@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     environment: str = "local"
     debug: bool = True
     api_prefix: str = "/api/v1"
-    database_url: str = "postgresql+asyncpg://rpg_user:rpg_password@localhost:5432/rpg_game"
+    database_url: str = "postgresql+asyncpg://rpg_user:rpg_password@127.0.0.1:55432/rpg_game"
     jwt_secret_key: str = "change-me-before-production"
     access_token_expire_minutes: int = 1440
 
