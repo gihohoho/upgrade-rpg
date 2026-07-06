@@ -246,3 +246,11 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - `backend/.env.example`, `backend/app/core/config.py`, `backend/alembic.ini`의 기본 DB 주소를 `127.0.0.1:55432` 기준으로 맞췄다.
 - Windows 환경에서 기존 로컬 PostgreSQL과 포트 충돌이 나지 않도록 `docs/LOCAL_DB_PORT_POLICY.md`를 추가했다.
 - 이번 변경은 기존 프론트 게임 기능에는 영향을 주지 않는다.
+
+## v081 - Master Data API DB 연결
+
+- `/api/v1/game/master-data`의 임시 stub 응답을 제거하고 PostgreSQL seed 테이블을 실제로 읽도록 변경했습니다.
+- `payload`에 characters, skills, itemTemplates, bosses, fieldZones, dropTables, enhancementRules 등을 포함합니다.
+- `meta.counts`와 `payload.counts`로 주요 마스터 데이터 개수를 확인할 수 있습니다.
+- `backend/scripts/check_master_data_api.py`를 추가해 서버 실행 후 API 응답을 터미널에서 점검할 수 있게 했습니다.
+- `docs/MASTER_DATA_API.md` 문서를 추가했습니다.

@@ -1,18 +1,31 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.response import ok_response
 from app.core.security import CurrentUser, get_current_user_placeholder
+from app.db.session import get_db_session
+from app.services.game_service import GameService
 
 router = APIRouter()
+service = GameService()
 
 
 @router.get("/master-data")
-async def get_master_data(current_user: CurrentUser = Depends(get_current_user_placeholder)):
-    """Future endpoint: items, bosses, drops, fields, skills, enhancement rules."""
+async def get_master_data(
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Return master data imported from PostgreSQL seed tables."""
+    master_data = await service.get_master_data(session)
     return ok_response(
         type="game.master_data",
-        data={"status": "stub", "userId": current_user.id},
-        meta={"note": "마스터 데이터 seed 연결 전 임시 응답입니다."},
+        payload=master_data,
+        data={"status": "loaded", "userId": current_user.id},
+        meta={
+            "source": "postgresql",
+            "counts": master_data["counts"],
+            "note": "PostgreSQL seed 데이터를 실제로 읽어온 응답입니다.",
+        },
     )
 
 
@@ -21,7 +34,7 @@ async def load_game(current_user: CurrentUser = Depends(get_current_user_placeho
     """Future endpoint: load user profile/progress/inventory/equipment/skills."""
     return ok_response(
         type="game.load",
-        data={"status": "stub", "userId": current_user.id},
+        data=await service.load_game(current_user.id),
         meta={"note": "DB 저장 구조 연결 전 임시 응답입니다."},
     )
 

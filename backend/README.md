@@ -152,3 +152,27 @@ python scripts/setup_dev_db.py --dry-run
 
 
 > 로컬 PostgreSQL은 기본 포트 `5432`가 아니라 `55432`를 사용한다. Windows에서 기존 PostgreSQL과 충돌을 피하기 위한 프로젝트 기준이다. 자세한 내용은 `docs/LOCAL_DB_PORT_POLICY.md`를 참고한다.
+
+## v081 master-data API 확인
+
+`/api/v1/game/master-data`는 PostgreSQL seed 테이블을 실제로 읽습니다.
+
+위치: **backend 폴더 + 가상환경 activate 상태**
+
+```bash
+uvicorn app.main:app --reload
+```
+
+다른 터미널에서 확인:
+
+위치: **backend 폴더 + 가상환경 activate 상태**
+
+```bash
+python scripts/check_master_data_api.py
+```
+
+브라우저에서는 아래 주소를 엽니다.
+
+```txt
+http://127.0.0.1:8000/api/v1/game/master-data
+```
