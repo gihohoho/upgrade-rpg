@@ -30,6 +30,31 @@ node tools/smoke_frontend_master_data_bridge.js
 await checkBackendMasterData();
 ```
 
+
+## v089 요약
+
+- `src/api/master-data-runtime-switch.js` 추가
+- 기본값 OFF인 백엔드 master-data 런타임 모드 추가
+- 브라우저 콘솔에서 `enableBackendMasterDataMode()` / `disableBackendMasterDataMode()`로 전환 가능
+- ON 상태에서는 페이지 시작 전에 FastAPI master-data를 불러와 기존 전역 데이터 내부를 교체
+- API 로딩 실패 시 기존 정적 JS 데이터로 fallback
+
+확인 명령어:
+
+위치: 프로젝트 루트
+
+```bash
+node tools/smoke_master_data_runtime_switch.js
+```
+
+브라우저 콘솔:
+
+```js
+enableBackendMasterDataMode();
+await checkBackendMasterDataRuntimeMode();
+disableBackendMasterDataMode();
+```
+
 ---
 
 # RPG v077 - 백엔드 환경 보정 / JS seed 추출 도구 추가

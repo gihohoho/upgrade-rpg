@@ -74,3 +74,7 @@ node tools/smoke_master_data_adapter.js
 ```
 
 FastAPI master-data 응답을 기존 브라우저 게임 데이터와 비슷한 형태로 변환할 수 있는지 확인합니다.
+
+## v089
+
+- `smoke_master_data_runtime_switch.js`: 백엔드 master-data 런타임 스위치 파일과 index.html 로딩 순서를 정적으로 검사한다.

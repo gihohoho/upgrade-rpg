@@ -329,3 +329,13 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - Added browser console helpers: `checkBackendMasterDataAdapter()`, `loadAdaptedBackendMasterData()`, `getCachedAdaptedBackendMasterData()`.
 - Added `tools/smoke_master_data_adapter.js` to verify adapter structure, counts, boss split, field count, item count, and nullable skill proc rate preservation.
 - Documented the adapter in `docs/MASTER_DATA_ADAPTER.md`.
+
+## v089 - Backend master-data runtime switch
+
+- Added `src/api/master-data-runtime-switch.js`.
+- Backend master-data runtime mode is OFF by default and can be enabled from the browser console.
+- Console helpers: `enableBackendMasterDataMode()`, `disableBackendMasterDataMode()`, `checkBackendMasterDataRuntimeMode()`.
+- When enabled, FastAPI master-data is fetched with `includeAssets=true`, adapted to legacy-like structures, and injected before the original game initialization runs.
+- Injection mutates existing legacy objects/arrays instead of reassigning top-level `const` declarations.
+- If API loading fails, the game falls back to the existing static JS data.
+- Added `tools/smoke_master_data_runtime_switch.js` and `docs/MASTER_DATA_RUNTIME_SWITCH.md`.

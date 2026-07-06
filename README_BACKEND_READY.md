@@ -198,3 +198,10 @@ python scripts/check_master_data_parity.py --include-assets
 ```bash
 node tools/smoke_master_data_adapter.js
 ```
+
+
+## v089 - Backend master-data runtime switch
+
+- 기본 OFF 상태의 브라우저 런타임 전환 플래그를 추가했습니다.
+- `enableBackendMasterDataMode()`를 실행하면 다음 페이지 로드부터 FastAPI master-data를 기존 게임 데이터 형태로 주입합니다.
+- 실패 시 기존 JS 데이터로 fallback하므로 현재 게임 실행 안전성을 유지합니다.
