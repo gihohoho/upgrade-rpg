@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>강화RPG v0.22 (특수보스 & 장비슬롯 개편)</title>
+    <link rel="stylesheet" href="src/styles/style.css" />
+  </head>
+  <body>
+    <div id="tooltip"></div>
+
+    <div class="game-wrapper">
+      <div id="battle-zone">
+        <div class="zone-nav">
+          <div id="zone-title">구역 1</div>
+        </div>
+
+        <div class="enemy-display">
+          <div id="enemy-image-placeholder"></div>
+
+          <div
+            id="boss-control-btns"
+            style="
+              display: none;
+              margin-bottom: 10px;
+              gap: 8px;
+              justify-content: center;
+            "
+          >
+            <button
+              class="boss-ctrl-btn"
+              onclick="toggleBossPanel()"
+              style="color: #ffcc00; border-color: #ffcc00"
+            >
+              보스목록
+            </button>
+            <button
+              class="boss-ctrl-btn"
+              onclick="toggleSpecialBossPanel()"
+              style="color: #e0a8ff; border-color: #e0a8ff"
+            >
+              특수보스<br />목록
+            </button>
+            <button
+              class="boss-ctrl-btn"
+              id="btn-auto-boss"
+              onclick="toggleAutoBoss()"
+            >
+              자동소환<br /><span style="color: #777">OFF</span>
+            </button>
+            <button
+              class="boss-ctrl-btn"
+              id="btn-boss-remove"
+              onclick="removeBoss()"
+            >
+              보스제거
+            </button>
+            <button
+              class="boss-ctrl-btn"
+              id="btn-equip-drop"
+              onclick="toggleEquipDrop()"
+            >
+              장비드랍<br /><span style="color: #88ff88">ON</span>
+            </button>
+          </div>
+
+          <div id="enemy-name">필드 몬스터 1</div>
+          <div class="hp-bar-container">
+            <div id="enemy-hp-bar" class="hp-bar-fill"></div>
+            <span id="enemy-hp-text">100 / 100</span>
+          </div>
+        </div>
+
+        <div id="field-info-panel" class="zone-info-box">
+          <div class="info-row gold-reward-row">
+            💰 획득 골드: <span id="info-gold" class="info-highlight">0</span>
+          </div>
+          <div class="info-row" style="color: #ff4444">
+            🚫 구역(필드)에서는 장비가 드랍되지 않습니다.
+          </div>
+        </div>
+
+        <div
+          id="boss-info-panel"
+          class="zone-info-box"
+          style="
+            display: none;
+            text-align: left;
+            width: 340px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.8);
+            border-color: #ffcc00;
+            background: rgba(10, 15, 25, 0.9);
+          "
+        ></div>
+      </div>
+
+      <div id="char-panel" class="window-panel">
+        <div class="equip-section">
+          <div class="equip-grid-normal" id="equip-normal"></div>
+          <div class="equip-grid-special" id="equip-special"></div>
+        </div>
+
+        <div class="stats-section" style="margin-bottom: 8px">
+          <div class="stat-row" data-stat="atk">
+            <span class="stat-label">공격력</span
+            ><span class="stat-val red-text" id="stat-atk">10A</span>
+          </div>
+          <div class="stat-row" data-stat="aspd">
+            <span class="stat-label">추가 공격속도</span
+            ><span class="stat-val blue-text" id="stat-aspd">400%</span>
+          </div>
+          <div class="stat-row" data-stat="ncrate">
+            <span class="stat-label">평타 치명타 확률</span
+            ><span class="stat-val orange-text" id="stat-nc-rate">0%</span>
+          </div>
+          <div class="stat-row" data-stat="ndmg">
+            <span class="stat-label">평타 피해 증가</span
+            ><span class="stat-val red-text" id="stat-n-dmg">0%</span>
+          </div>
+          <div class="stat-row" data-stat="ncdmg">
+            <span class="stat-label">평타 치명타 피해</span
+            ><span class="stat-val orange-text" id="stat-nc-dmg">0%</span>
+          </div>
+          <div class="stat-row" data-stat="sdmg">
+            <span class="stat-label">스킬 피해 증가</span
+            ><span class="stat-val blue-text" id="stat-s-dmg">0%</span>
+          </div>
+          <div class="stat-row" data-stat="scrate">
+            <span class="stat-label">스킬 치명타 확률</span
+            ><span class="stat-val blue-text" id="stat-sc-rate">0%</span>
+          </div>
+          <div class="stat-row" data-stat="alldmg">
+            <span class="stat-label">모든 피해 증가</span
+            ><span class="stat-val purple-text" id="stat-all-dmg">0%</span>
+          </div>
+          <div class="stat-row" data-stat="scdmg">
+            <span class="stat-label">스킬 치명타 피해</span
+            ><span class="stat-val blue-text" id="stat-sc-dmg">0%</span>
+          </div>
+          <div class="stat-row" data-stat="schance">
+            <span class="stat-label">추가 스킬피해 확률</span
+            ><span class="stat-val teal-text" id="stat-s-chance">0%</span>
+          </div>
+
+          <div class="stat-row unique-stat-row" data-stat="unique" style="color: #777">
+            <span class="stat-label">고유능력 - 스킬발동확률 증가</span
+            ><span class="stat-val unique-stat-value" id="stat-skill-prob">0%</span>
+          </div>
+          
+          <div class="stat-row" data-stat="smult" style="border-bottom: none">
+            <span class="stat-label">추가 스킬피해 계수</span
+            ><span class="stat-val teal-text" id="stat-s-mult">0%</span>
+          </div>
+        </div>
+
+        <div
+          class="stats-section"
+          style="background: rgba(0, 0, 0, 0.15); border: 1px solid #666"
+        >
+          <div class="stat-row" data-stat="farmgaininc">
+            <span class="stat-label">순수공격력 증가량</span
+            ><span
+              class="stat-val"
+              id="stat-farm-gain-inc"
+              style="color: #99ff99"
+              >0%</span
+            >
+          </div>
+          <div class="stat-row" data-stat="goldinc">
+            <span class="stat-label">골드 획득량 증가</span
+            ><span
+              class="stat-val yellow-text"
+              id="stat-gold-inc"
+              style="color: #ffcc00"
+              >0%</span
+            >
+          </div>
+          <div class="stat-row" data-stat="dropinc">
+            <span class="stat-label">아이템 드랍률 증가</span
+            ><span
+              class="stat-val green-text"
+              id="stat-drop-inc"
+              style="color: #88ff88"
+              >0%</span
+            >
+          </div>
+          <div
+            class="stat-row"
+            data-stat="enhanceinc"
+            style="border-bottom: none"
+          >
+            <span class="stat-label">강화 성공률 증가</span
+            ><span
+              class="stat-val purple-text"
+              id="stat-enhance-inc"
+              style="color: #cc66ff"
+              >0%</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="test-panel"
+        class="window-panel"
+        style="top: 575px; left: 20px; width: auto; z-index: 10"
+      >
+        <div
+          class="inv-header"
+          style="
+            color: #555;
+            border-bottom: 1px solid #555;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+          "
+        >
+          <span>⚙️ 테스트 패널</span>
+        </div>
+        <div class="test-panel-sections">
+          <div class="control-section-title">공격력 테스트</div>
+          <div class="test-panel-grid">
+            <button class="sys-btn" onclick="addPureAtk(10000)" style="color: #ffb3b3">순수공<br />+1B</button>
+            <button class="sys-btn" onclick="addPureAtk(100000)" style="color: #ff9f9f">순수공<br />+10B</button>
+            <button class="sys-btn" onclick="addPureAtk(1000000)" style="color: #ff8a8a">순수공<br />+100B</button>
+            <button class="sys-btn" onclick="addPureAtk(100000000)" style="color: #ff8080">순수공<br />+1C</button>
+            <button class="sys-btn sys-btn-placeholder" disabled>기능<br />미구현</button>
+            <button class="sys-btn sys-btn-placeholder" disabled>기능<br />미구현</button>
+
+            <button class="sys-btn" onclick="addPureAtk(-10000)" style="color: #ffb3b3">순수공<br />-1B</button>
+            <button class="sys-btn" onclick="addPureAtk(-100000)" style="color: #ff9f9f">순수공<br />-10B</button>
+            <button class="sys-btn" onclick="addPureAtk(-1000000)" style="color: #ff8a8a">순수공<br />-100B</button>
+            <button class="sys-btn" onclick="addPureAtk(-100000000)" style="color: #ff8080">순수공<br />-1C</button>
+            <button class="sys-btn sys-btn-placeholder" disabled>기능<br />미구현</button>
+            <button class="sys-btn sys-btn-placeholder" disabled>기능<br />미구현</button>
+          </div>
+
+          <div class="control-section-title">테스트 도구</div>
+          <div class="test-panel-grid">
+            <button class="sys-btn test-group-start" onclick="openTestItemModal()" style="color: #00ffff">장비<br />지급</button>
+            <button class="sys-btn test-group-start" onclick="openTestSpecialItemModal()" style="color: #ff66cc">특수보스<br />장비지급</button>
+            <button class="sys-btn test-group-start" id="btn-test-cost" onclick="toggleTestCostMode()" style="color: #ff9999">비용 1원<br />OFF</button>
+            <button class="sys-btn test-group-start" id="btn-test-buff" onclick="toggleTestBuffMode()">버프<br />OFF</button>
+            <button class="sys-btn test-group-start" onclick="setBaseAtkAspdMax()" style="color: #88ff88">기본공/공속<br />MAX</button>
+            <button class="sys-btn test-group-start" onclick="resetSkillsOnly()" style="color: #ffcc66">스킬<br />초기화</button>
+            <button class="sys-btn test-group-start" id="btn-test-special-cd" onclick="toggleSpecialBossNoCooldownMode()" style="color: #66ccff">쿨타임제거<br />OFF</button>
+            <button class="sys-btn test-group-start" id="btn-test-codex-reveal" onclick="toggleCodexRevealMode()" style="color: #ffaaee">도감보이기<br />OFF</button>
+            <button class="sys-btn test-group-start" onclick="sendOneHourGoldMail()" style="color: #ffcc00">1H골드<br />(우편함)</button>
+            <button class="sys-btn test-group-start" onclick="sendTalismanMail()" style="color: #ff99ff">탈리스만<br />(우편함)</button>
+            <button class="sys-btn sys-btn-placeholder" disabled>기능<br />미구현</button>
+            <button class="sys-btn sys-btn-placeholder" disabled>기능<br />미구현</button>
+            <button class="sys-btn sys-btn-placeholder" disabled>기능<br />미구현</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 테스트 전용 장비 지급 모달 -->
+      <div
+        id="test-item-modal"
+        class="window-panel"
+        style="
+          display: none;
+          top: 10%;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 760px;
+          background: #1a1a1a;
+          z-index: 700;
+        "
+      >
+        <div class="inv-header" style="color: #fff">
+          <span id="test-item-modal-title">보스 아이템 선택</span>
+          <button class="close-btn" onclick="closeTestItemModal()">✖</button>
+        </div>
+        <div
+          id="test-boss-list"
+          class="boss-grid-container"
+          style="
+            background: none;
+            min-height: auto;
+            padding: 10px 0;
+            border-bottom: 1px solid #444;
+            margin-bottom: 15px;
+            overflow-y: auto;
+            max-height: 180px;
+            grid-template-columns: repeat(9, 64px);
+          "
+        ></div>
+
+        <div
+          id="test-item-list"
+          style="
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 5px;
+          "
+        ></div>
+      </div>
+
+      <div id="inv-panel" class="window-panel">
+        <div class="inv-header">
+          <span
+            >가방: <span id="inventory-count">0</span>/60</span
+          >
+          <button class="close-btn" onclick="toggleInv()">✖</button>
+        </div>
+        <div
+          id="inventory-container"
+          class="inv-grid-50"
+          style="max-height: 280px"
+        ></div>
+        <div class="inv-footer">
+          <div class="gold-box">
+            <span class="money-mark gold-coin-mark">$</span>
+            <span id="player-gold">0A</span>
+          </div>
+          <div class="inv-footer-actions">
+            <div class="inv-footer-main-actions">
+              <button
+                class="discard-btn"
+                onclick="toggleStorage()"
+                style="
+                  background: #447;
+                  border-color: #77a;
+                  color: #b3b3ff;
+                  font-size: 12px;
+                "
+              >
+                보관함
+              </button>
+              <button
+                class="discard-btn"
+                onclick="toggleTrash()"
+                style="
+                  background: #463344;
+                  border-color: #9a6694;
+                  color: #ffd6fa;
+                  font-size: 12px;
+                "
+              >
+                휴지통
+              </button>
+            </div>
+            <button
+              class="discard-btn inv-bulk-trash-btn"
+              onclick="bulkMoveInventoryToTrash()"
+              style="
+                background: #654050;
+                border-color: #b47798;
+                color: #ffd6fa;
+                font-size: 12px;
+              "
+            >
+              전체 일괄 휴지통으로
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="storage-panel"
+        class="window-panel"
+        style="
+          display: none;
+          right: 20px;
+          top: 535px;
+          width: auto;
+          min-width: 372px;
+        "
+      >
+        <div class="inv-header">
+          <span
+            >보관함: <span id="storage-count">0</span>/60</span
+          >
+          <button class="close-btn" onclick="toggleStorage()">✖</button>
+        </div>
+        <div
+          id="storage-container"
+          class="inv-grid-50"
+          style="
+            grid-template-columns: repeat(5, 64px);
+            max-height: 175px;
+            border-color: #5c5c8a;
+          "
+        ></div>
+      </div>
+
+      <div
+        id="trash-panel"
+        class="window-panel"
+        style="
+          display: none;
+          right: 20px;
+          top: 535px;
+          width: auto;
+          min-width: 372px;
+        "
+      >
+        <div class="inv-header">
+          <span
+            >휴지통: <span id="trash-count">0</span>/60</span
+          >
+          <button class="close-btn" onclick="toggleTrash()">✖</button>
+        </div>
+        <div
+          id="trash-container"
+          class="inv-grid-50"
+          style="
+            grid-template-columns: repeat(5, 64px);
+            max-height: 175px;
+            border-color: #8a5c86;
+          "
+        ></div>
+        <div class="inv-footer" style="justify-content: flex-end; margin-top: 8px;">
+          <button
+            class="discard-btn"
+            onclick="emptyTrash()"
+            style="
+              background: #6a2d35;
+              border-color: #d0727a;
+              color: #ffd4d8;
+              font-size: 12px;
+            "
+          >
+            휴지통 비우기
+          </button>
+        </div>
+      </div>
+
+      <div
+        id="mailbox-panel"
+        class="window-panel mailbox-panel"
+        style="
+          display: none;
+          right: 20px;
+          top: 535px;
+          width: auto;
+          min-width: 372px;
+        "
+      >
+        <div class="inv-header mailbox-header">
+          <span>📮 우편함 (<span id="mailbox-count">0</span>건)</span>
+          <div class="mailbox-header-actions">
+            <button class="mail-claim-all-btn" onclick="claimAllMail()">모두받기</button>
+            <button class="close-btn" onclick="toggleMailbox()">✖</button>
+          </div>
+        </div>
+        <div id="mailbox-container" class="mailbox-container"></div>
+      </div>
+
+      <div id="town-hub-panel" class="window-panel town-hub-panel">
+        <div class="town-hub-title">🏘️ 마을</div>
+        <div class="town-hub-notices">
+          <div class="town-hub-notice">
+            <b>기록관</b>은 최종 저장된 기록을 기준으로 보여줍니다.<br>
+            수동 저장을 누르면 기록관도 현재 시점으로 갱신됩니다.
+          </div>
+          <div class="town-hub-notice">
+            <b>도감</b>은 아이템을 획득할 때마다 즉시 갱신됩니다.<br>
+            도감 아이템 <b>1개당</b> 순수공격력 증가량 / 골드 획득량 / 아이템 드랍률 / 강화 성공률이 각각 <b>0.1%</b> 증가합니다.
+          </div>
+        </div>
+        <div class="town-hub-actions">
+          <button class="town-hub-btn record" onclick="openTownRecordModal()">기록관</button>
+          <button class="town-hub-btn codex" onclick="openTownCodexModal()">도감</button>
+          <button class="town-hub-btn rank" onclick="openTownRankingModal()">랭킹</button>
+          <button class="town-hub-btn mail" onclick="toggleMailbox()">우편함 <span id="town-mail-count">0</span></button>
+        </div>
+      </div>
+
+      <div id="town-record-modal" class="town-modal-backdrop" style="display:none;">
+        <div class="town-modal">
+          <div class="town-modal-header">
+            <span>📜 기록관</span>
+            <button class="close-btn" onclick="closeTownModal('town-record-modal')">✖</button>
+          </div>
+          <div id="town-record-content" class="town-modal-content"></div>
+        </div>
+      </div>
+
+      <div id="town-codex-modal" class="town-modal-backdrop" style="display:none;">
+        <div class="town-modal town-modal-wide">
+          <div class="town-modal-header">
+            <span>📚 도감 / 수집률</span>
+            <button class="close-btn" onclick="closeTownModal('town-codex-modal')">✖</button>
+          </div>
+          <div id="town-codex-content" class="town-modal-content"></div>
+        </div>
+      </div>
+
+      <div id="town-ranking-modal" class="town-modal-backdrop" style="display:none;">
+        <div class="town-modal">
+          <div class="town-modal-header">
+            <span>🏆 랭킹</span>
+            <button class="close-btn" onclick="closeTownModal('town-ranking-modal')">✖</button>
+          </div>
+          <div id="town-ranking-content" class="town-modal-content"></div>
+        </div>
+      </div>
+
+
+
+      <div id="item-action-panel">
+        <div
+          style="
+            text-align: right;
+            margin-bottom: -5px;
+            position: relative;
+            z-index: 10;
+          "
+        >
+          <button
+            onclick="closeActionPanel()"
+            style="
+              background: none;
+              border: none;
+              color: #aaa;
+              font-size: 20px;
+              cursor: pointer;
+            "
+          >
+            ✖
+          </button>
+        </div>
+        <div class="action-info">
+          <div class="action-icon"><img id="ap-img" src="" alt="" /></div>
+          <div class="action-text">
+            <div id="ap-name" class="action-title">아이템 이름</div>
+            <div id="ap-stats" class="action-stat">스탯 정보</div>
+          </div>
+        </div>
+        <div
+          class="action-btns"
+          style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px"
+        >
+          
+          <button
+            id="btn-ap-use"
+            class="action-btn"
+            style="background: #4b8a5c"
+            onclick="actionUseSelected()"
+          >
+            장착/사용
+          </button>
+          <button
+            id="btn-ap-reinforce1"
+            class="action-btn btn-reinforce"
+            onclick="actionReinforce(1)"
+          >
+            강화 1회
+          </button>
+          <button
+            id="btn-ap-reinforce20"
+            class="action-btn btn-reinforce"
+            onclick="actionReinforce(20)"
+          >
+            강화 20회
+          </button>
+          <button
+            id="btn-ap-reinforce50"
+            class="action-btn btn-reinforce"
+            onclick="actionReinforce(50)"
+          >
+            강화 50회
+          </button>
+          <button
+            id="btn-ap-reinforce200"
+            class="action-btn btn-reinforce"
+            onclick="actionReinforce(200)"
+          >
+            강화 200회
+          </button>
+          <button
+            id="btn-ap-move"
+            class="action-btn"
+            style="background: #5c5c8a"
+            onclick="actionMoveStorage()"
+          >
+            보관함 넣기
+          </button>
+          <button
+            id="btn-ap-sell"
+            class="action-btn btn-sell"
+            style="grid-column: span 2"
+            onclick="actionSell()"
+          >
+            휴지통으로 이동
+          </button>
+        </div>
+        <div id="ap-enhance-log" class="ap-enhance-log"></div>
+      </div>
+
+      <div id="bottom-hud">
+        <div class="hud-sys-btns">
+          <div class="control-section-title hud-section-title">이동 / 진입</div>
+          <div class="hud-sys-grid">
+            <button class="sys-btn" onclick="toggleInv()">인벤<br />토리</button>
+            <button class="sys-btn" onclick="enterTown()">마을<br />이동</button>
+            <button class="sys-btn" onclick="enterBossZone()">보스존<br />입장</button>
+            <button class="sys-btn" onclick="toggleFieldZone()">필드존<br />선택</button>
+            <button class="sys-btn" onclick="moveToRecentField()" style="color: #ffcc00">최근<br />필드</button>
+            <button class="sys-btn sys-btn-placeholder" disabled>기능<br />미구현</button>
+            <button class="sys-btn sys-btn-placeholder" disabled>기능<br />미구현</button>
+          </div>
+
+          <div class="control-section-title hud-section-title">성장 / 시스템</div>
+          <div class="hud-sys-grid">
+            <button class="sys-btn" onclick="giveBeginnerItem()" style="color: #ff99ff">초보자<br />무기</button>
+            <button class="sys-btn" onclick="manualSaveGame()" style="color: #88ffcc">수동<br />저장</button>
+            <button class="sys-btn" onclick="openSponsorPage()" style="color: #ffb3e6">후원<br />하기</button>
+            <button class="sys-btn" onclick="resetGame()" style="color: #ccc">데이터<br />초기화</button>
+            <button class="sys-btn" id="btn-auto-special-boss" onclick="toggleAutoSpecialBoss()" style="color: #e0a8ff">특보 자동<br />OFF</button>
+            <button class="sys-btn sys-btn-placeholder" disabled>기능<br />미구현</button>
+            <button class="sys-btn sys-btn-placeholder" disabled>기능<br />미구현</button>
+          </div>
+        </div>
+
+        <div class="hud-portrait-area">
+          <div class="portrait-box">
+            <img
+              src="https://placehold.co/140x140/333/fff?text=?"
+              alt="Portrait"
+            />
+          </div>
+        </div>
+
+        <div class="hud-center-stats">
+          <div class="hud-title">강화의 노예</div>
+          <div class="hud-subtitle">검신</div>
+          <div class="hud-stats-grid">
+            <div>
+              <span class="red-text">공격력</span><span id="hud-atk">10A</span>
+            </div>
+            <div>
+              <span class="blue-text">스킬 피해 증가</span
+              ><span id="hud-sdmg">0%</span>
+            </div>
+            <div>
+              <span class="green-text">추가 공격속도</span
+              ><span id="hud-aspd">400%</span>
+            </div>
+            <div>
+              <span class="purple-text">모든 피해 증가</span
+              ><span id="hud-alldmg">0%</span>
+            </div>
+            <div>
+              <span class="red-text">평타 피해 증가</span
+              ><span id="hud-ndmg">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-right-slots">
+          <div class="skill-slots-grid"></div>
+        </div>
+      </div>
+
+      <div
+        id="boss-panel"
+        class="window-panel"
+        style="
+          display: none;
+          top: 10%;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 450px;
+          background: #0a0a15;
+          border: 2px solid #334;
+          z-index: 50;
+        "
+      >
+        <div class="inv-header" style="color: #fff">
+          <span>일반 보스 소환</span
+          ><button class="close-btn" onclick="toggleBossPanel()">✖</button>
+        </div>
+        <div id="boss-grid" class="boss-grid-container"></div>
+        <div id="boss-pagination" class="boss-pagination">
+          <button class="boss-page-btn" onclick="changeBossPage(-1)">◀ 이전</button>
+          <span id="boss-page-info">1 / 1</span>
+          <button class="boss-page-btn" onclick="changeBossPage(1)">다음 ▶</button>
+        </div>
+      </div>
+
+      <div
+        id="special-boss-panel"
+        class="window-panel"
+        style="
+          display: none;
+          top: 10%;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 450px;
+          background: #1a0a1a;
+          border: 2px solid #93c;
+          z-index: 50;
+        "
+      >
+        <div class="inv-header" style="color: #fff">
+          <span>특수 보스 소환</span
+          ><button class="close-btn" onclick="toggleSpecialBossPanel()">
+            ✖
+          </button>
+        </div>
+        <div id="special-boss-grid" class="boss-grid-container"></div>
+      </div>
+
+      <div id="auto-special-modal" class="game-modal-backdrop auto-special-backdrop" style="display: none;">
+        <div class="auto-special-modal">
+          <div class="auto-special-title">특수보스 자동사냥 선택</div>
+          <div class="auto-special-desc">
+            자동사냥을 켜면 현재 위치를 기억한 뒤, 선택한 특수보스의 쿨타임이 끝날 때마다 자동으로 이동해 전투합니다.<br />
+            특수보스를 처치하면 이동 직전 위치로 돌아갑니다. 필드존, 마을, 보스존 모두 복귀됩니다.<br />
+            자동사냥이 ON인 동안에는 다른 특수보스를 직접 소환할 수 없습니다.
+          </div>
+          <div id="auto-special-list" class="auto-special-list"></div>
+          <div class="auto-special-actions">
+            <button class="game-reset-cancel" onclick="closeAutoSpecialBossModal()">취소</button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="field-panel"
+        class="window-panel"
+        style="
+          display: none;
+          top: 10%;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 440px;
+          background: #1a1a1a;
+          border: 2px solid #555;
+          z-index: 50;
+        "
+      >
+        <div class="inv-header" style="color: #fff">
+          <span>필드존 선택 (골드 전용 / 아이템 드랍 불가)</span
+          ><button class="close-btn" onclick="toggleFieldZone()">✖</button>
+        </div>
+        <div id="field-list-container"></div>
+      </div>
+
+      <div
+        id="boss-tooltip"
+        style="
+          display: none;
+          position: fixed;
+          background: #0b101c;
+          border: 2px solid #ffcc00;
+          color: #fff;
+          padding: 12px;
+          border-radius: 4px;
+          font-size: 14px;
+          z-index: 1200;
+          pointer-events: none;
+          min-width: 280px;
+          line-height: 1.5;
+          font-family: &quot;돋움&quot;, Dotum, sans-serif;
+          box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.9);
+        "
+      ></div>
+    </div>
+
+      <div id="reset-modal" class="game-modal-backdrop" style="display: none;">
+        <div class="game-reset-modal">
+          <div class="game-reset-title">데이터 초기화</div>
+          <div class="game-reset-subtitle">정말 처음부터 다시 시작할까요?</div>
+          <div class="game-reset-body">
+            <p>현재 캐릭터의 골드, 장비, 보관함, 휴지통, 스킬, 보스 진행 상황이 모두 삭제됩니다.</p>
+            <p class="game-reset-warning">이 작업은 되돌릴 수 없습니다.</p>
+          </div>
+          <div class="game-reset-actions">
+            <button class="game-reset-cancel" onclick="closeResetModal()">취소</button>
+            <button class="game-reset-confirm" onclick="confirmResetGame()">초기화 진행</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="bulk-trash-modal" class="game-modal-backdrop bulk-trash-backdrop" style="display: none;">
+        <div class="game-reset-modal bulk-trash-modal">
+          <div class="game-reset-title bulk-trash-title">전체 일괄 휴지통</div>
+          <div class="game-reset-subtitle">가방의 모든 아이템을 휴지통으로 이동할까요?</div>
+          <div class="game-reset-body">
+            <p>가방에 있는 장비, 스킬강화권, 탈리스만/휘장 등 모든 아이템이 휴지통으로 이동합니다.</p>
+            <p>보관함에 있는 아이템은 이동하지 않습니다.</p>
+            <p class="game-reset-warning">휴지통 비우기를 누르기 전까지는 복구할 수 있습니다.</p>
+          </div>
+          <div class="game-reset-actions">
+            <button class="game-reset-cancel" onclick="closeBulkTrashModal()">취소</button>
+            <button class="game-reset-confirm bulk-trash-confirm" onclick="confirmBulkMoveInventoryToTrash()">휴지통으로 이동</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="trash-empty-modal" class="game-modal-backdrop trash-empty-backdrop" style="display: none;">
+        <div class="game-reset-modal trash-empty-modal">
+          <div class="game-reset-title trash-empty-title">휴지통 비우기</div>
+          <div class="game-reset-subtitle">휴지통의 아이템을 완전히 삭제할까요?</div>
+          <div class="game-reset-body">
+            <p>휴지통에 들어있는 모든 아이템이 삭제됩니다.</p>
+            <p class="game-reset-warning">삭제 후에는 복구할 수 없습니다.</p>
+          </div>
+          <div class="game-reset-actions">
+            <button class="game-reset-cancel" onclick="closeTrashEmptyModal()">취소</button>
+            <button class="game-reset-confirm trash-empty-confirm" onclick="confirmEmptyTrash()">휴지통 비우기</button>
+          </div>
+        </div>
+      </div>
+
+    <!--
+      백엔드 분리 준비용 구조.
+      아직 import/export를 쓰지 않는 전역 스크립트 방식이라 아래 로딩 순서는 중요합니다.
+      state -> data -> systems -> ui -> app 순서로 유지해야 합니다.
+    -->
+    <script src="src/data/skills.js"></script>
+    <script src="src/state/game-state.js"></script>
+    <script src="src/utils/icon-utils.js"></script>
+    <script src="src/data/boss-factories.js"></script>
+    <script src="src/data/bosses.js"></script>
+    <script src="src/rules/abyss-fragment-rules.js"></script>
+    <script src="src/rules/boss-display-rules.js"></script>
+    <script src="src/rules/boss-drop-rules.js"></script>
+    <script src="src/data/boss-bootstrap.js"></script>
+    <script src="src/data/zones.js"></script>
+    <script src="src/systems/stat-system.js"></script>
+    <script src="src/ui/render-ui.js"></script>
+    <script src="src/systems/action-result-system.js"></script>
+    <script src="src/systems/item-system.js"></script>
+    <script src="src/systems/combat-system.js"></script>
+    <script src="src/app/main.js"></script>
+  </body>
+</html>

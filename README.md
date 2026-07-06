@@ -1,8 +1,8 @@
-# RPG v075 - 백엔드 기초 설계 / FastAPI 뼈대 + PostgreSQL 초안
+# RPG v077 - 백엔드 환경 보정 / JS seed 추출 도구 추가
 
 이 ZIP은 **Vue 프론트엔드 + FastAPI 백엔드 + PostgreSQL + 관리자 페이지**로 넘어가기 전, 현재 HTML/JavaScript 게임을 안전하게 분리하기 위한 준비본입니다.
 
-이번 버전의 핵심은 **관리자 페이지 요구사항 V1 고정 + PostgreSQL DB 설계 초안 + FastAPI 프로젝트 뼈대 생성**입니다. 기존 프론트 게임 동작은 건드리지 않고, 앞으로 서버/DB/관리자 페이지를 만들 기준을 추가했습니다.
+이번 버전의 핵심은 **FastAPI 로컬환경 오류 보정 + JS 마스터 데이터 seed 추출 도구 추가**입니다. 기존 프론트 게임 동작은 건드리지 않았고, 백엔드/PostgreSQL 이전을 위한 데이터 추출 준비를 보강했습니다.
 
 ## 현재 완료된 작업
 
@@ -17,6 +17,7 @@
 관리자 페이지 요구사항 V1 문서화 완료
 PostgreSQL DB 설계 초안 추가 완료
 FastAPI backend/ 뼈대 추가 완료
+Docker PostgreSQL 로컬 개발환경 세팅 추가 완료
 ```
 
 ## 이번 버전의 핵심 변경
@@ -96,10 +97,64 @@ player.userCharacters[player.currentCharacterId].skills
 player.skills
 ```
 
+
+
+### v077 추가 사항
+
+```txt
+CORS_ORIGINS 파싱 안정화
+asyncpg 의존성 명시
+JS 마스터 데이터 seed 추출 도구 추가
+seed smoke 테스트 추가
+실제 로컬 실행 중 발생한 오류 해결법 문서화
+```
+
+seed 추출 명령어:
+
+```bash
+node tools/extract_seed_data.js
+node tools/smoke_seed_extraction.js
+```
+
+생성 위치:
+
+```txt
+backend/seeds/generated/
+```
+
+### 로컬 개발환경 세팅 추가
+
+새 파일:
+
+```txt
+docker-compose.yml
+.gitignore
+.dockerignore
+docs/LOCAL_DEV_SETUP.md
+docs/DOCKER_POSTGRES_GUIDE.md
+docs/GIT_WORKFLOW.md
+tools/check_backend_ready.py
+```
+
+Docker로 PostgreSQL과 Adminer를 실행할 수 있게 준비했습니다.
+
+```bash
+docker compose up -d
+```
+
+FastAPI DB 연결 확인 주소도 추가했습니다.
+
+```txt
+http://localhost:8000/api/v1/health/db
+```
+
 ## 먼저 읽을 문서 순서
 
 1. `README.md`
-2. `docs/BACKEND_SPLIT_STAGE2_PLAN.md`
+2. `docs/LOCAL_DEV_SETUP.md`
+3. `docs/DOCKER_POSTGRES_GUIDE.md`
+4. `docs/GIT_WORKFLOW.md`
+5. `docs/BACKEND_SPLIT_STAGE2_PLAN.md`
 3. `docs/BACKEND_SPLIT_CHECKLIST.md`
 4. `docs/SKILL_STRUCTURE_READY.md`
 5. `docs/CSS_AUDIT.md`
@@ -111,9 +166,10 @@ player.skills
 11. `docs/ADMIN_PAGE_REQUIREMENTS.md`
 12. `docs/DECISION_LOG.md`
 13. `docs/API_RESPONSE_CONTRACT.md`
-14. `docs/CHANGELOG.md`
+14. `docs/SEED_EXTRACTION.md`
+15. `docs/CHANGELOG.md`
 
-## 실행 방법
+## 프론트 실행 방법
 
 현재 버전은 아직 Vue 프로젝트가 아니라 일반 HTML/JS 구조입니다.
 
@@ -131,6 +187,45 @@ python -m http.server 5500
 
 ```txt
 http://localhost:5500
+```
+
+
+## 백엔드 로컬 실행 방법
+
+처음 1회 준비:
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/Scripts/activate
+pip install -e .[dev]
+cp .env.example .env
+cd ..
+docker compose up -d
+```
+
+FastAPI 실행:
+
+```bash
+cd backend
+source .venv/Scripts/activate
+uvicorn app.main:app --reload
+```
+
+확인 주소:
+
+```txt
+http://localhost:8000/docs
+http://localhost:8000/api/v1/health
+http://localhost:8000/api/v1/health/db
+http://localhost:8081
+```
+
+개발환경 점검:
+
+```bash
+python tools/check_backend_ready.py
+python tools/check_backend_ready.py --db
 ```
 
 ## 현재 구조
@@ -214,13 +309,25 @@ backend/sql/schema_draft.sql
 
 ## 브라우저 확인 여부
 
-이번 v075는 `backend/` 폴더와 설계 문서를 추가한 작업입니다. 기존 `index.html`과 프론트 JS 실행 흐름은 변경하지 않았습니다.
+이번 v076은 `docker-compose.yml`, 로컬 개발환경 문서, 점검 도구를 추가한 작업입니다. 기존 `index.html`과 프론트 JS 실행 흐름은 변경하지 않았습니다.
 
 따라서 브라우저에서 따로 확인할 항목은 없습니다.
 
+## v078 업데이트 - Seed Import 구조 추가
+
+이번 버전은 `backend/seeds/generated/*.json` 파일을 PostgreSQL 로컬 DB에 넣기 위한 개발용 import 구조를 추가했습니다.
+
+터미널 위치 기준:
+
+- 프로젝트 루트: `node tools/extract_seed_data.js`, `python tools/smoke_seed_import_structure.py`
+- backend 폴더: `python scripts/setup_dev_db.py --reset --seed --verify`
+
+자세한 내용은 `docs/SEED_IMPORT.md`를 확인하세요.
+
+
 ## 다음 추천 작업
 
-이제 서버/DB 뼈대가 생겼으므로 다음 단계는 아래 중 하나입니다.
+이제 로컬 PostgreSQL/FastAPI 실행 준비가 되었으므로 다음 단계는 아래 중 하나입니다.
 
 ```txt
 1. 현재 JS 마스터 데이터 추출 도구 작성
@@ -230,3 +337,13 @@ backend/sql/schema_draft.sql
 ```
 
 내 추천은 다음 단계에서 **현재 JS 마스터 데이터 추출 도구 작성 + seed JSON 생성**으로 넘어가는 것입니다.
+
+
+## v079 seed import connection fix
+
+- `backend/scripts/setup_dev_db.py`를 sync SQLAlchemy + `psycopg` 방식으로 변경했습니다.
+- Windows/Docker 환경에서 `asyncpg.exceptions.ConnectionDoesNotExistError`가 seed import 중 발생하는 문제를 피하기 위한 수정입니다.
+- `backend/pyproject.toml`에 `psycopg[binary]` 의존성을 추가했습니다.
+
+
+> 로컬 PostgreSQL은 기본 포트 `5432`가 아니라 `55432`를 사용한다. Windows에서 기존 PostgreSQL과 충돌을 피하기 위한 프로젝트 기준이다. 자세한 내용은 `docs/LOCAL_DB_PORT_POLICY.md`를 참고한다.

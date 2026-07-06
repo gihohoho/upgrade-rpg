@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: upgrade_rpg_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: rpg_game
+      POSTGRES_USER: rpg_user
+      POSTGRES_PASSWORD: rpg_password
+      TZ: Asia/Seoul
+    ports:
+      - "55432:5432"
+    volumes:
+      - rpg_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rpg_user -d rpg_game"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  adminer:
+    image: adminer:4
+    container_name: upgrade_rpg_adminer
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8081:8080"
+
+volumes:
+  rpg_postgres_data:
