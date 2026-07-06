@@ -321,3 +321,11 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - 기존 게임 동작은 아직 정적 JS 데이터를 그대로 사용하며, API 데이터는 검증/캐시용 snapshot으로만 보관합니다.
 - 브라우저 콘솔에서 `await checkBackendMasterData()`로 백엔드 master-data 연결을 확인할 수 있습니다.
 - `tools/smoke_frontend_master_data_bridge.js` 정적 검증 도구와 `docs/FRONTEND_MASTER_DATA_BRIDGE.md` 문서를 추가했습니다.
+
+## v088 - Frontend master-data adapter
+
+- Added `src/api/master-data-adapter.js`.
+- Converts `/api/v1/game/master-data` payload into legacy-like browser data structures without changing live gameplay yet.
+- Added browser console helpers: `checkBackendMasterDataAdapter()`, `loadAdaptedBackendMasterData()`, `getCachedAdaptedBackendMasterData()`.
+- Added `tools/smoke_master_data_adapter.js` to verify adapter structure, counts, boss split, field count, item count, and nullable skill proc rate preservation.
+- Documented the adapter in `docs/MASTER_DATA_ADAPTER.md`.

@@ -442,3 +442,20 @@ python scripts/check_master_data_api.py --include-assets
 ### v087 note
 
 `lightsabre`처럼 기본 발동확률이 없는 스킬은 `procRate: null`로 유지합니다. `python scripts/setup_dev_db.py --reset --seed --verify`를 다시 실행해야 DB에 반영됩니다.
+
+
+## v088 프론트 master-data 어댑터
+
+`src/api/master-data-adapter.js`가 추가되었습니다. 아직 실제 게임 데이터는 기존 JS를 그대로 사용하지만, FastAPI `/api/v1/game/master-data` 응답을 기존 게임 데이터 구조에 가까운 형태로 변환해 검증할 수 있습니다.
+
+위치: 프로젝트 루트
+
+```bash
+node tools/smoke_master_data_adapter.js
+```
+
+FastAPI 서버가 켜져 있을 때 브라우저 Console에서 다음을 실행할 수 있습니다.
+
+```js
+await checkBackendMasterDataAdapter();
+```

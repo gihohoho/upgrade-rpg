@@ -64,3 +64,13 @@ python tools/smoke_nullable_skill_proc_rate.py
 ```
 
 `lightsabre`처럼 기본 발동확률이 없는 스킬의 `procRate`가 `0`으로 바뀌지 않고 `null`로 보존되는지 확인합니다.
+
+## v088 frontend master-data adapter
+
+위치: 프로젝트 루트
+
+```bash
+node tools/smoke_master_data_adapter.js
+```
+
+FastAPI master-data 응답을 기존 브라우저 게임 데이터와 비슷한 형태로 변환할 수 있는지 확인합니다.

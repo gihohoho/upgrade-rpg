@@ -187,3 +187,14 @@ python scripts/check_master_data_parity.py --include-assets
 ### v087 note
 
 `lightsabre`처럼 기본 발동확률이 없는 스킬은 `procRate: null`로 유지합니다. `python scripts/setup_dev_db.py --reset --seed --verify`를 다시 실행해야 DB에 반영됩니다.
+
+
+## v088 - 프론트 master-data 어댑터
+
+브라우저에서 FastAPI master-data 응답을 기존 JS 데이터 구조와 비슷하게 변환하는 `src/api/master-data-adapter.js`가 추가되었습니다. 실제 런타임 교체는 아직 하지 않습니다.
+
+위치: 프로젝트 루트
+
+```bash
+node tools/smoke_master_data_adapter.js
+```
