@@ -1,0 +1,769 @@
+[
+  {
+    "level": 1,
+    "name": "마그토늄 노가다",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone1",
+    "maxHp": 50000,
+    "goldReward": 1500,
+    "req": {
+      "text": "순수공격력 1000 미만",
+      "minAtk": 0,
+      "maxAtk": 999
+    },
+    "farm": null
+  },
+  {
+    "level": 2,
+    "name": "마그토늄 노가다 [5회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone2",
+    "maxHp": 250000,
+    "goldReward": 7500,
+    "req": {
+      "text": "순수공격력 1000 미만",
+      "minAtk": 0,
+      "maxAtk": 999
+    },
+    "farm": null
+  },
+  {
+    "level": 3,
+    "name": "마그토늄 노가다 [20회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone3",
+    "maxHp": 1000000,
+    "goldReward": 30000,
+    "req": {
+      "text": "순수공격력 1000 미만",
+      "minAtk": 0,
+      "maxAtk": 999
+    },
+    "farm": null
+  },
+  {
+    "level": 4,
+    "name": "이계 던전 쩔 노가다",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone4",
+    "maxHp": 5000000,
+    "goldReward": 60000,
+    "req": {
+      "text": "순수공격력 5000 미만",
+      "minAtk": 0,
+      "maxAtk": 4999
+    },
+    "farm": null
+  },
+  {
+    "level": 5,
+    "name": "이계 던전 쩔 노가다 [5회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone5",
+    "maxHp": 25000000,
+    "goldReward": 300000,
+    "req": {
+      "text": "순수공격력 5000 미만",
+      "minAtk": 0,
+      "maxAtk": 4999
+    },
+    "farm": null
+  },
+  {
+    "level": 6,
+    "name": "이계 던전 쩔 노가다 [20회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone6",
+    "maxHp": 100000000,
+    "goldReward": 1200000,
+    "req": {
+      "text": "순수공격력 5000 미만",
+      "minAtk": 0,
+      "maxAtk": 4999
+    },
+    "farm": null
+  },
+  {
+    "level": 7,
+    "name": "테라니움 노가다",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone7",
+    "maxHp": 1000000000,
+    "goldReward": 6000000,
+    "req": {
+      "text": "순수공격력 1B 미만",
+      "minAtk": 0,
+      "maxAtk": 9999
+    },
+    "farm": null
+  },
+  {
+    "level": 8,
+    "name": "할렘 던전 노가다",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone8",
+    "maxHp": 10000000000,
+    "goldReward": 44800000,
+    "req": {
+      "text": "순수공격력 24B 미만",
+      "minAtk": 0,
+      "maxAtk": 239999
+    },
+    "farm": {
+      "gain": 1,
+      "cap": 120000,
+      "capText": "12B",
+      "prob": 1
+    }
+  },
+  {
+    "level": 9,
+    "name": "할렘 던전 노가다 [5회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone9",
+    "maxHp": 50000000000,
+    "goldReward": 224000000,
+    "req": {
+      "text": "순수공격력 24B 미만",
+      "minAtk": 0,
+      "maxAtk": 239999
+    },
+    "farm": {
+      "gain": 5,
+      "cap": 120000,
+      "capText": "12B",
+      "prob": 1
+    }
+  },
+  {
+    "level": 10,
+    "name": "할렘 던전 노가다 [20회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone10",
+    "maxHp": 200000000000,
+    "goldReward": 896000000,
+    "req": {
+      "text": "순수공격력 24B 미만",
+      "minAtk": 0,
+      "maxAtk": 239999
+    },
+    "farm": {
+      "gain": 20,
+      "cap": 120000,
+      "capText": "12B",
+      "prob": 1
+    }
+  },
+  {
+    "level": 11,
+    "name": "할렘 던전 노가다 [50회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone11",
+    "maxHp": 500000000000,
+    "goldReward": 2240000000,
+    "req": {
+      "text": "순수공격력 24B 미만",
+      "minAtk": 0,
+      "maxAtk": 239999
+    },
+    "farm": {
+      "gain": 50,
+      "cap": 120000,
+      "capText": "12B",
+      "prob": 1
+    }
+  },
+  {
+    "level": 12,
+    "name": "루크 쩔 노가다",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone12",
+    "maxHp": 1000000000000,
+    "goldReward": 4200000000,
+    "req": {
+      "text": "순수공격력 9B~120B",
+      "minAtk": 90000,
+      "maxAtk": 1200000
+    },
+    "farm": {
+      "gain": 2,
+      "cap": 600000,
+      "capText": "60B",
+      "prob": 1,
+      "specialText": "※순수 공격력이 12B 이하면 상승치 40배 (80 증가)",
+      "specialThreshold": 120000,
+      "specialMult": 40
+    }
+  },
+  {
+    "level": 13,
+    "name": "루크 쩔 노가다 [5회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone13",
+    "maxHp": 5000000000000,
+    "goldReward": 21000000000,
+    "req": {
+      "text": "순수공격력 9B~120B",
+      "minAtk": 90000,
+      "maxAtk": 1200000
+    },
+    "farm": {
+      "gain": 10,
+      "cap": 600000,
+      "capText": "60B",
+      "prob": 1,
+      "specialText": "※순수 공격력이 12B 이하면 상승치 40배 (400 증가)",
+      "specialThreshold": 120000,
+      "specialMult": 40
+    }
+  },
+  {
+    "level": 14,
+    "name": "루크 쩔 노가다 [20회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone14",
+    "maxHp": 20000000000000,
+    "goldReward": 84000000000,
+    "req": {
+      "text": "순수공격력 9B~120B",
+      "minAtk": 90000,
+      "maxAtk": 1200000
+    },
+    "farm": {
+      "gain": 40,
+      "cap": 600000,
+      "capText": "60B",
+      "prob": 1,
+      "specialText": "※순수 공격력이 12B 이하면 상승치 40배 (1600 증가)",
+      "specialThreshold": 120000,
+      "specialMult": 40
+    }
+  },
+  {
+    "level": 15,
+    "name": "루크 쩔 노가다 [100회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone15",
+    "maxHp": 100000000000000,
+    "goldReward": 420000000000,
+    "req": {
+      "text": "순수공격력 18B~120B",
+      "minAtk": 180000,
+      "maxAtk": 1200000
+    },
+    "farm": {
+      "gain": 200,
+      "cap": 600000,
+      "capText": "60B",
+      "prob": 1
+    }
+  },
+  {
+    "level": 16,
+    "name": "핀드 워 쩔 노가다",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone16",
+    "maxHp": 300000000000000,
+    "goldReward": 5000000000000,
+    "req": {
+      "text": "순수공격력 50B~520B",
+      "minAtk": 500000,
+      "maxAtk": 5200000
+    },
+    "farm": {
+      "gain": 6,
+      "cap": 2600000,
+      "capText": "260B",
+      "prob": 1,
+      "specialText": "※순수 공격력이 60B 이하면 상승치 30배 (180 증가)",
+      "specialThreshold": 600000,
+      "specialMult": 30
+    }
+  },
+  {
+    "level": 17,
+    "name": "핀드 워 쩔 노가다 [5회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone17",
+    "maxHp": 1500000000000000,
+    "goldReward": 25000000000000,
+    "req": {
+      "text": "순수공격력 50B~520B",
+      "minAtk": 500000,
+      "maxAtk": 5200000
+    },
+    "farm": {
+      "gain": 30,
+      "cap": 2600000,
+      "capText": "260B",
+      "prob": 1,
+      "specialText": "※순수 공격력이 60B 이하면 상승치 30배 (900 증가)",
+      "specialThreshold": 600000,
+      "specialMult": 30
+    }
+  },
+  {
+    "level": 18,
+    "name": "핀드 워 쩔 노가다 [10회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone18",
+    "maxHp": 3000000000000000,
+    "goldReward": 50000000000000,
+    "req": {
+      "text": "순수공격력 65B~520B",
+      "minAtk": 650000,
+      "maxAtk": 5200000
+    },
+    "farm": {
+      "gain": 60,
+      "cap": 2600000,
+      "capText": "260B",
+      "prob": 1
+    }
+  },
+  {
+    "level": 19,
+    "name": "폭풍의 항로 노가다",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone19",
+    "maxHp": 9000000000000000,
+    "goldReward": 13000000000000,
+    "req": {
+      "text": "순수공격력 80B~520B",
+      "minAtk": 800000,
+      "maxAtk": 5200000
+    },
+    "farm": {
+      "gain": 120,
+      "cap": 2600000,
+      "capText": "260B",
+      "prob": 1
+    }
+  },
+  {
+    "level": 20,
+    "name": "심연의 폭풍의 항로 노가다",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone20",
+    "maxHp": 45000000000000000,
+    "goldReward": 65000000000000,
+    "req": {
+      "text": "순수공격력 120B~520B",
+      "minAtk": 1200000,
+      "maxAtk": 5200000
+    },
+    "farm": {
+      "gain": 600,
+      "cap": 2600000,
+      "capText": "260B",
+      "prob": 1
+    }
+  },
+  {
+    "level": 21,
+    "name": "아이올라이트 노가다",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone21",
+    "maxHp": 117000000000000000,
+    "goldReward": 190000000000000,
+    "req": {
+      "text": "순수공격력 200B~4000B",
+      "minAtk": 2000000,
+      "maxAtk": 40000000
+    },
+    "farm": {
+      "gain": 6,
+      "cap": 20000000,
+      "capText": "2000B",
+      "prob": 1,
+      "specialText": "※순수 공격력이 260B 이하면 상승치 50배 (300 증가)",
+      "specialThreshold": 2600000,
+      "specialMult": 50
+    }
+  },
+  {
+    "level": 22,
+    "name": "아이올라이트 노가다 [5회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone22",
+    "maxHp": 585000000000000000,
+    "goldReward": 950000000000000,
+    "req": {
+      "text": "순수공격력 200B~4000B",
+      "minAtk": 2000000,
+      "maxAtk": 40000000
+    },
+    "farm": {
+      "gain": 30,
+      "cap": 20000000,
+      "capText": "2000B",
+      "prob": 1,
+      "specialText": "※순수 공격력이 260B 이하면 상승치 50배 (1500 증가)",
+      "specialThreshold": 2600000,
+      "specialMult": 50
+    }
+  },
+  {
+    "level": 23,
+    "name": "아이올라이트 노가다 [20회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone23",
+    "maxHp": 2340000000000000000,
+    "goldReward": 3800000000000000,
+    "req": {
+      "text": "순수공격력 200B~4000B",
+      "minAtk": 2000000,
+      "maxAtk": 40000000
+    },
+    "farm": {
+      "gain": 120,
+      "cap": 20000000,
+      "capText": "2000B",
+      "prob": 1,
+      "specialText": "※순수 공격력이 260B 이하면 상승치 50배 (6000 증가)",
+      "specialThreshold": 2600000,
+      "specialMult": 50
+    }
+  },
+  {
+    "level": 24,
+    "name": "절망의 광석 노가다",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone24",
+    "maxHp": 11700000000000000000,
+    "goldReward": 19000000000000000,
+    "req": {
+      "text": "순수공격력 300B~4000B",
+      "minAtk": 3000000,
+      "maxAtk": 40000000
+    },
+    "farm": {
+      "gain": 600,
+      "cap": 20000000,
+      "capText": "2000B",
+      "prob": 1
+    }
+  },
+  {
+    "level": 25,
+    "name": "절망의 광석 노가다 [5회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone25",
+    "maxHp": 58500000000000000000,
+    "goldReward": 95000000000000000,
+    "req": {
+      "text": "순수공격력 500B~4000B",
+      "minAtk": 5000000,
+      "maxAtk": 40000000
+    },
+    "farm": {
+      "gain": 3000,
+      "cap": 20000000,
+      "capText": "2000B",
+      "prob": 1
+    }
+  },
+  {
+    "level": 26,
+    "name": "절망의 광석 노가다 [20회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone26",
+    "maxHp": 234000000000000000000,
+    "goldReward": 380000000000000000,
+    "req": {
+      "text": "순수공격력 1000B~5C",
+      "minAtk": 10000000,
+      "maxAtk": 500000000
+    },
+    "farm": {
+      "gain": 60,
+      "cap": 250000000,
+      "capText": "2C 5000B",
+      "prob": 1,
+      "specialText": "※순수 공격력이 2000B 이하면 상승치 50배 (3000 증가)",
+      "specialThreshold": 20000000,
+      "specialMult": 50
+    }
+  },
+  {
+    "level": 27,
+    "name": "골든 베릴 노가다",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone27",
+    "maxHp": 936000000000000000000,
+    "goldReward": 1520000000000000000,
+    "req": {
+      "text": "순수공격력 1500B~5C",
+      "minAtk": 15000000,
+      "maxAtk": 500000000
+    },
+    "farm": {
+      "gain": 240,
+      "cap": 250000000,
+      "capText": "2C 5000B",
+      "prob": 1,
+      "specialText": "※순수 공격력이 2000B 이하면 상승치 50배 (12000 증가)",
+      "specialThreshold": 20000000,
+      "specialMult": 50
+    }
+  },
+  {
+    "level": 28,
+    "name": "골든 베릴 노가다 [5회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone28",
+    "maxHp": 4.6799999999999995e+21,
+    "goldReward": 7599999999999999000,
+    "req": {
+      "text": "순수공격력 2000B~5C",
+      "minAtk": 20000000,
+      "maxAtk": 500000000
+    },
+    "farm": {
+      "gain": 1200,
+      "cap": 250000000,
+      "capText": "2C 5000B",
+      "prob": 1
+    }
+  },
+  {
+    "level": 29,
+    "name": "골든 베릴 노가다 [20회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone29",
+    "maxHp": 1.8719999999999998e+22,
+    "goldReward": 30399999999999996000,
+    "req": {
+      "text": "순수공격력 3200B~5C",
+      "minAtk": 32000000,
+      "maxAtk": 500000000
+    },
+    "farm": {
+      "gain": 4800,
+      "cap": 250000000,
+      "capText": "2C 5000B",
+      "prob": 1
+    }
+  },
+  {
+    "level": 30,
+    "name": "골든 베릴 노가다 [100회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone30",
+    "maxHp": 9.36e+22,
+    "goldReward": 152000000000000000000,
+    "req": {
+      "text": "순수공격력 6500B~5C",
+      "minAtk": 65000000,
+      "maxAtk": 500000000
+    },
+    "farm": {
+      "gain": 24000,
+      "cap": 250000000,
+      "capText": "2C 5000B",
+      "prob": 1
+    }
+  },
+  {
+    "level": 31,
+    "name": "균열의 단편 노가다",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone31",
+    "maxHp": 3.931e+23,
+    "goldReward": 638367521367521400000,
+    "req": {
+      "text": "순수공격력 1C~200C",
+      "minAtk": 100000000,
+      "maxAtk": 20000000000
+    },
+    "farm": {
+      "gain": 100,
+      "cap": 20000000000,
+      "capText": "200C",
+      "prob": 1,
+      "specialText": "※순수 공격력이 2C 5000B 이하면 상승치 50배 (5000 증가)",
+      "specialThreshold": 250000000,
+      "specialMult": 50
+    }
+  },
+  {
+    "level": 32,
+    "name": "균열의 단편 노가다 [5회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone32",
+    "maxHp": 1.9655e+24,
+    "goldReward": 3.1918376068376067e+21,
+    "req": {
+      "text": "순수공격력 1C~200C",
+      "minAtk": 100000000,
+      "maxAtk": 20000000000
+    },
+    "farm": {
+      "gain": 500,
+      "cap": 20000000000,
+      "capText": "200C",
+      "prob": 1,
+      "specialText": "※순수 공격력이 2C 5000B 이하면 상승치 50배 (25000 증가)",
+      "specialThreshold": 250000000,
+      "specialMult": 50
+    }
+  },
+  {
+    "level": 33,
+    "name": "균열의 단편 노가다 [20회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone33",
+    "maxHp": 7.862e+24,
+    "goldReward": 1.2767350427350427e+22,
+    "req": {
+      "text": "순수공격력 1C~200C",
+      "minAtk": 100000000,
+      "maxAtk": 20000000000
+    },
+    "farm": {
+      "gain": 2000,
+      "cap": 20000000000,
+      "capText": "200C",
+      "prob": 1
+    }
+  },
+  {
+    "level": 34,
+    "name": "균열의 단편 노가다 [100회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone34",
+    "maxHp": 3.931e+25,
+    "goldReward": 6.383675213675214e+22,
+    "req": {
+      "text": "순수공격력 1C~200C",
+      "minAtk": 100000000,
+      "maxAtk": 20000000000
+    },
+    "farm": {
+      "gain": 10000,
+      "cap": 20000000000,
+      "capText": "200C",
+      "prob": 1
+    }
+  },
+  {
+    "level": 35,
+    "name": "균열의 단편 노가다 [500회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone35",
+    "maxHp": 1.9655000000000002e+26,
+    "goldReward": 3.191837606837607e+23,
+    "req": {
+      "text": "순수공격력 5C~200C",
+      "minAtk": 500000000,
+      "maxAtk": 20000000000
+    },
+    "farm": {
+      "gain": 40000,
+      "cap": 20000000000,
+      "capText": "200C",
+      "prob": 1
+    }
+  },
+  {
+    "level": 36,
+    "name": "퀀텀 카지노 노가다",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone36",
+    "maxHp": 6e+26,
+    "goldReward": 9.743589743589743e+23,
+    "req": {
+      "text": "순수공격력 50C~2000D",
+      "minAtk": 5000000000,
+      "maxAtk": 2000000000000000
+    },
+    "farm": {
+      "gain": 800,
+      "cap": 1000000000000,
+      "capText": "1D",
+      "prob": 1,
+      "specialText": "※순수 공격력이 40C 이하면 상승치 50배 (4B 증가)",
+      "specialThreshold": 4000000000,
+      "specialMult": 50
+    }
+  },
+  {
+    "level": 37,
+    "name": "퀀텀 카지노 노가다 [5회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone37",
+    "maxHp": 3e+27,
+    "goldReward": 4.871794871794872e+24,
+    "req": {
+      "text": "순수공격력 50C~2000D",
+      "minAtk": 5000000000,
+      "maxAtk": 2000000000000000
+    },
+    "farm": {
+      "gain": 4000,
+      "cap": 1000000000000,
+      "capText": "1D",
+      "prob": 1,
+      "specialText": "※순수 공격력이 40C 이하면 상승치 50배 (20B 증가)",
+      "specialThreshold": 4000000000,
+      "specialMult": 50
+    }
+  },
+  {
+    "level": 38,
+    "name": "퀀텀 카지노 노가다 [20회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone38",
+    "maxHp": 1.2e+28,
+    "goldReward": 1.9487179487179487e+25,
+    "req": {
+      "text": "순수공격력 50C~2000D",
+      "minAtk": 5000000000,
+      "maxAtk": 2000000000000000
+    },
+    "farm": {
+      "gain": 16000,
+      "cap": 1000000000000,
+      "capText": "1D",
+      "prob": 1
+    }
+  },
+  {
+    "level": 39,
+    "name": "퀀텀 카지노 노가다 [100회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone39",
+    "maxHp": 6e+28,
+    "goldReward": 9.743589743589745e+25,
+    "req": {
+      "text": "순수공격력 50C~2000D",
+      "minAtk": 5000000000,
+      "maxAtk": 2000000000000000
+    },
+    "farm": {
+      "gain": 80000,
+      "cap": 1000000000000,
+      "capText": "1D",
+      "prob": 1
+    }
+  },
+  {
+    "level": 40,
+    "name": "퀀텀 카지노 노가다 [500회]",
+    "enemyName": "",
+    "img": "https://placehold.co/64x64/222/fff?text=Zone40",
+    "maxHp": 3e+29,
+    "goldReward": 4.871794871794872e+26,
+    "req": {
+      "text": "순수공격력 500C~2000D",
+      "minAtk": 50000000000,
+      "maxAtk": 2000000000000000
+    },
+    "farm": {
+      "gain": 400000,
+      "cap": 1000000000000,
+      "capText": "0",
+      "prob": 1
+    }
+  }
+]

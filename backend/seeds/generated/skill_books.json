@@ -1,0 +1,63 @@
+[
+  {
+    "itemName": "스킬강화권",
+    "targetSkillId": "lightsabre",
+    "type": "normal"
+  },
+  {
+    "itemName": "강력한 스킬강화권",
+    "targetSkillId": "ironStrike",
+    "type": "normal"
+  },
+  {
+    "itemName": "빛나는 스킬강화권",
+    "targetSkillId": "overdrive",
+    "type": "normal"
+  },
+  {
+    "itemName": "화려한 스킬강화권",
+    "targetSkillId": "baldo",
+    "type": "normal"
+  },
+  {
+    "itemName": "찬란한 스킬강화권",
+    "targetSkillId": "illusionSword",
+    "type": "normal"
+  },
+  {
+    "itemName": "해방된 스킬강화권",
+    "targetSkillId": "deepSword",
+    "type": "normal"
+  },
+  {
+    "itemName": "천공의 스킬강화권",
+    "targetSkillId": "tempestStrike",
+    "type": "normal"
+  },
+  {
+    "itemName": "심연의 스킬강화권",
+    "targetSkillId": "lightsabre",
+    "type": "awakening",
+    "awakeningKey": "SQ",
+    "baseKey": "Q"
+  },
+  {
+    "itemName": "-초월- 심연의 스킬강화권",
+    "targetSkillId": "ironStrike",
+    "type": "awakening",
+    "awakeningKey": "SW",
+    "baseKey": "W"
+  },
+  {
+    "itemName": "-초월-심연의 스킬강화권",
+    "targetSkillId": "ironStrike",
+    "type": "awakening",
+    "awakeningKey": "SW",
+    "baseKey": "W"
+  },
+  {
+    "itemName": "진 각성 스킬강화권",
+    "targetSkillId": "heavenlyStrike",
+    "type": "ultimate"
+  }
+]

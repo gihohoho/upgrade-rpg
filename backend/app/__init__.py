@@ -1,0 +1,1 @@
+"""Idle RPG backend package."""

@@ -1,0 +1,18 @@
+[
+  {
+    "id": "weapon_master",
+    "name": "웨펀마스터",
+    "description": "현재 기본 캐릭터입니다. 기존 Q/W/E/R/T/F/D/M 스킬 구성을 그대로 사용합니다.",
+    "skillIds": [
+      "lightsabre",
+      "ironStrike",
+      "overdrive",
+      "baldo",
+      "illusionSword",
+      "deepSword",
+      "tempestStrike",
+      "heavenlyStrike"
+    ],
+    "isDefault": true
+  }
+]

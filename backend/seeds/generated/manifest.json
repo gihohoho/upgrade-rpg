@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-07-06T02:49:30.959Z",
+  "source": "current browser JS master data",
+  "counts": {
+    "characters": 1,
+    "skills": 8,
+    "skillBooks": 11,
+    "bosses": 45,
+    "normalBosses": 39,
+    "specialBosses": 6,
+    "fieldZones": 40,
+    "itemTemplates": 245,
+    "dropTables": 45,
+    "dropTableItems": 245
+  },
+  "files": [
+    "characters.json",
+    "skills.json",
+    "skill_books.json",
+    "bosses.json",
+    "field_zones.json",
+    "item_templates.json",
+    "drop_tables.json",
+    "drop_table_items.json",
+    "enhancement_rules.json"
+  ]
+}
