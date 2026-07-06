@@ -22,6 +22,27 @@ from app.models import (
 )
 
 
+INLINE_ASSET_PREFIXES = (
+    "data:image/svg+xml",
+    "data:image/png",
+    "data:image/jpeg",
+    "data:image/webp",
+)
+
+
+def is_inline_asset_string(value: Any) -> bool:
+    """Return True when a value is an inline image data URL.
+
+    Seed JSON can contain image strings not only in top-level image_url/icon_url
+    columns but also inside nested options JSON. The default master-data response
+    should not include those long strings because some local antivirus tools flag
+    large inline SVG payloads inside JSON responses.
+    """
+    if not isinstance(value, str):
+        return False
+    return value.startswith(INLINE_ASSET_PREFIXES)
+
+
 def serialize_value(value: Any) -> Any:
     """Convert DB values into JSON-friendly values.
 
@@ -41,6 +62,28 @@ def serialize_value(value: Any) -> Any:
     return value
 
 
+def serialize_master_value(value: Any, *, include_assets: bool) -> Any:
+    """Serialize DB values and optionally remove nested inline image assets.
+
+    Top-level fields such as iconUrl/imageUrl are handled separately, but nested
+    JSON fields like options/baseStats may also contain copied asset URLs. When
+    include_assets is false, replace every inline image data URL with None while
+    preserving the surrounding object shape.
+    """
+    serialized = serialize_value(value)
+
+    if include_assets:
+        return serialized
+
+    if is_inline_asset_string(serialized):
+        return None
+    if isinstance(serialized, list):
+        return [serialize_master_value(item, include_assets=include_assets) for item in serialized]
+    if isinstance(serialized, dict):
+        return {key: serialize_master_value(item, include_assets=include_assets) for key, item in serialized.items()}
+    return serialized
+
+
 class GameService:
     """Read/write service for game APIs.
 
@@ -48,18 +91,18 @@ class GameService:
     localStorage migration step starts.
     """
 
-    async def get_master_data(self, session: AsyncSession) -> dict[str, Any]:
-        characters = await self._fetch_characters(session)
-        skills = await self._fetch_skills(session)
+    async def get_master_data(self, session: AsyncSession, *, include_assets: bool = False) -> dict[str, Any]:
+        characters = await self._fetch_characters(session, include_assets=include_assets)
+        skills = await self._fetch_skills(session, include_assets=include_assets)
         character_skills = await self._fetch_character_skills(session)
-        skill_levels = await self._fetch_skill_levels(session)
-        item_templates = await self._fetch_item_templates(session)
-        bosses = await self._fetch_bosses(session)
-        field_zones = await self._fetch_field_zones(session)
-        drop_tables = await self._fetch_drop_tables(session)
-        drop_table_items = await self._fetch_drop_table_items(session)
-        enhancement_groups = await self._fetch_enhancement_groups(session)
-        enhancement_levels = await self._fetch_enhancement_levels(session)
+        skill_levels = await self._fetch_skill_levels(session, include_assets=include_assets)
+        item_templates = await self._fetch_item_templates(session, include_assets=include_assets)
+        bosses = await self._fetch_bosses(session, include_assets=include_assets)
+        field_zones = await self._fetch_field_zones(session, include_assets=include_assets)
+        drop_tables = await self._fetch_drop_tables(session, include_assets=include_assets)
+        drop_table_items = await self._fetch_drop_table_items(session, include_assets=include_assets)
+        enhancement_groups = await self._fetch_enhancement_groups(session, include_assets=include_assets)
+        enhancement_levels = await self._fetch_enhancement_levels(session, include_assets=include_assets)
 
         enhancement_rules = {
             "groups": enhancement_groups,
@@ -92,27 +135,56 @@ class GameService:
             "enhancementGroups": enhancement_groups,
             "enhancementLevels": enhancement_levels,
             "enhancementRules": enhancement_rules,
+            "assetPolicy": self._build_asset_policy(include_assets=include_assets),
             "counts": counts,
         }
+
+    def _build_asset_policy(self, *, include_assets: bool) -> dict[str, Any]:
+        return {
+            "includeAssets": include_assets,
+            "mode": "inline-data-url" if include_assets else "metadata-only",
+            "excludedByDefault": [
+                "characters.imageUrl",
+                "skills.iconUrl",
+                "itemTemplates.iconUrl",
+                "bosses.imageUrl",
+                "*.options.* inline data:image URLs",
+                "*.rules.* inline data:image URLs",
+                "dropTableItems.conditions.* inline data:image URLs",
+            ],
+            "includeAssetsQuery": "?includeAssets=true",
+            "note": (
+                "기본 응답은 백신 오탐과 응답 크기 증가를 줄이기 위해 최상위 asset 필드와 중첩 JSON 안의 긴 SVG/data URL을 null로 내려줍니다."
+                if not include_assets
+                else "includeAssets=true 요청이므로 최상위 asset 필드와 중첩 JSON 안의 긴 SVG/data URL을 함께 내려줍니다."
+            ),
+        }
+
+    @staticmethod
+    def _asset_value(value: str | None, *, include_assets: bool) -> str | None:
+        if include_assets:
+            return value
+        return None
 
     async def load_game(self, user_id: int) -> dict[str, Any]:
         return {"userId": user_id, "status": "stub"}
 
-    async def _fetch_characters(self, session: AsyncSession) -> list[dict[str, Any]]:
+    async def _fetch_characters(self, session: AsyncSession, *, include_assets: bool) -> list[dict[str, Any]]:
         result = await session.execute(select(Character).order_by(Character.code))
         return [
             {
                 "code": row.code,
                 "name": row.name,
                 "description": row.description,
-                "imageUrl": row.image_url,
+                "imageUrl": self._asset_value(row.image_url, include_assets=include_assets),
+                "hasImage": bool(row.image_url),
                 "isEnabled": row.is_enabled,
-                "meta": serialize_value(row.meta_json),
+                "meta": serialize_master_value(row.meta_json, include_assets=include_assets),
             }
             for row in result.scalars().all()
         ]
 
-    async def _fetch_skills(self, session: AsyncSession) -> list[dict[str, Any]]:
+    async def _fetch_skills(self, session: AsyncSession, *, include_assets: bool) -> list[dict[str, Any]]:
         result = await session.execute(select(Skill).order_by(Skill.slot_key, Skill.code))
         return [
             {
@@ -120,10 +192,11 @@ class GameService:
                 "name": row.name,
                 "slotKey": row.slot_key,
                 "description": row.description,
-                "iconUrl": row.icon_url,
+                "iconUrl": self._asset_value(row.icon_url, include_assets=include_assets),
+                "hasIcon": bool(row.icon_url),
                 "procRate": serialize_value(row.proc_rate),
                 "cooldownSeconds": row.cooldown_seconds,
-                "options": serialize_value(row.options_json),
+                "options": serialize_master_value(row.options_json, include_assets=include_assets),
             }
             for row in result.scalars().all()
         ]
@@ -142,7 +215,7 @@ class GameService:
             for row in result.scalars().all()
         ]
 
-    async def _fetch_skill_levels(self, session: AsyncSession) -> list[dict[str, Any]]:
+    async def _fetch_skill_levels(self, session: AsyncSession, *, include_assets: bool) -> list[dict[str, Any]]:
         result = await session.execute(select(SkillLevel).order_by(SkillLevel.skill_code, SkillLevel.level))
         return [
             {
@@ -150,12 +223,12 @@ class GameService:
                 "level": row.level,
                 "damageMultiplier": serialize_value(row.damage_multiplier),
                 "procRateBonus": serialize_value(row.proc_rate_bonus),
-                "options": serialize_value(row.options_json),
+                "options": serialize_master_value(row.options_json, include_assets=include_assets),
             }
             for row in result.scalars().all()
         ]
 
-    async def _fetch_item_templates(self, session: AsyncSession) -> list[dict[str, Any]]:
+    async def _fetch_item_templates(self, session: AsyncSession, *, include_assets: bool) -> list[dict[str, Any]]:
         result = await session.execute(select(ItemTemplate).order_by(ItemTemplate.item_type, ItemTemplate.code))
         return [
             {
@@ -163,19 +236,20 @@ class GameService:
                 "name": row.name,
                 "itemType": row.item_type,
                 "grade": row.grade,
-                "iconUrl": row.icon_url,
+                "iconUrl": self._asset_value(row.icon_url, include_assets=include_assets),
+                "hasIcon": bool(row.icon_url),
                 "description": row.description,
                 "stackable": row.stackable,
                 "equipSlot": row.equip_slot,
                 "enhanceGroupCode": row.enhance_group_code,
-                "baseStats": serialize_value(row.base_stats_json),
-                "options": serialize_value(row.options_json),
+                "baseStats": serialize_master_value(row.base_stats_json, include_assets=include_assets),
+                "options": serialize_master_value(row.options_json, include_assets=include_assets),
                 "adminNote": row.admin_note,
             }
             for row in result.scalars().all()
         ]
 
-    async def _fetch_bosses(self, session: AsyncSession) -> list[dict[str, Any]]:
+    async def _fetch_bosses(self, session: AsyncSession, *, include_assets: bool) -> list[dict[str, Any]]:
         result = await session.execute(select(Boss).order_by(Boss.boss_type, Boss.tier, Boss.code))
         return [
             {
@@ -184,16 +258,17 @@ class GameService:
                 "tier": row.tier,
                 "bossType": row.boss_type,
                 "hp": serialize_value(row.hp),
-                "imageUrl": row.image_url,
+                "imageUrl": self._asset_value(row.image_url, include_assets=include_assets),
+                "hasImage": bool(row.image_url),
                 "description": row.description,
-                "summonRules": serialize_value(row.summon_rules_json),
+                "summonRules": serialize_master_value(row.summon_rules_json, include_assets=include_assets),
                 "cooldownSeconds": row.cooldown_seconds,
                 "isEnabled": row.is_enabled,
             }
             for row in result.scalars().all()
         ]
 
-    async def _fetch_field_zones(self, session: AsyncSession) -> list[dict[str, Any]]:
+    async def _fetch_field_zones(self, session: AsyncSession, *, include_assets: bool) -> list[dict[str, Any]]:
         result = await session.execute(select(FieldZone).order_by(FieldZone.sort_order, FieldZone.code))
         return [
             {
@@ -203,14 +278,14 @@ class GameService:
                 "enemyHp": serialize_value(row.enemy_hp),
                 "goldReward": serialize_value(row.gold_reward),
                 "description": row.description,
-                "entryRules": serialize_value(row.entry_rules_json),
-                "farmRules": serialize_value(row.farm_rules_json),
+                "entryRules": serialize_master_value(row.entry_rules_json, include_assets=include_assets),
+                "farmRules": serialize_master_value(row.farm_rules_json, include_assets=include_assets),
                 "isEnabled": row.is_enabled,
             }
             for row in result.scalars().all()
         ]
 
-    async def _fetch_drop_tables(self, session: AsyncSession) -> list[dict[str, Any]]:
+    async def _fetch_drop_tables(self, session: AsyncSession, *, include_assets: bool) -> list[dict[str, Any]]:
         result = await session.execute(select(DropTable).order_by(DropTable.owner_code, DropTable.code))
         return [
             {
@@ -218,13 +293,13 @@ class GameService:
                 "ownerType": row.owner_type,
                 "ownerCode": row.owner_code,
                 "description": row.description,
-                "rules": serialize_value(row.rules_json),
+                "rules": serialize_master_value(row.rules_json, include_assets=include_assets),
                 "isEnabled": row.is_enabled,
             }
             for row in result.scalars().all()
         ]
 
-    async def _fetch_drop_table_items(self, session: AsyncSession) -> list[dict[str, Any]]:
+    async def _fetch_drop_table_items(self, session: AsyncSession, *, include_assets: bool) -> list[dict[str, Any]]:
         result = await session.execute(select(DropTableItem).order_by(DropTableItem.drop_table_code, DropTableItem.id))
         return [
             {
@@ -234,12 +309,12 @@ class GameService:
                 "rate": serialize_value(row.rate),
                 "minQuantity": row.min_quantity,
                 "maxQuantity": row.max_quantity,
-                "conditions": serialize_value(row.conditions_json),
+                "conditions": serialize_master_value(row.conditions_json, include_assets=include_assets),
             }
             for row in result.scalars().all()
         ]
 
-    async def _fetch_enhancement_groups(self, session: AsyncSession) -> list[dict[str, Any]]:
+    async def _fetch_enhancement_groups(self, session: AsyncSession, *, include_assets: bool) -> list[dict[str, Any]]:
         result = await session.execute(select(EnhancementGroup).order_by(EnhancementGroup.code))
         return [
             {
@@ -247,13 +322,13 @@ class GameService:
                 "name": row.name,
                 "description": row.description,
                 "maxLevel": row.max_level,
-                "rules": serialize_value(row.rules_json),
+                "rules": serialize_master_value(row.rules_json, include_assets=include_assets),
                 "isEnabled": row.is_enabled,
             }
             for row in result.scalars().all()
         ]
 
-    async def _fetch_enhancement_levels(self, session: AsyncSession) -> list[dict[str, Any]]:
+    async def _fetch_enhancement_levels(self, session: AsyncSession, *, include_assets: bool) -> list[dict[str, Any]]:
         result = await session.execute(
             select(EnhancementLevel).order_by(EnhancementLevel.group_code, EnhancementLevel.from_level)
         )
@@ -264,9 +339,9 @@ class GameService:
                 "toLevel": row.to_level,
                 "successRate": serialize_value(row.success_rate),
                 "goldCost": serialize_value(row.gold_cost),
-                "materialRules": serialize_value(row.material_rules_json),
-                "resultStats": serialize_value(row.result_stats_json),
-                "failRules": serialize_value(row.fail_rules_json),
+                "materialRules": serialize_master_value(row.material_rules_json, include_assets=include_assets),
+                "resultStats": serialize_master_value(row.result_stats_json, include_assets=include_assets),
+                "failRules": serialize_master_value(row.fail_rules_json, include_assets=include_assets),
             }
             for row in result.scalars().all()
         ]

@@ -176,3 +176,36 @@ python scripts/check_master_data_api.py
 ```txt
 http://127.0.0.1:8000/api/v1/game/master-data
 ```
+
+## v083 - master-data asset 옵션
+
+기본 master-data API는 백신 오탐과 응답 크기 증가를 줄이기 위해 긴 SVG/data URL 이미지 문자열을 제외합니다.
+
+위치: **브라우저 주소창**
+
+```txt
+http://127.0.0.1:8000/api/v1/game/master-data
+```
+
+이미지 문자열까지 포함하려면:
+
+위치: **브라우저 주소창**
+
+```txt
+http://127.0.0.1:8000/api/v1/game/master-data?includeAssets=true
+```
+
+터미널 확인:
+
+위치: **backend 폴더 + 가상환경 activate 상태**
+
+```bash
+python scripts/check_master_data_api.py
+python scripts/check_master_data_api.py --include-assets
+```
+
+## v084 note
+
+- `/api/v1/game/master-data` 기본 응답에서 최상위 asset 필드뿐 아니라 `options`, `conditions`, `rules`, `raw` 같은 중첩 JSON 안의 `data:image...` 문자열도 제거합니다.
+- asset 문자열이 필요한 경우에는 `?includeAssets=true`를 사용합니다.
+

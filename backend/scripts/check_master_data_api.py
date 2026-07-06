@@ -4,6 +4,11 @@ Run from the `backend` folder while FastAPI is running:
 
     python scripts/check_master_data_api.py
 
+Default check uses the lightweight response, where long SVG/data URL assets are
+not included. To check the asset-included response:
+
+    python scripts/check_master_data_api.py --include-assets
+
 Optional custom URL:
 
     python scripts/check_master_data_api.py http://127.0.0.1:8000/api/v1/game/master-data
@@ -15,6 +20,7 @@ import json
 import sys
 from typing import Any
 from urllib.error import URLError
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from urllib.request import urlopen
 
 DEFAULT_URL = "http://127.0.0.1:8000/api/v1/game/master-data"
@@ -31,6 +37,7 @@ REQUIRED_PAYLOAD_KEYS = [
     "enhancementGroups",
     "enhancementLevels",
     "enhancementRules",
+    "assetPolicy",
     "counts",
 ]
 EXPECTED_MINIMUM_COUNTS = {
@@ -44,18 +51,47 @@ EXPECTED_MINIMUM_COUNTS = {
     "enhancementGroups": 2,
     "enhancementLevels": 26,
 }
+ASSET_MARKERS = [
+    "data:image/svg+xml",
+    "data:image/png",
+    "data:image/jpeg",
+    "data:image/webp",
+]
 
 
-def fetch_json(url: str) -> dict[str, Any]:
+def with_query_param(url: str, key: str, value: str) -> str:
+    parts = urlsplit(url)
+    query = dict(parse_qsl(parts.query, keep_blank_values=True))
+    query[key] = value
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
+
+
+def parse_args(argv: list[str]) -> tuple[str, bool]:
+    include_assets = False
+    url = DEFAULT_URL
+    for arg in argv[1:]:
+        if arg == "--include-assets":
+            include_assets = True
+        elif arg in {"-h", "--help"}:
+            print(__doc__)
+            raise SystemExit(0)
+        else:
+            url = arg
+    if include_assets:
+        url = with_query_param(url, "includeAssets", "true")
+    return url, include_assets
+
+
+def fetch_json(url: str) -> tuple[dict[str, Any], str]:
     with urlopen(url, timeout=10) as response:  # noqa: S310 - local dev checker only
         raw = response.read().decode("utf-8")
-    return json.loads(raw)
+    return json.loads(raw), raw
 
 
 def main() -> int:
-    url = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_URL
+    url, include_assets = parse_args(sys.argv)
     try:
-        response = fetch_json(url)
+        response, raw_response = fetch_json(url)
     except URLError as error:
         print("API 요청 실패")
         print(f"url: {url}")
@@ -80,6 +116,17 @@ def main() -> int:
         print(json.dumps({"missingKeys": missing_keys}, ensure_ascii=False, indent=2))
         return 1
 
+    asset_policy = payload.get("assetPolicy") or {}
+    if bool(asset_policy.get("includeAssets")) != include_assets:
+        print("assetPolicy.includeAssets 값이 요청 옵션과 다릅니다.")
+        print(json.dumps({"requestedIncludeAssets": include_assets, "assetPolicy": asset_policy}, ensure_ascii=False, indent=2))
+        return 1
+
+    if not include_assets and any(marker in raw_response for marker in ASSET_MARKERS):
+        print("기본 master-data 응답에 긴 data URL 이미지 문자열이 포함되어 있습니다.")
+        print("백신 오탐을 줄이려면 기본 응답에서는 iconUrl/imageUrl이 null이어야 합니다.")
+        return 1
+
     counts = payload.get("counts") or {}
     too_small = {
         key: {"actual": counts.get(key), "expectedMinimum": minimum}
@@ -92,7 +139,7 @@ def main() -> int:
         return 1
 
     print("master-data API check passed")
-    print(json.dumps({"url": url, "counts": counts}, ensure_ascii=False, indent=2))
+    print(json.dumps({"url": url, "includeAssets": include_assets, "counts": counts}, ensure_ascii=False, indent=2))
     return 0
 
 
