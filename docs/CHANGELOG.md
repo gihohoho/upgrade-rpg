@@ -1,5 +1,21 @@
 # 변경 기록
 
+
+## v098 - Master-data dev badge toggle alignment
+
+- `hide/show` 토글 버튼 문구를 `hide MD` / `show MD`로 명확하게 바꿨습니다.
+- 토글 버튼을 MASTER DATA 배지 상단 정가운데 탭처럼 배치했습니다.
+- 배지를 숨겨도 같은 위치에 `show MD` 탭이 남아, Console 없이 화면에서 다시 펼칠 수 있습니다.
+- 토글과 배지를 하나의 wrapper 안에서 함께 배치해 버튼이 위로 뜨거나 겹치는 현상을 줄였습니다.
+
+
+## v095 - Backend master-data dev badge
+
+- 브라우저 화면 하단에 master-data 상태 확인용 개발자 배지를 추가했다.
+- 배지는 `file://`, `localhost`, `127.0.0.1` 환경에서 기본 표시된다.
+- `applied`, `static_js_mode`, `failed_fallback_to_static_js` 같은 runtime state와 mode/assets/counts 요약을 표시한다.
+- Console 헬퍼 `refreshBackendMasterDataDevBadge()`, `showBackendMasterDataDevBadge()`, `hideBackendMasterDataDevBadge()`, `toggleBackendMasterDataDevBadge()`를 추가했다.
+
 ## v087 - Preserve nullable skill proc rate
 
 - Preserved missing skill `baseProcRate` values as database `NULL` instead of converting them to `0`.
@@ -385,3 +401,19 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - `master-data-runtime-switch`가 기존 정적 `zones` 데이터에서 field zone 이미지 값을 보정하도록 추가했다.
 - `renderFieldZone()`에 최후 방어용 기본 이미지 fallback을 추가했다.
 - `tools/smoke_field_zone_asset_fallback.js`와 `docs/MASTER_DATA_FIELD_ZONE_ASSET_FALLBACK.md`를 추가했다.
+
+
+## v096 - Master-data dev badge HUD position
+
+- 개발자용 master-data 배지를 bottom HUD 내부로 이동했다.
+- 배지 위치를 중앙 능력치 패널 오른쪽, 프로필 사진의 반대편에 배치했다.
+- `hide` 버튼으로 숨긴 배지를 `showBackendMasterDataDevBadge()`로 다시 표시할 수 있음을 문서화했다.
+- 작은 화면에서는 배지가 오른쪽 위로 이동하도록 반응형 위치를 보정했다.
+
+## v097 - Master-data dev badge controls polish
+
+- 개발자용 master-data 배지의 버튼 줄 넘침 문제를 수정했다.
+- `hide` 버튼을 배지 내부에서 분리해 배지 위쪽의 별도 토글 버튼으로 이동했다.
+- 배지를 숨긴 뒤에도 화면의 `show MD` 버튼으로 다시 표시할 수 있게 했다.
+- `auto` / `static` 버튼에 현재 적용 중인 모드를 나타내는 활성 스타일을 추가했다.
+- `refresh` 버튼의 의미를 명확히 하기 위해 `updated` 시간을 표시하고 문서를 보강했다.

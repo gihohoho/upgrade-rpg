@@ -256,3 +256,29 @@ runBackendMasterDataBrowserChecklist();
 
 - 백엔드 master-data 자동 적용 시 필드존 이미지가 `undefined`로 렌더링되지 않도록 보정했습니다.
 - 기본 master-data 응답은 여전히 assets 제외 정책을 유지하며, 필요한 이미지는 기존 정적 JS 데이터에서 보정합니다.
+
+## v095 메모 - master-data 개발자 배지
+
+브라우저 로컬 개발 환경에서 화면 하단에 master-data 상태 배지가 표시된다. 현재 `auto/static/backend`, `applied/fallback`, assets 포함 여부, 주요 데이터 개수를 빠르게 확인할 수 있다. 숨기려면 Console에서 `hideBackendMasterDataDevBadge()`를 실행한다.
+
+
+
+## v096 메모 - master-data 배지 위치 보정
+
+- master-data 개발자 배지를 하단 HUD 중앙 능력치 패널 오른쪽으로 이동했다.
+- 왼쪽 프로필 사진과 반대편에 배치해 현재 백엔드 데이터 상태를 화면에서 바로 볼 수 있다.
+- `hide` 버튼을 눌러 사라진 배지는 Console에서 `showBackendMasterDataDevBadge()`로 다시 표시할 수 있다.
+
+## v097 메모 - master-data 개발자 배지 개선
+
+- 배지 버튼 줄 넘침을 줄이고 hide/show 토글을 배지 위쪽 별도 버튼으로 분리했습니다.
+- 숨김 상태에서도 `show MD` 버튼으로 다시 표시할 수 있습니다.
+- 현재 모드(auto/static)에 활성 스타일을 표시합니다.
+
+
+## v098 메모 - master-data 배지 토글 정렬
+
+- 배지 토글 문구를 `hide MD` / `show MD`로 변경했습니다.
+- 토글 버튼을 MASTER DATA 배지 상단 정가운데에 탭처럼 배치했습니다.
+- 배지를 숨겨도 화면 안의 `show MD` 버튼으로 다시 펼칠 수 있습니다.
+- 이 수정은 프론트 개발자용 UI만 바꾸므로 DB reset/seed import는 필요 없습니다.
