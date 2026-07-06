@@ -250,6 +250,16 @@ function manualSaveGame() {
 	lastManualSaveAt = now;
 	saveGame({ refreshRecordSnapshot: true });
 	addLog(`[저장] 현재 게임 데이터를 수동 저장했습니다. 기록관도 현재 저장 시점 기준으로 갱신되었습니다.`, true);
+
+	if (window.requestBackendSaveAfterManualSave && typeof window.requestBackendSaveAfterManualSave === "function") {
+		window.requestBackendSaveAfterManualSave({
+			reason: "manualSaveGame",
+			source: "manual-save-button",
+			log: true,
+		}).catch((error) => {
+			console.warn("[Upgrade RPG] manual save backend sync failed", error);
+		});
+	}
 }
 
 function openSponsorPage() {

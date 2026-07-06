@@ -424,3 +424,11 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - Implemented `POST /api/v1/game/save` and `GET /api/v1/game/load` as DB-backed snapshot APIs.
 - Added browser helpers: `pushLocalSaveToBackend()`, `loadBackendSaveSnapshot()`, and `checkBackendSaveSnapshotBridge()`.
 - Added static and live smoke tests for the save snapshot bridge.
+
+## v100 - Save Data Dual Write
+
+- Added `src/api/save-data-sync-policy.js`.
+- Manual save now keeps the existing localStorage save and then attempts to push the same snapshot to `POST /api/v1/game/save`.
+- Backend save failure does not block or undo localStorage save; it only records a fallback status and logs a warning.
+- Added browser helpers: `getBackendSaveSyncPolicy()`, `getBackendSaveSyncStatus()`, `enableBackendSaveDualWrite()`, `disableBackendSaveDualWrite()`, `syncLatestLocalSaveToBackend()`.
+- Added `tools/smoke_save_data_dual_write.js` and `docs/SAVE_DATA_DUAL_WRITE.md`.

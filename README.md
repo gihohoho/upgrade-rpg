@@ -1,3 +1,32 @@
+# RPG v100 - Save Data Dual Write
+
+이번 버전은 기존 `localStorage` 저장을 유지하면서, **수동 저장 버튼을 누를 때 백엔드 DB에도 세이브 스냅샷을 저장**하도록 연결한 버전입니다.
+
+```txt
+수동 저장 버튼
+→ localStorage 저장
+→ FastAPI /api/v1/game/save 저장 시도
+→ 실패해도 localStorage 저장은 유지
+```
+
+확인 명령어:
+
+위치: 프로젝트 루트
+
+```bash
+node tools/smoke_save_data_dual_write.js
+```
+
+브라우저 Console 확인:
+
+```js
+getBackendSaveSyncPolicy();
+getBackendSaveSyncStatus();
+await syncLatestLocalSaveToBackend();
+```
+
+---
+
 # RPG v085 - 프론트 master-data API 브릿지 추가
 
 ## v086 요약

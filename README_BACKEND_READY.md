@@ -287,3 +287,14 @@ runBackendMasterDataBrowserChecklist();
 
 유저 진행 데이터 마이그레이션의 첫 단계로 `idleRpgSaveV22` localStorage 원본을 PostgreSQL `user_save_snapshots`에 저장/조회하는 API와 브라우저 테스트 함수를 추가했습니다. 아직 게임 로딩 흐름은 localStorage를 유지합니다.
 
+
+
+## v100 - Save Data Dual Write
+
+수동 저장 버튼을 기존 localStorage 저장과 백엔드 `/api/v1/game/save` 저장에 동시에 연결했습니다. 백엔드 저장 실패 시에도 기존 localStorage 저장은 유지됩니다.
+
+위치: 프로젝트 루트
+
+```bash
+node tools/smoke_save_data_dual_write.js
+```
