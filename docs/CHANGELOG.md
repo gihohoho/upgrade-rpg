@@ -339,3 +339,11 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - Injection mutates existing legacy objects/arrays instead of reassigning top-level `const` declarations.
 - If API loading fails, the game falls back to the existing static JS data.
 - Added `tools/smoke_master_data_runtime_switch.js` and `docs/MASTER_DATA_RUNTIME_SWITCH.md`.
+
+## v090 - Backend master-data runtime validator
+
+- Added `src/api/master-data-runtime-validator.js`.
+- Added browser console helpers: `checkBackendMasterDataRuntimeIntegrity()`, `assertBackendMasterDataRuntimeIntegrity()`, `getBackendMasterDataRuntimeDebugSnapshot()`.
+- The validator checks backend runtime mode state, active global master-data counts, applied backend data counts, core DOM availability, and sample boss/field/skill values.
+- Added `tools/smoke_master_data_runtime_validator.js` and `docs/MASTER_DATA_RUNTIME_VALIDATOR.md`.
+- Existing game behavior remains unchanged. The validator only inspects runtime state.

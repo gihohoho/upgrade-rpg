@@ -78,3 +78,18 @@ FastAPI master-data 응답을 기존 브라우저 게임 데이터와 비슷한 
 ## v089
 
 - `smoke_master_data_runtime_switch.js`: 백엔드 master-data 런타임 스위치 파일과 index.html 로딩 순서를 정적으로 검사한다.
+
+## v090 backend master-data runtime validator
+
+위치: 프로젝트 루트
+
+```bash
+node tools/smoke_master_data_runtime_validator.js
+```
+
+브라우저 Console에서 백엔드 master-data 주입 상태와 핵심 화면 요소를 확인할 수 있습니다.
+
+```js
+checkBackendMasterDataRuntimeIntegrity({ requireBackendMode: true });
+getBackendMasterDataRuntimeDebugSnapshot();
+```

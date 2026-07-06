@@ -484,3 +484,26 @@ FastAPI 서버가 켜져 있을 때 브라우저 Console에서 다음을 실행�
 ```js
 await checkBackendMasterDataAdapter();
 ```
+
+## v090 - 백엔드 master-data 런타임 검증 도구
+
+`src/api/master-data-runtime-validator.js`가 추가되었습니다.
+
+기존 게임 동작은 바꾸지 않고, 백엔드 master-data 모드를 켰을 때 실제 브라우저 런타임 상태를 확인할 수 있습니다.
+
+정적 검사:
+
+위치: **프로젝트 루트**
+
+```bash
+node tools/smoke_master_data_runtime_validator.js
+```
+
+브라우저 Console 검사:
+
+```js
+checkBackendMasterDataRuntimeIntegrity({ requireBackendMode: true });
+getBackendMasterDataRuntimeDebugSnapshot();
+```
+
+자세한 내용은 `docs/MASTER_DATA_RUNTIME_VALIDATOR.md`를 참고하세요.
