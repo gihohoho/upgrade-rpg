@@ -25,7 +25,7 @@ class EnhancementLevel(Base, IdMixin, TimestampMixin):
     from_level: Mapped[int] = mapped_column(Integer)
     to_level: Mapped[int] = mapped_column(Integer)
     success_rate: Mapped[float] = mapped_column(Numeric(10, 6), default=0)
-    gold_cost: Mapped[int] = mapped_column(Integer, default=0)
+    gold_cost: Mapped[float] = mapped_column(Numeric(40, 0), default=0)
     material_rules_json: Mapped[dict] = mapped_column(JSONB, default=dict)
     result_stats_json: Mapped[dict] = mapped_column(JSONB, default=dict)
     fail_rules_json: Mapped[dict] = mapped_column(JSONB, default=dict)

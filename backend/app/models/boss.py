@@ -13,7 +13,7 @@ class Boss(Base, IdMixin, TimestampMixin):
     name: Mapped[str] = mapped_column(String(160))
     tier: Mapped[int | None] = mapped_column(Integer, nullable=True)
     boss_type: Mapped[str] = mapped_column(String(30), default="normal")
-    hp: Mapped[int] = mapped_column(Integer, default=1)
+    hp: Mapped[float] = mapped_column(Numeric(40, 0), default=1)
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     summon_rules_json: Mapped[dict] = mapped_column(JSONB, default=dict)

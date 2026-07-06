@@ -14,7 +14,7 @@ CREATE TABLE users (
 CREATE TABLE user_profiles (
   id BIGSERIAL PRIMARY KEY,
   user_id BIGINT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  gold BIGINT NOT NULL DEFAULT 0,
+  gold NUMERIC(40,0) NOT NULL DEFAULT 0,
   farm_atk_bonus NUMERIC NOT NULL DEFAULT 0,
   add_attack_speed NUMERIC NOT NULL DEFAULT 0,
   current_character_id VARCHAR(80) NOT NULL DEFAULT 'weapon_master',
@@ -134,7 +134,7 @@ CREATE TABLE bosses (
   name VARCHAR(160) NOT NULL,
   tier INTEGER,
   boss_type VARCHAR(30) NOT NULL DEFAULT 'normal',
-  hp INTEGER NOT NULL DEFAULT 1,
+  hp NUMERIC(40,0) NOT NULL DEFAULT 1,
   image_url VARCHAR(500),
   description TEXT,
   summon_rules_json JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -173,8 +173,8 @@ CREATE TABLE field_zones (
   code VARCHAR(120) UNIQUE NOT NULL,
   name VARCHAR(160) NOT NULL,
   sort_order INTEGER NOT NULL DEFAULT 0,
-  enemy_hp INTEGER NOT NULL DEFAULT 1,
-  gold_reward INTEGER NOT NULL DEFAULT 0,
+  enemy_hp NUMERIC(40,0) NOT NULL DEFAULT 1,
+  gold_reward NUMERIC(40,0) NOT NULL DEFAULT 0,
   description TEXT,
   entry_rules_json JSONB NOT NULL DEFAULT '{}'::jsonb,
   farm_rules_json JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -201,13 +201,26 @@ CREATE TABLE enhancement_levels (
   from_level INTEGER NOT NULL,
   to_level INTEGER NOT NULL,
   success_rate NUMERIC(10,6) NOT NULL DEFAULT 0,
-  gold_cost INTEGER NOT NULL DEFAULT 0,
+  gold_cost NUMERIC(40,0) NOT NULL DEFAULT 0,
   material_rules_json JSONB NOT NULL DEFAULT '{}'::jsonb,
   result_stats_json JSONB NOT NULL DEFAULT '{}'::jsonb,
   fail_rules_json JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT uq_enhancement_step UNIQUE (group_code, from_level)
+);
+
+
+CREATE TABLE user_mailbox_messages (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(160) NOT NULL,
+  body TEXT,
+  rewards_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+  claimed BOOLEAN NOT NULL DEFAULT FALSE,
+  source_type VARCHAR(60) NOT NULL DEFAULT 'system',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE admin_roles (

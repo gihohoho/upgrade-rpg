@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Integer, String, Text
+from sqlalchemy import Boolean, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -12,8 +12,8 @@ class FieldZone(Base, IdMixin, TimestampMixin):
     code: Mapped[str] = mapped_column(String(120), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(160))
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
-    enemy_hp: Mapped[int] = mapped_column(Integer, default=1)
-    gold_reward: Mapped[int] = mapped_column(Integer, default=0)
+    enemy_hp: Mapped[float] = mapped_column(Numeric(40, 0), default=1)
+    gold_reward: Mapped[float] = mapped_column(Numeric(40, 0), default=0)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     entry_rules_json: Mapped[dict] = mapped_column(JSONB, default=dict)
     farm_rules_json: Mapped[dict] = mapped_column(JSONB, default=dict)

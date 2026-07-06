@@ -122,3 +122,30 @@ seed 추출은 프로젝트 루트에서 실행합니다.
 node tools/extract_seed_data.js
 node tools/smoke_seed_extraction.js
 ```
+
+
+## Local DB seed import
+
+위치: **backend 폴더**
+
+DB를 초기화하고 seed 데이터를 넣으려면:
+
+```bash
+python scripts/setup_dev_db.py --reset --seed --verify
+```
+
+DB를 건드리지 않고 seed JSON만 확인하려면:
+
+```bash
+python scripts/setup_dev_db.py --dry-run
+```
+
+자세한 설명은 `../docs/SEED_IMPORT.md`를 확인하세요.
+
+
+
+## v079 seed import connection fix
+
+- `backend/scripts/setup_dev_db.py`를 sync SQLAlchemy + `psycopg` 방식으로 변경했습니다.
+- Windows/Docker 환경에서 `asyncpg.exceptions.ConnectionDoesNotExistError`가 seed import 중 발생하는 문제를 피하기 위한 수정입니다.
+- `backend/pyproject.toml`에 `psycopg[binary]` 의존성을 추가했습니다.
