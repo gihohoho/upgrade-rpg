@@ -262,3 +262,33 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - `meta.counts`와 `payload.counts`로 주요 마스터 데이터 개수를 확인할 수 있습니다.
 - `backend/scripts/check_master_data_api.py`를 추가해 서버 실행 후 API 응답을 터미널에서 점검할 수 있게 했습니다.
 - `docs/MASTER_DATA_API.md` 문서를 추가했습니다.
+
+## v082 - Seed Import Long Asset Fix
+
+- seed import 중 `item_templates.icon_url` 등 긴 SVG data URL이 `VARCHAR(500)` 제한에 걸리던 문제를 수정했습니다.
+- `characters.image_url`, `skills.icon_url`, `item_templates.icon_url`, `bosses.image_url` 컬럼을 `TEXT` 기준으로 변경했습니다.
+- `setup_dev_db.py` 기본 SQL 로그 출력을 줄이고, 필요할 때만 `--verbose-sql`로 긴 SQL 로그를 볼 수 있게 했습니다.
+
+## v083 - Master Data Asset Cleanup
+
+- `/api/v1/game/master-data` 기본 응답에서 긴 SVG/data URL 이미지 문자열을 제외합니다.
+- 기본 응답에서는 `imageUrl`, `iconUrl`이 `null`로 내려가고, `hasImage`, `hasIcon`으로 원본 이미지 존재 여부를 확인합니다.
+- 이미지 문자열까지 필요한 경우 `?includeAssets=true`를 붙여 요청할 수 있습니다.
+- `payload.assetPolicy`와 `meta.assetPolicy`를 추가해 현재 asset 포함 정책을 응답에 명시합니다.
+- `scripts/check_master_data_api.py`가 기본 응답에 긴 data URL이 포함되지 않는지도 검사합니다.
+- `docs/MASTER_DATA_ASSET_POLICY.md` 문서를 추가했습니다.
+
+## v084 - Master Data Nested Asset Cleanup
+
+- `v083`에서 최상위 `imageUrl`/`iconUrl`은 제거됐지만, `options`, `conditions`, `rules`, `raw` 같은 중첩 JSON 안에 남아 있던 `data:image...` 문자열을 추가로 제거했습니다.
+- 기본 `/api/v1/game/master-data` 응답에서는 모든 중첩 inline image data URL을 `null`로 내려줍니다.
+- `?includeAssets=true` 요청에서는 최상위 asset 필드와 중첩 JSON 안의 asset 문자열을 모두 포함합니다.
+- `tools/smoke_master_data_nested_asset_cleanup.py`를 추가했습니다.
+
+## v085 - Frontend Master Data Bridge
+
+- 브라우저에서 FastAPI `/api/v1/game/master-data`를 호출할 수 있는 프론트 API 클라이언트를 추가했습니다.
+- `src/api/game-api-client.js`, `src/api/master-data-bridge.js`를 추가했습니다.
+- 기존 게임 동작은 아직 정적 JS 데이터를 그대로 사용하며, API 데이터는 검증/캐시용 snapshot으로만 보관합니다.
+- 브라우저 콘솔에서 `await checkBackendMasterData()`로 백엔드 master-data 연결을 확인할 수 있습니다.
+- `tools/smoke_frontend_master_data_bridge.js` 정적 검증 도구와 `docs/FRONTEND_MASTER_DATA_BRIDGE.md` 문서를 추가했습니다.

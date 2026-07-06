@@ -1,3 +1,29 @@
+# RPG v085 - 프론트 master-data API 브릿지 추가
+
+이번 버전은 기존 HTML/JS 게임 동작을 유지하면서, 브라우저에서 FastAPI `/api/v1/game/master-data`를 읽어올 수 있는 프론트 연결 준비층을 추가한 버전입니다.
+
+```txt
+기존 게임 동작: 정적 JS 데이터 그대로 유지
+추가된 기능: 브라우저 콘솔에서 백엔드 master-data API 연결 확인
+다음 단계: API 데이터와 기존 JS 데이터 비교/전환 어댑터 작성
+```
+
+확인 명령어:
+
+위치: 프로젝트 루트
+
+```bash
+node tools/smoke_frontend_master_data_bridge.js
+```
+
+브라우저 콘솔 확인:
+
+```js
+await checkBackendMasterData();
+```
+
+---
+
 # RPG v077 - 백엔드 환경 보정 / JS seed 추출 도구 추가
 
 이 ZIP은 **Vue 프론트엔드 + FastAPI 백엔드 + PostgreSQL + 관리자 페이지**로 넘어가기 전, 현재 HTML/JavaScript 게임을 안전하게 분리하기 위한 준비본입니다.
@@ -370,3 +396,36 @@ python scripts/check_master_data_api.py
 ```
 
 자세한 내용은 `docs/MASTER_DATA_API.md`를 확인하세요.
+
+## v083 - Master Data Asset Cleanup
+
+`/api/v1/game/master-data` 기본 응답에서 긴 SVG/data URL 이미지 문자열을 제외했습니다.
+
+브라우저 확인:
+
+```txt
+http://127.0.0.1:8000/api/v1/game/master-data
+```
+
+이미지 문자열까지 포함해서 확인해야 할 때:
+
+```txt
+http://127.0.0.1:8000/api/v1/game/master-data?includeAssets=true
+```
+
+터미널 확인:
+
+위치: **backend 폴더 + 가상환경 activate 상태**
+
+```bash
+python scripts/check_master_data_api.py
+python scripts/check_master_data_api.py --include-assets
+```
+
+자세한 내용은 `docs/MASTER_DATA_ASSET_POLICY.md`를 확인하세요.
+
+## v084 note
+
+- `/api/v1/game/master-data` 기본 응답에서 최상위 asset 필드뿐 아니라 `options`, `conditions`, `rules`, `raw` 같은 중첩 JSON 안의 `data:image...` 문자열도 제거합니다.
+- asset 문자열이 필요한 경우에는 `?includeAssets=true`를 사용합니다.
+

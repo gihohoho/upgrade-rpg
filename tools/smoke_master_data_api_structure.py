@@ -1,4 +1,4 @@
-"""Static smoke test for the v081 master-data API implementation.
+"""Static smoke test for the v083 master-data API implementation.
 
 Run from the project root:
 
@@ -25,6 +25,8 @@ def main() -> None:
         [
             "payload=master_data",
             "source\": \"postgresql",
+            "includeAssets",
+            "Query(",
             "Depends(get_db_session)",
             "GameService",
         ],
@@ -33,6 +35,9 @@ def main() -> None:
         PROJECT_ROOT / "backend" / "app" / "services" / "game_service.py",
         [
             "async def get_master_data",
+            "include_assets",
+            "assetPolicy",
+            "_asset_value",
             "itemTemplates",
             "dropTableItems",
             "enhancementRules",
@@ -45,6 +50,8 @@ def main() -> None:
         [
             "DEFAULT_URL",
             "EXPECTED_MINIMUM_COUNTS",
+            "ASSET_MARKERS",
+            "--include-assets",
             "master-data API check passed",
         ],
     )

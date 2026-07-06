@@ -24,3 +24,14 @@ smoke_backend_foundation.js   backend/ 뼈대 파일 존재 검증
 node tools/extract_seed_data.js
 node tools/smoke_seed_extraction.js
 ```
+
+
+## frontend master-data bridge
+
+프로젝트 루트에서 실행합니다.
+
+```bash
+node tools/smoke_frontend_master_data_bridge.js
+```
+
+브라우저에 추가된 `RpgGameApi`, `RpgMasterDataBridge`, `checkBackendMasterData()` 로딩 순서와 기본 동작을 검증합니다.

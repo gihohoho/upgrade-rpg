@@ -42,12 +42,27 @@ uvicorn app.main:app --reload
 http://127.0.0.1:8000/api/v1/game/master-data
 ```
 
+`v083`부터 기본 응답은 백신 오탐과 응답 크기 문제를 줄이기 위해 긴 SVG/data URL 이미지 문자열을 제외합니다.
+이미지 문자열까지 확인해야 할 때만 아래 주소를 사용합니다.
+
+```txt
+http://127.0.0.1:8000/api/v1/game/master-data?includeAssets=true
+```
+
 ## 터미널 확인 스크립트
 
 위치: **backend 폴더 + 가상환경 activate 상태**
 
 ```bash
 python scripts/check_master_data_api.py
+```
+
+이미지 문자열 포함 응답까지 확인하고 싶다면 아래처럼 실행합니다.
+
+위치: **backend 폴더 + 가상환경 activate 상태**
+
+```bash
+python scripts/check_master_data_api.py --include-assets
 ```
 
 정상이면 아래처럼 출력됩니다.
@@ -80,6 +95,10 @@ master-data API check passed
     "enhancementRules": {
       "groups": [],
       "levels": []
+    },
+    "assetPolicy": {
+      "includeAssets": false,
+      "mode": "metadata-only"
     },
     "counts": {}
   },
@@ -130,3 +149,19 @@ value too long for type character varying(500)
 ```bash
 python scripts/setup_dev_db.py --reset --seed --verify
 ```
+
+
+## v083 asset 정책
+
+기본 응답에서는 아래 필드가 `null`로 내려갑니다.
+
+```txt
+characters.imageUrl
+skills.iconUrl
+itemTemplates.iconUrl
+bosses.imageUrl
+```
+
+대신 `hasImage`, `hasIcon` 값으로 원본 이미지 데이터 존재 여부를 알 수 있습니다.
+긴 SVG/data URL까지 필요하면 `?includeAssets=true`를 붙여 요청합니다.
+자세한 내용은 `docs/MASTER_DATA_ASSET_POLICY.md`를 참고하세요.

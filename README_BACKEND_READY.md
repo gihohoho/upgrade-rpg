@@ -164,3 +164,9 @@ src/api/api-response-contract.js
 ```
 
 이번 작업은 현재 브라우저 게임 동작을 바꾸지 않는 문서/계약 작업입니다.
+
+## v084 note
+
+- `/api/v1/game/master-data` 기본 응답에서 최상위 asset 필드뿐 아니라 `options`, `conditions`, `rules`, `raw` 같은 중첩 JSON 안의 `data:image...` 문자열도 제거합니다.
+- asset 문자열이 필요한 경우에는 `?includeAssets=true`를 사용합니다.
+
