@@ -90,6 +90,13 @@ def as_decimal(value: Any, default: str = "0") -> Decimal:
     return Decimal(str(value))
 
 
+def as_nullable_decimal(value: Any) -> Decimal | None:
+    """Preserve missing numeric seed values as NULL instead of converting them to 0."""
+    if value is None:
+        return None
+    return Decimal(str(value))
+
+
 def seconds_from_ms(value: Any) -> int:
     if value is None:
         return 0
@@ -157,7 +164,7 @@ def build_skill_rows(skills: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "slot_key": item.get("slotKey") or "",
                 "description": item.get("description") or item.get("effectHtml"),
                 "icon_url": item.get("img"),
-                "proc_rate": as_decimal(item.get("baseProcRate")),
+                "proc_rate": as_nullable_decimal(item.get("baseProcRate")),
                 "cooldown_seconds": seconds_from_ms(item.get("cooldownMs")),
                 "options_json": {
                     "source": "seed",

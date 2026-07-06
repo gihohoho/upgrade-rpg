@@ -45,7 +45,7 @@ CREATE TABLE skills (
   slot_key VARCHAR(20) NOT NULL,
   description TEXT,
   icon_url TEXT,
-  proc_rate NUMERIC(8,4) NOT NULL DEFAULT 0,
+  proc_rate NUMERIC(8,4),
   cooldown_seconds INTEGER NOT NULL DEFAULT 0,
   options_json JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

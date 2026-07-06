@@ -1,5 +1,34 @@
 # 변경 기록
 
+## v087 - Preserve nullable skill proc rate
+
+- Preserved missing skill `baseProcRate` values as database `NULL` instead of converting them to `0`.
+- Updated `skills.proc_rate` to be nullable in SQLAlchemy and schema draft.
+- Added documentation and a smoke test for nullable master-data fields.
+- Intended to make `check_master_data_parity.py` pass for `lightsabre.procRate`.
+
+
+## v086 - Master Data Parity Checker
+
+- `backend/scripts/check_master_data_parity.py`를 추가했습니다.
+- 현재 JS 마스터 데이터에서 생성된 `backend/seeds/generated/*.json`과 FastAPI `/api/v1/game/master-data` 응답을 비교할 수 있습니다.
+- 기본 경량 응답과 `--include-assets` 이미지 포함 응답을 모두 검사할 수 있습니다.
+- characters, skills, itemTemplates, bosses, fieldZones, dropTables, dropTableItems, enhancementRules의 개수와 주요 필드를 비교합니다.
+- `tools/smoke_master_data_parity_checker.py`와 `docs/MASTER_DATA_PARITY_CHECKER.md`를 추가했습니다.
+
+## v085 - Frontend Master Data Bridge
+
+- `src/api/game-api-client.js`와 `src/api/master-data-bridge.js`를 추가했습니다.
+- 기존 게임 동작은 유지하면서 브라우저 콘솔에서 FastAPI master-data API를 읽어올 수 있게 했습니다.
+- `checkBackendMasterData()`, `loadBackendMasterData()`, `getCachedBackendMasterData()` 전역 함수를 추가했습니다.
+- `tools/smoke_frontend_master_data_bridge.js`와 `docs/FRONTEND_MASTER_DATA_BRIDGE.md`를 추가했습니다.
+
+## v084 - Master Data Nested Asset Cleanup
+
+- 기본 master-data 응답에서 최상위 asset 필드뿐 아니라 중첩 JSON 내부의 긴 `data:image/...` 문자열도 제거하도록 정리했습니다.
+- `?includeAssets=true` 요청에서는 기존처럼 asset 문자열을 포함합니다.
+- `tools/smoke_master_data_nested_asset_cleanup.py`와 관련 문서를 추가했습니다.
+
 ## v082 - Seed Import Long Asset URL Fix
 
 - `item_templates.icon_url`에 SVG `data:image` 문자열이 500자를 넘어 seed import가 실패하던 문제를 수정했습니다.

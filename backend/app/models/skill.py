@@ -14,7 +14,7 @@ class Skill(Base, IdMixin, TimestampMixin):
     slot_key: Mapped[str] = mapped_column(String(20))
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     icon_url: Mapped[str | None] = mapped_column(Text, nullable=True)
-    proc_rate: Mapped[float] = mapped_column(Numeric(8, 4), default=0)
+    proc_rate: Mapped[float | None] = mapped_column(Numeric(8, 4), nullable=True)
     cooldown_seconds: Mapped[int] = mapped_column(Integer, default=0)
     options_json: Mapped[dict] = mapped_column(JSONB, default=dict)
 

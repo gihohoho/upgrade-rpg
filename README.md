@@ -1,5 +1,13 @@
 # RPG v085 - 프론트 master-data API 브릿지 추가
 
+## v086 요약
+
+- `backend/scripts/check_master_data_parity.py` 추가
+- JS seed JSON과 FastAPI `/api/v1/game/master-data` 응답의 데이터 동등성 검증
+- 기본 경량 응답과 `--include-assets` 이미지 포함 응답 모두 확인 가능
+- 게임 동작은 변경하지 않음
+
+
 이번 버전은 기존 HTML/JS 게임 동작을 유지하면서, 브라우저에서 FastAPI `/api/v1/game/master-data`를 읽어올 수 있는 프론트 연결 준비층을 추가한 버전입니다.
 
 ```txt
@@ -429,3 +437,8 @@ python scripts/check_master_data_api.py --include-assets
 - `/api/v1/game/master-data` 기본 응답에서 최상위 asset 필드뿐 아니라 `options`, `conditions`, `rules`, `raw` 같은 중첩 JSON 안의 `data:image...` 문자열도 제거합니다.
 - asset 문자열이 필요한 경우에는 `?includeAssets=true`를 사용합니다.
 
+
+
+### v087 note
+
+`lightsabre`처럼 기본 발동확률이 없는 스킬은 `procRate: null`로 유지합니다. `python scripts/setup_dev_db.py --reset --seed --verify`를 다시 실행해야 DB에 반영됩니다.

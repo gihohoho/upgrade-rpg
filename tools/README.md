@@ -14,6 +14,8 @@ smoke_seed_extraction.js      생성된 seed JSON 기본 검증
 smoke_action_results.js       Action Result 구조 검증
 smoke_api_response_contract.js API 응답 계약 검증
 smoke_backend_foundation.js   backend/ 뼈대 파일 존재 검증
+smoke_master_data_parity_checker.py  v086 parity checker 정적 검증
+smoke_nullable_skill_proc_rate.py  v087 nullable skill procRate 검증
 ```
 
 ## seed 추출
@@ -35,3 +37,30 @@ node tools/smoke_frontend_master_data_bridge.js
 ```
 
 브라우저에 추가된 `RpgGameApi`, `RpgMasterDataBridge`, `checkBackendMasterData()` 로딩 순서와 기본 동작을 검증합니다.
+
+
+## master-data parity checker
+
+프로젝트 루트에서 정적 검사를 실행합니다.
+
+```bash
+python tools/smoke_master_data_parity_checker.py
+```
+
+실제 seed/API parity 검사는 FastAPI 서버를 켠 뒤 backend 폴더에서 실행합니다.
+
+```bash
+python scripts/check_master_data_parity.py
+python scripts/check_master_data_parity.py --include-assets
+```
+
+
+## nullable skill procRate
+
+프로젝트 루트에서 실행합니다.
+
+```bash
+python tools/smoke_nullable_skill_proc_rate.py
+```
+
+`lightsabre`처럼 기본 발동확률이 없는 스킬의 `procRate`가 `0`으로 바뀌지 않고 `null`로 보존되는지 확인합니다.

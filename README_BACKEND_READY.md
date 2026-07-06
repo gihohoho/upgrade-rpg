@@ -170,3 +170,20 @@ src/api/api-response-contract.js
 - `/api/v1/game/master-data` 기본 응답에서 최상위 asset 필드뿐 아니라 `options`, `conditions`, `rules`, `raw` 같은 중첩 JSON 안의 `data:image...` 문자열도 제거합니다.
 - asset 문자열이 필요한 경우에는 `?includeAssets=true`를 사용합니다.
 
+
+
+## v086 - Master Data Parity Checker
+
+`backend/scripts/check_master_data_parity.py`로 JS seed JSON과 FastAPI master-data API 응답이 같은지 비교할 수 있습니다.
+
+위치: backend 폴더 + 가상환경 activate 상태
+
+```bash
+python scripts/check_master_data_parity.py
+python scripts/check_master_data_parity.py --include-assets
+```
+
+
+### v087 note
+
+`lightsabre`처럼 기본 발동확률이 없는 스킬은 `procRate: null`로 유지합니다. `python scripts/setup_dev_db.py --reset --seed --verify`를 다시 실행해야 DB에 반영됩니다.
