@@ -1,12 +1,14 @@
 (function () {
 	"use strict";
 
-	const VERSION = "v106.backend-save-data-restore-guard";
+	const VERSION = "v108.backend-save-data-restore-reload-lock";
 	const LOCAL_SAVE_KEY = "idleRpgSaveV22";
 	const DEFAULT_SLOT_KEY = "default";
 	const DEFAULT_TIMEOUT_MS = 3000;
 	const BACKUP_INDEX_KEY = "upgradeRpgBackendSaveRestoreBackups";
 	const RESTORE_STATUS_KEY = "upgradeRpgBackendSaveRestoreStatus";
+	const RESTORE_PENDING_KEY = "upgradeRpgBackendSaveRestorePendingReload";
+	const PENDING_RESTORE_LOCK_TTL_MS = 60 * 60 * 1000;
 	const MAX_BACKUPS = 5;
 	const MODAL_ID = "backend-save-restore-preview-modal";
 	const STYLE_ID = "backend-save-restore-preview-style";
@@ -81,6 +83,19 @@
 			}
 		}
 		return String(value);
+	}
+
+	function escapeHtml(value) {
+		return String(value)
+			.replace(/&/g, "&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;")
+			.replace(/'/g, "&#39;");
+	}
+
+	function formatValueHtml(value) {
+		return escapeHtml(formatValue(value));
 	}
 
 	function summarizeForModal(summary) {
@@ -185,6 +200,61 @@
 			// 자동 새로고침이 없는 환경에서는 상태 저장만 사용합니다.
 		}
 		return next;
+	}
+
+
+	function getPendingBackendSaveRestore() {
+		const pending = readJsonStorage(RESTORE_PENDING_KEY, null);
+		if (!pending || !pending.saveKey) return null;
+		const expiresAt = Number(pending.expiresAt || 0);
+		if (expiresAt && expiresAt < Date.now()) {
+			removeStorage(RESTORE_PENDING_KEY);
+			return null;
+		}
+		return pending;
+	}
+
+	function markBackendSaveRestorePendingReload(options) {
+		const opts = options || {};
+		const pending = {
+			version: VERSION,
+			state: "pending_reload",
+			action: opts.action || "backend-restore",
+			saveKey: opts.saveKey || getLocalSaveKey(opts),
+			backupKey: opts.backupKey || null,
+			createdAt: nowIso(),
+			expiresAt: Date.now() + PENDING_RESTORE_LOCK_TTL_MS,
+		};
+		writeJsonStorage(RESTORE_PENDING_KEY, pending);
+		return pending;
+	}
+
+	function clearBackendSaveRestorePendingReload() {
+		removeStorage(RESTORE_PENDING_KEY);
+		return { ok: true, cleared: true };
+	}
+
+	function shouldSkipSaveGameForBackendRestore(saveKey) {
+		const pending = getPendingBackendSaveRestore();
+		if (!pending) return false;
+		const currentSaveKey = saveKey || getLocalSaveKey();
+		return pending.saveKey === currentSaveKey;
+	}
+
+	function completeBackendSaveRestoreReloadApply(options) {
+		const opts = options || {};
+		const pending = getPendingBackendSaveRestore();
+		if (!pending) return { ok: true, applied: false, reason: "no_pending_restore" };
+		const saveKey = opts.saveKey || pending.saveKey;
+		clearBackendSaveRestorePendingReload();
+		const status = setBackendSaveRestoreStatus({
+			ok: !!opts.loaded,
+			state: opts.loaded ? "applied_after_reload" : "cleared_after_reload_load_failed",
+			backupKey: pending.backupKey || null,
+			saveKey,
+			error: opts.loaded ? null : "새로고침 후 세이브 로딩 성공 여부를 확인하지 못했습니다.",
+		});
+		return { ok: true, applied: !!opts.loaded, pending, status };
 	}
 
 	function getBackendSnapshotFromPreview(preview) {
@@ -292,6 +362,11 @@
 			return { ok: false, status, preview, backupResult };
 		}
 
+		markBackendSaveRestorePendingReload({
+			action: "backend-restore",
+			saveKey,
+			backupKey: backupResult.backupKey || null,
+		});
 		const status = setBackendSaveRestoreStatus({
 			ok: true,
 			state: "restored_needs_reload",
@@ -326,6 +401,11 @@
 		if (!writeStorage(backup.saveKey, backup.raw)) {
 			return { ok: false, error: "백업을 localStorage에 쓰지 못했습니다.", backupKey: selectedKey };
 		}
+		markBackendSaveRestorePendingReload({
+			action: "backup-restore",
+			saveKey: backup.saveKey,
+			backupKey: selectedKey,
+		});
 		const status = setBackendSaveRestoreStatus({
 			ok: true,
 			state: "backup_restored_needs_reload",
@@ -396,6 +476,26 @@
 	border: 1px solid rgba(59, 130, 246, 0.25);
 	color: #bfdbfe;
 	font-size: 13px;
+	line-height: 1.45;
+}
+#${MODAL_ID} .save-restore-modal-warning {
+	margin-bottom: 12px;
+	padding: 10px 12px;
+	border-radius: 10px;
+	background: rgba(248, 113, 113, 0.13);
+	border: 1px solid rgba(248, 113, 113, 0.30);
+	color: #fecaca;
+	font-size: 13px;
+	line-height: 1.45;
+}
+#${MODAL_ID} .save-restore-modal-backup {
+	margin-top: 12px;
+	padding: 10px 12px;
+	border-radius: 10px;
+	background: rgba(15, 23, 42, 0.78);
+	border: 1px solid rgba(148, 163, 184, 0.22);
+	color: #cbd5e1;
+	font-size: 12px;
 	line-height: 1.45;
 }
 #${MODAL_ID} .save-restore-modal-grid {
@@ -485,6 +585,11 @@
 	background: rgba(248, 113, 113, 0.15);
 	color: #fecaca;
 }
+#${MODAL_ID} .save-restore-modal-actions button[data-backup="true"] {
+	border-color: rgba(96, 165, 250, 0.62);
+	background: rgba(96, 165, 250, 0.14);
+	color: #bfdbfe;
+}
 #${MODAL_ID} .save-restore-modal-actions button:disabled {
 	opacity: 0.45;
 	cursor: not-allowed;
@@ -497,7 +602,7 @@
 	}
 
 	function renderSummaryRows(summary) {
-		return summarizeForModal(summary).map(([label, value]) => `<dt>${label}</dt><dd>${formatValue(value)}</dd>`).join("");
+		return summarizeForModal(summary).map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${formatValueHtml(value)}</dd>`).join("");
 	}
 
 	function renderDiffRows(diffs) {
@@ -508,10 +613,34 @@
 			<table>
 				<thead><tr><th>항목</th><th>현재 localStorage</th><th>백엔드 DB</th></tr></thead>
 				<tbody>
-					${diffs.map((diff) => `<tr><td>${diff.label}</td><td>${formatValue(diff.local)}</td><td>${formatValue(diff.backend)}</td></tr>`).join("")}
+					${diffs.map((diff) => `<tr><td>${escapeHtml(diff.label)}</td><td>${formatValueHtml(diff.local)}</td><td>${formatValueHtml(diff.backend)}</td></tr>`).join("")}
 				</tbody>
 			</table>
 		`;
+	}
+
+	function getLatestBackupSummaryHtml() {
+		const backups = listBackendSaveRestoreBackups();
+		const latest = backups[0];
+		if (!latest) {
+			return { count: 0, html: "아직 생성된 복구 전 백업이 없습니다." };
+		}
+		return {
+			count: backups.length,
+			html: [
+				`백업 개수: ${backups.length}`,
+				`최근 백업 시각: ${formatClock(latest.createdAt)}`,
+				`최근 백업 레벨: ${formatValue(latest.summary && latest.summary.level)}`,
+				`최근 백업 골드: ${formatValue(latest.summary && latest.summary.gold)}`,
+			].map(escapeHtml).join("<br>"),
+		};
+	}
+
+	function insertModalMessage(modal, message, ok) {
+		const body = modal && modal.querySelector ? modal.querySelector(".save-restore-modal-body") : null;
+		if (!body) return;
+		const className = ok ? "save-restore-modal-note" : "save-restore-modal-warning";
+		body.insertAdjacentHTML("afterbegin", `<div class="${className}">${escapeHtml(message)}</div>`);
 	}
 
 	function closeBackendSaveRestorePreviewModal() {
@@ -542,10 +671,10 @@
 				</div>
 			</div>
 		`;
-		modal.addEventListener("click", (event) => {
+		modal.onclick = (event) => {
 			const action = event.target && event.target.getAttribute ? event.target.getAttribute("data-action") : null;
 			if (action === "close") closeBackendSaveRestorePreviewModal();
-		}, { once: true });
+		};
 
 		let preview = null;
 		let error = null;
@@ -562,35 +691,36 @@
 
 		if (error) {
 			modal.querySelector(".save-restore-modal-body").innerHTML = `
-				<div class="save-restore-modal-note">백엔드 세이브 미리보기를 불러오지 못했습니다.</div>
-				<div style="color:#fecaca; font-size:13px;">${error}</div>
+				<div class="save-restore-modal-warning">백엔드 세이브 미리보기를 불러오지 못했습니다.</div>
+				<div style="color:#fecaca; font-size:13px;">${escapeHtml(error)}</div>
 				<div class="save-restore-modal-actions"><button type="button" data-action="close">닫기</button></div>
 			`;
-			modal.addEventListener("click", (event) => {
-				if (event.target && event.target.getAttribute && event.target.getAttribute("data-action") === "close") closeBackendSaveRestorePreviewModal();
-			});
 			return { ok: false, error };
 		}
 
 		const comparison = preview.comparison || {};
 		const canRestore = !!preview.backend.exists;
+		const latestBackup = getLatestBackupSummaryHtml();
 		const note = canRestore
 			? `추천 상태: ${preview.recommendation} / 차이 개수: ${comparison.diffCount} / 원본 완전 동일: ${comparison.sameRawSnapshot}`
 			: "백엔드 DB에 복구할 세이브가 없습니다. 먼저 수동 저장 또는 sync DB를 실행하세요.";
 		modal.querySelector(".save-restore-modal-body").innerHTML = `
-			<div class="save-restore-modal-note">${note}<br>복구를 누르면 현재 localStorage를 자동 백업한 뒤 DB 세이브로 교체합니다. 실제 게임 적용은 새로고침 후 반영됩니다.</div>
+			<div class="save-restore-modal-note">${escapeHtml(note)}<br>복구를 누르면 현재 localStorage를 자동 백업한 뒤 DB 세이브로 교체합니다. 실제 게임 적용은 새로고침 후 반영됩니다.</div>
+			<div class="save-restore-modal-warning">주의: 복구 완료 후 새로고침하기 전까지 화면의 게임 런타임 상태는 그대로입니다. 새로고침해야 DB 세이브가 실제 게임에 적용됩니다.</div>
 			<div class="save-restore-modal-grid">
 				<div class="save-restore-modal-card"><h4>현재 localStorage</h4><dl>${renderSummaryRows(preview.local.summary)}</dl></div>
 				<div class="save-restore-modal-card"><h4>백엔드 DB</h4><dl>${renderSummaryRows(preview.backend.summary)}</dl></div>
 			</div>
 			<div class="save-restore-modal-diffs">${renderDiffRows(comparison.diffs)}</div>
+			<div class="save-restore-modal-backup">${latestBackup.html}</div>
 			<div class="save-restore-modal-actions">
 				<button type="button" data-action="close">닫기</button>
 				<button type="button" data-action="reload">새로고침</button>
+				<button type="button" data-action="restore-backup" data-backup="true" ${latestBackup.count > 0 ? "" : "disabled"}>최근 백업으로 되돌리기</button>
 				<button type="button" data-action="restore" data-danger="true" ${canRestore ? "" : "disabled"}>DB 세이브로 복구</button>
 			</div>
 		`;
-		modal.addEventListener("click", async (event) => {
+		modal.onclick = async (event) => {
 			const action = event.target && event.target.getAttribute ? event.target.getAttribute("data-action") : null;
 			if (!action) return;
 			if (action === "close") closeBackendSaveRestorePreviewModal();
@@ -601,14 +731,27 @@
 				button.textContent = "복구 중...";
 				const result = await restoreBackendSaveSnapshotToLocal({ ...opts, skipConfirm: true, log: false });
 				button.textContent = result.ok ? "복구 완료" : "복구 실패";
-				const body = modal.querySelector(".save-restore-modal-body");
 				const message = result.ok
 					? `복구 완료. 백업 키: ${result.backupResult && result.backupResult.backupKey ? result.backupResult.backupKey : "-"}. 새로고침하면 적용됩니다.`
 					: `복구 실패: ${result.status && result.status.error ? result.status.error : result.error || "unknown"}`;
-				const color = result.ok ? "#bbf7d0" : "#fecaca";
-				body.insertAdjacentHTML("afterbegin", `<div class="save-restore-modal-note" style="color:${color};">${message}</div>`);
+				insertModalMessage(modal, message, !!result.ok);
 			}
-		});
+			if (action === "restore-backup") {
+				const button = event.target;
+				button.disabled = true;
+				button.textContent = "백업 복구 중...";
+				const result = restoreBackendSaveBackupToLocal();
+				button.textContent = result.ok ? "백업 복구 완료" : result.cancelled ? "백업 복구 취소" : "백업 복구 실패";
+				if (result.cancelled) {
+					button.disabled = false;
+					return;
+				}
+				const message = result.ok
+					? "최근 백업을 localStorage로 되돌렸습니다. 새로고침하면 적용됩니다."
+					: `백업 복구 실패: ${result.error || "unknown"}`;
+				insertModalMessage(modal, message, !!result.ok);
+			}
+		};
 		return { ok: true, preview };
 	}
 
@@ -631,9 +774,15 @@
 		VERSION,
 		BACKUP_INDEX_KEY,
 		RESTORE_STATUS_KEY,
+		RESTORE_PENDING_KEY,
 		createLocalSaveBackupBeforeRestore,
 		listBackendSaveRestoreBackups,
 		getBackendSaveRestoreStatus,
+		getPendingBackendSaveRestore,
+		markBackendSaveRestorePendingReload,
+		clearBackendSaveRestorePendingReload,
+		shouldSkipSaveGameForBackendRestore,
+		completeBackendSaveRestoreReloadApply,
 		restoreBackendSaveSnapshotToLocal,
 		restoreBackendSaveBackupToLocal,
 		openBackendSaveRestorePreviewModal,
@@ -643,6 +792,11 @@
 	window.createLocalSaveBackupBeforeRestore = createLocalSaveBackupBeforeRestore;
 	window.listBackendSaveRestoreBackups = listBackendSaveRestoreBackups;
 	window.getBackendSaveRestoreStatus = getBackendSaveRestoreStatus;
+	window.getPendingBackendSaveRestore = getPendingBackendSaveRestore;
+	window.markBackendSaveRestorePendingReload = markBackendSaveRestorePendingReload;
+	window.clearBackendSaveRestorePendingReload = clearBackendSaveRestorePendingReload;
+	window.shouldSkipSaveGameForBackendRestore = shouldSkipSaveGameForBackendRestore;
+	window.completeBackendSaveRestoreReloadApply = completeBackendSaveRestoreReloadApply;
 	window.restoreBackendSaveSnapshotToLocal = restoreBackendSaveSnapshotToLocal;
 	window.restoreBackendSaveBackupToLocal = restoreBackendSaveBackupToLocal;
 	window.openBackendSaveRestorePreviewModal = openBackendSaveRestorePreviewModal;

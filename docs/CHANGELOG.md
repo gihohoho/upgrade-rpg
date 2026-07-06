@@ -1,3 +1,8 @@
+## v108
+- DB 세이브/백업 복구 직후 새로고침할 때 `beforeunload` 자동 저장이 기존 런타임 상태를 다시 localStorage에 덮어쓰는 문제를 수정했습니다.
+- 복구 성공 시 `pending_reload` 잠금을 남겨서 새로고침 전 자동저장/수동저장이 복구된 localStorage 값을 덮어쓰지 못하게 했습니다.
+- 새로고침 후 게임이 복구된 세이브를 읽으면 잠금을 해제하고 상태를 `applied_after_reload`로 기록합니다.
+
 ## v106
 - 백엔드 DB 세이브를 localStorage에 덮어쓰기 전에 미리보기 모달로 비교할 수 있게 했습니다.
 - 복구 실행 전 현재 localStorage 세이브를 자동 백업합니다.
@@ -468,3 +473,13 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - `dual`/`local` 버튼 클릭 시 이전 `skipped_local_only_mode` 상태가 남지 않도록 상태를 즉시 갱신합니다.
 - 수동 저장 쿨타임 중에는 `skipped_manual_save_cooldown` 상태를 표시합니다.
 - SAVE DATA 배지의 `sync`/`load` 버튼명을 `sync DB`/`load DB`로 명확히 바꿨습니다.
+
+## v107 - Save Data badge restore actions
+
+- Added `preview` and `backup` buttons to the `SAVE DATA` development badge.
+- `preview` opens the DB save restore preview modal without needing browser Console commands.
+- `backup` restores the latest pre-restore localStorage backup after browser confirmation.
+- The restore modal now shows a stronger reload warning, latest backup summary, and a `최근 백업으로 되돌리기` button.
+- Restore preview values are escaped before insertion into modal HTML.
+- No DB reset or seed import is required.
+- Added `tools/smoke_save_data_badge_restore_actions.js` and `docs/SAVE_DATA_BADGE_RESTORE_ACTIONS.md`.

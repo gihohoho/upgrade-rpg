@@ -22,14 +22,23 @@ function assertOrder(file, first, second) {
   }
 }
 
-assertIncludes("src/api/save-data-restore-guard.js", "v106.backend-save-data-restore-guard");
+assertIncludes("src/api/save-data-restore-guard.js", "v108.backend-save-data-restore-reload-lock");
 assertIncludes("src/api/save-data-restore-guard.js", "restoreBackendSaveSnapshotToLocal");
 assertIncludes("src/api/save-data-restore-guard.js", "openBackendSaveRestorePreviewModal");
 assertIncludes("src/api/save-data-restore-guard.js", "createLocalSaveBackupBeforeRestore");
 assertIncludes("src/api/save-data-restore-guard.js", "restoreBackendSaveBackupToLocal");
 assertIncludes("src/api/save-data-restore-guard.js", "restored_needs_reload");
 assertIncludes("src/api/save-data-restore-guard.js", "DB 세이브로 복구");
+assertIncludes("src/api/save-data-restore-guard.js", "최근 백업으로 되돌리기");
+assertIncludes("src/api/save-data-restore-guard.js", "save-restore-modal-warning");
+assertIncludes("src/api/save-data-restore-guard.js", "escapeHtml");
 assertIncludes("src/api/save-data-restore-guard.js", "upgrade-rpg:backend-save-restore");
+assertIncludes("src/api/save-data-restore-guard.js", "RESTORE_PENDING_KEY");
+assertIncludes("src/api/save-data-restore-guard.js", "markBackendSaveRestorePendingReload");
+assertIncludes("src/api/save-data-restore-guard.js", "shouldSkipSaveGameForBackendRestore");
+assertIncludes("src/api/save-data-restore-guard.js", "completeBackendSaveRestoreReloadApply");
+assertIncludes("src/app/main.js", "shouldSkipSaveGameForBackendRestore");
+assertIncludes("src/app/main.js", "completeBackendSaveRestoreReloadApply");
 assertIncludes("index.html", "src/api/save-data-restore-guard.js");
 assertOrder("index.html", "src/api/save-data-preview.js", "src/api/save-data-restore-guard.js");
 assertOrder("index.html", "src/api/save-data-restore-guard.js", "src/api/save-data-dev-badge.js");

@@ -224,6 +224,9 @@ let isResettingGame = false;
 
 function saveGame(options = {}) {
 	if (isResettingGame) return;
+	if (window.shouldSkipSaveGameForBackendRestore && typeof window.shouldSkipSaveGameForBackendRestore === "function" && window.shouldSkipSaveGameForBackendRestore("idleRpgSaveV22")) {
+		return;
+	}
 	if (typeof tickPlayTimeRecord === "function") tickPlayTimeRecord();
 	if (typeof refreshRecordSnapshot === "function") refreshRecordSnapshot(!!options.refreshRecordSnapshot);
 	const savePayload = typeof getServerSavePayload === "function"
@@ -240,6 +243,10 @@ function saveGame(options = {}) {
 }
 
 function manualSaveGame() {
+	if (window.shouldSkipSaveGameForBackendRestore && typeof window.shouldSkipSaveGameForBackendRestore === "function" && window.shouldSkipSaveGameForBackendRestore("idleRpgSaveV22")) {
+		addLog("[저장] 세이브 복구가 새로고침 대기 중이라 수동 저장을 잠시 막았습니다. 새로고침 후 다시 저장하세요.", true);
+		return;
+	}
 	const now = Date.now();
 	const cooldownMs = 60000;
 	const remain = cooldownMs - (now - lastManualSaveAt);
@@ -486,8 +493,9 @@ function confirmResetGame() {
 }
 
 window.onload = function () {
+	let loaded = false;
 	try {
-		const loaded = loadGame();
+		loaded = loadGame();
 		if (!loaded) {
 			currentEnemy.hp = getFieldEnemyHp(0);
 		} else if (currentZoneType === "field") {
@@ -511,6 +519,15 @@ window.onload = function () {
 		console.error("초기화 중 치명적 에러 발생, 강제 복구를 시도합니다:", error);
 		currentZoneType = "town";
 		updateFullUI();
+	}
+	if (window.completeBackendSaveRestoreReloadApply && typeof window.completeBackendSaveRestoreReloadApply === "function") {
+		const restoreApplyResult = window.completeBackendSaveRestoreReloadApply({
+			loaded,
+			saveKey: "idleRpgSaveV22",
+		});
+		if (restoreApplyResult && restoreApplyResult.applied && typeof addLog === "function") {
+			addLog("[저장] 복구된 세이브를 새로고침 후 게임에 적용했고, 자동저장 잠금을 해제했습니다.", true);
+		}
 	}
 	setInterval(saveGame, 60000);
 	setInterval(() => {
