@@ -93,3 +93,18 @@ node tools/smoke_master_data_runtime_validator.js
 checkBackendMasterDataRuntimeIntegrity({ requireBackendMode: true });
 getBackendMasterDataRuntimeDebugSnapshot();
 ```
+
+## v091 backend master-data browser checklist
+
+위치: 프로젝트 루트
+
+```bash
+node tools/smoke_master_data_browser_checklist.js
+```
+
+브라우저 Console에서 백엔드 master-data 모드의 실제 화면 점검 리포트를 생성할 수 있습니다.
+
+```js
+runBackendMasterDataBrowserChecklist();
+printBackendMasterDataManualChecklist();
+```

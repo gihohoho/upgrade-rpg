@@ -215,3 +215,19 @@ node tools/smoke_master_data_adapter.js
 - `node tools/smoke_master_data_runtime_validator.js`
 
 이 단계는 실제 게임 로직을 바꾸지 않고, API 데이터 주입 후 전역 데이터와 핵심 DOM이 정상인지 확인하는 안전 점검 단계입니다.
+
+## v091 note
+
+백엔드 master-data 모드가 실제 브라우저 화면에서 정상적으로 보스/필드/장비지급/인벤토리 데이터를 그리는지 확인하기 위한 체크리스트 도구가 추가되었습니다.
+
+위치: **프로젝트 루트**
+
+```bash
+node tools/smoke_master_data_browser_checklist.js
+```
+
+브라우저 Console:
+
+```js
+runBackendMasterDataBrowserChecklist();
+```

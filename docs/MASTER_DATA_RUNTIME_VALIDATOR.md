@@ -155,3 +155,7 @@ disableBackendMasterDataMode();
 ```
 
 페이지가 새로고침되고 기존 정적 JS 데이터 모드로 돌아갑니다.
+
+## 다음 단계: 브라우저 체크리스트
+
+`v091`부터는 `runBackendMasterDataBrowserChecklist()`로 보스/필드/장비지급/인벤토리 렌더링 상태까지 한 번에 확인할 수 있습니다. 자세한 내용은 `docs/MASTER_DATA_BROWSER_CHECKLIST.md`를 참고하세요.

@@ -507,3 +507,26 @@ getBackendMasterDataRuntimeDebugSnapshot();
 ```
 
 자세한 내용은 `docs/MASTER_DATA_RUNTIME_VALIDATOR.md`를 참고하세요.
+
+## v091 - 백엔드 master-data 브라우저 체크리스트
+
+`src/api/master-data-browser-checklist.js`가 추가되었습니다.
+
+백엔드 master-data 모드를 켠 뒤 실제 브라우저 화면에서 보스/필드/장비지급/인벤토리 관련 핵심 상태를 한 번에 점검할 수 있습니다.
+
+정적 검사:
+
+위치: **프로젝트 루트**
+
+```bash
+node tools/smoke_master_data_browser_checklist.js
+```
+
+브라우저 Console 검사:
+
+```js
+runBackendMasterDataBrowserChecklist();
+printBackendMasterDataManualChecklist();
+```
+
+자세한 내용은 `docs/MASTER_DATA_BROWSER_CHECKLIST.md`를 참고하세요.

@@ -347,3 +347,11 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - The validator checks backend runtime mode state, active global master-data counts, applied backend data counts, core DOM availability, and sample boss/field/skill values.
 - Added `tools/smoke_master_data_runtime_validator.js` and `docs/MASTER_DATA_RUNTIME_VALIDATOR.md`.
 - Existing game behavior remains unchanged. The validator only inspects runtime state.
+
+## v091 - Backend master-data browser checklist
+
+- Added `src/api/master-data-browser-checklist.js`.
+- Added browser console helpers: `runBackendMasterDataBrowserChecklist()`, `assertBackendMasterDataBrowserChecklist()`, `printBackendMasterDataManualChecklist()`.
+- The checklist verifies backend master-data mode state, required helper functions, core DOM ids, rendered boss/field/inventory/equipment panels, sample data, and nullable `lightsabre` proc rate preservation.
+- Added `tools/smoke_master_data_browser_checklist.js` and `docs/MASTER_DATA_BROWSER_CHECKLIST.md`.
+- Existing game behavior remains unchanged. The checklist only inspects and optionally re-renders existing panels.
