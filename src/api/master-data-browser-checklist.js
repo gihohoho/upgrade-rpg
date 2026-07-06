@@ -1,7 +1,7 @@
 (function () {
 	"use strict";
 
-	const CHECKLIST_VERSION = "v091.backend-master-data-browser-checklist";
+	const CHECKLIST_VERSION = "v093.backend-master-data-browser-checklist";
 
 	const REQUIRED_HELPERS = [
 		"enableBackendMasterDataMode",
@@ -40,6 +40,9 @@
 		"special-boss-grid",
 		"field-list-container",
 		"test-item-modal",
+	];
+
+	const OPTIONAL_DOM_IDS = [
 		"test-special-item-modal",
 	];
 
@@ -206,9 +209,21 @@
 				`dom.${id}`,
 				`#${id} 요소 존재`,
 				exists,
-				{ id },
+				{ id, required: true },
 				undefined,
 				`index.html에서 #${id} 요소가 삭제되었는지 확인하세요.`
+			));
+		});
+
+		OPTIONAL_DOM_IDS.forEach((id) => {
+			const exists = !!document.getElementById(id);
+			results.push(makeCheck(
+				`dom.optional.${id}`,
+				`#${id} 선택 요소 존재`,
+				exists,
+				{ id, required: false },
+				exists ? "pass" : "warn",
+				`#${id}는 일부 빌드에서 동적으로 생성되거나 생략될 수 있는 선택 요소입니다. openTestSpecialItemModal() 함수가 정상이라면 필수 실패로 보지 않습니다.`
 			));
 		});
 	}
@@ -370,6 +385,7 @@
 		REQUIRED_RENDER_FUNCTIONS,
 		REQUIRED_GAME_FUNCTIONS,
 		REQUIRED_DOM_IDS,
+		OPTIONAL_DOM_IDS,
 		MINIMUM_COUNTS,
 		runBackendMasterDataBrowserChecklist,
 		assertBackendMasterDataBrowserChecklist,

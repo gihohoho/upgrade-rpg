@@ -60,7 +60,8 @@
 		}
 
 		const includeAssets = !!(options && options.includeAssets);
-		const apiResponse = await window.RpgGameApi.fetchMasterData({ includeAssets });
+		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : undefined;
+		const apiResponse = await window.RpgGameApi.fetchMasterData({ includeAssets, timeoutMs });
 		const payload = getPayload(apiResponse);
 		const validation = validateMasterDataPayload(payload);
 		const assetValidation = includeAssets ? { ok: true, assetPolicy: payload.assetPolicy } : validateDefaultAssetPolicy(payload);
@@ -68,6 +69,7 @@
 		const snapshot = {
 			loadedAt: new Date().toISOString(),
 			includeAssets,
+			timeoutMs,
 			apiBaseUrl: window.RpgGameApi.getApiBaseUrl(),
 			apiResponse,
 			payload,
@@ -89,6 +91,7 @@
 		const summary = {
 			ok,
 			includeAssets: snapshot.includeAssets,
+			timeoutMs: snapshot.timeoutMs,
 			apiBaseUrl: snapshot.apiBaseUrl,
 			counts: snapshot.counts,
 			countFailures: snapshot.validation.failures,

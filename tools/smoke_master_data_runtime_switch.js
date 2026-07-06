@@ -29,6 +29,9 @@ const index = fs.readFileSync(indexPath, "utf8");
 	"replaceArray(bossList",
 	"replaceArray(specialBossList",
 	"replaceArray(zones",
+	"fieldZones: 0",
+	"staticZoneByLevel",
+	"field.img = staticField.img",
 	"failed_fallback_to_static_js",
 ].forEach((needle) => {
 	if (!runtime.includes(needle)) fail(`runtime switch에 필요한 코드가 없습니다: ${needle}`);

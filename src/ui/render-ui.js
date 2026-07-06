@@ -1903,7 +1903,8 @@ function renderFieldZone() {
 			if (!field) return;
 			let btn = document.createElement("div");
 			btn.className = "boss-slot";
-			btn.innerHTML = `<img src="${field.img}" alt="field">`;
+			const fieldImg = field.img && field.img !== "undefined" ? field.img : `https://placehold.co/64x64/222/fff?text=Zone${field.level || zoneIdx + 1}`;
+			btn.innerHTML = `<img src="${fieldImg}" alt="field">`;
 
 			btn.onmouseenter = (e) => {
 				const tip = document.getElementById("boss-tooltip");

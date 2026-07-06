@@ -108,3 +108,15 @@ node tools/smoke_master_data_browser_checklist.js
 runBackendMasterDataBrowserChecklist();
 printBackendMasterDataManualChecklist();
 ```
+### `smoke_master_data_auto_boot_policy.js`
+
+위치: **프로젝트 루트**
+
+```bash
+node tools/smoke_master_data_auto_boot_policy.js
+```
+
+백엔드 master-data 자동 부트 정책, timeout 처리, 로딩 순서가 들어갔는지 확인합니다.
+
+
+- `node tools/smoke_field_zone_asset_fallback.js`: 백엔드 master-data 모드에서 필드 이미지가 제외되어도 정적 JS 이미지 또는 안전한 기본 이미지로 보정되는지 확인합니다.

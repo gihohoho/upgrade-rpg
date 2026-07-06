@@ -1,7 +1,7 @@
-# v091 Backend Master Data Browser Checklist
+# v093 Backend Master Data Browser Checklist
 
 `v090`까지는 백엔드 master-data 모드가 브라우저 런타임에 주입됐는지 자동 검증했다.
-`v091`은 여기서 한 단계 더 나아가 실제 화면에서 확인해야 할 보스/필드/장비지급/인벤토리 관련 체크 항목을 한 번에 모아준다.
+`v091`은 실제 화면 체크리스트를 추가했고, `v093`은 실제 화면 구조에 맞춰 선택 DOM 검사를 보정한다.
 
 ## 목적
 
@@ -76,6 +76,7 @@ printBackendMasterDataManualChecklist();
 - 백엔드 데이터 적용 완료 여부
 - characters, skills, itemTemplates, normalBosses, specialBosses, fieldZones 최소 개수
 - 핵심 DOM 존재 여부
+- 선택 DOM 존재 여부(`#test-special-item-modal`은 일부 빌드에서 동적 생성/생략 가능하므로 경고로만 표시)
 - 일반보스 그리드 렌더링 여부
 - 특수보스 그리드 렌더링 여부
 - 필드존 목록 렌더링 여부
@@ -122,3 +123,14 @@ runBackendMasterDataBrowserChecklist({ refreshPanels: false });
 ## 주의
 
 이 도구는 게임 데이터를 바꾸지 않는다. 다만 `refreshPanels: true`일 때 `renderUI`, `renderBossZone`, `renderSpecialBossZone`, `renderFieldZone` 등을 호출해서 화면 목록을 다시 그린다.
+
+
+## v093 보정 사항
+
+브라우저 검증에서 `#test-special-item-modal` 요소가 없다는 이유만으로 전체 체크리스트가 실패하던 문제를 수정했다.
+
+이 요소는 특수 장비 지급 테스트 모달과 관련된 선택 DOM이며, 현재 구조에서는 `openTestSpecialItemModal()` 함수가 존재하고 실제 클릭 동작이 가능하면 필수 실패로 보지 않는다. 따라서 v093부터는 다음처럼 처리한다.
+
+- 필수 DOM: `fail` 유지
+- `#test-special-item-modal`: 없으면 `warn`, 있으면 `pass`
+- `warn`만 있는 경우 전체 `ok`는 `true` 유지

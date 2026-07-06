@@ -28,8 +28,23 @@
 		}
 	}
 
+	function getBootPolicy() {
+		if (window.RpgBackendMasterDataBootPolicy && typeof window.RpgBackendMasterDataBootPolicy.getBackendMasterDataBootPolicy === "function") {
+			return window.RpgBackendMasterDataBootPolicy.getBackendMasterDataBootPolicy();
+		}
+		const legacyEnabled = readStorage(STORAGE_KEY) === "1" || window.__UPGRADE_RPG_USE_BACKEND_MASTER_DATA__ === true;
+		return {
+			mode: legacyEnabled ? "backend" : "static",
+			includeAssets: true,
+			timeoutMs: 1500,
+			shouldTryBackend: legacyEnabled,
+			required: false,
+			fallbackToStaticJs: true,
+		};
+	}
+
 	function isBackendMasterDataModeEnabled() {
-		return readStorage(STORAGE_KEY) === "1" || window.__UPGRADE_RPG_USE_BACKEND_MASTER_DATA__ === true;
+		return !!getBootPolicy().shouldTryBackend;
 	}
 
 	function cloneJson(value) {
@@ -55,8 +70,10 @@
 	}
 
 	function setStatus(nextStatus) {
+		const policy = getBootPolicy();
 		const status = {
 			modeEnabled: isBackendMasterDataModeEnabled(),
+			bootPolicy: policy,
 			updatedAt: new Date().toISOString(),
 			...(window[STATUS_KEY] || {}),
 			...(nextStatus || {}),
@@ -75,10 +92,155 @@
 		}
 	}
 
-	function applyLegacyMasterData(legacyData) {
+	function isMissingAsset(value) {
+		return value === undefined || value === null || value === "" || value === "undefined";
+	}
+
+	function buildStaticDropAssetIndex() {
+		const byName = {};
+		const byNameAndType = {};
+		const collectDrops = (bosses) => {
+			(Array.isArray(bosses) ? bosses : []).forEach((boss) => {
+				(Array.isArray(boss.drops) ? boss.drops : []).forEach((drop) => {
+					if (!drop || !drop.name || !drop.img) return;
+					byName[drop.name] = drop;
+					byNameAndType[`${drop.name}::${drop.type || ""}`] = drop;
+				});
+			});
+		};
+		try {
+			if (typeof bossList !== "undefined") collectDrops(bossList);
+			if (typeof specialBossList !== "undefined") collectDrops(specialBossList);
+		} catch (error) {
+			// 정적 보스 데이터가 아직 없다면 무시합니다.
+		}
+		return { byName, byNameAndType };
+	}
+
+	function hydrateMissingAssetsFromStaticData(legacyData) {
+		const hydrated = {
+			characters: 0,
+			skills: 0,
+			bosses: 0,
+			bossDrops: 0,
+			itemTemplates: 0,
+			fieldZones: 0,
+		};
+
+		try {
+			if (typeof characterMasterData !== "undefined") {
+				Object.entries(legacyData.characterMasterData || {}).forEach(([id, character]) => {
+					const staticCharacter = characterMasterData[id];
+					if (character && staticCharacter && isMissingAsset(character.img) && staticCharacter.img) {
+						character.img = staticCharacter.img;
+						hydrated.characters += 1;
+					}
+				});
+			}
+		} catch (error) {
+			// 캐릭터 정적 데이터가 없으면 무시합니다.
+		}
+
+		try {
+			if (typeof skillMasterData !== "undefined") {
+				Object.entries(legacyData.skillMasterData || {}).forEach(([id, skill]) => {
+					const staticSkill = skillMasterData[id];
+					if (skill && staticSkill && isMissingAsset(skill.img) && staticSkill.img) {
+						skill.img = staticSkill.img;
+						hydrated.skills += 1;
+					}
+				});
+			}
+		} catch (error) {
+			// 스킬 정적 데이터가 없으면 무시합니다.
+		}
+
+		const staticBosses = [];
+		try {
+			if (typeof bossList !== "undefined") staticBosses.push(...bossList.map((boss) => ({ ...boss, isSpecial: false })));
+			if (typeof specialBossList !== "undefined") staticBosses.push(...specialBossList.map((boss) => ({ ...boss, isSpecial: true })));
+		} catch (error) {
+			// 정적 보스 데이터가 없으면 무시합니다.
+		}
+		const staticBossByKey = {};
+		staticBosses.forEach((boss) => {
+			if (!boss) return;
+			staticBossByKey[`${boss.isSpecial ? "special" : "normal"}::${boss.id}`] = boss;
+			if (boss.name) staticBossByKey[`name::${boss.name}`] = boss;
+		});
+
+		const hydrateBossList = (bosses) => {
+			(Array.isArray(bosses) ? bosses : []).forEach((boss) => {
+				const staticBoss = staticBossByKey[`${boss.isSpecial ? "special" : "normal"}::${boss.id}`] || staticBossByKey[`name::${boss.name}`];
+				if (!staticBoss) return;
+				if (isMissingAsset(boss.img) && staticBoss.img) {
+					boss.img = staticBoss.img;
+					hydrated.bosses += 1;
+				}
+				const staticDropsByName = {};
+				(Array.isArray(staticBoss.drops) ? staticBoss.drops : []).forEach((drop) => {
+					if (drop && drop.name) staticDropsByName[drop.name] = drop;
+				});
+				(Array.isArray(boss.drops) ? boss.drops : []).forEach((drop) => {
+					const staticDrop = drop && staticDropsByName[drop.name];
+					if (!staticDrop || !staticDrop.img) return;
+					if (isMissingAsset(drop.img)) {
+						drop.img = staticDrop.img;
+						hydrated.bossDrops += 1;
+					}
+					if (drop.raw && isMissingAsset(drop.raw.img)) drop.raw.img = staticDrop.img;
+				});
+			});
+		};
+		hydrateBossList(legacyData.bossList);
+		hydrateBossList(legacyData.specialBossList);
+
+		const dropAssetIndex = buildStaticDropAssetIndex();
+		(Array.isArray(legacyData.itemTemplateList) ? legacyData.itemTemplateList : []).forEach((item) => {
+			if (!item || !item.name) return;
+			const staticDrop = dropAssetIndex.byNameAndType[`${item.name}::${item.type || ""}`] || dropAssetIndex.byName[item.name];
+			if (!staticDrop || !staticDrop.img) return;
+			if (isMissingAsset(item.img)) {
+				item.img = staticDrop.img;
+				hydrated.itemTemplates += 1;
+			}
+			if (item.raw && isMissingAsset(item.raw.img)) item.raw.img = staticDrop.img;
+		});
+
+		try {
+			if (typeof zones !== "undefined") {
+				const staticZoneByLevel = {};
+				const staticZoneByName = {};
+				(Array.isArray(zones) ? zones : []).forEach((zone) => {
+					if (!zone) return;
+					if (zone.level !== undefined && zone.level !== null) staticZoneByLevel[String(zone.level)] = zone;
+					if (zone.name) staticZoneByName[zone.name] = zone;
+				});
+				(Array.isArray(legacyData.fieldZones) ? legacyData.fieldZones : []).forEach((field) => {
+					if (!field) return;
+					const staticField = staticZoneByLevel[String(field.level)] || staticZoneByName[field.name];
+					if (!staticField || !staticField.img) return;
+					if (isMissingAsset(field.img)) {
+						field.img = staticField.img;
+						hydrated.fieldZones += 1;
+					}
+				});
+			}
+		} catch (error) {
+			// 필드 정적 데이터가 없으면 무시합니다. render 단계에서 안전한 기본 이미지로 한 번 더 방어합니다.
+		}
+
+		legacyData.staticAssetHydration = hydrated;
+		return hydrated;
+	}
+
+	function applyLegacyMasterData(legacyData, options) {
 		if (!legacyData || typeof legacyData !== "object") {
 			throw new Error("적용할 legacy master-data가 없습니다.");
 		}
+
+		const shouldHydrateStaticAssets = !options || options.hydrateStaticAssets !== false;
+		const assetHydration = shouldHydrateStaticAssets ? hydrateMissingAssetsFromStaticData(legacyData) : null;
 
 		const applied = {
 			characterMasterData: false,
@@ -113,7 +275,8 @@
 			missing,
 			counts: legacyData.counts || {},
 			defaultCharacterId: legacyData.defaultCharacterId || null,
-			includeAssets: true,
+			includeAssets: !!(options && options.includeAssets),
+			assetHydration,
 		});
 
 		window.backendAppliedMasterData = legacyData;
@@ -122,38 +285,55 @@
 
 	async function loadAndApplyBackendMasterData(options) {
 		assertAdapterReady();
-		const includeAssets = options && options.includeAssets !== undefined ? !!options.includeAssets : true;
-		setStatus({ state: "loading", includeAssets });
-		const snapshot = await window.RpgMasterDataAdapter.loadAdaptedMasterDataFromApi({ includeAssets });
+		const policy = getBootPolicy();
+		const includeAssets = options && options.includeAssets !== undefined ? !!options.includeAssets : !!policy.includeAssets;
+		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : Number(policy.timeoutMs || 1500);
+		setStatus({ state: "loading", includeAssets, timeoutMs, bootPolicy: policy });
+		const snapshot = await window.RpgMasterDataAdapter.loadAdaptedMasterDataFromApi({ includeAssets, timeoutMs });
 		if (!snapshot.validation || snapshot.validation.ok !== true) {
 			const failures = snapshot.validation ? snapshot.validation.failures : [];
 			throw new Error(`master-data adapter 검증 실패: ${failures.join(", ")}`);
 		}
-		const status = applyLegacyMasterData(snapshot.legacyData);
+		const status = applyLegacyMasterData(snapshot.legacyData, { includeAssets, hydrateStaticAssets: !includeAssets });
 		status.snapshot = snapshot;
 		return status;
 	}
 
 	async function applyBackendMasterDataBeforeGameStart() {
-		if (!isBackendMasterDataModeEnabled()) {
-			return setStatus({ state: "disabled" });
+		const policy = getBootPolicy();
+		if (!policy.shouldTryBackend) {
+			return setStatus({ state: "static_js_mode", bootPolicy: policy });
 		}
 
 		try {
-			const status = await loadAndApplyBackendMasterData({ includeAssets: true });
+			const status = await loadAndApplyBackendMasterData({ includeAssets: policy.includeAssets, timeoutMs: policy.timeoutMs });
 			console.log("[Upgrade RPG] backend master-data runtime mode applied", {
+				mode: policy.mode,
+				includeAssets: policy.includeAssets,
 				counts: status.counts,
 				applied: status.applied,
+				assetHydration: status.assetHydration,
 			});
 			return status;
 		} catch (error) {
+			const state = policy.required ? "failed_required_backend_static_js_continued" : "failed_fallback_to_static_js";
 			console.warn("[Upgrade RPG] backend master-data runtime mode failed. 기존 JS 데이터로 계속 실행합니다.", error);
-			return setStatus({ state: "failed_fallback_to_static_js", errorMessage: error && error.message ? error.message : String(error) });
+			return setStatus({
+				state,
+				bootPolicy: policy,
+				errorMessage: error && error.message ? error.message : String(error),
+			});
 		}
 	}
 
 	function setBackendMasterDataMode(enabled, options) {
 		const shouldEnable = !!enabled;
+		if (window.RpgBackendMasterDataBootPolicy) {
+			return shouldEnable
+				? window.RpgBackendMasterDataBootPolicy.enableBackendMasterDataMode(options || {})
+				: window.RpgBackendMasterDataBootPolicy.disableBackendMasterDataMode(options || {});
+		}
+
 		if (shouldEnable) {
 			writeStorage(STORAGE_KEY, "1");
 			window.__UPGRADE_RPG_USE_BACKEND_MASTER_DATA__ = true;
@@ -180,12 +360,15 @@
 
 	async function checkBackendMasterDataRuntimeMode() {
 		const status = getBackendMasterDataRuntimeStatus();
+		const policy = getBootPolicy();
 		const summary = {
 			modeEnabled: isBackendMasterDataModeEnabled(),
+			bootPolicy: policy,
 			state: status.state,
 			counts: status.counts || null,
 			applied: status.applied || null,
 			missing: status.missing || [],
+			assetHydration: status.assetHydration || null,
 			errorMessage: status.errorMessage || null,
 		};
 		if (summary.modeEnabled && status.state === "disabled") {
@@ -210,12 +393,14 @@
 
 	window.RpgBackendMasterDataRuntime = {
 		STORAGE_KEY,
+		getBootPolicy,
 		isBackendMasterDataModeEnabled,
 		setBackendMasterDataMode,
 		enableBackendMasterDataMode,
 		disableBackendMasterDataMode,
 		getBackendMasterDataRuntimeStatus,
 		checkBackendMasterDataRuntimeMode,
+		hydrateMissingAssetsFromStaticData,
 		applyLegacyMasterData,
 		loadAndApplyBackendMasterData,
 		applyBackendMasterDataBeforeGameStart,
@@ -227,5 +412,5 @@
 	window.getBackendMasterDataRuntimeStatus = getBackendMasterDataRuntimeStatus;
 
 	wrapWindowOnload();
-	setStatus({ state: isBackendMasterDataModeEnabled() ? "enabled_waiting_for_page_load" : "disabled" });
+	setStatus({ state: getBootPolicy().shouldTryBackend ? "backend_auto_waiting_for_page_load" : "static_js_mode" });
 })();

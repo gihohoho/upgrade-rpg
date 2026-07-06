@@ -355,3 +355,33 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - The checklist verifies backend master-data mode state, required helper functions, core DOM ids, rendered boss/field/inventory/equipment panels, sample data, and nullable `lightsabre` proc rate preservation.
 - Added `tools/smoke_master_data_browser_checklist.js` and `docs/MASTER_DATA_BROWSER_CHECKLIST.md`.
 - Existing game behavior remains unchanged. The checklist only inspects and optionally re-renders existing panels.
+## v092 - Backend master-data auto boot policy
+
+- Added `src/api/master-data-boot-policy.js`.
+- Added default `auto` boot policy with static JS fallback.
+- Added API request timeout support through `AbortController`.
+- Updated runtime switch to hydrate missing image/icon assets from already-loaded static JS data when API assets are excluded.
+- Added `tools/smoke_master_data_auto_boot_policy.js`.
+
+
+
+## v093 - Browser checklist optional modal fix
+
+- `#test-special-item-modal`을 필수 DOM에서 선택 DOM으로 변경했다.
+- 특수 장비 지급 모달 요소가 동적 생성/생략되는 구조에서도 백엔드 master-data checklist가 불필요하게 실패하지 않도록 보정했다.
+- 체크리스트 버전을 `v093.backend-master-data-browser-checklist`로 갱신했다.
+- 수동 체크리스트 중복 문구를 제거했다.
+
+
+### v093 추가 보정 - Master-data bridge timeout summary
+
+- `src/api/master-data-bridge.js`의 `checkMasterDataApi()` summary에서 정의되지 않은 `timeoutMs` 변수를 참조하던 문제를 수정했다.
+- `snapshot.timeoutMs`를 사용하도록 변경해 브라우저와 Node smoke test 모두 안정적으로 동작하게 했다.
+
+## v094 - Field zone asset fallback
+
+- 백엔드 master-data 기본 응답에서 assets를 제외할 때 필드존 이미지가 `undefined`가 되어 `file:///.../undefined` 요청이 발생하던 문제를 수정했다.
+- `master-data-adapter`가 field zone의 `img`/`hasImage` 필드를 명시하도록 보강했다.
+- `master-data-runtime-switch`가 기존 정적 `zones` 데이터에서 field zone 이미지 값을 보정하도록 추가했다.
+- `renderFieldZone()`에 최후 방어용 기본 이미지 fallback을 추가했다.
+- `tools/smoke_field_zone_asset_fallback.js`와 `docs/MASTER_DATA_FIELD_ZONE_ASSET_FALLBACK.md`를 추가했다.

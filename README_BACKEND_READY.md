@@ -231,3 +231,28 @@ node tools/smoke_master_data_browser_checklist.js
 ```js
 runBackendMasterDataBrowserChecklist();
 ```
+## v092 - Backend master-data auto boot policy
+
+- 브라우저 시작 시 백엔드 master-data를 자동으로 시도하는 `auto` 정책을 추가했습니다.
+- FastAPI 요청 실패 시 기존 JS 데이터로 자동 fallback합니다.
+- 기본 API 요청에서는 긴 image/data URL asset을 제외하고, 필요한 이미지는 이미 로드된 정적 JS 데이터에서 보정합니다.
+- 확인 스크립트: `node tools/smoke_master_data_auto_boot_policy.js`
+
+
+
+## v093 - Browser checklist optional modal fix
+
+백엔드 master-data 자동 적용 상태는 정상인데 `#test-special-item-modal` 요소가 없다는 이유로 브라우저 체크리스트가 실패하던 문제를 수정했습니다.
+
+이 요소는 필수 DOM이 아니라 선택/동적 모달 요소로 취급합니다. 이제 해당 요소가 없어도 `warn`으로만 표시되고, 다른 필수 검사가 통과하면 `runBackendMasterDataBrowserChecklist()`의 전체 `ok`는 `true`가 됩니다.
+
+
+### v093 추가 보정 - master-data bridge timeout summary
+
+`checkBackendMasterData()`가 summary를 만들 때 `timeoutMs` 지역 변수를 직접 참조하던 문제를 수정했습니다. 이제 `snapshot.timeoutMs`를 사용하므로 브라우저/스모크 테스트에서 `ReferenceError: timeoutMs is not defined`가 발생하지 않습니다.
+
+
+### v094 - Field zone asset fallback
+
+- 백엔드 master-data 자동 적용 시 필드존 이미지가 `undefined`로 렌더링되지 않도록 보정했습니다.
+- 기본 master-data 응답은 여전히 assets 제외 정책을 유지하며, 필요한 이미지는 기존 정적 JS 데이터에서 보정합니다.

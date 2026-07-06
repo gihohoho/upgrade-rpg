@@ -3,6 +3,7 @@
 
 	const DEFAULT_API_BASE_URL = "http://127.0.0.1:8000/api/v1";
 	const API_BASE_URL_STORAGE_KEY = "upgradeRpgApiBaseUrl";
+	const DEFAULT_REQUEST_TIMEOUT_MS = 1500;
 
 	function trimTrailingSlash(value) {
 		return String(value || "").replace(/\/+$/, "");
@@ -48,15 +49,38 @@
 	async function request(path, options) {
 		const requestOptions = options || {};
 		const url = buildUrl(path, requestOptions.query);
-		const response = await fetch(url, {
-			method: requestOptions.method || "GET",
-			headers: {
-				Accept: "application/json",
-				...(requestOptions.body ? { "Content-Type": "application/json" } : {}),
-				...(requestOptions.headers || {}),
-			},
-			body: requestOptions.body ? JSON.stringify(requestOptions.body) : undefined,
-		});
+		const timeoutMs = Number(requestOptions.timeoutMs || 0);
+		let timeoutId = null;
+		let controller = null;
+
+		if (timeoutMs > 0 && typeof AbortController !== "undefined") {
+			controller = new AbortController();
+			timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+		}
+
+		let response;
+		try {
+			response = await fetch(url, {
+				method: requestOptions.method || "GET",
+				headers: {
+					Accept: "application/json",
+					...(requestOptions.body ? { "Content-Type": "application/json" } : {}),
+					...(requestOptions.headers || {}),
+				},
+				body: requestOptions.body ? JSON.stringify(requestOptions.body) : undefined,
+				signal: controller ? controller.signal : undefined,
+			});
+		} catch (error) {
+			if (error && error.name === "AbortError") {
+				const timeoutError = new Error(`API 요청 시간이 초과되었습니다: ${timeoutMs}ms`);
+				timeoutError.url = url;
+				timeoutError.timeoutMs = timeoutMs;
+				throw timeoutError;
+			}
+			throw error;
+		} finally {
+			if (timeoutId) window.clearTimeout(timeoutId);
+		}
 
 		let json = null;
 		try {
@@ -86,14 +110,17 @@
 
 	async function fetchMasterData(options) {
 		const includeAssets = !!(options && options.includeAssets);
+		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : undefined;
 		return request("/game/master-data", {
 			query: includeAssets ? { includeAssets: true } : undefined,
+			timeoutMs,
 		});
 	}
 
 	window.RpgGameApi = {
 		DEFAULT_API_BASE_URL,
 		API_BASE_URL_STORAGE_KEY,
+		DEFAULT_REQUEST_TIMEOUT_MS,
 		getApiBaseUrl,
 		setApiBaseUrl,
 		buildUrl,

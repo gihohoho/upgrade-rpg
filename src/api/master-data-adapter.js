@@ -280,17 +280,24 @@
 		return asArray(payload.fieldZones)
 			.slice()
 			.sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0))
-			.map((zone) => ({
-				level: zone.sortOrder,
-				code: zone.code,
-				name: zone.name,
-				enemyName: zone.description === zone.name ? "" : zone.description || "",
-				maxHp: zone.enemyHp,
-				goldReward: zone.goldReward,
-				req: cloneJson(zone.entryRules || {}),
-				farm: zone.farmRules && Object.keys(zone.farmRules).length ? cloneJson(zone.farmRules) : null,
-				isEnabled: zone.isEnabled !== false,
-			}));
+			.map((zone) => {
+				const entryRules = zone.entryRules || {};
+				const farmRules = zone.farmRules || {};
+				const raw = entryRules.raw || farmRules.raw || {};
+				return {
+					level: zone.sortOrder,
+					code: zone.code,
+					name: zone.name,
+					enemyName: zone.description === zone.name ? "" : zone.description || "",
+					img: zone.imageUrl || raw.img || null,
+					hasImage: !!zone.hasImage,
+					maxHp: zone.enemyHp,
+					goldReward: zone.goldReward,
+					req: cloneJson(entryRules),
+					farm: farmRules && Object.keys(farmRules).length ? cloneJson(farmRules) : null,
+					isEnabled: zone.isEnabled !== false,
+				};
+			});
 	}
 
 	function buildEnhancementRules(payload) {
