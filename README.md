@@ -1,3 +1,8 @@
+## v105
+- 백엔드 DB 세이브를 실제 게임에 적용하기 전에 localStorage 세이브와 비교하는 preview/compare 브릿지를 추가했습니다.
+- `previewBackendSaveSnapshot()`으로 레벨, 골드, 필드, 인벤토리/창고/우편/장착 슬롯 차이를 확인할 수 있습니다.
+- 이 단계에서는 DB 세이브를 localStorage나 게임 상태에 덮어쓰지 않습니다.
+
 ## v104
 - MD/SAVE dev badge 위치를 하단 HUD 바로 위로 올리고, 접힌 상태에서는 우측 상단에 show 버튼이 가지런히 붙도록 조정했습니다.
 - SAVE DATA 배지 버튼 행이 줄바꿈되지 않도록 폭과 레이아웃을 조정했습니다.

@@ -26,7 +26,7 @@ const requiredSnippets = [
 	"upgradeRpgShowBackendMasterDataDevBadge",
 	"getBackendMasterDataRuntimeStatus",
 	"getBackendMasterDataBootPolicy",
-	"v103.backend-master-data-dev-badge-bottom-dock",
+	"v104.backend-master-data-dev-badge-hud-top-align",
 	"attachBadgeToPreferredParent",
 	"bottom-hud",
 	"backend-master-data-dev-badge-toggle",
@@ -38,7 +38,7 @@ const requiredSnippets = [
 	"hide MD",
 	"show MD",
 	"shouldCreateControls",
-	"bottom: 158px",
+	"bottom: calc(100% + 10px)",
 	"right: 238px",
 	"position: fixed",
 ];
