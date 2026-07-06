@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.response import ok_response
 from app.core.security import CurrentUser, get_current_user_placeholder
 from app.db.session import get_db_session
+from app.schemas.game import GameSaveSnapshotRequest
 from app.services.game_service import GameService
 
 router = APIRouter()
@@ -42,19 +43,56 @@ async def get_master_data(
 
 
 @router.get("/load")
-async def load_game(current_user: CurrentUser = Depends(get_current_user_placeholder)):
-    """Future endpoint: load user profile/progress/inventory/equipment/skills."""
+async def load_game(
+    slot_key: str = Query(default="default", alias="slotKey"),
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Load the raw localStorage save snapshot stored in PostgreSQL.
+
+    This endpoint is a migration bridge. It does not yet replace the browser's
+    localStorage boot flow; it only proves that user progress can be read from DB.
+    """
+    save_data = await service.load_game(session, current_user.id, slot_key=slot_key)
     return ok_response(
         type="game.load",
-        data=await service.load_game(current_user.id),
-        meta={"note": "DB 저장 구조 연결 전 임시 응답입니다."},
+        payload=save_data,
+        data={
+            "status": save_data["status"],
+            "userId": current_user.id,
+            "slotKey": slot_key,
+            "exists": save_data["exists"],
+        },
+        meta={"source": "postgresql", "note": "localStorage 원본 세이브 스냅샷 조회 API입니다."},
     )
 
 
 @router.post("/save")
-async def save_game(current_user: CurrentUser = Depends(get_current_user_placeholder)):
-    """Future endpoint: temporary save bridge while migrating from localStorage."""
+async def save_game(
+    payload: GameSaveSnapshotRequest,
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Store a raw localStorage save snapshot in PostgreSQL.
+
+    The normalized save tables already exist as drafts, but this snapshot bridge is
+    the safest first migration step because it preserves the current browser save
+    payload exactly.
+    """
+    saved = await service.save_game_snapshot(
+        session,
+        user_id=current_user.id,
+        username=current_user.username,
+        payload=payload,
+    )
     return ok_response(
         type="game.save",
-        data={"status": "stub", "userId": current_user.id},
+        payload=saved,
+        data={
+            "status": "saved",
+            "userId": current_user.id,
+            "slotKey": saved["slotKey"],
+            "saveVersion": saved["saveVersion"],
+        },
+        meta={"source": "postgresql", "note": "localStorage 원본 세이브 스냅샷 저장 API입니다."},
     )

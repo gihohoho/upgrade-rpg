@@ -582,3 +582,8 @@ printBackendMasterDataManualChecklist();
 - 토글 버튼을 MASTER DATA 배지 상단 정가운데에 탭처럼 배치했습니다.
 - 배지를 숨겨도 화면 안의 `show MD` 버튼으로 다시 펼칠 수 있습니다.
 - 이 수정은 프론트 개발자용 UI만 바꾸므로 DB reset/seed import는 필요 없습니다.
+
+### v099 save snapshot API bridge
+
+유저 진행 데이터 마이그레이션의 첫 단계로 `idleRpgSaveV22` localStorage 원본을 PostgreSQL `user_save_snapshots`에 저장/조회하는 API와 브라우저 테스트 함수를 추가했습니다. 아직 게임 로딩 흐름은 localStorage를 유지합니다.
+

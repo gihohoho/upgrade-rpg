@@ -6,7 +6,7 @@ from app.models.field import FieldZone
 from app.models.item import ItemInstance, ItemTemplate, UserEquipmentSlot, UserInventorySlot
 from app.models.mailbox import UserMailboxMessage
 from app.models.skill import CharacterSkill, Skill, SkillLevel, UserCharacterSkill
-from app.models.user import User, UserProfile
+from app.models.user import User, UserProfile, UserSaveSnapshot
 
 __all__ = [
     "AdminChangeLog",
@@ -30,4 +30,5 @@ __all__ = [
     "UserInventorySlot",
     "UserMailboxMessage",
     "UserProfile",
+    "UserSaveSnapshot",
 ]

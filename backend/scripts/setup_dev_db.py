@@ -55,6 +55,7 @@ from app.models import (  # noqa: F401 - importing registers SQLAlchemy metadata
     UserInventorySlot,
     UserMailboxMessage,
     UserProfile,
+    UserSaveSnapshot,
 )
 
 DEFAULT_SEED_DIR = BACKEND_DIR / "seeds" / "generated"

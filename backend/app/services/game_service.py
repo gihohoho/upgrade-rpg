@@ -19,6 +19,9 @@ from app.models import (
     ItemTemplate,
     Skill,
     SkillLevel,
+    User,
+    UserProfile,
+    UserSaveSnapshot,
 )
 
 
@@ -166,8 +169,122 @@ class GameService:
             return value
         return None
 
-    async def load_game(self, user_id: int) -> dict[str, Any]:
-        return {"userId": user_id, "status": "stub"}
+    async def load_game(self, session: AsyncSession, user_id: int, *, slot_key: str = "default") -> dict[str, Any]:
+        """Load the latest raw save snapshot for a user/slot.
+
+        This is a migration bridge. It returns the raw snapshot exactly as stored so
+        later browser-side migration can still use the existing saveVersion rules.
+        """
+        result = await session.execute(
+            select(UserSaveSnapshot).where(
+                UserSaveSnapshot.user_id == user_id,
+                UserSaveSnapshot.slot_key == slot_key,
+            )
+        )
+        snapshot = result.scalar_one_or_none()
+        if snapshot is None:
+            return {
+                "userId": user_id,
+                "slotKey": slot_key,
+                "status": "empty",
+                "exists": False,
+                "clientSaveKey": None,
+                "saveVersion": None,
+                "snapshot": None,
+                "summary": {},
+                "source": None,
+                "updatedAt": None,
+            }
+
+        return self._serialize_save_snapshot(snapshot, status="loaded")
+
+    async def save_game_snapshot(
+        self,
+        session: AsyncSession,
+        *,
+        user_id: int,
+        username: str,
+        payload: Any,
+    ) -> dict[str, Any]:
+        """Store the browser localStorage save payload as one raw DB snapshot.
+
+        The local dev auth placeholder uses user id 1. Since local schema resets wipe
+        users too, this method also ensures the placeholder user/profile exists before
+        inserting the save snapshot.
+        """
+        await self._ensure_local_user(session, user_id=user_id, username=username)
+
+        snapshot_data = payload.snapshot or {}
+        save_version = payload.save_version
+        if save_version is None and isinstance(snapshot_data, dict):
+            raw_version = snapshot_data.get("saveVersion")
+            if raw_version is not None:
+                try:
+                    save_version = int(raw_version)
+                except (TypeError, ValueError):
+                    save_version = 0
+        if save_version is None:
+            save_version = 0
+
+        result = await session.execute(
+            select(UserSaveSnapshot).where(
+                UserSaveSnapshot.user_id == user_id,
+                UserSaveSnapshot.slot_key == payload.slot_key,
+            )
+        )
+        row = result.scalar_one_or_none()
+        if row is None:
+            row = UserSaveSnapshot(
+                user_id=user_id,
+                slot_key=payload.slot_key,
+                client_save_key=payload.client_save_key,
+                save_version=save_version,
+                snapshot_json=snapshot_data,
+                summary_json=payload.summary or {},
+                source=payload.source or "localStorage",
+                note=payload.note,
+            )
+            session.add(row)
+        else:
+            row.client_save_key = payload.client_save_key
+            row.save_version = save_version
+            row.snapshot_json = snapshot_data
+            row.summary_json = payload.summary or {}
+            row.source = payload.source or "localStorage"
+            row.note = payload.note
+
+        await session.commit()
+        await session.refresh(row)
+        return self._serialize_save_snapshot(row, status="saved")
+
+    async def _ensure_local_user(self, session: AsyncSession, *, user_id: int, username: str) -> None:
+        user = await session.get(User, user_id)
+        if user is None:
+            user = User(id=user_id, username=username or f"local-dev-{user_id}", is_active=True, is_admin=True)
+            session.add(user)
+            await session.flush()
+
+        result = await session.execute(select(UserProfile).where(UserProfile.user_id == user_id))
+        profile = result.scalar_one_or_none()
+        if profile is None:
+            session.add(UserProfile(user_id=user_id))
+            await session.flush()
+
+    def _serialize_save_snapshot(self, snapshot: UserSaveSnapshot, *, status: str) -> dict[str, Any]:
+        return {
+            "userId": snapshot.user_id,
+            "slotKey": snapshot.slot_key,
+            "status": status,
+            "exists": True,
+            "clientSaveKey": snapshot.client_save_key,
+            "saveVersion": snapshot.save_version,
+            "snapshot": serialize_value(snapshot.snapshot_json),
+            "summary": serialize_value(snapshot.summary_json),
+            "source": snapshot.source,
+            "note": snapshot.note,
+            "createdAt": serialize_value(snapshot.created_at),
+            "updatedAt": serialize_value(snapshot.updated_at),
+        }
 
     async def _fetch_characters(self, session: AsyncSession, *, include_assets: bool) -> list[dict[str, Any]]:
         result = await session.execute(select(Character).order_by(Character.code))

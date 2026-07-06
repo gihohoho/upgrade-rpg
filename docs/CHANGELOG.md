@@ -417,3 +417,10 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - 배지를 숨긴 뒤에도 화면의 `show MD` 버튼으로 다시 표시할 수 있게 했다.
 - `auto` / `static` 버튼에 현재 적용 중인 모드를 나타내는 활성 스타일을 추가했다.
 - `refresh` 버튼의 의미를 명확히 하기 위해 `updated` 시간을 표시하고 문서를 보강했다.
+
+## v099 - Save Snapshot API Bridge
+
+- Added `user_save_snapshots` table/model for raw localStorage save snapshots.
+- Implemented `POST /api/v1/game/save` and `GET /api/v1/game/load` as DB-backed snapshot APIs.
+- Added browser helpers: `pushLocalSaveToBackend()`, `loadBackendSaveSnapshot()`, and `checkBackendSaveSnapshotBridge()`.
+- Added static and live smoke tests for the save snapshot bridge.

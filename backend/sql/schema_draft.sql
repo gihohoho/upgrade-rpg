@@ -26,6 +26,21 @@ CREATE TABLE user_profiles (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE user_save_snapshots (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  slot_key VARCHAR(80) NOT NULL DEFAULT 'default',
+  client_save_key VARCHAR(120) NOT NULL DEFAULT 'idleRpgSaveV22',
+  save_version INTEGER NOT NULL DEFAULT 0,
+  snapshot_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+  summary_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+  source VARCHAR(80) NOT NULL DEFAULT 'localStorage',
+  note TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT uq_user_save_snapshot_slot UNIQUE (user_id, slot_key)
+);
+
 CREATE TABLE characters (
   id BIGSERIAL PRIMARY KEY,
   code VARCHAR(80) UNIQUE NOT NULL,

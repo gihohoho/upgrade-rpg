@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, ForeignKey, Integer, Numeric, String
+from sqlalchemy import Boolean, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -31,3 +31,25 @@ class UserProfile(Base, IdMixin, TimestampMixin):
     records_json: Mapped[dict] = mapped_column(JSONB, default=dict)
 
     user: Mapped[User] = relationship(back_populates="profile")
+
+
+
+class UserSaveSnapshot(Base, IdMixin, TimestampMixin):
+    """Raw localStorage save snapshot kept during the backend migration.
+
+    This table is intentionally snapshot-based first. The next migration stages can
+    split inventory, equipment, skills, mailbox, and records into normalized tables
+    after the browser/localStorage bridge is proven safe.
+    """
+
+    __tablename__ = "user_save_snapshots"
+    __table_args__ = (UniqueConstraint("user_id", "slot_key", name="uq_user_save_snapshot_slot"),)
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    slot_key: Mapped[str] = mapped_column(String(80), default="default")
+    client_save_key: Mapped[str] = mapped_column(String(120), default="idleRpgSaveV22")
+    save_version: Mapped[int] = mapped_column(Integer, default=0)
+    snapshot_json: Mapped[dict] = mapped_column(JSONB, default=dict)
+    summary_json: Mapped[dict] = mapped_column(JSONB, default=dict)
+    source: Mapped[str] = mapped_column(String(80), default="localStorage")
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)

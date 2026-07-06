@@ -117,6 +117,24 @@
 		});
 	}
 
+	async function saveGameSnapshot(payload, options) {
+		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : undefined;
+		return request("/game/save", {
+			method: "POST",
+			body: payload || {},
+			timeoutMs,
+		});
+	}
+
+	async function loadGameSnapshot(options) {
+		const slotKey = options && options.slotKey ? options.slotKey : undefined;
+		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : undefined;
+		return request("/game/load", {
+			query: slotKey ? { slotKey } : undefined,
+			timeoutMs,
+		});
+	}
+
 	window.RpgGameApi = {
 		DEFAULT_API_BASE_URL,
 		API_BASE_URL_STORAGE_KEY,
@@ -126,5 +144,7 @@
 		buildUrl,
 		request,
 		fetchMasterData,
+		saveGameSnapshot,
+		loadGameSnapshot,
 	};
 })();
