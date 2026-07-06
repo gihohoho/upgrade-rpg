@@ -1,6 +1,6 @@
 [project]
 name = "idle-rpg-backend"
-version = "0.1.1"
+version = "0.1.2"
 description = "FastAPI backend foundation for the idle RPG migration"
 requires-python = ">=3.11"
 dependencies = [

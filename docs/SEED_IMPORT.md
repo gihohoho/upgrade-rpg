@@ -122,6 +122,26 @@ pip install "psycopg[binary]"
 python scripts/setup_dev_db.py --reset --seed --verify
 ```
 
+
+## 긴 이미지/아이콘 URL 처리
+
+현재 seed에는 SVG `data:image` URL이 들어갈 수 있습니다. 일반 URL보다 길기 때문에 이미지/아이콘 컬럼은 `VARCHAR(500)`이 아니라 `TEXT` 타입을 사용합니다.
+
+관련 컬럼:
+
+- `characters.image_url`
+- `skills.icon_url`
+- `item_templates.icon_url`
+- `bosses.image_url`
+
+만약 아래 오류가 나오면 v082 이상 ZIP을 적용한 뒤 `--reset --seed --verify`를 다시 실행하세요.
+
+```txt
+value too long for type character varying(500)
+```
+
+자세한 내용은 `docs/SEED_IMPORT_LONG_ASSET_FIX.md`를 참고하세요.
+
 ## 다음 단계
 
 seed import가 성공하면 다음 단계는 `/game/master-data` API가 DB에서 실제 데이터를 읽어오게 만드는 작업입니다.

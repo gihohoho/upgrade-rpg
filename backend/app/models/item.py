@@ -13,7 +13,7 @@ class ItemTemplate(Base, IdMixin, TimestampMixin):
     name: Mapped[str] = mapped_column(String(160))
     item_type: Mapped[str] = mapped_column(String(60), index=True)
     grade: Mapped[str | None] = mapped_column(String(60), nullable=True)
-    icon_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    icon_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     stackable: Mapped[bool] = mapped_column(Boolean, default=False)
     equip_slot: Mapped[str | None] = mapped_column(String(60), nullable=True)

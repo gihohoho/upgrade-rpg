@@ -520,6 +520,7 @@ def main() -> None:
     parser.add_argument("--seed", action="store_true", help="Import generated seed JSON into PostgreSQL")
     parser.add_argument("--verify", action="store_true", help="Print table counts after setup")
     parser.add_argument("--dry-run", action="store_true", help="Load seed JSON and print expected counts without DB access")
+    parser.add_argument("--verbose-sql", action="store_true", help="Print raw SQL logs while running this script")
     args = parser.parse_args()
 
     seed_dir = Path(args.seed_dir).resolve()
@@ -528,7 +529,9 @@ def main() -> None:
         return
 
     sync_database_url = to_sync_database_url(settings.database_url)
-    engine = create_engine(sync_database_url, echo=settings.debug, future=True, pool_pre_ping=True)
+    # Keep SQL echo off by default. Seed rows can include very long SVG data URLs,
+    # so raw SQL logs become huge and make the real error hard to read.
+    engine = create_engine(sync_database_url, echo=args.verbose_sql, future=True, pool_pre_ping=True)
 
     try:
         if args.reset:

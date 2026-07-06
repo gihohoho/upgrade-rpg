@@ -114,3 +114,19 @@ master-data API check passed
 
 다음 단계에서는 프론트엔드가 아직 JS 파일에서 직접 읽는 마스터 데이터를 FastAPI API 응답으로 점진적으로 교체할 준비를 합니다.
 단, 게임 화면 전체를 한 번에 API로 바꾸기보다는 먼저 읽기 전용 브릿지부터 붙이는 방식이 안전합니다.
+
+## seed import가 0개로 보일 때
+
+`scripts/check_master_data_api.py`에서 모든 개수가 0으로 나오면 API가 실패한 것이 아니라 seed import가 중간에 실패해 롤백됐을 수 있습니다.
+
+특히 아래 오류가 있으면 이미지/아이콘 URL 컬럼 길이 문제입니다. v082 이상에서는 해당 컬럼을 `TEXT`로 변경했습니다.
+
+```txt
+value too long for type character varying(500)
+```
+
+위치: **backend 폴더 + 가상환경 activate 상태**
+
+```bash
+python scripts/setup_dev_db.py --reset --seed --verify
+```

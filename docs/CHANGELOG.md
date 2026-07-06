@@ -1,5 +1,13 @@
 # 변경 기록
 
+## v082 - Seed Import Long Asset URL Fix
+
+- `item_templates.icon_url`에 SVG `data:image` 문자열이 500자를 넘어 seed import가 실패하던 문제를 수정했습니다.
+- `characters.image_url`, `skills.icon_url`, `item_templates.icon_url`, `bosses.image_url` 컬럼을 `Text` 타입으로 변경했습니다.
+- `backend/sql/schema_draft.sql`의 이미지/아이콘 URL 컬럼도 `TEXT`로 맞췄습니다.
+- `backend/scripts/setup_dev_db.py`의 SQL 로그 출력을 기본 비활성화했습니다. 긴 seed 데이터가 터미널을 가득 채우는 것을 막고, 필요할 때만 `--verbose-sql`로 볼 수 있습니다.
+- `tools/smoke_seed_import_long_asset_columns.py`를 추가했습니다.
+
 ## v078 - Seed Import Structure
 
 - `backend/scripts/setup_dev_db.py` 추가
