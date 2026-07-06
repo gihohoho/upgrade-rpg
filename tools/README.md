@@ -145,3 +145,5 @@ node tools/smoke_save_data_dual_write.js
 ```
 
 수동 저장 버튼이 기존 localStorage 저장 후 백엔드 save snapshot API에도 저장을 시도하도록 연결되었는지 정적으로 검사합니다.
+
+- `smoke_save_data_dev_badge.js`: SAVE DATA 개발자 배지 구조와 로딩 순서를 확인합니다.

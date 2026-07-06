@@ -244,7 +244,14 @@ function manualSaveGame() {
 	const cooldownMs = 60000;
 	const remain = cooldownMs - (now - lastManualSaveAt);
 	if (remain > 0) {
-		addLog(`[저장] 수동 저장은 ${Math.ceil(remain / 1000)}초 후 다시 사용할 수 있습니다.`);
+		const remainSeconds = Math.ceil(remain / 1000);
+		addLog(`[저장] 수동 저장은 ${remainSeconds}초 후 다시 사용할 수 있습니다.`);
+		if (window.recordBackendSaveManualSaveCooldown && typeof window.recordBackendSaveManualSaveCooldown === "function") {
+			window.recordBackendSaveManualSaveCooldown({
+				reason: "manualSaveGame",
+				remainSeconds,
+			});
+		}
 		return;
 	}
 	lastManualSaveAt = now;

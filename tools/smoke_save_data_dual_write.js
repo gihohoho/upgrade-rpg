@@ -23,6 +23,8 @@ function assertOrder(file, first, second) {
 }
 
 assertIncludes("src/api/save-data-sync-policy.js", "requestBackendSaveAfterManualSave");
+assertIncludes("src/api/save-data-sync-policy.js", "ready_manual_dual");
+assertIncludes("src/api/save-data-sync-policy.js", "skipped_manual_save_cooldown");
 assertIncludes("src/api/save-data-sync-policy.js", "manual_dual");
 assertIncludes("src/api/save-data-sync-policy.js", "failed_fallback_to_local_storage");
 assertIncludes("src/app/main.js", "requestBackendSaveAfterManualSave");

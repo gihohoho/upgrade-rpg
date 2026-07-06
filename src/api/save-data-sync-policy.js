@@ -3,6 +3,7 @@
 
 	const SAVE_SYNC_MODE_STORAGE_KEY = "upgradeRpgBackendSaveSyncMode";
 	const SAVE_SYNC_STATUS_STORAGE_KEY = "upgradeRpgBackendSaveSyncStatus";
+	const SAVE_SYNC_MODE_INIT_STORAGE_KEY = "upgradeRpgBackendSaveSyncModeInitializedV102";
 	const DEFAULT_MODE = "manual_dual";
 	const DEFAULT_TIMEOUT_MS = 3000;
 
@@ -28,8 +29,48 @@
 		}
 	}
 
+	function removeStorage(key) {
+		try {
+			if (window.localStorage) window.localStorage.removeItem(key);
+		} catch (error) {
+			// localStorage가 막힌 환경에서는 기본값으로만 동작합니다.
+		}
+	}
+
+	function isLocalDevelopment() {
+		try {
+			const protocol = window.location && window.location.protocol;
+			const host = window.location && window.location.hostname;
+			return protocol === "file:" || host === "localhost" || host === "127.0.0.1";
+		} catch (error) {
+			return true;
+		}
+	}
+
+	function normalizeStoredBackendSaveSyncMode() {
+		const storedMode = readStorage(SAVE_SYNC_MODE_STORAGE_KEY);
+		const initialized = readStorage(SAVE_SYNC_MODE_INIT_STORAGE_KEY);
+		if (initialized !== "1" && storedMode === "local_only" && isLocalDevelopment()) {
+			// v101 테스트 중 local 버튼을 눌러 저장된 값 때문에 다음 접속마다 local로 시작하는 문제를 방지합니다.
+			// v102 최초 적용 시 한 번만 기본값인 manual_dual로 되돌리고, 이후 사용자가 local을 누르면 그대로 유지됩니다.
+			writeStorage(SAVE_SYNC_MODE_STORAGE_KEY, DEFAULT_MODE);
+			writeStorage(SAVE_SYNC_MODE_INIT_STORAGE_KEY, "1");
+			return DEFAULT_MODE;
+		}
+		if (initialized !== "1") writeStorage(SAVE_SYNC_MODE_INIT_STORAGE_KEY, "1");
+		return storedMode;
+	}
+
+	function dispatchBackendSaveSyncEvent(name, detail) {
+		try {
+			window.dispatchEvent(new CustomEvent(`upgrade-rpg:backend-save-sync-${name}`, { detail: detail || {} }));
+		} catch (error) {
+			// CustomEvent를 지원하지 않는 환경에서는 배지 자동 새로고침으로 보정합니다.
+		}
+	}
+
 	function getBackendSaveSyncMode() {
-		const mode = readStorage(SAVE_SYNC_MODE_STORAGE_KEY);
+		const mode = normalizeStoredBackendSaveSyncMode();
 		if (mode === "local_only" || mode === "manual_dual") return mode;
 		return DEFAULT_MODE;
 	}
@@ -37,6 +78,13 @@
 	function setBackendSaveSyncMode(mode, options) {
 		const nextMode = mode === "local_only" ? "local_only" : "manual_dual";
 		writeStorage(SAVE_SYNC_MODE_STORAGE_KEY, nextMode);
+		writeStorage(SAVE_SYNC_MODE_INIT_STORAGE_KEY, "1");
+		const modeStatus = setBackendSaveSyncStatus({
+			ok: null,
+			state: nextMode === "manual_dual" ? "ready_manual_dual" : "local_only_mode",
+			reason: "mode-change",
+		});
+		dispatchBackendSaveSyncEvent("mode", { mode: nextMode, status: modeStatus });
 		const shouldReload = !!(options && options.reload);
 		if (typeof addLog === "function") {
 			addLog(
@@ -86,7 +134,7 @@
 
 	function setBackendSaveSyncStatus(status) {
 		const nextStatus = {
-			ok: !!status.ok,
+			ok: status.ok === undefined || status.ok === null ? null : !!status.ok,
 			state: status.state || (status.ok ? "synced" : "failed"),
 			updatedAt: nowIso(),
 			mode: getBackendSaveSyncMode(),
@@ -99,6 +147,7 @@
 		};
 		writeStorage(SAVE_SYNC_STATUS_STORAGE_KEY, JSON.stringify(nextStatus));
 		window.__upgradeRpgBackendSaveSyncStatus = nextStatus;
+		dispatchBackendSaveSyncEvent("status", nextStatus);
 		return nextStatus;
 	}
 
@@ -117,6 +166,30 @@
 
 	function shouldSyncBackendOnManualSave() {
 		return getBackendSaveSyncMode() === "manual_dual";
+	}
+
+	function resetBackendSaveSyncModeToDefault() {
+		removeStorage(SAVE_SYNC_MODE_STORAGE_KEY);
+		removeStorage(SAVE_SYNC_MODE_INIT_STORAGE_KEY);
+		const mode = getBackendSaveSyncMode();
+		const status = setBackendSaveSyncStatus({
+			ok: null,
+			state: "ready_manual_dual",
+			reason: "reset-default-mode",
+		});
+		dispatchBackendSaveSyncEvent("mode", { mode, status });
+		return getBackendSaveSyncPolicy();
+	}
+
+	function recordBackendSaveManualSaveCooldown(options) {
+		const opts = options || {};
+		const remainSeconds = opts.remainSeconds !== undefined ? opts.remainSeconds : null;
+		return setBackendSaveSyncStatus({
+			ok: null,
+			state: "skipped_manual_save_cooldown",
+			reason: opts.reason || "manual-save-cooldown",
+			error: remainSeconds !== null ? `수동 저장 쿨타임입니다. ${remainSeconds}초 후 다시 시도할 수 있습니다.` : "수동 저장 쿨타임입니다.",
+		});
 	}
 
 	function logSaveSync(message, isImportant) {
@@ -218,11 +291,14 @@
 
 	window.BACKEND_SAVE_SYNC_MODE_STORAGE_KEY = SAVE_SYNC_MODE_STORAGE_KEY;
 	window.BACKEND_SAVE_SYNC_STATUS_STORAGE_KEY = SAVE_SYNC_STATUS_STORAGE_KEY;
+	window.BACKEND_SAVE_SYNC_MODE_INIT_STORAGE_KEY = SAVE_SYNC_MODE_INIT_STORAGE_KEY;
 	window.getBackendSaveSyncMode = getBackendSaveSyncMode;
 	window.getBackendSaveSyncPolicy = getBackendSaveSyncPolicy;
 	window.getBackendSaveSyncStatus = getBackendSaveSyncStatus;
 	window.enableBackendSaveDualWrite = enableBackendSaveDualWrite;
 	window.disableBackendSaveDualWrite = disableBackendSaveDualWrite;
+	window.resetBackendSaveSyncModeToDefault = resetBackendSaveSyncModeToDefault;
+	window.recordBackendSaveManualSaveCooldown = recordBackendSaveManualSaveCooldown;
 	window.syncLatestLocalSaveToBackend = syncLatestLocalSaveToBackend;
 	window.requestBackendSaveAfterManualSave = requestBackendSaveAfterManualSave;
 	window.checkBackendSaveSyncPolicy = checkBackendSaveSyncPolicy;

@@ -1,3 +1,7 @@
+## v104
+- MD/SAVE dev badge 위치를 하단 HUD 바로 위로 올리고, 접힌 상태에서는 우측 상단에 show 버튼이 가지런히 붙도록 조정했습니다.
+- SAVE DATA 배지 버튼 행이 줄바꿈되지 않도록 폭과 레이아웃을 조정했습니다.
+
 # RPG v100 - Save Data Dual Write
 
 이번 버전은 기존 `localStorage` 저장을 유지하면서, **수동 저장 버튼을 누를 때 백엔드 DB에도 세이브 스냅샷을 저장**하도록 연결한 버전입니다.
@@ -616,3 +620,12 @@ printBackendMasterDataManualChecklist();
 
 유저 진행 데이터 마이그레이션의 첫 단계로 `idleRpgSaveV22` localStorage 원본을 PostgreSQL `user_save_snapshots`에 저장/조회하는 API와 브라우저 테스트 함수를 추가했습니다. 아직 게임 로딩 흐름은 localStorage를 유지합니다.
 
+
+
+## v101
+
+- SAVE DATA 개발자 배지를 추가해 수동 저장의 백엔드 DB 동기화 상태를 화면에서 확인할 수 있습니다.
+
+## v102 note
+
+SAVE DATA 기본 모드는 로컬 개발에서 `dual`입니다. DB 저장 테스트는 SAVE DATA 배지의 `dual` 버튼이 활성화된 상태에서 `성장/시스템 → 수동 저장`을 눌러 확인합니다. `local` 모드는 백엔드 저장을 일부러 건너뛰는 모드입니다.

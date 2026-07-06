@@ -86,3 +86,15 @@ uvicorn app.main:app --reload
 getBackendSaveSyncStatus();
 await loadBackendSaveSnapshot();
 ```
+
+## v102: 테스트 기준 정리
+
+DB 저장 테스트는 `dual` 모드에서 진행합니다.
+
+1. SAVE DATA 배지에서 `dual` 버튼이 활성화되어 있는지 확인합니다.
+2. 성장/시스템 → 수동 저장을 누릅니다.
+3. SAVE DATA 배지가 `synced`로 바뀌는지 확인합니다.
+
+`local` 모드는 백엔드 저장을 끄는 안전 모드입니다. 이 상태에서 성장/시스템 → 수동 저장을 누르면 localStorage 저장만 하고 DB 저장은 시도하지 않으며, 상태는 `skipped_local_only_mode`가 됩니다.
+
+수동 저장에는 60초 쿨타임이 있으므로 연속 테스트 중에는 `sync DB` 버튼으로 DB 전송만 따로 확인할 수 있습니다.

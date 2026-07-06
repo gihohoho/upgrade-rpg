@@ -298,3 +298,12 @@ runBackendMasterDataBrowserChecklist();
 ```bash
 node tools/smoke_save_data_dual_write.js
 ```
+
+
+## v101 - SAVE DATA 개발자 배지
+
+수동 저장 시 백엔드 DB 저장 성공/실패 상태를 브라우저 화면에서 확인할 수 있는 개발자용 배지를 추가했습니다.
+
+## v102 SAVE DATA test note
+
+If SAVE DATA shows `skipped_local_only_mode`, click `dual` once and try `성장/시스템 → 수동 저장` again after the 60 second manual-save cooldown. During cooldown, the badge shows `skipped_manual_save_cooldown`.

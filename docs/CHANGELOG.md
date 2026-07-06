@@ -1,4 +1,23 @@
+## v104
+- MD/SAVE dev badge 위치를 하단 HUD 바로 위로 올리고, 접힌 상태에서는 우측 상단에 show 버튼이 가지런히 붙도록 조정했습니다.
+- SAVE DATA 배지 버튼 행이 줄바꿈되지 않도록 폭과 레이아웃을 조정했습니다.
+
 # 변경 기록
+
+## v103 - 개발자 배지 하단 HUD 위 배치
+
+- `MASTER DATA`와 `SAVE DATA` 개발자 배지를 하단 HUD 내부가 아니라 하단 인터페이스 바로 위쪽에 고정 배치했습니다.
+- 데스크톱에서는 오른쪽 스킬칸 위에 두 배지가 나란히 보이도록 정렬했습니다.
+- 좁은 화면에서는 두 배지가 겹치지 않도록 세로로 분리되게 했습니다.
+- 배지 위치만 변경했으며 master-data/save-data 로직은 변경하지 않았습니다.
+
+## v101 - SAVE DATA 개발자 배지
+
+- 수동 저장의 백엔드 DB 동기화 상태를 화면에서 확인하는 `SAVE DATA` 개발자 배지를 추가했습니다.
+- 배지에서 즉시 `sync`, `load`, `dual`, `local` 작업을 실행할 수 있습니다.
+- 저장 정책/상태 변경 시 배지가 즉시 갱신되도록 `upgrade-rpg:backend-save-sync-*` 이벤트를 추가했습니다.
+- 백엔드 저장값 `load`는 아직 게임 상태에 적용하지 않고 조회만 합니다.
+
 
 
 ## v098 - Master-data dev badge toggle alignment
@@ -432,3 +451,10 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - Backend save failure does not block or undo localStorage save; it only records a fallback status and logs a warning.
 - Added browser helpers: `getBackendSaveSyncPolicy()`, `getBackendSaveSyncStatus()`, `enableBackendSaveDualWrite()`, `disableBackendSaveDualWrite()`, `syncLatestLocalSaveToBackend()`.
 - Added `tools/smoke_save_data_dual_write.js` and `docs/SAVE_DATA_DUAL_WRITE.md`.
+## v102 - Save Data default dual mode and cooldown status
+
+- SAVE DATA 기본 모드를 로컬 개발 환경에서 `manual_dual`로 복구했습니다.
+- v101에서 저장된 `local_only` 테스트 상태가 다음 접속까지 남아 DB 저장 테스트를 방해하는 문제를 완화했습니다.
+- `dual`/`local` 버튼 클릭 시 이전 `skipped_local_only_mode` 상태가 남지 않도록 상태를 즉시 갱신합니다.
+- 수동 저장 쿨타임 중에는 `skipped_manual_save_cooldown` 상태를 표시합니다.
+- SAVE DATA 배지의 `sync`/`load` 버튼명을 `sync DB`/`load DB`로 명확히 바꿨습니다.
