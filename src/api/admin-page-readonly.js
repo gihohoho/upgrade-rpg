@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v126.admin-edit-impact-guide";
+  const VERSION = "v128.admin-post-edit-api-verify";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -23,6 +23,97 @@
     enhancementGroups: ["name", "description", "max_level", "is_enabled"],
     enhancementLevels: ["to_level", "success_rate", "gold_cost"],
     characterSkills: ["sort_order", "is_default"],
+  };
+
+  let currentMasterDetailPayload = null;
+  let currentAdminChangeLogDetailPayload = null;
+
+  const ADMIN_TO_MASTER_API_FIELD_MAP = {
+    itemTemplates: {
+      code: "code",
+      name: "name",
+      item_type: "itemType",
+      grade: "grade",
+      description: "description",
+      stackable: "stackable",
+      equip_slot: "equipSlot",
+      enhance_group_code: "enhanceGroupCode",
+      admin_note: "adminNote",
+    },
+    skills: {
+      code: "code",
+      name: "name",
+      slot_key: "slotKey",
+      description: "description",
+      proc_rate: "procRate",
+      cooldown_seconds: "cooldownSeconds",
+    },
+    skillLevels: {
+      skill_code: "skillCode",
+      level: "level",
+      damage_multiplier: "damageMultiplier",
+      proc_rate_bonus: "procRateBonus",
+    },
+    bosses: {
+      code: "code",
+      name: "name",
+      tier: "tier",
+      boss_type: "bossType",
+      hp: "hp",
+      description: "description",
+      cooldown_seconds: "cooldownSeconds",
+      is_enabled: "isEnabled",
+    },
+    fieldZones: {
+      code: "code",
+      name: "name",
+      sort_order: "sortOrder",
+      enemy_hp: "enemyHp",
+      gold_reward: "goldReward",
+      description: "description",
+      is_enabled: "isEnabled",
+    },
+    characters: {
+      code: "code",
+      name: "name",
+      description: "description",
+      is_enabled: "isEnabled",
+    },
+    dropTables: {
+      code: "code",
+      owner_type: "ownerType",
+      owner_code: "ownerCode",
+      description: "description",
+      is_enabled: "isEnabled",
+    },
+    dropTableItems: {
+      id: "id",
+      drop_table_code: "dropTableCode",
+      item_template_code: "itemTemplateCode",
+      rate: "rate",
+      min_quantity: "minQuantity",
+      max_quantity: "maxQuantity",
+    },
+    enhancementGroups: {
+      code: "code",
+      name: "name",
+      description: "description",
+      max_level: "maxLevel",
+      is_enabled: "isEnabled",
+    },
+    enhancementLevels: {
+      group_code: "groupCode",
+      from_level: "fromLevel",
+      to_level: "toLevel",
+      success_rate: "successRate",
+      gold_cost: "goldCost",
+    },
+    characterSkills: {
+      character_code: "characterCode",
+      skill_code: "skillCode",
+      sort_order: "sortOrder",
+      is_default: "isDefault",
+    },
   };
 
 
@@ -256,6 +347,7 @@
     if (typeof window.RpgGameApi.fetchAdminChangeLogDetail !== "function") throw new Error("fetchAdminChangeLogDetail 함수를 찾을 수 없습니다.");
     if (typeof window.RpgGameApi.previewAdminChangeLogRollback !== "function") throw new Error("previewAdminChangeLogRollback 함수를 찾을 수 없습니다.");
     if (typeof window.RpgGameApi.applyAdminChangeLogRollback !== "function") throw new Error("applyAdminChangeLogRollback 함수를 찾을 수 없습니다.");
+    if (typeof window.RpgGameApi.fetchMasterData !== "function") throw new Error("fetchMasterData 함수를 찾을 수 없습니다.");
   }
 
   function readSnapshotFiltersFromDom() {
@@ -927,8 +1019,10 @@
     const payload = response && response.payload ? response.payload : {};
     renderAdminEditPreviewResult(payload);
     if (payload.applied) {
-      setStatus(`DB 적용 완료 · change log #${formatValue(payload.changeLogId)} · 상세 다시 불러오기`, "ok");
-      await openAdminMasterDataDetail(values.domain, values.id, { timeoutMs: DEFAULT_TIMEOUT_MS });
+      await runPostWriteMasterApiVerification(values.domain, values.id, {
+        label: "DB 적용",
+        contextLabel: `change log #${formatValue(payload.changeLogId)} 적용 후 자동 확인`,
+      });
       await refreshAdminChangeLogs({ targetType: `master_data.${values.domain}`, targetId: String(values.id), limit: 10 });
     } else {
       setStatus(`DB 적용 실패/차단: ${formatValue(payload.status)} · errors ${formatValue(payload.errorCount)}`, "error");
@@ -963,7 +1057,214 @@
     return result;
   }
 
+  function makeAdminDetailFieldMap(detailPayload) {
+    const fields = Array.isArray(detailPayload && detailPayload.fields) ? detailPayload.fields : [];
+    const map = {};
+    fields.forEach((field) => {
+      if (!field || !field.key) return;
+      map[field.key] = field.value;
+    });
+    return map;
+  }
+
+  function valuesEqualForApiVerify(expected, actual) {
+    if (expected === actual) return true;
+    if ((expected === null || expected === undefined || expected === "") && (actual === null || actual === undefined || actual === "")) return true;
+    if (typeof expected === "boolean" || typeof actual === "boolean") {
+      return (expected === true || String(expected).toLowerCase() === "true") === (actual === true || String(actual).toLowerCase() === "true");
+    }
+    const expectedNumber = Number(expected);
+    const actualNumber = Number(actual);
+    if (expected !== "" && actual !== "" && Number.isFinite(expectedNumber) && Number.isFinite(actualNumber)) {
+      return expectedNumber === actualNumber;
+    }
+    return String(expected) === String(actual);
+  }
+
+  function findMasterApiRow(domain, detailPayload, masterPayload) {
+    const rows = Array.isArray(masterPayload && masterPayload[domain]) ? masterPayload[domain] : [];
+    const fields = makeAdminDetailFieldMap(detailPayload);
+    if (!rows.length) return null;
+
+    if (fields.id !== undefined) {
+      const byId = rows.find((row) => valuesEqualForApiVerify(fields.id, row && row.id));
+      if (byId) return byId;
+    }
+    if (fields.code !== undefined) {
+      const byCode = rows.find((row) => valuesEqualForApiVerify(fields.code, row && row.code));
+      if (byCode) return byCode;
+    }
+
+    if (domain === "skillLevels") {
+      return rows.find((row) => valuesEqualForApiVerify(fields.skill_code, row && row.skillCode) && valuesEqualForApiVerify(fields.level, row && row.level)) || null;
+    }
+    if (domain === "dropTableItems") {
+      return rows.find((row) => valuesEqualForApiVerify(fields.id, row && row.id) || (
+        valuesEqualForApiVerify(fields.drop_table_code, row && row.dropTableCode) &&
+        valuesEqualForApiVerify(fields.item_template_code, row && row.itemTemplateCode)
+      )) || null;
+    }
+    if (domain === "enhancementLevels") {
+      return rows.find((row) =>
+        valuesEqualForApiVerify(fields.group_code, row && row.groupCode) &&
+        valuesEqualForApiVerify(fields.from_level, row && row.fromLevel) &&
+        valuesEqualForApiVerify(fields.to_level, row && row.toLevel)
+      ) || null;
+    }
+    if (domain === "characterSkills") {
+      return rows.find((row) =>
+        valuesEqualForApiVerify(fields.character_code, row && row.characterCode) &&
+        valuesEqualForApiVerify(fields.skill_code, row && row.skillCode)
+      ) || null;
+    }
+    return null;
+  }
+
+  function buildMasterApiVerifyComparisons(domain, detailPayload, apiRow) {
+    const fieldMap = ADMIN_TO_MASTER_API_FIELD_MAP[domain] || {};
+    const detailFields = makeAdminDetailFieldMap(detailPayload);
+    return Object.entries(fieldMap)
+      .filter(([adminKey, apiKey]) => detailFields[adminKey] !== undefined && apiRow && Object.prototype.hasOwnProperty.call(apiRow, apiKey))
+      .map(([adminKey, apiKey]) => {
+        const expected = detailFields[adminKey];
+        const actual = apiRow ? apiRow[apiKey] : undefined;
+        return {
+          adminKey,
+          apiKey,
+          expected,
+          actual,
+          same: valuesEqualForApiVerify(expected, actual),
+        };
+      });
+  }
+
+  function renderMasterApiVerifyResult(result) {
+    const target = $(`[data-admin-master-api-verify-result]`);
+    if (!target) return;
+    const info = result || {};
+    if (!info.checked) {
+      target.innerHTML = `<div class="empty">버튼을 누르면 현재 선택한 상세 항목이 <strong>/game/master-data</strong> 응답에도 같은 값으로 보이는지 확인합니다.</div>`;
+      return;
+    }
+    if (!info.found) {
+      target.innerHTML = `
+        <div class="error">master-data API에서 선택한 항목을 찾지 못했습니다.</div>
+        <div class="filter-help">domain=${escapeHtml(formatValue(info.domain))} · id=${escapeHtml(formatValue(info.id))} · rows=${escapeHtml(formatValue(info.rowCount))}</div>
+      `;
+      return;
+    }
+    const rows = (info.comparisons || []).map((row) => `
+      <tr>
+        <td>${escapeHtml(row.adminKey)}</td>
+        <td>${escapeHtml(row.apiKey)}</td>
+        <td>${escapeHtml(formatValue(row.expected))}</td>
+        <td>${escapeHtml(formatValue(row.actual))}</td>
+        <td><span class="pill ${row.same ? "good" : "blocked"}">${row.same ? "same" : "diff"}</span></td>
+      </tr>
+    `).join("") || `<tr><td colspan="5">비교 가능한 스칼라 필드가 없습니다.</td></tr>`;
+    target.innerHTML = `
+      <div class="draft-preview-summary">
+        <span class="pill ${info.ok ? "good" : "blocked"}">API 반영 ${info.ok ? "정상" : "차이 있음"}</span>
+        <span class="pill">domain ${escapeHtml(formatValue(info.domain))}</span>
+        <span class="pill">비교 ${escapeHtml(formatValue(info.comparisonCount))}</span>
+        <span class="pill ${info.diffCount ? "blocked" : "good"}">diff ${escapeHtml(formatValue(info.diffCount))}</span>
+        <span class="pill">checked ${escapeHtml(formatClock(info.checkedAt))}</span>
+        ${info.contextLabel ? `<span class="pill warn">${escapeHtml(info.contextLabel)}</span>` : ""}
+      </div>
+      <div class="table-wrap relation-table-wrap"><table><thead><tr><th>관리자 필드</th><th>master-data API 필드</th><th>관리자 상세 값</th><th>API 값</th><th>상태</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="filter-help">이 검사는 DB → FastAPI <code>/game/master-data</code> 응답까지 반영됐는지 확인합니다. 이미 열려 있던 게임 화면은 새로고침해야 새 master-data를 다시 읽습니다.</div>
+    `;
+  }
+
+  async function verifySelectedMasterDataApi(options) {
+    ensureApi();
+    const detail = currentMasterDetailPayload;
+    if (!detail || !detail.id || !detail.domain) {
+      const error = new Error("먼저 마스터 데이터 상세를 열어주세요.");
+      setStatus(error.message, "error");
+      throw error;
+    }
+    const target = $(`[data-admin-master-api-verify-result]`);
+    if (target) target.innerHTML = `<div class="empty">/game/master-data 응답에서 선택 항목을 확인하는 중...</div>`;
+    const timeoutMs = options && options.timeoutMs !== undefined ? options.timeoutMs : DEFAULT_TIMEOUT_MS;
+    const response = await window.RpgGameApi.fetchMasterData({ timeoutMs });
+    const payload = response && response.payload ? response.payload : {};
+    const domain = detail.domain;
+    const rows = Array.isArray(payload[domain]) ? payload[domain] : [];
+    const apiRow = findMasterApiRow(domain, detail, payload);
+    const comparisons = apiRow ? buildMasterApiVerifyComparisons(domain, detail, apiRow) : [];
+    const diffCount = comparisons.filter((row) => !row.same).length;
+    const result = {
+      checked: true,
+      ok: !!apiRow && diffCount === 0,
+      found: !!apiRow,
+      domain,
+      id: detail.id,
+      title: detail.title,
+      rowCount: rows.length,
+      comparisonCount: comparisons.length,
+      diffCount,
+      comparisons,
+      apiRowPreview: apiRow || null,
+      counts: payload.counts || {},
+      contextLabel: options && options.contextLabel ? String(options.contextLabel) : "",
+      autoAfterWrite: !!(options && options.autoAfterWrite),
+      checkedAt: new Date().toISOString(),
+    };
+    renderMasterApiVerifyResult(result);
+    setStatus(result.ok ? `master-data API 반영 확인 완료: ${formatValue(domain)} #${formatValue(detail.id)}` : `master-data API 확인 필요: diff ${formatValue(diffCount)}`, result.ok ? "ok" : "error");
+    return result;
+  }
+
+  async function runPostWriteMasterApiVerification(domain, id, options) {
+    const opts = options || {};
+    const label = opts.label || "DB 적용";
+    const result = {
+      ok: false,
+      status: "not_started",
+      domain,
+      id,
+      label,
+      verification: null,
+      error: null,
+    };
+    if (!domain || !id) {
+      result.status = "skipped_missing_target";
+      setStatus(`${label} 완료 · API 자동 확인은 대상 정보가 없어 건너뜀`, "error");
+      return result;
+    }
+    try {
+      setStatus(`${label} 완료 · 상세 다시 불러오기 및 master-data API 자동 확인 중...`, "info");
+      await openAdminMasterDataDetail(domain, id, { timeoutMs: DEFAULT_TIMEOUT_MS });
+      const verification = await verifySelectedMasterDataApi({
+        timeoutMs: DEFAULT_TIMEOUT_MS,
+        contextLabel: opts.contextLabel || `${label} 후 자동 확인`,
+        autoAfterWrite: true,
+      });
+      result.verification = verification;
+      result.ok = !!(verification && verification.ok);
+      result.status = result.ok ? "verified" : "diff_or_missing";
+      setStatus(
+        result.ok
+          ? `${label} 완료 · master-data API 자동 확인 정상 · 게임은 새로고침 후 반영`
+          : `${label} 완료 · master-data API 자동 확인 필요: diff ${formatValue(verification && verification.diffCount)}`,
+        result.ok ? "ok" : "error"
+      );
+      return result;
+    } catch (error) {
+      result.status = "verify_failed";
+      result.error = error;
+      const target = $(`[data-admin-master-api-verify-result]`);
+      if (target) {
+        target.innerHTML = `<div class="error">${escapeHtml(label)} 후 master-data API 자동 확인 실패: ${escapeHtml(error && error.message ? error.message : error)}</div>`;
+      }
+      setStatus(`${label} 완료 · master-data API 자동 확인 실패: ${error && error.message ? error.message : error}`, "error");
+      return result;
+    }
+  }
+
   function renderMasterDetail(detailPayload) {
+    currentMasterDetailPayload = detailPayload && detailPayload.status === "loaded" ? detailPayload : null;
     const target = $("[data-admin-master-detail]");
     const meta = $("[data-admin-master-detail-meta]");
     if (!target) return;
@@ -1021,6 +1322,15 @@
         </div>
       </div>
       <div style="margin:0 14px 12px;">${renderMasterEditDraft(detail, fields)}</div>
+      <div class="detail-card" style="margin:0 14px 12px;">
+        <div class="detail-title">인게임 master-data API 반영 확인 <span class="pill good">diagnostic</span></div>
+        <div class="filter-help">관리자 상세 값이 게임이 읽는 <code>/game/master-data</code> 응답에도 같은 값으로 보이는지 확인합니다. DB 적용 직후 게임 새로고침 전 점검용입니다.</div>
+        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn mini primary" type="button" data-admin-action="verify-master-api-target">선택 항목 API 반영 확인</button>
+          <span class="pill warn">게임 화면은 새로고침 필요</span>
+        </div>
+        <div class="edit-draft-result" data-admin-master-api-verify-result><div class="empty">버튼을 누르면 현재 선택한 상세 항목이 <strong>/game/master-data</strong> 응답에도 같은 값으로 보이는지 확인합니다.</div></div>
+      </div>
       <div class="detail-card" style="margin:0 14px 12px;">
         <div class="detail-title">실제 연결 항목</div>
         <div class="filter-help">관련 마스터 데이터를 축약된 목록으로 보여줍니다. 행의 보기 버튼을 누르면 해당 항목 상세로 이동합니다.</div>
@@ -1207,6 +1517,7 @@
 
 
   function renderAdminChangeLogDetail(detailPayload) {
+    currentAdminChangeLogDetailPayload = detailPayload && detailPayload.status === "loaded" ? detailPayload : null;
     const target = $(`[data-admin-change-log-detail]`);
     if (!target) return;
     const payload = detailPayload || {};
@@ -1329,8 +1640,12 @@
     const payload = response && response.payload ? response.payload : {};
     renderAdminRollbackResult(payload);
     if (payload.rolledBack) {
-      setStatus(`되돌리기 완료 · rollback log #${formatValue(payload.rollbackChangeLogId)} · 게임은 새로고침 후 반영`, "ok");
+      const rollbackTarget = currentAdminChangeLogDetailPayload && currentAdminChangeLogDetailPayload.rollback ? currentAdminChangeLogDetailPayload.rollback : {};
       await refreshAdminChangeLogs({ limit: 20 });
+      await runPostWriteMasterApiVerification(rollbackTarget.domain, rollbackTarget.id, {
+        label: "되돌리기",
+        contextLabel: `rollback log #${formatValue(payload.rollbackChangeLogId)} 적용 후 자동 확인`,
+      });
     } else {
       setStatus(`되돌리기 실패/차단: ${formatValue(payload.status)}`, "error");
     }
@@ -1509,6 +1824,13 @@
           if (!(error && String(error.message || "").includes("확인 문구"))) renderError(error);
         }
       }
+      if (action === "verify-master-api-target") {
+        try {
+          await verifySelectedMasterDataApi();
+        } catch (error) {
+          renderError(error);
+        }
+      }
       if (action === "reset-admin-edit-draft") {
         resetAdminEditDraft();
       }
@@ -1564,7 +1886,9 @@
     const fieldHelpReady = !!document.querySelector("[data-admin-field-help]");
     const adminChangeLogReady = !!document.querySelector("[data-admin-change-log-table]");
     const adminChangeLogDetailReady = !!document.querySelector("[data-admin-change-log-detail]");
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, readOnly: false, writeLocked: false, guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const masterApiVerifyReady = typeof verifySelectedMasterDataApi === "function";
+    const postWriteApiVerifyReady = typeof runPostWriteMasterApiVerification === "function";
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && masterApiVerifyReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, masterApiVerifyReady, postWriteApiVerifyReady, readOnly: false, writeLocked: false, guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -1608,6 +1932,11 @@
     applyAdminChangeLogRollback,
     readAdminRollbackControls,
     renderAdminRollbackResult,
+    verifySelectedMasterDataApi,
+    runPostWriteMasterApiVerification,
+    renderMasterApiVerifyResult,
+    findMasterApiRow,
+    buildMasterApiVerifyComparisons,
     getAdminFieldHelp,
     listAdminFieldHelp,
     getAdminFieldValueHint,
@@ -1640,6 +1969,8 @@
   window.previewAdminChangeLogRollback = previewAdminChangeLogRollback;
   window.applyAdminChangeLogRollback = applyAdminChangeLogRollback;
   window.readAdminRollbackControls = readAdminRollbackControls;
+  window.verifySelectedMasterDataApi = verifySelectedMasterDataApi;
+  window.runPostWriteMasterApiVerification = runPostWriteMasterApiVerification;
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", bootAdminReadOnlyPage, { once: true });

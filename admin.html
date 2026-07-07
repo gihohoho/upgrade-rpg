@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upgrade RPG Admin - Change Log Rollback</title>
+  <title>Upgrade RPG Admin - Master Data API Verify</title>
   <style>
     :root {
       color-scheme: dark;
@@ -692,9 +692,9 @@
   <main class="admin-shell">
     <div class="topbar">
       <div>
-        <div class="eyebrow"><span class="dot"></span>Guarded Admin Rollback</div>
+        <div class="eyebrow"><span class="dot"></span>Guarded Admin + API Verify</div>
         <h1>Upgrade RPG 관리자 페이지</h1>
-        <p class="subtitle">마스터 데이터 allow-list 필드를 실제 DB에 적용하고, 저장 전 인게임 영향 안내와 admin_change_logs 안전 되돌리기를 함께 확인합니다.</p>
+        <p class="subtitle">마스터 데이터 allow-list 필드를 실제 DB에 적용하고, 변경 이력 되돌리기, 인게임 영향 안내, 적용/되돌리기 후 master-data API 자동 확인까지 함께 점검합니다.</p>
       </div>
       <div class="top-actions">
         <a class="btn" href="index.html" data-admin-game-url>게임으로 돌아가기</a>
@@ -702,7 +702,7 @@
       </div>
     </div>
 
-    <div class="notice">이 페이지는 관리자 화면으로 옮기기 전의 안전한 뼈대입니다. <strong>마스터 데이터 allow-list 필드</strong>는 검증 + 확인 문구를 거쳐 실제 DB 적용이 가능하고, 변경 전에는 어떤 인게임 영역에 영향이 있는지 안내합니다. localStorage와 현재 게임 런타임은 직접 수정하지 않습니다.</div>
+    <div class="notice">이 페이지는 관리자 화면으로 옮기기 전의 안전한 뼈대입니다. <strong>마스터 데이터 allow-list 필드</strong>는 검증 + 확인 문구를 거쳐 실제 DB 적용이 가능하고, 변경 전 영향 안내와 변경 후 <code>/game/master-data</code> API 반영 확인을 제공합니다. localStorage와 현재 게임 런타임은 직접 수정하지 않습니다.</div>
     <div class="notice danger-notice">주의: 지급/삭제/JSON/이미지/관계 코드 변경은 아직 막혀 있습니다. 실제 적용/되돌리기는 name, description, 수치 밸런스, is_enabled 등 좁은 필드만 가능합니다.</div>
     <div class="notice location-notice">
       <div>
@@ -717,7 +717,7 @@
       <a href="#section-overview">요약</a>
       <a href="#section-field-help">필드 도움말</a>
       <a href="#section-master-catalog">마스터 목록</a>
-      <a href="#section-master-detail">상세/편집 초안</a>
+      <a href="#section-master-detail">상세/편집/API확인</a>
       <a href="#section-change-logs">변경 이력</a>
       <a href="#section-save-snapshots">세이브 스냅샷</a>
       <a href="#section-readiness">준비 상태</a>
@@ -915,7 +915,7 @@
       <div data-admin-readiness><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <p class="footer-note">v126 admin edit impact guide · static HTML + JS · FastAPI guarded write/rollback APIs</p>
+    <p class="footer-note">v128 admin post-edit API verify · static HTML + JS · FastAPI guarded write/rollback APIs</p>
   </main>
 
   <script src="src/api/game-api-client.js"></script>

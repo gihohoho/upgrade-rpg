@@ -1,3 +1,18 @@
+## v128
+- 관리자 마스터 데이터 실제 적용 후 선택 항목 상세를 다시 불러오고 `/api/v1/game/master-data` 응답을 자동 비교합니다.
+- 변경 이력 되돌리기 성공 후에도 되돌린 대상의 master-data API 반영 상태를 자동 확인합니다.
+- 자동 확인 결과에 `contextLabel`과 `autoAfterWrite` 정보를 붙여 수동 확인과 구분할 수 있게 했습니다.
+- 이 기능은 진단만 수행하며 DB 추가 수정/localStorage 수정/현재 게임 런타임 수정은 하지 않습니다.
+- DB reset/seed는 필요 없습니다.
+
+## v127
+- 관리자 상세 화면에 `인게임 master-data API 반영 확인` 진단을 추가했습니다.
+- 선택한 마스터 데이터 상세 값이 `/api/v1/game/master-data` 응답에도 같은 값으로 내려오는지 비교합니다.
+- DB 적용 후 게임 새로고침 전에 DB → FastAPI master-data 응답까지 반영됐는지 확인할 수 있습니다.
+- 이 기능은 조회만 수행하며 DB/localStorage/현재 게임 런타임은 수정하지 않습니다.
+- Console helper `verifySelectedMasterDataApi()`를 추가했습니다.
+- DB reset/seed는 필요 없습니다.
+
 ## v124
 - 관리자 페이지에서 수정한 `itemTemplates.stackable` 값을 인게임 신규 획득 장비 겹치기 로직에 연결했습니다.
 - master-data adapter가 보스 드랍 아이템에 `stackable`, `templateKey`, `itemTemplateCode` 런타임 필드를 붙입니다.

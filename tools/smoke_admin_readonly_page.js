@@ -18,7 +18,7 @@ function assertContains(file, patterns) {
 
 assertContains("admin.html", [
   "Upgrade RPG 관리자 페이지",
-  "Guarded Admin Rollback",
+  "Guarded Admin + API Verify",
   "data-admin-action=\"refresh\"",
   "data-admin-api-base-url",
   "data-admin-cards",
@@ -41,7 +41,7 @@ assertContains("admin.html", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v126.admin-edit-impact-guide",
+  "v128.admin-post-edit-api-verify",
   "fetchAdminReadOnlyPageData",
   "refreshAdminReadOnlyPage",
   "checkAdminReadOnlyPageReady",
