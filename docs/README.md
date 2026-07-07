@@ -64,3 +64,5 @@ docs/archive/stage-notes/
 - [ADMIN_COMBO_RELATION_GUARD.md](ADMIN_COMBO_RELATION_GUARD.md) - 조합 관계 필드 안전 편집과 중복 조합 검증
 
 - [ADMIN_OWNER_CODE_RELATION_TOOLS.md](ADMIN_OWNER_CODE_RELATION_TOOLS.md) - dropTables.owner_code 안전 편집과 owner_type 연동 select
+
+- [ADMIN_RELATION_SEARCH_TOOLS.md](ADMIN_RELATION_SEARCH_TOOLS.md) - relation select 검색/필터 UI와 카탈로그 편의 기능

@@ -1,6 +1,6 @@
 # 새 채팅 시작용 프롬프트
 
-아래 내용을 그대로 새 채팅의 첫 메시지로 붙여넣고, 함께 `rpg_v147_admin_owner_code_relation_tools.zip`을 업로드해서 이어서 진행해줘.
+아래 내용을 그대로 새 채팅의 첫 메시지로 붙여넣고, 함께 `rpg_v153_admin_relation_preview_tools.zip`을 업로드해서 이어서 진행해줘.
 
 ---
 
@@ -51,10 +51,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v147: admin owner code relation tools
+v153: admin relation preview tools
 
 최신 ZIP:
-rpg_v147_admin_owner_code_relation_tools.zip
+rpg_v153_admin_relation_preview_tools.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -89,14 +89,19 @@ docs/NEXT_STEPS.md
 24. v141에서 관리자 관계 필드 안전 편집 완료.
 25. v144에서 조합 관계 필드 안전 편집과 중복 조합 검증 완료.
 26. v147에서 dropTables.owner_code 안전 편집과 owner_type 연동 select 완료.
+27. v150에서 relation select 검색/필터 UI 완료.
+28. v150에서 마스터 카탈로그 Enter 조회/페이지 자동 초기화 완료.
+29. v151에서 변경 preview relation label 강화 완료.
+30. v152에서 relation 대상 빠른 열기 버튼 완료.
+31. v153에서 relation 변경 개수 표시 완료.
 
-v147 세부 완료:
-- v144 조합 관계 필드 안전 편집 유지.
-- dropTables.owner_code relation select 추가.
-- owner_type=boss이면 bosses 목록, owner_type=field이면 fieldZones 목록에서 owner_code 선택.
-- owner_type 변경 시 owner_code 후보 목록 자동 전환.
-- preview/apply 공통으로 owner_type + owner_code 대상 존재 여부 검사.
-- 초안 검증 결과에 relation target label 표시.
+v153 세부 완료:
+- v147 관계 필드 안전 편집 유지.
+- v150 relation select 후보 검색/필터 유지.
+- 변경 preview와 초안 before/after 표에서 relation 값에 대상 이름 label 표시.
+- relation 변경 행에 relation 배지 표시.
+- relation 대상이 열 수 있는 도메인이면 대상 열기 버튼 표시.
+- 변경 요약 배너에 relation 변경 개수 표시.
 
 현재 게임 실제 세이브 슬롯:
 default
@@ -137,12 +142,12 @@ bash tools/run_smoke_all.sh
 ```
 
 다음 추천 단계:
-v148 relation select 검색/필터 UI
+v154 관리자 변경 이력 relation label 강화
 
 구체적으로:
-관계 대상 목록이 길어질수록 select에서 찾기 어려워질 수 있으니, relation select 후보를 코드/이름으로 빠르게 필터링할 수 있게 만드는 단계가 좋아.
+이미 저장된 change log 상세와 rollback preview에서도 relation 값이 코드만 보이지 않도록 before/after에 대상 이름 label을 붙여줘.
 
-현재 선택값은 필터와 상관없이 유지하고, 실제 적용은 기존 preview/apply 백엔드 검증을 그대로 거치게 해줘.
+rollback 대상도 열 수 있으면 대상 열기 버튼을 붙이고, 기존 rollback guard는 그대로 유지해줘.
 
 이 단계도 가능하면 DB reset/seed 없이 관리자 UI 편의 기능 중심으로 진행해줘.
 

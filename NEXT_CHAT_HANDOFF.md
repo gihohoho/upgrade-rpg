@@ -68,10 +68,10 @@ local-admin-dev-key
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v147: admin owner code relation tools**
-- 최신 ZIP 이름: **rpg_v147_admin_owner_code_relation_tools.zip**
+- 최신 안정 버전: **v153: admin relation preview tools**
+- 최신 ZIP 이름: **rpg_v153_admin_relation_preview_tools.zip**
 
-v147은 v144의 조합 관계 필드 안전 편집 위에 `dropTables.owner_code` 안전 편집을 추가한 버전입니다. owner_type이 boss면 bosses 목록, field면 fieldZones 목록에서만 owner_code를 선택하고, owner_type을 바꾸면 owner_code 후보 목록도 자동 전환됩니다. 백엔드는 preview/apply 단계에서 `owner_type + owner_code` 대상 존재 여부를 다시 검사합니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
+v153은 v150의 relation select 검색/필터 UI 위에 변경 preview relation label, relation 대상 빠른 열기, relation 변경 개수 표시를 추가한 버전입니다. 관계 후보 검색과 preview 표시는 DB를 수정하지 않는 프론트 UI 편의 기능입니다. owner_type 변경 시 owner_code 후보와 검색 상태도 안전하게 갱신됩니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
 DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 DB reset/seed는 필요 없습니다.
 
@@ -143,6 +143,18 @@ DB reset/seed는 필요 없습니다.
   - owner_type 변경 시 owner_code 후보 자동 전환
   - preview/apply 공통으로 owner_type + owner_code 대상 존재 검증
   - 초안 검증 결과에 relation target label 표시
+- v150에서 relation select 검색/필터 UI 완료.
+  - relation select 후보를 코드/이름으로 검색
+  - 검색 결과와 상관없이 현재 선택값 유지
+  - owner_type 변경 시 owner_code 후보와 검색 상태 안전 갱신
+  - 카탈로그 검색/페이지 입력 Enter 조회
+  - 카탈로그 조건 변경 시 페이지 1 자동 초기화
+
+- v153에서 relation preview 도구 완료.
+  - 변경 preview와 초안 before/after 표에 relation 대상 이름 label 표시
+  - relation 변경 행에 relation 배지 표시
+  - relation 대상 빠른 열기 버튼 추가
+  - 변경 요약 배너에 relation 변경 개수 표시
 
 ### runtime 반영
 

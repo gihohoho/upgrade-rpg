@@ -43,7 +43,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v147.admin-owner-code-relation-tools",
+  "v153.admin-relation-preview-tools",
   "renderMasterDetail",
   "openAdminMasterDataDetail",
   "fetchAdminMasterDataDetail",
@@ -60,7 +60,7 @@ assertContains("admin.html", [
   "data-admin-master-detail-meta",
   ".json-preview",
   ".detail-grid",
-  "v147 admin owner code relation tools",
+  "v153 admin relation preview tools",
 ]);
 
 assertContains("backend/scripts/check_admin_readonly_api.py", [

@@ -1,5 +1,25 @@
 # Changelog
 
+## v153 - Admin Relation Preview Tools
+
+- 변경 preview와 초안 before/after 표에서 relation 값에 대상 이름 label을 함께 표시합니다.
+- relation 변경 행에 `relation` 배지를 표시합니다.
+- 변경 요약 배너에 relation 변경 개수 표시를 추가했습니다.
+- relation 대상이 열 수 있는 도메인이면 `대상 열기` 버튼을 표시합니다.
+- `대상 열기`는 code로 카탈로그를 조회한 뒤 해당 상세를 엽니다.
+- 기존 preview/apply 백엔드 검증, dev key, 확인 문구, high risk 추가 확인, stale guard는 유지합니다.
+- DB reset / seed는 필요 없습니다.
+
+## v150 - Admin Relation Search Tools
+
+- 관계 필드 relation select 검색 input을 추가했습니다.
+- 검색은 프론트 UI 안에서만 후보 목록을 좁히며 DB를 수정하지 않습니다.
+- 검색 결과가 현재 선택값을 숨기더라도 현재 선택값은 유지되게 했습니다.
+- owner_type 변경 시 owner_code 후보 목록과 검색 상태가 같이 안전하게 갱신됩니다.
+- 마스터 데이터 카탈로그 검색/페이지 입력에서 Enter 조회를 지원합니다.
+- 카탈로그 domain, 표시 개수, 활성 상태, 정렬 변경 시 페이지를 1로 되돌립니다.
+- DB reset / seed는 필요 없습니다.
+
 ## v147 - Admin Owner Code Relation Tools
 
 - `dropTables.owner_code`를 relation select 기반으로 안전하게 편집할 수 있게 했습니다.
@@ -333,6 +353,16 @@
 - 기존 게임 동작은 유지하고, FastAPI 응답 구조로 옮기기 위한 중간 계층만 추가했습니다.
 
 # Changelog
+
+## v153 - Admin Relation Preview Tools
+
+- 관계 필드 relation select 검색 input을 추가했습니다.
+- 검색은 프론트 UI 안에서만 후보 목록을 좁히며 DB를 수정하지 않습니다.
+- 검색 결과가 현재 선택값을 숨기더라도 현재 선택값은 유지되게 했습니다.
+- owner_type 변경 시 owner_code 후보 목록과 검색 상태가 같이 안전하게 갱신됩니다.
+- 마스터 데이터 카탈로그 검색/페이지 입력에서 Enter 조회를 지원합니다.
+- 카탈로그 domain, 표시 개수, 활성 상태, 정렬 변경 시 페이지를 1로 되돌립니다.
+- DB reset / seed는 필요 없습니다.
 
 ## v144 - Admin Combo Relation Guard
 

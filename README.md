@@ -21,9 +21,9 @@ docs/README.md
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v147: admin owner code relation tools**
+- 최신 안정 버전: **v153: admin relation preview tools**
 
-v147은 v144의 조합 관계 필드 안전 편집 위에 `dropTables.owner_code` 안전 편집을 추가한 버전입니다. owner_type이 boss면 bosses 목록, field면 fieldZones 목록에서만 owner_code를 선택하게 하고, 백엔드가 preview/apply 단계에서 실제 대상 존재 여부를 다시 검사합니다. owner_type을 바꾸면 owner_code 후보 목록도 자동 전환됩니다.
+v153은 v150의 relation select 검색/필터 UI 위에 변경 preview relation label, relation 대상 빠른 열기, relation 변경 개수 표시를 추가한 버전입니다. 관계 후보 검색과 preview 표시는 DB를 수정하지 않는 프론트 UI 편의 기능입니다.
 
 DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 

@@ -11,7 +11,7 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-assert(adminJs.includes('v147.admin-owner-code-relation-tools'), 'version should be v128');
+assert(adminJs.includes('v153.admin-relation-preview-tools'), 'version should be v128');
 assert(adminJs.includes('runPostWriteMasterApiVerification'), 'post write verify helper missing');
 assert(adminJs.includes('await runPostWriteMasterApiVerification(values.domain, values.id'), 'apply flow should auto verify edited target');
 assert(adminJs.includes('rollbackTarget.domain'), 'rollback flow should auto verify rollback target domain');
@@ -22,7 +22,7 @@ assert(adminJs.includes('postWriteApiVerifyReady'), 'readiness should expose pos
 assert(adminJs.includes('window.runPostWriteMasterApiVerification = runPostWriteMasterApiVerification'), 'console helper export missing');
 assert(adminJs.includes('currentAdminChangeLogDetailPayload'), 'rollback target detail state missing');
 
-assert(adminHtml.includes('v147 admin owner code relation tools'), 'footer should be v128');
+assert(adminHtml.includes('v153 admin relation preview tools'), 'footer should be v128');
 assert(adminHtml.includes('적용/되돌리기 후 master-data API 자동 확인'), 'subtitle should mention auto verify');
 assert(docs.includes('DB 적용 후 자동 확인'), 'docs should explain apply auto verify');
 assert(docs.includes('되돌리기 후 자동 확인'), 'docs should explain rollback auto verify');

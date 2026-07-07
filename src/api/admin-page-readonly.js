@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v147.admin-owner-code-relation-tools";
+  const VERSION = "v153.admin-relation-preview-tools";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -943,14 +943,19 @@
     return String(dependencyValue || "").trim();
   }
 
-  function getAdminDraftRelationOptions(definition) {
+  function getAdminDraftRelationOptionsForValues(definition, values) {
     if (!definition) return null;
     if (definition.optionGroups && definition.dependsOn) {
-      const groupKey = getAdminDraftRelationOptionGroupKey(definition);
+      const dependencyKey = String(definition.dependsOn || "");
+      const groupKey = values && Object.prototype.hasOwnProperty.call(values, dependencyKey) ? String(values[dependencyKey] || "").trim() : getAdminDraftRelationOptionGroupKey(definition);
       const grouped = definition.optionGroups[groupKey];
       if (Array.isArray(grouped)) return grouped.slice();
     }
     return Array.isArray(definition.options) ? definition.options.slice() : null;
+  }
+
+  function getAdminDraftRelationOptions(definition) {
+    return getAdminDraftRelationOptionsForValues(definition, null);
   }
 
   function getAdminDraftSelectOptions(key, value, domain) {
@@ -966,6 +971,86 @@
     return baseOptions;
   }
 
+  function normalizeAdminRelationSearchText(value) {
+    return String(value === null || value === undefined ? "" : value).trim().toLowerCase();
+  }
+
+  function getAdminRelationOptionText(option) {
+    if (!option) return "";
+    return [option.value, option.label, option.targetLabel, option.targetDomain].filter((value) => value !== null && value !== undefined).join(" ");
+  }
+
+  function filterAdminDraftSelectOptions(options, query, selectedValue) {
+    const safeOptions = Array.isArray(options) ? options.slice() : [];
+    const normalizedQuery = normalizeAdminRelationSearchText(query);
+    const selectedText = selectedValue === null || selectedValue === undefined ? "" : String(selectedValue);
+    const filtered = normalizedQuery
+      ? safeOptions.filter((option) => normalizeAdminRelationSearchText(getAdminRelationOptionText(option)).includes(normalizedQuery))
+      : safeOptions;
+    if (selectedText && !filtered.some((option) => String(option.value) === selectedText)) {
+      const selectedOption = safeOptions.find((option) => String(option.value) === selectedText);
+      if (selectedOption) filtered.unshift({ ...selectedOption, keepSelected: true });
+    }
+    return filtered;
+  }
+
+  function renderAdminDraftSelectOptionsHtml(options, selectedValue) {
+    const selectedText = selectedValue === null || selectedValue === undefined ? "" : String(selectedValue);
+    const safeOptions = Array.isArray(options) ? options : [];
+    if (!safeOptions.length) {
+      return `<option value="${escapeHtml(selectedText)}" selected>${escapeHtml(selectedText ? `${selectedText} · 검색 결과 없음` : "검색 결과 없음")}</option>`;
+    }
+    return safeOptions.map((option) => {
+      const optionValue = option && option.value !== undefined && option.value !== null ? String(option.value) : "";
+      const optionLabel = option && option.label ? option.label : optionValue;
+      const suffix = option && option.keepSelected ? " · 현재 선택값" : "";
+      return `<option value="${escapeHtml(optionValue)}" ${optionValue === selectedText ? "selected" : ""}>${escapeHtml(optionLabel + suffix)}</option>`;
+    }).join("");
+  }
+
+  function getAdminRelationSelectMetaText(key, domain, query) {
+    const definition = getAdminRelationEditOptionDefinition(domain, key);
+    if (!definition) return "";
+    const allOptions = getAdminDraftRelationOptions(definition) || [];
+    const filtered = filterAdminDraftSelectOptions(allOptions, query, "");
+    const target = definition.targetLabel || definition.targetDomain || "관계 대상";
+    const queryText = normalizeAdminRelationSearchText(query);
+    return queryText ? `${target} ${filtered.length}/${allOptions.length}개 표시` : `${target} ${allOptions.length}개 중 선택`;
+  }
+
+  function updateAdminRelationOptionMeta(meta, key, domain, query) {
+    if (!meta) return;
+    const text = getAdminRelationSelectMetaText(key, domain, query);
+    meta.textContent = text;
+    meta.classList.toggle("warn", !!query && text.includes("0/"));
+  }
+
+  function applyAdminRelationOptionFilter(input) {
+    if (!input) return false;
+    const draft = input.closest("[data-admin-edit-draft]");
+    const wrapper = input.closest("[data-admin-relation-select-tools]");
+    if (!draft || !wrapper) return false;
+    const domain = draft.getAttribute("data-admin-edit-draft-domain") || DEFAULT_MASTER_DOMAIN;
+    const key = input.getAttribute("data-admin-relation-option-filter-for") || "";
+    const select = wrapper.querySelector(`[data-admin-edit-draft-field="${key}"]`);
+    if (!select) return false;
+    const selectedValue = select.value;
+    const original = parseDraftOriginalValue(select.getAttribute("data-admin-edit-draft-original"));
+    const options = getAdminDraftSelectOptions(key, original, domain);
+    const filtered = filterAdminDraftSelectOptions(options, input.value, selectedValue);
+    select.innerHTML = renderAdminDraftSelectOptionsHtml(filtered, selectedValue);
+    select.value = selectedValue;
+    updateAdminRelationOptionMeta(wrapper.querySelector("[data-admin-relation-option-meta]"), key, domain, input.value);
+    return true;
+  }
+
+  function clearAdminRelationOptionFilter(key) {
+    const filter = document.querySelector(`[data-admin-relation-option-filter-for="${key}"]`);
+    if (!filter) return false;
+    filter.value = "";
+    return applyAdminRelationOptionFilter(filter);
+  }
+
   function refreshDependentAdminRelationSelects(changedKey) {
     const draft = document.querySelector("[data-admin-edit-draft]");
     if (!draft) return false;
@@ -979,18 +1064,18 @@
       if (!field) return;
       const previousValue = field.value;
       const options = getAdminDraftRelationOptions(definition) || [];
-      field.innerHTML = options.map((option) => {
-        const optionValue = option && option.value !== undefined && option.value !== null ? String(option.value) : "";
-        const optionLabel = option && option.label ? option.label : optionValue;
-        return `<option value="${escapeHtml(optionValue)}">${escapeHtml(optionLabel)}</option>`;
-      }).join("");
+      let nextValue = "";
       if (options.some((option) => String(option.value) === previousValue)) {
-        field.value = previousValue;
+        nextValue = previousValue;
       } else if (options.length) {
-        field.value = String(options[0].value ?? "");
-      } else {
-        field.value = "";
+        nextValue = String(options[0].value ?? "");
       }
+      const wrapper = field.closest("[data-admin-relation-select-tools]");
+      const filter = wrapper ? wrapper.querySelector("[data-admin-relation-option-filter]") : null;
+      if (filter) filter.value = "";
+      field.innerHTML = renderAdminDraftSelectOptionsHtml(options, nextValue);
+      field.value = nextValue;
+      updateAdminRelationOptionMeta(wrapper && wrapper.querySelector("[data-admin-relation-option-meta]"), fieldName, domain, "");
       touched = true;
     });
     return touched;
@@ -1115,16 +1200,26 @@
         </select>
       `;
     }
-    if (kind === "preset-select" || kind === "relation-select") {
+    if (kind === "preset-select") {
       const options = getAdminDraftSelectOptions(key, value, domain);
       return `
         <select ${commonAttrs} data-admin-edit-draft-value-type="text" aria-label="${escapeHtml(field.label || key)} 선택">
-          ${options.map((option) => {
-            const optionValue = option && option.value !== undefined && option.value !== null ? String(option.value) : "";
-            const optionLabel = option && option.label ? option.label : optionValue;
-            return `<option value="${escapeHtml(optionValue)}" ${optionValue === valueText ? "selected" : ""}>${escapeHtml(optionLabel)}</option>`;
-          }).join("")}
+          ${renderAdminDraftSelectOptionsHtml(options, valueText)}
         </select>
+      `;
+    }
+    if (kind === "relation-select") {
+      const options = getAdminDraftSelectOptions(key, value, domain);
+      const definition = getAdminRelationEditOptionDefinition(domain, key) || {};
+      const metaText = getAdminRelationSelectMetaText(key, domain, "");
+      return `
+        <div class="relation-select-tools" data-admin-relation-select-tools>
+          <input class="relation-option-filter" data-admin-relation-option-filter data-admin-relation-option-filter-for="${escapeHtml(key)}" type="text" placeholder="코드/이름으로 후보 검색" autocomplete="off" aria-label="${escapeHtml(field.label || key)} 후보 검색" />
+          <select ${commonAttrs} data-admin-edit-draft-value-type="text" aria-label="${escapeHtml(field.label || key)} 선택">
+            ${renderAdminDraftSelectOptionsHtml(options, valueText)}
+          </select>
+          <div class="relation-option-meta" data-admin-relation-option-meta>${escapeHtml(metaText || (definition.targetLabel ? `${definition.targetLabel} 후보` : "관계 후보"))}</div>
+        </div>
       `;
     }
     if (kind === "number") {
@@ -1290,11 +1385,67 @@
     });
   }
 
+  function getAdminRelationOptionDisplayText(option, value) {
+    const valueText = value === null || value === undefined ? "" : String(value);
+    if (!option) return formatValue(value);
+    const label = String(option.label || option.targetLabel || option.value || valueText || "");
+    if (!valueText) return label || "-";
+    if (label === valueText || label.startsWith(`${valueText} ·`)) return label;
+    return `${valueText} · ${label}`;
+  }
+
+  function getAdminRelationValueDisplay(domain, key, value, contextValues) {
+    const definition = getAdminRelationEditOptionDefinition(domain, key);
+    if (!definition) return formatValue(value);
+    const valueText = value === null || value === undefined ? "" : String(value);
+    const options = getAdminDraftRelationOptionsForValues(definition, contextValues || {}) || [];
+    const option = options.find((candidate) => String(candidate.value ?? "") === valueText);
+    return getAdminRelationOptionDisplayText(option, value);
+  }
+
+  function getAdminRelationOpenTarget(domain, key, value, contextValues) {
+    const definition = getAdminRelationEditOptionDefinition(domain, key);
+    if (!definition) return null;
+    const valueText = value === null || value === undefined ? "" : String(value).trim();
+    if (!valueText) return null;
+    if (domain === "dropTables" && key === "owner_type") return null;
+    let targetDomain = definition.targetDomain || "";
+    if (definition.optionGroups && definition.dependsOn) {
+      const dependencyValue = contextValues && Object.prototype.hasOwnProperty.call(contextValues, definition.dependsOn) ? String(contextValues[definition.dependsOn] || "") : getAdminDraftRelationOptionGroupKey(definition);
+      if (domain === "dropTables" && key === "owner_code") targetDomain = dependencyValue === "field" ? "fieldZones" : "bosses";
+    }
+    if (!targetDomain || targetDomain.includes("/")) return null;
+    return { domain: targetDomain, code: valueText };
+  }
+
+  function renderAdminRelationOpenButton(domain, key, value, contextValues) {
+    const target = getAdminRelationOpenTarget(domain, key, value, contextValues);
+    if (!target) return "";
+    return `<button class="btn mini relation-jump-btn" type="button" data-admin-action="open-master-detail-by-code" data-admin-detail-domain="${escapeHtml(target.domain)}" data-admin-detail-code="${escapeHtml(target.code)}">대상 열기</button>`;
+  }
+
+  function formatAdminChangeValueText(domain, change, side, contextValues) {
+    const key = change && change.key;
+    const rawValue = side === "before" ? change && change.before : change && change.after;
+    const relation = side === "after" ? change && change.relation : null;
+    if (relation && relation.targetLabel) {
+      const text = formatValue(rawValue);
+      return `${text} · ${relation.targetLabel}`;
+    }
+    if (isAdminRelationEditField(domain, key)) return getAdminRelationValueDisplay(domain, key, rawValue, contextValues);
+    return formatValue(rawValue);
+  }
+
+  function renderAdminChangeValueCell(domain, change, side, contextValues) {
+    const text = formatAdminChangeValueText(domain, change, side, contextValues);
+    const key = change && change.key;
+    const rawValue = side === "before" ? change && change.before : change && change.after;
+    const button = isAdminRelationEditField(domain, key) ? renderAdminRelationOpenButton(domain, key, rawValue, contextValues) : "";
+    return `<div class="relation-value-cell"><span>${escapeHtml(text)}</span>${button}</div>`;
+  }
+
   function formatAdminChangeAfterValue(change) {
-    const text = formatValue(change && change.after);
-    const relation = change && change.relation;
-    if (!relation || !relation.targetLabel) return text;
-    return `${text} · ${relation.targetLabel}`;
+    return formatAdminChangeValueText(change && change.domain, change, "after", change || {});
   }
 
 
@@ -1305,7 +1456,8 @@
     }
     const changes = sortAdminChangesByRisk(result.domain, collectLocalDraftChangesForImpact(result)).map((change) => {
       const risk = getAdminDraftFieldRisk(result.domain, change.key);
-      return { ...change, risk };
+      const relation = isAdminRelationEditField(result.domain, change.key);
+      return { ...change, risk, relation };
     });
     return {
       ok: true,
@@ -1314,6 +1466,7 @@
       id: result.id,
       changes,
       changeCount: changes.length,
+      relationCount: changes.filter((change) => change.relation).length,
       highCount: changes.filter((change) => change.risk === "high").length,
       mediumCount: changes.filter((change) => change.risk === "medium").length,
       lowCount: changes.filter((change) => change.risk === "low").length,
@@ -1333,20 +1486,25 @@
       `;
       return;
     }
-    const rows = info.changes.map((change) => `
-      <tr class="draft-review-row-${escapeHtml(change.risk)}">
-        <td>${escapeHtml(change.label || change.key)}</td>
-        <td><span class="pill ${change.risk === "high" ? "blocked" : (change.risk === "medium" ? "warn" : "good")}">${escapeHtml(change.risk)}</span></td>
-        <td>${escapeHtml(formatValue(change.before))}</td>
-        <td>${escapeHtml(formatValue(change.after))}</td>
-      </tr>
-    `).join("");
+    const rows = info.changes.map((change) => {
+      const beforeContext = { ...Object.fromEntries(info.changes.map((item) => [item.key, item.before])), [change.key]: change.before };
+      const afterContext = { ...Object.fromEntries(info.changes.map((item) => [item.key, item.after])), [change.key]: change.after };
+      return `
+        <tr class="draft-review-row-${escapeHtml(change.risk)}">
+          <td>${escapeHtml(change.label || change.key)}${change.relation ? ` <span class="pill warn">relation</span>` : ""}</td>
+          <td><span class="pill ${change.risk === "high" ? "blocked" : (change.risk === "medium" ? "warn" : "good")}">${escapeHtml(change.risk)}</span></td>
+          <td>${renderAdminChangeValueCell(info.domain, change, "before", beforeContext)}</td>
+          <td>${renderAdminChangeValueCell(info.domain, change, "after", afterContext)}</td>
+        </tr>
+      `;
+    }).join("");
     target.innerHTML = `
       <div class="draft-review-banner ${info.highCount ? "draft-review-danger" : ""}">
         <span class="pill ${info.highCount ? "blocked" : "good"}">변경 ${escapeHtml(formatValue(info.changeCount))}</span>
         <span class="pill ${info.highCount ? "blocked" : "good"}">high ${escapeHtml(formatValue(info.highCount))}</span>
         <span class="pill ${info.mediumCount ? "warn" : "good"}">medium ${escapeHtml(formatValue(info.mediumCount))}</span>
         <span class="pill good">low ${escapeHtml(formatValue(info.lowCount))}</span>
+        <span class="pill ${info.relationCount ? "warn" : "good"}">relation ${escapeHtml(formatValue(info.relationCount || 0))}</span>
         ${info.highCount ? `<span class="pill blocked">고위험 변경은 ${escapeHtml(ADMIN_EDIT_HIGH_RISK_CONFIRM_TEXT)} 추가 입력 필요</span>` : ""}
       </div>
       <div class="table-wrap relation-table-wrap draft-review-table-wrap">
@@ -1646,8 +1804,11 @@
     const acceptedForDisplay = sortAdminChangesByRisk(draftValuesForImpact.domain, accepted);
     const acceptedRows = acceptedForDisplay.length ? acceptedForDisplay.map((change) => {
       const risk = getAdminDraftFieldRisk(draftValuesForImpact.domain, change.key);
+      const beforeContext = { ...(draftValuesForImpact.originals || {}), [change.key]: change.before };
+      const afterContext = { ...(draftValuesForImpact.draft || {}), [change.key]: change.after };
+      const relationBadge = isAdminRelationEditField(draftValuesForImpact.domain, change.key) ? ` <span class="pill warn">relation</span>` : "";
       return `
-        <tr class="draft-review-row-${escapeHtml(risk)}"><td>${escapeHtml(change.label || change.key)}</td><td><span class="pill ${risk === "high" ? "blocked" : (risk === "medium" ? "warn" : "good")}">${escapeHtml(risk)}</span></td><td>${escapeHtml(formatValue(change.before))}</td><td>${escapeHtml(formatAdminChangeAfterValue(change))}</td><td>${escapeHtml(change.type || "-")}</td></tr>
+        <tr class="draft-review-row-${escapeHtml(risk)}"><td>${escapeHtml(change.label || change.key)}${relationBadge}</td><td><span class="pill ${risk === "high" ? "blocked" : (risk === "medium" ? "warn" : "good")}">${escapeHtml(risk)}</span></td><td>${renderAdminChangeValueCell(draftValuesForImpact.domain, change, "before", beforeContext)}</td><td>${renderAdminChangeValueCell(draftValuesForImpact.domain, change, "after", afterContext)}</td><td>${escapeHtml(change.type || "-")}</td></tr>
       `;
     }).join("") : `<tr><td colspan="5">변경된 값 없음</td></tr>`;
     const rejectedRows = rejected.length ? rejected.map((change) => `
@@ -2176,6 +2337,23 @@
     return response;
   }
 
+  async function openAdminMasterDataDetailByCode(domain, code) {
+    ensureApi();
+    const safeDomain = domain || DEFAULT_MASTER_DOMAIN;
+    const safeCode = String(code || "").trim();
+    if (!safeCode) throw new Error("열 relation code가 없습니다.");
+    setStatus(`관계 대상 찾는 중: ${safeDomain} · ${safeCode}`);
+    const response = await window.RpgGameApi.listAdminMasterCatalogRows({ domain: safeDomain, q: safeCode, limit: 20, page: 1, sort: "id_asc" });
+    const payload = response && response.payload ? response.payload : {};
+    const rows = Array.isArray(payload.rows) ? payload.rows : [];
+    const row = rows.find((candidate) => {
+      const cells = candidate && candidate.cells ? candidate.cells : {};
+      return String(cells.code || candidate.code || "") === safeCode;
+    }) || rows[0];
+    if (!row || !row.id) throw new Error(`관계 대상을 찾지 못했습니다: ${safeDomain} · ${safeCode}`);
+    return openAdminMasterDataDetail(safeDomain, row.id);
+  }
+
   async function openAdminMasterDataDetail(domain, id, options) {
     ensureApi();
     const target = $("[data-admin-master-detail]");
@@ -2517,13 +2695,30 @@
 
   function bindEvents() {
     document.addEventListener("input", (event) => {
-      if (event.target && event.target.closest && event.target.closest("[data-admin-edit-draft]")) {
+      if (event.target && event.target.matches && event.target.matches("[data-admin-relation-option-filter]")) {
+        applyAdminRelationOptionFilter(event.target);
+        return;
+      }
+      if (event.target && event.target.closest && event.target.closest("[data-admin-edit-draft]") && event.target.getAttribute && event.target.getAttribute("data-admin-edit-draft-field")) {
         refreshAdminEditImpactGuide();
+      }
+      if (event.target && event.target.matches && event.target.matches("[data-admin-master-query]")) {
+        syncMasterCatalogPageInput(1);
+      }
+    });
+    document.addEventListener("keydown", async (event) => {
+      if (event.key !== "Enter" || !(event.target && event.target.matches)) return;
+      if (event.target.matches("[data-admin-master-query], [data-admin-master-page]")) {
+        event.preventDefault();
+        await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom() });
       }
     });
     document.addEventListener("change", (event) => {
-      if (event.target && event.target.closest && event.target.closest("[data-admin-edit-draft]")) {
-        const changedKey = event.target.getAttribute && event.target.getAttribute("data-admin-edit-draft-field");
+      if (event.target && event.target.matches && event.target.matches("[data-admin-master-domain], [data-admin-master-limit], [data-admin-master-enabled], [data-admin-master-sort]")) {
+        syncMasterCatalogPageInput(1);
+      }
+      if (event.target && event.target.closest && event.target.closest("[data-admin-edit-draft]") && event.target.getAttribute && event.target.getAttribute("data-admin-edit-draft-field")) {
+        const changedKey = event.target.getAttribute("data-admin-edit-draft-field");
         if (changedKey) refreshDependentAdminRelationSelects(changedKey);
         refreshAdminEditImpactGuide();
       }
@@ -2554,6 +2749,15 @@
         const id = button.getAttribute("data-admin-detail-id");
         try {
           await openAdminMasterDataDetail(domain, id);
+        } catch (error) {
+          renderError(error);
+        }
+      }
+      if (action === "open-master-detail-by-code") {
+        const domain = button.getAttribute("data-admin-detail-domain");
+        const code = button.getAttribute("data-admin-detail-code");
+        try {
+          await openAdminMasterDataDetailByCode(domain, code);
         } catch (error) {
           renderError(error);
         }
@@ -2692,7 +2896,9 @@
     const masterApiVerifyReady = typeof verifySelectedMasterDataApi === "function";
     const postWriteApiVerifyReady = typeof runPostWriteMasterApiVerification === "function";
     const adminWriteGuardReady = !!document.querySelector("[data-admin-write-dev-key]") && !!document.querySelector("[data-admin-write-key-status]");
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && masterApiVerifyReady && adminWriteGuardReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const relationSearchReady = typeof applyAdminRelationOptionFilter === "function" && typeof filterAdminDraftSelectOptions === "function";
+    const relationPreviewReady = typeof formatAdminChangeValueText === "function" && typeof getAdminRelationValueDisplay === "function" && typeof openAdminMasterDataDetailByCode === "function";
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && masterApiVerifyReady && adminWriteGuardReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -2717,6 +2923,7 @@
     resetChangeLogFilters,
     describeChangeLogFilters,
     openAdminMasterDataDetail,
+    openAdminMasterDataDetailByCode,
     openAdminMasterDataRelations,
     renderMasterDetail,
     renderMasterRelations,
@@ -2764,6 +2971,11 @@
     isAdminRelationEditField,
     getAdminRelationComboGuardLabels,
     refreshDependentAdminRelationSelects,
+    applyAdminRelationOptionFilter,
+    clearAdminRelationOptionFilter,
+    filterAdminDraftSelectOptions,
+    renderAdminDraftSelectOptionsHtml,
+    getAdminRelationSelectMetaText,
     renderAdminRelationEditOptionsNote,
     getAdminEquipSlotDisplayName,
     getAdminDraftFieldRisk,
@@ -2780,6 +2992,7 @@
   window.resetAdminChangeLogFilters = resetChangeLogFilters;
   window.refreshAdminChangeLogs = refreshAdminChangeLogs;
   window.openAdminMasterDataDetail = openAdminMasterDataDetail;
+  window.openAdminMasterDataDetailByCode = openAdminMasterDataDetailByCode;
   window.openAdminMasterDataRelations = openAdminMasterDataRelations;
   window.checkAdminReadOnlyPageReady = checkAdminReadOnlyPageReady;
   window.getAdminEditDraftReadiness = getAdminEditDraftReadiness;
@@ -2804,11 +3017,18 @@
   window.markSelectedMasterCatalogRow = markSelectedMasterCatalogRow;
   window.getAdminDraftFieldRisk = getAdminDraftFieldRisk;
   window.refreshDependentAdminRelationSelects = refreshDependentAdminRelationSelects;
+  window.applyAdminRelationOptionFilter = applyAdminRelationOptionFilter;
+  window.clearAdminRelationOptionFilter = clearAdminRelationOptionFilter;
+  window.filterAdminDraftSelectOptions = filterAdminDraftSelectOptions;
+  window.getAdminRelationSelectMetaText = getAdminRelationSelectMetaText;
   window.getAdminRelationComboGuardLabels = getAdminRelationComboGuardLabels;
   window.getAdminDraftLockedReason = getAdminDraftLockedReason;
   window.buildAdminEditDraftReview = buildAdminEditDraftReview;
   window.sortAdminChangesByRisk = sortAdminChangesByRisk;
   window.formatAdminChangeAfterValue = formatAdminChangeAfterValue;
+  window.formatAdminChangeValueText = formatAdminChangeValueText;
+  window.getAdminRelationValueDisplay = getAdminRelationValueDisplay;
+  window.getAdminRelationOpenTarget = getAdminRelationOpenTarget;
   window.getCurrentAdminPageUrl = getCurrentAdminPageUrl;
   window.copyCurrentAdminPageUrl = copyCurrentAdminPageUrl;
   window.openAdminChangeLogDetail = openAdminChangeLogDetail;

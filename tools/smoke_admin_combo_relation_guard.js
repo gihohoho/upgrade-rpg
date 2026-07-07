@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v147.admin-owner-code-relation-tools",
+  "v153.admin-relation-preview-tools",
   "getAdminRelationComboGuardLabels",
   "중복 조합 검사",
   "skill_code + level",
@@ -44,7 +44,7 @@ assertContains("backend/app/services/admin_service.py", [
 ]);
 
 assertContains("admin.html", [
-  "v147 admin owner code relation tools",
+  "v153 admin relation preview tools",
   "relation-edit-note",
 ]);
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upgrade RPG Admin - Edit Input UI</title>
+  <title>Upgrade RPG Admin - Relation Search Tools</title>
   <style>
     :root {
       color-scheme: dark;
@@ -553,6 +553,37 @@
       background: rgba(245, 158, 11, 0.06);
     }
 
+    .relation-select-tools {
+      display: grid;
+      gap: 6px;
+    }
+
+    .relation-option-filter {
+      width: 100%;
+      border: 1px solid rgba(96, 165, 250, 0.24);
+      border-radius: 9px;
+      background: rgba(15, 23, 42, 0.74);
+      color: var(--text);
+      padding: 8px 10px;
+      outline: none;
+      min-height: 34px;
+    }
+
+    .relation-option-filter:focus {
+      border-color: rgba(147, 197, 253, 0.72);
+    }
+
+    .relation-option-meta {
+      color: #bfdbfe;
+      font-size: 11px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .relation-option-meta.warn {
+      color: var(--amber);
+    }
+
     .draft-field input:disabled,
     .draft-field textarea:disabled,
     .draft-field select:disabled {
@@ -646,6 +677,27 @@
 
     .draft-review-table-wrap {
       max-height: 260px;
+    }
+
+    .relation-value-cell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-width: 170px;
+    }
+
+    .relation-value-cell span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .relation-jump-btn {
+      flex: 0 0 auto;
+      padding: 4px 7px;
+      font-size: 10px;
     }
 
     .draft-review-row-high {
@@ -1183,7 +1235,7 @@
       <div data-admin-readiness><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <p class="footer-note">v147 admin owner code relation tools · static HTML + JS · FastAPI guarded write/rollback APIs</p>
+    <p class="footer-note">v153 admin relation preview tools · static HTML + JS · FastAPI guarded write/rollback APIs</p>
   </main>
 
   <script src="src/api/game-api-client.js"></script>

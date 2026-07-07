@@ -27,7 +27,7 @@ assert(adminHtml.includes('data-admin-write-key-status'), 'admin.html has dev ke
 assert(adminHtml.includes('data-admin-action="save-admin-write-dev-key"'), 'admin.html can save dev key');
 assert(adminHtml.includes('data-admin-action="clear-admin-write-dev-key"'), 'admin.html can clear dev key');
 
-assert(adminJs.includes('v147.admin-owner-code-relation-tools'), 'admin page version updated');
+assert(adminJs.includes('v153.admin-relation-preview-tools'), 'admin page version updated');
 assert(adminJs.includes('function requireAdminWriteDevKeyForUi'), 'admin JS blocks write actions when key missing');
 assert(adminJs.includes('saveAdminWriteDevKeyFromInput'), 'admin JS can save write dev key');
 assert(adminJs.includes('clearAdminWriteDevKey'), 'admin JS can clear write dev key');
