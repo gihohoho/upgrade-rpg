@@ -29,6 +29,7 @@
 - `ADMIN_FIELD_HELP.md`
 - `ADMIN_VALUE_HINTS.md`
 - `ADMIN_GUARDED_EDIT_APPLY.md`
+- `ADMIN_CHANGE_LOG_ROLLBACK.md`
 
 ### 현재 세이브 데이터 연결
 

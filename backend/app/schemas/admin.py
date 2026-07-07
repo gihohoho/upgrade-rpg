@@ -39,5 +39,21 @@ class AdminMasterDataEditApplyRequest(AdminMasterDataEditPreviewRequest):
     dry_run: bool = Field(default=False, alias="dryRun")
 
 
+class AdminChangeLogRollbackPreviewRequest(BaseModel):
+    """Preview rollback of one guarded admin change log without mutating DB."""
+
+    model_config = ConfigDict(populate_by_name=True, str_strip_whitespace=True)
+
+    reason: str | None = Field(default=None, max_length=500)
+    dry_run: bool = Field(default=True, alias="dryRun")
+
+
+class AdminChangeLogRollbackApplyRequest(AdminChangeLogRollbackPreviewRequest):
+    """Guarded rollback request that requires an exact confirmation phrase."""
+
+    confirm_text: str = Field(default="", alias="confirmText", max_length=80)
+    dry_run: bool = Field(default=False, alias="dryRun")
+
+
 class AdminChangeApplyRequest(AdminChangePreviewRequest):
     confirmed: bool = False

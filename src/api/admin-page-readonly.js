@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v122.admin-guarded-edit-apply";
+  const VERSION = "v123.admin-change-log-rollback";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -9,6 +9,7 @@
   const DEFAULT_MASTER_LIMIT = 50;
   const DEFAULT_MASTER_SORT = "code_asc";
   const ADMIN_EDIT_APPLY_CONFIRM_TEXT = "APPLY MASTER DATA EDIT";
+  const ADMIN_ROLLBACK_CONFIRM_TEXT = "ROLLBACK MASTER DATA EDIT";
   const ADMIN_EDIT_APPLY_TIMEOUT_MS = 5000;
   const ADMIN_EDIT_ALLOWED_FIELDS = {
     itemTemplates: ["name", "description", "grade", "stackable", "admin_note"],
@@ -78,6 +79,11 @@
       body: "게임 플레이 화면에는 보여주지 않는 운영자용 메모입니다. 데이터 작업 이유, 주의사항, 임시 설명, 나중에 확인할 내용을 적어두는 내부 기록용 필드입니다.",
       example: "예: 밸런스 조정 예정, 이벤트 드랍 전용, 아직 미사용 데이터 등",
     },
+    stackable: {
+      title: "stackable / 겹치기 가능 여부",
+      body: "인벤토리에서 같은 아이템을 한 칸에 수량으로 합칠 수 있는지 정하는 true/false 값입니다. true면 재료/강화권처럼 여러 개가 한 칸에 쌓이고, false면 장비처럼 각각 별도 칸을 차지합니다.",
+      example: "예: 강화권/재료는 true, 무기/방어구/탈리스만처럼 개별 강화·옵션을 가진 장비는 보통 false가 안전합니다.",
+    },
     sortorder: {
       title: "sort order / 정렬값",
       body: "화면이나 관리자 목록에서 어떤 순서로 보여줄지 정하는 숫자입니다. 보통 숫자가 작을수록 앞쪽에 배치합니다.",
@@ -139,6 +145,12 @@
       if (String(value) === "normal_equipment") return { label: "일반 장비 강화", body: "일반/심연/특수/avatar 계열 장비가 공유하는 기본 강화 규칙 묶음입니다." };
       if (String(value) === "talisman_emblem") return { label: "탈리스만/휘장 강화", body: "탈리스만과 빛나는 휘장처럼 같은 강화 방식을 쓰는 장비 묶음입니다." };
       return { label: String(value), body: `강화그룹 코드 ${value}와 같은 code/group_code를 가진 enhancementGroups/enhancementLevels가 연결됩니다.` };
+    }
+    if (normalized === "stackable") {
+      const boolValue = value === true || String(value).toLowerCase() === "true";
+      return boolValue
+        ? { label: "true · 겹치기 가능", body: "같은 아이템을 인벤토리 한 칸에 수량으로 합칠 수 있습니다. 재료/강화권 계열에 적합합니다." }
+        : { label: "false · 개별 칸 사용", body: "같은 이름이어도 각각 별도 칸을 차지합니다. 강화 수치/옵션/장착 상태가 따로 필요한 장비에 적합합니다." };
     }
     if (normalized === "adminnote") {
       return value ? { label: "관리자 메모 있음", body: "게임 화면에는 표시되지 않는 내부 메모가 들어 있습니다." } : { label: "관리자 메모 없음", body: "운영/밸런스 메모가 아직 비어 있습니다." };
@@ -241,6 +253,9 @@
     if (typeof window.RpgGameApi.fetchAdminMasterDataRelations !== "function") throw new Error("fetchAdminMasterDataRelations 함수를 찾을 수 없습니다.");
     if (typeof window.RpgGameApi.applyAdminMasterDataEdit !== "function") throw new Error("applyAdminMasterDataEdit 함수를 찾을 수 없습니다.");
     if (typeof window.RpgGameApi.listAdminChangeLogs !== "function") throw new Error("listAdminChangeLogs 함수를 찾을 수 없습니다.");
+    if (typeof window.RpgGameApi.fetchAdminChangeLogDetail !== "function") throw new Error("fetchAdminChangeLogDetail 함수를 찾을 수 없습니다.");
+    if (typeof window.RpgGameApi.previewAdminChangeLogRollback !== "function") throw new Error("previewAdminChangeLogRollback 함수를 찾을 수 없습니다.");
+    if (typeof window.RpgGameApi.applyAdminChangeLogRollback !== "function") throw new Error("applyAdminChangeLogRollback 함수를 찾을 수 없습니다.");
   }
 
   function readSnapshotFiltersFromDom() {
@@ -380,6 +395,7 @@
       <div class="card"><div class="label">최근 저장</div><div class="value small">${escapeHtml(formatClock(save.latestUpdatedAt))}</div></div>
       <div class="card"><div class="label">전체 쓰기 UI</div><div class="value small"><span class="pill ${writeLocked ? "blocked" : "warn"}">${writeLocked ? "blocked" : "check"}</span></div></div>
       <div class="card"><div class="label">마스터 편집 적용</div><div class="value small"><span class="pill ${readiness.guardedMasterEditApplyReady ? "good" : "blocked"}">${readiness.guardedMasterEditApplyReady ? "guarded" : "blocked"}</span></div></div>
+      <div class="card"><div class="label">변경 이력 되돌리기</div><div class="value small"><span class="pill ${readiness.guardedRollbackReady ? "good" : "blocked"}">${readiness.guardedRollbackReady ? "guarded" : "blocked"}</span></div></div>
     `;
   }
 
@@ -955,10 +971,11 @@
     }
     target.innerHTML = `
       <table>
-        <thead><tr><th>ID</th><th>대상</th><th>행</th><th>액션</th><th>변경 필드</th><th>사유</th><th>적용</th><th>시각</th></tr></thead>
+        <thead><tr><th>상세</th><th>ID</th><th>대상</th><th>행</th><th>액션</th><th>변경 필드</th><th>사유</th><th>적용</th><th>시각</th></tr></thead>
         <tbody>
           ${rows.map((row) => `
             <tr>
+              <td><button class="btn mini" type="button" data-admin-action="open-admin-change-log-detail" data-admin-change-log-id="${escapeHtml(row.id)}">보기</button></td>
               <td>${escapeHtml(formatValue(row.id))}</td>
               <td>${escapeHtml(formatValue(row.targetType))}</td>
               <td>${escapeHtml(formatValue(row.targetId))}</td>
@@ -972,6 +989,138 @@
         </tbody>
       </table>
     `;
+  }
+
+
+  function renderAdminChangeLogDetail(detailPayload) {
+    const target = $(`[data-admin-change-log-detail]`);
+    if (!target) return;
+    const payload = detailPayload || {};
+    if (!payload.id || payload.status !== "loaded") {
+      target.innerHTML = `<div class="empty">변경 이력의 <strong>보기</strong> 버튼을 누르면 상세/되돌리기 미리보기가 여기에 표시됩니다.</div>`;
+      return;
+    }
+    const changes = Array.isArray(payload.changes) ? payload.changes : [];
+    const rollback = payload.rollback || {};
+    const rows = changes.length ? changes.map((change) => `
+      <tr><td>${escapeHtml(change.label || change.key)}</td><td>${escapeHtml(formatValue(change.before))}</td><td>${escapeHtml(formatValue(change.after))}</td></tr>
+    `).join("") : `<tr><td colspan="3">변경 필드 없음</td></tr>`;
+    target.innerHTML = `
+      <div class="detail-card" data-admin-change-log-detail-card data-admin-change-log-id="${escapeHtml(payload.id)}">
+        <div class="detail-title">변경 이력 #${escapeHtml(formatValue(payload.id))} <span class="pill ${rollback.available ? "good" : "blocked"}">rollback ${rollback.available ? "ready" : "blocked"}</span></div>
+        <div class="filter-help">대상: ${escapeHtml(formatValue(payload.targetType))} / 행 ${escapeHtml(formatValue(payload.targetId))} · action=${escapeHtml(formatValue(payload.action))} · applied=${escapeHtml(formatValue(payload.applied))}</div>
+        <div class="filter-help">사유: ${escapeHtml(formatValue(payload.reason))} · 시각: ${escapeHtml(formatClock(payload.createdAt))}</div>
+        <div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>이전 값</th><th>적용 값</th></tr></thead><tbody>${rows}</tbody></table></div>
+        <div class="edit-draft-actions">
+          <button class="btn mini primary" type="button" data-admin-action="preview-admin-change-log-rollback">되돌리기 미리보기</button>
+          <label class="apply-confirm-field"><span>되돌리기 확인 문구</span><input type="text" data-admin-rollback-confirm placeholder="${escapeHtml(ADMIN_ROLLBACK_CONFIRM_TEXT)}" autocomplete="off" /></label>
+          <label class="apply-confirm-field"><span>되돌리기 사유</span><input type="text" data-admin-rollback-reason placeholder="예: 보스 HP 변경 되돌림" autocomplete="off" /></label>
+          <button class="btn mini danger" type="button" data-admin-action="apply-admin-change-log-rollback">검사 후 되돌리기</button>
+          <span class="pill warn">DB rollback: guarded</span>
+        </div>
+        <div class="edit-draft-result" data-admin-rollback-result><div class="empty">먼저 <strong>되돌리기 미리보기</strong>를 눌러 현재 DB 값이 이 변경 이력의 적용 값과 일치하는지 확인하세요.</div></div>
+      </div>
+    `;
+  }
+
+  function readAdminRollbackControls() {
+    const card = $(`[data-admin-change-log-detail-card]`);
+    const confirmEl = $(`[data-admin-rollback-confirm]`);
+    const reasonEl = $(`[data-admin-rollback-reason]`);
+    return {
+      changeLogId: card ? Number(card.getAttribute("data-admin-change-log-id") || 0) : 0,
+      confirmText: confirmEl ? confirmEl.value.trim() : "",
+      reason: reasonEl ? reasonEl.value.trim() : "",
+      confirmMatches: !!confirmEl && confirmEl.value.trim() === ADMIN_ROLLBACK_CONFIRM_TEXT,
+    };
+  }
+
+  function renderAdminRollbackResult(payload) {
+    const target = $(`[data-admin-rollback-result]`);
+    if (!target) return;
+    const result = payload || {};
+    const changes = Array.isArray(result.acceptedChanges) && result.acceptedChanges.length ? result.acceptedChanges : (Array.isArray(result.changes) ? result.changes : []);
+    const mismatches = Array.isArray(result.currentMismatches) ? result.currentMismatches : [];
+    const warnings = Array.isArray(result.warnings) ? result.warnings : [];
+    const rows = changes.length ? changes.map((change) => `
+      <tr><td>${escapeHtml(change.label || change.key)}</td><td>${escapeHtml(formatValue(change.before))}</td><td>${escapeHtml(formatValue(change.after))}</td></tr>
+    `).join("") : `<tr><td colspan="3">되돌릴 변경 없음</td></tr>`;
+    const mismatchRows = mismatches.length ? mismatches.map((item) => `
+      <tr><td>${escapeHtml(item.label || item.key)}</td><td>${escapeHtml(formatValue(item.current))}</td><td>${escapeHtml(formatValue(item.expectedAfter))}</td><td>${escapeHtml(formatValue(item.rollbackTo))}</td></tr>
+    `).join("") : `<tr><td colspan="4">현재 DB 값 일치</td></tr>`;
+    target.innerHTML = `
+      <div class="draft-preview-summary">
+        <span class="pill ${result.rollbackReady ? "good" : "blocked"}">rollbackReady: ${escapeHtml(formatValue(result.rollbackReady))}</span>
+        <span class="pill ${result.currentMatchesAfter ? "good" : "blocked"}">currentMatchesAfter: ${escapeHtml(formatValue(result.currentMatchesAfter))}</span>
+        <span class="pill ${result.dryRun ? "warn" : "good"}">dryRun: ${escapeHtml(formatValue(result.dryRun))}</span>
+        <span class="pill ${result.writeBlocked ? "blocked" : "good"}">writeBlocked: ${escapeHtml(formatValue(result.writeBlocked))}</span>
+        <span class="pill ${result.rolledBack ? "good" : "warn"}">rolledBack: ${escapeHtml(formatValue(result.rolledBack === true))}</span>
+        ${result.rollbackChangeLogId ? `<span class="pill good">rollback log #${escapeHtml(formatValue(result.rollbackChangeLogId))}</span>` : ""}
+      </div>
+      ${warnings.length ? `<div class="filter-help">warnings: ${escapeHtml(warnings.join(", "))}</div>` : ""}
+      ${result.note ? `<div class="filter-help">${escapeHtml(result.note)}</div>` : ""}
+      <details class="json-detail" open><summary>되돌릴 값</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>현재/적용 값</th><th>되돌릴 값</th></tr></thead><tbody>${rows}</tbody></table></div></details>
+      <details class="json-detail" ${mismatches.length ? "open" : ""}><summary>현재값 안전 검사</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>현재 DB 값</th><th>이력의 적용 값</th><th>되돌릴 값</th></tr></thead><tbody>${mismatchRows}</tbody></table></div></details>
+    `;
+  }
+
+  async function openAdminChangeLogDetail(changeLogId, options) {
+    ensureApi();
+    const id = Number(changeLogId || 0);
+    if (!id) throw new Error("변경 이력 ID가 올바르지 않습니다.");
+    const target = $(`[data-admin-change-log-detail]`);
+    if (target) target.innerHTML = `<div class="empty">변경 이력 상세 불러오는 중...</div>`;
+    const timeoutMs = options && options.timeoutMs !== undefined ? options.timeoutMs : DEFAULT_TIMEOUT_MS;
+    const response = await window.RpgGameApi.fetchAdminChangeLogDetail({ id, timeoutMs });
+    const payload = response && response.payload ? response.payload : {};
+    renderAdminChangeLogDetail(payload);
+    setStatus(`변경 이력 #${formatValue(id)} 상세 로드`, "ok");
+    return response;
+  }
+
+  async function previewAdminChangeLogRollback(options) {
+    ensureApi();
+    const controls = readAdminRollbackControls();
+    if (!controls.changeLogId) throw new Error("되돌릴 변경 이력 상세를 먼저 열어주세요.");
+    const target = $(`[data-admin-rollback-result]`);
+    if (target) target.innerHTML = `<div class="empty">되돌리기 안전 검사 중...</div>`;
+    const timeoutMs = options && options.timeoutMs !== undefined ? options.timeoutMs : DEFAULT_TIMEOUT_MS;
+    const response = await window.RpgGameApi.previewAdminChangeLogRollback({ id: controls.changeLogId, reason: controls.reason || undefined, timeoutMs });
+    const payload = response && response.payload ? response.payload : {};
+    renderAdminRollbackResult(payload);
+    setStatus(`되돌리기 미리보기: ${formatValue(payload.status)} · ready ${formatValue(payload.rollbackReady)}`, payload.rollbackReady ? "ok" : "error");
+    return response;
+  }
+
+  async function applyAdminChangeLogRollback(options) {
+    ensureApi();
+    const controls = readAdminRollbackControls();
+    if (!controls.changeLogId) throw new Error("되돌릴 변경 이력 상세를 먼저 열어주세요.");
+    if (!controls.confirmMatches) {
+      const error = new Error(`되돌리기 확인 문구를 정확히 입력해야 합니다: ${ADMIN_ROLLBACK_CONFIRM_TEXT}`);
+      setStatus(error.message, "error");
+      const target = $(`[data-admin-rollback-result]`);
+      if (target) target.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+      throw error;
+    }
+    const confirmed = window.confirm("정말 이 변경 이력을 기준으로 DB 값을 이전 값으로 되돌릴까요? 현재값 안전 검사를 통과해야 적용됩니다.");
+    if (!confirmed) {
+      setStatus("관리자 되돌리기를 취소했습니다.", "info");
+      return { ok: false, canceled: true };
+    }
+    const target = $(`[data-admin-rollback-result]`);
+    if (target) target.innerHTML = `<div class="empty">백엔드에서 되돌리기를 적용하는 중...</div>`;
+    const timeoutMs = options && options.timeoutMs !== undefined ? options.timeoutMs : ADMIN_EDIT_APPLY_TIMEOUT_MS;
+    const response = await window.RpgGameApi.applyAdminChangeLogRollback({ id: controls.changeLogId, confirmText: controls.confirmText, reason: controls.reason || undefined, timeoutMs });
+    const payload = response && response.payload ? response.payload : {};
+    renderAdminRollbackResult(payload);
+    if (payload.rolledBack) {
+      setStatus(`되돌리기 완료 · rollback log #${formatValue(payload.rollbackChangeLogId)} · 게임은 새로고침 후 반영`, "ok");
+      await refreshAdminChangeLogs({ limit: 20 });
+    } else {
+      setStatus(`되돌리기 실패/차단: ${formatValue(payload.status)}`, "error");
+    }
+    return response;
   }
 
   async function refreshAdminChangeLogs(options) {
@@ -999,6 +1148,7 @@
         <div><span class="pill ${readiness.safeForAdminReadOnlyUi ? "good" : "warn"}">read-only UI: ${escapeHtml(formatValue(readiness.safeForAdminReadOnlyUi))}</span></div>
         <div><span class="pill ${readiness.safeForAdminWriteUi ? "warn" : "blocked"}">general write UI: ${escapeHtml(formatValue(readiness.safeForAdminWriteUi))}</span></div>
         <div><span class="pill ${readiness.guardedMasterEditApplyReady ? "good" : "blocked"}">guarded master edit apply: ${escapeHtml(formatValue(readiness.guardedMasterEditApplyReady))}</span></div>
+        <div><span class="pill ${readiness.guardedRollbackReady ? "good" : "blocked"}">guarded rollback: ${escapeHtml(formatValue(readiness.guardedRollbackReady))}</span></div>
         <div style="color:#cbd5e1; font-size:13px;">${escapeHtml(readiness.writeUiBlockedReason || "일반 쓰기 기능은 아직 막혀 있습니다.")}</div>
         ${warnings.length ? `<div class="error">경고: ${escapeHtml(warnings.join(", "))}</div>` : `<div style="color:#86efac; font-size:13px;">현재 read-only overview 기준 경고 없음</div>`}
       </div>
@@ -1114,6 +1264,27 @@
           renderError(error);
         }
       }
+      if (action === "open-admin-change-log-detail") {
+        try {
+          await openAdminChangeLogDetail(button.getAttribute("data-admin-change-log-id"));
+        } catch (error) {
+          renderError(error);
+        }
+      }
+      if (action === "preview-admin-change-log-rollback") {
+        try {
+          await previewAdminChangeLogRollback();
+        } catch (error) {
+          renderError(error);
+        }
+      }
+      if (action === "apply-admin-change-log-rollback") {
+        try {
+          await applyAdminChangeLogRollback();
+        } catch (error) {
+          if (!(error && String(error.message || "").includes("확인 문구"))) renderError(error);
+        }
+      }
       if (action === "reset-admin-edit-draft") {
         resetAdminEditDraft();
       }
@@ -1158,7 +1329,7 @@
   }
 
   function checkAdminReadOnlyPageReady(options) {
-    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function" && typeof window.RpgGameApi.previewAdminMasterDataEdit === "function" && typeof window.RpgGameApi.applyAdminMasterDataEdit === "function" && typeof window.RpgGameApi.listAdminChangeLogs === "function");
+    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function" && typeof window.RpgGameApi.previewAdminMasterDataEdit === "function" && typeof window.RpgGameApi.applyAdminMasterDataEdit === "function" && typeof window.RpgGameApi.listAdminChangeLogs === "function" && typeof window.RpgGameApi.fetchAdminChangeLogDetail === "function" && typeof window.RpgGameApi.previewAdminChangeLogRollback === "function" && typeof window.RpgGameApi.applyAdminChangeLogRollback === "function");
     const domReady = !!document.querySelector("[data-admin-cards]");
     const locationHintReady = !!document.querySelector("[data-admin-current-url]");
     const snapshotFilterReady = !!document.querySelector("[data-admin-filter-slot-key]");
@@ -1168,7 +1339,8 @@
     const editDraftReady = !!document.querySelector("[data-admin-edit-draft]");
     const fieldHelpReady = !!document.querySelector("[data-admin-field-help]");
     const adminChangeLogReady = !!document.querySelector("[data-admin-change-log-table]");
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, readOnly: false, writeLocked: false, guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const adminChangeLogDetailReady = !!document.querySelector("[data-admin-change-log-detail]");
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, readOnly: false, writeLocked: false, guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -1203,6 +1375,12 @@
     getAdminEditDraftReadiness,
     refreshAdminChangeLogs,
     renderAdminChangeLogs,
+    openAdminChangeLogDetail,
+    renderAdminChangeLogDetail,
+    previewAdminChangeLogRollback,
+    applyAdminChangeLogRollback,
+    readAdminRollbackControls,
+    renderAdminRollbackResult,
     getAdminFieldHelp,
     listAdminFieldHelp,
     getAdminFieldValueHint,
@@ -1229,6 +1407,10 @@
   window.getAdminFieldValueHint = getAdminFieldValueHint;
   window.getCurrentAdminPageUrl = getCurrentAdminPageUrl;
   window.copyCurrentAdminPageUrl = copyCurrentAdminPageUrl;
+  window.openAdminChangeLogDetail = openAdminChangeLogDetail;
+  window.previewAdminChangeLogRollback = previewAdminChangeLogRollback;
+  window.applyAdminChangeLogRollback = applyAdminChangeLogRollback;
+  window.readAdminRollbackControls = readAdminRollbackControls;
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", bootAdminReadOnlyPage, { once: true });

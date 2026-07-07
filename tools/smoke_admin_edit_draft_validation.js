@@ -55,7 +55,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v122.admin-guarded-edit-apply",
+  "v123.admin-change-log-rollback",
   "previewAdminEditDraft",
   "readAdminEditDraftValues",
   "resetAdminEditDraft",
@@ -67,7 +67,7 @@ assertContains("src/api/admin-page-readonly.js", [
 ]);
 
 assertContains("admin.html", [
-  "v122 admin guarded edit apply",
+  "v123 admin change log rollback",
   ".edit-draft-result",
   ".draft-preview-summary",
   "확인 문구",

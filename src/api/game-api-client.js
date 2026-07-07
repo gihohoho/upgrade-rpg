@@ -259,6 +259,45 @@
 		});
 	}
 
+
+	async function fetchAdminChangeLogDetail(options) {
+		const opts = options || {};
+		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
+		const id = opts.id !== undefined ? Number(opts.id) : (opts.changeLogId !== undefined ? Number(opts.changeLogId) : undefined);
+		return request(`/admin/change-logs/${id}`, {
+			timeoutMs,
+		});
+	}
+
+	async function previewAdminChangeLogRollback(options) {
+		const opts = options || {};
+		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
+		const id = opts.id !== undefined ? Number(opts.id) : (opts.changeLogId !== undefined ? Number(opts.changeLogId) : undefined);
+		return request(`/admin/change-logs/${id}/rollback-preview`, {
+			method: "POST",
+			body: {
+				reason: opts.reason || undefined,
+				dryRun: true,
+			},
+			timeoutMs,
+		});
+	}
+
+	async function applyAdminChangeLogRollback(options) {
+		const opts = options || {};
+		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
+		const id = opts.id !== undefined ? Number(opts.id) : (opts.changeLogId !== undefined ? Number(opts.changeLogId) : undefined);
+		return request(`/admin/change-logs/${id}/rollback-apply`, {
+			method: "POST",
+			body: {
+				reason: opts.reason || undefined,
+				confirmText: opts.confirmText || "",
+				dryRun: false,
+			},
+			timeoutMs,
+		});
+	}
+
 	async function saveGameSnapshot(payload, options) {
 		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : undefined;
 		return request("/game/save", {
@@ -297,6 +336,9 @@
 		previewAdminMasterDataEdit,
 		applyAdminMasterDataEdit,
 		listAdminChangeLogs,
+		fetchAdminChangeLogDetail,
+		previewAdminChangeLogRollback,
+		applyAdminChangeLogRollback,
 		loadGameSnapshot,
 	};
 })();

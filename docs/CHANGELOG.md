@@ -604,3 +604,13 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - raw JSON 전체와 이미지 data URL은 계속 숨김.
 - 관리자 쓰기 UI는 계속 차단.
 - DB reset/seed 불필요.
+
+## v123 - Admin change log rollback
+
+- Added admin change log detail API: `GET /api/v1/admin/change-logs/{change_log_id}`.
+- Added guarded rollback preview/apply APIs for master-data edit logs.
+- Rollback is blocked if the current DB row no longer matches the original change log `after_json`, preventing old rollback operations from overwriting newer edits.
+- Added rollback controls to the admin change-log section.
+- Added `ROLLBACK MASTER DATA EDIT` confirmation text for rollback apply.
+- Added `stackable` true/false explanation to the admin field help and value hints.
+- No DB reset or seed import is required because the existing `admin_change_logs` table is reused.

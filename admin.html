@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upgrade RPG Admin - Value Hints</title>
+  <title>Upgrade RPG Admin - Change Log Rollback</title>
   <style>
     :root {
       color-scheme: dark;
@@ -644,9 +644,9 @@
   <main class="admin-shell">
     <div class="topbar">
       <div>
-        <div class="eyebrow"><span class="dot"></span>Guarded Admin Preview</div>
+        <div class="eyebrow"><span class="dot"></span>Guarded Admin Rollback</div>
         <h1>Upgrade RPG 관리자 페이지</h1>
-        <p class="subtitle">마스터 데이터 조회/상세/검증에 더해, allow-list 필드만 확인 문구를 거쳐 실제 DB에 적용할 수 있습니다. 변경 이력은 admin_change_logs에 남깁니다.</p>
+        <p class="subtitle">마스터 데이터 allow-list 필드를 실제 DB에 적용하고, admin_change_logs 변경 이력에서 안전하게 되돌리기까지 준비합니다.</p>
       </div>
       <div class="top-actions">
         <a class="btn" href="index.html" data-admin-game-url>게임으로 돌아가기</a>
@@ -654,8 +654,8 @@
       </div>
     </div>
 
-    <div class="notice">이 페이지는 관리자 화면으로 옮기기 전의 안전한 뼈대입니다. 이제 <strong>마스터 데이터 allow-list 필드</strong>는 검증 + 확인 문구를 거쳐 실제 DB 적용까지 가능합니다. localStorage와 현재 게임 런타임은 직접 수정하지 않습니다.</div>
-    <div class="notice danger-notice">주의: 지급/삭제/JSON/이미지/관계 코드 변경은 아직 막혀 있습니다. 실제 적용은 name, description, 수치 밸런스, is_enabled 등 좁은 필드만 가능합니다.</div>
+    <div class="notice">이 페이지는 관리자 화면으로 옮기기 전의 안전한 뼈대입니다. <strong>마스터 데이터 allow-list 필드</strong>는 검증 + 확인 문구를 거쳐 실제 DB 적용이 가능하고, 변경 이력에서 현재값 검사를 통과한 경우 되돌리기도 가능합니다. localStorage와 현재 게임 런타임은 직접 수정하지 않습니다.</div>
+    <div class="notice danger-notice">주의: 지급/삭제/JSON/이미지/관계 코드 변경은 아직 막혀 있습니다. 실제 적용/되돌리기는 name, description, 수치 밸런스, is_enabled 등 좁은 필드만 가능합니다.</div>
     <div class="notice location-notice">
       <div>
         <strong>현재 관리자 페이지 주소</strong>
@@ -713,6 +713,11 @@
           <strong>admin note / 관리자 메모</strong>
           <p>게임 플레이 화면에는 보여주지 않는 운영자용 메모입니다. 데이터 작업 이유, 주의사항, 임시 설명, 나중에 확인할 내용을 적어두는 내부 기록용 필드입니다.</p>
           <div class="example">예: 밸런스 조정 예정, 이벤트 드랍 전용, 아직 미사용 데이터 등</div>
+        </div>
+        <div class="field-help-card">
+          <strong>stackable / 겹치기 가능 여부</strong>
+          <p>같은 아이템을 인벤토리 한 칸에 수량으로 합칠 수 있는지 정하는 true/false 값입니다.</p>
+          <div class="example">true: 재료/강화권처럼 한 칸에 여러 개 쌓임 · false: 장비처럼 각각 별도 칸 사용</div>
         </div>
         <div class="field-help-card">
           <strong>값 해석 힌트</strong>
@@ -797,9 +802,10 @@
         <h2 class="section-title">관리자 변경 이력</h2>
         <div class="section-meta" data-admin-change-log-meta>-</div>
       </div>
-      <div class="filter-help" style="padding:10px 14px; border-bottom:1px solid rgba(148, 163, 184, 0.14);">실제 적용된 관리자 변경은 여기에 남습니다. before/after 원본 JSON은 숨기고, 어떤 필드가 바뀌었는지만 요약합니다.</div>
+      <div class="filter-help" style="padding:10px 14px; border-bottom:1px solid rgba(148, 163, 184, 0.14);">실제 적용된 관리자 변경은 여기에 남습니다. 보기 버튼으로 before/after 스칼라 값을 확인하고, 현재 DB 값이 이력의 적용 값과 일치할 때만 안전하게 되돌릴 수 있습니다.</div>
       <div style="padding:10px 14px; border-bottom:1px solid rgba(148, 163, 184, 0.14);"><button class="btn mini" type="button" data-admin-action="refresh-admin-change-logs">변경 이력 새로고침</button></div>
       <div class="table-wrap" data-admin-change-log-table><div class="empty">불러오는 중...</div></div>
+      <div style="padding:12px 14px; border-top:1px solid rgba(148, 163, 184, 0.14);" data-admin-change-log-detail><div class="empty">변경 이력의 <strong>보기</strong> 버튼을 누르면 상세/되돌리기 미리보기가 여기에 표시됩니다.</div></div>
     </section>
 
     <section class="filter-panel" id="section-save-snapshots" aria-label="최근 세이브 스냅샷 필터">
@@ -856,12 +862,12 @@
     <section class="section" id="section-readiness">
       <div class="section-header">
         <h2 class="section-title">관리자 준비 상태</h2>
-        <div class="section-meta">guarded write ready</div>
+        <div class="section-meta">guarded write/rollback ready</div>
       </div>
       <div data-admin-readiness><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <p class="footer-note">v122 admin guarded edit apply · static HTML + JS · FastAPI guarded write APIs</p>
+    <p class="footer-note">v123 admin change log rollback · static HTML + JS · FastAPI guarded write/rollback APIs</p>
   </main>
 
   <script src="src/api/game-api-client.js"></script>

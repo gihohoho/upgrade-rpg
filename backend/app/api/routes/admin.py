@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.response import ok_response
 from app.core.security import CurrentUser, get_current_user_placeholder
 from app.db.session import get_db_session
-from app.schemas.admin import AdminChangePreviewRequest, AdminMasterDataEditApplyRequest, AdminMasterDataEditPreviewRequest
+from app.schemas.admin import AdminChangeLogRollbackApplyRequest, AdminChangeLogRollbackPreviewRequest, AdminChangePreviewRequest, AdminMasterDataEditApplyRequest, AdminMasterDataEditPreviewRequest
 from app.services.admin_service import AdminService
 
 router = APIRouter()
@@ -324,6 +324,106 @@ async def list_admin_change_logs(
         meta={
             "source": "postgresql",
             "note": "관리자 변경 이력 읽기 전용 목록입니다. before/after JSON 원본은 내려주지 않습니다.",
+        },
+    )
+
+
+@router.get("/change-logs/{change_log_id}")
+async def get_admin_change_log_detail(
+    change_log_id: int,
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Return a safe scalar detail for one admin change log."""
+    detail = await service.get_admin_change_log_detail(
+        session,
+        change_log_id=change_log_id,
+    )
+    return ok_response(
+        type="admin.change_log.detail",
+        payload=detail,
+        data={
+            "status": detail["status"],
+            "readOnly": detail["readOnly"],
+            "adminUserId": current_user.id,
+            "id": detail.get("id"),
+            "changedKeyCount": detail.get("changedKeyCount", 0),
+            "rollbackAvailable": (detail.get("rollback") or {}).get("available", False),
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 변경 이력 상세 조회입니다. before/after 전체 JSON 원본 대신 스칼라 변경 행만 내려줍니다.",
+        },
+    )
+
+
+@router.post("/change-logs/{change_log_id}/rollback-preview")
+async def preview_admin_change_log_rollback(
+    change_log_id: int,
+    payload: AdminChangeLogRollbackPreviewRequest | None = Body(default=None),
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Preview a guarded rollback without mutating DB."""
+    preview = await service.preview_admin_change_log_rollback(
+        session,
+        change_log_id=change_log_id,
+        reason=payload.reason if payload else None,
+    )
+    return ok_response(
+        type="admin.change_log.rollback_preview",
+        payload=preview,
+        data={
+            "status": preview["status"],
+            "readOnly": preview.get("readOnly"),
+            "dryRun": preview.get("dryRun"),
+            "writeBlocked": preview.get("writeBlocked"),
+            "adminUserId": current_user.id,
+            "changeLogId": preview.get("changeLogId"),
+            "rollbackReady": preview.get("rollbackReady", False),
+            "currentMatchesAfter": preview.get("currentMatchesAfter", False),
+            "diffCount": preview.get("diffCount", 0),
+            "errorCount": preview.get("errorCount", 0),
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 변경 이력 되돌리기 미리보기입니다. 현재 DB 값이 이력의 after 값과 일치할 때만 rollbackReady가 true가 됩니다.",
+        },
+    )
+
+
+@router.post("/change-logs/{change_log_id}/rollback-apply")
+async def apply_admin_change_log_rollback(
+    change_log_id: int,
+    payload: AdminChangeLogRollbackApplyRequest = Body(...),
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Apply a guarded rollback for a safe master-data change log."""
+    result = await service.apply_admin_change_log_rollback(
+        session,
+        change_log_id=change_log_id,
+        confirm_text=payload.confirm_text,
+        reason=payload.reason,
+        admin_user_id=current_user.id,
+    )
+    return ok_response(
+        type="admin.change_log.rollback_apply",
+        payload=result,
+        data={
+            "status": result["status"],
+            "readOnly": result.get("readOnly"),
+            "dryRun": result.get("dryRun"),
+            "writeBlocked": result.get("writeBlocked"),
+            "rolledBack": result.get("rolledBack", False),
+            "adminUserId": current_user.id,
+            "changeLogId": result.get("changeLogId"),
+            "rollbackChangeLogId": result.get("rollbackChangeLogId"),
+            "diffCount": result.get("diffCount", 0),
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 변경 이력 되돌리기 적용 API입니다. 확인 문구와 현재값 검사를 통과한 경우에만 DB에 반영합니다.",
         },
     )
 

@@ -47,6 +47,7 @@ class AdminService:
     )
 
     MASTER_EDIT_APPLY_CONFIRM_TEXT = "APPLY MASTER DATA EDIT"
+    MASTER_EDIT_ROLLBACK_CONFIRM_TEXT = "ROLLBACK MASTER DATA EDIT"
 
     # 실제 DB에 적용 가능한 필드만 아주 좁게 열어둡니다.
     # code / *_code / *_id / JSON / asset 필드는 연결 깨짐 위험이 있어서 다음 단계 전까지 잠급니다.
@@ -469,6 +470,297 @@ class AdminService:
             "rows": rows,
             "rawBeforeAfterReturned": False,
         }
+
+
+    async def get_admin_change_log_detail(
+        self,
+        session: AsyncSession,
+        *,
+        change_log_id: int,
+    ) -> dict[str, Any]:
+        """Return one admin change log with safe scalar before/after rows.
+
+        The list endpoint intentionally hides before/after values. This detail endpoint
+        is still bounded and sanitized, but it gives enough information for an admin to
+        understand exactly what changed before using the guarded rollback flow.
+        """
+        row = await self._get_admin_change_log(session, change_log_id)
+        if row is None:
+            return self._empty_change_log_detail(status="not_found", change_log_id=change_log_id, warnings=["change_log_not_found"])
+        detail = self._serialize_admin_change_log_detail(row)
+        domain, row_id = self._extract_master_change_target(row)
+        rollback_available = bool(row.applied and row.action == "update" and domain and row_id and isinstance(serialize_value(row.rollback_json), dict))
+        detail["rollback"] = {
+            "available": rollback_available,
+            "domain": domain,
+            "id": row_id,
+            "confirmTextRequired": self.MASTER_EDIT_ROLLBACK_CONFIRM_TEXT,
+            "note": "변경 직후 현재 DB 값이 이 변경 이력의 after 값과 일치할 때만 안전 되돌리기가 가능합니다.",
+        }
+        return detail
+
+    async def preview_admin_change_log_rollback(
+        self,
+        session: AsyncSession,
+        *,
+        change_log_id: int,
+        reason: str | None = None,
+    ) -> dict[str, Any]:
+        """Preview rollback of one guarded master-data change log.
+
+        Rollback is deliberately stricter than normal editing: it only proceeds when
+        the current DB row still matches the change log's after_json. If another edit
+        already changed the row, rollback is blocked to avoid overwriting newer work.
+        """
+        row = await self._get_admin_change_log(session, change_log_id)
+        if row is None:
+            return self._empty_rollback_preview(status="not_found", change_log_id=change_log_id, warnings=["change_log_not_found"])
+
+        domain, row_id = self._extract_master_change_target(row)
+        before_json = serialize_value(row.before_json) or {}
+        after_json = serialize_value(row.after_json) or {}
+        rollback_json = serialize_value(row.rollback_json) or {}
+        if not row.applied or row.action != "update" or not domain or not row_id or not isinstance(before_json, dict) or not isinstance(after_json, dict):
+            return self._empty_rollback_preview(
+                status="rollback_not_available",
+                change_log_id=change_log_id,
+                warnings=["change_log_is_not_guarded_master_update"],
+                target_type=row.target_type,
+                target_id=row.target_id,
+            )
+        if not isinstance(rollback_json, dict) or rollback_json.get("domain") != domain or int(rollback_json.get("id") or 0) != int(row_id):
+            return self._empty_rollback_preview(
+                status="rollback_metadata_invalid",
+                change_log_id=change_log_id,
+                warnings=["rollback_json_invalid"],
+                target_type=row.target_type,
+                target_id=row.target_id,
+            )
+
+        master_row = await self._get_master_row(session, domain, int(row_id))
+        if master_row is None:
+            return self._empty_rollback_preview(
+                status="target_not_found",
+                change_log_id=change_log_id,
+                warnings=["target_row_not_found"],
+                target_type=row.target_type,
+                target_id=row.target_id,
+                domain=domain,
+                row_id=int(row_id),
+            )
+
+        keys = sorted(set(before_json.keys()) | set(after_json.keys()))
+        current_values = self._current_master_values(master_row, keys)
+        after_mismatches = []
+        before_matches = []
+        for key in keys:
+            current = current_values.get(key)
+            expected_after = serialize_value(after_json.get(key))
+            expected_before = serialize_value(before_json.get(key))
+            if current != expected_after:
+                after_mismatches.append({
+                    "key": key,
+                    "label": self._humanize_field_name(key),
+                    "current": current,
+                    "expectedAfter": expected_after,
+                    "rollbackTo": expected_before,
+                })
+            if current == expected_before:
+                before_matches.append(key)
+
+        changes = self._build_change_log_changes(before_json, after_json)
+        base = {
+            "status": "rollback_preview_ready",
+            "readOnly": False,
+            "dryRun": True,
+            "writeBlocked": True,
+            "rollbackReady": False,
+            "wouldRollback": False,
+            "confirmTextRequired": self.MASTER_EDIT_ROLLBACK_CONFIRM_TEXT,
+            "changeLogId": int(change_log_id),
+            "targetType": row.target_type,
+            "targetId": row.target_id,
+            "domain": domain,
+            "id": int(row_id),
+            "action": row.action,
+            "reason": str(reason or "")[:300] if reason else None,
+            "sourceChangeReason": row.reason,
+            "changes": changes,
+            "changedKeys": [change["key"] for change in changes],
+            "diffCount": len(changes),
+            "currentMatchesAfter": len(after_mismatches) == 0,
+            "currentMismatches": after_mismatches[:30],
+            "currentMismatchCount": len(after_mismatches),
+            "alreadyRolledBackFieldCount": len(before_matches),
+            "rawBeforeAfterReturned": False,
+            "warnings": [],
+            "note": "현재 DB 값이 변경 이력의 after 값과 일치하면, before 값으로 되돌릴 수 있습니다.",
+        }
+
+        if len(before_matches) == len(keys) and keys:
+            base.update({
+                "status": "already_rolled_back",
+                "rollbackReady": False,
+                "wouldRollback": False,
+                "writeBlocked": True,
+                "warnings": ["target_already_matches_before_values"],
+                "note": "현재 DB 값이 이미 이 변경 이력의 이전 값과 같습니다. 되돌릴 변경이 없습니다.",
+            })
+            return base
+
+        if after_mismatches:
+            base.update({
+                "status": "rollback_blocked_current_changed",
+                "rollbackReady": False,
+                "wouldRollback": False,
+                "writeBlocked": True,
+                "warnings": ["current_db_values_do_not_match_change_log_after_values"],
+                "note": "이 변경 이후 같은 행이 다시 수정된 것으로 보입니다. 최신 변경을 덮어쓰지 않기 위해 되돌리기를 차단했습니다.",
+            })
+            return base
+
+        edit_preview = await self.preview_master_data_edit(
+            session,
+            domain=domain,
+            row_id=int(row_id),
+            draft=before_json,
+            reason=reason,
+            dry_run=True,
+        )
+        error_count = int(edit_preview.get("errorCount") or 0)
+        accepted_changes = edit_preview.get("acceptedChanges") or []
+        base.update({
+            "rollbackReady": error_count == 0 and len(accepted_changes) > 0,
+            "wouldRollback": error_count == 0 and len(accepted_changes) > 0,
+            "errorCount": error_count,
+            "acceptedChanges": accepted_changes,
+            "rejectedChanges": edit_preview.get("rejectedChanges") or [],
+            "unchangedChanges": edit_preview.get("unchangedChanges") or [],
+            "warnings": edit_preview.get("warnings") or [],
+            "note": "되돌리기 미리보기입니다. 아직 DB를 수정하지 않았습니다.",
+        })
+        if not base["rollbackReady"]:
+            base.update({
+                "status": "rollback_preview_not_valid",
+                "writeBlocked": True,
+                "wouldRollback": False,
+            })
+        return base
+
+    async def apply_admin_change_log_rollback(
+        self,
+        session: AsyncSession,
+        *,
+        change_log_id: int,
+        confirm_text: str,
+        reason: str | None,
+        admin_user_id: int,
+    ) -> dict[str, Any]:
+        """Apply a guarded rollback for one master-data change log."""
+        preview = await self.preview_admin_change_log_rollback(
+            session,
+            change_log_id=change_log_id,
+            reason=reason,
+        )
+        if str(confirm_text or "").strip() != self.MASTER_EDIT_ROLLBACK_CONFIRM_TEXT:
+            preview.update({
+                "status": "rollback_confirmation_required",
+                "dryRun": False,
+                "writeBlocked": True,
+                "rolledBack": False,
+                "rollbackReady": False,
+                "wouldRollback": False,
+                "warnings": [*(preview.get("warnings") or []), "rollback_confirm_text_mismatch"],
+                "note": "정확한 되돌리기 확인 문구를 입력해야 DB에 적용됩니다.",
+            })
+            return preview
+        if not preview.get("rollbackReady") or not preview.get("currentMatchesAfter"):
+            preview.update({
+                "status": "rollback_rejected",
+                "dryRun": False,
+                "writeBlocked": True,
+                "rolledBack": False,
+                "rollbackReady": False,
+                "wouldRollback": False,
+                "warnings": [*(preview.get("warnings") or []), "rollback_preview_not_safe_to_apply"],
+            })
+            return preview
+
+        row = await self._get_admin_change_log(session, change_log_id)
+        if row is None:
+            preview.update({"status": "not_found", "rolledBack": False, "writeBlocked": True})
+            return preview
+        domain, row_id = self._extract_master_change_target(row)
+        master_row = await self._get_master_row(session, str(domain), int(row_id or 0))
+        if master_row is None:
+            preview.update({"status": "target_not_found", "rolledBack": False, "writeBlocked": True})
+            return preview
+
+        before_json = serialize_value(row.before_json) or {}
+        after_json = serialize_value(row.after_json) or {}
+        keys = sorted(set(before_json.keys()) | set(after_json.keys()))
+        current_values = self._current_master_values(master_row, keys)
+        column_map = self._master_edit_column_map(master_row)
+        applied_changes: list[dict[str, Any]] = []
+        rollback_values: dict[str, Any] = {}
+        for key, rollback_to in before_json.items():
+            column = column_map.get(key)
+            if column is None or not self._master_edit_field_is_allowed(str(domain), key):
+                continue
+            normalized_value, issue = self._normalize_master_edit_value(column, rollback_to)
+            if issue:
+                continue
+            setattr(master_row, key, normalized_value)
+            rollback_values[key] = serialize_value(normalized_value)
+            applied_changes.append({
+                "key": key,
+                "label": self._humanize_field_name(key),
+                "before": current_values.get(key),
+                "after": serialize_value(normalized_value),
+                "type": self._master_edit_column_type(column),
+            })
+
+        if not applied_changes:
+            await session.rollback()
+            preview.update({
+                "status": "rollback_nothing_to_apply",
+                "dryRun": False,
+                "writeBlocked": True,
+                "rolledBack": False,
+                "warnings": [*(preview.get("warnings") or []), "no_rollback_changes_applied"],
+            })
+            return preview
+
+        rollback_log = AdminChangeLog(
+            admin_user_id=int(admin_user_id),
+            target_type=row.target_type,
+            target_id=row.target_id,
+            action="rollback",
+            reason=(str(reason or "")[:500] or f"Rollback change log #{change_log_id}"),
+            before_json=current_values,
+            after_json=rollback_values,
+            rollback_json={"domain": domain, "id": int(row_id), "draft": current_values, "sourceChangeLogId": int(change_log_id)},
+            applied=True,
+        )
+        session.add(rollback_log)
+        await session.commit()
+        await session.refresh(rollback_log)
+
+        preview.update({
+            "status": "rolled_back",
+            "dryRun": False,
+            "writeBlocked": False,
+            "rolledBack": True,
+            "rollbackReady": False,
+            "wouldRollback": False,
+            "rollbackChangeLogId": rollback_log.id,
+            "appliedChanges": applied_changes,
+            "acceptedChanges": applied_changes,
+            "diffCount": len(applied_changes),
+            "warnings": [*(preview.get("warnings") or []), "game_runtime_requires_reload"],
+            "note": "관리자 변경 이력을 기준으로 DB 값을 이전 값으로 되돌렸습니다. 게임 화면은 새로고침 후 최신 master-data를 다시 읽습니다.",
+        })
+        return preview
 
     def _empty_edit_preview(
         self,
@@ -1183,6 +1475,121 @@ class AdminService:
             return (UserSaveSnapshot.slot_key.asc(), UserSaveSnapshot.user_id.asc(), UserSaveSnapshot.updated_at.desc())
         return (UserSaveSnapshot.updated_at.desc(), UserSaveSnapshot.user_id, UserSaveSnapshot.slot_key)
 
+
+    async def _get_admin_change_log(self, session: AsyncSession, change_log_id: int) -> AdminChangeLog | None:
+        safe_id = int(change_log_id or 0)
+        if safe_id <= 0:
+            return None
+        result = await session.execute(select(AdminChangeLog).where(AdminChangeLog.id == safe_id))
+        return result.scalar_one_or_none()
+
+    def _empty_change_log_detail(self, *, status: str, change_log_id: int, warnings: list[str]) -> dict[str, Any]:
+        return {
+            "status": status,
+            "readOnly": True,
+            "id": int(change_log_id or 0),
+            "changes": [],
+            "changedKeys": [],
+            "changedKeyCount": 0,
+            "rollback": {"available": False, "confirmTextRequired": self.MASTER_EDIT_ROLLBACK_CONFIRM_TEXT},
+            "rawBeforeAfterReturned": False,
+            "warnings": warnings,
+        }
+
+    def _empty_rollback_preview(
+        self,
+        *,
+        status: str,
+        change_log_id: int,
+        warnings: list[str],
+        target_type: str | None = None,
+        target_id: str | None = None,
+        domain: str | None = None,
+        row_id: int | None = None,
+    ) -> dict[str, Any]:
+        return {
+            "status": status,
+            "readOnly": False,
+            "dryRun": True,
+            "writeBlocked": True,
+            "rollbackReady": False,
+            "wouldRollback": False,
+            "confirmTextRequired": self.MASTER_EDIT_ROLLBACK_CONFIRM_TEXT,
+            "changeLogId": int(change_log_id or 0),
+            "targetType": target_type,
+            "targetId": target_id,
+            "domain": domain,
+            "id": row_id,
+            "changes": [],
+            "changedKeys": [],
+            "diffCount": 0,
+            "errorCount": 1,
+            "currentMatchesAfter": False,
+            "currentMismatches": [],
+            "currentMismatchCount": 0,
+            "rawBeforeAfterReturned": False,
+            "warnings": warnings,
+        }
+
+    def _serialize_admin_change_log_detail(self, row: AdminChangeLog) -> dict[str, Any]:
+        base = self._serialize_admin_change_log(row)
+        before_json = serialize_value(row.before_json) or {}
+        after_json = serialize_value(row.after_json) or {}
+        changes = self._build_change_log_changes(before_json, after_json)
+        base.update({
+            "status": "loaded",
+            "readOnly": True,
+            "changes": changes,
+            "changedKeys": [change["key"] for change in changes],
+            "changedKeyCount": len(changes),
+            "rawBeforeAfterReturned": False,
+            "scalarChangesReturned": True,
+            "rollbackRawJsonReturned": False,
+            "warnings": [],
+        })
+        return base
+
+    def _build_change_log_changes(self, before_json: Any, after_json: Any) -> list[dict[str, Any]]:
+        before_dict = before_json if isinstance(before_json, dict) else {}
+        after_dict = after_json if isinstance(after_json, dict) else {}
+        keys = sorted(set(before_dict.keys()) | set(after_dict.keys()))
+        return [
+            {
+                "key": key,
+                "label": self._humanize_field_name(key),
+                "before": serialize_value(before_dict.get(key)),
+                "after": serialize_value(after_dict.get(key)),
+            }
+            for key in keys
+        ]
+
+    def _extract_master_change_target(self, row: AdminChangeLog) -> tuple[str | None, int | None]:
+        target_type = str(getattr(row, "target_type", "") or "")
+        if not target_type.startswith("master_data."):
+            return None, None
+        domain = target_type.split(".", 1)[1]
+        if domain not in self.MASTER_CATALOG_DOMAINS:
+            return None, None
+        try:
+            row_id = int(getattr(row, "target_id", 0) or 0)
+        except (TypeError, ValueError):
+            row_id = 0
+        return domain, row_id if row_id > 0 else None
+
+    async def _get_master_row(self, session: AsyncSession, domain: str, row_id: int) -> Any | None:
+        config = self.MASTER_CATALOG_DOMAINS.get(str(domain or ""))
+        safe_row_id = int(row_id or 0)
+        if not config or safe_row_id <= 0:
+            return None
+        result = await session.execute(select(config["model"]).where(config["model"].id == safe_row_id))
+        return result.scalar_one_or_none()
+
+    def _current_master_values(self, row: Any, keys: list[str]) -> dict[str, Any]:
+        values: dict[str, Any] = {}
+        for key in keys:
+            values[key] = serialize_value(getattr(row, key, None))
+        return values
+
     async def _count_admin_change_logs(self, session: AsyncSession, where_clauses: list[Any]) -> int:
         stmt = select(func.count()).select_from(AdminChangeLog)
         if where_clauses:
@@ -1506,7 +1913,8 @@ class AdminService:
             "safeForAdminReadOnlyUi": True,
             "safeForAdminWriteUi": False,
             "guardedMasterEditApplyReady": True,
-            "writeUiBlockedReason": "일반 지급/삭제/관계 변경은 계속 막혀 있습니다. 단, allow-list 마스터 데이터 필드는 확인 문구와 변경 이력을 거쳐 guarded apply가 가능합니다.",
+            "guardedRollbackReady": True,
+            "writeUiBlockedReason": "일반 지급/삭제/관계 변경은 계속 막혀 있습니다. 단, allow-list 마스터 데이터 필드는 확인 문구와 변경 이력을 거쳐 guarded apply/rollback이 가능합니다.",
         }
 
     async def _count(self, session: AsyncSession, model: Any, *, where_clause: Any | None = None) -> int:
