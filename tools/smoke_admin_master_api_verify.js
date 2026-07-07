@@ -14,7 +14,7 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-assert(adminJs.includes('v128.admin-post-edit-api-verify'), 'version should be v128 admin post edit api verify');
+assert(adminJs.includes('v130.admin-write-dev-key-guard'), 'version should be v130 admin write dev key guard');
 assert(adminJs.includes('verifySelectedMasterDataApi'), 'verifySelectedMasterDataApi helper missing');
 assert(adminJs.includes('findMasterApiRow'), 'findMasterApiRow helper missing');
 assert(adminJs.includes('buildMasterApiVerifyComparisons'), 'buildMasterApiVerifyComparisons helper missing');
@@ -29,7 +29,7 @@ assert(adminJs.includes('postWriteApiVerifyReady'), 'post-write readiness flag m
 assert(adminJs.includes('autoAfterWrite'), 'autoAfterWrite result flag missing');
 
 assert(adminHtml.includes('Guarded Admin + API Verify'), 'admin page title copy not updated');
-assert(adminHtml.includes('v128 admin post-edit API verify'), 'footer version not updated');
+assert(adminHtml.includes('v130 admin write dev key guard'), 'footer version not updated');
 
 assert(docs.includes('/game/master-data'), 'docs should mention game master-data API');
 assert(docs.includes('await verifySelectedMasterDataApi()'), 'docs should mention console helper');

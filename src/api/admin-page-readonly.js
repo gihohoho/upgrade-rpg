@@ -1,16 +1,19 @@
 (function () {
   "use strict";
 
-  const VERSION = "v128.admin-post-edit-api-verify";
+  const VERSION = "v130.admin-write-dev-key-guard";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
   const DEFAULT_MASTER_DOMAIN = "itemTemplates";
   const DEFAULT_MASTER_LIMIT = 50;
   const DEFAULT_MASTER_SORT = "code_asc";
+  const DEFAULT_CHANGE_LOG_LIMIT = 20;
+  const DEFAULT_CHANGE_LOG_SORT = "created_desc";
   const ADMIN_EDIT_APPLY_CONFIRM_TEXT = "APPLY MASTER DATA EDIT";
   const ADMIN_ROLLBACK_CONFIRM_TEXT = "ROLLBACK MASTER DATA EDIT";
   const ADMIN_EDIT_APPLY_TIMEOUT_MS = 5000;
+  const ADMIN_WRITE_DEV_KEY_EXAMPLE = "local-admin-dev-key";
   const ADMIN_EDIT_ALLOWED_FIELDS = {
     itemTemplates: ["name", "description", "grade", "stackable", "admin_note"],
     skills: ["name", "description", "proc_rate", "cooldown_seconds"],
@@ -334,6 +337,62 @@
     input.value = window.RpgGameApi.getApiBaseUrl();
   }
 
+  function getAdminWriteKeyInput() {
+    return $(`[data-admin-write-dev-key]`);
+  }
+
+  function hasAdminWriteDevKey() {
+    return !!(window.RpgGameApi && window.RpgGameApi.hasAdminWriteDevKey && window.RpgGameApi.hasAdminWriteDevKey());
+  }
+
+  function renderAdminWriteKeyStatus() {
+    const target = $(`[data-admin-write-key-status]`);
+    if (!target || !window.RpgGameApi) return;
+    const ready = hasAdminWriteDevKey();
+    target.innerHTML = ready
+      ? `<span class="pill good">write key set</span>`
+      : `<span class="pill blocked">write key missing</span>`;
+  }
+
+  function syncAdminWriteDevKeyInput() {
+    const input = getAdminWriteKeyInput();
+    if (input && window.RpgGameApi && window.RpgGameApi.getAdminWriteDevKey) input.value = window.RpgGameApi.getAdminWriteDevKey();
+    renderAdminWriteKeyStatus();
+  }
+
+  function saveAdminWriteDevKeyFromInput() {
+    ensureApi();
+    const input = getAdminWriteKeyInput();
+    const value = input ? input.value.trim() : "";
+    if (!value) {
+      const error = new Error(`관리자 쓰기 dev key를 입력해 주세요. 로컬 기본 예시는 ${ADMIN_WRITE_DEV_KEY_EXAMPLE} 입니다.`);
+      setStatus(error.message, "error");
+      renderAdminWriteKeyStatus();
+      throw error;
+    }
+    window.RpgGameApi.setAdminWriteDevKey(value);
+    syncAdminWriteDevKeyInput();
+    setStatus("관리자 쓰기 dev key가 이 브라우저 탭에 저장됐습니다.", "ok");
+    return value;
+  }
+
+  function clearAdminWriteDevKey() {
+    ensureApi();
+    window.RpgGameApi.clearAdminWriteDevKey();
+    syncAdminWriteDevKeyInput();
+    setStatus("관리자 쓰기 dev key를 지웠습니다. 실제 적용/되돌리기는 다시 잠깁니다.", "info");
+    return "";
+  }
+
+  function requireAdminWriteDevKeyForUi(actionLabel) {
+    if (hasAdminWriteDevKey()) return true;
+    const message = `${actionLabel || "관리자 쓰기 작업"} 전에 관리자 쓰기 dev key를 먼저 설정해 주세요.`;
+    setStatus(message, "error");
+    const target = $(`[data-admin-edit-draft-result]`) || $(`[data-admin-rollback-result]`);
+    if (target) target.innerHTML = `<div class="error">${escapeHtml(message)}<br>관리자 페이지의 <strong>쓰기 잠금</strong> 영역에서 dev key를 저장한 뒤 다시 시도하세요.</div>`;
+    throw new Error(message);
+  }
+
   function ensureApi() {
     if (!window.RpgGameApi) throw new Error("RpgGameApi를 찾을 수 없습니다. game-api-client.js 로딩 순서를 확인하세요.");
     if (typeof window.RpgGameApi.fetchAdminOverview !== "function") throw new Error("fetchAdminOverview 함수를 찾을 수 없습니다.");
@@ -398,6 +457,60 @@
   }
 
 
+  function readChangeLogFiltersFromDom() {
+    const limitEl = $("[data-admin-change-log-filter-limit]");
+    const targetTypeEl = $("[data-admin-change-log-filter-target-type]");
+    const targetIdEl = $("[data-admin-change-log-filter-target-id]");
+    const actionEl = $("[data-admin-change-log-filter-action]");
+    const changedKeyEl = $("[data-admin-change-log-filter-changed-key]");
+    const appliedEl = $("[data-admin-change-log-filter-applied]");
+    const sortEl = $("[data-admin-change-log-filter-sort]");
+    const appliedValue = appliedEl && appliedEl.value ? appliedEl.value : "all";
+    return {
+      limit: limitEl && limitEl.value ? Number(limitEl.value) : DEFAULT_CHANGE_LOG_LIMIT,
+      targetType: targetTypeEl ? targetTypeEl.value.trim() : "",
+      targetId: targetIdEl ? targetIdEl.value.trim() : "",
+      action: actionEl ? actionEl.value.trim() : "",
+      changedKey: changedKeyEl ? changedKeyEl.value.trim() : "",
+      applied: appliedValue === "all" ? undefined : appliedValue === "true",
+      sort: sortEl && sortEl.value ? sortEl.value : DEFAULT_CHANGE_LOG_SORT,
+    };
+  }
+
+  function resetChangeLogFilters(options) {
+    const opts = options || {};
+    const limitEl = $("[data-admin-change-log-filter-limit]");
+    const targetTypeEl = $("[data-admin-change-log-filter-target-type]");
+    const targetIdEl = $("[data-admin-change-log-filter-target-id]");
+    const actionEl = $("[data-admin-change-log-filter-action]");
+    const changedKeyEl = $("[data-admin-change-log-filter-changed-key]");
+    const appliedEl = $("[data-admin-change-log-filter-applied]");
+    const sortEl = $("[data-admin-change-log-filter-sort]");
+    if (limitEl) limitEl.value = String(DEFAULT_CHANGE_LOG_LIMIT);
+    if (targetTypeEl) targetTypeEl.value = "";
+    if (targetIdEl) targetIdEl.value = "";
+    if (actionEl) actionEl.value = "";
+    if (changedKeyEl) changedKeyEl.value = "";
+    if (appliedEl) appliedEl.value = "all";
+    if (sortEl) sortEl.value = DEFAULT_CHANGE_LOG_SORT;
+    if (!opts.silent) setStatus("관리자 변경 이력 필터 초기화", "info");
+    return readChangeLogFiltersFromDom();
+  }
+
+  function describeChangeLogFilters(filters) {
+    const f = filters || {};
+    const parts = [];
+    if (f.targetType) parts.push(`targetType=${f.targetType}`);
+    if (f.targetId) parts.push(`targetId=${f.targetId}`);
+    if (f.action) parts.push(`action=${f.action}`);
+    if (f.changedKey) parts.push(`changedKey=${f.changedKey}`);
+    if (f.applied !== undefined && f.applied !== null) parts.push(`applied=${f.applied}`);
+    if (f.sort && f.sort !== DEFAULT_CHANGE_LOG_SORT) parts.push(`sort=${f.sort}`);
+    return parts.length ? parts.join(", ") : "필터 없음";
+  }
+
+
+
   function readMasterCatalogFiltersFromDom() {
     const domainEl = $("[data-admin-master-domain]");
     const limitEl = $("[data-admin-master-limit]");
@@ -460,13 +573,15 @@
     const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : DEFAULT_TIMEOUT_MS;
     const filters = opts.snapshotFilters || readSnapshotFiltersFromDom();
     const masterCatalogFilters = opts.masterCatalogFilters || readMasterCatalogFiltersFromDom();
-    const [overview, snapshots, masterDomains, masterCatalog] = await Promise.all([
+    const changeLogFilters = opts.changeLogFilters || readChangeLogFiltersFromDom();
+    const [overview, snapshots, masterDomains, masterCatalog, changeLogs] = await Promise.all([
       window.RpgGameApi.fetchAdminOverview({ timeoutMs }),
       window.RpgGameApi.listAdminSaveSnapshots({ timeoutMs, ...filters }),
       window.RpgGameApi.listAdminMasterCatalogDomains({ timeoutMs }),
       window.RpgGameApi.listAdminMasterCatalogRows({ timeoutMs, ...masterCatalogFilters }),
+      window.RpgGameApi.listAdminChangeLogs({ timeoutMs, ...changeLogFilters }),
     ]);
-    return { overview, snapshots, masterDomains, masterCatalog, snapshotFilters: filters, masterCatalogFilters };
+    return { overview, snapshots, masterDomains, masterCatalog, changeLogs, snapshotFilters: filters, masterCatalogFilters, changeLogFilters };
   }
 
   function renderCards(overviewPayload) {
@@ -635,7 +750,7 @@
     return `
       <div class="detail-card edit-draft-card" data-admin-edit-draft data-admin-edit-draft-domain="${escapeHtml(domain || "")}" data-admin-edit-draft-id="${escapeHtml(detail.id || "")}">
         <div class="detail-title">관리자 편집 초안 <span class="pill warn">guarded apply</span><span class="pill good">change log</span></div>
-        <div class="filter-help">이제 allow-list 필드는 실제 DB 적용까지 가능합니다. 먼저 <strong>초안 검증</strong>으로 오류가 없는지 확인한 뒤, 확인 문구 <code>${escapeHtml(ADMIN_EDIT_APPLY_CONFIRM_TEXT)}</code>를 정확히 입력해야 적용됩니다. 게임 화면은 새로고침 후 최신 master-data를 다시 읽습니다.</div>
+        <div class="filter-help">이제 allow-list 필드는 실제 DB 적용까지 가능합니다. 먼저 <strong>초안 검증</strong>으로 오류가 없는지 확인한 뒤, dev key와 확인 문구 <code>${escapeHtml(ADMIN_EDIT_APPLY_CONFIRM_TEXT)}</code>를 정확히 입력해야 적용됩니다. 게임 화면은 새로고침 후 최신 master-data를 다시 읽습니다.</div>
         <div class="filter-help">실제 적용 가능 필드: ${escapeHtml(getAdminEditAllowedFields(domain).join(", ") || "없음")}</div>
         ${lockedFields.length ? `<div class="filter-help">연결/식별자라 잠근 필드: ${escapeHtml(lockedFields.slice(0, 12).join(", "))}${lockedFields.length > 12 ? " ..." : ""}</div>` : ""}
         <div class="edit-draft-grid">${rows}</div>
@@ -647,7 +762,7 @@
           <label class="apply-confirm-field"><span>확인 문구</span><input type="text" data-admin-edit-apply-confirm placeholder="${escapeHtml(ADMIN_EDIT_APPLY_CONFIRM_TEXT)}" autocomplete="off" /></label>
           <label class="apply-confirm-field"><span>변경 사유</span><input type="text" data-admin-edit-apply-reason placeholder="예: 보스 HP 밸런스 조정" autocomplete="off" /></label>
           <button class="btn mini danger" type="button" data-admin-action="apply-admin-edit-draft">검증 후 실제 적용</button>
-          <span class="pill warn">DB write: guarded</span>
+          <span class="pill warn">DB write: dev-key guarded</span>
         </div>
         <div class="edit-draft-result" data-admin-edit-draft-result><div class="empty">값을 바꾼 뒤 <strong>초안 검증</strong>을 누르세요. 실제 적용은 확인 문구가 맞고 검증 오류가 없을 때만 됩니다.</div></div>
       </div>
@@ -993,6 +1108,7 @@
       setStatus(error.message, "error");
       throw error;
     }
+    requireAdminWriteDevKeyForUi("마스터 데이터 실제 적용");
     if (!controls.confirmMatches) {
       const error = new Error(`확인 문구를 정확히 입력해야 합니다: ${ADMIN_EDIT_APPLY_CONFIRM_TEXT}`);
       setStatus(error.message, "error");
@@ -1023,7 +1139,7 @@
         label: "DB 적용",
         contextLabel: `change log #${formatValue(payload.changeLogId)} 적용 후 자동 확인`,
       });
-      await refreshAdminChangeLogs({ targetType: `master_data.${values.domain}`, targetId: String(values.id), limit: 10 });
+      await refreshAdminChangeLogs({ filters: { ...readChangeLogFiltersFromDom(), targetType: `master_data.${values.domain}`, targetId: String(values.id), limit: 10 } });
     } else {
       setStatus(`DB 적용 실패/차단: ${formatValue(payload.status)} · errors ${formatValue(payload.errorCount)}`, "error");
     }
@@ -1041,8 +1157,9 @@
       version: VERSION,
       readOnly: false,
       dryRun: false,
-      writeLocked: false,
+      writeLocked: !hasAdminWriteDevKey(),
       guardedApply: true,
+      adminWriteDevKeySet: hasAdminWriteDevKey(),
       confirmTextRequired: ADMIN_EDIT_APPLY_CONFIRM_TEXT,
       confirmMatches: controls.confirmMatches,
       fieldsEditable: fields.every((field) => field.disabled === false),
@@ -1488,7 +1605,7 @@
     if (!target) return;
     const payload = logsPayload || {};
     const rows = Array.isArray(payload.rows) ? payload.rows : [];
-    if (meta) meta.textContent = `${formatValue(rows.length)} / ${formatValue(payload.total)} logs · before/after raw JSON hidden`;
+    if (meta) meta.textContent = `${formatValue(rows.length)} / ${formatValue(payload.total)} logs · ${describeChangeLogFilters(payload.filters || {})} · before/after raw JSON hidden`;
     if (!rows.length) {
       target.innerHTML = `<div class="empty">아직 관리자 변경 이력이 없습니다.</div>`;
       return;
@@ -1541,7 +1658,7 @@
           <label class="apply-confirm-field"><span>되돌리기 확인 문구</span><input type="text" data-admin-rollback-confirm placeholder="${escapeHtml(ADMIN_ROLLBACK_CONFIRM_TEXT)}" autocomplete="off" /></label>
           <label class="apply-confirm-field"><span>되돌리기 사유</span><input type="text" data-admin-rollback-reason placeholder="예: 보스 HP 변경 되돌림" autocomplete="off" /></label>
           <button class="btn mini danger" type="button" data-admin-action="apply-admin-change-log-rollback">검사 후 되돌리기</button>
-          <span class="pill warn">DB rollback: guarded</span>
+          <span class="pill warn">DB rollback: dev-key guarded</span>
         </div>
         <div class="edit-draft-result" data-admin-rollback-result><div class="empty">먼저 <strong>되돌리기 미리보기</strong>를 눌러 현재 DB 값이 이 변경 이력의 적용 값과 일치하는지 확인하세요.</div></div>
       </div>
@@ -1621,6 +1738,7 @@
     ensureApi();
     const controls = readAdminRollbackControls();
     if (!controls.changeLogId) throw new Error("되돌릴 변경 이력 상세를 먼저 열어주세요.");
+    requireAdminWriteDevKeyForUi("변경 이력 되돌리기 적용");
     if (!controls.confirmMatches) {
       const error = new Error(`되돌리기 확인 문구를 정확히 입력해야 합니다: ${ADMIN_ROLLBACK_CONFIRM_TEXT}`);
       setStatus(error.message, "error");
@@ -1641,7 +1759,7 @@
     renderAdminRollbackResult(payload);
     if (payload.rolledBack) {
       const rollbackTarget = currentAdminChangeLogDetailPayload && currentAdminChangeLogDetailPayload.rollback ? currentAdminChangeLogDetailPayload.rollback : {};
-      await refreshAdminChangeLogs({ limit: 20 });
+      await refreshAdminChangeLogs({ filters: readChangeLogFiltersFromDom() });
       await runPostWriteMasterApiVerification(rollbackTarget.domain, rollbackTarget.id, {
         label: "되돌리기",
         contextLabel: `rollback log #${formatValue(payload.rollbackChangeLogId)} 적용 후 자동 확인`,
@@ -1655,16 +1773,16 @@
   async function refreshAdminChangeLogs(options) {
     ensureApi();
     const opts = options || {};
+    const filters = opts.filters || readChangeLogFiltersFromDom();
     const target = $(`[data-admin-change-log-table]`);
     if (target) target.innerHTML = `<div class="empty">변경 이력 불러오는 중...</div>`;
     const response = await window.RpgGameApi.listAdminChangeLogs({
-      limit: opts.limit || 20,
-      targetType: opts.targetType || undefined,
-      targetId: opts.targetId || undefined,
+      ...filters,
       timeoutMs: opts.timeoutMs !== undefined ? opts.timeoutMs : DEFAULT_TIMEOUT_MS,
     });
     const payload = response && response.payload ? response.payload : {};
     renderAdminChangeLogs(payload);
+    setStatus(`변경 이력 로드 · ${describeChangeLogFilters(filters)}`, "ok");
     return response;
   }
 
@@ -1678,6 +1796,7 @@
         <div><span class="pill ${readiness.safeForAdminWriteUi ? "warn" : "blocked"}">general write UI: ${escapeHtml(formatValue(readiness.safeForAdminWriteUi))}</span></div>
         <div><span class="pill ${readiness.guardedMasterEditApplyReady ? "good" : "blocked"}">guarded master edit apply: ${escapeHtml(formatValue(readiness.guardedMasterEditApplyReady))}</span></div>
         <div><span class="pill ${readiness.guardedRollbackReady ? "good" : "blocked"}">guarded rollback: ${escapeHtml(formatValue(readiness.guardedRollbackReady))}</span></div>
+        <div><span class="pill ${hasAdminWriteDevKey() ? "good" : "blocked"}">admin write dev key: ${escapeHtml(hasAdminWriteDevKey() ? "set" : "missing")}</span></div>
         <div style="color:#cbd5e1; font-size:13px;">${escapeHtml(readiness.writeUiBlockedReason || "일반 쓰기 기능은 아직 막혀 있습니다.")}</div>
         ${warnings.length ? `<div class="error">경고: ${escapeHtml(warnings.join(", "))}</div>` : `<div style="color:#86efac; font-size:13px;">현재 read-only overview 기준 경고 없음</div>`}
       </div>
@@ -1710,16 +1829,18 @@
       const snapshotPayload = result.snapshots && result.snapshots.payload ? result.snapshots.payload : {};
       const masterDomainsPayload = result.masterDomains && result.masterDomains.payload ? result.masterDomains.payload : {};
       const masterCatalogPayload = result.masterCatalog && result.masterCatalog.payload ? result.masterCatalog.payload : {};
+      const changeLogPayload = result.changeLogs && result.changeLogs.payload ? result.changeLogs.payload : {};
       renderCards(overviewPayload);
       renderMasterTable(overviewPayload.masterData || {});
       syncMasterDomainOptions(masterDomainsPayload);
       renderMasterCatalogTable(masterCatalogPayload);
       renderSnapshotTable(snapshotPayload);
+      renderAdminChangeLogs(changeLogPayload);
       renderReadiness(overviewPayload.readiness || {});
-      await refreshAdminChangeLogs({ limit: 20 });
       const filterText = describeSnapshotFilters(result.snapshotFilters || (snapshotPayload && snapshotPayload.filters));
       const masterFilterText = describeMasterCatalogFilters(result.masterCatalogFilters || (masterCatalogPayload && masterCatalogPayload.filters));
-      setStatus(`정상 로드 · ${formatClock(new Date().toISOString())} · ${filterText} · ${masterFilterText} · API ${window.RpgGameApi.getApiBaseUrl()}`, "ok");
+      const changeFilterText = describeChangeLogFilters(result.changeLogFilters || (changeLogPayload && changeLogPayload.filters));
+      setStatus(`정상 로드 · ${formatClock(new Date().toISOString())} · 세이브 ${filterText} · 마스터 ${masterFilterText} · 이력 ${changeFilterText} · API ${window.RpgGameApi.getApiBaseUrl()}`, "ok");
       return { ok: true, ...result };
     } catch (error) {
       renderError(error);
@@ -1761,8 +1882,9 @@
       if (!button) return;
       const action = button.getAttribute("data-admin-action");
       if (action === "refresh") await refreshAdminReadOnlyPage();
-      if (action === "apply-snapshot-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() });
-      if (action === "apply-master-catalog-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() });
+      if (action === "apply-snapshot-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom() });
+      if (action === "apply-master-catalog-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom() });
+      if (action === "apply-change-log-filters") await refreshAdminChangeLogs({ filters: readChangeLogFiltersFromDom() });
       if (action === "open-master-detail") {
         const domain = button.getAttribute("data-admin-detail-domain");
         const id = button.getAttribute("data-admin-detail-id");
@@ -1793,12 +1915,12 @@
           await applyAdminEditDraft();
         } catch (error) {
           // applyAdminEditDraft already renders user-facing validation errors.
-          if (!(error && String(error.message || "").includes("확인 문구"))) renderError(error);
+          if (!(error && (String(error.message || "").includes("확인 문구") || String(error.message || "").includes("dev key")))) renderError(error);
         }
       }
       if (action === "refresh-admin-change-logs") {
         try {
-          await refreshAdminChangeLogs();
+          await refreshAdminChangeLogs({ filters: readChangeLogFiltersFromDom() });
         } catch (error) {
           renderError(error);
         }
@@ -1821,7 +1943,7 @@
         try {
           await applyAdminChangeLogRollback();
         } catch (error) {
-          if (!(error && String(error.message || "").includes("확인 문구"))) renderError(error);
+          if (!(error && (String(error.message || "").includes("확인 문구") || String(error.message || "").includes("dev key")))) renderError(error);
         }
       }
       if (action === "verify-master-api-target") {
@@ -1836,11 +1958,25 @@
       }
       if (action === "reset-master-catalog-filters") {
         resetMasterCatalogFilters();
-        await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() });
+        await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom() });
       }
       if (action === "reset-snapshot-filters") {
         resetSnapshotFilters();
-        await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() });
+        await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom() });
+      }
+      if (action === "reset-change-log-filters") {
+        resetChangeLogFilters();
+        await refreshAdminChangeLogs({ filters: readChangeLogFiltersFromDom() });
+      }
+      if (action === "save-admin-write-dev-key") {
+        try {
+          saveAdminWriteDevKeyFromInput();
+        } catch (error) {
+          renderAdminWriteKeyStatus();
+        }
+      }
+      if (action === "clear-admin-write-dev-key") {
+        clearAdminWriteDevKey();
       }
       if (action === "save-api-base-url") {
         try {
@@ -1868,14 +2004,16 @@
     bindEvents();
     syncLocationHints();
     syncApiInput();
+    syncAdminWriteDevKeyInput();
     resetSnapshotFilters({ silent: true });
     resetMasterCatalogFilters({ silent: true });
+    resetChangeLogFilters({ silent: true });
     renderMasterDetail({});
     refreshAdminReadOnlyPage();
   }
 
   function checkAdminReadOnlyPageReady(options) {
-    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function" && typeof window.RpgGameApi.previewAdminMasterDataEdit === "function" && typeof window.RpgGameApi.applyAdminMasterDataEdit === "function" && typeof window.RpgGameApi.listAdminChangeLogs === "function" && typeof window.RpgGameApi.fetchAdminChangeLogDetail === "function" && typeof window.RpgGameApi.previewAdminChangeLogRollback === "function" && typeof window.RpgGameApi.applyAdminChangeLogRollback === "function");
+    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function" && typeof window.RpgGameApi.previewAdminMasterDataEdit === "function" && typeof window.RpgGameApi.applyAdminMasterDataEdit === "function" && typeof window.RpgGameApi.listAdminChangeLogs === "function" && typeof window.RpgGameApi.fetchAdminChangeLogDetail === "function" && typeof window.RpgGameApi.previewAdminChangeLogRollback === "function" && typeof window.RpgGameApi.applyAdminChangeLogRollback === "function" && typeof window.RpgGameApi.setAdminWriteDevKey === "function" && typeof window.RpgGameApi.hasAdminWriteDevKey === "function");
     const domReady = !!document.querySelector("[data-admin-cards]");
     const locationHintReady = !!document.querySelector("[data-admin-current-url]");
     const snapshotFilterReady = !!document.querySelector("[data-admin-filter-slot-key]");
@@ -1886,9 +2024,11 @@
     const fieldHelpReady = !!document.querySelector("[data-admin-field-help]");
     const adminChangeLogReady = !!document.querySelector("[data-admin-change-log-table]");
     const adminChangeLogDetailReady = !!document.querySelector("[data-admin-change-log-detail]");
+    const adminChangeLogFilterReady = !!document.querySelector("[data-admin-change-log-filter-changed-key]");
     const masterApiVerifyReady = typeof verifySelectedMasterDataApi === "function";
     const postWriteApiVerifyReady = typeof runPostWriteMasterApiVerification === "function";
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && masterApiVerifyReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, masterApiVerifyReady, postWriteApiVerifyReady, readOnly: false, writeLocked: false, guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const adminWriteGuardReady = !!document.querySelector("[data-admin-write-dev-key]") && !!document.querySelector("[data-admin-write-key-status]");
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && masterApiVerifyReady && adminWriteGuardReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -1909,6 +2049,9 @@
     readMasterCatalogFiltersFromDom,
     resetMasterCatalogFilters,
     describeMasterCatalogFilters,
+    readChangeLogFiltersFromDom,
+    resetChangeLogFilters,
+    describeChangeLogFilters,
     openAdminMasterDataDetail,
     openAdminMasterDataRelations,
     renderMasterDetail,
@@ -1932,6 +2075,10 @@
     applyAdminChangeLogRollback,
     readAdminRollbackControls,
     renderAdminRollbackResult,
+    syncAdminWriteDevKeyInput,
+    saveAdminWriteDevKeyFromInput,
+    clearAdminWriteDevKey,
+    hasAdminWriteDevKey,
     verifySelectedMasterDataApi,
     runPostWriteMasterApiVerification,
     renderMasterApiVerifyResult,
@@ -1951,10 +2098,17 @@
   window.resetAdminSnapshotFilters = resetSnapshotFilters;
   window.readAdminMasterCatalogFilters = readMasterCatalogFiltersFromDom;
   window.resetAdminMasterCatalogFilters = resetMasterCatalogFilters;
+  window.readAdminChangeLogFilters = readChangeLogFiltersFromDom;
+  window.resetAdminChangeLogFilters = resetChangeLogFilters;
+  window.refreshAdminChangeLogs = refreshAdminChangeLogs;
   window.openAdminMasterDataDetail = openAdminMasterDataDetail;
   window.openAdminMasterDataRelations = openAdminMasterDataRelations;
   window.checkAdminReadOnlyPageReady = checkAdminReadOnlyPageReady;
   window.getAdminEditDraftReadiness = getAdminEditDraftReadiness;
+  window.syncAdminWriteDevKeyInput = syncAdminWriteDevKeyInput;
+  window.saveAdminWriteDevKeyFromInput = saveAdminWriteDevKeyFromInput;
+  window.clearAdminWriteDevKey = clearAdminWriteDevKey;
+  window.hasAdminWriteDevKey = hasAdminWriteDevKey;
   window.readAdminEditDraftValues = readAdminEditDraftValues;
   window.resetAdminEditDraft = resetAdminEditDraft;
   window.previewAdminEditDraft = previewAdminEditDraft;

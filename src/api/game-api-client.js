@@ -3,6 +3,7 @@
 
 	const DEFAULT_API_BASE_URL = "http://127.0.0.1:8000/api/v1";
 	const API_BASE_URL_STORAGE_KEY = "upgradeRpgApiBaseUrl";
+	const ADMIN_WRITE_DEV_KEY_STORAGE_KEY = "upgradeRpgAdminWriteDevKey";
 	const DEFAULT_REQUEST_TIMEOUT_MS = 1500;
 
 	function trimTrailingSlash(value) {
@@ -33,6 +34,40 @@
 			// localStorage를 쓸 수 없는 환경에서도 현재 창에서는 동작하게 둡니다.
 		}
 		return nextBaseUrl;
+	}
+
+	function getAdminWriteDevKey() {
+		try {
+			return window.sessionStorage ? String(window.sessionStorage.getItem(ADMIN_WRITE_DEV_KEY_STORAGE_KEY) || "") : "";
+		} catch (error) {
+			return "";
+		}
+	}
+
+	function setAdminWriteDevKey(value) {
+		const nextValue = String(value || "").trim();
+		try {
+			if (window.sessionStorage) {
+				if (nextValue) window.sessionStorage.setItem(ADMIN_WRITE_DEV_KEY_STORAGE_KEY, nextValue);
+				else window.sessionStorage.removeItem(ADMIN_WRITE_DEV_KEY_STORAGE_KEY);
+			}
+		} catch (error) {
+			// sessionStorage를 쓸 수 없는 환경에서는 현재 입력값만 반환합니다.
+		}
+		return nextValue;
+	}
+
+	function clearAdminWriteDevKey() {
+		return setAdminWriteDevKey("");
+	}
+
+	function getAdminWriteHeaders() {
+		const key = getAdminWriteDevKey();
+		return key ? { "X-Admin-Dev-Key": key } : {};
+	}
+
+	function hasAdminWriteDevKey() {
+		return !!getAdminWriteDevKey();
 	}
 
 	function buildUrl(path, query) {
@@ -244,6 +279,7 @@
 				dryRun: false,
 			},
 			timeoutMs,
+			headers: getAdminWriteHeaders(),
 		});
 	}
 
@@ -253,8 +289,12 @@
 		const limit = opts.limit !== undefined ? Number(opts.limit) : undefined;
 		const targetType = opts.targetType !== undefined ? String(opts.targetType || "").trim() : undefined;
 		const targetId = opts.targetId !== undefined ? String(opts.targetId || "").trim() : undefined;
+		const action = opts.action !== undefined ? String(opts.action || "").trim() : undefined;
+		const changedKey = opts.changedKey !== undefined ? String(opts.changedKey || "").trim() : undefined;
+		const applied = opts.applied !== undefined && opts.applied !== "" ? opts.applied : undefined;
+		const sort = opts.sort !== undefined ? String(opts.sort || "").trim() : undefined;
 		return request("/admin/change-logs", {
-			query: { limit, targetType, targetId },
+			query: { limit, targetType, targetId, action, changedKey, applied, sort },
 			timeoutMs,
 		});
 	}
@@ -295,6 +335,7 @@
 				dryRun: false,
 			},
 			timeoutMs,
+			headers: getAdminWriteHeaders(),
 		});
 	}
 
@@ -319,9 +360,15 @@
 	window.RpgGameApi = {
 		DEFAULT_API_BASE_URL,
 		API_BASE_URL_STORAGE_KEY,
+		ADMIN_WRITE_DEV_KEY_STORAGE_KEY,
 		DEFAULT_REQUEST_TIMEOUT_MS,
 		getApiBaseUrl,
 		setApiBaseUrl,
+		getAdminWriteDevKey,
+		setAdminWriteDevKey,
+		clearAdminWriteDevKey,
+		getAdminWriteHeaders,
+		hasAdminWriteDevKey,
 		buildUrl,
 		request,
 		fetchMasterData,

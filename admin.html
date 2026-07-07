@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upgrade RPG Admin - Master Data API Verify</title>
+  <title>Upgrade RPG Admin - Write Dev Key Guard</title>
   <style>
     :root {
       color-scheme: dark;
@@ -702,7 +702,7 @@
       </div>
     </div>
 
-    <div class="notice">이 페이지는 관리자 화면으로 옮기기 전의 안전한 뼈대입니다. <strong>마스터 데이터 allow-list 필드</strong>는 검증 + 확인 문구를 거쳐 실제 DB 적용이 가능하고, 변경 전 영향 안내와 변경 후 <code>/game/master-data</code> API 반영 확인을 제공합니다. localStorage와 현재 게임 런타임은 직접 수정하지 않습니다.</div>
+    <div class="notice">이 페이지는 관리자 화면으로 옮기기 전의 안전한 뼈대입니다. <strong>마스터 데이터 allow-list 필드</strong>는 검증 + 확인 문구 + dev key를 거쳐 실제 DB 적용이 가능하고, 변경 전 영향 안내와 변경 후 <code>/game/master-data</code> API 반영 확인을 제공합니다. localStorage와 현재 게임 런타임은 직접 수정하지 않습니다.</div>
     <div class="notice danger-notice">주의: 지급/삭제/JSON/이미지/관계 코드 변경은 아직 막혀 있습니다. 실제 적용/되돌리기는 name, description, 수치 밸런스, is_enabled 등 좁은 필드만 가능합니다.</div>
     <div class="notice location-notice">
       <div>
@@ -716,6 +716,7 @@
     <nav class="admin-jump-nav" aria-label="관리자 페이지 바로가기">
       <a href="#section-overview">요약</a>
       <a href="#section-field-help">필드 도움말</a>
+      <a href="#section-admin-write-guard">쓰기 잠금</a>
       <a href="#section-master-catalog">마스터 목록</a>
       <a href="#section-master-detail">상세/편집/API확인</a>
       <a href="#section-change-logs">변경 이력</a>
@@ -773,6 +774,30 @@
           <div class="example">예: grade 7 → tier 7 · 원본 아이템 tier 값</div>
         </div>
       </div>
+    </section>
+
+
+    <section class="filter-panel" id="section-admin-write-guard" aria-label="관리자 쓰기 dev key 잠금">
+      <div class="filter-title">관리자 쓰기 dev key 잠금</div>
+      <div class="filter-help">조회/미리보기는 그대로 가능하지만, <strong>검증 후 실제 적용</strong>과 <strong>검사 후 되돌리기</strong>는 여기서 dev key를 설정해야 백엔드가 허용합니다. 이 키는 임시 로컬 개발용 안전장치이고, 나중에 로그인/RBAC로 대체할 예정입니다.</div>
+      <div class="filter-grid">
+        <div class="filter-field wide">
+          <label for="admin-write-dev-key">Dev key</label>
+          <input id="admin-write-dev-key" data-admin-write-dev-key type="password" placeholder="backend .env의 ADMIN_WRITE_DEV_KEY" autocomplete="off" />
+        </div>
+        <div class="filter-field">
+          <label>상태</label>
+          <div data-admin-write-key-status class="filter-help" style="margin:0; min-height:36px; display:flex; align-items:center;">확인 중...</div>
+        </div>
+        <div class="filter-field">
+          <label>작업</label>
+          <div class="filter-actions" style="margin:0;">
+            <button class="btn mini primary" type="button" data-admin-action="save-admin-write-dev-key">dev key 저장</button>
+            <button class="btn mini" type="button" data-admin-action="clear-admin-write-dev-key">지우기</button>
+          </div>
+        </div>
+      </div>
+      <div class="filter-help">기본 로컬 예시 키는 <code>local-admin-dev-key</code> 입니다. 실제 배포 전에는 이 임시 키 방식이 아니라 로그인/권한 관리로 바꿔야 합니다.</div>
     </section>
 
 
@@ -851,7 +876,64 @@
         <div class="section-meta" data-admin-change-log-meta>-</div>
       </div>
       <div class="filter-help" style="padding:10px 14px; border-bottom:1px solid rgba(148, 163, 184, 0.14);">실제 적용된 관리자 변경은 여기에 남습니다. 보기 버튼으로 before/after 스칼라 값을 확인하고, 현재 DB 값이 이력의 적용 값과 일치할 때만 안전하게 되돌릴 수 있습니다.</div>
-      <div style="padding:10px 14px; border-bottom:1px solid rgba(148, 163, 184, 0.14);"><button class="btn mini" type="button" data-admin-action="refresh-admin-change-logs">변경 이력 새로고침</button></div>
+      <div style="padding:12px 14px; border-bottom:1px solid rgba(148, 163, 184, 0.14);">
+        <div class="filter-title" style="margin-bottom:10px;">변경 이력 필터</div>
+        <div class="filter-grid">
+          <div class="filter-field">
+            <label for="admin-change-log-filter-limit">표시 개수</label>
+            <select id="admin-change-log-filter-limit" data-admin-change-log-filter-limit>
+              <option value="10">10</option>
+              <option value="20" selected>20</option>
+              <option value="30">30</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label for="admin-change-log-filter-target-type">대상 타입</label>
+            <input id="admin-change-log-filter-target-type" data-admin-change-log-filter-target-type type="text" placeholder="master_data.bosses" />
+          </div>
+          <div class="filter-field">
+            <label for="admin-change-log-filter-target-id">행 ID</label>
+            <input id="admin-change-log-filter-target-id" data-admin-change-log-filter-target-id type="text" placeholder="예: 1" />
+          </div>
+          <div class="filter-field">
+            <label for="admin-change-log-filter-action">액션</label>
+            <select id="admin-change-log-filter-action" data-admin-change-log-filter-action>
+              <option value="" selected>전체</option>
+              <option value="guarded_update">guarded_update</option>
+              <option value="guarded_rollback">guarded_rollback</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label for="admin-change-log-filter-changed-key">변경 필드</label>
+            <input id="admin-change-log-filter-changed-key" data-admin-change-log-filter-changed-key type="text" placeholder="hp / stackable / admin_note" />
+          </div>
+          <div class="filter-field">
+            <label for="admin-change-log-filter-applied">적용 여부</label>
+            <select id="admin-change-log-filter-applied" data-admin-change-log-filter-applied>
+              <option value="all" selected>전체</option>
+              <option value="true">적용됨</option>
+              <option value="false">차단/미적용</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label for="admin-change-log-filter-sort">정렬</label>
+            <select id="admin-change-log-filter-sort" data-admin-change-log-filter-sort>
+              <option value="created_desc" selected>최근순</option>
+              <option value="created_asc">오래된순</option>
+              <option value="target_asc">대상순</option>
+              <option value="action_asc">액션순</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-self:end;">
+            <button class="btn mini primary" type="button" data-admin-action="apply-change-log-filters">이력 필터 적용</button>
+            <button class="btn mini" type="button" data-admin-action="reset-change-log-filters">초기화</button>
+            <button class="btn mini" type="button" data-admin-action="refresh-admin-change-logs">새로고침</button>
+          </div>
+        </div>
+        <div class="filter-help" style="margin-top:10px;">필터는 조회 조건만 바꿉니다. before/after 원본 JSON은 계속 숨기고, 상세에서는 안전한 스칼라 변경값만 보여줍니다.</div>
+      </div>
       <div class="table-wrap" data-admin-change-log-table><div class="empty">불러오는 중...</div></div>
       <div style="padding:12px 14px; border-top:1px solid rgba(148, 163, 184, 0.14);" data-admin-change-log-detail><div class="empty">변경 이력의 <strong>보기</strong> 버튼을 누르면 상세/되돌리기 미리보기가 여기에 표시됩니다.</div></div>
     </section>
@@ -915,7 +997,7 @@
       <div data-admin-readiness><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <p class="footer-note">v128 admin post-edit API verify · static HTML + JS · FastAPI guarded write/rollback APIs</p>
+    <p class="footer-note">v130 admin write dev key guard · static HTML + JS · FastAPI guarded write/rollback APIs</p>
   </main>
 
   <script src="src/api/game-api-client.js"></script>

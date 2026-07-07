@@ -23,7 +23,7 @@ assertContains("backend/app/api/routes/admin.py", [
   "apply_master_data_edit",
   'type="admin.master_data.edit_apply"',
   'type="admin.change_logs"',
-  "확인 문구와 allow-list",
+  "X-Admin-Dev-Key, 확인 문구, allow-list",
 ]);
 
 assertContains("backend/app/services/admin_service.py", [
@@ -64,7 +64,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v128.admin-post-edit-api-verify",
+  "v130.admin-write-dev-key-guard",
   "ADMIN_EDIT_APPLY_CONFIRM_TEXT",
   "ADMIN_EDIT_ALLOWED_FIELDS",
   "isAdminEditApplyAllowedField",
@@ -80,7 +80,7 @@ assertContains("admin.html", [
   "Guarded Admin + API Verify",
   "data-admin-change-log-table",
   "data-admin-action=\"refresh-admin-change-logs\"",
-  "v128 admin post-edit API verify",
+  "v130 admin write dev key guard",
   "allow-list 필드",
 ]);
 

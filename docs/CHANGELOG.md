@@ -1,3 +1,19 @@
+
+## v130 - Admin Write Dev Key Guard
+
+- 관리자 실제 적용/되돌리기 API에 `X-Admin-Dev-Key` 임시 잠금장치를 추가했습니다.
+- 관리자 페이지에 `관리자 쓰기 dev key 잠금` 영역을 추가했습니다.
+- 읽기/미리보기 API는 그대로 열어두고, DB를 바꾸는 apply/rollback apply만 헤더 검사를 통과해야 합니다.
+- DB reset / seed는 필요 없습니다.
+
+
+## v129 - admin change log filters
+
+- 관리자 변경 이력에 target type, row id, action, changed field, applied, sort 필터를 추가했습니다.
+- `GET /api/v1/admin/change-logs`에 `action`, `changedKey`, `applied`, `sort` query를 추가했습니다.
+- raw before/after JSON은 계속 숨기고 compact rows + 상세 scalar 변경값만 노출합니다.
+- DB reset/seed는 필요 없습니다.
+
 ## v128
 - 관리자 마스터 데이터 실제 적용 후 선택 항목 상세를 다시 불러오고 `/api/v1/game/master-data` 응답을 자동 비교합니다.
 - 변경 이력 되돌리기 성공 후에도 되돌린 대상의 master-data API 반영 상태를 자동 확인합니다.

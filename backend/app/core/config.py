@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://rpg_user:rpg_password@127.0.0.1:55432/rpg_game"
     jwt_secret_key: str = "change-me-before-production"
     access_token_expire_minutes: int = 1440
+    # Local-only guard for dangerous admin write endpoints until real login/RBAC is added.
+    # Read-only admin APIs do not require this key.
+    admin_write_dev_key: str = "local-admin-dev-key"
 
     # pydantic-settings는 list[str] 환경변수를 JSON으로 먼저 파싱하려고 하므로,
     # 로컬 .env에서는 문자열로 받고 아래 프로퍼티에서 JSON/쉼표 형식을 모두 허용합니다.

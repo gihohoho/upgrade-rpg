@@ -2,7 +2,7 @@ from fastapi import APIRouter, Body, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.response import ok_response
-from app.core.security import CurrentUser, get_current_user_placeholder
+from app.core.security import CurrentUser, get_current_user_placeholder, require_admin_write_dev_key
 from app.db.session import get_db_session
 from app.schemas.admin import AdminChangeLogRollbackApplyRequest, AdminChangeLogRollbackPreviewRequest, AdminChangePreviewRequest, AdminMasterDataEditApplyRequest, AdminMasterDataEditPreviewRequest
 from app.services.admin_service import AdminService
@@ -253,6 +253,7 @@ async def preview_admin_master_data_edit(
 @router.post("/master-data/edit-apply")
 async def apply_admin_master_data_edit(
     payload: AdminMasterDataEditApplyRequest = Body(...),
+    _write_guard: bool = Depends(require_admin_write_dev_key),
     current_user: CurrentUser = Depends(get_current_user_placeholder),
     session: AsyncSession = Depends(get_db_session),
 ):
@@ -289,7 +290,7 @@ async def apply_admin_master_data_edit(
         },
         meta={
             "source": "postgresql",
-            "note": "관리자 마스터 데이터 변경 적용 API입니다. 확인 문구와 allow-list를 통과한 스칼라 필드만 DB에 반영합니다.",
+            "note": "관리자 마스터 데이터 변경 적용 API입니다. X-Admin-Dev-Key, 확인 문구, allow-list를 통과한 스칼라 필드만 DB에 반영합니다.",
         },
     )
 
@@ -299,6 +300,10 @@ async def list_admin_change_logs(
     limit: int = Query(default=20, ge=1, le=100),
     target_type: str | None = Query(default=None, alias="targetType", max_length=120),
     target_id: str | None = Query(default=None, alias="targetId", max_length=160),
+    action: str | None = Query(default=None, max_length=80),
+    changed_key: str | None = Query(default=None, alias="changedKey", max_length=120),
+    applied: bool | None = Query(default=None),
+    sort: str | None = Query(default="created_desc", max_length=40),
     current_user: CurrentUser = Depends(get_current_user_placeholder),
     session: AsyncSession = Depends(get_db_session),
 ):
@@ -308,6 +313,10 @@ async def list_admin_change_logs(
         limit=limit,
         target_type=target_type,
         target_id=target_id,
+        action=action,
+        changed_key=changed_key,
+        applied=applied,
+        sort=sort,
     )
     return ok_response(
         type="admin.change_logs",
@@ -396,6 +405,7 @@ async def preview_admin_change_log_rollback(
 async def apply_admin_change_log_rollback(
     change_log_id: int,
     payload: AdminChangeLogRollbackApplyRequest = Body(...),
+    _write_guard: bool = Depends(require_admin_write_dev_key),
     current_user: CurrentUser = Depends(get_current_user_placeholder),
     session: AsyncSession = Depends(get_db_session),
 ):
@@ -423,7 +433,7 @@ async def apply_admin_change_log_rollback(
         },
         meta={
             "source": "postgresql",
-            "note": "관리자 변경 이력 되돌리기 적용 API입니다. 확인 문구와 현재값 검사를 통과한 경우에만 DB에 반영합니다.",
+            "note": "관리자 변경 이력 되돌리기 적용 API입니다. X-Admin-Dev-Key, 확인 문구, 현재값 검사를 통과한 경우에만 DB에 반영합니다.",
         },
     )
 

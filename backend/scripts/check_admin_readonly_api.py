@@ -17,12 +17,14 @@ from typing import Any
 DEFAULT_BASE_URL = "http://127.0.0.1:8000/api/v1"
 
 
-def request_json(method: str, url: str, body: dict[str, Any] | None = None) -> dict[str, Any]:
+def request_json(method: str, url: str, body: dict[str, Any] | None = None, headers_extra: dict[str, str] | None = None) -> dict[str, Any]:
     data = None
     headers = {"Accept": "application/json"}
     if body is not None:
         data = json.dumps(body).encode("utf-8")
         headers["Content-Type"] = "application/json"
+    if headers_extra:
+        headers.update(headers_extra)
     req = urllib.request.Request(url, method=method, headers=headers, data=data)
     try:
         with urllib.request.urlopen(req, timeout=5) as response:
@@ -36,6 +38,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
     parser.add_argument("--limit", type=int, default=20)
+    parser.add_argument("--admin-write-dev-key", default="local-admin-dev-key")
     args = parser.parse_args()
 
     base_url = args.base_url.rstrip("/")
@@ -64,13 +67,26 @@ def main() -> int:
         master_detail = request_json("GET", master_detail_url)
         master_relations = request_json("GET", master_relations_url)
         master_edit_preview = request_json("POST", master_edit_preview_url, {"domain": "itemTemplates", "id": first_catalog_row.get("id"), "draft": {"name": "dry-run smoke name"}, "dryRun": True})
-        # 기본 live check는 실제 DB 변경을 하지 않습니다. 일부러 틀린 확인 문구로 guarded apply 차단만 확인합니다.
-        master_edit_apply = request_json("POST", master_edit_apply_url, {"domain": "itemTemplates", "id": first_catalog_row.get("id"), "draft": {"name": "blocked apply smoke name"}, "confirmText": "WRONG", "dryRun": False})
+        # 기본 live check는 실제 DB 변경을 하지 않습니다.
+        # 1) dev key 없이 쓰기 API가 차단되는지 확인합니다.
+        try:
+            request_json("POST", master_edit_apply_url, {"domain": "itemTemplates", "id": first_catalog_row.get("id"), "draft": {"name": "blocked apply smoke name"}, "confirmText": "WRONG", "dryRun": False})
+            master_edit_apply_missing_key_blocked = False
+        except RuntimeError as error:
+            master_edit_apply_missing_key_blocked = "HTTP 403" in str(error)
+        # 2) dev key가 있어도 확인 문구가 틀리면 실제 적용은 차단되는지 확인합니다.
+        master_edit_apply = request_json(
+            "POST",
+            master_edit_apply_url,
+            {"domain": "itemTemplates", "id": first_catalog_row.get("id"), "draft": {"name": "blocked apply smoke name"}, "confirmText": "WRONG", "dryRun": False},
+            {"X-Admin-Dev-Key": args.admin_write_dev_key},
+        )
     else:
         master_detail = None
         master_relations = None
         master_edit_preview = None
         master_edit_apply = None
+        master_edit_apply_missing_key_blocked = None
     admin_change_logs = request_json("GET", admin_change_logs_url)
 
     failures: list[str] = []
@@ -96,6 +112,8 @@ def main() -> int:
         failures.append("master-data edit-preview type mismatch")
     if master_edit_apply is not None and master_edit_apply.get("type") != "admin.master_data.edit_apply":
         failures.append("master-data edit-apply type mismatch")
+    if master_edit_apply_missing_key_blocked is False:
+        failures.append("master-data edit-apply should require X-Admin-Dev-Key")
     if admin_change_logs.get("type") != "admin.change_logs":
         failures.append("admin change-logs type mismatch")
 
@@ -233,6 +251,7 @@ def main() -> int:
         "masterRelations": master_relations.get("data") if master_relations else None,
         "masterEditPreview": master_edit_preview.get("data") if master_edit_preview else None,
         "masterEditApply": master_edit_apply.get("data") if master_edit_apply else None,
+        "masterEditApplyMissingKeyBlocked": master_edit_apply_missing_key_blocked,
         "adminChangeLogs": admin_change_logs.get("data"),
         "failures": failures,
     }

@@ -71,3 +71,7 @@
 - seed import 임시 이슈 해결 기록
 
 삭제하지 않고 이동만 했기 때문에, 필요하면 언제든 다시 참고할 수 있습니다.
+
+- [Admin Change Log Filters](ADMIN_CHANGE_LOG_FILTERS.md) - 관리자 변경 이력 필터/검색.
+
+- [ADMIN_WRITE_DEV_KEY_GUARD.md](ADMIN_WRITE_DEV_KEY_GUARD.md): 관리자 실제 적용/되돌리기 API에 로컬 dev key 잠금 추가.
