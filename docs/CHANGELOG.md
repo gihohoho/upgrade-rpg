@@ -483,3 +483,13 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - Restore preview values are escaped before insertion into modal HTML.
 - No DB reset or seed import is required.
 - Added `tools/smoke_save_data_badge_restore_actions.js` and `docs/SAVE_DATA_BADGE_RESTORE_ACTIONS.md`.
+
+## v109 - Save Data slot list
+
+- Added `GET /api/v1/game/save-slots` to list DB save-slot metadata without returning full raw snapshot JSON.
+- Added `GameService.list_save_slots()` and `_serialize_save_slot()`.
+- Added browser helper module `src/api/save-data-slots.js`.
+- Added browser helpers: `listBackendSaveSlots()`, `openBackendSaveSlotsModal()`, and `checkBackendSaveSlotsReady()`.
+- Added a `slots` button to the `SAVE DATA` development badge.
+- Updated `backend/scripts/check_save_snapshot_api.py` to verify the saved slot appears in the slot list.
+- No DB reset or seed import is required because the existing `user_save_snapshots` table already has `slot_key`.

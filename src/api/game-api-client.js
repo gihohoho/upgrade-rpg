@@ -117,6 +117,13 @@
 		});
 	}
 
+	async function listGameSaveSlots(options) {
+		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : undefined;
+		return request("/game/save-slots", {
+			timeoutMs,
+		});
+	}
+
 	async function saveGameSnapshot(payload, options) {
 		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : undefined;
 		return request("/game/save", {
@@ -144,6 +151,7 @@
 		buildUrl,
 		request,
 		fetchMasterData,
+		listGameSaveSlots,
 		saveGameSnapshot,
 		loadGameSnapshot,
 	};

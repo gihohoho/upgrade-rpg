@@ -198,6 +198,27 @@ class GameService:
 
         return self._serialize_save_snapshot(snapshot, status="loaded")
 
+
+    async def list_save_slots(self, session: AsyncSession, user_id: int) -> dict[str, Any]:
+        """List save snapshot slots for a user without returning full snapshots.
+
+        Returning only metadata/summary keeps the API light and safe while preparing
+        the project for multiple save slots and a future admin page.
+        """
+        result = await session.execute(
+            select(UserSaveSnapshot)
+            .where(UserSaveSnapshot.user_id == user_id)
+            .order_by(UserSaveSnapshot.updated_at.desc(), UserSaveSnapshot.slot_key)
+        )
+        slots = [self._serialize_save_slot(row) for row in result.scalars().all()]
+        return {
+            "userId": user_id,
+            "status": "loaded",
+            "exists": bool(slots),
+            "count": len(slots),
+            "slots": slots,
+        }
+
     async def save_game_snapshot(
         self,
         session: AsyncSession,
@@ -269,6 +290,22 @@ class GameService:
         if profile is None:
             session.add(UserProfile(user_id=user_id))
             await session.flush()
+
+
+    def _serialize_save_slot(self, snapshot: UserSaveSnapshot) -> dict[str, Any]:
+        return {
+            "userId": snapshot.user_id,
+            "slotKey": snapshot.slot_key,
+            "exists": True,
+            "isDefault": snapshot.slot_key == "default",
+            "clientSaveKey": snapshot.client_save_key,
+            "saveVersion": snapshot.save_version,
+            "summary": serialize_value(snapshot.summary_json),
+            "source": snapshot.source,
+            "note": snapshot.note,
+            "createdAt": serialize_value(snapshot.created_at),
+            "updatedAt": serialize_value(snapshot.updated_at),
+        }
 
     def _serialize_save_snapshot(self, snapshot: UserSaveSnapshot, *, status: str) -> dict[str, Any]:
         return {

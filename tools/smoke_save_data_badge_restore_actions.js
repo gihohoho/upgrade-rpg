@@ -22,9 +22,11 @@ function assertOrder(file, first, second) {
   }
 }
 
-assertIncludes("src/api/save-data-dev-badge.js", "v107.backend-save-data-dev-badge-restore-actions");
+assertIncludes("src/api/save-data-dev-badge.js", "v109.backend-save-data-dev-badge-slots");
 assertIncludes("src/api/save-data-dev-badge.js", 'data-sd-action="preview"');
 assertIncludes("src/api/save-data-dev-badge.js", 'data-sd-action="backup"');
+assertIncludes("src/api/save-data-dev-badge.js", 'data-sd-action="slots"');
+assertIncludes("src/api/save-data-dev-badge.js", "openBackendSaveSlotsModal");
 assertIncludes("src/api/save-data-dev-badge.js", "openBackendSaveRestorePreviewModal");
 assertIncludes("src/api/save-data-dev-badge.js", "restoreBackendSaveBackupToLocal");
 assertIncludes("src/api/save-data-dev-badge.js", "data-sd-restore");

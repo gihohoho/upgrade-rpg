@@ -13,6 +13,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+import urllib.parse
 from typing import Any
 
 DEFAULT_BASE_URL = "http://127.0.0.1:8000/api/v1"
@@ -63,11 +64,14 @@ def main() -> int:
         "note": "save snapshot API smoke test",
     }
 
+    encoded_slot_key = urllib.parse.quote(args.slot_key, safe="")
     save_url = f"{args.base_url.rstrip('/')}/game/save"
-    load_url = f"{args.base_url.rstrip('/')}/game/load?slotKey={args.slot_key}"
+    load_url = f"{args.base_url.rstrip('/')}/game/load?slotKey={encoded_slot_key}"
+    slots_url = f"{args.base_url.rstrip('/')}/game/save-slots"
 
     saved = request_json("POST", save_url, save_payload)
     loaded = request_json("GET", load_url)
+    slots = request_json("GET", slots_url)
 
     failures: list[str] = []
     if not saved.get("ok"):
@@ -78,6 +82,13 @@ def main() -> int:
         failures.append("save response type mismatch")
     if loaded.get("type") != "game.load":
         failures.append("load response type mismatch")
+    if not slots.get("ok"):
+        failures.append("slots response ok=false")
+    if slots.get("type") != "game.save_slots":
+        failures.append("slots response type mismatch")
+    slot_keys = [slot.get("slotKey") for slot in slots.get("payload", {}).get("slots", [])]
+    if args.slot_key not in slot_keys:
+        failures.append("saved slot is missing from slots response")
     if loaded.get("payload", {}).get("exists") is not True:
         failures.append("loaded payload exists is not true")
     if loaded.get("payload", {}).get("saveVersion") != 5:
@@ -89,8 +100,10 @@ def main() -> int:
         "ok": not failures,
         "saveUrl": save_url,
         "loadUrl": load_url,
+        "slotsUrl": slots_url,
         "saved": saved.get("data"),
         "loaded": loaded.get("data"),
+        "slots": slots.get("data"),
         "failures": failures,
     }
 

@@ -67,6 +67,33 @@ async def load_game(
     )
 
 
+@router.get("/save-slots")
+async def list_save_slots(
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """List saved DB snapshot slots without returning full raw save JSON.
+
+    This is a safe preparation step for future multi-slot saves and admin tools.
+    The existing browser game still uses the default slot unless a caller explicitly
+    requests a different slot key.
+    """
+    slots_data = await service.list_save_slots(session, current_user.id)
+    return ok_response(
+        type="game.save_slots",
+        payload=slots_data,
+        data={
+            "status": slots_data["status"],
+            "userId": current_user.id,
+            "count": slots_data["count"],
+        },
+        meta={
+            "source": "postgresql",
+            "note": "저장 슬롯 목록 조회 API입니다. 전체 snapshot_json은 내려주지 않습니다.",
+        },
+    )
+
+
 @router.post("/save")
 async def save_game(
     payload: GameSaveSnapshotRequest,

@@ -15,8 +15,10 @@ function assertContains(file, patterns) {
 assertContains("src/api/game-api-client.js", [
   "saveGameSnapshot",
   "loadGameSnapshot",
+  "listGameSaveSlots",
   'request("/game/save"',
   'request("/game/load"',
+  'request("/game/save-slots"',
 ]);
 
 assertContains("src/api/save-data-bridge.js", [

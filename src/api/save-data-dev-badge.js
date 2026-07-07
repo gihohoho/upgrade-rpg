@@ -6,7 +6,7 @@
 	const WRAPPER_ID = "backend-save-data-dev-badge-wrap";
 	const STYLE_ID = "backend-save-data-dev-badge-style";
 	const STORAGE_KEY = "upgradeRpgShowBackendSaveDataDevBadge";
-	const VERSION = "v104.backend-save-data-dev-badge-hud-top-align";
+	const VERSION = "v109.backend-save-data-dev-badge-slots";
 
 	let currentAction = null;
 	let lastLoadResult = null;
@@ -134,6 +134,26 @@
 		return "loaded: checked";
 	}
 
+	function getRestoreStatus() {
+		if (typeof window.getBackendSaveRestoreStatus === "function") return window.getBackendSaveRestoreStatus();
+		return { ok: null, state: "not_ready", updatedAt: null, backupKey: null, error: null };
+	}
+
+	function getRestoreBackupCount() {
+		if (typeof window.listBackendSaveRestoreBackups !== "function") return 0;
+		const backups = window.listBackendSaveRestoreBackups();
+		return Array.isArray(backups) ? backups.length : 0;
+	}
+
+	function summarizeRestoreStatus() {
+		const status = getRestoreStatus();
+		const backupCount = getRestoreBackupCount();
+		if (!status || !status.state || status.state === "never_restored") return `restore: - · backups:${backupCount}`;
+		const state = String(status.state);
+		const suffix = status.updatedAt ? ` · ${formatClockFromIso(status.updatedAt)}` : "";
+		return `restore: ${state}${suffix} · backups:${backupCount}`;
+	}
+
 	function ensureStyle() {
 		if (document.getElementById(STYLE_ID)) return;
 		const style = document.createElement("style");
@@ -236,12 +256,13 @@
 #${BADGE_ID} .sd-badge-meta { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 4px 8px; color: #cbd5e1; }
 #${BADGE_ID} .sd-badge-summary,
 #${BADGE_ID} .sd-badge-load,
+#${BADGE_ID} .sd-badge-restore,
 #${BADGE_ID} .sd-badge-updated { margin-top: 4px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #${BADGE_ID} .sd-badge-updated { color: #64748b; font-size: 10px; }
 #${BADGE_ID} .sd-badge-actions {
 	margin-top: 6px;
 	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 5px;
 }
 #${BADGE_ID} button {
@@ -343,10 +364,14 @@
 			</div>
 			<div class="sd-badge-summary" data-sd-summary>save: -</div>
 			<div class="sd-badge-load" data-sd-load>loaded: -</div>
+			<div class="sd-badge-restore" data-sd-restore>restore: -</div>
 			<div class="sd-badge-updated" data-sd-updated>updated: -</div>
 			<div class="sd-badge-actions">
 				<button type="button" data-sd-action="sync" title="현재 localStorage 저장값을 백엔드 DB에 즉시 저장합니다. 게임 저장 버튼이 아니라 DB 전송 확인용입니다.">sync DB</button>
 				<button type="button" data-sd-action="load" title="백엔드 DB에 저장된 세이브 스냅샷을 조회만 합니다. 아직 게임에 적용하지 않습니다.">load DB</button>
+				<button type="button" data-sd-action="slots" title="DB에 저장된 세이브 슬롯 목록을 조회합니다. 게임 저장값은 변경하지 않습니다.">slots</button>
+				<button type="button" data-sd-action="preview" title="DB 세이브와 현재 localStorage 세이브를 비교하는 복구 미리보기 모달을 엽니다.">preview</button>
+				<button type="button" data-sd-action="backup" title="가장 최근 복구 전 백업을 localStorage로 되돌립니다. 되돌린 뒤 새로고침이 필요합니다.">backup</button>
 				<button type="button" data-sd-action="dual" title="수동 저장 시 localStorage와 백엔드 DB에 함께 저장합니다.">dual</button>
 				<button type="button" data-sd-action="local" title="수동 저장 시 기존 localStorage에만 저장합니다.">local</button>
 			</div>
@@ -367,6 +392,17 @@
 			} else if (action === "load") {
 				if (typeof window.loadBackendSaveSnapshot !== "function") throw new Error("loadBackendSaveSnapshot 함수를 찾을 수 없습니다.");
 				lastLoadResult = await window.loadBackendSaveSnapshot({ timeoutMs: 2500 });
+			} else if (action === "slots") {
+				if (typeof window.openBackendSaveSlotsModal !== "function") throw new Error("openBackendSaveSlotsModal 함수를 찾을 수 없습니다.");
+				await window.openBackendSaveSlotsModal({ log: false });
+			} else if (action === "preview") {
+				if (typeof window.openBackendSaveRestorePreviewModal !== "function") throw new Error("openBackendSaveRestorePreviewModal 함수를 찾을 수 없습니다.");
+				await window.openBackendSaveRestorePreviewModal({ log: false });
+			} else if (action === "backup") {
+				if (typeof window.restoreBackendSaveBackupToLocal !== "function") throw new Error("restoreBackendSaveBackupToLocal 함수를 찾을 수 없습니다.");
+				const result = window.restoreBackendSaveBackupToLocal();
+				if (result && result.ok && typeof window.alert === "function") window.alert("최근 백업을 localStorage로 되돌렸습니다. 새로고침하면 적용됩니다.");
+				if (result && !result.ok && !result.cancelled && typeof window.alert === "function") window.alert(result.error || "복구할 백업이 없습니다.");
 			} else if (action === "dual") {
 				if (typeof window.enableBackendSaveDualWrite !== "function") throw new Error("enableBackendSaveDualWrite 함수를 찾을 수 없습니다.");
 				window.enableBackendSaveDualWrite();
@@ -394,10 +430,16 @@
 		const localButton = badge.querySelector('button[data-sd-action="local"]');
 		const syncButton = badge.querySelector('button[data-sd-action="sync"]');
 		const loadButton = badge.querySelector('button[data-sd-action="load"]');
+		const slotsButton = badge.querySelector('button[data-sd-action="slots"]');
+		const previewButton = badge.querySelector('button[data-sd-action="preview"]');
+		const backupButton = badge.querySelector('button[data-sd-action="backup"]');
 		if (dualButton) dualButton.dataset.active = mode === "manual_dual" ? "true" : "false";
 		if (localButton) localButton.dataset.active = mode === "local_only" ? "true" : "false";
 		if (syncButton) syncButton.dataset.busy = currentAction === "sync" ? "true" : "false";
 		if (loadButton) loadButton.dataset.busy = currentAction === "load" ? "true" : "false";
+		if (slotsButton) slotsButton.dataset.busy = currentAction === "slots" ? "true" : "false";
+		if (previewButton) previewButton.dataset.busy = currentAction === "preview" ? "true" : "false";
+		if (backupButton) backupButton.dataset.busy = currentAction === "backup" ? "true" : "false";
 	}
 
 	function updateToggleState(toggle, visible) {
@@ -441,6 +483,7 @@
 		const slotEl = badge.querySelector("[data-sd-slot]");
 		const summaryEl = badge.querySelector("[data-sd-summary]");
 		const loadEl = badge.querySelector("[data-sd-load]");
+		const restoreEl = badge.querySelector("[data-sd-restore]");
 		const updatedEl = badge.querySelector("[data-sd-updated]");
 
 		if (stateEl) stateEl.textContent = state;
@@ -448,6 +491,7 @@
 		if (slotEl) slotEl.textContent = `slot: ${slot}`;
 		if (summaryEl) summaryEl.textContent = summarizeSave(status);
 		if (loadEl) loadEl.textContent = summarizeLoadResult();
+		if (restoreEl) restoreEl.textContent = summarizeRestoreStatus();
 		if (updatedEl) updatedEl.textContent = `updated: ${updatedAt}${statusUpdatedAt !== "-" ? ` · saved: ${statusUpdatedAt}` : ""}`;
 
 		const wrapper = document.getElementById(WRAPPER_ID);
@@ -500,6 +544,7 @@
 		}
 		window.addEventListener("upgrade-rpg:backend-save-sync-status", () => refreshBackendSaveDataDevBadge({ flash: true }));
 		window.addEventListener("upgrade-rpg:backend-save-sync-mode", () => refreshBackendSaveDataDevBadge({ flash: true }));
+		window.addEventListener("upgrade-rpg:backend-save-restore", () => refreshBackendSaveDataDevBadge({ flash: true }));
 		window.setTimeout(refresh, 500);
 		window.setTimeout(refresh, 1500);
 		window.setTimeout(refresh, 3000);
