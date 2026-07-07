@@ -17,57 +17,57 @@ function assertContains(file, patterns) {
 }
 
 assertContains("backend/app/api/routes/admin.py", [
-  '@router.get("/master-data/detail")',
-  "get_admin_master_catalog_detail",
-  'type="admin.master_data.detail"',
-  "sanitizedJsonReturned",
+  '@router.get("/master-data/relations")',
+  "get_admin_master_catalog_relations",
+  'type="admin.master_data.relations"',
+  "groupCount",
+  "totalRelatedRows",
   "safeForAdminWriteUi",
 ]);
 
 assertContains("backend/app/services/admin_service.py", [
-  "get_master_catalog_detail",
-  "_serialize_master_detail_scalar_fields",
-  "_serialize_master_detail_json_fields",
-  "_build_master_detail_relation_hints",
-  "_sanitize_json_preview",
-  "[asset hidden:data-url]",
+  "get_master_catalog_relations",
+  "_build_master_relation_groups",
+  "_fetch_master_relation_group",
+  "_serialize_master_relation_row",
   "rawJsonReturned",
   "assetsReturned",
-  "sanitizedJsonReturned",
+  "safeForAdminWriteUi",
+  "DropTableItem.item_template_code",
+  "EnhancementLevel.group_code",
+  "CharacterSkill.skill_code",
 ]);
 
 assertContains("src/api/game-api-client.js", [
-  "fetchAdminMasterDataDetail",
-  'request("/admin/master-data/detail"',
-  "rowId",
+  "fetchAdminMasterDataRelations",
+  'request("/admin/master-data/relations"',
+  "limit,",
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
   "v117.admin-master-data-relations",
-  "renderMasterDetail",
-  "openAdminMasterDataDetail",
-  "fetchAdminMasterDataDetail",
-  "open-master-detail",
-  "data-admin-detail-domain",
-  "data-admin-detail-id",
-  "masterDetailReady",
-  "JSON 미리보기",
+  "renderMasterRelations",
+  "openAdminMasterDataRelations",
+  "fetchAdminMasterDataRelations",
+  "open-master-relations",
+  "data-admin-relation-domain",
+  "data-admin-relation-id",
+  "실제 연결 항목",
+  "relation-table-wrap",
 ]);
 
 assertContains("admin.html", [
   "선택한 마스터 데이터 상세",
   "data-admin-master-detail",
-  "data-admin-master-detail-meta",
-  ".json-preview",
-  ".detail-grid",
+  ".relation-table-wrap",
   "v117 admin master data relations",
 ]);
 
 assertContains("backend/scripts/check_admin_readonly_api.py", [
-  "admin/master-data/detail",
-  "masterDetailUrl",
-  "sanitizedJsonReturned",
-  "master-data detail should hide raw JSON and assets",
+  "admin/master-data/relations",
+  "masterRelationsUrl",
+  "master-data relations should hide raw JSON and assets",
+  "master-data relations groups missing",
 ]);
 
-console.log("admin master data detail smoke test passed");
+console.log("admin master data relations smoke test passed");

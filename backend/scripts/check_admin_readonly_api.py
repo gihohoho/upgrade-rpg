@@ -40,6 +40,7 @@ def main() -> int:
     master_domains_url = f"{base_url}/admin/master-data/domains"
     master_catalog_url = f"{base_url}/admin/master-data/catalog?domain=itemTemplates&limit=10&sort=code_asc"
     master_detail_url = None
+    master_relations_url = None
 
     overview = request_json("GET", overview_url)
     snapshots = request_json("GET", snapshots_url)
@@ -49,9 +50,12 @@ def main() -> int:
     first_catalog_row = ((master_catalog.get("payload") or {}).get("rows") or [None])[0]
     if first_catalog_row and first_catalog_row.get("id"):
         master_detail_url = f"{base_url}/admin/master-data/detail?domain=itemTemplates&id={first_catalog_row.get('id')}"
+        master_relations_url = f"{base_url}/admin/master-data/relations?domain=itemTemplates&id={first_catalog_row.get('id')}&limit=10"
         master_detail = request_json("GET", master_detail_url)
+        master_relations = request_json("GET", master_relations_url)
     else:
         master_detail = None
+        master_relations = None
 
     failures: list[str] = []
     if not overview.get("ok"):
@@ -70,6 +74,8 @@ def main() -> int:
         failures.append("master-data catalog type mismatch")
     if master_detail is not None and master_detail.get("type") != "admin.master_data.detail":
         failures.append("master-data detail type mismatch")
+    if master_relations is not None and master_relations.get("type") != "admin.master_data.relations":
+        failures.append("master-data relations type mismatch")
 
     overview_payload = overview.get("payload") or {}
     snapshots_payload = snapshots.get("payload") or {}
@@ -77,6 +83,7 @@ def main() -> int:
     master_domains_payload = master_domains.get("payload") or {}
     master_catalog_payload = master_catalog.get("payload") or {}
     master_detail_payload = master_detail.get("payload") if master_detail else None
+    master_relations_payload = master_relations.get("payload") if master_relations else None
     if overview_payload.get("readOnly") is not True:
         failures.append("overview readOnly should be true")
     if snapshots_payload.get("readOnly") is not True:
@@ -89,6 +96,8 @@ def main() -> int:
         failures.append("master-data catalog readOnly should be true")
     if master_detail_payload is not None and master_detail_payload.get("readOnly") is not True:
         failures.append("master-data detail readOnly should be true")
+    if master_relations_payload is not None and master_relations_payload.get("readOnly") is not True:
+        failures.append("master-data relations readOnly should be true")
     filters = snapshots_payload.get("filters") or {}
     default_filters = default_snapshots_payload.get("filters") or {}
     if not isinstance(filters, dict):
@@ -123,6 +132,17 @@ def main() -> int:
             failures.append("master-data detail fields missing")
         if not isinstance(master_detail_payload.get("jsonFields"), list):
             failures.append("master-data detail jsonFields missing")
+    if master_relations_payload is not None:
+        if master_relations_payload.get("rawJsonReturned") is not False or master_relations_payload.get("assetsReturned") is not False:
+            failures.append("master-data relations should hide raw JSON and assets")
+        if master_relations_payload.get("safeForAdminWriteUi") is not False:
+            failures.append("master-data relations write UI should remain blocked")
+        if not isinstance(master_relations_payload.get("groups"), list):
+            failures.append("master-data relations groups missing")
+        for group in master_relations_payload.get("groups") or []:
+            if group.get("rawJsonReturned") is not False or group.get("assetsReturned") is not False:
+                failures.append("master-data relation groups should hide raw JSON and assets")
+                break
     snapshot_rows = snapshots_payload.get("snapshots") or []
     default_snapshot_rows = default_snapshots_payload.get("snapshots") or []
     if not isinstance(snapshot_rows, list):
@@ -154,6 +174,7 @@ def main() -> int:
         "masterDomainsUrl": master_domains_url,
         "masterCatalogUrl": master_catalog_url,
         "masterDetailUrl": master_detail_url,
+        "masterRelationsUrl": master_relations_url,
         "overview": overview.get("data"),
         "readiness": readiness,
         "saveSnapshots": snapshots.get("data"),
@@ -161,6 +182,7 @@ def main() -> int:
         "masterDomains": master_domains.get("data"),
         "masterCatalog": master_catalog.get("data"),
         "masterDetail": master_detail.get("data") if master_detail else None,
+        "masterRelations": master_relations.get("data") if master_relations else None,
         "failures": failures,
     }
 

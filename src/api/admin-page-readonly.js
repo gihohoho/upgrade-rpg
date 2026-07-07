@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v116.admin-master-data-detail";
+  const VERSION = "v117.admin-master-data-relations";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -122,6 +122,7 @@
     if (typeof window.RpgGameApi.listAdminMasterCatalogDomains !== "function") throw new Error("listAdminMasterCatalogDomains 함수를 찾을 수 없습니다.");
     if (typeof window.RpgGameApi.listAdminMasterCatalogRows !== "function") throw new Error("listAdminMasterCatalogRows 함수를 찾을 수 없습니다.");
     if (typeof window.RpgGameApi.fetchAdminMasterDataDetail !== "function") throw new Error("fetchAdminMasterDataDetail 함수를 찾을 수 없습니다.");
+    if (typeof window.RpgGameApi.fetchAdminMasterDataRelations !== "function") throw new Error("fetchAdminMasterDataRelations 함수를 찾을 수 없습니다.");
   }
 
   function readSnapshotFiltersFromDom() {
@@ -376,9 +377,18 @@
         <div class="detail-card">
           <div class="detail-title">연결 요약</div>
           <div class="relation-list">${relationRows}</div>
+          <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn mini" type="button" data-admin-action="open-master-relations" data-admin-relation-domain="${escapeHtml(detail.domain || "")}" data-admin-relation-id="${escapeHtml(detail.id)}">연결 항목 불러오기</button>
+            <span class="pill good">read-only</span>
+          </div>
           <div class="detail-title" style="margin-top:14px;">에셋 필드</div>
           <table class="detail-table"><tbody>${assetRows}</tbody></table>
         </div>
+      </div>
+      <div class="detail-card" style="margin:0 14px 12px;">
+        <div class="detail-title">실제 연결 항목</div>
+        <div class="filter-help">관련 마스터 데이터를 축약된 목록으로 보여줍니다. 행의 보기 버튼을 누르면 해당 항목 상세로 이동합니다.</div>
+        <div data-admin-master-relations><div class="empty">연결 항목을 불러오지 않았습니다.</div></div>
       </div>
       <div class="detail-card" style="margin-top:12px;">
         <div class="detail-title">JSON 미리보기</div>
@@ -387,6 +397,72 @@
       </div>
       <div class="filter-help">readOnly=${escapeHtml(formatValue(detail.readOnly))} · write UI=${escapeHtml(formatValue(detail.safeForAdminWriteUi))} · rawJsonReturned=${escapeHtml(formatValue(detail.rawJsonReturned))} · assetsReturned=${escapeHtml(formatValue(detail.assetsReturned))}</div>
     `;
+  }
+
+  function renderMasterRelations(relationsPayload) {
+    const target = $("[data-admin-master-relations]");
+    if (!target) return;
+    const relations = relationsPayload || {};
+    const groups = Array.isArray(relations.groups) ? relations.groups : [];
+    if (relations.status && relations.status !== "loaded") {
+      target.innerHTML = `<div class="error">연결 항목을 불러오지 못했습니다: ${escapeHtml(relations.status)}</div>`;
+      return;
+    }
+    if (!groups.length) {
+      target.innerHTML = `<div class="empty">연결된 마스터 데이터가 없습니다.</div>`;
+      return;
+    }
+    target.innerHTML = groups.map((group) => {
+      const rows = Array.isArray(group.rows) ? group.rows : [];
+      const columns = Array.isArray(group.columns) ? group.columns.slice(0, 6) : [];
+      const limited = group.limited ? ` · ${escapeHtml(formatValue(group.count))}개 중 ${escapeHtml(formatValue(group.shown))}개 표시` : ` · ${escapeHtml(formatValue(group.count))}개`;
+      return `
+        <details class="json-detail" open>
+          <summary>${escapeHtml(group.label || group.domainLabel || group.domain)} <span class="pill">${escapeHtml(group.domainLabel || group.domain)}</span><span class="pill good">read-only</span><span class="pill">${limited}</span></summary>
+          ${rows.length ? `
+            <div class="table-wrap relation-table-wrap">
+              <table>
+                <thead><tr><th>상세</th><th>ID</th><th>제목</th>${columns.map((column) => `<th>${escapeHtml(column.label || column.key)}</th>`).join("")}</tr></thead>
+                <tbody>
+                  ${rows.map((row) => {
+                    const cells = row.cells || {};
+                    return `
+                      <tr>
+                        <td><button class="btn mini" type="button" data-admin-action="open-master-detail" data-admin-detail-domain="${escapeHtml(row.domain || group.domain || "")}" data-admin-detail-id="${escapeHtml(row.id)}">보기</button></td>
+                        <td>${escapeHtml(formatValue(row.id))}</td>
+                        <td>${escapeHtml(formatValue(row.title))}</td>
+                        ${columns.map((column) => `<td>${escapeHtml(formatValue(cells[column.key]))}</td>`).join("")}
+                      </tr>
+                    `;
+                  }).join("")}
+                </tbody>
+              </table>
+            </div>
+          ` : `<div class="empty">표시할 연결 행이 없습니다.</div>`}
+        </details>
+      `;
+    }).join("");
+  }
+
+  async function openAdminMasterDataRelations(domain, id, options) {
+    ensureApi();
+    const target = $("[data-admin-master-relations]");
+    const safeDomain = domain || (readMasterCatalogFiltersFromDom().domain || DEFAULT_MASTER_DOMAIN);
+    const safeId = Number(id);
+    if (!Number.isFinite(safeId) || safeId <= 0) {
+      const error = new Error("연결 항목 조회 ID가 올바르지 않습니다.");
+      renderMasterRelations({ status: "invalid_id", id, domain: safeDomain });
+      setStatus(error.message, "error");
+      throw error;
+    }
+    if (target) target.innerHTML = `<div class="empty">연결 항목을 불러오는 중...</div>`;
+    const timeoutMs = options && options.timeoutMs !== undefined ? options.timeoutMs : DEFAULT_TIMEOUT_MS;
+    const limit = options && options.limit !== undefined ? options.limit : 20;
+    const response = await window.RpgGameApi.fetchAdminMasterDataRelations({ domain: safeDomain, id: safeId, limit, timeoutMs });
+    const relationsPayload = response && response.payload ? response.payload : {};
+    renderMasterRelations(relationsPayload);
+    setStatus(`연결 항목 로드: ${formatValue(relationsPayload.domainLabel || relationsPayload.domain)} #${formatValue(relationsPayload.id)} · ${formatValue(relationsPayload.totalRelatedRows)}개`, "ok");
+    return response;
   }
 
   async function openAdminMasterDataDetail(domain, id, options) {
@@ -407,6 +483,14 @@
     const response = await window.RpgGameApi.fetchAdminMasterDataDetail({ domain: safeDomain, id: safeId, timeoutMs });
     const detailPayload = response && response.payload ? response.payload : {};
     renderMasterDetail(detailPayload);
+    if (!options || options.loadRelations !== false) {
+      try {
+        await openAdminMasterDataRelations(safeDomain, safeId, { timeoutMs, limit: 20 });
+      } catch (error) {
+        // 상세 정보는 이미 표시됐으므로, 연결 항목 실패는 상태 메시지만 남깁니다.
+        console.warn("[Upgrade RPG] admin relations load failed", error);
+      }
+    }
     setStatus(`상세 로드: ${formatValue(detailPayload.domainLabel || detailPayload.domain)} #${formatValue(detailPayload.id)} · ${formatValue(detailPayload.title)}`, "ok");
     return response;
   }
@@ -543,6 +627,15 @@
           renderError(error);
         }
       }
+      if (action === "open-master-relations") {
+        const domain = button.getAttribute("data-admin-relation-domain");
+        const id = button.getAttribute("data-admin-relation-id");
+        try {
+          await openAdminMasterDataRelations(domain, id);
+        } catch (error) {
+          renderError(error);
+        }
+      }
       if (action === "reset-master-catalog-filters") {
         resetMasterCatalogFilters();
         await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() });
@@ -584,13 +677,14 @@
   }
 
   function checkAdminReadOnlyPageReady(options) {
-    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function");
+    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function");
     const domReady = !!document.querySelector("[data-admin-cards]");
     const locationHintReady = !!document.querySelector("[data-admin-current-url]");
     const snapshotFilterReady = !!document.querySelector("[data-admin-filter-slot-key]");
     const masterCatalogReady = !!document.querySelector("[data-admin-master-domain]");
     const masterDetailReady = !!document.querySelector("[data-admin-master-detail]");
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, readOnly: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() };
+    const masterRelationsReady = true;
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, readOnly: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -612,7 +706,9 @@
     resetMasterCatalogFilters,
     describeMasterCatalogFilters,
     openAdminMasterDataDetail,
+    openAdminMasterDataRelations,
     renderMasterDetail,
+    renderMasterRelations,
     checkAdminReadOnlyPageReady,
   };
   window.refreshAdminReadOnlyPage = refreshAdminReadOnlyPage;
@@ -622,6 +718,7 @@
   window.readAdminMasterCatalogFilters = readMasterCatalogFiltersFromDom;
   window.resetAdminMasterCatalogFilters = resetMasterCatalogFilters;
   window.openAdminMasterDataDetail = openAdminMasterDataDetail;
+  window.openAdminMasterDataRelations = openAdminMasterDataRelations;
   window.checkAdminReadOnlyPageReady = checkAdminReadOnlyPageReady;
   window.getCurrentAdminPageUrl = getCurrentAdminPageUrl;
   window.copyCurrentAdminPageUrl = copyCurrentAdminPageUrl;

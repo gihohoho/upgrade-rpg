@@ -170,6 +170,44 @@ async def get_admin_master_catalog_detail(
     )
 
 
+
+@router.get("/master-data/relations")
+async def get_admin_master_catalog_relations(
+    domain: str = Query(default="itemTemplates", max_length=80),
+    id: int = Query(..., ge=1),
+    limit: int = Query(default=20, ge=1, le=80),
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Return compact read-only related master-data rows for the admin detail panel."""
+    relations = await service.get_master_catalog_relations(
+        session,
+        domain=domain,
+        row_id=id,
+        limit=limit,
+    )
+    return ok_response(
+        type="admin.master_data.relations",
+        payload=relations,
+        data={
+            "status": relations["status"],
+            "readOnly": relations["readOnly"],
+            "adminUserId": current_user.id,
+            "domain": relations["domain"],
+            "id": relations["id"],
+            "groupCount": relations["groupCount"],
+            "totalRelatedRows": relations["totalRelatedRows"],
+            "rawJsonReturned": relations["rawJsonReturned"],
+            "assetsReturned": relations["assetsReturned"],
+            "safeForAdminWriteUi": relations["safeForAdminWriteUi"],
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 마스터 데이터 연결 항목 조회 전용입니다. 관련 행도 축약된 목록만 내려줍니다.",
+        },
+    )
+
+
 @router.get("/save-snapshots")
 async def list_admin_save_snapshots(
     limit: int = Query(default=20, ge=1, le=100),

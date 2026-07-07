@@ -432,6 +432,202 @@ class AdminService:
             "note": "관리자 상세 보기 준비용 조회 전용 응답입니다. JSON은 안전하게 축약/마스킹되며 이미지 data URL은 내려주지 않습니다.",
         }
 
+    async def get_master_catalog_relations(
+        self,
+        session: AsyncSession,
+        *,
+        domain: str = "itemTemplates",
+        row_id: int,
+        limit: int = 20,
+    ) -> dict[str, Any]:
+        """Return compact related rows for one master-data record.
+
+        This keeps the admin page read-only while making the catalog more useful:
+        an admin can click one row and immediately see the connected drop tables,
+        skills, enhancement rules, or item templates without exposing raw JSON or
+        image assets.
+        """
+        config = self.MASTER_CATALOG_DOMAINS.get(domain)
+        if not config:
+            return self._empty_relation_response(
+                status="invalid_domain",
+                domain=domain,
+                domain_label=domain,
+                row_id=row_id,
+                warnings=["domain_invalid"],
+            )
+
+        safe_row_id = int(row_id or 0)
+        if safe_row_id <= 0:
+            return self._empty_relation_response(
+                status="invalid_id",
+                domain=domain,
+                domain_label=config["label"],
+                row_id=row_id,
+                warnings=["id_invalid"],
+            )
+
+        model = config["model"]
+        result = await session.execute(select(model).where(model.id == safe_row_id))
+        row = result.scalar_one_or_none()
+        if row is None:
+            return self._empty_relation_response(
+                status="not_found",
+                domain=domain,
+                domain_label=config["label"],
+                row_id=safe_row_id,
+                warnings=["row_not_found"],
+            )
+
+        safe_limit = max(1, min(int(limit or 20), 80))
+        groups = await self._build_master_relation_groups(session, domain, row, limit=safe_limit)
+        total_related_rows = sum(int(group.get("count") or 0) for group in groups)
+        title = getattr(row, "name", None) or getattr(row, "code", None) or f"#{safe_row_id}"
+        return {
+            "status": "loaded",
+            "readOnly": True,
+            "domain": domain,
+            "domainLabel": config["label"],
+            "id": safe_row_id,
+            "title": title,
+            "limitPerGroup": safe_limit,
+            "groupCount": len(groups),
+            "totalRelatedRows": total_related_rows,
+            "groups": groups,
+            "rawJsonReturned": False,
+            "assetsReturned": False,
+            "safeForAdminWriteUi": False,
+            "warnings": [],
+            "note": "관리자 상세 보기의 연결 항목 조회 전용 응답입니다. 관련 행은 축약된 목록으로만 내려갑니다.",
+        }
+
+    def _empty_relation_response(
+        self,
+        *,
+        status: str,
+        domain: str,
+        domain_label: str,
+        row_id: int,
+        warnings: list[str],
+    ) -> dict[str, Any]:
+        return {
+            "status": status,
+            "readOnly": True,
+            "domain": domain,
+            "domainLabel": domain_label,
+            "id": row_id,
+            "title": "-",
+            "limitPerGroup": 0,
+            "groupCount": 0,
+            "totalRelatedRows": 0,
+            "groups": [],
+            "rawJsonReturned": False,
+            "assetsReturned": False,
+            "safeForAdminWriteUi": False,
+            "warnings": warnings,
+        }
+
+    async def _build_master_relation_groups(self, session: AsyncSession, domain: str, row: Any, *, limit: int) -> list[dict[str, Any]]:
+        groups: list[dict[str, Any]] = []
+        code = getattr(row, "code", None)
+
+        if domain == "itemTemplates" and code:
+            groups.append(await self._fetch_master_relation_group(session, "드랍 아이템", "dropTableItems", DropTableItem, limit, DropTableItem.item_template_code == code))
+            group_code = getattr(row, "enhance_group_code", None)
+            if group_code:
+                groups.append(await self._fetch_master_relation_group(session, "강화 그룹", "enhancementGroups", EnhancementGroup, limit, EnhancementGroup.code == group_code))
+                groups.append(await self._fetch_master_relation_group(session, "강화 단계", "enhancementLevels", EnhancementLevel, limit, EnhancementLevel.group_code == group_code))
+        elif domain == "skills" and code:
+            groups.append(await self._fetch_master_relation_group(session, "스킬 레벨", "skillLevels", SkillLevel, limit, SkillLevel.skill_code == code))
+            groups.append(await self._fetch_master_relation_group(session, "캐릭터 스킬 연결", "characterSkills", CharacterSkill, limit, CharacterSkill.skill_code == code))
+        elif domain == "skillLevels":
+            skill_code = getattr(row, "skill_code", None)
+            if skill_code:
+                groups.append(await self._fetch_master_relation_group(session, "상위 스킬", "skills", Skill, limit, Skill.code == skill_code))
+        elif domain == "characters" and code:
+            groups.append(await self._fetch_master_relation_group(session, "캐릭터 스킬 연결", "characterSkills", CharacterSkill, limit, CharacterSkill.character_code == code))
+        elif domain == "characterSkills":
+            character_code = getattr(row, "character_code", None)
+            skill_code = getattr(row, "skill_code", None)
+            if character_code:
+                groups.append(await self._fetch_master_relation_group(session, "캐릭터", "characters", Character, limit, Character.code == character_code))
+            if skill_code:
+                groups.append(await self._fetch_master_relation_group(session, "스킬", "skills", Skill, limit, Skill.code == skill_code))
+        elif domain == "bosses" and code:
+            groups.append(await self._fetch_master_relation_group(session, "보스 드랍 테이블", "dropTables", DropTable, limit, DropTable.owner_type == "boss", DropTable.owner_code == code))
+        elif domain == "fieldZones" and code:
+            groups.append(await self._fetch_master_relation_group(session, "필드 드랍 테이블", "dropTables", DropTable, limit, DropTable.owner_type == "field", DropTable.owner_code == code))
+        elif domain == "dropTables" and code:
+            owner_type = getattr(row, "owner_type", None)
+            owner_code = getattr(row, "owner_code", None)
+            if owner_type == "boss" and owner_code:
+                groups.append(await self._fetch_master_relation_group(session, "대상 보스", "bosses", Boss, limit, Boss.code == owner_code))
+            if owner_type == "field" and owner_code:
+                groups.append(await self._fetch_master_relation_group(session, "대상 필드", "fieldZones", FieldZone, limit, FieldZone.code == owner_code))
+            groups.append(await self._fetch_master_relation_group(session, "드랍 아이템", "dropTableItems", DropTableItem, limit, DropTableItem.drop_table_code == code))
+        elif domain == "dropTableItems":
+            drop_table_code = getattr(row, "drop_table_code", None)
+            item_template_code = getattr(row, "item_template_code", None)
+            if drop_table_code:
+                groups.append(await self._fetch_master_relation_group(session, "드랍 테이블", "dropTables", DropTable, limit, DropTable.code == drop_table_code))
+            if item_template_code:
+                groups.append(await self._fetch_master_relation_group(session, "아이템 템플릿", "itemTemplates", ItemTemplate, limit, ItemTemplate.code == item_template_code))
+        elif domain == "enhancementGroups" and code:
+            groups.append(await self._fetch_master_relation_group(session, "강화 단계", "enhancementLevels", EnhancementLevel, limit, EnhancementLevel.group_code == code))
+            groups.append(await self._fetch_master_relation_group(session, "연결 아이템", "itemTemplates", ItemTemplate, limit, ItemTemplate.enhance_group_code == code))
+        elif domain == "enhancementLevels":
+            group_code = getattr(row, "group_code", None)
+            if group_code:
+                groups.append(await self._fetch_master_relation_group(session, "강화 그룹", "enhancementGroups", EnhancementGroup, limit, EnhancementGroup.code == group_code))
+                groups.append(await self._fetch_master_relation_group(session, "연결 아이템", "itemTemplates", ItemTemplate, limit, ItemTemplate.enhance_group_code == group_code))
+
+        return [group for group in groups if group.get("count") or group.get("rows")]
+
+    async def _fetch_master_relation_group(
+        self,
+        session: AsyncSession,
+        label: str,
+        domain: str,
+        model: Any,
+        limit: int,
+        *where_clauses: Any,
+    ) -> dict[str, Any]:
+        where_list = [clause for clause in where_clauses if clause is not None]
+        total = await self._count_master_catalog_rows(session, model, where_list)
+        config = self.MASTER_CATALOG_DOMAINS.get(domain) or {}
+        sort = config.get("defaultSort") or "id_asc"
+        stmt = select(model)
+        if where_list:
+            stmt = stmt.where(*where_list)
+        stmt = stmt.order_by(*self._master_catalog_order_by(model, sort)).limit(limit)
+        result = await session.execute(stmt)
+        rows = [self._serialize_master_relation_row(domain, row) for row in result.scalars().all()]
+        return {
+            "label": label,
+            "domain": domain,
+            "domainLabel": config.get("label") or domain,
+            "count": total,
+            "shown": len(rows),
+            "limited": total > len(rows),
+            "columns": self._master_catalog_columns(domain),
+            "rows": rows,
+            "rawJsonReturned": False,
+            "assetsReturned": False,
+        }
+
+    def _serialize_master_relation_row(self, domain: str, row: Any) -> dict[str, Any]:
+        catalog_row = self._serialize_master_catalog_row(domain, row)
+        cells = catalog_row.get("cells") or {}
+        title = getattr(row, "name", None) or getattr(row, "code", None) or f"#{getattr(row, 'id', '-') }"
+        return {
+            "id": getattr(row, "id", None),
+            "domain": domain,
+            "title": title,
+            "cells": cells,
+            "rawJsonReturned": False,
+            "assetsReturned": False,
+        }
+
     async def _get_master_data_counts(self, session: AsyncSession) -> dict[str, Any]:
         counts: dict[str, Any] = {}
         for key, model in self.MASTER_DATA_MODELS:
