@@ -21,10 +21,10 @@ docs/README.md
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v133: admin edit input UI**
+- 최신 안정 버전: **v134: admin safe selects**
 
-v133은 관리자 편집 초안 입력 UI를 타입별로 개선한 버전입니다.
-백엔드 API, DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
+v134는 관리자 편집 초안에서 안전한 enum 필드를 preset select로 바꾸고, itemTemplates/skills의 일부 안전 필드를 allow-list에 추가한 버전입니다.
+DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 
 ## 백엔드 실행
 

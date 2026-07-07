@@ -1,6 +1,6 @@
 # 새 채팅 시작용 프롬프트
 
-아래 내용을 그대로 새 채팅의 첫 메시지로 붙여넣고, 함께 `rpg_v133_admin_edit_input_ui.zip`을 업로드해서 이어서 진행해줘.
+아래 내용을 그대로 새 채팅의 첫 메시지로 붙여넣고, 함께 `rpg_v134_admin_safe_selects.zip`을 업로드해서 이어서 진행해줘.
 
 ---
 
@@ -69,10 +69,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v133: admin edit input UI
+v134: admin safe selects
 
 최신 ZIP:
-rpg_v133_admin_edit_input_ui.zip
+rpg_v134_admin_safe_selects.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -105,6 +105,12 @@ docs/NEXT_STEPS.md
     - number 필드 number input
     - description/admin_note textarea
     - 읽기 전용/잠금 필드 카드 표시
+21. v134에서 admin safe selects + allow-list 확장 완료.
+    - itemTemplates.item_type 실제 적용 가능
+    - itemTemplates.equip_slot 실제 적용 가능
+    - skills.slot_key 실제 적용 가능
+    - item_type/equip_slot/boss_type/slot_key preset select
+    - risk high/medium/low 배지
 
 현재 게임 실제 세이브 슬롯:
 default
@@ -141,12 +147,13 @@ bash tools/run_smoke_all.sh
 ```
 
 다음 추천 단계:
-v134 관리자 allow-list 확장
+v135 관리자 변경 전후 비교 UI 강화
 
 구체적으로:
-skills/dropTableItems/enhancementLevels/fieldZones에서 안전한 수치/설명 필드를 조금씩 실제 수정 가능하게 확장.
-관계 필드(`*_id`, `*_code`)는 아직 잠금 유지.
+실제 적용 직전에 바뀌는 필드만 더 크게 보여주고, risk high 변경은 상단에 한 번 더 강조.
+item_type / equip_slot / slot_key 변경 시 별도 경고 문구 표시.
+관계 필드(`*_id`, `*_code`)와 JSON 필드는 아직 잠금 유지.
 
-이 단계는 DB reset/seed 없이 백엔드 allow-list + 관리자 UI/검증 중심으로 진행하는 게 좋아.
+이 단계는 DB reset/seed 없이 관리자 UI 중심으로 진행하는 게 좋아.
 
-업로드한 ZIP 기준으로 구조 확인 후, v134부터 이어서 진행해줘.
+업로드한 ZIP 기준으로 구조 확인 후, v135부터 이어서 진행해줘.

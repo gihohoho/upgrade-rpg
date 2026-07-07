@@ -1,3 +1,16 @@
+# Changelog
+
+## v134 - Admin Safe Selects + Allow-list Expansion
+
+- 관리자 편집 초안에 preset select 타입을 추가했습니다.
+- `itemTemplates.item_type`, `itemTemplates.equip_slot`, `skills.slot_key`를 실제 적용 allow-list에 추가했습니다.
+- `item_type`, `equip_slot`, `boss_type`, `slot_key`는 오타 방지를 위해 select 프리셋으로 입력하게 했습니다.
+- 현재 DB 값이 프리셋에 없으면 select 맨 위에 현재 DB 값으로 표시하게 했습니다.
+- 편집 필드마다 `risk high / medium / low` 배지를 표시했습니다.
+- field help / value hint / impact guide에 아이템 분류, 장착 슬롯, 스킬 슬롯 설명을 추가했습니다.
+- 관계 필드, JSON 필드, id/code 필드는 계속 잠금 유지했습니다.
+- DB reset / seed는 필요 없습니다.
+
 # v133 - Admin Edit Input UI
 
 - 관리자 편집 초안 입력 UI를 필드 타입에 맞게 개선했습니다.

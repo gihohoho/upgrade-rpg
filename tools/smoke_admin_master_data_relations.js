@@ -45,7 +45,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v133.admin-edit-input-ui",
+  "v134.admin-safe-selects",
   "renderMasterRelations",
   "openAdminMasterDataRelations",
   "fetchAdminMasterDataRelations",
@@ -60,7 +60,7 @@ assertContains("admin.html", [
   "선택한 마스터 데이터 상세",
   "data-admin-master-detail",
   ".relation-table-wrap",
-  "v133 admin edit input UI",
+  "v134 admin safe selects",
 ]);
 
 assertContains("backend/scripts/check_admin_readonly_api.py", [

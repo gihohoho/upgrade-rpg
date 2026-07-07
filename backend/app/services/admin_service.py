@@ -52,8 +52,8 @@ class AdminService:
     # 실제 DB에 적용 가능한 필드만 아주 좁게 열어둡니다.
     # code / *_code / *_id / JSON / asset 필드는 연결 깨짐 위험이 있어서 다음 단계 전까지 잠급니다.
     MASTER_EDIT_ALLOWED_FIELDS: dict[str, set[str]] = {
-        "itemTemplates": {"name", "description", "grade", "stackable", "admin_note"},
-        "skills": {"name", "description", "proc_rate", "cooldown_seconds"},
+        "itemTemplates": {"name", "item_type", "description", "grade", "stackable", "equip_slot", "admin_note"},
+        "skills": {"slot_key", "name", "description", "proc_rate", "cooldown_seconds"},
         "skillLevels": {"damage_multiplier", "proc_rate_bonus"},
         "bosses": {"name", "tier", "boss_type", "hp", "description", "cooldown_seconds", "is_enabled"},
         "fieldZones": {"name", "sort_order", "enemy_hp", "gold_reward", "description", "is_enabled"},
@@ -164,6 +164,7 @@ class AdminService:
         domain: str,
         row_id: int,
         draft: dict[str, Any],
+        base_values: dict[str, Any] | None = None,
         reason: str | None = None,
         dry_run: bool = True,
     ) -> dict[str, Any]:
@@ -212,10 +213,13 @@ class AdminService:
             # The UI only sends visible fields, but this keeps manual API calls bounded.
             safe_draft = dict(list(safe_draft.items())[:80])
 
+        safe_base_values = base_values if isinstance(base_values, dict) else None
+
         column_map = self._master_edit_column_map(row)
         accepted_changes: list[dict[str, Any]] = []
         unchanged: list[dict[str, Any]] = []
         rejected_changes: list[dict[str, Any]] = []
+        stale_changes: list[dict[str, Any]] = []
         warnings: list[str] = []
 
         for raw_key, raw_after in safe_draft.items():
@@ -243,6 +247,46 @@ class AdminService:
                 continue
 
             before_value = serialize_value(getattr(row, key, None))
+
+            if safe_base_values is not None:
+                if key not in safe_base_values:
+                    stale_changes.append({
+                        "key": key,
+                        "label": self._humanize_field_name(key),
+                        "base": None,
+                        "current": before_value,
+                        "after": raw_after,
+                        "reason": "base_value_missing",
+                    })
+                    rejected_changes.append({
+                        "key": key,
+                        "label": self._humanize_field_name(key),
+                        "before": before_value,
+                        "after": raw_after,
+                        "reason": "base_value_missing",
+                    })
+                    continue
+
+                normalized_base, base_issue = self._normalize_master_edit_value(column, safe_base_values.get(key))
+                base_value = serialize_value(safe_base_values.get(key) if base_issue else normalized_base)
+                if base_value != before_value:
+                    stale_changes.append({
+                        "key": key,
+                        "label": self._humanize_field_name(key),
+                        "base": base_value,
+                        "current": before_value,
+                        "after": raw_after,
+                        "reason": "current_value_changed_since_form_loaded",
+                    })
+                    rejected_changes.append({
+                        "key": key,
+                        "label": self._humanize_field_name(key),
+                        "before": before_value,
+                        "after": raw_after,
+                        "reason": "current_value_changed_since_form_loaded",
+                    })
+                    continue
+
             normalized_after, issue = self._normalize_master_edit_value(column, raw_after)
             if issue:
                 rejected_changes.append({
@@ -272,6 +316,10 @@ class AdminService:
             warnings.append("draft_empty")
         if reason and len(str(reason)) > 300:
             warnings.append("reason_truncated_in_preview")
+        if safe_base_values is None:
+            warnings.append("base_values_missing_stale_guard_disabled")
+        if stale_changes:
+            warnings.append("current_value_changed_since_form_loaded")
 
         error_count = len(rejected_changes)
         diff_count = len(accepted_changes)
@@ -293,6 +341,9 @@ class AdminService:
             "diffCount": diff_count,
             "errorCount": error_count,
             "unchangedCount": len(unchanged),
+            "staleCount": len(stale_changes),
+            "staleChanges": stale_changes[:30],
+            "staleGuardEnabled": safe_base_values is not None,
             "acceptedChanges": accepted_changes,
             "rejectedChanges": rejected_changes,
             "unchangedChanges": unchanged[:30],
@@ -310,6 +361,7 @@ class AdminService:
         domain: str,
         row_id: int,
         draft: dict[str, Any],
+        base_values: dict[str, Any] | None,
         reason: str | None,
         confirm_text: str,
         admin_user_id: int,
@@ -326,6 +378,7 @@ class AdminService:
             domain=domain,
             row_id=row_id,
             draft=draft,
+            base_values=base_values,
             reason=reason,
             dry_run=True,
         )
@@ -342,6 +395,22 @@ class AdminService:
                 "wouldBeValid": False,
                 "warnings": [*(preview.get("warnings") or []), "confirm_text_mismatch"],
                 "note": "정확한 확인 문구를 입력해야 DB 적용이 가능합니다.",
+            })
+            return preview
+
+        if not isinstance(base_values, dict) or not base_values:
+            preview.update({
+                "status": "stale_guard_base_values_required",
+                "readOnly": False,
+                "dryRun": False,
+                "writeBlocked": True,
+                "applied": False,
+                "applyReady": False,
+                "errorCount": int(preview.get("errorCount") or 0) + 1,
+                "wouldBeValid": False,
+                "staleGuardEnabled": False,
+                "warnings": [*(preview.get("warnings") or []), "base_values_required_for_apply"],
+                "note": "DB 적용에는 편집 화면을 열었을 때의 기준값(baseValues)이 필요합니다. 상세를 다시 열고 초안을 다시 적용하세요.",
             })
             return preview
 
@@ -443,21 +512,27 @@ class AdminService:
         limit: int = 20,
         target_type: str | None = None,
         target_id: str | None = None,
+        action: str | None = None,
+        changed_key: str | None = None,
+        applied: bool | None = None,
+        sort: str | None = "created_desc",
     ) -> dict[str, Any]:
         safe_limit = max(1, min(int(limit or 20), 100))
-        clauses = []
-        clean_target_type = self._clean_filter_text(target_type)
-        clean_target_id = self._clean_filter_text(target_id)
-        if clean_target_type:
-            clauses.append(AdminChangeLog.target_type == clean_target_type)
-        if clean_target_id:
-            clauses.append(AdminChangeLog.target_id == clean_target_id)
+        filters = self._clean_admin_change_log_filters(
+            target_type=target_type,
+            target_id=target_id,
+            action=action,
+            changed_key=changed_key,
+            applied=applied,
+            sort=sort,
+        )
+        clauses = self._build_admin_change_log_where_clauses(filters)
 
         total = await self._count_admin_change_logs(session, clauses)
         stmt = select(AdminChangeLog)
         if clauses:
             stmt = stmt.where(*clauses)
-        stmt = stmt.order_by(AdminChangeLog.created_at.desc(), AdminChangeLog.id.desc()).limit(safe_limit)
+        stmt = stmt.order_by(*self._admin_change_log_order_by(filters.get("sort") or "created_desc")).limit(safe_limit)
         result = await session.execute(stmt)
         rows = [self._serialize_admin_change_log(row) for row in result.scalars().all()]
         return {
@@ -466,7 +541,7 @@ class AdminService:
             "count": len(rows),
             "total": total,
             "limit": safe_limit,
-            "filters": {"targetType": clean_target_type, "targetId": clean_target_id},
+            "filters": filters,
             "rows": rows,
             "rawBeforeAfterReturned": False,
         }
@@ -1475,6 +1550,74 @@ class AdminService:
             return (UserSaveSnapshot.slot_key.asc(), UserSaveSnapshot.user_id.asc(), UserSaveSnapshot.updated_at.desc())
         return (UserSaveSnapshot.updated_at.desc(), UserSaveSnapshot.user_id, UserSaveSnapshot.slot_key)
 
+
+
+    def _clean_admin_change_log_filters(
+        self,
+        *,
+        target_type: Any = None,
+        target_id: Any = None,
+        action: Any = None,
+        changed_key: Any = None,
+        applied: Any = None,
+        sort: Any = "created_desc",
+    ) -> dict[str, Any]:
+        safe_sort = str(sort or "created_desc").strip()
+        if safe_sort not in {"created_desc", "created_asc", "target_asc", "action_asc"}:
+            safe_sort = "created_desc"
+        safe_changed_key = self._clean_filter_text(changed_key)
+        if safe_changed_key and not self._is_safe_admin_change_key(safe_changed_key):
+            safe_changed_key = None
+
+        clean_applied: bool | None
+        if applied is None or applied == "":
+            clean_applied = None
+        elif isinstance(applied, bool):
+            clean_applied = applied
+        else:
+            clean_applied = str(applied).strip().lower() in {"true", "1", "yes", "applied"}
+
+        active = {
+            "targetType": self._clean_filter_text(target_type),
+            "targetId": self._clean_filter_text(target_id),
+            "action": self._clean_filter_text(action),
+            "changedKey": safe_changed_key,
+            "applied": clean_applied,
+            "sort": safe_sort,
+        }
+        active["hasActiveFilters"] = any(
+            active.get(key) not in (None, "") for key in ("targetType", "targetId", "action", "changedKey", "applied")
+        )
+        return active
+
+    def _build_admin_change_log_where_clauses(self, filters: dict[str, Any]) -> list[Any]:
+        clauses: list[Any] = []
+        if filters.get("targetType"):
+            clauses.append(AdminChangeLog.target_type == filters["targetType"])
+        if filters.get("targetId"):
+            clauses.append(AdminChangeLog.target_id == filters["targetId"])
+        if filters.get("action"):
+            clauses.append(AdminChangeLog.action == filters["action"])
+        if filters.get("applied") is not None:
+            clauses.append(AdminChangeLog.applied.is_(bool(filters["applied"])))
+        if filters.get("changedKey"):
+            key = str(filters["changedKey"])
+            clauses.append(or_(AdminChangeLog.before_json.op("?")(key), AdminChangeLog.after_json.op("?")(key)))
+        return clauses
+
+    def _admin_change_log_order_by(self, sort: str) -> tuple[Any, ...]:
+        if sort == "created_asc":
+            return (AdminChangeLog.created_at.asc(), AdminChangeLog.id.asc())
+        if sort == "target_asc":
+            return (AdminChangeLog.target_type.asc(), AdminChangeLog.target_id.asc(), AdminChangeLog.created_at.desc(), AdminChangeLog.id.desc())
+        if sort == "action_asc":
+            return (AdminChangeLog.action.asc(), AdminChangeLog.created_at.desc(), AdminChangeLog.id.desc())
+        return (AdminChangeLog.created_at.desc(), AdminChangeLog.id.desc())
+
+    @staticmethod
+    def _is_safe_admin_change_key(value: str) -> bool:
+        allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-"
+        return bool(value) and all(ch in allowed for ch in value)
 
     async def _get_admin_change_log(self, session: AsyncSession, change_log_id: int) -> AdminChangeLog | None:
         safe_id = int(change_log_id or 0)

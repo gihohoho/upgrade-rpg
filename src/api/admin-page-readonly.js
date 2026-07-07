@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v133.admin-edit-input-ui";
+  const VERSION = "v134.admin-safe-selects";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -15,8 +15,8 @@
   const ADMIN_EDIT_APPLY_TIMEOUT_MS = 5000;
   const ADMIN_WRITE_DEV_KEY_EXAMPLE = "local-admin-dev-key";
   const ADMIN_EDIT_ALLOWED_FIELDS = {
-    itemTemplates: ["name", "description", "grade", "stackable", "admin_note"],
-    skills: ["name", "description", "proc_rate", "cooldown_seconds"],
+    itemTemplates: ["name", "item_type", "grade", "description", "stackable", "equip_slot", "admin_note"],
+    skills: ["slot_key", "name", "description", "proc_rate", "cooldown_seconds"],
     skillLevels: ["damage_multiplier", "proc_rate_bonus"],
     bosses: ["name", "tier", "boss_type", "hp", "description", "cooldown_seconds", "is_enabled"],
     fieldZones: ["name", "sort_order", "enemy_hp", "gold_reward", "description", "is_enabled"],
@@ -48,6 +48,59 @@
     "gold_cost",
   ]);
   const ADMIN_DRAFT_TEXTAREA_FIELDS = new Set(["description", "admin_note"]);
+  const ADMIN_DRAFT_SELECT_FIELD_OPTIONS = {
+    item_type: [
+      { value: "normal", label: "normal · 일반 장비" },
+      { value: "skill_book", label: "skill_book · 스킬강화권" },
+      { value: "special_equip", label: "special_equip · 특수 장비" },
+      { value: "abyss", label: "abyss · 심연 장비" },
+      { value: "avatar", label: "avatar · 아바타" },
+      { value: "material", label: "material · 재료" },
+      { value: "consumable", label: "consumable · 소모품" },
+      { value: "unknown", label: "unknown · 미분류" },
+    ],
+    equip_slot: [
+      { value: "", label: "없음 · 장착 슬롯 없음" },
+      { value: "skill_all", label: "skill_all · 스킬피해+모든피해" },
+      { value: "skill_dmg", label: "skill_dmg · 스킬피해" },
+      { value: "skill_chance", label: "skill_chance · 스킬발동확률" },
+      { value: "atk_inc", label: "atk_inc · 공격력 추가" },
+      { value: "normal_dmg", label: "normal_dmg · 평타피해" },
+      { value: "normal_crit", label: "normal_crit · 평타치명" },
+      { value: "all_dmg", label: "all_dmg · 모든피해" },
+      { value: "6", label: "6 · 특수 슬롯 6" },
+      { value: "7", label: "7 · 특수 슬롯 7" },
+      { value: "8", label: "8 · 특수 슬롯 8" },
+      { value: "9", label: "9 · 특수 슬롯 9" },
+      { value: "10", label: "10 · 특수 슬롯 10" },
+      { value: "11", label: "11 · 특수 슬롯 11" },
+      { value: "12", label: "12 · 특수 슬롯 12" },
+      { value: "13", label: "13 · 특수 슬롯 13" },
+      { value: "14", label: "14 · 특수 슬롯 14" },
+    ],
+    boss_type: [
+      { value: "normal", label: "normal · 일반 보스" },
+      { value: "special", label: "special · 특수 보스" },
+    ],
+    slot_key: [
+      { value: "Q", label: "Q · 기본 1번 스킬" },
+      { value: "W", label: "W · 기본 2번 스킬" },
+      { value: "E", label: "E · 기본 3번 스킬" },
+      { value: "R", label: "R · 기본 4번 스킬" },
+      { value: "T", label: "T · 기본 5번 스킬" },
+      { value: "F", label: "F · 기본 6번 스킬" },
+      { value: "D", label: "D · 기본 7번 스킬" },
+      { value: "M", label: "M · 기본 8번 스킬" },
+      { value: "SQ", label: "SQ · Q 각성 스킬" },
+      { value: "SW", label: "SW · W 각성 스킬" },
+      { value: "SE", label: "SE · E 각성 스킬" },
+      { value: "SR", label: "SR · R 각성 스킬" },
+      { value: "ST", label: "ST · T 각성 스킬" },
+      { value: "SF", label: "SF · F 각성 스킬" },
+      { value: "SD", label: "SD · D 각성 스킬" },
+      { value: "SM", label: "SM · M 각성 스킬" },
+    ],
+  };
   const ADMIN_DRAFT_VISIBLE_LOCKED_LIMIT = 18;
 
   let currentMasterDetailPayload = null;
@@ -195,6 +248,26 @@
       body: "게임 플레이 화면에는 보여주지 않는 운영자용 메모입니다. 데이터 작업 이유, 주의사항, 임시 설명, 나중에 확인할 내용을 적어두는 내부 기록용 필드입니다.",
       example: "예: 밸런스 조정 예정, 이벤트 드랍 전용, 아직 미사용 데이터 등",
     },
+    itemtype: {
+      title: "item type / 아이템 분류",
+      body: "아이템이 일반 장비인지, 스킬강화권인지, 특수 장비인지 같은 큰 분류를 정하는 값입니다. 드랍 목록, 겹치기 기본 판단, 향후 필터/정렬 기준에 영향을 줄 수 있습니다.",
+      example: "예: normal=일반 장비, skill_book=스킬강화권, special_equip=특수 장비",
+    },
+    equipslot: {
+      title: "equip slot / 장착 슬롯",
+      body: "장비가 어떤 장착 그룹 또는 특수 슬롯에 들어가는지 나타내는 값입니다. 잘못 바꾸면 장착 위치나 장비 효과 분류가 어색해질 수 있으니 select 프리셋 안에서만 고르는 편이 안전합니다.",
+      example: "예: skill_all, atk_inc, normal_dmg, skill_chance, 6~14 특수 슬롯",
+    },
+    slotkey: {
+      title: "slot key / 스킬 슬롯",
+      body: "스킬이 Q/W/E/R/T/F/D/M 또는 각성 슬롯 중 어디에 배치되는지 나타내는 값입니다. 같은 슬롯이 중복되면 UI 배치가 헷갈릴 수 있으니 변경 후 게임 화면에서 꼭 확인해야 합니다.",
+      example: "예: Q, W, E, R, T, F, D, M, SQ, SW 같은 슬롯 키",
+    },
+    bosstype: {
+      title: "boss type / 보스 분류",
+      body: "보스가 일반 보스인지 특수 보스인지 나누는 값입니다. 보스 목록 정렬, 소환/표시 그룹, 드랍 확인에 영향을 줄 수 있습니다.",
+      example: "normal=일반 보스, special=특수 보스",
+    },
     stackable: {
       title: "stackable / 겹치기 가능 여부",
       body: "인벤토리에서 같은 아이템을 한 칸에 수량으로 합칠 수 있는지 정하는 true/false 값입니다. true면 재료/강화권처럼 여러 개가 한 칸에 쌓이고, false면 장비처럼 각각 별도 칸을 차지합니다.",
@@ -261,6 +334,29 @@
       if (String(value) === "normal_equipment") return { label: "일반 장비 강화", body: "일반/심연/특수/avatar 계열 장비가 공유하는 기본 강화 규칙 묶음입니다." };
       if (String(value) === "talisman_emblem") return { label: "탈리스만/휘장 강화", body: "탈리스만과 빛나는 휘장처럼 같은 강화 방식을 쓰는 장비 묶음입니다." };
       return { label: String(value), body: `강화그룹 코드 ${value}와 같은 code/group_code를 가진 enhancementGroups/enhancementLevels가 연결됩니다.` };
+    }
+    if (normalized === "itemtype") {
+      const text = String(value || "");
+      if (text === "normal") return { label: "normal · 일반 장비", body: "일반 장비 분류입니다. 보통 개별 장비라 stackable=false가 안전합니다." };
+      if (text === "skill_book") return { label: "skill_book · 스킬강화권", body: "스킬 강화권 분류입니다. 보통 수량 겹치기 대상입니다." };
+      if (text === "special_equip") return { label: "special_equip · 특수 장비", body: "특수 슬롯 장비 분류입니다. 장착 슬롯 값과 함께 확인해야 합니다." };
+      return text ? { label: text, body: "프리셋에 있는 아이템 분류 값입니다. 변경 후 드랍/인벤토리 표시를 확인하세요." } : { label: "분류 없음", body: "아이템 분류가 비어 있습니다." };
+    }
+    if (normalized === "equipslot") {
+      const text = String(value || "");
+      if (!text) return { label: "장착 슬롯 없음", body: "재료/강화권처럼 장착하지 않는 아이템에 어울립니다." };
+      if (/^\d+$/.test(text)) return { label: `특수 슬롯 ${text}`, body: "탈리스만/휘장 계열처럼 번호 기반 특수 슬롯으로 쓰는 값입니다." };
+      return { label: text, body: "일반 장비 장착/효과 그룹입니다. 변경 후 장착 위치와 툴팁을 확인하세요." };
+    }
+    if (normalized === "slotkey") {
+      const text = String(value || "");
+      return text ? { label: `${text} 슬롯`, body: "스킬 버튼/각성 슬롯 배치에 영향을 줄 수 있습니다. 중복 슬롯이 생기지 않게 확인하세요." } : { label: "슬롯 없음", body: "스킬 슬롯이 비어 있습니다." };
+    }
+    if (normalized === "bosstype") {
+      const text = String(value || "");
+      if (text === "special") return { label: "special · 특수 보스", body: "특수 보스 그룹으로 표시/정렬될 수 있습니다." };
+      if (text === "normal") return { label: "normal · 일반 보스", body: "일반 보스 그룹으로 표시/정렬됩니다." };
+      return text ? { label: text, body: "보스 분류 값입니다. normal/special 프리셋 사용을 권장합니다." } : { label: "보스 분류 없음", body: "보스 분류가 비어 있습니다." };
     }
     if (normalized === "stackable") {
       const boolValue = value === true || String(value).toLowerCase() === "true";
@@ -711,11 +807,22 @@
     return String(key || "").trim().toLowerCase();
   }
 
+  function getAdminDraftSelectOptions(key, value) {
+    const normalized = normalizeAdminDraftFieldKey(key);
+    const baseOptions = (ADMIN_DRAFT_SELECT_FIELD_OPTIONS[normalized] || []).slice();
+    const valueText = value === null || value === undefined ? "" : String(value);
+    if (valueText && !baseOptions.some((option) => String(option.value) === valueText)) {
+      baseOptions.unshift({ value: valueText, label: `${valueText} · 현재 DB 값` });
+    }
+    return baseOptions;
+  }
+
   function getAdminDraftFieldInputKind(field) {
     const key = normalizeAdminDraftFieldKey(field && field.key);
     const value = field ? field.value : null;
     const valueText = value === null || value === undefined ? "" : String(value);
     const isLongText = valueText.length > 90 || valueText.includes("\n");
+    if (ADMIN_DRAFT_SELECT_FIELD_OPTIONS[key]) return "preset-select";
     if (ADMIN_DRAFT_BOOLEAN_FIELDS.has(key) || typeof value === "boolean") return "boolean-select";
     if (ADMIN_DRAFT_NUMBER_FIELDS.has(key) || typeof value === "number") return "number";
     if (ADMIN_DRAFT_TEXTAREA_FIELDS.has(key) || isLongText) return "textarea";
@@ -724,6 +831,7 @@
 
   function getAdminDraftFieldTypeLabel(kind) {
     if (kind === "boolean-select") return "true/false select";
+    if (kind === "preset-select") return "preset select";
     if (kind === "number") return "number input";
     if (kind === "textarea") return "textarea";
     return "text input";
@@ -740,8 +848,28 @@
 
   function renderAdminDraftTypeBadge(kind) {
     const label = getAdminDraftFieldTypeLabel(kind);
-    const tone = kind === "boolean-select" ? "good" : (kind === "number" ? "warn" : "");
+    const tone = kind === "boolean-select" || kind === "preset-select" ? "good" : (kind === "number" ? "warn" : "");
     return `<span class="pill ${escapeHtml(tone)}">${escapeHtml(label)}</span>`;
+  }
+
+  function getAdminDraftFieldRisk(domain, key) {
+    const rawDomain = String(domain || "");
+    const normalized = normalizeAdminDraftFieldKey(key).replace(/_/g, "");
+    if (rawDomain === "itemTemplates" && ["stackable", "itemtype", "equipslot"].includes(normalized)) return "high";
+    if (rawDomain === "bosses" && ["hp", "isenabled"].includes(normalized)) return "high";
+    if (rawDomain === "skills" && ["slotkey", "procrate", "cooldownseconds"].includes(normalized)) return "high";
+    if (rawDomain === "skillLevels" && ["damagemultiplier", "procratebonus"].includes(normalized)) return "high";
+    if (rawDomain === "dropTableItems" && ["rate", "minquantity", "maxquantity"].includes(normalized)) return "high";
+    if (rawDomain === "enhancementLevels" && ["successrate", "goldcost"].includes(normalized)) return "high";
+    if (["grade", "bosstype", "tier", "sortorder", "enemyhp", "goldreward", "maxlevel", "tolevel", "isdefault"].includes(normalized)) return "medium";
+    if (["adminnote", "description"].includes(normalized)) return "low";
+    return "medium";
+  }
+
+  function renderAdminDraftRiskBadge(domain, key) {
+    const risk = getAdminDraftFieldRisk(domain, key);
+    const tone = risk === "high" ? "blocked" : (risk === "medium" ? "warn" : "good");
+    return `<span class="pill ${escapeHtml(tone)}">risk ${escapeHtml(risk)}</span>`;
   }
 
   function renderAdminDraftLockedFields(lockedFields) {
@@ -804,6 +932,18 @@
         </select>
       `;
     }
+    if (kind === "preset-select") {
+      const options = getAdminDraftSelectOptions(key, value);
+      return `
+        <select ${commonAttrs} data-admin-edit-draft-value-type="text" aria-label="${escapeHtml(field.label || key)} 프리셋 선택">
+          ${options.map((option) => {
+            const optionValue = option && option.value !== undefined && option.value !== null ? String(option.value) : "";
+            const optionLabel = option && option.label ? option.label : optionValue;
+            return `<option value="${escapeHtml(optionValue)}" ${optionValue === valueText ? "selected" : ""}>${escapeHtml(optionLabel)}</option>`;
+          }).join("")}
+        </select>
+      `;
+    }
     if (kind === "number") {
       return `<input type="number" inputmode="decimal" step="any" value="${escapeHtml(valueText)}" ${commonAttrs} data-admin-edit-draft-value-type="number" />`;
     }
@@ -830,7 +970,7 @@
         <label class="draft-field draft-field-${escapeHtml(kind)}">
           <span class="draft-field-heading">
             <span>${escapeHtml(label)}${renderFieldHelpBadge(field.key)}</span>
-            ${renderAdminDraftTypeBadge(kind)}
+            <span class="draft-field-badges">${renderAdminDraftTypeBadge(kind)}${renderAdminDraftRiskBadge(domain, field.key)}</span>
           </span>
           ${renderFieldHelpInline(field.key)}
           ${renderFieldValueHintInline(field.key, value)}
@@ -842,7 +982,7 @@
     return `
       <div class="detail-card edit-draft-card" data-admin-edit-draft data-admin-edit-draft-domain="${escapeHtml(domain || "")}" data-admin-edit-draft-id="${escapeHtml(detail.id || "")}">
         <div class="detail-title">관리자 편집 초안 <span class="pill warn">guarded apply</span><span class="pill good">typed inputs</span><span class="pill good">change log</span></div>
-        <div class="filter-help">allow-list 필드는 실제 DB 적용까지 가능합니다. 입력 실수를 줄이기 위해 boolean은 <strong>true/false select</strong>, number는 <strong>number input</strong>, description/admin_note는 <strong>textarea</strong>로 표시합니다.</div>
+        <div class="filter-help">allow-list 필드는 실제 DB 적용까지 가능합니다. 입력 실수를 줄이기 위해 boolean은 <strong>true/false select</strong>, enum 성격 필드는 <strong>preset select</strong>, number는 <strong>number input</strong>, description/admin_note는 <strong>textarea</strong>로 표시합니다.</div>
         <div class="filter-help">먼저 <strong>초안 검증</strong>으로 오류가 없는지 확인한 뒤, dev key와 확인 문구 <code>${escapeHtml(ADMIN_EDIT_APPLY_CONFIRM_TEXT)}</code>를 정확히 입력해야 적용됩니다. 적용 직전에는 편집 화면을 열었을 때의 기준값과 현재 DB 값이 같은지도 한 번 더 검사합니다.</div>
         <div class="filter-help">실제 적용 가능 필드: ${escapeHtml(getAdminEditAllowedFields(domain).join(", ") || "없음")}</div>
         <div class="edit-draft-grid">${rows}</div>
@@ -943,6 +1083,14 @@
         reload: true,
       };
     }
+    if (rawDomain === "itemTemplates" && ["itemtype", "equipslot"].includes(key)) {
+      return {
+        severity: "high",
+        title: "아이템 분류/장착 슬롯 변경",
+        body: `${change.label || change.key} 변경은 인벤토리 분류, 장착 위치, 드랍 표시, 향후 강화/필터 규칙에 영향을 줄 수 있습니다. 변경 후 신규 획득/장착/툴팁을 꼭 확인하세요.`,
+        reload: true,
+      };
+    }
     if (rawDomain === "itemTemplates" && ["name", "description", "grade"].includes(key)) {
       return {
         severity: "medium",
@@ -1002,6 +1150,14 @@
       };
     }
 
+    if (rawDomain === "skills" && key === "slotkey") {
+      return {
+        severity: "high",
+        title: "스킬 슬롯 배치 변경",
+        body: "slot_key 변경은 Q/W/E/R/T/F/D/M 또는 각성 슬롯 배치에 영향을 줍니다. 같은 슬롯이 중복되지 않는지, 게임 화면에서 스킬 버튼이 의도대로 보이는지 확인해야 합니다.",
+        reload: true,
+      };
+    }
     if (rawDomain === "skills" && ["procrate", "cooldownseconds"].includes(key)) {
       return {
         severity: "high",
@@ -2198,6 +2354,8 @@
     isAdminEditApplyAllowedField,
     getAdminEditAllowedFields,
     getAdminDraftFieldInputKind,
+    getAdminDraftSelectOptions,
+    getAdminDraftFieldRisk,
     getAdminDraftLockedReason,
     checkAdminReadOnlyPageReady,
   };
@@ -2227,6 +2385,8 @@
   window.listAdminFieldHelp = listAdminFieldHelp;
   window.getAdminFieldValueHint = getAdminFieldValueHint;
   window.getAdminDraftFieldInputKind = getAdminDraftFieldInputKind;
+  window.getAdminDraftSelectOptions = getAdminDraftSelectOptions;
+  window.getAdminDraftFieldRisk = getAdminDraftFieldRisk;
   window.getAdminDraftLockedReason = getAdminDraftLockedReason;
   window.getCurrentAdminPageUrl = getCurrentAdminPageUrl;
   window.copyCurrentAdminPageUrl = copyCurrentAdminPageUrl;

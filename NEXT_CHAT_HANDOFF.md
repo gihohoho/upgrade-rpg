@@ -68,11 +68,11 @@ local-admin-dev-key
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v133: admin edit input UI**
-- 최신 ZIP 이름: **rpg_v133_admin_edit_input_ui.zip**
+- 최신 안정 버전: **v134: admin safe selects**
+- 최신 ZIP 이름: **rpg_v134_admin_safe_selects.zip**
 
-v133은 관리자 편집 초안 입력 UI를 타입별로 개선한 버전입니다.
-백엔드 API, DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
+v134는 관리자 편집 초안에서 enum 성격 필드를 preset select로 고르게 하고, itemTemplates/skills 일부 안전 필드를 실제 적용 allow-list에 추가한 버전입니다.
+DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 DB reset/seed는 필요 없습니다.
 
 ## 현재까지 완료된 핵심 기능
@@ -114,6 +114,12 @@ DB reset/seed는 필요 없습니다.
   - number 필드: number input
   - description/admin_note: textarea
   - 읽기 전용/잠금 필드 카드 표시
+- v134에서 admin safe selects + allow-list 확장 완료.
+  - itemTemplates.item_type 실제 적용 가능
+  - itemTemplates.equip_slot 실제 적용 가능
+  - skills.slot_key 실제 적용 가능
+  - item_type/equip_slot/boss_type/slot_key preset select
+  - risk high/medium/low 배지
 
 ### runtime 반영
 

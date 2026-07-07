@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("admin.html", [
-  "v133 admin edit input UI",
+  "v134 admin safe selects",
   "data-admin-field-help",
   "필드 용어 도움말",
   "grade / 등급",
@@ -29,7 +29,7 @@ assertContains("admin.html", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v133.admin-edit-input-ui",
+  "v134.admin-safe-selects",
   "ADMIN_FIELD_HELP_DEFINITIONS",
   "getAdminFieldHelp",
   "listAdminFieldHelp",

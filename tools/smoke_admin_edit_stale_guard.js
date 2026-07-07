@@ -17,8 +17,8 @@ const servicePy = read("backend/app/services/admin_service.py");
 const checkPy = read("backend/scripts/check_admin_readonly_api.py");
 const adminHtml = read("admin.html");
 
-assert(adminJs.includes('v133.admin-edit-input-ui'), 'admin page version is v133 input UI');
-assert(adminHtml.includes('v133 admin edit input UI'), 'admin footer is v133 input UI');
+assert(adminJs.includes('v134.admin-safe-selects'), 'admin page version is v134 safe selects');
+assert(adminHtml.includes('v134 admin safe selects'), 'admin footer is v134 safe selects');
 assert(adminJs.includes('baseValues: values.originals'), 'admin preview/apply sends original base values');
 assert(adminJs.includes('stale guard'), 'admin UI explains stale guard');
 assert(adminJs.includes('payload.staleGuardEnabled'), 'admin UI renders stale guard state');

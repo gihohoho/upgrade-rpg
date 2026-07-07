@@ -60,7 +60,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v133.admin-edit-input-ui",
+  "v134.admin-safe-selects",
   "ADMIN_ROLLBACK_CONFIRM_TEXT",
   "ROLLBACK MASTER DATA EDIT",
   "openAdminChangeLogDetail",
@@ -78,7 +78,7 @@ assertContains("admin.html", [
   "Guarded Admin + API Verify",
   "data-admin-change-log-detail",
   "stackable / 겹치기 가능 여부",
-  "v133 admin edit input UI",
+  "v134 admin safe selects",
 ]);
 
 console.log("admin change log rollback smoke test passed");
