@@ -1,6 +1,6 @@
 # 새 채팅 시작용 프롬프트
 
-아래 내용을 그대로 새 채팅의 첫 메시지로 붙여넣고, 함께 `rpg_v138_admin_safe_apply_review.zip`을 업로드해서 이어서 진행해줘.
+아래 내용을 그대로 새 채팅의 첫 메시지로 붙여넣고, 함께 `rpg_v141_admin_relation_safe_edit.zip`을 업로드해서 이어서 진행해줘.
 
 ---
 
@@ -51,10 +51,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v138: admin safe apply review
+v141: admin relation safe edit
 
 최신 ZIP:
-rpg_v138_admin_safe_apply_review.zip
+rpg_v141_admin_relation_safe_edit.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -87,7 +87,7 @@ docs/NEXT_STEPS.md
 22. v135에서 마스터 데이터 카탈로그 페이지네이션 + 슬롯 이름 표시 완료.
 23. v138에서 관리자 적용 직전 비교 UI + high risk 추가 확인 완료.
 
-v138 세부 완료:
+v141 세부 완료:
 - 변경된 필드만 before/after 표시.
 - 위험도 순 정렬.
 - high risk 변경 시 HIGH RISK EDIT 추가 입력 필요.
@@ -141,3 +141,16 @@ v139 관리자 관계 필드 안전 편집 준비
 이 단계도 가능하면 DB reset/seed 없이 관리자/검증 로직 중심으로 진행해줘.
 
 업로드한 ZIP 기준으로 구조 확인 후, v139부터 이어서 진행해줘.
+
+
+추가 완료 상태:
+- v141 관계 필드 안전 편집 완료
+- itemTemplates.enhance_group_code는 enhancementGroups 목록 기반 relation select
+- dropTableItems.item_template_code는 itemTemplates 목록 기반 relation select
+- dropTables.owner_type은 boss/field select
+- 백엔드 preview/apply 공통으로 관계 대상 존재 여부를 검증
+- DB reset/seed 필요 없음
+
+다음 추천 단계:
+- 조합 관계 필드 안전 편집 준비
+- skillLevels.skill_code + level, enhancementLevels.group_code + from_level, characterSkills.character_code + skill_code처럼 유니크 조합이 있는 필드는 중복 검증을 먼저 붙인 뒤 여는 것이 안전함

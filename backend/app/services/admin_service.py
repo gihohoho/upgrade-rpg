@@ -49,20 +49,24 @@ class AdminService:
     MASTER_EDIT_APPLY_CONFIRM_TEXT = "APPLY MASTER DATA EDIT"
     MASTER_EDIT_ROLLBACK_CONFIRM_TEXT = "ROLLBACK MASTER DATA EDIT"
 
-    # 실제 DB에 적용 가능한 필드만 아주 좁게 열어둡니다.
-    # code / *_code / *_id / JSON / asset 필드는 연결 깨짐 위험이 있어서 다음 단계 전까지 잠급니다.
     MASTER_EDIT_ALLOWED_FIELDS: dict[str, set[str]] = {
-        "itemTemplates": {"name", "item_type", "description", "grade", "stackable", "equip_slot", "admin_note"},
+        "itemTemplates": {"name", "item_type", "description", "grade", "stackable", "equip_slot", "enhance_group_code", "admin_note"},
         "skills": {"slot_key", "name", "description", "proc_rate", "cooldown_seconds"},
         "skillLevels": {"damage_multiplier", "proc_rate_bonus"},
         "bosses": {"name", "tier", "boss_type", "hp", "description", "cooldown_seconds", "is_enabled"},
         "fieldZones": {"name", "sort_order", "enemy_hp", "gold_reward", "description", "is_enabled"},
         "characters": {"name", "description", "is_enabled"},
-        "dropTables": {"description", "is_enabled"},
-        "dropTableItems": {"rate", "min_quantity", "max_quantity"},
+        "dropTables": {"owner_type", "description", "is_enabled"},
+        "dropTableItems": {"item_template_code", "rate", "min_quantity", "max_quantity"},
         "enhancementGroups": {"name", "description", "max_level", "is_enabled"},
         "enhancementLevels": {"to_level", "success_rate", "gold_cost"},
         "characterSkills": {"sort_order", "is_default"},
+    }
+
+    MASTER_RELATION_EDIT_FIELDS: dict[str, set[str]] = {
+        "itemTemplates": {"enhance_group_code"},
+        "dropTables": {"owner_type"},
+        "dropTableItems": {"item_template_code"},
     }
 
     MASTER_CATALOG_DOMAINS: dict[str, dict[str, Any]] = {
@@ -233,7 +237,7 @@ class AdminService:
                 rejected_changes.append({"key": key, "reason": "unknown_field"})
                 continue
 
-            if self._master_edit_field_is_readonly(key):
+            if self._master_edit_field_is_readonly(domain, key):
                 rejected_changes.append({"key": key, "label": self._humanize_field_name(key), "reason": "read_only_field"})
                 continue
             if not self._master_edit_field_is_allowed(domain, key):
@@ -298,6 +302,18 @@ class AdminService:
                 })
                 continue
 
+            relation_issue = await self._validate_master_relation_edit_value(session, domain, key, normalized_after, row)
+            if relation_issue:
+                rejected_changes.append({
+                    "key": key,
+                    "label": self._humanize_field_name(key),
+                    "before": before_value,
+                    "after": raw_after,
+                    "reason": relation_issue,
+                })
+                continue
+
+            relation_info = await self._describe_master_relation_edit_value(session, domain, key, normalized_after)
             normalized_after = serialize_value(normalized_after)
             change = {
                 "key": key,
@@ -307,6 +323,8 @@ class AdminService:
                 "rawAfter": raw_after,
                 "type": self._master_edit_column_type(column),
             }
+            if relation_info:
+                change["relation"] = relation_info
             if before_value == normalized_after:
                 unchanged.append(change)
             else:
@@ -876,9 +894,10 @@ class AdminService:
         mapper = sa_inspect(row.__class__)
         return {column_attr.key: column_attr.columns[0] for column_attr in mapper.mapper.column_attrs}
 
-    @staticmethod
-    def _master_edit_field_is_readonly(key: str) -> bool:
+    def _master_edit_field_is_readonly(self, domain: str, key: str) -> bool:
         normalized = str(key or "").lower()
+        if self._master_relation_edit_field_is_open(domain, normalized):
+            return False
         return (
             normalized in {"id", "created_at", "updated_at", "code"}
             or normalized.endswith("_id")
@@ -889,6 +908,66 @@ class AdminService:
     def _master_edit_field_is_allowed(self, domain: str, key: str) -> bool:
         allowed = self.MASTER_EDIT_ALLOWED_FIELDS.get(domain) or set()
         return str(key or "") in allowed
+
+    def _master_relation_edit_field_is_open(self, domain: str, key: str) -> bool:
+        relation_fields = self.MASTER_RELATION_EDIT_FIELDS.get(str(domain or "")) or set()
+        return str(key or "") in relation_fields
+
+    async def _validate_master_relation_edit_value(self, session: AsyncSession, domain: str, key: str, value: Any, row: Any) -> str | None:
+        if not self._master_relation_edit_field_is_open(domain, key):
+            return None
+        value_text = "" if value is None else str(value).strip()
+        if domain == "itemTemplates" and key == "enhance_group_code":
+            if not value_text:
+                return None
+            exists = await self._exists_by_code(session, EnhancementGroup, value_text)
+            return None if exists else "relation_target_not_found_enhancement_group"
+        if domain == "dropTableItems" and key == "item_template_code":
+            if not value_text:
+                return "relation_target_required_item_template"
+            exists = await self._exists_by_code(session, ItemTemplate, value_text)
+            return None if exists else "relation_target_not_found_item_template"
+        if domain == "dropTables" and key == "owner_type":
+            if value_text not in {"boss", "field"}:
+                return "invalid_owner_type"
+            owner_code = str(getattr(row, "owner_code", "") or "").strip()
+            if not owner_code:
+                return "owner_code_missing"
+            model = Boss if value_text == "boss" else FieldZone
+            exists = await self._exists_by_code(session, model, owner_code)
+            return None if exists else "owner_code_not_found_for_owner_type"
+        return None
+
+    async def _describe_master_relation_edit_value(self, session: AsyncSession, domain: str, key: str, value: Any) -> dict[str, Any] | None:
+        if not self._master_relation_edit_field_is_open(domain, key):
+            return None
+        value_text = "" if value is None else str(value).strip()
+        if domain == "itemTemplates" and key == "enhance_group_code":
+            if not value_text:
+                return {"field": key, "targetDomain": "enhancementGroups", "targetCode": None, "targetLabel": "강화 그룹 없음"}
+            target = await self._fetch_code_name(session, EnhancementGroup, value_text)
+            return {"field": key, "targetDomain": "enhancementGroups", "targetCode": value_text, "targetLabel": target.get("name") if target else value_text}
+        if domain == "dropTableItems" and key == "item_template_code":
+            target = await self._fetch_code_name(session, ItemTemplate, value_text)
+            return {"field": key, "targetDomain": "itemTemplates", "targetCode": value_text, "targetLabel": target.get("name") if target else value_text}
+        if domain == "dropTables" and key == "owner_type":
+            return {"field": key, "targetDomain": "bosses" if value_text == "boss" else "fieldZones", "targetCode": value_text, "targetLabel": "보스" if value_text == "boss" else "필드"}
+        return None
+
+    async def _exists_by_code(self, session: AsyncSession, model: Any, code: str) -> bool:
+        if not code:
+            return False
+        result = await session.execute(select(func.count()).select_from(model).where(model.code == code))
+        return int(result.scalar_one() or 0) > 0
+
+    async def _fetch_code_name(self, session: AsyncSession, model: Any, code: str) -> dict[str, Any] | None:
+        if not code:
+            return None
+        result = await session.execute(select(model).where(model.code == code))
+        row = result.scalar_one_or_none()
+        if row is None:
+            return None
+        return {"code": getattr(row, "code", None), "name": getattr(row, "name", None)}
 
     def _normalize_master_edit_value(self, column: Any, raw_value: Any) -> tuple[Any, str | None]:
         column_type = column.type
@@ -1064,7 +1143,8 @@ class AdminService:
         session: AsyncSession,
         *,
         domain: str = "itemTemplates",
-        limit: int = 50,
+        limit: int = 20,
+        page: int = 1,
         query: str | None = None,
         enabled: str = "all",
         sort: str | None = None,
@@ -1084,7 +1164,12 @@ class AdminService:
                 "count": 0,
                 "total": 0,
                 "limit": 0,
-                "filters": {"domain": domain, "warnings": ["domain_invalid"]},
+                "page": 1,
+                "offset": 0,
+                "totalPages": 1,
+                "hasPrevPage": False,
+                "hasNextPage": False,
+                "filters": {"domain": domain, "page": 1, "limit": 0, "warnings": ["domain_invalid"]},
                 "columns": [],
                 "rows": [],
                 "rawJsonReturned": False,
@@ -1093,7 +1178,9 @@ class AdminService:
 
         model = config["model"]
         warnings: list[str] = []
-        safe_limit = max(1, min(int(limit or 50), 200))
+        safe_limit = max(1, min(int(limit or 20), 200))
+        safe_page = max(1, int(page or 1))
+        safe_offset = (safe_page - 1) * safe_limit
         safe_query = self._clean_filter_text(query)
         if safe_query and len(safe_query) > 80:
             safe_query = safe_query[:80]
@@ -1113,9 +1200,10 @@ class AdminService:
         stmt = select(model)
         if where_clauses:
             stmt = stmt.where(*where_clauses)
-        stmt = stmt.order_by(*self._master_catalog_order_by(model, safe_sort)).limit(safe_limit)
+        stmt = stmt.order_by(*self._master_catalog_order_by(model, safe_sort)).offset(safe_offset).limit(safe_limit)
         result = await session.execute(stmt)
         rows = [self._serialize_master_catalog_row(domain, row) for row in result.scalars().all()]
+        total_pages = max(1, (total_filtered + safe_limit - 1) // safe_limit)
 
         return {
             "status": "loaded",
@@ -1124,16 +1212,23 @@ class AdminService:
             "domainLabel": config["label"],
             "description": config.get("description"),
             "limit": safe_limit,
+            "page": safe_page,
+            "offset": safe_offset,
             "count": len(rows),
             "total": total_filtered,
+            "totalPages": total_pages,
+            "hasPrevPage": safe_page > 1,
+            "hasNextPage": safe_page < total_pages,
             "totalAll": total_all,
             "filters": {
                 "domain": domain,
                 "query": safe_query,
                 "enabled": safe_enabled,
                 "sort": safe_sort,
+                "page": safe_page,
+                "limit": safe_limit,
                 "warnings": warnings,
-                "hasActiveFilters": bool(safe_query or safe_enabled != "all"),
+                "hasActiveFilters": bool(safe_query or safe_enabled != "all" or safe_page > 1),
             },
             "columns": self._master_catalog_columns(domain),
             "rows": rows,
@@ -1221,6 +1316,7 @@ class AdminService:
         scalar_fields, asset_fields = self._serialize_master_detail_scalar_fields(row)
         json_fields = self._serialize_master_detail_json_fields(row)
         relation_hints = await self._build_master_detail_relation_hints(session, domain, row)
+        relation_edit_options = await self._build_master_relation_edit_options(session, domain, row)
         title = getattr(row, "name", None) or getattr(row, "code", None) or f"#{safe_row_id}"
         asset_hidden_count = sum(int(field.get("hiddenAssetCount") or 0) for field in json_fields)
         asset_hidden_count += sum(1 for field in asset_fields if field.get("hidden"))
@@ -1242,6 +1338,7 @@ class AdminService:
             "jsonFields": json_fields,
             "assetFields": asset_fields,
             "relationHints": relation_hints,
+            "relationEditOptions": relation_edit_options,
             "rawJsonReturned": False,
             "sanitizedJsonReturned": True,
             "assetsReturned": False,
@@ -1968,6 +2065,74 @@ class AdminService:
             hints.append({"label": "캐릭터", "value": getattr(row, "character_code", None)})
             hints.append({"label": "스킬", "value": getattr(row, "skill_code", None)})
         return hints
+
+    async def _build_master_relation_edit_options(self, session: AsyncSession, domain: str, row: Any) -> list[dict[str, Any]]:
+        if domain == "itemTemplates":
+            current = getattr(row, "enhance_group_code", None)
+            options = [{"value": "", "label": "없음 · 강화 그룹 연결 안 함", "current": not bool(current)}]
+            options.extend(await self._fetch_relation_code_options(session, EnhancementGroup, current_code=current, limit=200))
+            return [{
+                "field": "enhance_group_code",
+                "kind": "relation-select",
+                "targetDomain": "enhancementGroups",
+                "targetLabel": "강화 그룹",
+                "nullable": True,
+                "allowApply": True,
+                "options": options,
+                "note": "선택한 강화 그룹 code가 실제 enhancementGroups에 있을 때만 적용됩니다.",
+            }]
+        if domain == "dropTableItems":
+            current = getattr(row, "item_template_code", None)
+            return [{
+                "field": "item_template_code",
+                "kind": "relation-select",
+                "targetDomain": "itemTemplates",
+                "targetLabel": "아이템 템플릿",
+                "nullable": False,
+                "allowApply": True,
+                "options": await self._fetch_relation_code_options(session, ItemTemplate, current_code=current, limit=300),
+                "note": "선택한 itemTemplates.code가 실제 존재할 때만 드랍 아이템 연결을 변경합니다.",
+            }]
+        if domain == "dropTables":
+            return [{
+                "field": "owner_type",
+                "kind": "relation-select",
+                "targetDomain": "bosses/fieldZones",
+                "targetLabel": "드랍 테이블 소유자 종류",
+                "nullable": False,
+                "allowApply": True,
+                "options": [
+                    {"value": "boss", "label": "boss · 보스 드랍 테이블", "current": getattr(row, "owner_type", None) == "boss"},
+                    {"value": "field", "label": "field · 필드 드랍 테이블", "current": getattr(row, "owner_type", None) == "field"},
+                ],
+                "note": "owner_code가 선택한 종류의 실제 코드에 존재할 때만 적용됩니다. owner_code 자체는 아직 잠금입니다.",
+            }]
+        return []
+
+    async def _fetch_relation_code_options(self, session: AsyncSession, model: Any, *, current_code: Any = None, limit: int = 200) -> list[dict[str, Any]]:
+        safe_limit = max(1, min(int(limit or 200), 500))
+        current_text = "" if current_code is None else str(current_code)
+        result = await session.execute(select(model).order_by(model.code.asc()).limit(safe_limit))
+        rows = result.scalars().all()
+        options = [self._serialize_relation_option(row, current_text) for row in rows]
+        if current_text and not any(str(option.get("value")) == current_text for option in options):
+            current = await self._fetch_code_name(session, model, current_text)
+            options.insert(0, {
+                "value": current_text,
+                "label": f"{current_text} · {(current or {}).get('name') or '현재 DB 값'}",
+                "current": True,
+            })
+        return options
+
+    @staticmethod
+    def _serialize_relation_option(row: Any, current_code: str) -> dict[str, Any]:
+        code = str(getattr(row, "code", "") or "")
+        name = getattr(row, "name", None)
+        return {
+            "value": code,
+            "label": f"{code} · {name}" if name else code,
+            "current": bool(current_code and code == current_code),
+        }
 
     async def _count_where(self, session: AsyncSession, model: Any, *where_clauses: Any) -> int:
         stmt = select(func.count()).select_from(model)

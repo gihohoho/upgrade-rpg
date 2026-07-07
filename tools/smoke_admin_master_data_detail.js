@@ -43,7 +43,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v138.admin-safe-apply-review",
+  "v141.admin-relation-safe-edit",
   "renderMasterDetail",
   "openAdminMasterDataDetail",
   "fetchAdminMasterDataDetail",
@@ -60,7 +60,7 @@ assertContains("admin.html", [
   "data-admin-master-detail-meta",
   ".json-preview",
   ".detail-grid",
-  "v138 admin safe apply review",
+  "v141 admin relation safe edit",
 ]);
 
 assertContains("backend/scripts/check_admin_readonly_api.py", [

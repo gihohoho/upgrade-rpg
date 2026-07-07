@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v138.admin-safe-apply-review";
+  const VERSION = "v141.admin-relation-safe-edit";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -16,14 +16,14 @@
   const ADMIN_EDIT_APPLY_TIMEOUT_MS = 5000;
   const ADMIN_WRITE_DEV_KEY_EXAMPLE = "local-admin-dev-key";
   const ADMIN_EDIT_ALLOWED_FIELDS = {
-    itemTemplates: ["name", "item_type", "grade", "description", "stackable", "equip_slot", "admin_note"],
+    itemTemplates: ["name", "item_type", "grade", "description", "stackable", "equip_slot", "enhance_group_code", "admin_note"],
     skills: ["slot_key", "name", "description", "proc_rate", "cooldown_seconds"],
     skillLevels: ["damage_multiplier", "proc_rate_bonus"],
     bosses: ["name", "tier", "boss_type", "hp", "description", "cooldown_seconds", "is_enabled"],
     fieldZones: ["name", "sort_order", "enemy_hp", "gold_reward", "description", "is_enabled"],
     characters: ["name", "description", "is_enabled"],
-    dropTables: ["description", "is_enabled"],
-    dropTableItems: ["rate", "min_quantity", "max_quantity"],
+    dropTables: ["owner_type", "description", "is_enabled"],
+    dropTableItems: ["item_template_code", "rate", "min_quantity", "max_quantity"],
     enhancementGroups: ["name", "description", "max_level", "is_enabled"],
     enhancementLevels: ["to_level", "success_rate", "gold_cost"],
     characterSkills: ["sort_order", "is_default"],
@@ -100,6 +100,10 @@
     boss_type: [
       { value: "normal", label: "normal · 일반 보스" },
       { value: "special", label: "special · 특수 보스" },
+    ],
+    owner_type: [
+      { value: "boss", label: "boss · 보스 드랍 테이블" },
+      { value: "field", label: "field · 필드 드랍 테이블" },
     ],
     slot_key: [
       { value: "Q", label: "Q · 기본 1번 스킬" },
@@ -867,8 +871,23 @@
 
 
 
-  function fieldKeyLooksReadOnly(key) {
+  function getAdminRelationEditOptionDefinitions(domain) {
+    const detail = currentMasterDetailPayload && currentMasterDetailPayload.domain === domain ? currentMasterDetailPayload : {};
+    return Array.isArray(detail.relationEditOptions) ? detail.relationEditOptions : [];
+  }
+
+  function getAdminRelationEditOptionDefinition(domain, key) {
+    const normalized = normalizeAdminDraftFieldKey(key);
+    return getAdminRelationEditOptionDefinitions(domain).find((definition) => normalizeAdminDraftFieldKey(definition && definition.field) === normalized) || null;
+  }
+
+  function isAdminRelationEditField(domain, key) {
+    return !!getAdminRelationEditOptionDefinition(domain, key);
+  }
+
+  function fieldKeyLooksReadOnly(domain, key) {
     const normalized = String(key || "").toLowerCase();
+    if (isAdminRelationEditField(domain, normalized)) return false;
     return normalized === "id" || normalized === "code" || normalized.endsWith("_id") || normalized.endsWith("_code") || normalized.endsWith("_json") || normalized === "created_at" || normalized === "updated_at" || normalized === "createdat" || normalized === "updatedat";
   }
 
@@ -890,22 +909,25 @@
     return ADMIN_EQUIP_SLOT_PRESET_LABELS[key] || key || "장착 슬롯 없음";
   }
 
-  function getAdminDraftSelectOptions(key, value) {
+  function getAdminDraftSelectOptions(key, value, domain) {
     const normalized = normalizeAdminDraftFieldKey(key);
-    const baseOptions = (ADMIN_DRAFT_SELECT_FIELD_OPTIONS[normalized] || []).slice();
+    const relationDefinition = getAdminRelationEditOptionDefinition(domain, normalized);
+    const relationOptions = relationDefinition && Array.isArray(relationDefinition.options) ? relationDefinition.options : null;
+    const baseOptions = relationOptions ? relationOptions.slice() : (ADMIN_DRAFT_SELECT_FIELD_OPTIONS[normalized] || []).slice();
     const valueText = value === null || value === undefined ? "" : String(value);
     if (valueText && !baseOptions.some((option) => String(option.value) === valueText)) {
       const currentLabel = normalized === "equip_slot" ? `${valueText} · ${getAdminEquipSlotDisplayName(valueText)} · 현재 DB 값` : `${valueText} · 현재 DB 값`;
-      baseOptions.unshift({ value: valueText, label: currentLabel });
+      baseOptions.unshift({ value: valueText, label: currentLabel, current: true });
     }
     return baseOptions;
   }
 
-  function getAdminDraftFieldInputKind(field) {
+  function getAdminDraftFieldInputKind(field, domain) {
     const key = normalizeAdminDraftFieldKey(field && field.key);
     const value = field ? field.value : null;
     const valueText = value === null || value === undefined ? "" : String(value);
     const isLongText = valueText.length > 90 || valueText.includes("\n");
+    if (isAdminRelationEditField(domain, key)) return "relation-select";
     if (ADMIN_DRAFT_SELECT_FIELD_OPTIONS[key]) return "preset-select";
     if (ADMIN_DRAFT_BOOLEAN_FIELDS.has(key) || typeof value === "boolean") return "boolean-select";
     if (ADMIN_DRAFT_NUMBER_FIELDS.has(key) || typeof value === "number") return "number";
@@ -916,6 +938,7 @@
   function getAdminDraftFieldTypeLabel(kind) {
     if (kind === "boolean-select") return "true/false select";
     if (kind === "preset-select") return "preset select";
+    if (kind === "relation-select") return "relation select";
     if (kind === "number") return "number input";
     if (kind === "textarea") return "textarea";
     return "text input";
@@ -932,20 +955,20 @@
 
   function renderAdminDraftTypeBadge(kind) {
     const label = getAdminDraftFieldTypeLabel(kind);
-    const tone = kind === "boolean-select" || kind === "preset-select" ? "good" : (kind === "number" ? "warn" : "");
+    const tone = kind === "boolean-select" || kind === "preset-select" ? "good" : (kind === "relation-select" || kind === "number" ? "warn" : "");
     return `<span class="pill ${escapeHtml(tone)}">${escapeHtml(label)}</span>`;
   }
 
   function getAdminDraftFieldRisk(domain, key) {
     const rawDomain = String(domain || "");
     const normalized = normalizeAdminDraftFieldKey(key).replace(/_/g, "");
-    if (rawDomain === "itemTemplates" && ["stackable", "itemtype", "equipslot"].includes(normalized)) return "high";
+    if (rawDomain === "itemTemplates" && ["stackable", "itemtype", "equipslot", "enhancegroupcode"].includes(normalized)) return "high";
     if (rawDomain === "bosses" && ["hp", "isenabled"].includes(normalized)) return "high";
     if (rawDomain === "skills" && ["slotkey", "procrate", "cooldownseconds"].includes(normalized)) return "high";
     if (rawDomain === "skillLevels" && ["damagemultiplier", "procratebonus"].includes(normalized)) return "high";
-    if (rawDomain === "dropTableItems" && ["rate", "minquantity", "maxquantity"].includes(normalized)) return "high";
+    if (rawDomain === "dropTableItems" && ["itemtemplatecode", "rate", "minquantity", "maxquantity"].includes(normalized)) return "high";
     if (rawDomain === "enhancementLevels" && ["successrate", "goldcost"].includes(normalized)) return "high";
-    if (["grade", "bosstype", "tier", "sortorder", "enemyhp", "goldreward", "maxlevel", "tolevel", "isdefault"].includes(normalized)) return "medium";
+    if (["grade", "bosstype", "ownertype", "tier", "sortorder", "enemyhp", "goldreward", "maxlevel", "tolevel", "isdefault"].includes(normalized)) return "medium";
     if (["adminnote", "description"].includes(normalized)) return "low";
     return "medium";
   }
@@ -1001,7 +1024,7 @@
     }
   }
 
-  function renderAdminDraftControl(field, kind) {
+  function renderAdminDraftControl(field, kind, domain) {
     const value = field ? field.value : null;
     const valueText = value === null || value === undefined ? "" : String(value);
     const original = makeDraftOriginalValue(value);
@@ -1016,10 +1039,10 @@
         </select>
       `;
     }
-    if (kind === "preset-select") {
-      const options = getAdminDraftSelectOptions(key, value);
+    if (kind === "preset-select" || kind === "relation-select") {
+      const options = getAdminDraftSelectOptions(key, value, domain);
       return `
-        <select ${commonAttrs} data-admin-edit-draft-value-type="text" aria-label="${escapeHtml(field.label || key)} 프리셋 선택">
+        <select ${commonAttrs} data-admin-edit-draft-value-type="text" aria-label="${escapeHtml(field.label || key)} 선택">
           ${options.map((option) => {
             const optionValue = option && option.value !== undefined && option.value !== null ? String(option.value) : "";
             const optionLabel = option && option.label ? option.label : optionValue;
@@ -1038,17 +1061,24 @@
     return `<input type="text" value="${escapeHtml(valueText)}" ${commonAttrs} data-admin-edit-draft-value-type="text" />`;
   }
 
+  function renderAdminRelationEditOptionsNote(domain) {
+    const definitions = getAdminRelationEditOptionDefinitions(domain).filter((definition) => definition && definition.allowApply);
+    if (!definitions.length) return "";
+    const labels = definitions.map((definition) => `${definition.field} → ${definition.targetLabel || definition.targetDomain || "대상"}`).join(", ");
+    return `<div class="relation-edit-note"><span class="pill warn">relation select</span> ${escapeHtml(labels)}<br><span>${escapeHtml("관계 필드는 직접 텍스트 입력이 아니라 실제 존재하는 대상 목록에서 선택하고, 백엔드가 적용 직전에 대상 존재 여부를 다시 검사합니다.")}</span></div>`;
+  }
+
   function renderMasterEditDraft(detail, fields) {
     const safeFields = Array.isArray(fields) ? fields : [];
     const domain = detail && detail.domain ? detail.domain : DEFAULT_MASTER_DOMAIN;
-    const candidateFields = safeFields.filter((field) => !fieldKeyLooksReadOnly(field.key));
+    const candidateFields = safeFields.filter((field) => !fieldKeyLooksReadOnly(domain, field.key));
     const editableCandidateFields = candidateFields.filter((field) => isAdminEditApplyAllowedField(domain, field.key));
     const editableFields = editableCandidateFields.slice(0, 14);
     const lockedFields = candidateFields.filter((field) => !isAdminEditApplyAllowedField(domain, field.key));
     const editableOverflowCount = Math.max(0, editableCandidateFields.length - editableFields.length);
     const rows = editableFields.length ? editableFields.map((field) => {
       const value = field.value;
-      const kind = getAdminDraftFieldInputKind(field);
+      const kind = getAdminDraftFieldInputKind(field, domain);
       const label = field.label || field.key;
       return `
         <label class="draft-field draft-field-${escapeHtml(kind)}">
@@ -1058,7 +1088,7 @@
           </span>
           ${renderFieldHelpInline(field.key)}
           ${renderFieldValueHintInline(field.key, value)}
-          ${renderAdminDraftControl(field, kind)}
+          ${renderAdminDraftControl(field, kind, domain)}
         </label>
       `;
     }).join("") : `<div class="empty">이 도메인에서 실제 적용까지 열어둔 일반 필드가 없습니다.</div>`;
@@ -1069,6 +1099,7 @@
         <div class="filter-help">allow-list 필드는 실제 DB 적용까지 가능합니다. 입력 실수를 줄이기 위해 boolean은 <strong>true/false select</strong>, enum 성격 필드는 <strong>preset select</strong>, number는 <strong>number input</strong>, description/admin_note는 <strong>textarea</strong>로 표시합니다.</div>
         <div class="filter-help">먼저 <strong>초안 검증</strong>으로 오류가 없는지 확인한 뒤, dev key와 확인 문구 <code>${escapeHtml(ADMIN_EDIT_APPLY_CONFIRM_TEXT)}</code>를 정확히 입력해야 적용됩니다. 적용 직전에는 편집 화면을 열었을 때의 기준값과 현재 DB 값이 같은지도 한 번 더 검사합니다.</div>
         <div class="filter-help">실제 적용 가능 필드: ${escapeHtml(getAdminEditAllowedFields(domain).join(", ") || "없음")}</div>
+        ${renderAdminRelationEditOptionsNote(domain)}
         <div class="edit-draft-grid">${rows}</div>
         ${editableOverflowCount ? `<div class="filter-help">표시 제한으로 실제 적용 가능 필드 ${escapeHtml(formatValue(editableOverflowCount))}개는 편집 초안에서 제외했습니다.</div>` : ""}
         ${renderAdminDraftLockedFields(lockedFields)}
@@ -1271,6 +1302,14 @@
         reload: true,
       };
     }
+    if (rawDomain === "itemTemplates" && key === "enhancegroupcode") {
+      return {
+        severity: "high",
+        title: "아이템 강화 그룹 연결 변경",
+        body: `enhance_group_code ${formatValue(before)} → ${formatValue(after)} 변경은 이 아이템이 사용하는 강화 확률/비용/결과 단계에 직접 영향을 줍니다. 적용 전 연결 항목에서 강화 그룹과 단계를 확인하세요.`,
+        reload: true,
+      };
+    }
     if (rawDomain === "itemTemplates" && ["name", "description", "grade"].includes(key)) {
       return {
         severity: "medium",
@@ -1354,11 +1393,27 @@
         reload: true,
       };
     }
+    if (rawDomain === "dropTableItems" && key === "itemtemplatecode") {
+      return {
+        severity: "high",
+        title: "드랍 아이템 연결 변경",
+        body: `item_template_code ${formatValue(before)} → ${formatValue(after)} 변경은 해당 드랍 테이블에서 실제로 떨어지는 아이템을 바꿉니다. 확률/수량과 함께 게임 드랍 결과를 꼭 확인하세요.`,
+        reload: true,
+      };
+    }
     if (rawDomain === "dropTableItems" && ["rate", "minquantity", "maxquantity"].includes(key)) {
       return {
         severity: "high",
         title: "드랍 확률/수량 변경",
         body: `${change.label || change.key} 변경은 보스/필드 드랍 결과에 직접 영향을 줍니다. 너무 높은 rate나 수량은 밸런스가 크게 바뀔 수 있습니다.`,
+        reload: true,
+      };
+    }
+    if (rawDomain === "dropTables" && key === "ownertype") {
+      return {
+        severity: "medium",
+        title: "드랍 테이블 대상 종류 변경",
+        body: "owner_type 변경은 같은 owner_code를 보스 코드로 볼지 필드 코드로 볼지 바꿉니다. 백엔드가 owner_code 존재 여부를 다시 검사하지만, 적용 후 실제 연결 항목을 확인하세요.",
         reload: true,
       };
     }
@@ -2569,6 +2624,10 @@
     getAdminEditAllowedFields,
     getAdminDraftFieldInputKind,
     getAdminDraftSelectOptions,
+    getAdminRelationEditOptionDefinitions,
+    getAdminRelationEditOptionDefinition,
+    isAdminRelationEditField,
+    renderAdminRelationEditOptionsNote,
     getAdminEquipSlotDisplayName,
     getAdminDraftFieldRisk,
     getAdminDraftLockedReason,
@@ -2601,6 +2660,9 @@
   window.getAdminFieldValueHint = getAdminFieldValueHint;
   window.getAdminDraftFieldInputKind = getAdminDraftFieldInputKind;
   window.getAdminDraftSelectOptions = getAdminDraftSelectOptions;
+  window.getAdminRelationEditOptionDefinitions = getAdminRelationEditOptionDefinitions;
+  window.getAdminRelationEditOptionDefinition = getAdminRelationEditOptionDefinition;
+  window.isAdminRelationEditField = isAdminRelationEditField;
   window.getAdminEquipSlotDisplayName = getAdminEquipSlotDisplayName;
   window.markSelectedMasterCatalogRow = markSelectedMasterCatalogRow;
   window.getAdminDraftFieldRisk = getAdminDraftFieldRisk;

@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v138.admin-safe-apply-review",
+  "v141.admin-relation-safe-edit",
   "ADMIN_DRAFT_SELECT_FIELD_OPTIONS",
   "preset-select",
   "getAdminDraftSelectOptions",
@@ -36,13 +36,13 @@ assertContains("src/api/admin-page-readonly.js", [
 ]);
 
 assertContains("backend/app/services/admin_service.py", [
-  '"itemTemplates": {"name", "item_type", "description", "grade", "stackable", "equip_slot", "admin_note"}',
+  '"itemTemplates": {"name", "item_type", "description", "grade", "stackable", "equip_slot", "enhance_group_code", "admin_note"}',
   '"skills": {"slot_key", "name", "description", "proc_rate", "cooldown_seconds"}',
   "MASTER_EDIT_ALLOWED_FIELDS",
 ]);
 
 assertContains("admin.html", [
-  "v138 admin safe apply review",
+  "v141 admin relation safe edit",
   ".draft-field-badges",
 ]);
 

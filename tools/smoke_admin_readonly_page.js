@@ -41,7 +41,7 @@ assertContains("admin.html", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v138.admin-safe-apply-review",
+  "v141.admin-relation-safe-edit",
   "fetchAdminReadOnlyPageData",
   "refreshAdminReadOnlyPage",
   "checkAdminReadOnlyPageReady",

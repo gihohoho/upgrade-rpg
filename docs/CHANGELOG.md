@@ -1,5 +1,15 @@
 # Changelog
 
+## v141 - Admin Relation Safe Edit
+
+- 관리자 편집 초안에 relation select 타입을 추가했습니다.
+- `itemTemplates.enhance_group_code`를 enhancementGroups 목록 기반 select로 편집할 수 있게 했습니다.
+- `dropTableItems.item_template_code`를 itemTemplates 목록 기반 select로 편집할 수 있게 했습니다.
+- `dropTables.owner_type`을 boss/field select로 편집할 수 있게 했습니다.
+- 백엔드 preview/apply 공통 검증에서 관계 대상 존재 여부를 다시 검사합니다.
+- 관계 필드 변경은 high risk/medium risk 안내와 기존 확인 문구, stale guard, change log를 그대로 거칩니다.
+- DB reset / seed는 필요 없습니다.
+
 ## v138 - Admin Safe Apply Review
 
 - 관리자 편집 초안 아래에 적용 직전 비교 UI를 추가했습니다.

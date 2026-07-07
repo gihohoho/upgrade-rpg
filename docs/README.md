@@ -31,6 +31,7 @@
 - `ADMIN_POST_EDIT_API_VERIFY.md`
 - `ADMIN_VALUE_HINTS.md`
 - `ADMIN_SAFE_SELECTS_ALLOWLIST.md`
+- `ADMIN_RELATION_SAFE_EDIT.md`
 - `ADMIN_REQUIREMENTS_V1.md`
 - `BACKEND_ARCHITECTURE.md`
 - `BACKEND_API_ROUTES_DRAFT.md`
@@ -58,3 +59,4 @@ docs/archive/stage-notes/
 - `ADMIN_MASTER_CATALOG_PAGINATION.md` - 관리자 마스터 데이터 카탈로그 페이지네이션과 인게임 슬롯 이름 표시
 - `ADMIN_SAFE_APPLY_REVIEW.md` - 관리자 적용 직전 before/after 비교와 high risk 추가 확인
 - `ADMIN_CATALOG_SELECTION_HELPER.md` - 마스터 데이터 카탈로그 현재 선택 행 표시
+- `ADMIN_RELATION_SAFE_EDIT.md` - 관계 필드 select 기반 안전 편집

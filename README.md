@@ -21,9 +21,9 @@ docs/README.md
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v138: admin safe apply review**
+- 최신 안정 버전: **v141: admin relation safe edit**
 
-v138은 관리자 마스터 데이터 편집에서 적용 직전 before/after 비교 UI를 추가하고, high risk 변경에는 `HIGH RISK EDIT` 추가 확인 문구를 요구하는 버전입니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
+v141은 v138의 적용 직전 before/after 비교와 high risk 추가 확인 위에, 일부 관계 필드를 실제 DB 대상 목록 기반 relation select로 안전하게 편집할 수 있게 만든 버전입니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
 
 DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 

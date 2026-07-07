@@ -68,10 +68,10 @@ local-admin-dev-key
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v138: admin safe apply review**
-- 최신 ZIP 이름: **rpg_v138_admin_safe_apply_review.zip**
+- 최신 안정 버전: **v141: admin relation safe edit**
+- 최신 ZIP 이름: **rpg_v141_admin_relation_safe_edit.zip**
 
-v138은 관리자 마스터 데이터 편집에서 적용 직전 before/after 비교 UI를 추가하고, high risk 변경에는 `HIGH RISK EDIT` 추가 확인 문구를 요구하는 버전입니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
+v141은 v138의 적용 직전 before/after 비교와 high risk 추가 확인 위에, 일부 관계 필드를 실제 DB 대상 목록 기반 relation select로 안전하게 편집할 수 있게 만든 버전입니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
 DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 DB reset/seed는 필요 없습니다.
 
@@ -126,6 +126,11 @@ DB reset/seed는 필요 없습니다.
   - 위험도 순 정렬
   - high risk 변경 시 HIGH RISK EDIT 추가 입력 필요
   - 카탈로그 현재 선택 행 강조
+- v141에서 관리자 관계 필드 안전 편집 완료.
+  - itemTemplates.enhance_group_code relation select
+  - dropTableItems.item_template_code relation select
+  - dropTables.owner_type boss/field select
+  - 백엔드 preview/apply 공통 관계 대상 존재 검증
 
 ### runtime 반영
 
@@ -206,10 +211,8 @@ getAdminDraftFieldInputKind({ key: "stackable", value: true });
 
 가장 안전한 다음 단계 후보:
 
-1. **관리자 변경 전후 비교 UI 강화**
-   - 실제 적용 전에 “바뀌는 필드만” 더 눈에 잘 보이게 표시.
-   - 위험도 높은 변경은 상단에 한 번 더 강조.
-   - item_type / equip_slot / slot_key 변경 시 별도 경고 문구 표시.
+1. **조합 관계 필드 안전 편집 준비**
+   - skillLevels.skill_code + level, enhancementLevels.group_code + from_level 같은 유니크 조합 필드는 조합 중복 검증을 붙인 뒤 열어야 합니다.
 
 2. **관리자 allow-list 추가 확장 검토**
    - dropTables.owner_type, skillLevels.level, enhancementLevels.from_level 같은 관계성 필드는 조심스럽게 검토.

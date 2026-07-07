@@ -1,32 +1,37 @@
 # Next Steps
 
-## 1순위 추천: 관리자 allow-list 추가 확장 후보 검토
+## 1순위 추천: 조합 관계 필드 안전 편집 준비
 
-v138에서 적용 직전 비교 UI와 high risk 추가 확인을 넣었기 때문에, 다음에는 조금 더 과감하게 실제 수정 가능한 필드를 늘릴 수 있습니다.
+v141에서 단일 대상 관계 select와 백엔드 존재 검증을 붙였으므로, 다음에는 조합 관계 필드를 열기 전에 더 강한 검증이 필요합니다.
 
 우선 검토 후보:
 
-- `dropTables.owner_type`
-- `dropTables.owner_code`
-- `dropTableItems.item_template_code`
-- `itemTemplates.enhance_group_code`
+- `dropTableItems.drop_table_code`
+- `skillLevels.skill_code`
 - `skillLevels.level`
+- `enhancementLevels.group_code`
 - `enhancementLevels.from_level`
+- `characterSkills.character_code`
+- `characterSkills.skill_code`
 
-단, 위 필드는 대부분 관계/연결 필드라 잘못 바꾸면 드랍, 강화, 스킬 레벨 연결이 깨질 수 있습니다. 그래서 바로 전부 열기보다는 select 후보를 만들고, 관계 대상이 실제 존재하는지 백엔드 검증을 붙인 뒤 여는 편이 안전합니다.
+주의점:
 
-DB reset/seed는 필요 없을 가능성이 높지만, 관계 검증 API를 추가하면 백엔드 smoke를 같이 늘리는 것이 좋습니다.
+- `skillLevels.skill_code + level`은 유니크 조합입니다.
+- `enhancementLevels.group_code + from_level`은 유니크 조합입니다.
+- `characterSkills.character_code + skill_code`는 유니크 조합입니다.
+- 그래서 둘 중 하나만 바꾸더라도 변경 후 조합이 이미 존재하는지 백엔드에서 검사해야 합니다.
 
-## 2순위: 관리자 변경 전 영향 시뮬레이션 강화
+DB reset/seed는 필요 없을 가능성이 높습니다.
 
-현재는 영향 안내와 before/after 비교까지 있습니다. 다음에는 변경하려는 값이 실제로 연결된 대상에 어떤 영향을 주는지 더 구체적으로 보여줄 수 있습니다.
+## 2순위: 관계 변경 영향 시뮬레이션 강화
+
+현재는 relation select와 존재 검증까지 들어갔습니다. 다음에는 변경하려는 연결값이 실제로 어떤 대상에 영향을 주는지 더 구체적으로 보여줄 수 있습니다.
 
 예시:
 
-- 특정 장비의 `equip_slot` 변경 전 연결 강화 그룹 표시
-- 특정 드랍 아이템의 드랍 테이블/소유자 표시
-- 특정 스킬의 characterSkills 연결 표시
-- 특정 강화 레벨의 그룹/이전 단계/다음 단계 표시
+- 아이템의 강화 그룹 변경 전/후 강화 단계 수 표시
+- 드랍 아이템 변경 전/후 아이템 이름과 장착 슬롯 표시
+- 드랍 테이블 owner_type 변경 전/후 연결 대상 표시
 
 ## 3순위: 정식 인증/권한 설계 준비
 

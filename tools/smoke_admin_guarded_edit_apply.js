@@ -64,7 +64,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v138.admin-safe-apply-review",
+  "v141.admin-relation-safe-edit",
   "ADMIN_EDIT_APPLY_CONFIRM_TEXT",
   "ADMIN_EDIT_ALLOWED_FIELDS",
   "isAdminEditApplyAllowedField",
@@ -80,7 +80,7 @@ assertContains("admin.html", [
   "Guarded Admin + API Verify",
   "data-admin-change-log-table",
   "data-admin-action=\"refresh-admin-change-logs\"",
-  "v138 admin safe apply review",
+  "v141 admin relation safe edit",
   "allow-list 필드",
 ]);
 

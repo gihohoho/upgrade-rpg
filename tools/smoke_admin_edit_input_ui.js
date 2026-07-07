@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v138.admin-safe-apply-review",
+  "v141.admin-relation-safe-edit",
   "ADMIN_DRAFT_BOOLEAN_FIELDS",
   "ADMIN_DRAFT_NUMBER_FIELDS",
   "ADMIN_DRAFT_TEXTAREA_FIELDS",
@@ -33,7 +33,7 @@ assertContains("src/api/admin-page-readonly.js", [
 ]);
 
 assertContains("admin.html", [
-  "v138 admin safe apply review",
+  "v141 admin relation safe edit",
   ".draft-field select",
   ".draft-field-heading",
   ".locked-field-panel",
