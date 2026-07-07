@@ -45,7 +45,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v144.admin-combo-relation-guard",
+  "v147.admin-owner-code-relation-tools",
   "renderMasterRelations",
   "openAdminMasterDataRelations",
   "fetchAdminMasterDataRelations",
@@ -60,7 +60,7 @@ assertContains("admin.html", [
   "선택한 마스터 데이터 상세",
   "data-admin-master-detail",
   ".relation-table-wrap",
-  "v144 admin combo relation guard",
+  "v147 admin owner code relation tools",
 ]);
 
 assertContains("backend/scripts/check_admin_readonly_api.py", [

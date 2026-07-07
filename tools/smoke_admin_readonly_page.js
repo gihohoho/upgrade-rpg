@@ -41,7 +41,7 @@ assertContains("admin.html", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v144.admin-combo-relation-guard",
+  "v147.admin-owner-code-relation-tools",
   "fetchAdminReadOnlyPageData",
   "refreshAdminReadOnlyPage",
   "checkAdminReadOnlyPageReady",

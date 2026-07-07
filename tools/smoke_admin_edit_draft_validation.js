@@ -55,7 +55,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v144.admin-combo-relation-guard",
+  "v147.admin-owner-code-relation-tools",
   "previewAdminEditDraft",
   "readAdminEditDraftValues",
   "resetAdminEditDraft",
@@ -67,7 +67,7 @@ assertContains("src/api/admin-page-readonly.js", [
 ]);
 
 assertContains("admin.html", [
-  "v144 admin combo relation guard",
+  "v147 admin owner code relation tools",
   ".edit-draft-result",
   ".draft-preview-summary",
   "확인 문구",

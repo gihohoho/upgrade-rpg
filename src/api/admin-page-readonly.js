@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v144.admin-combo-relation-guard";
+  const VERSION = "v147.admin-owner-code-relation-tools";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -22,7 +22,7 @@
     bosses: ["name", "tier", "boss_type", "hp", "description", "cooldown_seconds", "is_enabled"],
     fieldZones: ["name", "sort_order", "enemy_hp", "gold_reward", "description", "is_enabled"],
     characters: ["name", "description", "is_enabled"],
-    dropTables: ["owner_type", "description", "is_enabled"],
+    dropTables: ["owner_type", "owner_code", "description", "is_enabled"],
     dropTableItems: ["drop_table_code", "item_template_code", "rate", "min_quantity", "max_quantity"],
     enhancementGroups: ["name", "description", "max_level", "is_enabled"],
     enhancementLevels: ["group_code", "from_level", "to_level", "success_rate", "gold_cost"],
@@ -936,10 +936,27 @@
     return ADMIN_EQUIP_SLOT_PRESET_LABELS[key] || key || "장착 슬롯 없음";
   }
 
+  function getAdminDraftRelationOptionGroupKey(definition) {
+    if (!definition || !definition.dependsOn) return "";
+    const dependencyField = document.querySelector(`[data-admin-edit-draft-field="${definition.dependsOn}"]`);
+    const dependencyValue = dependencyField ? dependencyField.value : "";
+    return String(dependencyValue || "").trim();
+  }
+
+  function getAdminDraftRelationOptions(definition) {
+    if (!definition) return null;
+    if (definition.optionGroups && definition.dependsOn) {
+      const groupKey = getAdminDraftRelationOptionGroupKey(definition);
+      const grouped = definition.optionGroups[groupKey];
+      if (Array.isArray(grouped)) return grouped.slice();
+    }
+    return Array.isArray(definition.options) ? definition.options.slice() : null;
+  }
+
   function getAdminDraftSelectOptions(key, value, domain) {
     const normalized = normalizeAdminDraftFieldKey(key);
     const relationDefinition = getAdminRelationEditOptionDefinition(domain, normalized);
-    const relationOptions = relationDefinition && Array.isArray(relationDefinition.options) ? relationDefinition.options : null;
+    const relationOptions = getAdminDraftRelationOptions(relationDefinition);
     const baseOptions = relationOptions ? relationOptions.slice() : (ADMIN_DRAFT_SELECT_FIELD_OPTIONS[normalized] || []).slice();
     const valueText = value === null || value === undefined ? "" : String(value);
     if (valueText && !baseOptions.some((option) => String(option.value) === valueText)) {
@@ -947,6 +964,36 @@
       baseOptions.unshift({ value: valueText, label: currentLabel, current: true });
     }
     return baseOptions;
+  }
+
+  function refreshDependentAdminRelationSelects(changedKey) {
+    const draft = document.querySelector("[data-admin-edit-draft]");
+    if (!draft) return false;
+    const domain = draft.getAttribute("data-admin-edit-draft-domain") || DEFAULT_MASTER_DOMAIN;
+    const changed = normalizeAdminDraftFieldKey(changedKey);
+    let touched = false;
+    getAdminRelationEditOptionDefinitions(domain).forEach((definition) => {
+      if (!definition || normalizeAdminDraftFieldKey(definition.dependsOn) !== changed) return;
+      const fieldName = definition.field;
+      const field = draft.querySelector(`[data-admin-edit-draft-field="${fieldName}"]`);
+      if (!field) return;
+      const previousValue = field.value;
+      const options = getAdminDraftRelationOptions(definition) || [];
+      field.innerHTML = options.map((option) => {
+        const optionValue = option && option.value !== undefined && option.value !== null ? String(option.value) : "";
+        const optionLabel = option && option.label ? option.label : optionValue;
+        return `<option value="${escapeHtml(optionValue)}">${escapeHtml(optionLabel)}</option>`;
+      }).join("");
+      if (options.some((option) => String(option.value) === previousValue)) {
+        field.value = previousValue;
+      } else if (options.length) {
+        field.value = String(options[0].value ?? "");
+      } else {
+        field.value = "";
+      }
+      touched = true;
+    });
+    return touched;
   }
 
   function getAdminDraftFieldInputKind(field, domain) {
@@ -993,6 +1040,7 @@
     if (rawDomain === "bosses" && ["hp", "isenabled"].includes(normalized)) return "high";
     if (rawDomain === "skills" && ["slotkey", "procrate", "cooldownseconds"].includes(normalized)) return "high";
     if (rawDomain === "skillLevels" && ["skillcode", "level", "damagemultiplier", "procratebonus"].includes(normalized)) return "high";
+    if (rawDomain === "dropTables" && ["ownertype", "ownercode"].includes(normalized)) return "high";
     if (rawDomain === "dropTableItems" && ["droptablecode", "itemtemplatecode", "rate", "minquantity", "maxquantity"].includes(normalized)) return "high";
     if (rawDomain === "enhancementLevels" && ["groupcode", "fromlevel", "successrate", "goldcost"].includes(normalized)) return "high";
     if (rawDomain === "characterSkills" && ["charactercode", "skillcode"].includes(normalized)) return "high";
@@ -1242,6 +1290,14 @@
     });
   }
 
+  function formatAdminChangeAfterValue(change) {
+    const text = formatValue(change && change.after);
+    const relation = change && change.relation;
+    if (!relation || !relation.targetLabel) return text;
+    return `${text} · ${relation.targetLabel}`;
+  }
+
+
   function buildAdminEditDraftReview(values) {
     const result = values || readAdminEditDraftValues();
     if (!result || !result.ok) {
@@ -1464,9 +1520,17 @@
     }
     if (rawDomain === "dropTables" && key === "ownertype") {
       return {
-        severity: "medium",
+        severity: "high",
         title: "드랍 테이블 대상 종류 변경",
-        body: "owner_type 변경은 같은 owner_code를 보스 코드로 볼지 필드 코드로 볼지 바꿉니다. 백엔드가 owner_code 존재 여부를 다시 검사하지만, 적용 후 실제 연결 항목을 확인하세요.",
+        body: "owner_type 변경은 같은 owner_code를 보스 코드로 볼지 필드 코드로 볼지 바꿉니다. owner_code 후보 목록이 타입에 맞게 자동 전환되고, 백엔드가 존재 여부를 다시 검사합니다.",
+        reload: true,
+      };
+    }
+    if (rawDomain === "dropTables" && key === "ownercode") {
+      return {
+        severity: "high",
+        title: "드랍 테이블 소유자 변경",
+        body: "owner_code를 바꾸면 이 드랍 테이블이 연결되는 보스/필드가 바뀝니다. 적용 후 관계 보기에서 대상 보스/필드를 확인하세요.",
         reload: true,
       };
     }
@@ -1583,7 +1647,7 @@
     const acceptedRows = acceptedForDisplay.length ? acceptedForDisplay.map((change) => {
       const risk = getAdminDraftFieldRisk(draftValuesForImpact.domain, change.key);
       return `
-        <tr class="draft-review-row-${escapeHtml(risk)}"><td>${escapeHtml(change.label || change.key)}</td><td><span class="pill ${risk === "high" ? "blocked" : (risk === "medium" ? "warn" : "good")}">${escapeHtml(risk)}</span></td><td>${escapeHtml(formatValue(change.before))}</td><td>${escapeHtml(formatValue(change.after))}</td><td>${escapeHtml(change.type || "-")}</td></tr>
+        <tr class="draft-review-row-${escapeHtml(risk)}"><td>${escapeHtml(change.label || change.key)}</td><td><span class="pill ${risk === "high" ? "blocked" : (risk === "medium" ? "warn" : "good")}">${escapeHtml(risk)}</span></td><td>${escapeHtml(formatValue(change.before))}</td><td>${escapeHtml(formatAdminChangeAfterValue(change))}</td><td>${escapeHtml(change.type || "-")}</td></tr>
       `;
     }).join("") : `<tr><td colspan="5">변경된 값 없음</td></tr>`;
     const rejectedRows = rejected.length ? rejected.map((change) => `
@@ -2459,6 +2523,8 @@
     });
     document.addEventListener("change", (event) => {
       if (event.target && event.target.closest && event.target.closest("[data-admin-edit-draft]")) {
+        const changedKey = event.target.getAttribute && event.target.getAttribute("data-admin-edit-draft-field");
+        if (changedKey) refreshDependentAdminRelationSelects(changedKey);
         refreshAdminEditImpactGuide();
       }
     });
@@ -2697,6 +2763,7 @@
     getAdminRelationEditOptionDefinition,
     isAdminRelationEditField,
     getAdminRelationComboGuardLabels,
+    refreshDependentAdminRelationSelects,
     renderAdminRelationEditOptionsNote,
     getAdminEquipSlotDisplayName,
     getAdminDraftFieldRisk,
@@ -2736,10 +2803,12 @@
   window.getAdminEquipSlotDisplayName = getAdminEquipSlotDisplayName;
   window.markSelectedMasterCatalogRow = markSelectedMasterCatalogRow;
   window.getAdminDraftFieldRisk = getAdminDraftFieldRisk;
+  window.refreshDependentAdminRelationSelects = refreshDependentAdminRelationSelects;
   window.getAdminRelationComboGuardLabels = getAdminRelationComboGuardLabels;
   window.getAdminDraftLockedReason = getAdminDraftLockedReason;
   window.buildAdminEditDraftReview = buildAdminEditDraftReview;
   window.sortAdminChangesByRisk = sortAdminChangesByRisk;
+  window.formatAdminChangeAfterValue = formatAdminChangeAfterValue;
   window.getCurrentAdminPageUrl = getCurrentAdminPageUrl;
   window.copyCurrentAdminPageUrl = copyCurrentAdminPageUrl;
   window.openAdminChangeLogDetail = openAdminChangeLogDetail;

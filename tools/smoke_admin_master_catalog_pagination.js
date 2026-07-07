@@ -39,7 +39,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v144.admin-combo-relation-guard",
+  "v147.admin-owner-code-relation-tools",
   "const DEFAULT_MASTER_LIMIT = 20",
   'const DEFAULT_MASTER_SORT = "id_asc"',
   "data-admin-master-page",

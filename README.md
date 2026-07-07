@@ -21,9 +21,9 @@ docs/README.md
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v144: admin combo relation guard**
+- 최신 안정 버전: **v147: admin owner code relation tools**
 
-v144는 v141의 관계 select 위에 조합 관계 필드 안전 편집을 추가한 버전입니다. skill_code + level, group_code + from_level, character_code + skill_code처럼 중복되면 위험한 조합은 백엔드가 preview/apply 단계에서 한 번 더 검사합니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
+v147은 v144의 조합 관계 필드 안전 편집 위에 `dropTables.owner_code` 안전 편집을 추가한 버전입니다. owner_type이 boss면 bosses 목록, field면 fieldZones 목록에서만 owner_code를 선택하게 하고, 백엔드가 preview/apply 단계에서 실제 대상 존재 여부를 다시 검사합니다. owner_type을 바꾸면 owner_code 후보 목록도 자동 전환됩니다.
 
 DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 

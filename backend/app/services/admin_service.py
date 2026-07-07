@@ -56,7 +56,7 @@ class AdminService:
         "bosses": {"name", "tier", "boss_type", "hp", "description", "cooldown_seconds", "is_enabled"},
         "fieldZones": {"name", "sort_order", "enemy_hp", "gold_reward", "description", "is_enabled"},
         "characters": {"name", "description", "is_enabled"},
-        "dropTables": {"owner_type", "description", "is_enabled"},
+        "dropTables": {"owner_type", "owner_code", "description", "is_enabled"},
         "dropTableItems": {"drop_table_code", "item_template_code", "rate", "min_quantity", "max_quantity"},
         "enhancementGroups": {"name", "description", "max_level", "is_enabled"},
         "enhancementLevels": {"group_code", "from_level", "to_level", "success_rate", "gold_cost"},
@@ -65,7 +65,7 @@ class AdminService:
 
     MASTER_RELATION_EDIT_FIELDS: dict[str, set[str]] = {
         "itemTemplates": {"enhance_group_code"},
-        "dropTables": {"owner_type"},
+        "dropTables": {"owner_type", "owner_code"},
         "dropTableItems": {"drop_table_code", "item_template_code"},
         "skillLevels": {"skill_code"},
         "enhancementLevels": {"group_code"},
@@ -322,7 +322,7 @@ class AdminService:
                 })
                 continue
 
-            relation_info = await self._describe_master_relation_edit_value(session, domain, key, normalized_after)
+            relation_info = await self._describe_master_relation_edit_value(session, domain, key, normalized_after, row, safe_draft, column_map)
             normalized_after = serialize_value(normalized_after)
             change = {
                 "key": key,
@@ -950,13 +950,17 @@ class AdminService:
                 return "relation_target_required_item_template"
             exists = await self._exists_by_code(session, ItemTemplate, value_text)
             return None if exists else "relation_target_not_found_item_template"
-        if domain == "dropTables" and key == "owner_type":
-            if value_text not in {"boss", "field"}:
+        if domain == "dropTables" and key in {"owner_type", "owner_code"}:
+            proposed = self._build_proposed_combo_values(row, column_map or {}, draft or {}, ["owner_type", "owner_code"])
+            if proposed.get("issue"):
+                return proposed["issue"]
+            owner_type = str(proposed.get("owner_type") or "").strip()
+            owner_code = str(proposed.get("owner_code") or "").strip()
+            if owner_type not in {"boss", "field"}:
                 return "invalid_owner_type"
-            owner_code = str(getattr(row, "owner_code", "") or "").strip()
             if not owner_code:
                 return "owner_code_missing"
-            model = Boss if value_text == "boss" else FieldZone
+            model = Boss if owner_type == "boss" else FieldZone
             exists = await self._exists_by_code(session, model, owner_code)
             return None if exists else "owner_code_not_found_for_owner_type"
         if domain == "skillLevels" and key in {"skill_code", "level"}:
@@ -1005,7 +1009,16 @@ class AdminService:
             return "duplicate_character_skill_pair" if duplicate else None
         return None
 
-    async def _describe_master_relation_edit_value(self, session: AsyncSession, domain: str, key: str, value: Any) -> dict[str, Any] | None:
+    async def _describe_master_relation_edit_value(
+        self,
+        session: AsyncSession,
+        domain: str,
+        key: str,
+        value: Any,
+        row: Any | None = None,
+        draft: dict[str, Any] | None = None,
+        column_map: dict[str, Any] | None = None,
+    ) -> dict[str, Any] | None:
         if not self._master_relation_edit_field_is_open(domain, key):
             return None
         value_text = "" if value is None else str(value).strip()
@@ -1022,6 +1035,13 @@ class AdminService:
             return {"field": key, "targetDomain": "itemTemplates", "targetCode": value_text, "targetLabel": target.get("name") if target else value_text}
         if domain == "dropTables" and key == "owner_type":
             return {"field": key, "targetDomain": "bosses" if value_text == "boss" else "fieldZones", "targetCode": value_text, "targetLabel": "보스" if value_text == "boss" else "필드"}
+        if domain == "dropTables" and key == "owner_code":
+            proposed = self._build_proposed_combo_values(row, column_map or {}, draft or {}, ["owner_type", "owner_code"]) if row is not None else {"owner_type": "boss", "owner_code": value_text}
+            owner_type = str(proposed.get("owner_type") or "").strip()
+            target_domain = "bosses" if owner_type == "boss" else "fieldZones"
+            target_model = Boss if owner_type == "boss" else FieldZone
+            target = await self._fetch_code_name(session, target_model, value_text)
+            return {"field": key, "targetDomain": target_domain, "targetCode": value_text, "targetLabel": target.get("name") if target else value_text}
         if domain == "skillLevels" and key == "skill_code":
             target = await self._fetch_code_name(session, Skill, value_text)
             return {"field": key, "targetDomain": "skills", "targetCode": value_text, "targetLabel": target.get("name") if target else value_text}
@@ -2211,19 +2231,42 @@ class AdminService:
                 },
             ]
         if domain == "dropTables":
-            return [{
-                "field": "owner_type",
-                "kind": "relation-select",
-                "targetDomain": "bosses/fieldZones",
-                "targetLabel": "드랍 테이블 소유자 종류",
-                "nullable": False,
-                "allowApply": True,
-                "options": [
-                    {"value": "boss", "label": "boss · 보스 드랍 테이블", "current": getattr(row, "owner_type", None) == "boss"},
-                    {"value": "field", "label": "field · 필드 드랍 테이블", "current": getattr(row, "owner_type", None) == "field"},
-                ],
-                "note": "owner_code가 선택한 종류의 실제 코드에 존재할 때만 적용됩니다. owner_code 자체는 아직 잠금입니다.",
-            }]
+            current_owner_type = str(getattr(row, "owner_type", None) or "boss")
+            current_owner_code = getattr(row, "owner_code", None)
+            boss_options = await self._fetch_relation_code_options(session, Boss, current_code=current_owner_code if current_owner_type == "boss" else None, limit=300)
+            field_options = await self._fetch_relation_code_options(session, FieldZone, current_code=current_owner_code if current_owner_type == "field" else None, limit=300)
+            owner_code_options = boss_options if current_owner_type == "boss" else field_options
+            return [
+                {
+                    "field": "owner_type",
+                    "kind": "relation-select",
+                    "targetDomain": "bosses/fieldZones",
+                    "targetLabel": "드랍 테이블 소유자 종류",
+                    "nullable": False,
+                    "allowApply": True,
+                    "linkedField": "owner_code",
+                    "options": [
+                        {"value": "boss", "label": "boss · 보스 드랍 테이블", "current": current_owner_type == "boss"},
+                        {"value": "field", "label": "field · 필드 드랍 테이블", "current": current_owner_type == "field"},
+                    ],
+                    "note": "owner_type을 바꾸면 owner_code 후보도 보스/필드 목록으로 자동 전환됩니다.",
+                },
+                {
+                    "field": "owner_code",
+                    "kind": "relation-select",
+                    "targetDomain": "bosses" if current_owner_type == "boss" else "fieldZones",
+                    "targetLabel": "드랍 테이블 소유자 코드",
+                    "nullable": False,
+                    "allowApply": True,
+                    "dependsOn": "owner_type",
+                    "optionGroups": {
+                        "boss": boss_options,
+                        "field": field_options,
+                    },
+                    "options": owner_code_options,
+                    "note": "owner_type이 boss이면 bosses.code, field이면 fieldZones.code 중에서만 선택합니다. 백엔드가 적용 직전에 다시 존재 여부를 검사합니다.",
+                },
+            ]
         if domain == "skillLevels":
             current = getattr(row, "skill_code", None)
             return [{

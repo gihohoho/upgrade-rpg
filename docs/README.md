@@ -62,3 +62,5 @@ docs/archive/stage-notes/
 - `ADMIN_RELATION_SAFE_EDIT.md` - 관계 필드 select 기반 안전 편집
 
 - [ADMIN_COMBO_RELATION_GUARD.md](ADMIN_COMBO_RELATION_GUARD.md) - 조합 관계 필드 안전 편집과 중복 조합 검증
+
+- [ADMIN_OWNER_CODE_RELATION_TOOLS.md](ADMIN_OWNER_CODE_RELATION_TOOLS.md) - dropTables.owner_code 안전 편집과 owner_type 연동 select

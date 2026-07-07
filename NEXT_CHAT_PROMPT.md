@@ -1,6 +1,6 @@
 # 새 채팅 시작용 프롬프트
 
-아래 내용을 그대로 새 채팅의 첫 메시지로 붙여넣고, 함께 `rpg_v144_admin_combo_relation_guard.zip`을 업로드해서 이어서 진행해줘.
+아래 내용을 그대로 새 채팅의 첫 메시지로 붙여넣고, 함께 `rpg_v147_admin_owner_code_relation_tools.zip`을 업로드해서 이어서 진행해줘.
 
 ---
 
@@ -51,10 +51,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v144: admin combo relation guard
+v147: admin owner code relation tools
 
 최신 ZIP:
-rpg_v144_admin_combo_relation_guard.zip
+rpg_v147_admin_owner_code_relation_tools.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -88,14 +88,15 @@ docs/NEXT_STEPS.md
 23. v138에서 관리자 적용 직전 비교 UI + high risk 추가 확인 완료.
 24. v141에서 관리자 관계 필드 안전 편집 완료.
 25. v144에서 조합 관계 필드 안전 편집과 중복 조합 검증 완료.
+26. v147에서 dropTables.owner_code 안전 편집과 owner_type 연동 select 완료.
 
-v144 세부 완료:
-- v141 관계 select 안전 편집 유지.
-- dropTableItems.drop_table_code relation select 추가.
-- skillLevels.skill_code + level 중복 조합 검증 추가.
-- enhancementLevels.group_code + from_level 중복 조합 검증 추가.
-- characterSkills.character_code + skill_code 중복 조합 검증 추가.
-- preview/apply 공통으로 관계 대상 존재 여부와 중복 조합 검사.
+v147 세부 완료:
+- v144 조합 관계 필드 안전 편집 유지.
+- dropTables.owner_code relation select 추가.
+- owner_type=boss이면 bosses 목록, owner_type=field이면 fieldZones 목록에서 owner_code 선택.
+- owner_type 변경 시 owner_code 후보 목록 자동 전환.
+- preview/apply 공통으로 owner_type + owner_code 대상 존재 여부 검사.
+- 초안 검증 결과에 relation target label 표시.
 
 현재 게임 실제 세이브 슬롯:
 default
@@ -136,24 +137,13 @@ bash tools/run_smoke_all.sh
 ```
 
 다음 추천 단계:
-v139 관리자 관계 필드 안전 편집 준비
+v148 relation select 검색/필터 UI
 
 구체적으로:
-관계 필드(`*_code`, `owner_code`, `item_template_code`, `enhance_group_code`)를 바로 text input으로 열지 말고, 실제 존재하는 대상 목록 기반 select와 백엔드 관계 검증을 먼저 준비하는 게 좋아.
+관계 대상 목록이 길어질수록 select에서 찾기 어려워질 수 있으니, relation select 후보를 코드/이름으로 빠르게 필터링할 수 있게 만드는 단계가 좋아.
 
-이 단계도 가능하면 DB reset/seed 없이 관리자/검증 로직 중심으로 진행해줘.
+현재 선택값은 필터와 상관없이 유지하고, 실제 적용은 기존 preview/apply 백엔드 검증을 그대로 거치게 해줘.
 
-업로드한 ZIP 기준으로 구조 확인 후, v139부터 이어서 진행해줘.
+이 단계도 가능하면 DB reset/seed 없이 관리자 UI 편의 기능 중심으로 진행해줘.
 
-
-추가 완료 상태:
-- v141 관계 필드 안전 편집 완료
-- itemTemplates.enhance_group_code는 enhancementGroups 목록 기반 relation select
-- dropTableItems.item_template_code는 itemTemplates 목록 기반 relation select
-- dropTables.owner_type은 boss/field select
-- 백엔드 preview/apply 공통으로 관계 대상 존재 여부를 검증
-- DB reset/seed 필요 없음
-
-다음 추천 단계:
-- 조합 관계 필드 안전 편집 준비
-- skillLevels.skill_code + level, enhancementLevels.group_code + from_level, characterSkills.character_code + skill_code처럼 유니크 조합이 있는 필드는 중복 검증을 먼저 붙인 뒤 여는 것이 안전함
+업로드한 ZIP 기준으로 구조 확인 후, v148부터 이어서 진행해줘.

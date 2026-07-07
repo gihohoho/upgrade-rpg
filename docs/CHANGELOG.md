@@ -1,5 +1,15 @@
 # Changelog
 
+## v147 - Admin Owner Code Relation Tools
+
+- `dropTables.owner_code`를 relation select 기반으로 안전하게 편집할 수 있게 했습니다.
+- `owner_type=boss`이면 bosses 목록, `owner_type=field`이면 fieldZones 목록에서만 owner_code를 선택합니다.
+- `owner_type`을 바꾸면 `owner_code` 후보 목록도 자동으로 보스/필드 목록으로 전환됩니다.
+- preview/apply 공통으로 `owner_type + owner_code` 대상 존재 여부를 백엔드에서 다시 검사합니다.
+- 초안 검증 결과에서 relation target label을 함께 표시합니다.
+- 기존 dev key, 확인 문구, high risk 추가 확인, stale guard, change log/rollback을 유지합니다.
+- DB reset / seed는 필요 없습니다.
+
 ## v144 - Admin Combo Relation Guard
 
 - `dropTableItems.drop_table_code` relation select 편집 추가.

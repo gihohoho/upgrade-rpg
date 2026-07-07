@@ -68,10 +68,10 @@ local-admin-dev-key
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v144: admin combo relation guard**
-- 최신 ZIP 이름: **rpg_v144_admin_combo_relation_guard.zip**
+- 최신 안정 버전: **v147: admin owner code relation tools**
+- 최신 ZIP 이름: **rpg_v147_admin_owner_code_relation_tools.zip**
 
-v144는 v141의 relation select 위에 조합 관계 필드 안전 편집을 추가한 버전입니다. `skill_code + level`, `group_code + from_level`, `character_code + skill_code`처럼 중복되면 위험한 조합은 백엔드가 preview/apply 단계에서 한 번 더 검사합니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
+v147은 v144의 조합 관계 필드 안전 편집 위에 `dropTables.owner_code` 안전 편집을 추가한 버전입니다. owner_type이 boss면 bosses 목록, field면 fieldZones 목록에서만 owner_code를 선택하고, owner_type을 바꾸면 owner_code 후보 목록도 자동 전환됩니다. 백엔드는 preview/apply 단계에서 `owner_type + owner_code` 대상 존재 여부를 다시 검사합니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
 DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 DB reset/seed는 필요 없습니다.
 
@@ -136,6 +136,13 @@ DB reset/seed는 필요 없습니다.
   - skillLevels.skill_code + level 중복 조합 검증
   - enhancementLevels.group_code + from_level 중복 조합 검증
   - characterSkills.character_code + skill_code 중복 조합 검증
+
+- v147에서 dropTables owner_code 안전 편집 완료.
+  - dropTables.owner_code relation select
+  - owner_type=boss이면 bosses 목록, owner_type=field이면 fieldZones 목록
+  - owner_type 변경 시 owner_code 후보 자동 전환
+  - preview/apply 공통으로 owner_type + owner_code 대상 존재 검증
+  - 초안 검증 결과에 relation target label 표시
 
 ### runtime 반영
 
@@ -216,16 +223,17 @@ getAdminDraftFieldInputKind({ key: "stackable", value: true });
 
 가장 안전한 다음 단계 후보:
 
-1. **dropTables.owner_code 안전 편집**
-   - owner_type이 boss면 bosses 목록에서 owner_code 선택.
-   - owner_type이 field면 fieldZones 목록에서 owner_code 선택.
-   - owner_type + owner_code가 실제 대상에 존재하는지 preview/apply 공통 검증.
+1. **relation select 검색/필터 편의성**
+   - 대상 목록이 많아질 때 select에서 찾기 쉽게 코드/이름 검색 UI를 붙이는 단계.
+   - 현재 선택값은 필터와 상관없이 항상 유지.
+   - 프론트 UI 편의 기능이라 DB reset/seed 없이 진행 가능.
 
-2. **relation select 검색/필터 편의성**
-   - 대상 목록이 많아질 때 select에서 찾기 쉽게 검색/필터 UI를 붙이는 단계.
+2. **변경 preview relation before/after label 강화**
+   - 현재는 적용/초안 값 쪽 relation target label을 보여줍니다.
+   - 다음에는 이전 DB 값 쪽도 대상 이름을 함께 표시하면 비교가 더 쉬워집니다.
 
 3. **JSON 편집기 미리보기 준비**
    - 아직 JSON 원본 적용은 막고, 먼저 sanitized preview와 schema hint부터 준비.
 
-3. **정식 인증/권한 설계 준비**
+4. **정식 인증/권한 설계 준비**
    - 현재 dev key는 로컬 개발용 안전장치일 뿐입니다.
