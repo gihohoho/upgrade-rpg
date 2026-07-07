@@ -135,8 +135,20 @@
 		const opts = options || {};
 		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
 		const limit = opts.limit !== undefined ? Number(opts.limit) : undefined;
+		const userId = opts.userId !== undefined && opts.userId !== null && opts.userId !== "" ? Number(opts.userId) : undefined;
+		const slotKey = opts.slotKey !== undefined ? String(opts.slotKey || "").trim() : undefined;
+		const source = opts.source !== undefined ? String(opts.source || "").trim() : undefined;
+		const defaultOnly = opts.defaultOnly === true ? true : undefined;
+		const sort = opts.sort !== undefined ? String(opts.sort || "").trim() : undefined;
 		return request("/admin/save-snapshots", {
-			query: limit ? { limit } : undefined,
+			query: {
+				limit,
+				userId,
+				slotKey,
+				source,
+				defaultOnly,
+				sort,
+			},
 			timeoutMs,
 		});
 	}

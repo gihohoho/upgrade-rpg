@@ -23,6 +23,11 @@ REQUIRED_PATTERNS = {
     "backend/app/services/admin_service.py": [
         "get_readonly_overview",
         "list_save_snapshot_summaries",
+        "_build_snapshot_filters",
+        "_build_snapshot_where_clauses",
+        "_snapshot_order_by",
+        "totalAll",
+        "hasActiveFilters",
         "MASTER_DATA_MODELS",
         "safeForAdminReadOnlyUi",
         "safeForAdminWriteUi",
@@ -32,10 +37,15 @@ REQUIRED_PATTERNS = {
     "src/api/game-api-client.js": [
         "fetchAdminOverview",
         "listAdminSaveSnapshots",
+        "defaultOnly",
+        "slotKey",
+        "userId",
     ],
     "backend/scripts/check_admin_readonly_api.py": [
         "admin/overview",
         "admin/save-snapshots",
+        "defaultOnly=true",
+        "filters",
         "rawSnapshotReturned",
     ],
 }

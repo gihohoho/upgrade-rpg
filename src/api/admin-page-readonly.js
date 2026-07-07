@@ -1,9 +1,10 @@
 (function () {
   "use strict";
 
-  const VERSION = "v113.admin-readonly-page-url-helper";
+  const VERSION = "v114.admin-save-snapshot-filters";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
+  const DEFAULT_SNAPSHOT_SORT = "updated_desc";
 
   function $(selector) {
     return document.querySelector(selector);
@@ -117,16 +118,63 @@
     if (typeof window.RpgGameApi.listAdminSaveSnapshots !== "function") throw new Error("listAdminSaveSnapshots 함수를 찾을 수 없습니다.");
   }
 
+  function readSnapshotFiltersFromDom() {
+    const limitEl = $("[data-admin-filter-limit]");
+    const userIdEl = $("[data-admin-filter-user-id]");
+    const slotKeyEl = $("[data-admin-filter-slot-key]");
+    const sourceEl = $("[data-admin-filter-source]");
+    const defaultOnlyEl = $("[data-admin-filter-default-only]");
+    const sortEl = $("[data-admin-filter-sort]");
+    const userId = userIdEl && userIdEl.value.trim() ? Number(userIdEl.value.trim()) : undefined;
+    return {
+      limit: limitEl && limitEl.value ? Number(limitEl.value) : DEFAULT_SNAPSHOT_LIMIT,
+      userId: Number.isFinite(userId) ? userId : undefined,
+      slotKey: slotKeyEl ? slotKeyEl.value.trim() : "",
+      source: sourceEl ? sourceEl.value.trim() : "",
+      defaultOnly: !!(defaultOnlyEl && defaultOnlyEl.checked),
+      sort: sortEl && sortEl.value ? sortEl.value : DEFAULT_SNAPSHOT_SORT,
+    };
+  }
+
+  function resetSnapshotFilters(options) {
+    const opts = options || {};
+    const limitEl = $("[data-admin-filter-limit]");
+    const userIdEl = $("[data-admin-filter-user-id]");
+    const slotKeyEl = $("[data-admin-filter-slot-key]");
+    const sourceEl = $("[data-admin-filter-source]");
+    const defaultOnlyEl = $("[data-admin-filter-default-only]");
+    const sortEl = $("[data-admin-filter-sort]");
+    if (limitEl) limitEl.value = String(DEFAULT_SNAPSHOT_LIMIT);
+    if (userIdEl) userIdEl.value = "";
+    if (slotKeyEl) slotKeyEl.value = "";
+    if (sourceEl) sourceEl.value = "";
+    if (defaultOnlyEl) defaultOnlyEl.checked = false;
+    if (sortEl) sortEl.value = DEFAULT_SNAPSHOT_SORT;
+    if (!opts.silent) setStatus("세이브 스냅샷 필터 초기화", "info");
+    return readSnapshotFiltersFromDom();
+  }
+
+  function describeSnapshotFilters(filters) {
+    const f = filters || {};
+    const parts = [];
+    if (f.userId) parts.push(`userId=${f.userId}`);
+    if (f.slotKey) parts.push(`slotKey=${f.slotKey}`);
+    if (f.source) parts.push(`source=${f.source}`);
+    if (f.defaultOnly) parts.push("defaultOnly=true");
+    if (f.sort && f.sort !== DEFAULT_SNAPSHOT_SORT) parts.push(`sort=${f.sort}`);
+    return parts.length ? parts.join(", ") : "필터 없음";
+  }
+
   async function fetchAdminReadOnlyPageData(options) {
     ensureApi();
     const opts = options || {};
     const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : DEFAULT_TIMEOUT_MS;
-    const limit = opts.limit || DEFAULT_SNAPSHOT_LIMIT;
+    const filters = opts.snapshotFilters || readSnapshotFiltersFromDom();
     const [overview, snapshots] = await Promise.all([
       window.RpgGameApi.fetchAdminOverview({ timeoutMs }),
-      window.RpgGameApi.listAdminSaveSnapshots({ timeoutMs, limit }),
+      window.RpgGameApi.listAdminSaveSnapshots({ timeoutMs, ...filters }),
     ]);
-    return { overview, snapshots };
+    return { overview, snapshots, snapshotFilters: filters };
   }
 
   function renderCards(overviewPayload) {
@@ -181,7 +229,10 @@
     const meta = $("[data-admin-snapshot-meta]");
     if (!target) return;
     const rows = Array.isArray(snapshotPayload.snapshots) ? snapshotPayload.snapshots : [];
-    if (meta) meta.textContent = `${formatValue(rows.length)} / ${formatValue(snapshotPayload.total)} shown`;
+    const filters = snapshotPayload.filters || {};
+    const filterNote = filters.hasActiveFilters ? ` · ${describeSnapshotFilters(filters)}` : "";
+    const totalAllNote = snapshotPayload.totalAll !== undefined ? ` / 전체 ${formatValue(snapshotPayload.totalAll)}` : "";
+    if (meta) meta.textContent = `${formatValue(rows.length)} / ${formatValue(snapshotPayload.total)} shown${totalAllNote}${filterNote}`;
     if (!rows.length) {
       target.innerHTML = `<div class="empty">최근 세이브 스냅샷이 없습니다.</div>`;
       return;
@@ -252,7 +303,8 @@
       renderMasterTable(overviewPayload.masterData || {});
       renderSnapshotTable(snapshotPayload);
       renderReadiness(overviewPayload.readiness || {});
-      setStatus(`정상 로드 · ${formatClock(new Date().toISOString())} · API ${window.RpgGameApi.getApiBaseUrl()}`, "ok");
+      const filterText = describeSnapshotFilters(result.snapshotFilters || (snapshotPayload && snapshotPayload.filters));
+      setStatus(`정상 로드 · ${formatClock(new Date().toISOString())} · ${filterText} · API ${window.RpgGameApi.getApiBaseUrl()}`, "ok");
       return { ok: true, ...result };
     } catch (error) {
       renderError(error);
@@ -284,6 +336,11 @@
       if (!button) return;
       const action = button.getAttribute("data-admin-action");
       if (action === "refresh") await refreshAdminReadOnlyPage();
+      if (action === "apply-snapshot-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom() });
+      if (action === "reset-snapshot-filters") {
+        resetSnapshotFilters();
+        await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom() });
+      }
       if (action === "save-api-base-url") {
         try {
           saveApiBaseUrlFromInput();
@@ -310,6 +367,7 @@
     bindEvents();
     syncLocationHints();
     syncApiInput();
+    resetSnapshotFilters({ silent: true });
     refreshAdminReadOnlyPage();
   }
 
@@ -317,7 +375,8 @@
     const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function");
     const domReady = !!document.querySelector("[data-admin-cards]");
     const locationHintReady = !!document.querySelector("[data-admin-current-url]");
-    const result = { ok: apiReady && domReady, version: VERSION, apiReady, domReady, locationHintReady, readOnly: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl() };
+    const snapshotFilterReady = !!document.querySelector("[data-admin-filter-slot-key]");
+    const result = { ok: apiReady && domReady && snapshotFilterReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, readOnly: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom() };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -332,10 +391,15 @@
     getGamePageUrl,
     syncLocationHints,
     copyCurrentAdminPageUrl,
+    readSnapshotFiltersFromDom,
+    resetSnapshotFilters,
+    describeSnapshotFilters,
     checkAdminReadOnlyPageReady,
   };
   window.refreshAdminReadOnlyPage = refreshAdminReadOnlyPage;
   window.fetchAdminReadOnlyPageData = fetchAdminReadOnlyPageData;
+  window.readAdminSnapshotFilters = readSnapshotFiltersFromDom;
+  window.resetAdminSnapshotFilters = resetSnapshotFilters;
   window.checkAdminReadOnlyPageReady = checkAdminReadOnlyPageReady;
   window.getCurrentAdminPageUrl = getCurrentAdminPageUrl;
   window.copyCurrentAdminPageUrl = copyCurrentAdminPageUrl;

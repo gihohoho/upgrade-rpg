@@ -178,6 +178,58 @@
 
     .api-input:focus { border-color: rgba(147, 197, 253, 0.72); }
 
+    .filter-panel {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.58);
+      padding: 12px;
+      margin: 14px 0;
+    }
+
+    .filter-title {
+      color: var(--soft);
+      font-size: 13px;
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: 110px 140px 150px 150px 160px auto auto;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .filter-field { display: grid; gap: 5px; }
+    .filter-field label { color: var(--muted); font-size: 11px; font-weight: 800; }
+    .filter-field input,
+    .filter-field select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(2, 6, 23, 0.78);
+      color: var(--text);
+      padding: 9px 10px;
+      outline: none;
+      min-height: 38px;
+    }
+
+    .check-field {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--soft);
+      font-size: 12px;
+      font-weight: 800;
+      min-height: 38px;
+    }
+
+    .filter-help {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
     .status-line {
       color: var(--muted);
       font-size: 12px;
@@ -299,11 +351,13 @@
       .topbar { flex-direction: column; }
       .top-actions { justify-content: flex-start; min-width: 0; }
       .toolbar { grid-template-columns: 1fr; }
+      .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
     @media (max-width: 560px) {
       .admin-shell { width: min(100% - 20px, 1180px); padding-top: 16px; }
+      .filter-grid { grid-template-columns: 1fr; }
       .grid { grid-template-columns: 1fr; }
       th, td { padding: 8px 10px; }
     }
@@ -353,6 +407,49 @@
       <div class="table-wrap" data-admin-master-table><div class="empty">불러오는 중...</div></div>
     </section>
 
+    <section class="filter-panel" aria-label="최근 세이브 스냅샷 필터">
+      <div class="filter-title">최근 세이브 스냅샷 필터</div>
+      <div class="filter-grid">
+        <div class="filter-field">
+          <label for="admin-filter-limit">표시 개수</label>
+          <select id="admin-filter-limit" data-admin-filter-limit>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="30" selected>30</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="admin-filter-user-id">유저 ID</label>
+          <input id="admin-filter-user-id" data-admin-filter-user-id type="number" min="1" placeholder="전체" />
+        </div>
+        <div class="filter-field">
+          <label for="admin-filter-slot-key">슬롯</label>
+          <input id="admin-filter-slot-key" data-admin-filter-slot-key type="text" placeholder="default" />
+        </div>
+        <div class="filter-field">
+          <label for="admin-filter-source">출처</label>
+          <input id="admin-filter-source" data-admin-filter-source type="text" placeholder="localStorage" />
+        </div>
+        <div class="filter-field">
+          <label for="admin-filter-sort">정렬</label>
+          <select id="admin-filter-sort" data-admin-filter-sort>
+            <option value="updated_desc" selected>최근 수정순</option>
+            <option value="updated_asc">오래된 수정순</option>
+            <option value="user_asc">유저/슬롯순</option>
+            <option value="slot_asc">슬롯/유저순</option>
+          </select>
+        </div>
+        <label class="check-field"><input data-admin-filter-default-only type="checkbox" /> default만</label>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn primary" type="button" data-admin-action="apply-snapshot-filters">필터 적용</button>
+          <button class="btn" type="button" data-admin-action="reset-snapshot-filters">초기화</button>
+        </div>
+      </div>
+      <div class="filter-help">필터는 조회 조건만 바꾸며 DB/localStorage/게임 세이브를 수정하지 않습니다. 원본 snapshot_json은 계속 숨김 상태입니다.</div>
+    </section>
+
     <section class="section">
       <div class="section-header">
         <h2 class="section-title">최근 세이브 스냅샷 요약</h2>
@@ -369,7 +466,7 @@
       <div data-admin-readiness><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <p class="footer-note">v113 admin page URL helper · static HTML + JS · FastAPI read-only APIs</p>
+    <p class="footer-note">v114 admin save snapshot filters · static HTML + JS · FastAPI read-only APIs</p>
   </main>
 
   <script src="src/api/game-api-client.js"></script>

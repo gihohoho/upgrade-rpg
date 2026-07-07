@@ -78,25 +78,53 @@ class AdminService:
             "nextRecommendedStep": "관리자 화면에서는 먼저 overview/save-snapshots처럼 조회 전용 API로 DB 상태를 확인한 뒤, 변경 미리보기와 변경 이력을 붙이는 순서가 안전합니다.",
         }
 
-    async def list_save_snapshot_summaries(self, session: AsyncSession, *, limit: int = 20) -> dict[str, Any]:
-        """List recent save snapshots for admin diagnostics without raw snapshots."""
-        safe_limit = max(1, min(int(limit or 20), 100))
-        result = await session.execute(
-            select(UserSaveSnapshot)
-            .order_by(UserSaveSnapshot.updated_at.desc(), UserSaveSnapshot.user_id, UserSaveSnapshot.slot_key)
-            .limit(safe_limit)
+    async def list_save_snapshot_summaries(
+        self,
+        session: AsyncSession,
+        *,
+        limit: int = 20,
+        user_id: int | None = None,
+        slot_key: str | None = None,
+        source: str | None = None,
+        default_only: bool = False,
+        sort: str = "updated_desc",
+    ) -> dict[str, Any]:
+        """List recent save snapshots for admin diagnostics without raw snapshots.
+
+        The filters are intentionally metadata-only. Even when a single snapshot is
+        selected, snapshot_json is not returned to the browser.
+        """
+        filters = self._build_snapshot_filters(
+            user_id=user_id,
+            slot_key=slot_key,
+            source=source,
+            default_only=default_only,
+            sort=sort,
         )
+        where_clauses = self._build_snapshot_where_clauses(filters)
+        safe_limit = filters["limit"] = max(1, min(int(limit or 20), 100))
+
+        stmt = select(UserSaveSnapshot)
+        if where_clauses:
+            stmt = stmt.where(*where_clauses)
+        stmt = stmt.order_by(*self._snapshot_order_by(filters["sort"])).limit(safe_limit)
+
+        result = await session.execute(stmt)
         rows = result.scalars().all()
-        total = await self._count(session, UserSaveSnapshot)
+        total_all = await self._count(session, UserSaveSnapshot)
+        total_filtered = await self._count_save_snapshots(session, where_clauses)
         snapshots = [self._serialize_save_snapshot_summary(row) for row in rows]
         return {
             "status": "loaded",
             "readOnly": True,
             "limit": safe_limit,
             "count": len(snapshots),
-            "total": total,
+            "total": total_filtered,
+            "totalAll": total_all,
+            "filters": filters,
             "snapshots": snapshots,
-            "note": "관리자 준비용 조회 전용 목록입니다. snapshot_json 원본은 내려주지 않습니다.",
+            "rawSnapshotReturned": False,
+            "note": "관리자 준비용 조회 전용 목록입니다. 필터를 써도 snapshot_json 원본은 내려주지 않습니다.",
         }
 
     async def _get_master_data_counts(self, session: AsyncSession) -> dict[str, Any]:
@@ -134,6 +162,93 @@ class AdminService:
         active = await self._count(session, User, where_clause=(User.is_active.is_(True)))
         admins = await self._count(session, User, where_clause=(User.is_admin.is_(True)))
         return {"total": total, "active": active, "admins": admins}
+
+    def _build_snapshot_filters(
+        self,
+        *,
+        user_id: int | None,
+        slot_key: str | None,
+        source: str | None,
+        default_only: bool,
+        sort: str,
+    ) -> dict[str, Any]:
+        warnings: list[str] = []
+        safe_sort = sort if sort in {"updated_desc", "updated_asc", "user_asc", "slot_asc"} else "updated_desc"
+        if safe_sort != sort:
+            warnings.append("sort_fallback_updated_desc")
+
+        safe_user_id = None
+        if user_id is not None:
+            try:
+                parsed_user_id = int(user_id)
+                if parsed_user_id >= 1:
+                    safe_user_id = parsed_user_id
+                else:
+                    warnings.append("userId_ignored_invalid")
+            except (TypeError, ValueError):
+                warnings.append("userId_ignored_invalid")
+
+        safe_slot_key = self._clean_filter_text(slot_key)
+        if safe_slot_key and not self._is_safe_slot_key(safe_slot_key):
+            warnings.append("slotKey_ignored_unsafe")
+            safe_slot_key = None
+
+        safe_source = self._clean_filter_text(source)
+        if default_only:
+            if safe_slot_key and safe_slot_key != "default":
+                warnings.append("slotKey_ignored_because_defaultOnly")
+            safe_slot_key = "default"
+
+        active = {
+            "userId": safe_user_id,
+            "slotKey": safe_slot_key,
+            "source": safe_source,
+            "defaultOnly": bool(default_only),
+            "sort": safe_sort,
+            "warnings": warnings,
+        }
+        active["hasActiveFilters"] = any(
+            active.get(key) not in (None, "", False) for key in ("userId", "slotKey", "source", "defaultOnly")
+        )
+        return active
+
+    def _build_snapshot_where_clauses(self, filters: dict[str, Any]) -> list[Any]:
+        clauses: list[Any] = []
+        if filters.get("userId") is not None:
+            clauses.append(UserSaveSnapshot.user_id == int(filters["userId"]))
+        if filters.get("slotKey"):
+            clauses.append(UserSaveSnapshot.slot_key == filters["slotKey"])
+        if filters.get("source"):
+            clauses.append(UserSaveSnapshot.source == filters["source"])
+        return clauses
+
+    def _snapshot_order_by(self, sort: str) -> tuple[Any, ...]:
+        if sort == "updated_asc":
+            return (UserSaveSnapshot.updated_at.asc(), UserSaveSnapshot.user_id, UserSaveSnapshot.slot_key)
+        if sort == "user_asc":
+            return (UserSaveSnapshot.user_id.asc(), UserSaveSnapshot.slot_key.asc(), UserSaveSnapshot.updated_at.desc())
+        if sort == "slot_asc":
+            return (UserSaveSnapshot.slot_key.asc(), UserSaveSnapshot.user_id.asc(), UserSaveSnapshot.updated_at.desc())
+        return (UserSaveSnapshot.updated_at.desc(), UserSaveSnapshot.user_id, UserSaveSnapshot.slot_key)
+
+    async def _count_save_snapshots(self, session: AsyncSession, where_clauses: list[Any]) -> int:
+        stmt = select(func.count()).select_from(UserSaveSnapshot)
+        if where_clauses:
+            stmt = stmt.where(*where_clauses)
+        result = await session.execute(stmt)
+        return int(result.scalar_one() or 0)
+
+    @staticmethod
+    def _clean_filter_text(value: Any) -> str | None:
+        if value is None:
+            return None
+        cleaned = str(value).strip()
+        return cleaned or None
+
+    @staticmethod
+    def _is_safe_slot_key(value: str) -> bool:
+        allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-"
+        return all(ch in allowed for ch in value)
 
     def _build_readiness(self, master_counts: dict[str, Any], save_snapshot_summary: dict[str, Any]) -> dict[str, Any]:
         warnings: list[str] = []

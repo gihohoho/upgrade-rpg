@@ -527,3 +527,12 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - Added `openAdminReadOnlyPage()` and a `관리자 페이지 열기` action from the admin overview modal.
 - The page does not mutate DB/localStorage/game runtime and does not render raw `snapshot_json`.
 - No DB reset or seed import is required.
+
+
+## v114 - Admin save snapshot filters
+
+- Added read-only filters to `admin.html` for recent save snapshot summaries.
+- Added `/admin/save-snapshots` query filters: `userId`, `slotKey`, `source`, `defaultOnly`, and `sort`.
+- The filtered admin API still does not return raw `snapshot_json` and keeps `rawSnapshotReturned=false`.
+- Added browser helpers `readAdminSnapshotFilters()` and `resetAdminSnapshotFilters()` for console diagnostics.
+- No DB reset or seed import is required because the existing `user_save_snapshots` table is only queried.

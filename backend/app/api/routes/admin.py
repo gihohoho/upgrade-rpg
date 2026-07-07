@@ -71,11 +71,28 @@ async def get_admin_readonly_overview(
 @router.get("/save-snapshots")
 async def list_admin_save_snapshots(
     limit: int = Query(default=20, ge=1, le=100),
+    user_id: int | None = Query(default=None, alias="userId", ge=1),
+    slot_key: str | None = Query(default=None, alias="slotKey", max_length=80),
+    source: str | None = Query(default=None, max_length=80),
+    default_only: bool = Query(default=False, alias="defaultOnly"),
+    sort: str = Query(default="updated_desc", max_length=30),
     current_user: CurrentUser = Depends(get_current_user_placeholder),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """List recent user save snapshots for admin diagnostics without raw snapshot JSON."""
-    snapshots = await service.list_save_snapshot_summaries(session, limit=limit)
+    """List recent user save snapshots for admin diagnostics without raw snapshot JSON.
+
+    Optional filters are read-only helpers for the static admin page. They do not
+    expose or mutate the raw snapshot payload.
+    """
+    snapshots = await service.list_save_snapshot_summaries(
+        session,
+        limit=limit,
+        user_id=user_id,
+        slot_key=slot_key,
+        source=source,
+        default_only=default_only,
+        sort=sort,
+    )
     return ok_response(
         type="admin.save_snapshots",
         payload=snapshots,
@@ -85,7 +102,9 @@ async def list_admin_save_snapshots(
             "adminUserId": current_user.id,
             "count": snapshots["count"],
             "total": snapshots["total"],
+            "totalAll": snapshots["totalAll"],
             "limit": snapshots["limit"],
+            "filters": snapshots["filters"],
         },
         meta={
             "source": "postgresql",

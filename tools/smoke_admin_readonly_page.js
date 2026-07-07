@@ -24,6 +24,14 @@ assertContains("admin.html", [
   "data-admin-cards",
   "data-admin-master-table",
   "data-admin-snapshot-table",
+  "data-admin-filter-limit",
+  "data-admin-filter-user-id",
+  "data-admin-filter-slot-key",
+  "data-admin-filter-source",
+  "data-admin-filter-sort",
+  "data-admin-filter-default-only",
+  "data-admin-action=\"apply-snapshot-filters\"",
+  "data-admin-action=\"reset-snapshot-filters\"",
   "data-admin-readiness",
   "src/api/game-api-client.js",
   "src/api/admin-page-readonly.js",
@@ -31,7 +39,7 @@ assertContains("admin.html", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v113.admin-readonly-page-url-helper",
+  "v114.admin-save-snapshot-filters",
   "fetchAdminReadOnlyPageData",
   "refreshAdminReadOnlyPage",
   "checkAdminReadOnlyPageReady",
@@ -44,6 +52,10 @@ assertContains("src/api/admin-page-readonly.js", [
   "getGamePageUrl",
   "copyCurrentAdminPageUrl",
   "syncLocationHints",
+  "readSnapshotFiltersFromDom",
+  "resetSnapshotFilters",
+  "describeSnapshotFilters",
+  "snapshotFilterReady",
 ]);
 
 assertContains("src/api/admin-readonly-overview.js", [

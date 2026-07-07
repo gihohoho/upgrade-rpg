@@ -1,6 +1,6 @@
 # Admin Read-only Page
 
-Version: `v113: admin page URL helper`
+Version: `v114: admin save snapshot filters`
 
 ## 목적
 
@@ -79,3 +79,12 @@ http://127.0.0.1:8000/api/v1
 - `admin.html` 상단에 현재 관리자 페이지 주소를 표시하고 복사할 수 있게 했다.
 - `게임으로 돌아가기` 링크도 현재 관리자 페이지와 같은 host/port 기준 `index.html`로 보정한다.
 - `http://127.0.0.1:5500/admin.html`처럼 특정 포트를 고정 안내하지 않는다.
+
+
+## v114 추가 사항
+
+- `admin.html`에 최근 세이브 스냅샷 필터 영역을 추가했다.
+- 필터 항목: 표시 개수, 유저 ID, 슬롯, 출처, default만, 정렬.
+- `/admin/save-snapshots` API가 `userId`, `slotKey`, `source`, `defaultOnly`, `sort` query를 받는다.
+- 필터는 조회 조건만 바꾸며 DB/localStorage/게임 런타임을 수정하지 않는다.
+- 원본 `snapshot_json`은 계속 숨김 상태다.
