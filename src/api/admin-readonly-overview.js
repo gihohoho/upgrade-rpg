@@ -1,7 +1,7 @@
 (function () {
 	"use strict";
 
-	const VERSION = "v111.admin-readonly-overview";
+	const VERSION = "v113.admin-readonly-overview-url-helper";
 	const DEFAULT_TIMEOUT_MS = 3000;
 	const MODAL_ID = "admin-readonly-overview-modal";
 	const STYLE_ID = "admin-readonly-overview-style";
@@ -199,6 +199,26 @@
 	background: rgba(34, 197, 94, 0.18);
 	color: #bbf7d0;
 }
+#${MODAL_ID} .admin-overview-url-box {
+	margin-bottom: 12px;
+	padding: 10px 12px;
+	border-radius: 10px;
+	background: rgba(15, 23, 42, 0.72);
+	border: 1px solid rgba(148, 163, 184, 0.22);
+	color: #cbd5e1;
+	font-size: 12px;
+	line-height: 1.45;
+}
+#${MODAL_ID} .admin-overview-url-box code {
+	display: block;
+	margin-top: 5px;
+	padding: 6px 8px;
+	border-radius: 8px;
+	background: rgba(2, 6, 23, 0.82);
+	color: #bfdbfe;
+	white-space: normal;
+	word-break: break-all;
+}
 @media (max-width: 720px) {
 	#${MODAL_ID} .admin-overview-grid { grid-template-columns: 1fr; }
 }
@@ -210,6 +230,51 @@
 		const modal = document.getElementById(MODAL_ID);
 		if (modal) modal.dataset.hidden = "true";
 		return { ok: true, closed: true };
+	}
+
+	function getAdminReadOnlyPageUrl() {
+		try {
+			return new URL("admin.html", window.location.href).toString();
+		} catch (error) {
+			return "admin.html";
+		}
+	}
+
+	async function copyAdminReadOnlyPageUrl() {
+		const url = getAdminReadOnlyPageUrl();
+		try {
+			if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+				await navigator.clipboard.writeText(url);
+				return { ok: true, url, copied: true, method: "clipboard" };
+			}
+		} catch (error) {
+			// 브라우저 권한 때문에 clipboard API가 막히면 아래 fallback을 시도합니다.
+		}
+
+		try {
+			const input = document.createElement("input");
+			input.value = url;
+			input.setAttribute("readonly", "readonly");
+			input.style.position = "fixed";
+			input.style.opacity = "0";
+			document.body.appendChild(input);
+			input.select();
+			document.execCommand("copy");
+			document.body.removeChild(input);
+			return { ok: true, url, copied: true, method: "fallback" };
+		} catch (error) {
+			return { ok: false, url, copied: false, error: error && error.message ? error.message : String(error) };
+		}
+	}
+
+	function openAdminReadOnlyPage() {
+		const url = getAdminReadOnlyPageUrl();
+		if (typeof window.open === "function") {
+			const opened = window.open(url, "_blank", "noopener");
+			if (opened) return { ok: true, url, opened: true };
+		}
+		window.location.href = url;
+		return { ok: true, url, opened: false, navigated: true };
 	}
 
 	function renderMasterRows(masterData) {
@@ -278,6 +343,7 @@
 				</div>
 				<div class="admin-overview-body">
 					<div class="admin-overview-note">관리자 페이지로 넘어가기 전 DB 상태를 조회만 합니다. 이 화면은 localStorage/DB를 수정하지 않습니다.</div>
+					<div class="admin-overview-url-box">현재 게임 주소 기준 관리자 페이지 주소<code>${escapeHtml(getAdminReadOnlyPageUrl())}</code></div>
 					<div>불러오는 중...</div>
 				</div>
 			</div>
@@ -286,6 +352,11 @@
 			const action = event.target && event.target.getAttribute ? event.target.getAttribute("data-action") : null;
 			if (action === "close") closeAdminReadOnlyOverviewModal();
 			if (action === "refresh") await openAdminReadOnlyOverviewModal(opts);
+			if (action === "open-page") openAdminReadOnlyPage();
+			if (action === "copy-page-url") {
+				const result = await copyAdminReadOnlyPageUrl();
+				console.log("[Upgrade RPG] admin page URL copy", result);
+			}
 		};
 
 		let overviewResponse = null;
@@ -304,7 +375,7 @@
 			body.innerHTML = `
 				<div class="admin-overview-warning">관리자 overview를 불러오지 못했습니다.</div>
 				<div style="color:#fecaca; font-size:13px;">${escapeHtml(error)}</div>
-				<div class="admin-overview-actions"><button type="button" data-action="close">닫기</button></div>
+				<div class="admin-overview-actions"><button type="button" data-action="close">닫기</button><button type="button" data-action="open-page" data-primary="true">관리자 페이지 열기</button></div>
 			`;
 			return { ok: false, error };
 		}
@@ -321,6 +392,7 @@
 				읽기 전용 상태: ${escapeHtml(formatValue(overview.readOnly))} · 관리자 쓰기 UI: ${escapeHtml(formatValue(readiness.safeForAdminWriteUi))}<br>
 				${escapeHtml(readiness.writeUiBlockedReason || "쓰기 기능은 아직 막혀 있습니다.")}
 			</div>
+			<div class="admin-overview-url-box">현재 게임 주소 기준 관리자 페이지 주소<code>${escapeHtml(getAdminReadOnlyPageUrl())}</code></div>
 			${warnings.length ? `<div class="admin-overview-warning">경고: ${escapeHtml(warnings.join(", "))}</div>` : ""}
 			<div class="admin-overview-grid">
 				<div class="admin-overview-card"><div class="admin-overview-card-label">마스터 도메인</div><div class="admin-overview-card-value">${escapeHtml(formatValue(master.summary && master.summary.domains))}</div></div>
@@ -336,6 +408,8 @@
 			${renderSnapshotRows(snapshots)}
 			<div class="admin-overview-actions">
 				<button type="button" data-action="close">닫기</button>
+				<button type="button" data-action="copy-page-url">주소 복사</button>
+				<button type="button" data-action="open-page">관리자 페이지 열기</button>
 				<button type="button" data-action="refresh" data-primary="true">새로고침</button>
 			</div>
 		`;
@@ -350,6 +424,8 @@
 			apiReady,
 			modalReady: typeof document !== "undefined",
 			readOnly: true,
+			pageReady: true,
+			adminPageUrl: getAdminReadOnlyPageUrl(),
 		};
 		if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only overview check", result);
 		return result;
@@ -363,10 +439,16 @@
 		openAdminReadOnlyOverviewModal,
 		closeAdminReadOnlyOverviewModal,
 		checkAdminReadOnlyOverviewReady,
+		getAdminReadOnlyPageUrl,
+		copyAdminReadOnlyPageUrl,
+		openAdminReadOnlyPage,
 	};
 	window.fetchAdminReadOnlyOverview = fetchAdminReadOnlyOverview;
 	window.listAdminReadOnlySaveSnapshots = listAdminReadOnlySaveSnapshots;
 	window.openAdminReadOnlyOverviewModal = openAdminReadOnlyOverviewModal;
 	window.closeAdminReadOnlyOverviewModal = closeAdminReadOnlyOverviewModal;
 	window.checkAdminReadOnlyOverviewReady = checkAdminReadOnlyOverviewReady;
+	window.getAdminReadOnlyPageUrl = getAdminReadOnlyPageUrl;
+	window.copyAdminReadOnlyPageUrl = copyAdminReadOnlyPageUrl;
+	window.openAdminReadOnlyPage = openAdminReadOnlyPage;
 })();

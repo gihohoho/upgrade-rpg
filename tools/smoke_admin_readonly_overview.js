@@ -20,11 +20,14 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-readonly-overview.js", [
-  "v111.admin-readonly-overview",
+  "v113.admin-readonly-overview-url-helper",
   "fetchAdminReadOnlyOverview",
   "listAdminReadOnlySaveSnapshots",
   "openAdminReadOnlyOverviewModal",
   "checkAdminReadOnlyOverviewReady",
+  "openAdminReadOnlyPage",
+  "getAdminReadOnlyPageUrl",
+  "copyAdminReadOnlyPageUrl",
   "rawSnapshotReturned",
   "관리자 페이지로 넘어가기 전 DB 상태를 조회만 합니다",
 ]);

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upgrade RPG Admin - Read Only</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050816;
+      --panel: rgba(15, 23, 42, 0.82);
+      --panel-strong: rgba(15, 23, 42, 0.96);
+      --border: rgba(148, 163, 184, 0.26);
+      --border-strong: rgba(148, 163, 184, 0.42);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --soft: #cbd5e1;
+      --blue: #93c5fd;
+      --green: #86efac;
+      --red: #fecaca;
+      --amber: #fde68a;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(59, 130, 246, 0.16), transparent 34rem),
+        radial-gradient(circle at bottom right, rgba(168, 85, 247, 0.13), transparent 32rem),
+        var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    a { color: inherit; }
+    button, input { font: inherit; }
+
+    .admin-shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 44px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 8px;
+      color: var(--blue);
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.65);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 4vw, 36px);
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 780px;
+      font-size: 14px;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+      min-width: 260px;
+    }
+
+    .btn {
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      padding: 9px 12px;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+    }
+
+    .btn:hover { background: rgba(255, 255, 255, 0.13); }
+    .btn.primary {
+      border-color: rgba(34, 197, 94, 0.55);
+      background: rgba(34, 197, 94, 0.18);
+      color: #bbf7d0;
+    }
+
+    .notice {
+      border: 1px solid rgba(96, 165, 250, 0.28);
+      background: rgba(37, 99, 235, 0.12);
+      color: #bfdbfe;
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+
+    .danger-notice {
+      border-color: rgba(248, 113, 113, 0.28);
+      background: rgba(239, 68, 68, 0.10);
+      color: var(--red);
+    }
+
+    .location-notice {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border-color: rgba(148, 163, 184, 0.30);
+      background: rgba(15, 23, 42, 0.66);
+      color: var(--soft);
+    }
+
+    .location-notice code {
+      display: block;
+      margin-top: 6px;
+      color: var(--blue);
+      background: rgba(2, 6, 23, 0.74);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 9px;
+      padding: 8px 10px;
+      word-break: break-all;
+      white-space: normal;
+    }
+
+    .location-help {
+      grid-column: 1 / -1;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto auto;
+      gap: 10px;
+      align-items: center;
+      margin: 16px 0;
+    }
+
+    .api-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(2, 6, 23, 0.78);
+      color: var(--text);
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    .api-input:focus { border-color: rgba(147, 197, 253, 0.72); }
+
+    .status-line {
+      color: var(--muted);
+      font-size: 12px;
+      margin: -4px 0 16px;
+      min-height: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--panel);
+      padding: 14px;
+      min-height: 96px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 7px;
+    }
+
+    .value {
+      color: var(--text);
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+
+    .value.small { font-size: 14px; letter-spacing: -0.01em; }
+
+    .section {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.64);
+      overflow: hidden;
+      margin-top: 14px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 13px 14px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(15, 23, 42, 0.76);
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .section-meta {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .table-wrap { overflow: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+      text-align: left;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--panel-strong);
+      color: var(--soft);
+      font-size: 11px;
+      letter-spacing: 0.02em;
+    }
+    td { color: #e2e8f0; }
+    tr:hover td { background: rgba(255, 255, 255, 0.035); }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: rgba(148, 163, 184, 0.17);
+      color: var(--soft);
+      font-weight: 800;
+      font-size: 11px;
+    }
+    .pill.good { background: rgba(34, 197, 94, 0.16); color: var(--green); }
+    .pill.warn { background: rgba(245, 158, 11, 0.16); color: var(--amber); }
+    .pill.blocked { background: rgba(248, 113, 113, 0.14); color: var(--red); }
+
+    .empty, .error {
+      padding: 18px 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .error { color: var(--red); }
+
+    .footer-note {
+      margin-top: 18px;
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    @media (max-width: 920px) {
+      .topbar { flex-direction: column; }
+      .top-actions { justify-content: flex-start; min-width: 0; }
+      .toolbar { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 560px) {
+      .admin-shell { width: min(100% - 20px, 1180px); padding-top: 16px; }
+      .grid { grid-template-columns: 1fr; }
+      th, td { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="admin-shell">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow"><span class="dot"></span>Read-only Admin Preview</div>
+        <h1>Upgrade RPG 관리자 페이지</h1>
+        <p class="subtitle">현재 단계에서는 DB 상태를 조회만 합니다. 마스터 데이터와 세이브 스냅샷 요약을 확인하지만, DB/localStorage/게임 런타임을 수정하지 않습니다.</p>
+      </div>
+      <div class="top-actions">
+        <a class="btn" href="index.html" data-admin-game-url>게임으로 돌아가기</a>
+        <button class="btn primary" type="button" data-admin-action="refresh">새로고침</button>
+      </div>
+    </div>
+
+    <div class="notice">이 페이지는 관리자 화면으로 옮기기 전의 안전한 뼈대입니다. <strong>쓰기 기능은 아직 막혀 있고</strong>, 원본 save snapshot JSON도 표시하지 않습니다.</div>
+    <div class="notice danger-notice">주의: 관리자 편집/지급/삭제 버튼은 아직 만들지 않았습니다. 지금은 확인 전용입니다.</div>
+    <div class="notice location-notice">
+      <div>
+        <strong>현재 관리자 페이지 주소</strong>
+        <code data-admin-current-url>계산 중...</code>
+      </div>
+      <button class="btn" type="button" data-admin-action="copy-admin-url">주소 복사</button>
+      <div class="location-help">직접 열 때는 고정된 5500 주소가 아니라, 현재 게임이 열린 주소와 같은 host/port 기준의 admin.html 주소를 사용하면 됩니다.</div>
+    </div>
+
+    <div class="toolbar">
+      <input class="api-input" data-admin-api-base-url type="text" aria-label="API base URL" />
+      <button class="btn" type="button" data-admin-action="save-api-base-url">API URL 저장</button>
+      <button class="btn" type="button" data-admin-action="reset-api-base-url">기본값</button>
+    </div>
+    <div class="status-line" data-admin-status>대기 중...</div>
+
+    <section class="grid" data-admin-cards>
+      <div class="card"><div class="label">상태</div><div class="value small">불러오는 중...</div></div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">마스터 데이터 counts</h2>
+        <div class="section-meta" data-admin-master-meta>-</div>
+      </div>
+      <div class="table-wrap" data-admin-master-table><div class="empty">불러오는 중...</div></div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">최근 세이브 스냅샷 요약</h2>
+        <div class="section-meta" data-admin-snapshot-meta>-</div>
+      </div>
+      <div class="table-wrap" data-admin-snapshot-table><div class="empty">불러오는 중...</div></div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">관리자 준비 상태</h2>
+        <div class="section-meta">write UI locked</div>
+      </div>
+      <div data-admin-readiness><div class="empty">불러오는 중...</div></div>
+    </section>
+
+    <p class="footer-note">v113 admin page URL helper · static HTML + JS · FastAPI read-only APIs</p>
+  </main>
+
+  <script src="src/api/game-api-client.js"></script>
+  <script src="src/api/admin-page-readonly.js"></script>
+</body>
+</html>

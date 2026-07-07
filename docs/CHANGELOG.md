@@ -1,3 +1,10 @@
+## v113
+- 관리자 페이지 주소 안내를 고정 `5500` 포트가 아니라 현재 게임이 열린 주소 기준으로 계산하도록 수정했습니다.
+- `SAVE DATA → admin` overview 모달에 실제 관리자 페이지 URL 표시와 `주소 복사` 버튼을 추가했습니다.
+- `admin.html` 상단에 현재 관리자 페이지 주소를 표시하고 복사할 수 있게 했습니다.
+- 관리자 페이지의 `게임으로 돌아가기` 링크도 같은 host/port 기준 `index.html`로 보정합니다.
+- DB reset/seed는 필요 없습니다.
+
 ## v111
 - 관리자 페이지 준비를 위해 읽기 전용 `/api/v1/admin/overview` API를 추가했습니다.
 - 최근 세이브 스냅샷 요약을 조회하는 `/api/v1/admin/save-snapshots` API를 추가했습니다.
@@ -511,3 +518,12 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - Manual dual-write now verifies the DB snapshot after saving and records `synced_verified` or `saved_verify_failed`.
 - Updated the live save snapshot API checker to verify integrity metadata and invalid slot-key rejection.
 - No DB reset or seed import is required because the DB schema is unchanged.
+
+## v112 - Admin read-only page shell
+
+- Added `admin.html` as a static read-only admin page shell outside the game screen.
+- Added `src/api/admin-page-readonly.js` to render admin overview and recent save snapshot summaries with existing read-only APIs.
+- Added API base URL controls for local development.
+- Added `openAdminReadOnlyPage()` and a `관리자 페이지 열기` action from the admin overview modal.
+- The page does not mutate DB/localStorage/game runtime and does not render raw `snapshot_json`.
+- No DB reset or seed import is required.
