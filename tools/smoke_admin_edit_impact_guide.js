@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v130.admin-write-dev-key-guard",
+  "v133.admin-edit-input-ui",
   "getAdminEditImpactHint",
   "buildAdminEditImpactGuide",
   "renderAdminEditImpactGuide",
@@ -32,7 +32,7 @@ assertContains("src/api/admin-page-readonly.js", [
 ]);
 
 assertContains("admin.html", [
-  "v130 admin write dev key guard",
+  "v133 admin edit input UI",
   "edit-draft-impact",
   "impact-summary",
   "impact-row",

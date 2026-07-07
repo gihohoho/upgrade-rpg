@@ -43,7 +43,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v130.admin-write-dev-key-guard",
+  "v133.admin-edit-input-ui",
   "renderMasterDetail",
   "openAdminMasterDataDetail",
   "fetchAdminMasterDataDetail",
@@ -60,7 +60,7 @@ assertContains("admin.html", [
   "data-admin-master-detail-meta",
   ".json-preview",
   ".detail-grid",
-  "v130 admin write dev key guard",
+  "v133 admin edit input UI",
 ]);
 
 assertContains("backend/scripts/check_admin_readonly_api.py", [

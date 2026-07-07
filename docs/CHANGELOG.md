@@ -1,3 +1,31 @@
+# v133 - Admin Edit Input UI
+
+- 관리자 편집 초안 입력 UI를 필드 타입에 맞게 개선했습니다.
+- boolean 필드는 checkbox 대신 true/false select로 표시합니다.
+- number 필드는 number input으로 표시합니다.
+- description/admin_note는 textarea로 표시합니다.
+- allow-list 밖 필드는 입력칸 대신 읽기 전용/잠금 필드 카드로 표시하고 잠금 사유를 보여줍니다.
+- 백엔드 API/DB schema/seed/localStorage는 변경하지 않았습니다.
+- DB reset / seed는 필요 없습니다.
+
+
+# v132 - handoff cleanup
+
+- 새 채팅 인수인계용 `NEXT_CHAT_HANDOFF.md` 추가.
+- 현재 상태 요약 `docs/CURRENT_STATUS.md` 추가.
+- 다음 단계 추천 `docs/NEXT_STEPS.md` 추가.
+- 문서 루트 정리: 자주 보지 않는 기록성 문서를 `docs/archive/stage-notes/`로 이동.
+- `tools/run_smoke_core.sh`, `tools/run_smoke_all.sh` 추가.
+- 기능 로직 변경 없음. DB reset/seed 필요 없음.
+
+
+## v131 - Admin Edit Stale Guard
+
+- 관리자 편집 적용 전에 편집 화면을 열었을 때의 기준값과 현재 DB 값이 같은지 검사하는 stale guard를 추가했습니다.
+- 프론트 편집 초안 검증/적용 요청에 `baseValues`를 함께 보내고, 백엔드는 현재 DB 값이 달라졌으면 `staleChanges`로 차단합니다.
+- 오래된 화면에서 최신 DB 값을 덮어쓰는 실수를 막기 위해 실제 적용에는 `baseValues`가 필요합니다.
+- 관리자 화면의 초안 검증 결과에 `stale guard`, `stale count`, `오래된 초안 검사` 표를 추가했습니다.
+- DB reset / seed는 필요 없습니다.
 
 ## v130 - Admin Write Dev Key Guard
 

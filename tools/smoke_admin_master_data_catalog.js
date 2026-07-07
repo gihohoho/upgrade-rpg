@@ -47,7 +47,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v130.admin-write-dev-key-guard",
+  "v133.admin-edit-input-ui",
   "readMasterCatalogFiltersFromDom",
   "resetMasterCatalogFilters",
   "describeMasterCatalogFilters",

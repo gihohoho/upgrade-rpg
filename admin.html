@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upgrade RPG Admin - Write Dev Key Guard</title>
+  <title>Upgrade RPG Admin - Edit Input UI</title>
   <style>
     :root {
       color-scheme: dark;
@@ -465,8 +465,17 @@
       font-weight: 900;
     }
 
+    .draft-field-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      min-height: 22px;
+    }
+
     .draft-field input,
-    .draft-field textarea {
+    .draft-field textarea,
+    .draft-field select {
       width: 100%;
       border: 1px solid rgba(148, 163, 184, 0.22);
       border-radius: 10px;
@@ -474,12 +483,75 @@
       color: var(--muted);
       padding: 9px 10px;
       resize: vertical;
+      outline: none;
+      min-height: 38px;
+    }
+
+    .draft-field textarea {
+      line-height: 1.5;
+      min-height: 96px;
     }
 
     .draft-field input:disabled,
-    .draft-field textarea:disabled {
+    .draft-field textarea:disabled,
+    .draft-field select:disabled {
       opacity: 0.84;
       cursor: not-allowed;
+    }
+
+    .locked-field-panel {
+      margin-top: 12px;
+      border: 1px solid rgba(248, 113, 113, 0.20);
+      border-radius: 12px;
+      background: rgba(127, 29, 29, 0.09);
+      padding: 11px;
+    }
+
+    .locked-field-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      color: var(--soft);
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 7px;
+    }
+
+    .locked-field-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 9px;
+    }
+
+    .locked-field-card {
+      display: grid;
+      gap: 4px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 10px;
+      background: rgba(2, 6, 23, 0.34);
+      padding: 9px;
+      min-width: 0;
+    }
+
+    .locked-field-card strong {
+      color: var(--red);
+      font-size: 11px;
+    }
+
+    .locked-field-card span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--soft);
+      font-size: 12px;
+    }
+
+    .locked-field-card em {
+      color: var(--muted);
+      font-size: 11px;
+      font-style: normal;
     }
 
     .edit-draft-impact {
@@ -558,7 +630,8 @@
 
 
     .draft-field input:not(:disabled),
-    .draft-field textarea:not(:disabled) {
+    .draft-field textarea:not(:disabled),
+    .draft-field select:not(:disabled) {
       color: var(--text);
       border-color: rgba(147, 197, 253, 0.42);
       background: rgba(15, 23, 42, 0.78);
@@ -677,6 +750,7 @@
       .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .detail-grid { grid-template-columns: 1fr; }
       .edit-draft-grid { grid-template-columns: 1fr; }
+      .locked-field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .field-help-grid { grid-template-columns: 1fr; }
     }
 
@@ -684,6 +758,7 @@
       .admin-shell { width: min(100% - 20px, 1180px); padding-top: 16px; }
       .filter-grid { grid-template-columns: 1fr; }
       .grid { grid-template-columns: 1fr; }
+      .locked-field-grid { grid-template-columns: 1fr; }
       th, td { padding: 8px 10px; }
     }
   </style>
@@ -702,7 +777,7 @@
       </div>
     </div>
 
-    <div class="notice">이 페이지는 관리자 화면으로 옮기기 전의 안전한 뼈대입니다. <strong>마스터 데이터 allow-list 필드</strong>는 검증 + 확인 문구 + dev key를 거쳐 실제 DB 적용이 가능하고, 변경 전 영향 안내와 변경 후 <code>/game/master-data</code> API 반영 확인을 제공합니다. localStorage와 현재 게임 런타임은 직접 수정하지 않습니다.</div>
+    <div class="notice">이 페이지는 관리자 화면으로 옮기기 전의 안전한 뼈대입니다. <strong>마스터 데이터 allow-list 필드</strong>는 타입별 입력 UI + 검증 + 확인 문구 + dev key를 거쳐 실제 DB 적용이 가능하고, 변경 전 영향 안내와 변경 후 <code>/game/master-data</code> API 반영 확인을 제공합니다. localStorage와 현재 게임 런타임은 직접 수정하지 않습니다.</div>
     <div class="notice danger-notice">주의: 지급/삭제/JSON/이미지/관계 코드 변경은 아직 막혀 있습니다. 실제 적용/되돌리기는 name, description, 수치 밸런스, is_enabled 등 좁은 필드만 가능합니다.</div>
     <div class="notice location-notice">
       <div>
@@ -997,7 +1072,7 @@
       <div data-admin-readiness><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <p class="footer-note">v130 admin write dev key guard · static HTML + JS · FastAPI guarded write/rollback APIs</p>
+    <p class="footer-note">v133 admin edit input UI · static HTML + JS · FastAPI guarded write/rollback APIs</p>
   </main>
 
   <script src="src/api/game-api-client.js"></script>

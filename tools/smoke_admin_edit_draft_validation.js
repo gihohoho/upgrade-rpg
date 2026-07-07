@@ -55,7 +55,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v130.admin-write-dev-key-guard",
+  "v133.admin-edit-input-ui",
   "previewAdminEditDraft",
   "readAdminEditDraftValues",
   "resetAdminEditDraft",
@@ -67,7 +67,7 @@ assertContains("src/api/admin-page-readonly.js", [
 ]);
 
 assertContains("admin.html", [
-  "v130 admin write dev key guard",
+  "v133 admin edit input UI",
   ".edit-draft-result",
   ".draft-preview-summary",
   "확인 문구",

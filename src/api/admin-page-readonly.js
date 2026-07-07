@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v130.admin-write-dev-key-guard";
+  const VERSION = "v133.admin-edit-input-ui";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -27,6 +27,28 @@
     enhancementLevels: ["to_level", "success_rate", "gold_cost"],
     characterSkills: ["sort_order", "is_default"],
   };
+  const ADMIN_DRAFT_BOOLEAN_FIELDS = new Set(["stackable", "is_enabled", "is_default"]);
+  const ADMIN_DRAFT_NUMBER_FIELDS = new Set([
+    "grade",
+    "proc_rate",
+    "cooldown_seconds",
+    "damage_multiplier",
+    "proc_rate_bonus",
+    "tier",
+    "hp",
+    "sort_order",
+    "enemy_hp",
+    "gold_reward",
+    "rate",
+    "min_quantity",
+    "max_quantity",
+    "max_level",
+    "to_level",
+    "success_rate",
+    "gold_cost",
+  ]);
+  const ADMIN_DRAFT_TEXTAREA_FIELDS = new Set(["description", "admin_note"]);
+  const ADMIN_DRAFT_VISIBLE_LOCKED_LIMIT = 18;
 
   let currentMasterDetailPayload = null;
   let currentAdminChangeLogDetailPayload = null;
@@ -685,11 +707,70 @@
     return (ADMIN_EDIT_ALLOWED_FIELDS[domain] || []).slice();
   }
 
-  function inputTypeForDraftField(field) {
+  function normalizeAdminDraftFieldKey(key) {
+    return String(key || "").trim().toLowerCase();
+  }
+
+  function getAdminDraftFieldInputKind(field) {
+    const key = normalizeAdminDraftFieldKey(field && field.key);
     const value = field ? field.value : null;
-    if (typeof value === "number") return "number";
-    if (typeof value === "boolean") return "checkbox";
+    const valueText = value === null || value === undefined ? "" : String(value);
+    const isLongText = valueText.length > 90 || valueText.includes("\n");
+    if (ADMIN_DRAFT_BOOLEAN_FIELDS.has(key) || typeof value === "boolean") return "boolean-select";
+    if (ADMIN_DRAFT_NUMBER_FIELDS.has(key) || typeof value === "number") return "number";
+    if (ADMIN_DRAFT_TEXTAREA_FIELDS.has(key) || isLongText) return "textarea";
     return "text";
+  }
+
+  function getAdminDraftFieldTypeLabel(kind) {
+    if (kind === "boolean-select") return "true/false select";
+    if (kind === "number") return "number input";
+    if (kind === "textarea") return "textarea";
+    return "text input";
+  }
+
+  function getAdminDraftLockedReason(key) {
+    const normalized = normalizeAdminDraftFieldKey(key);
+    if (normalized === "id" || normalized === "code") return "식별자 필드라 잠금";
+    if (normalized.endsWith("_id") || normalized.endsWith("_code")) return "관계/연결 필드라 잠금";
+    if (normalized.endsWith("_json")) return "JSON 원본 필드는 아직 편집 막음";
+    if (normalized === "created_at" || normalized === "updated_at" || normalized === "createdat" || normalized === "updatedat") return "자동 시간 필드라 잠금";
+    return "allow-list 밖이라 잠금";
+  }
+
+  function renderAdminDraftTypeBadge(kind) {
+    const label = getAdminDraftFieldTypeLabel(kind);
+    const tone = kind === "boolean-select" ? "good" : (kind === "number" ? "warn" : "");
+    return `<span class="pill ${escapeHtml(tone)}">${escapeHtml(label)}</span>`;
+  }
+
+  function renderAdminDraftLockedFields(lockedFields) {
+    const safeFields = Array.isArray(lockedFields) ? lockedFields : [];
+    if (!safeFields.length) return "";
+    const visibleFields = safeFields.slice(0, ADMIN_DRAFT_VISIBLE_LOCKED_LIMIT);
+    const hiddenCount = Math.max(0, safeFields.length - visibleFields.length);
+    return `
+      <div class="locked-field-panel" data-admin-edit-locked-fields>
+        <div class="locked-field-title">
+          <span>읽기 전용/잠금 필드</span>
+          <span class="pill blocked">수정 불가 ${escapeHtml(formatValue(safeFields.length))}</span>
+        </div>
+        <div class="filter-help">아래 필드는 화면에 보이지만 실수 방지를 위해 입력칸을 만들지 않았습니다. 코드/연결값/JSON/시간값은 아직 관리자에서 직접 수정하지 않는 쪽이 안전합니다.</div>
+        <div class="locked-field-grid">
+          ${visibleFields.map((field) => {
+            const reason = getAdminDraftLockedReason(field.key);
+            return `
+              <div class="locked-field-card">
+                <strong>${escapeHtml(field.label || field.key)}</strong>
+                <span>${escapeHtml(formatValue(field.value))}</span>
+                <em>${escapeHtml(reason)}</em>
+              </div>
+            `;
+          }).join("")}
+        </div>
+        ${hiddenCount ? `<div class="filter-help">잠금 필드 ${escapeHtml(formatValue(hiddenCount))}개는 너무 많아서 일부만 표시했습니다.</div>` : ""}
+      </div>
+    `;
   }
 
   function makeDraftOriginalValue(value) {
@@ -708,53 +789,65 @@
     }
   }
 
+  function renderAdminDraftControl(field, kind) {
+    const value = field ? field.value : null;
+    const valueText = value === null || value === undefined ? "" : String(value);
+    const original = makeDraftOriginalValue(value);
+    const key = field ? field.key : "";
+    const commonAttrs = `data-admin-edit-draft-field="${escapeHtml(key)}" data-admin-edit-draft-original="${escapeHtml(original)}"`;
+    if (kind === "boolean-select") {
+      const normalized = value === true || String(value).toLowerCase() === "true" ? "true" : "false";
+      return `
+        <select ${commonAttrs} data-admin-edit-draft-value-type="boolean" aria-label="${escapeHtml(field.label || key)} true false 선택">
+          <option value="true" ${normalized === "true" ? "selected" : ""}>true · 켜짐</option>
+          <option value="false" ${normalized === "false" ? "selected" : ""}>false · 꺼짐</option>
+        </select>
+      `;
+    }
+    if (kind === "number") {
+      return `<input type="number" inputmode="decimal" step="any" value="${escapeHtml(valueText)}" ${commonAttrs} data-admin-edit-draft-value-type="number" />`;
+    }
+    if (kind === "textarea") {
+      const rows = ADMIN_DRAFT_TEXTAREA_FIELDS.has(normalizeAdminDraftFieldKey(key)) ? 4 : 3;
+      return `<textarea rows="${rows}" ${commonAttrs} data-admin-edit-draft-value-type="text">${escapeHtml(valueText)}</textarea>`;
+    }
+    return `<input type="text" value="${escapeHtml(valueText)}" ${commonAttrs} data-admin-edit-draft-value-type="text" />`;
+  }
+
   function renderMasterEditDraft(detail, fields) {
     const safeFields = Array.isArray(fields) ? fields : [];
     const domain = detail && detail.domain ? detail.domain : DEFAULT_MASTER_DOMAIN;
     const candidateFields = safeFields.filter((field) => !fieldKeyLooksReadOnly(field.key));
-    const editableFields = candidateFields.filter((field) => isAdminEditApplyAllowedField(domain, field.key)).slice(0, 14);
-    const lockedFields = candidateFields.filter((field) => !isAdminEditApplyAllowedField(domain, field.key)).map((field) => field.key);
-    const hiddenCount = Math.max(0, candidateFields.length - editableFields.length);
+    const editableCandidateFields = candidateFields.filter((field) => isAdminEditApplyAllowedField(domain, field.key));
+    const editableFields = editableCandidateFields.slice(0, 14);
+    const lockedFields = candidateFields.filter((field) => !isAdminEditApplyAllowedField(domain, field.key));
+    const editableOverflowCount = Math.max(0, editableCandidateFields.length - editableFields.length);
     const rows = editableFields.length ? editableFields.map((field) => {
       const value = field.value;
-      const valueText = value === null || value === undefined ? "" : String(value);
-      const isLong = String(valueText).length > 90 || String(valueText).includes("\n");
-      const type = inputTypeForDraftField(field);
+      const kind = getAdminDraftFieldInputKind(field);
       const label = field.label || field.key;
-      const original = makeDraftOriginalValue(value);
-      if (type === "checkbox") {
-        return `
-          <label class="draft-field draft-field-check">
-            <span>${escapeHtml(label)}${renderFieldHelpBadge(field.key)}</span>
-            ${renderFieldHelpInline(field.key)}
-            ${renderFieldValueHintInline(field.key, value)}
-            <label class="check-field" style="margin:0; padding:9px 10px; border-radius:10px; border:1px solid rgba(148, 163, 184, 0.22); background:rgba(2, 6, 23, 0.56);">
-              <input type="checkbox" ${value ? "checked" : ""} data-admin-edit-draft-field="${escapeHtml(field.key)}" data-admin-edit-draft-original="${escapeHtml(original)}" data-admin-edit-draft-value-type="boolean" />
-              true / false
-            </label>
-          </label>
-        `;
-      }
       return `
-        <label class="draft-field">
-          <span>${escapeHtml(label)}${renderFieldHelpBadge(field.key)}</span>
+        <label class="draft-field draft-field-${escapeHtml(kind)}">
+          <span class="draft-field-heading">
+            <span>${escapeHtml(label)}${renderFieldHelpBadge(field.key)}</span>
+            ${renderAdminDraftTypeBadge(kind)}
+          </span>
           ${renderFieldHelpInline(field.key)}
           ${renderFieldValueHintInline(field.key, value)}
-          ${isLong
-            ? `<textarea rows="3" data-admin-edit-draft-field="${escapeHtml(field.key)}" data-admin-edit-draft-original="${escapeHtml(original)}" data-admin-edit-draft-value-type="text">${escapeHtml(valueText)}</textarea>`
-            : `<input type="${type === "number" ? "number" : "text"}" value="${escapeHtml(valueText)}" data-admin-edit-draft-field="${escapeHtml(field.key)}" data-admin-edit-draft-original="${escapeHtml(original)}" data-admin-edit-draft-value-type="${escapeHtml(type)}" />`}
+          ${renderAdminDraftControl(field, kind)}
         </label>
       `;
     }).join("") : `<div class="empty">이 도메인에서 실제 적용까지 열어둔 일반 필드가 없습니다.</div>`;
 
     return `
       <div class="detail-card edit-draft-card" data-admin-edit-draft data-admin-edit-draft-domain="${escapeHtml(domain || "")}" data-admin-edit-draft-id="${escapeHtml(detail.id || "")}">
-        <div class="detail-title">관리자 편집 초안 <span class="pill warn">guarded apply</span><span class="pill good">change log</span></div>
-        <div class="filter-help">이제 allow-list 필드는 실제 DB 적용까지 가능합니다. 먼저 <strong>초안 검증</strong>으로 오류가 없는지 확인한 뒤, dev key와 확인 문구 <code>${escapeHtml(ADMIN_EDIT_APPLY_CONFIRM_TEXT)}</code>를 정확히 입력해야 적용됩니다. 게임 화면은 새로고침 후 최신 master-data를 다시 읽습니다.</div>
+        <div class="detail-title">관리자 편집 초안 <span class="pill warn">guarded apply</span><span class="pill good">typed inputs</span><span class="pill good">change log</span></div>
+        <div class="filter-help">allow-list 필드는 실제 DB 적용까지 가능합니다. 입력 실수를 줄이기 위해 boolean은 <strong>true/false select</strong>, number는 <strong>number input</strong>, description/admin_note는 <strong>textarea</strong>로 표시합니다.</div>
+        <div class="filter-help">먼저 <strong>초안 검증</strong>으로 오류가 없는지 확인한 뒤, dev key와 확인 문구 <code>${escapeHtml(ADMIN_EDIT_APPLY_CONFIRM_TEXT)}</code>를 정확히 입력해야 적용됩니다. 적용 직전에는 편집 화면을 열었을 때의 기준값과 현재 DB 값이 같은지도 한 번 더 검사합니다.</div>
         <div class="filter-help">실제 적용 가능 필드: ${escapeHtml(getAdminEditAllowedFields(domain).join(", ") || "없음")}</div>
-        ${lockedFields.length ? `<div class="filter-help">연결/식별자라 잠근 필드: ${escapeHtml(lockedFields.slice(0, 12).join(", "))}${lockedFields.length > 12 ? " ..." : ""}</div>` : ""}
         <div class="edit-draft-grid">${rows}</div>
-        ${hiddenCount ? `<div class="filter-help">표시 제한/잠금으로 ${escapeHtml(formatValue(hiddenCount))}개 필드는 편집 초안에서 제외했습니다.</div>` : ""}
+        ${editableOverflowCount ? `<div class="filter-help">표시 제한으로 실제 적용 가능 필드 ${escapeHtml(formatValue(editableOverflowCount))}개는 편집 초안에서 제외했습니다.</div>` : ""}
+        ${renderAdminDraftLockedFields(lockedFields)}
         <div class="edit-draft-impact" data-admin-edit-impact><div class="empty">값을 바꾸면 여기에 <strong>인게임 영향 안내</strong>가 표시됩니다.</div></div>
         <div class="edit-draft-actions">
           <button class="btn mini primary" type="button" data-admin-action="preview-admin-edit-draft">초안 검증</button>
@@ -763,6 +856,7 @@
           <label class="apply-confirm-field"><span>변경 사유</span><input type="text" data-admin-edit-apply-reason placeholder="예: 보스 HP 밸런스 조정" autocomplete="off" /></label>
           <button class="btn mini danger" type="button" data-admin-action="apply-admin-edit-draft">검증 후 실제 적용</button>
           <span class="pill warn">DB write: dev-key guarded</span>
+          <span class="pill good">stale guard</span>
         </div>
         <div class="edit-draft-result" data-admin-edit-draft-result><div class="empty">값을 바꾼 뒤 <strong>초안 검증</strong>을 누르세요. 실제 적용은 확인 문구가 맞고 검증 오류가 없을 때만 됩니다.</div></div>
       </div>
@@ -781,7 +875,7 @@
       const type = field.getAttribute("data-admin-edit-draft-value-type") || "text";
       const original = parseDraftOriginalValue(field.getAttribute("data-admin-edit-draft-original"));
       originals[key] = original;
-      if (type === "boolean") values[key] = !!field.checked;
+      if (type === "boolean") values[key] = field.value === "true";
       else values[key] = field.value;
     });
     return {
@@ -800,7 +894,7 @@
     Array.from(draft.querySelectorAll("[data-admin-edit-draft-field]")).forEach((field) => {
       const type = field.getAttribute("data-admin-edit-draft-value-type") || "text";
       const original = parseDraftOriginalValue(field.getAttribute("data-admin-edit-draft-original"));
-      if (type === "boolean") field.checked = !!original;
+      if (type === "boolean") field.value = original ? "true" : "false";
       else field.value = original === null || original === undefined ? "" : String(original);
     });
     const result = $(`[data-admin-edit-draft-result]`);
@@ -1026,6 +1120,7 @@
     const accepted = Array.isArray(payload.acceptedChanges) ? payload.acceptedChanges : [];
     const rejected = Array.isArray(payload.rejectedChanges) ? payload.rejectedChanges : [];
     const unchanged = Array.isArray(payload.unchangedChanges) ? payload.unchangedChanges : [];
+    const stale = Array.isArray(payload.staleChanges) ? payload.staleChanges : [];
     const warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
     const acceptedRows = accepted.length ? accepted.map((change) => `
       <tr><td>${escapeHtml(change.label || change.key)}</td><td>${escapeHtml(formatValue(change.before))}</td><td>${escapeHtml(formatValue(change.after))}</td><td>${escapeHtml(change.type || "-")}</td></tr>
@@ -1033,6 +1128,9 @@
     const rejectedRows = rejected.length ? rejected.map((change) => `
       <tr><td>${escapeHtml(change.label || change.key)}</td><td>${escapeHtml(formatValue(change.after))}</td><td>${escapeHtml(change.reason || "rejected")}</td></tr>
     `).join("") : `<tr><td colspan="3">오류 없음</td></tr>`;
+    const staleRows = stale.length ? stale.map((change) => `
+      <tr><td>${escapeHtml(change.label || change.key)}</td><td>${escapeHtml(formatValue(change.base))}</td><td>${escapeHtml(formatValue(change.current))}</td><td>${escapeHtml(formatValue(change.after))}</td></tr>
+    `).join("") : `<tr><td colspan="4">오래된 초안 아님</td></tr>`;
     const applied = payload.applied === true;
     const modeLabel = applied ? "applied" : (payload.dryRun ? "preview only" : "apply result");
     const draftValuesForImpact = readAdminEditDraftValues();
@@ -1047,6 +1145,8 @@
         <span class="pill">diff ${escapeHtml(formatValue(payload.diffCount))}</span>
         <span class="pill">errors ${escapeHtml(formatValue(payload.errorCount))}</span>
         <span class="pill">unchanged ${escapeHtml(formatValue(payload.unchangedCount || unchanged.length))}</span>
+        <span class="pill ${payload.staleGuardEnabled === false ? "warn" : "good"}">stale guard: ${escapeHtml(payload.staleGuardEnabled === false ? "off" : "on")}</span>
+        <span class="pill ${stale.length ? "blocked" : "good"}">stale ${escapeHtml(formatValue(payload.staleCount || stale.length))}</span>
         ${payload.changeLogId ? `<span class="pill good">change log #${escapeHtml(formatValue(payload.changeLogId))}</span>` : ""}
       </div>
       ${warnings.length ? `<div class="filter-help">warnings: ${escapeHtml(warnings.join(", "))}</div>` : ""}
@@ -1054,6 +1154,11 @@
       <details class="json-detail" open>
         <summary>변경 값 <span class="pill good">${escapeHtml(modeLabel)}</span></summary>
         <div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>이전 DB 값</th><th>적용/초안 값</th><th>타입</th></tr></thead><tbody>${acceptedRows}</tbody></table></div>
+      </details>
+      <details class="json-detail" ${stale.length ? "open" : ""}>
+        <summary>오래된 초안 검사 <span class="pill ${stale.length ? "blocked" : "good"}">${escapeHtml(formatValue(stale.length))}</span></summary>
+        <div class="filter-help">편집 화면을 연 뒤 다른 변경이 먼저 적용됐다면, 이 초안은 최신 DB 값을 덮어쓸 수 있어서 차단됩니다. 이 경우 상세를 다시 열고 새 기준값으로 수정하세요.</div>
+        <div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>화면 열 때 값</th><th>현재 DB 값</th><th>내 초안 값</th></tr></thead><tbody>${staleRows}</tbody></table></div>
       </details>
       <details class="json-detail" ${rejected.length ? "open" : ""}>
         <summary>검증 오류 <span class="pill ${rejected.length ? "blocked" : "good"}">${escapeHtml(formatValue(rejected.length))}</span></summary>
@@ -1089,6 +1194,7 @@
       domain: values.domain,
       id: values.id,
       draft: values.draft,
+      baseValues: values.originals,
       reason: applyControls.reason || undefined,
       dryRun: true,
       timeoutMs,
@@ -1128,6 +1234,7 @@
       domain: values.domain,
       id: values.id,
       draft: values.draft,
+      baseValues: values.originals,
       reason: controls.reason || undefined,
       confirmText: controls.confirmText,
       timeoutMs,
@@ -2090,6 +2197,8 @@
     renderFieldValueHintInline,
     isAdminEditApplyAllowedField,
     getAdminEditAllowedFields,
+    getAdminDraftFieldInputKind,
+    getAdminDraftLockedReason,
     checkAdminReadOnlyPageReady,
   };
   window.refreshAdminReadOnlyPage = refreshAdminReadOnlyPage;
@@ -2117,6 +2226,8 @@
   window.getAdminFieldHelp = getAdminFieldHelp;
   window.listAdminFieldHelp = listAdminFieldHelp;
   window.getAdminFieldValueHint = getAdminFieldValueHint;
+  window.getAdminDraftFieldInputKind = getAdminDraftFieldInputKind;
+  window.getAdminDraftLockedReason = getAdminDraftLockedReason;
   window.getCurrentAdminPageUrl = getCurrentAdminPageUrl;
   window.copyCurrentAdminPageUrl = copyCurrentAdminPageUrl;
   window.openAdminChangeLogDetail = openAdminChangeLogDetail;

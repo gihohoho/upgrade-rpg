@@ -1,77 +1,55 @@
 # Docs Index
 
-문서가 너무 많이 쌓이지 않도록 `docs/` 루트에는 지금 자주 보는 문서만 남기고, 과거 단계별 기록은 `docs/archive/stage-notes/`로 이동했습니다.
+새 채팅에서 이어갈 때는 먼저 아래 문서를 보면 됩니다.
 
 ## 지금 자주 보는 문서
 
-### 실행/개발 환경
+## 가장 먼저 볼 문서
+
+- `../NEXT_CHAT_HANDOFF.md` — 새 채팅 인수인계 전체 요약
+- `CURRENT_STATUS.md` — 현재 정상 작동 상태 요약
+- `NEXT_STEPS.md` — 다음 단계 추천
+- `CHANGELOG.md` — 전체 변경 히스토리
+
+## 실행/개발 환경
 
 - `LOCAL_DEV_SETUP.md`
 - `DOCKER_POSTGRES_GUIDE.md`
-- `LOCAL_DB_PORT_POLICY.md`
 - `GIT_WORKFLOW.md`
 
-### 백엔드/DB/API 기준
+## smoke 호환을 위해 루트에 남긴 단계 문서
 
+일부 smoke test가 문서 존재 여부를 확인하므로 아래 문서는 루트에 유지합니다.
+
+- `ADMIN_EDIT_DRAFT_SHELL.md`
+- `ADMIN_EDIT_DRAFT_VALIDATION.md`
+- `ADMIN_EDIT_IMPACT_GUIDE.md`
+- `ADMIN_EDIT_INPUT_UI.md`
+- `ADMIN_FIELD_HELP.md`
+- `ADMIN_GUARDED_EDIT_APPLY.md`
+- `ADMIN_MASTER_API_VERIFY.md`
+- `ADMIN_POST_EDIT_API_VERIFY.md`
+- `ADMIN_VALUE_HINTS.md`
+- `ADMIN_REQUIREMENTS_V1.md`
 - `BACKEND_ARCHITECTURE.md`
 - `BACKEND_API_ROUTES_DRAFT.md`
 - `DB_SCHEMA_DRAFT.md`
-- `API_RESPONSE_CONTRACT.md`
-- `MASTER_DATA_API.md`
-- `SEED_IMPORT.md`
-- `SEED_EXTRACTION.md`
-
-### 현재 관리자 페이지
-
-- `ADMIN_PAGE_REQUIREMENTS.md`
-- `ADMIN_EDIT_DRAFT_SHELL.md`
-- `ADMIN_EDIT_DRAFT_VALIDATION.md`
-- `ADMIN_FIELD_HELP.md`
-- `ADMIN_VALUE_HINTS.md`
-- `ADMIN_GUARDED_EDIT_APPLY.md`
-- `ADMIN_CHANGE_LOG_ROLLBACK.md`
-- `ADMIN_EDIT_IMPACT_GUIDE.md`
-- `ADMIN_MASTER_API_VERIFY.md`
-- `ADMIN_POST_EDIT_API_VERIFY.md`
-- `RUNTIME_STACKABLE_ITEMS.md`
+- `MASTER_DATA_BROWSER_CHECKLIST.md`
 - `RUNTIME_STACKED_ENHANCE_SPACE_GUARD.md`
-
-### 현재 세이브 데이터 연결
-
+- `SAVE_DATA_BADGE_RESTORE_ACTIONS.md`
 - `SAVE_DATA_DEV_BADGE.md`
 - `SAVE_DATA_DUAL_WRITE.md`
 - `SAVE_DATA_PREVIEW_COMPARE.md`
 - `SAVE_DATA_RESTORE_GUARD.md`
 - `SAVE_DATA_RESTORE_RELOAD_LOCK.md`
 - `SAVE_DATA_SLOT_LIST.md`
-- `SAVE_SNAPSHOT_API.md`
-
-### 마스터 데이터 런타임 검증
-
-- `MASTER_DATA_RUNTIME_VALIDATOR.md`
-- `MASTER_DATA_BROWSER_CHECKLIST.md`
-- `MASTER_DATA_PARITY_CHECKER.md`
-- `MASTER_DATA_NULLABLE_FIELDS.md`
-
-### 히스토리
-
-- `CHANGELOG.md`
-- `DECISION_LOG.md`
-- `CODE_MAP.md`
 
 ## 보관 문서
 
-`docs/archive/stage-notes/`에는 과거 단계별 기록성 문서를 보관합니다.
+과거 단계별 기록성 문서는 아래로 이동했습니다.
 
-예:
-
-- 과거 UI 수정 기록
-- 과거 관리자 read-only 단계별 문서
-- 과거 master-data dev badge 단계 문서
-- seed import 임시 이슈 해결 기록
+```txt
+docs/archive/stage-notes/
+```
 
 삭제하지 않고 이동만 했기 때문에, 필요하면 언제든 다시 참고할 수 있습니다.
-
-- [Admin Change Log Filters](ADMIN_CHANGE_LOG_FILTERS.md) - 관리자 변경 이력 필터/검색.
-
-- [ADMIN_WRITE_DEV_KEY_GUARD.md](ADMIN_WRITE_DEV_KEY_GUARD.md): 관리자 실제 적용/되돌리기 API에 로컬 dev key 잠금 추가.
