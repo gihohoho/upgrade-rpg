@@ -39,12 +39,19 @@ def main() -> int:
     default_snapshots_url = f"{base_url}/admin/save-snapshots?limit={args.limit}&defaultOnly=true&sort=updated_desc"
     master_domains_url = f"{base_url}/admin/master-data/domains"
     master_catalog_url = f"{base_url}/admin/master-data/catalog?domain=itemTemplates&limit=10&sort=code_asc"
+    master_detail_url = None
 
     overview = request_json("GET", overview_url)
     snapshots = request_json("GET", snapshots_url)
     default_snapshots = request_json("GET", default_snapshots_url)
     master_domains = request_json("GET", master_domains_url)
     master_catalog = request_json("GET", master_catalog_url)
+    first_catalog_row = ((master_catalog.get("payload") or {}).get("rows") or [None])[0]
+    if first_catalog_row and first_catalog_row.get("id"):
+        master_detail_url = f"{base_url}/admin/master-data/detail?domain=itemTemplates&id={first_catalog_row.get('id')}"
+        master_detail = request_json("GET", master_detail_url)
+    else:
+        master_detail = None
 
     failures: list[str] = []
     if not overview.get("ok"):
@@ -61,12 +68,15 @@ def main() -> int:
         failures.append("master-data domains type mismatch")
     if master_catalog.get("type") != "admin.master_data.catalog":
         failures.append("master-data catalog type mismatch")
+    if master_detail is not None and master_detail.get("type") != "admin.master_data.detail":
+        failures.append("master-data detail type mismatch")
 
     overview_payload = overview.get("payload") or {}
     snapshots_payload = snapshots.get("payload") or {}
     default_snapshots_payload = default_snapshots.get("payload") or {}
     master_domains_payload = master_domains.get("payload") or {}
     master_catalog_payload = master_catalog.get("payload") or {}
+    master_detail_payload = master_detail.get("payload") if master_detail else None
     if overview_payload.get("readOnly") is not True:
         failures.append("overview readOnly should be true")
     if snapshots_payload.get("readOnly") is not True:
@@ -77,6 +87,8 @@ def main() -> int:
         failures.append("master-data domains readOnly should be true")
     if master_catalog_payload.get("readOnly") is not True:
         failures.append("master-data catalog readOnly should be true")
+    if master_detail_payload is not None and master_detail_payload.get("readOnly") is not True:
+        failures.append("master-data detail readOnly should be true")
     filters = snapshots_payload.get("filters") or {}
     default_filters = default_snapshots_payload.get("filters") or {}
     if not isinstance(filters, dict):
@@ -102,6 +114,15 @@ def main() -> int:
         failures.append("master-data catalog should hide raw JSON and assets")
     if not isinstance(master_catalog_payload.get("columns"), list):
         failures.append("master-data catalog columns missing")
+    if master_detail_payload is not None:
+        if master_detail_payload.get("rawJsonReturned") is not False or master_detail_payload.get("assetsReturned") is not False:
+            failures.append("master-data detail should hide raw JSON and assets")
+        if master_detail_payload.get("sanitizedJsonReturned") is not True:
+            failures.append("master-data detail should return sanitized JSON preview")
+        if not isinstance(master_detail_payload.get("fields"), list):
+            failures.append("master-data detail fields missing")
+        if not isinstance(master_detail_payload.get("jsonFields"), list):
+            failures.append("master-data detail jsonFields missing")
     snapshot_rows = snapshots_payload.get("snapshots") or []
     default_snapshot_rows = default_snapshots_payload.get("snapshots") or []
     if not isinstance(snapshot_rows, list):
@@ -132,12 +153,14 @@ def main() -> int:
         "defaultSnapshotsUrl": default_snapshots_url,
         "masterDomainsUrl": master_domains_url,
         "masterCatalogUrl": master_catalog_url,
+        "masterDetailUrl": master_detail_url,
         "overview": overview.get("data"),
         "readiness": readiness,
         "saveSnapshots": snapshots.get("data"),
         "defaultSaveSnapshots": default_snapshots.get("data"),
         "masterDomains": master_domains.get("data"),
         "masterCatalog": master_catalog.get("data"),
+        "masterDetail": master_detail.get("data") if master_detail else None,
         "failures": failures,
     }
 

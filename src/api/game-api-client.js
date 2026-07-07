@@ -181,6 +181,21 @@
 		});
 	}
 
+	async function fetchAdminMasterDataDetail(options) {
+		const opts = options || {};
+		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
+		const domain = opts.domain !== undefined ? String(opts.domain || "").trim() : undefined;
+		const id = opts.id !== undefined ? Number(opts.id) : (opts.rowId !== undefined ? Number(opts.rowId) : undefined);
+		return request("/admin/master-data/detail", {
+			query: {
+				domain,
+				id,
+			},
+			timeoutMs,
+		});
+	}
+
+
 	async function saveGameSnapshot(payload, options) {
 		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : undefined;
 		return request("/game/save", {
@@ -214,6 +229,7 @@
 		listAdminSaveSnapshots,
 		listAdminMasterCatalogDomains,
 		listAdminMasterCatalogRows,
+		fetchAdminMasterDataDetail,
 		loadGameSnapshot,
 	};
 })();

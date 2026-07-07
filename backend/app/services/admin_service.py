@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, inspect as sa_inspect, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
@@ -324,6 +324,114 @@ class AdminService:
             "note": "관리자 마스터 데이터 카탈로그 조회 전용 목록입니다. 원본 JSON과 이미지 data URL은 내려주지 않습니다.",
         }
 
+
+    async def get_master_catalog_detail(
+        self,
+        session: AsyncSession,
+        *,
+        domain: str = "itemTemplates",
+        row_id: int,
+    ) -> dict[str, Any]:
+        """Return one sanitized master-data row for the read-only admin detail panel.
+
+        This is intentionally not an edit endpoint. It returns normal scalar fields
+        and sanitized JSON previews, but it hides inline image/data URL assets and
+        still marks the response as read-only.
+        """
+        config = self.MASTER_CATALOG_DOMAINS.get(domain)
+        if not config:
+            return {
+                "status": "invalid_domain",
+                "readOnly": True,
+                "domain": domain,
+                "domainLabel": domain,
+                "id": row_id,
+                "title": "-",
+                "fields": [],
+                "jsonFields": [],
+                "assetFields": [],
+                "relationHints": [],
+                "rawJsonReturned": False,
+                "sanitizedJsonReturned": False,
+                "assetsReturned": False,
+                "safeForAdminWriteUi": False,
+                "warnings": ["domain_invalid"],
+            }
+
+        model = config["model"]
+        safe_row_id = int(row_id or 0)
+        if safe_row_id <= 0:
+            return {
+                "status": "invalid_id",
+                "readOnly": True,
+                "domain": domain,
+                "domainLabel": config["label"],
+                "id": row_id,
+                "title": "-",
+                "fields": [],
+                "jsonFields": [],
+                "assetFields": [],
+                "relationHints": [],
+                "rawJsonReturned": False,
+                "sanitizedJsonReturned": False,
+                "assetsReturned": False,
+                "safeForAdminWriteUi": False,
+                "warnings": ["id_invalid"],
+            }
+
+        result = await session.execute(select(model).where(model.id == safe_row_id))
+        row = result.scalar_one_or_none()
+        if row is None:
+            return {
+                "status": "not_found",
+                "readOnly": True,
+                "domain": domain,
+                "domainLabel": config["label"],
+                "id": safe_row_id,
+                "title": "-",
+                "fields": [],
+                "jsonFields": [],
+                "assetFields": [],
+                "relationHints": [],
+                "rawJsonReturned": False,
+                "sanitizedJsonReturned": False,
+                "assetsReturned": False,
+                "safeForAdminWriteUi": False,
+                "warnings": ["row_not_found"],
+            }
+
+        scalar_fields, asset_fields = self._serialize_master_detail_scalar_fields(row)
+        json_fields = self._serialize_master_detail_json_fields(row)
+        relation_hints = await self._build_master_detail_relation_hints(session, domain, row)
+        title = getattr(row, "name", None) or getattr(row, "code", None) or f"#{safe_row_id}"
+        asset_hidden_count = sum(int(field.get("hiddenAssetCount") or 0) for field in json_fields)
+        asset_hidden_count += sum(1 for field in asset_fields if field.get("hidden"))
+        warnings: list[str] = []
+        if asset_hidden_count:
+            warnings.append("assets_hidden")
+        if any(field.get("truncatedCount") for field in json_fields):
+            warnings.append("json_preview_truncated")
+
+        return {
+            "status": "loaded",
+            "readOnly": True,
+            "domain": domain,
+            "domainLabel": config["label"],
+            "description": config.get("description"),
+            "id": safe_row_id,
+            "title": title,
+            "fields": scalar_fields,
+            "jsonFields": json_fields,
+            "assetFields": asset_fields,
+            "relationHints": relation_hints,
+            "rawJsonReturned": False,
+            "sanitizedJsonReturned": True,
+            "assetsReturned": False,
+            "safeForAdminWriteUi": False,
+            "warnings": warnings,
+            "note": "관리자 상세 보기 준비용 조회 전용 응답입니다. JSON은 안전하게 축약/마스킹되며 이미지 data URL은 내려주지 않습니다.",
+        }
+
     async def _get_master_data_counts(self, session: AsyncSession) -> dict[str, Any]:
         counts: dict[str, Any] = {}
         for key, model in self.MASTER_DATA_MODELS:
@@ -561,6 +669,155 @@ class AdminService:
             if isinstance(value, dict) and value:
                 parts.append(f"{label}:" + ",".join(sorted(map(str, value.keys()))[:8]))
         return " | ".join(parts) if parts else "-"
+
+
+    def _serialize_master_detail_scalar_fields(self, row: Any) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        fields: list[dict[str, Any]] = []
+        asset_fields: list[dict[str, Any]] = []
+        mapper = sa_inspect(row.__class__)
+        for column_attr in mapper.mapper.column_attrs:
+            key = column_attr.key
+            value = getattr(row, key, None)
+            if key.endswith("_json"):
+                continue
+            if self._is_asset_field(key):
+                asset_fields.append(self._serialize_asset_field(key, value))
+                continue
+            fields.append({"key": key, "label": self._humanize_field_name(key), "value": self._safe_detail_scalar_value(value)})
+        return fields, asset_fields
+
+    def _serialize_master_detail_json_fields(self, row: Any) -> list[dict[str, Any]]:
+        json_fields: list[dict[str, Any]] = []
+        mapper = sa_inspect(row.__class__)
+        for column_attr in mapper.mapper.column_attrs:
+            key = column_attr.key
+            if not key.endswith("_json"):
+                continue
+            raw_value = serialize_value(getattr(row, key, None)) or {}
+            preview, stats = self._sanitize_json_preview(raw_value)
+            json_fields.append(
+                {
+                    "key": key,
+                    "label": self._humanize_field_name(key),
+                    "keys": sorted(map(str, raw_value.keys()))[:30] if isinstance(raw_value, dict) else [],
+                    "preview": preview,
+                    "hiddenAssetCount": stats["hiddenAssetCount"],
+                    "truncatedCount": stats["truncatedCount"],
+                    "maxDepthHit": stats["maxDepthHit"],
+                    "rawJsonReturned": False,
+                    "sanitizedPreview": True,
+                }
+            )
+        return json_fields
+
+    async def _build_master_detail_relation_hints(self, session: AsyncSession, domain: str, row: Any) -> list[dict[str, Any]]:
+        hints: list[dict[str, Any]] = []
+        code = getattr(row, "code", None)
+        if domain == "itemTemplates" and code:
+            hints.append({"label": "드랍 아이템 연결", "value": await self._count_where(session, DropTableItem, DropTableItem.item_template_code == code)})
+            group_code = getattr(row, "enhance_group_code", None)
+            if group_code:
+                hints.append({"label": "강화 그룹", "value": group_code})
+                hints.append({"label": "강화 단계 수", "value": await self._count_where(session, EnhancementLevel, EnhancementLevel.group_code == group_code)})
+        elif domain == "skills" and code:
+            hints.append({"label": "스킬 레벨 수", "value": await self._count_where(session, SkillLevel, SkillLevel.skill_code == code)})
+            hints.append({"label": "캐릭터 연결 수", "value": await self._count_where(session, CharacterSkill, CharacterSkill.skill_code == code)})
+        elif domain == "skillLevels":
+            hints.append({"label": "스킬 코드", "value": getattr(row, "skill_code", None)})
+        elif domain == "characters" and code:
+            hints.append({"label": "스킬 연결 수", "value": await self._count_where(session, CharacterSkill, CharacterSkill.character_code == code)})
+        elif domain == "bosses" and code:
+            hints.append({"label": "보스 드랍 테이블 수", "value": await self._count_where(session, DropTable, DropTable.owner_type == "boss", DropTable.owner_code == code)})
+        elif domain == "fieldZones" and code:
+            hints.append({"label": "필드 드랍 테이블 수", "value": await self._count_where(session, DropTable, DropTable.owner_type == "field", DropTable.owner_code == code)})
+        elif domain == "dropTables" and code:
+            hints.append({"label": "드랍 아이템 수", "value": await self._count_where(session, DropTableItem, DropTableItem.drop_table_code == code)})
+            hints.append({"label": "대상", "value": f"{getattr(row, 'owner_type', '-')}/{getattr(row, 'owner_code', '-')}"})
+        elif domain == "dropTableItems":
+            hints.append({"label": "드랍 테이블", "value": getattr(row, "drop_table_code", None)})
+            hints.append({"label": "아이템 코드", "value": getattr(row, "item_template_code", None)})
+        elif domain == "enhancementGroups" and code:
+            hints.append({"label": "강화 단계 수", "value": await self._count_where(session, EnhancementLevel, EnhancementLevel.group_code == code)})
+            hints.append({"label": "아이템 연결 수", "value": await self._count_where(session, ItemTemplate, ItemTemplate.enhance_group_code == code)})
+        elif domain == "enhancementLevels":
+            hints.append({"label": "강화 그룹", "value": getattr(row, "group_code", None)})
+        elif domain == "characterSkills":
+            hints.append({"label": "캐릭터", "value": getattr(row, "character_code", None)})
+            hints.append({"label": "스킬", "value": getattr(row, "skill_code", None)})
+        return hints
+
+    async def _count_where(self, session: AsyncSession, model: Any, *where_clauses: Any) -> int:
+        stmt = select(func.count()).select_from(model)
+        if where_clauses:
+            stmt = stmt.where(*where_clauses)
+        result = await session.execute(stmt)
+        return int(result.scalar_one() or 0)
+
+    @staticmethod
+    def _is_asset_field(key: str) -> bool:
+        return key in {"image_url", "icon_url"} or key.endswith("_image_url") or key.endswith("_icon_url")
+
+    def _serialize_asset_field(self, key: str, value: Any) -> dict[str, Any]:
+        value_text = "" if value is None else str(value)
+        hidden = bool(value_text)
+        kind = "data-url" if value_text.startswith("data:") else ("url" if value_text else "empty")
+        return {
+            "key": key,
+            "label": self._humanize_field_name(key),
+            "kind": kind,
+            "hidden": hidden,
+            "length": len(value_text),
+            "value": "[asset hidden]" if hidden else None,
+        }
+
+    def _safe_detail_scalar_value(self, value: Any) -> Any:
+        serialized = serialize_value(value)
+        if isinstance(serialized, str):
+            if serialized.startswith("data:"):
+                return "[asset hidden:data-url]"
+            if len(serialized) > 1000:
+                return serialized[:1000] + "…[truncated]"
+        return serialized
+
+    def _sanitize_json_preview(self, value: Any) -> tuple[Any, dict[str, int]]:
+        stats = {"hiddenAssetCount": 0, "truncatedCount": 0, "maxDepthHit": 0}
+        return self._sanitize_json_value(value, stats, depth=0), stats
+
+    def _sanitize_json_value(self, value: Any, stats: dict[str, int], *, depth: int) -> Any:
+        serialized = serialize_value(value)
+        if depth > 5:
+            stats["maxDepthHit"] += 1
+            return "[max depth hidden]"
+        if isinstance(serialized, str):
+            if serialized.startswith("data:"):
+                stats["hiddenAssetCount"] += 1
+                return "[asset hidden:data-url]"
+            if len(serialized) > 600:
+                stats["truncatedCount"] += 1
+                return serialized[:600] + "…[truncated]"
+            return serialized
+        if isinstance(serialized, list):
+            max_items = 60
+            values = [self._sanitize_json_value(item, stats, depth=depth + 1) for item in serialized[:max_items]]
+            if len(serialized) > max_items:
+                stats["truncatedCount"] += 1
+                values.append(f"…[{len(serialized) - max_items} more hidden]")
+            return values
+        if isinstance(serialized, dict):
+            max_items = 80
+            result: dict[str, Any] = {}
+            for index, key in enumerate(sorted(serialized.keys(), key=lambda item: str(item))):
+                if index >= max_items:
+                    stats["truncatedCount"] += 1
+                    result["…"] = f"[{len(serialized) - max_items} more keys hidden]"
+                    break
+                result[str(key)] = self._sanitize_json_value(serialized[key], stats, depth=depth + 1)
+            return result
+        return serialized
+
+    @staticmethod
+    def _humanize_field_name(key: str) -> str:
+        return key.replace("_", " ")
 
     def _build_readiness(self, master_counts: dict[str, Any], save_snapshot_summary: dict[str, Any]) -> dict[str, Any]:
         warnings: list[str] = []

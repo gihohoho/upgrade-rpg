@@ -546,3 +546,13 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - Added browser helpers `readAdminMasterCatalogFilters()` and `resetAdminMasterCatalogFilters()`.
 - Updated `backend/scripts/check_admin_readonly_api.py` and smoke tests to include the new catalog endpoints.
 - No DB reset or seed import is required because the existing master-data tables are queried only.
+
+## v116 - admin master data detail
+
+- 관리자 마스터 데이터 상세 조회 API 추가: `GET /api/v1/admin/master-data/detail`.
+- 관리자 페이지 카탈로그 행에 `보기` 버튼 추가.
+- 선택한 마스터 데이터 상세 패널 추가.
+- scalar 필드, 연결 요약, 에셋 숨김 상태, JSON 안전 미리보기를 표시.
+- raw JSON 전체와 이미지 data URL은 계속 숨김.
+- 관리자 쓰기 UI는 계속 차단.
+- DB reset/seed 불필요.

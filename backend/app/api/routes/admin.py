@@ -135,6 +135,41 @@ async def list_admin_master_catalog_rows(
     )
 
 
+
+@router.get("/master-data/detail")
+async def get_admin_master_catalog_detail(
+    domain: str = Query(default="itemTemplates", max_length=80),
+    id: int = Query(..., ge=1),
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Return one sanitized read-only master-data row for the admin detail panel."""
+    detail = await service.get_master_catalog_detail(
+        session,
+        domain=domain,
+        row_id=id,
+    )
+    return ok_response(
+        type="admin.master_data.detail",
+        payload=detail,
+        data={
+            "status": detail["status"],
+            "readOnly": detail["readOnly"],
+            "adminUserId": current_user.id,
+            "domain": detail["domain"],
+            "id": detail["id"],
+            "rawJsonReturned": detail["rawJsonReturned"],
+            "sanitizedJsonReturned": detail["sanitizedJsonReturned"],
+            "assetsReturned": detail["assetsReturned"],
+            "safeForAdminWriteUi": detail["safeForAdminWriteUi"],
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 마스터 데이터 상세 조회 전용입니다. DB를 수정하지 않고, 이미지 data URL은 숨깁니다.",
+        },
+    )
+
+
 @router.get("/save-snapshots")
 async def list_admin_save_snapshots(
     limit: int = Query(default=20, ge=1, le=100),

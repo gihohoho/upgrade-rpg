@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v115.admin-master-data-catalog";
+  const VERSION = "v116.admin-master-data-detail";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -121,6 +121,7 @@
     if (typeof window.RpgGameApi.listAdminSaveSnapshots !== "function") throw new Error("listAdminSaveSnapshots 함수를 찾을 수 없습니다.");
     if (typeof window.RpgGameApi.listAdminMasterCatalogDomains !== "function") throw new Error("listAdminMasterCatalogDomains 함수를 찾을 수 없습니다.");
     if (typeof window.RpgGameApi.listAdminMasterCatalogRows !== "function") throw new Error("listAdminMasterCatalogRows 함수를 찾을 수 없습니다.");
+    if (typeof window.RpgGameApi.fetchAdminMasterDataDetail !== "function") throw new Error("fetchAdminMasterDataDetail 함수를 찾을 수 없습니다.");
   }
 
   function readSnapshotFiltersFromDom() {
@@ -307,12 +308,13 @@
     }
     target.innerHTML = `
       <table>
-        <thead><tr>${columns.map((column) => `<th>${escapeHtml(column.label || column.key)}</th>`).join("")}<th>원본 JSON</th><th>이미지</th></tr></thead>
+        <thead><tr><th>상세</th>${columns.map((column) => `<th>${escapeHtml(column.label || column.key)}</th>`).join("")}<th>원본 JSON</th><th>이미지</th></tr></thead>
         <tbody>
           ${rows.map((row) => {
             const cells = row.cells || {};
             return `
               <tr>
+                <td><button class="btn mini" type="button" data-admin-action="open-master-detail" data-admin-detail-domain="${escapeHtml(row.domain || catalogPayload.domain || "")}" data-admin-detail-id="${escapeHtml(row.id)}">보기</button></td>
                 ${columns.map((column) => `<td>${escapeHtml(formatValue(cells[column.key]))}</td>`).join("")}
                 <td><span class="pill ${row.rawJsonReturned ? "blocked" : "good"}">${row.rawJsonReturned ? "returned" : "hidden"}</span></td>
                 <td><span class="pill ${row.assetsReturned ? "blocked" : "good"}">${row.assetsReturned ? "returned" : "hidden"}</span></td>
@@ -322,6 +324,91 @@
         </tbody>
       </table>
     `;
+  }
+
+
+  function renderMasterDetail(detailPayload) {
+    const target = $("[data-admin-master-detail]");
+    const meta = $("[data-admin-master-detail-meta]");
+    if (!target) return;
+    const detail = detailPayload || {};
+    const fields = Array.isArray(detail.fields) ? detail.fields : [];
+    const jsonFields = Array.isArray(detail.jsonFields) ? detail.jsonFields : [];
+    const assetFields = Array.isArray(detail.assetFields) ? detail.assetFields : [];
+    const relationHints = Array.isArray(detail.relationHints) ? detail.relationHints : [];
+    if (meta) meta.textContent = detail.status === "loaded" ? `${formatValue(detail.domainLabel || detail.domain)} · #${formatValue(detail.id)} · ${formatValue(detail.title)}` : formatValue(detail.status || "선택 없음");
+    if (detail.status && detail.status !== "loaded") {
+      target.innerHTML = `<div class="error">상세 정보를 불러오지 못했습니다: ${escapeHtml(detail.status)}</div>`;
+      return;
+    }
+    if (!detail.id) {
+      target.innerHTML = `<div class="empty">마스터 데이터 카탈로그에서 행의 <strong>보기</strong> 버튼을 누르면 상세 정보가 여기에 표시됩니다.</div>`;
+      return;
+    }
+
+    const fieldRows = fields.map((field) => `
+      <tr><th>${escapeHtml(field.label || field.key)}</th><td>${escapeHtml(formatValue(field.value))}</td></tr>
+    `).join("");
+    const relationRows = relationHints.length ? relationHints.map((hint) => `
+      <span class="pill">${escapeHtml(hint.label)}: ${escapeHtml(formatValue(hint.value))}</span>
+    `).join(" ") : `<span class="pill">연결 요약 없음</span>`;
+    const assetRows = assetFields.length ? assetFields.map((asset) => `
+      <tr><th>${escapeHtml(asset.label || asset.key)}</th><td><span class="pill ${asset.hidden ? "good" : ""}">${asset.hidden ? "hidden" : "empty"}</span> ${escapeHtml(formatValue(asset.kind))} · ${escapeHtml(formatValue(asset.length))} chars</td></tr>
+    `).join("") : `<tr><td colspan="2">숨길 이미지/아이콘 필드 없음</td></tr>`;
+    const jsonBlocks = jsonFields.length ? jsonFields.map((field) => {
+      const previewText = JSON.stringify(field.preview, null, 2);
+      const keyText = Array.isArray(field.keys) && field.keys.length ? field.keys.join(", ") : "-";
+      return `
+        <details class="json-detail" open>
+          <summary>${escapeHtml(field.label || field.key)} <span class="pill good">sanitized</span> <span class="pill">keys: ${escapeHtml(keyText)}</span></summary>
+          <div class="json-meta">hidden assets ${escapeHtml(formatValue(field.hiddenAssetCount))} · truncated ${escapeHtml(formatValue(field.truncatedCount))} · raw JSON ${field.rawJsonReturned ? "returned" : "hidden"}</div>
+          <pre class="json-preview">${escapeHtml(previewText)}</pre>
+        </details>
+      `;
+    }).join("") : `<div class="empty">JSON 필드 없음</div>`;
+
+    target.innerHTML = `
+      <div class="detail-grid">
+        <div class="detail-card">
+          <div class="detail-title">기본 필드</div>
+          <table class="detail-table"><tbody>${fieldRows}</tbody></table>
+        </div>
+        <div class="detail-card">
+          <div class="detail-title">연결 요약</div>
+          <div class="relation-list">${relationRows}</div>
+          <div class="detail-title" style="margin-top:14px;">에셋 필드</div>
+          <table class="detail-table"><tbody>${assetRows}</tbody></table>
+        </div>
+      </div>
+      <div class="detail-card" style="margin-top:12px;">
+        <div class="detail-title">JSON 미리보기</div>
+        <div class="filter-help">원본 JSON 통째로가 아니라, data URL 이미지/긴 문자열을 숨긴 안전 미리보기입니다.</div>
+        ${jsonBlocks}
+      </div>
+      <div class="filter-help">readOnly=${escapeHtml(formatValue(detail.readOnly))} · write UI=${escapeHtml(formatValue(detail.safeForAdminWriteUi))} · rawJsonReturned=${escapeHtml(formatValue(detail.rawJsonReturned))} · assetsReturned=${escapeHtml(formatValue(detail.assetsReturned))}</div>
+    `;
+  }
+
+  async function openAdminMasterDataDetail(domain, id, options) {
+    ensureApi();
+    const target = $("[data-admin-master-detail]");
+    const meta = $("[data-admin-master-detail-meta]");
+    const safeDomain = domain || (readMasterCatalogFiltersFromDom().domain || DEFAULT_MASTER_DOMAIN);
+    const safeId = Number(id);
+    if (!Number.isFinite(safeId) || safeId <= 0) {
+      const error = new Error("상세 조회 ID가 올바르지 않습니다.");
+      renderMasterDetail({ status: "invalid_id", id, domain: safeDomain });
+      setStatus(error.message, "error");
+      throw error;
+    }
+    if (target) target.innerHTML = `<div class="empty">상세 정보를 불러오는 중...</div>`;
+    if (meta) meta.textContent = `${safeDomain} · #${safeId}`;
+    const timeoutMs = options && options.timeoutMs !== undefined ? options.timeoutMs : DEFAULT_TIMEOUT_MS;
+    const response = await window.RpgGameApi.fetchAdminMasterDataDetail({ domain: safeDomain, id: safeId, timeoutMs });
+    const detailPayload = response && response.payload ? response.payload : {};
+    renderMasterDetail(detailPayload);
+    setStatus(`상세 로드: ${formatValue(detailPayload.domainLabel || detailPayload.domain)} #${formatValue(detailPayload.id)} · ${formatValue(detailPayload.title)}`, "ok");
+    return response;
   }
 
   function renderSnapshotTable(snapshotPayload) {
@@ -385,11 +472,13 @@
     const master = $("[data-admin-master-table]");
     const snapshots = $("[data-admin-snapshot-table]");
     const catalog = $("[data-admin-master-catalog-table]");
+    const detail = $("[data-admin-master-detail]");
     const readiness = $("[data-admin-readiness]");
     if (cards) cards.innerHTML = `<div class="card"><div class="label">오류</div><div class="value small">API 연결 실패</div></div>`;
     if (master) master.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
     if (snapshots) snapshots.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
     if (catalog) catalog.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
+    if (detail) detail.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
     if (readiness) readiness.innerHTML = `<div class="error">백엔드가 켜져 있는지, API URL이 맞는지 확인하세요.</div>`;
     setStatus(`불러오기 실패: ${message}`, "error");
   }
@@ -445,6 +534,15 @@
       if (action === "refresh") await refreshAdminReadOnlyPage();
       if (action === "apply-snapshot-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() });
       if (action === "apply-master-catalog-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() });
+      if (action === "open-master-detail") {
+        const domain = button.getAttribute("data-admin-detail-domain");
+        const id = button.getAttribute("data-admin-detail-id");
+        try {
+          await openAdminMasterDataDetail(domain, id);
+        } catch (error) {
+          renderError(error);
+        }
+      }
       if (action === "reset-master-catalog-filters") {
         resetMasterCatalogFilters();
         await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() });
@@ -481,16 +579,18 @@
     syncApiInput();
     resetSnapshotFilters({ silent: true });
     resetMasterCatalogFilters({ silent: true });
+    renderMasterDetail({});
     refreshAdminReadOnlyPage();
   }
 
   function checkAdminReadOnlyPageReady(options) {
-    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function");
+    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function");
     const domReady = !!document.querySelector("[data-admin-cards]");
     const locationHintReady = !!document.querySelector("[data-admin-current-url]");
     const snapshotFilterReady = !!document.querySelector("[data-admin-filter-slot-key]");
     const masterCatalogReady = !!document.querySelector("[data-admin-master-domain]");
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, readOnly: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() };
+    const masterDetailReady = !!document.querySelector("[data-admin-master-detail]");
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, readOnly: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -511,6 +611,8 @@
     readMasterCatalogFiltersFromDom,
     resetMasterCatalogFilters,
     describeMasterCatalogFilters,
+    openAdminMasterDataDetail,
+    renderMasterDetail,
     checkAdminReadOnlyPageReady,
   };
   window.refreshAdminReadOnlyPage = refreshAdminReadOnlyPage;
@@ -519,6 +621,7 @@
   window.resetAdminSnapshotFilters = resetSnapshotFilters;
   window.readAdminMasterCatalogFilters = readMasterCatalogFiltersFromDom;
   window.resetAdminMasterCatalogFilters = resetMasterCatalogFilters;
+  window.openAdminMasterDataDetail = openAdminMasterDataDetail;
   window.checkAdminReadOnlyPageReady = checkAdminReadOnlyPageReady;
   window.getCurrentAdminPageUrl = getCurrentAdminPageUrl;
   window.copyCurrentAdminPageUrl = copyCurrentAdminPageUrl;
