@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v119.admin-edit-draft-validation";
+  const VERSION = "v121.admin-value-hints";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -38,6 +38,106 @@
     } catch (error) {
       return String(value);
     }
+  }
+
+
+  const ADMIN_FIELD_HELP_DEFINITIONS = {
+    grade: {
+      title: "grade / 등급 숫자",
+      body: "현재 이 프로젝트의 itemTemplates.grade는 일반적인 normal/rare/epic 희귀도명이 아니라, 기존 JS 아이템의 tier 값을 옮겨 담은 숫자형 진행 등급입니다. 쉽게 말해 아이템이 어느 보스/장비 성장 구간에 속하는지 보는 값입니다.",
+      example: "예: grade=1은 1티어/초반 구간, grade=12는 12티어/상위 구간처럼 해석합니다. 희귀도 이름이 필요하면 나중에 rarity 같은 별도 필드로 분리하는 편이 안전합니다.",
+    },
+    enhancegroupcode: {
+      title: "enhance group code / 강화그룹 코드",
+      body: "이 아이템이 어떤 강화 규칙 묶음을 사용할지 연결하는 코드입니다. 아이템의 enhance_group_code와 강화 그룹의 code가 같으면, 그 강화 그룹/강화 단계가 이 아이템에 적용됩니다.",
+      example: "예: weapon_basic 아이템 → enhancementGroups.code=weapon_basic → enhancementLevels.group_code=weapon_basic 단계 적용",
+    },
+    groupcode: {
+      title: "group code / 강화 단계 그룹 코드",
+      body: "강화 단계가 어느 강화 그룹에 속하는지 나타내는 코드입니다. enhancementLevels의 group_code는 enhancementGroups의 code와 연결됩니다.",
+      example: "같은 group_code를 가진 강화 단계들이 +0→+1, +1→+2 같은 단계 규칙 묶음이 됩니다.",
+    },
+    adminnote: {
+      title: "admin note / 관리자 메모",
+      body: "게임 플레이 화면에는 보여주지 않는 운영자용 메모입니다. 데이터 작업 이유, 주의사항, 임시 설명, 나중에 확인할 내용을 적어두는 내부 기록용 필드입니다.",
+      example: "예: 밸런스 조정 예정, 이벤트 드랍 전용, 아직 미사용 데이터 등",
+    },
+    sortorder: {
+      title: "sort order / 정렬값",
+      body: "화면이나 관리자 목록에서 어떤 순서로 보여줄지 정하는 숫자입니다. 보통 숫자가 작을수록 앞쪽에 배치합니다.",
+      example: "예: 10, 20, 30처럼 간격을 두면 중간에 새 항목을 끼워 넣기 쉽습니다.",
+    },
+    isenabled: {
+      title: "is enabled / 활성 상태",
+      body: "이 마스터 데이터를 실제 게임 기준 데이터로 사용할지 여부입니다. false면 관리자에는 남아 있어도 게임 적용 대상에서 제외할 수 있습니다.",
+      example: "테스트용/미사용 데이터는 false로 두는 식으로 활용합니다.",
+    },
+  };
+
+  function normalizeAdminFieldKey(key) {
+    return String(key || "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+  }
+
+  function getAdminFieldHelp(key) {
+    const normalized = normalizeAdminFieldKey(key);
+    return ADMIN_FIELD_HELP_DEFINITIONS[normalized] || null;
+  }
+
+  function listAdminFieldHelp() {
+    return Object.entries(ADMIN_FIELD_HELP_DEFINITIONS).map(([key, help]) => ({ key, ...help }));
+  }
+
+  function renderFieldHelpBadge(key) {
+    const help = getAdminFieldHelp(key);
+    if (!help) return "";
+    const titleText = `${help.title}\n${help.body}\n${help.example || ""}`;
+    return ` <span class="field-help-badge" title="${escapeHtml(titleText)}">?</span>`;
+  }
+
+  function renderFieldHelpInline(key) {
+    const help = getAdminFieldHelp(key);
+    if (!help) return "";
+    return `<div class="field-help-inline"><strong>${escapeHtml(help.title)}</strong> — ${escapeHtml(help.body)}${help.example ? `<br><span>${escapeHtml(help.example)}</span>` : ""}</div>`;
+  }
+
+  function getAdminFieldValueHint(key, value) {
+    const normalized = normalizeAdminFieldKey(key);
+    if (normalized === "grade") {
+      if (value === null || value === undefined || value === "") {
+        return { label: "grade 없음", body: "이 항목은 아직 진행 티어/등급 숫자가 비어 있습니다." };
+      }
+      const numeric = Number(value);
+      if (Number.isFinite(numeric)) {
+        return {
+          label: `tier ${numeric}`,
+          body: `현재 값 ${numeric}은 희귀도명이 아니라 원본 아이템 tier ${numeric}입니다. 아이템/보스 성장 구간, 드랍 단계, 장비 진행도를 맞출 때 참고하는 숫자입니다.`,
+        };
+      }
+      return {
+        label: "text grade",
+        body: "숫자가 아닌 grade 값입니다. 현재 DB seed 기준에서는 대부분 tier 숫자가 들어가므로, 이 값은 별도로 확인하는 편이 안전합니다.",
+      };
+    }
+    if (normalized === "enhancegroupcode") {
+      if (!value) return { label: "강화그룹 미연결", body: "이 항목은 아직 강화 규칙 묶음에 연결되어 있지 않습니다." };
+      if (String(value) === "normal_equipment") return { label: "일반 장비 강화", body: "일반/심연/특수/avatar 계열 장비가 공유하는 기본 강화 규칙 묶음입니다." };
+      if (String(value) === "talisman_emblem") return { label: "탈리스만/휘장 강화", body: "탈리스만과 빛나는 휘장처럼 같은 강화 방식을 쓰는 장비 묶음입니다." };
+      return { label: String(value), body: `강화그룹 코드 ${value}와 같은 code/group_code를 가진 enhancementGroups/enhancementLevels가 연결됩니다.` };
+    }
+    if (normalized === "adminnote") {
+      return value ? { label: "관리자 메모 있음", body: "게임 화면에는 표시되지 않는 내부 메모가 들어 있습니다." } : { label: "관리자 메모 없음", body: "운영/밸런스 메모가 아직 비어 있습니다." };
+    }
+    return null;
+  }
+
+  function renderFieldValueHintInline(key, value) {
+    const hint = getAdminFieldValueHint(key, value);
+    if (!hint) return "";
+    return `<div class="field-value-hint"><strong>${escapeHtml(hint.label)}</strong> — ${escapeHtml(hint.body)}</div>`;
+  }
+
+  function formatValueWithFieldHint(key, value) {
+    return `${escapeHtml(formatValue(value))}${renderFieldValueHintInline(key, value)}`;
   }
 
   function setStatus(message, kind) {
@@ -309,14 +409,14 @@
     }
     target.innerHTML = `
       <table>
-        <thead><tr><th>상세</th>${columns.map((column) => `<th>${escapeHtml(column.label || column.key)}</th>`).join("")}<th>원본 JSON</th><th>이미지</th></tr></thead>
+        <thead><tr><th>상세</th>${columns.map((column) => `<th title="${escapeHtml((getAdminFieldHelp(column.key) && getAdminFieldHelp(column.key).body) || column.key)}">${escapeHtml(column.label || column.key)}${renderFieldHelpBadge(column.key)}</th>`).join("")}<th>원본 JSON</th><th>이미지</th></tr></thead>
         <tbody>
           ${rows.map((row) => {
             const cells = row.cells || {};
             return `
               <tr>
                 <td><button class="btn mini" type="button" data-admin-action="open-master-detail" data-admin-detail-domain="${escapeHtml(row.domain || catalogPayload.domain || "")}" data-admin-detail-id="${escapeHtml(row.id)}">보기</button></td>
-                ${columns.map((column) => `<td>${escapeHtml(formatValue(cells[column.key]))}</td>`).join("")}
+                ${columns.map((column) => `<td>${formatValueWithFieldHint(column.key, cells[column.key])}</td>`).join("")}
                 <td><span class="pill ${row.rawJsonReturned ? "blocked" : "good"}">${row.rawJsonReturned ? "returned" : "hidden"}</span></td>
                 <td><span class="pill ${row.assetsReturned ? "blocked" : "good"}">${row.assetsReturned ? "returned" : "hidden"}</span></td>
               </tr>
@@ -371,7 +471,9 @@
       if (type === "checkbox") {
         return `
           <label class="draft-field draft-field-check">
-            <span>${escapeHtml(label)}</span>
+            <span>${escapeHtml(label)}${renderFieldHelpBadge(field.key)}</span>
+            ${renderFieldHelpInline(field.key)}
+            ${renderFieldValueHintInline(field.key, value)}
             <label class="check-field" style="margin:0; padding:9px 10px; border-radius:10px; border:1px solid rgba(148, 163, 184, 0.22); background:rgba(2, 6, 23, 0.56);">
               <input type="checkbox" ${value ? "checked" : ""} data-admin-edit-draft-field="${escapeHtml(field.key)}" data-admin-edit-draft-original="${escapeHtml(original)}" data-admin-edit-draft-value-type="boolean" />
               true / false
@@ -381,7 +483,9 @@
       }
       return `
         <label class="draft-field">
-          <span>${escapeHtml(label)}</span>
+          <span>${escapeHtml(label)}${renderFieldHelpBadge(field.key)}</span>
+          ${renderFieldHelpInline(field.key)}
+          ${renderFieldValueHintInline(field.key, value)}
           ${isLong
             ? `<textarea rows="3" data-admin-edit-draft-field="${escapeHtml(field.key)}" data-admin-edit-draft-original="${escapeHtml(original)}" data-admin-edit-draft-value-type="text">${escapeHtml(valueText)}</textarea>`
             : `<input type="${type === "number" ? "number" : "text"}" value="${escapeHtml(valueText)}" data-admin-edit-draft-field="${escapeHtml(field.key)}" data-admin-edit-draft-original="${escapeHtml(original)}" data-admin-edit-draft-value-type="${escapeHtml(type)}" />`}
@@ -548,7 +652,7 @@
     }
 
     const fieldRows = fields.map((field) => `
-      <tr><th>${escapeHtml(field.label || field.key)}</th><td>${escapeHtml(formatValue(field.value))}</td></tr>
+      <tr><th>${escapeHtml(field.label || field.key)}${renderFieldHelpBadge(field.key)}</th><td>${formatValueWithFieldHint(field.key, field.value)}${renderFieldHelpInline(field.key)}</td></tr>
     `).join("");
     const relationRows = relationHints.length ? relationHints.map((hint) => `
       <span class="pill">${escapeHtml(hint.label)}: ${escapeHtml(formatValue(hint.value))}</span>
@@ -623,7 +727,7 @@
           ${rows.length ? `
             <div class="table-wrap relation-table-wrap">
               <table>
-                <thead><tr><th>상세</th><th>ID</th><th>제목</th>${columns.map((column) => `<th>${escapeHtml(column.label || column.key)}</th>`).join("")}</tr></thead>
+                <thead><tr><th>상세</th><th>ID</th><th>제목</th>${columns.map((column) => `<th title="${escapeHtml((getAdminFieldHelp(column.key) && getAdminFieldHelp(column.key).body) || column.key)}">${escapeHtml(column.label || column.key)}${renderFieldHelpBadge(column.key)}</th>`).join("")}</tr></thead>
                 <tbody>
                   ${rows.map((row) => {
                     const cells = row.cells || {};
@@ -632,7 +736,7 @@
                         <td><button class="btn mini" type="button" data-admin-action="open-master-detail" data-admin-detail-domain="${escapeHtml(row.domain || group.domain || "")}" data-admin-detail-id="${escapeHtml(row.id)}">보기</button></td>
                         <td>${escapeHtml(formatValue(row.id))}</td>
                         <td>${escapeHtml(formatValue(row.title))}</td>
-                        ${columns.map((column) => `<td>${escapeHtml(formatValue(cells[column.key]))}</td>`).join("")}
+                        ${columns.map((column) => `<td>${formatValueWithFieldHint(column.key, cells[column.key])}</td>`).join("")}
                       </tr>
                     `;
                   }).join("")}
@@ -896,7 +1000,8 @@
     const masterDetailReady = !!document.querySelector("[data-admin-master-detail]");
     const masterRelationsReady = true;
     const editDraftReady = !!document.querySelector("[data-admin-edit-draft]");
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, readOnly: true, writeLocked: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const fieldHelpReady = !!document.querySelector("[data-admin-field-help]");
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, readOnly: true, writeLocked: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -927,6 +1032,10 @@
     previewAdminEditDraft,
     renderAdminEditPreviewResult,
     getAdminEditDraftReadiness,
+    getAdminFieldHelp,
+    listAdminFieldHelp,
+    getAdminFieldValueHint,
+    renderFieldValueHintInline,
     checkAdminReadOnlyPageReady,
   };
   window.refreshAdminReadOnlyPage = refreshAdminReadOnlyPage;
@@ -942,6 +1051,9 @@
   window.readAdminEditDraftValues = readAdminEditDraftValues;
   window.resetAdminEditDraft = resetAdminEditDraft;
   window.previewAdminEditDraft = previewAdminEditDraft;
+  window.getAdminFieldHelp = getAdminFieldHelp;
+  window.listAdminFieldHelp = listAdminFieldHelp;
+  window.getAdminFieldValueHint = getAdminFieldValueHint;
   window.getCurrentAdminPageUrl = getCurrentAdminPageUrl;
   window.copyCurrentAdminPageUrl = copyCurrentAdminPageUrl;
 

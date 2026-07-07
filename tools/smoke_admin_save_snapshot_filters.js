@@ -30,7 +30,7 @@ assertContains("admin.html", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v119.admin-edit-draft-validation",
+  "v121.admin-value-hints",
   "readSnapshotFiltersFromDom",
   "resetSnapshotFilters",
   "describeSnapshotFilters",

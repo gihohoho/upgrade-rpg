@@ -1,3 +1,19 @@
+## v121
+- 관리자 페이지의 `grade` 설명을 현재 DB 구조에 맞게 수정했습니다.
+- 현재 `itemTemplates.grade`는 normal/rare/epic 희귀도명이 아니라 기존 JS `item.tier`를 옮긴 숫자형 진행 등급입니다.
+- 카탈로그/상세/편집 초안에 실제 값 해석 힌트를 추가했습니다. 예: `grade=12` → `tier 12`.
+- `enhance_group_code`와 `admin_note`도 값에 따라 간단한 해석 힌트를 표시합니다.
+- Console helper `getAdminFieldValueHint()`를 추가했습니다.
+- DB reset/seed는 필요 없습니다.
+
+## v120
+- 관리자 페이지에 `필드 용어 도움말` 섹션을 추가했습니다.
+- `grade`, `enhance group code`, `admin note`의 의미를 관리자 화면에서 바로 확인할 수 있게 했습니다.
+- 마스터 데이터 카탈로그 표 제목, 상세 필드, 편집 초안 입력칸 옆에 `?` 도움말 배지를 표시합니다.
+- Console helper `getAdminFieldHelp()`와 `listAdminFieldHelp()`를 추가했습니다.
+- 화면 설명만 추가했으며 DB/localStorage/게임 런타임은 수정하지 않습니다.
+- DB reset/seed는 필요 없습니다.
+
 ## v119
 - 관리자 편집 초안 입력칸을 활성화하고, 값을 바꾼 뒤 백엔드 dry-run 검증을 할 수 있게 했습니다.
 - `POST /api/v1/admin/master-data/edit-preview` API를 추가했습니다.
