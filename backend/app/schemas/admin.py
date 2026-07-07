@@ -29,5 +29,15 @@ class AdminMasterDataEditPreviewRequest(BaseModel):
     dry_run: bool = Field(default=True, alias="dryRun")
 
 
+class AdminMasterDataEditApplyRequest(AdminMasterDataEditPreviewRequest):
+    """Guarded request that can actually apply a validated scalar master-data edit.
+
+    The endpoint must require the exact confirmation phrase before mutating DB.
+    """
+
+    confirm_text: str = Field(default="", alias="confirmText", max_length=80)
+    dry_run: bool = Field(default=False, alias="dryRun")
+
+
 class AdminChangeApplyRequest(AdminChangePreviewRequest):
     confirmed: bool = False

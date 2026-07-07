@@ -1,13 +1,29 @@
 (function () {
   "use strict";
 
-  const VERSION = "v121.admin-value-hints";
+  const VERSION = "v122.admin-guarded-edit-apply";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
   const DEFAULT_MASTER_DOMAIN = "itemTemplates";
   const DEFAULT_MASTER_LIMIT = 50;
   const DEFAULT_MASTER_SORT = "code_asc";
+  const ADMIN_EDIT_APPLY_CONFIRM_TEXT = "APPLY MASTER DATA EDIT";
+  const ADMIN_EDIT_APPLY_TIMEOUT_MS = 5000;
+  const ADMIN_EDIT_ALLOWED_FIELDS = {
+    itemTemplates: ["name", "description", "grade", "stackable", "admin_note"],
+    skills: ["name", "description", "proc_rate", "cooldown_seconds"],
+    skillLevels: ["damage_multiplier", "proc_rate_bonus"],
+    bosses: ["name", "tier", "boss_type", "hp", "description", "cooldown_seconds", "is_enabled"],
+    fieldZones: ["name", "sort_order", "enemy_hp", "gold_reward", "description", "is_enabled"],
+    characters: ["name", "description", "is_enabled"],
+    dropTables: ["description", "is_enabled"],
+    dropTableItems: ["rate", "min_quantity", "max_quantity"],
+    enhancementGroups: ["name", "description", "max_level", "is_enabled"],
+    enhancementLevels: ["to_level", "success_rate", "gold_cost"],
+    characterSkills: ["sort_order", "is_default"],
+  };
+
 
   function $(selector) {
     return document.querySelector(selector);
@@ -223,6 +239,8 @@
     if (typeof window.RpgGameApi.listAdminMasterCatalogRows !== "function") throw new Error("listAdminMasterCatalogRows 함수를 찾을 수 없습니다.");
     if (typeof window.RpgGameApi.fetchAdminMasterDataDetail !== "function") throw new Error("fetchAdminMasterDataDetail 함수를 찾을 수 없습니다.");
     if (typeof window.RpgGameApi.fetchAdminMasterDataRelations !== "function") throw new Error("fetchAdminMasterDataRelations 함수를 찾을 수 없습니다.");
+    if (typeof window.RpgGameApi.applyAdminMasterDataEdit !== "function") throw new Error("applyAdminMasterDataEdit 함수를 찾을 수 없습니다.");
+    if (typeof window.RpgGameApi.listAdminChangeLogs !== "function") throw new Error("listAdminChangeLogs 함수를 찾을 수 없습니다.");
   }
 
   function readSnapshotFiltersFromDom() {
@@ -360,7 +378,8 @@
       <div class="card"><div class="label">전체 유저</div><div class="value">${escapeHtml(formatValue(users.total))}</div></div>
       <div class="card"><div class="label">관리자 수</div><div class="value">${escapeHtml(formatValue(users.admins))}</div></div>
       <div class="card"><div class="label">최근 저장</div><div class="value small">${escapeHtml(formatClock(save.latestUpdatedAt))}</div></div>
-      <div class="card"><div class="label">쓰기 UI</div><div class="value small"><span class="pill ${writeLocked ? "blocked" : "warn"}">${writeLocked ? "blocked" : "check"}</span></div></div>
+      <div class="card"><div class="label">전체 쓰기 UI</div><div class="value small"><span class="pill ${writeLocked ? "blocked" : "warn"}">${writeLocked ? "blocked" : "check"}</span></div></div>
+      <div class="card"><div class="label">마스터 편집 적용</div><div class="value small"><span class="pill ${readiness.guardedMasterEditApplyReady ? "good" : "blocked"}">${readiness.guardedMasterEditApplyReady ? "guarded" : "blocked"}</span></div></div>
     `;
   }
 
@@ -431,7 +450,16 @@
 
   function fieldKeyLooksReadOnly(key) {
     const normalized = String(key || "").toLowerCase();
-    return normalized === "id" || normalized.endsWith("_id") || normalized === "created_at" || normalized === "updated_at" || normalized === "createdat" || normalized === "updatedat";
+    return normalized === "id" || normalized === "code" || normalized.endsWith("_id") || normalized.endsWith("_code") || normalized.endsWith("_json") || normalized === "created_at" || normalized === "updated_at" || normalized === "createdat" || normalized === "updatedat";
+  }
+
+  function isAdminEditApplyAllowedField(domain, key) {
+    const allowed = ADMIN_EDIT_ALLOWED_FIELDS[domain] || [];
+    return allowed.includes(String(key || ""));
+  }
+
+  function getAdminEditAllowedFields(domain) {
+    return (ADMIN_EDIT_ALLOWED_FIELDS[domain] || []).slice();
   }
 
   function inputTypeForDraftField(field) {
@@ -459,8 +487,11 @@
 
   function renderMasterEditDraft(detail, fields) {
     const safeFields = Array.isArray(fields) ? fields : [];
-    const editableFields = safeFields.filter((field) => !fieldKeyLooksReadOnly(field.key)).slice(0, 14);
-    const hiddenCount = Math.max(0, safeFields.filter((field) => !fieldKeyLooksReadOnly(field.key)).length - editableFields.length);
+    const domain = detail && detail.domain ? detail.domain : DEFAULT_MASTER_DOMAIN;
+    const candidateFields = safeFields.filter((field) => !fieldKeyLooksReadOnly(field.key));
+    const editableFields = candidateFields.filter((field) => isAdminEditApplyAllowedField(domain, field.key)).slice(0, 14);
+    const lockedFields = candidateFields.filter((field) => !isAdminEditApplyAllowedField(domain, field.key)).map((field) => field.key);
+    const hiddenCount = Math.max(0, candidateFields.length - editableFields.length);
     const rows = editableFields.length ? editableFields.map((field) => {
       const value = field.value;
       const valueText = value === null || value === undefined ? "" : String(value);
@@ -491,21 +522,25 @@
             : `<input type="${type === "number" ? "number" : "text"}" value="${escapeHtml(valueText)}" data-admin-edit-draft-field="${escapeHtml(field.key)}" data-admin-edit-draft-original="${escapeHtml(original)}" data-admin-edit-draft-value-type="${escapeHtml(type)}" />`}
         </label>
       `;
-    }).join("") : `<div class="empty">편집 초안으로 표시할 일반 필드가 없습니다.</div>`;
+    }).join("") : `<div class="empty">이 도메인에서 실제 적용까지 열어둔 일반 필드가 없습니다.</div>`;
 
     return `
-      <div class="detail-card edit-draft-card" data-admin-edit-draft data-admin-edit-draft-domain="${escapeHtml(detail.domain || "")}" data-admin-edit-draft-id="${escapeHtml(detail.id || "")}">
-        <div class="detail-title">관리자 편집 초안 <span class="pill warn">dry-run validation</span><span class="pill blocked">save locked</span></div>
-        <div class="filter-help">이제 입력값은 직접 바꿔볼 수 있습니다. 단, <strong>검증만 가능</strong>하고 DB 저장은 계속 잠겨 있습니다. 변경 저장은 변경 이력/되돌리기/권한 정책이 붙기 전까지 열지 않습니다.</div>
+      <div class="detail-card edit-draft-card" data-admin-edit-draft data-admin-edit-draft-domain="${escapeHtml(domain || "")}" data-admin-edit-draft-id="${escapeHtml(detail.id || "")}">
+        <div class="detail-title">관리자 편집 초안 <span class="pill warn">guarded apply</span><span class="pill good">change log</span></div>
+        <div class="filter-help">이제 allow-list 필드는 실제 DB 적용까지 가능합니다. 먼저 <strong>초안 검증</strong>으로 오류가 없는지 확인한 뒤, 확인 문구 <code>${escapeHtml(ADMIN_EDIT_APPLY_CONFIRM_TEXT)}</code>를 정확히 입력해야 적용됩니다. 게임 화면은 새로고침 후 최신 master-data를 다시 읽습니다.</div>
+        <div class="filter-help">실제 적용 가능 필드: ${escapeHtml(getAdminEditAllowedFields(domain).join(", ") || "없음")}</div>
+        ${lockedFields.length ? `<div class="filter-help">연결/식별자라 잠근 필드: ${escapeHtml(lockedFields.slice(0, 12).join(", "))}${lockedFields.length > 12 ? " ..." : ""}</div>` : ""}
         <div class="edit-draft-grid">${rows}</div>
-        ${hiddenCount ? `<div class="filter-help">표시 제한으로 ${escapeHtml(formatValue(hiddenCount))}개 필드는 숨김 처리했습니다.</div>` : ""}
+        ${hiddenCount ? `<div class="filter-help">표시 제한/잠금으로 ${escapeHtml(formatValue(hiddenCount))}개 필드는 편집 초안에서 제외했습니다.</div>` : ""}
         <div class="edit-draft-actions">
           <button class="btn mini primary" type="button" data-admin-action="preview-admin-edit-draft">초안 검증</button>
           <button class="btn mini" type="button" data-admin-action="reset-admin-edit-draft">원래 값으로 되돌리기</button>
-          <button class="btn mini" type="button" disabled title="변경 이력/되돌리기/권한 정책 전까지 저장은 비활성화 상태입니다.">변경 저장 잠김</button>
-          <span class="pill good">DB write: blocked</span>
+          <label class="apply-confirm-field"><span>확인 문구</span><input type="text" data-admin-edit-apply-confirm placeholder="${escapeHtml(ADMIN_EDIT_APPLY_CONFIRM_TEXT)}" autocomplete="off" /></label>
+          <label class="apply-confirm-field"><span>변경 사유</span><input type="text" data-admin-edit-apply-reason placeholder="예: 보스 HP 밸런스 조정" autocomplete="off" /></label>
+          <button class="btn mini danger" type="button" data-admin-action="apply-admin-edit-draft">검증 후 실제 적용</button>
+          <span class="pill warn">DB write: guarded</span>
         </div>
-        <div class="edit-draft-result" data-admin-edit-draft-result><div class="empty">값을 바꾼 뒤 <strong>초안 검증</strong>을 누르면 백엔드가 dry-run으로 차이와 오류를 확인합니다.</div></div>
+        <div class="edit-draft-result" data-admin-edit-draft-result><div class="empty">값을 바꾼 뒤 <strong>초안 검증</strong>을 누르세요. 실제 적용은 확인 문구가 맞고 검증 오류가 없을 때만 됩니다.</div></div>
       </div>
     `;
   }
@@ -564,26 +599,41 @@
     const rejectedRows = rejected.length ? rejected.map((change) => `
       <tr><td>${escapeHtml(change.label || change.key)}</td><td>${escapeHtml(formatValue(change.after))}</td><td>${escapeHtml(change.reason || "rejected")}</td></tr>
     `).join("") : `<tr><td colspan="3">오류 없음</td></tr>`;
+    const applied = payload.applied === true;
+    const modeLabel = applied ? "applied" : (payload.dryRun ? "preview only" : "apply result");
     target.innerHTML = `
       <div class="draft-preview-summary">
         <span class="pill ${payload.wouldBeValid ? "good" : "blocked"}">valid: ${escapeHtml(formatValue(payload.wouldBeValid))}</span>
-        <span class="pill warn">dryRun: ${escapeHtml(formatValue(payload.dryRun))}</span>
-        <span class="pill blocked">writeBlocked: ${escapeHtml(formatValue(payload.writeBlocked))}</span>
+        <span class="pill ${payload.dryRun ? "warn" : "good"}">dryRun: ${escapeHtml(formatValue(payload.dryRun))}</span>
+        <span class="pill ${payload.writeBlocked ? "blocked" : "good"}">writeBlocked: ${escapeHtml(formatValue(payload.writeBlocked))}</span>
+        <span class="pill ${applied ? "good" : "warn"}">applied: ${escapeHtml(formatValue(applied))}</span>
         <span class="pill">diff ${escapeHtml(formatValue(payload.diffCount))}</span>
         <span class="pill">errors ${escapeHtml(formatValue(payload.errorCount))}</span>
         <span class="pill">unchanged ${escapeHtml(formatValue(payload.unchangedCount || unchanged.length))}</span>
+        ${payload.changeLogId ? `<span class="pill good">change log #${escapeHtml(formatValue(payload.changeLogId))}</span>` : ""}
       </div>
       ${warnings.length ? `<div class="filter-help">warnings: ${escapeHtml(warnings.join(", "))}</div>` : ""}
+      ${payload.note ? `<div class="filter-help">${escapeHtml(payload.note)}</div>` : ""}
       <details class="json-detail" open>
-        <summary>변경될 값 <span class="pill good">preview only</span></summary>
-        <div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>현재 DB 값</th><th>초안 값</th><th>타입</th></tr></thead><tbody>${acceptedRows}</tbody></table></div>
+        <summary>변경 값 <span class="pill good">${escapeHtml(modeLabel)}</span></summary>
+        <div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>이전 DB 값</th><th>적용/초안 값</th><th>타입</th></tr></thead><tbody>${acceptedRows}</tbody></table></div>
       </details>
       <details class="json-detail" ${rejected.length ? "open" : ""}>
         <summary>검증 오류 <span class="pill ${rejected.length ? "blocked" : "good"}">${escapeHtml(formatValue(rejected.length))}</span></summary>
         <div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>초안 값</th><th>사유</th></tr></thead><tbody>${rejectedRows}</tbody></table></div>
       </details>
-      <div class="filter-help">이 결과는 DB를 수정하지 않는 dry-run입니다. 실제 저장 버튼은 계속 잠겨 있습니다.</div>
+      <div class="filter-help">${applied ? "DB에 적용했습니다. 게임 화면은 새로고침 후 최신 master-data를 다시 읽습니다." : "검증 결과입니다. 실제 적용은 확인 문구가 맞고 오류가 없을 때만 됩니다."}</div>
     `;
+  }
+
+  function readAdminEditApplyControls() {
+    const confirmEl = $(`[data-admin-edit-apply-confirm]`);
+    const reasonEl = $(`[data-admin-edit-apply-reason]`);
+    return {
+      confirmText: confirmEl ? confirmEl.value.trim() : "",
+      reason: reasonEl ? reasonEl.value.trim() : "",
+      confirmMatches: !!confirmEl && confirmEl.value.trim() === ADMIN_EDIT_APPLY_CONFIRM_TEXT,
+    };
   }
 
   async function previewAdminEditDraft(options) {
@@ -597,10 +647,12 @@
     const target = $(`[data-admin-edit-draft-result]`);
     if (target) target.innerHTML = `<div class="empty">백엔드에서 초안을 검증하는 중...</div>`;
     const timeoutMs = options && options.timeoutMs !== undefined ? options.timeoutMs : DEFAULT_TIMEOUT_MS;
+    const applyControls = readAdminEditApplyControls();
     const response = await window.RpgGameApi.previewAdminMasterDataEdit({
       domain: values.domain,
       id: values.id,
       draft: values.draft,
+      reason: applyControls.reason || undefined,
       dryRun: true,
       timeoutMs,
     });
@@ -610,23 +662,72 @@
     return response;
   }
 
+  async function applyAdminEditDraft(options) {
+    ensureApi();
+    const values = readAdminEditDraftValues();
+    const controls = readAdminEditApplyControls();
+    if (!values.ok || !values.id) {
+      const error = new Error("적용할 편집 초안이 없습니다. 먼저 마스터 데이터 상세를 열어주세요.");
+      setStatus(error.message, "error");
+      throw error;
+    }
+    if (!controls.confirmMatches) {
+      const error = new Error(`확인 문구를 정확히 입력해야 합니다: ${ADMIN_EDIT_APPLY_CONFIRM_TEXT}`);
+      setStatus(error.message, "error");
+      const target = $(`[data-admin-edit-draft-result]`);
+      if (target) target.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+      throw error;
+    }
+    const confirmed = window.confirm("정말 DB 마스터 데이터를 수정할까요? 적용 후 게임은 새로고침해야 최신 master-data를 읽습니다.");
+    if (!confirmed) {
+      setStatus("관리자 변경 적용을 취소했습니다.", "info");
+      return { ok: false, canceled: true };
+    }
+    const target = $(`[data-admin-edit-draft-result]`);
+    if (target) target.innerHTML = `<div class="empty">백엔드에 변경을 적용하는 중...</div>`;
+    const timeoutMs = options && options.timeoutMs !== undefined ? options.timeoutMs : ADMIN_EDIT_APPLY_TIMEOUT_MS;
+    const response = await window.RpgGameApi.applyAdminMasterDataEdit({
+      domain: values.domain,
+      id: values.id,
+      draft: values.draft,
+      reason: controls.reason || undefined,
+      confirmText: controls.confirmText,
+      timeoutMs,
+    });
+    const payload = response && response.payload ? response.payload : {};
+    renderAdminEditPreviewResult(payload);
+    if (payload.applied) {
+      setStatus(`DB 적용 완료 · change log #${formatValue(payload.changeLogId)} · 상세 다시 불러오기`, "ok");
+      await openAdminMasterDataDetail(values.domain, values.id, { timeoutMs: DEFAULT_TIMEOUT_MS });
+      await refreshAdminChangeLogs({ targetType: `master_data.${values.domain}`, targetId: String(values.id), limit: 10 });
+    } else {
+      setStatus(`DB 적용 실패/차단: ${formatValue(payload.status)} · errors ${formatValue(payload.errorCount)}`, "error");
+    }
+    return response;
+  }
+
   function getAdminEditDraftReadiness(options) {
     const draft = $(`[data-admin-edit-draft]`);
     const fields = draft ? Array.from(draft.querySelectorAll("[data-admin-edit-draft-field]")) : [];
     const validateButton = draft ? draft.querySelector('[data-admin-action="preview-admin-edit-draft"]') : null;
-    const saveLockedButton = draft ? Array.from(draft.querySelectorAll("button")).find((button) => button.textContent.includes("변경 저장 잠김")) : null;
+    const applyButton = draft ? draft.querySelector('[data-admin-action="apply-admin-edit-draft"]') : null;
+    const controls = readAdminEditApplyControls();
     const result = {
-      ok: !!draft && fields.length >= 0 && !!validateButton && validateButton.disabled === false && (!saveLockedButton || saveLockedButton.disabled === true),
+      ok: !!draft && fields.length >= 0 && !!validateButton && validateButton.disabled === false && !!applyButton,
       version: VERSION,
-      readOnly: true,
-      dryRun: true,
-      writeLocked: true,
+      readOnly: false,
+      dryRun: false,
+      writeLocked: false,
+      guardedApply: true,
+      confirmTextRequired: ADMIN_EDIT_APPLY_CONFIRM_TEXT,
+      confirmMatches: controls.confirmMatches,
       fieldsEditable: fields.every((field) => field.disabled === false),
       hasDraft: !!draft,
       fieldCount: fields.length,
       validateButtonEnabled: !!validateButton && validateButton.disabled === false,
-      saveButtonDisabled: !saveLockedButton || saveLockedButton.disabled === true,
+      applyButtonReady: !!applyButton,
       currentDraft: readAdminEditDraftValues(),
+      applyControls: controls,
     };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin edit draft readiness", result);
     return result;
@@ -841,6 +942,54 @@
     `;
   }
 
+  function renderAdminChangeLogs(logsPayload) {
+    const target = $(`[data-admin-change-log-table]`);
+    const meta = $(`[data-admin-change-log-meta]`);
+    if (!target) return;
+    const payload = logsPayload || {};
+    const rows = Array.isArray(payload.rows) ? payload.rows : [];
+    if (meta) meta.textContent = `${formatValue(rows.length)} / ${formatValue(payload.total)} logs · before/after raw JSON hidden`;
+    if (!rows.length) {
+      target.innerHTML = `<div class="empty">아직 관리자 변경 이력이 없습니다.</div>`;
+      return;
+    }
+    target.innerHTML = `
+      <table>
+        <thead><tr><th>ID</th><th>대상</th><th>행</th><th>액션</th><th>변경 필드</th><th>사유</th><th>적용</th><th>시각</th></tr></thead>
+        <tbody>
+          ${rows.map((row) => `
+            <tr>
+              <td>${escapeHtml(formatValue(row.id))}</td>
+              <td>${escapeHtml(formatValue(row.targetType))}</td>
+              <td>${escapeHtml(formatValue(row.targetId))}</td>
+              <td>${escapeHtml(formatValue(row.action))}</td>
+              <td>${escapeHtml((row.changedKeys || []).join(", ") || "-")}</td>
+              <td>${escapeHtml(formatValue(row.reason))}</td>
+              <td><span class="pill ${row.applied ? "good" : "blocked"}">${escapeHtml(formatValue(row.applied))}</span></td>
+              <td>${escapeHtml(formatClock(row.createdAt))}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  async function refreshAdminChangeLogs(options) {
+    ensureApi();
+    const opts = options || {};
+    const target = $(`[data-admin-change-log-table]`);
+    if (target) target.innerHTML = `<div class="empty">변경 이력 불러오는 중...</div>`;
+    const response = await window.RpgGameApi.listAdminChangeLogs({
+      limit: opts.limit || 20,
+      targetType: opts.targetType || undefined,
+      targetId: opts.targetId || undefined,
+      timeoutMs: opts.timeoutMs !== undefined ? opts.timeoutMs : DEFAULT_TIMEOUT_MS,
+    });
+    const payload = response && response.payload ? response.payload : {};
+    renderAdminChangeLogs(payload);
+    return response;
+  }
+
   function renderReadiness(readiness) {
     const target = $("[data-admin-readiness]");
     if (!target) return;
@@ -848,8 +997,9 @@
     target.innerHTML = `
       <div style="padding:14px; display:grid; gap:10px;">
         <div><span class="pill ${readiness.safeForAdminReadOnlyUi ? "good" : "warn"}">read-only UI: ${escapeHtml(formatValue(readiness.safeForAdminReadOnlyUi))}</span></div>
-        <div><span class="pill ${readiness.safeForAdminWriteUi ? "warn" : "blocked"}">write UI: ${escapeHtml(formatValue(readiness.safeForAdminWriteUi))}</span></div>
-        <div style="color:#cbd5e1; font-size:13px;">${escapeHtml(readiness.writeUiBlockedReason || "쓰기 기능은 아직 막혀 있습니다.")}</div>
+        <div><span class="pill ${readiness.safeForAdminWriteUi ? "warn" : "blocked"}">general write UI: ${escapeHtml(formatValue(readiness.safeForAdminWriteUi))}</span></div>
+        <div><span class="pill ${readiness.guardedMasterEditApplyReady ? "good" : "blocked"}">guarded master edit apply: ${escapeHtml(formatValue(readiness.guardedMasterEditApplyReady))}</span></div>
+        <div style="color:#cbd5e1; font-size:13px;">${escapeHtml(readiness.writeUiBlockedReason || "일반 쓰기 기능은 아직 막혀 있습니다.")}</div>
         ${warnings.length ? `<div class="error">경고: ${escapeHtml(warnings.join(", "))}</div>` : `<div style="color:#86efac; font-size:13px;">현재 read-only overview 기준 경고 없음</div>`}
       </div>
     `;
@@ -887,6 +1037,7 @@
       renderMasterCatalogTable(masterCatalogPayload);
       renderSnapshotTable(snapshotPayload);
       renderReadiness(overviewPayload.readiness || {});
+      await refreshAdminChangeLogs({ limit: 20 });
       const filterText = describeSnapshotFilters(result.snapshotFilters || (snapshotPayload && snapshotPayload.filters));
       const masterFilterText = describeMasterCatalogFilters(result.masterCatalogFilters || (masterCatalogPayload && masterCatalogPayload.filters));
       setStatus(`정상 로드 · ${formatClock(new Date().toISOString())} · ${filterText} · ${masterFilterText} · API ${window.RpgGameApi.getApiBaseUrl()}`, "ok");
@@ -948,6 +1099,21 @@
           renderError(error);
         }
       }
+      if (action === "apply-admin-edit-draft") {
+        try {
+          await applyAdminEditDraft();
+        } catch (error) {
+          // applyAdminEditDraft already renders user-facing validation errors.
+          if (!(error && String(error.message || "").includes("확인 문구"))) renderError(error);
+        }
+      }
+      if (action === "refresh-admin-change-logs") {
+        try {
+          await refreshAdminChangeLogs();
+        } catch (error) {
+          renderError(error);
+        }
+      }
       if (action === "reset-admin-edit-draft") {
         resetAdminEditDraft();
       }
@@ -992,7 +1158,7 @@
   }
 
   function checkAdminReadOnlyPageReady(options) {
-    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function" && typeof window.RpgGameApi.previewAdminMasterDataEdit === "function");
+    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function" && typeof window.RpgGameApi.previewAdminMasterDataEdit === "function" && typeof window.RpgGameApi.applyAdminMasterDataEdit === "function" && typeof window.RpgGameApi.listAdminChangeLogs === "function");
     const domReady = !!document.querySelector("[data-admin-cards]");
     const locationHintReady = !!document.querySelector("[data-admin-current-url]");
     const snapshotFilterReady = !!document.querySelector("[data-admin-filter-slot-key]");
@@ -1001,7 +1167,8 @@
     const masterRelationsReady = true;
     const editDraftReady = !!document.querySelector("[data-admin-edit-draft]");
     const fieldHelpReady = !!document.querySelector("[data-admin-field-help]");
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, readOnly: true, writeLocked: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const adminChangeLogReady = !!document.querySelector("[data-admin-change-log-table]");
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, readOnly: false, writeLocked: false, guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -1030,12 +1197,18 @@
     readAdminEditDraftValues,
     resetAdminEditDraft,
     previewAdminEditDraft,
+    applyAdminEditDraft,
     renderAdminEditPreviewResult,
+    readAdminEditApplyControls,
     getAdminEditDraftReadiness,
+    refreshAdminChangeLogs,
+    renderAdminChangeLogs,
     getAdminFieldHelp,
     listAdminFieldHelp,
     getAdminFieldValueHint,
     renderFieldValueHintInline,
+    isAdminEditApplyAllowedField,
+    getAdminEditAllowedFields,
     checkAdminReadOnlyPageReady,
   };
   window.refreshAdminReadOnlyPage = refreshAdminReadOnlyPage;

@@ -6,6 +6,7 @@ from sqlalchemy import Boolean, Integer, Numeric, String, Text, func, inspect as
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
+    AdminChangeLog,
     Boss,
     Character,
     CharacterSkill,
@@ -44,6 +45,24 @@ class AdminService:
         ("enhancementGroups", EnhancementGroup),
         ("enhancementLevels", EnhancementLevel),
     )
+
+    MASTER_EDIT_APPLY_CONFIRM_TEXT = "APPLY MASTER DATA EDIT"
+
+    # 실제 DB에 적용 가능한 필드만 아주 좁게 열어둡니다.
+    # code / *_code / *_id / JSON / asset 필드는 연결 깨짐 위험이 있어서 다음 단계 전까지 잠급니다.
+    MASTER_EDIT_ALLOWED_FIELDS: dict[str, set[str]] = {
+        "itemTemplates": {"name", "description", "grade", "stackable", "admin_note"},
+        "skills": {"name", "description", "proc_rate", "cooldown_seconds"},
+        "skillLevels": {"damage_multiplier", "proc_rate_bonus"},
+        "bosses": {"name", "tier", "boss_type", "hp", "description", "cooldown_seconds", "is_enabled"},
+        "fieldZones": {"name", "sort_order", "enemy_hp", "gold_reward", "description", "is_enabled"},
+        "characters": {"name", "description", "is_enabled"},
+        "dropTables": {"description", "is_enabled"},
+        "dropTableItems": {"rate", "min_quantity", "max_quantity"},
+        "enhancementGroups": {"name", "description", "max_level", "is_enabled"},
+        "enhancementLevels": {"to_level", "success_rate", "gold_cost"},
+        "characterSkills": {"sort_order", "is_default"},
+    }
 
     MASTER_CATALOG_DOMAINS: dict[str, dict[str, Any]] = {
         "itemTemplates": {
@@ -212,6 +231,9 @@ class AdminService:
             if self._master_edit_field_is_readonly(key):
                 rejected_changes.append({"key": key, "label": self._humanize_field_name(key), "reason": "read_only_field"})
                 continue
+            if not self._master_edit_field_is_allowed(domain, key):
+                rejected_changes.append({"key": key, "label": self._humanize_field_name(key), "reason": "field_not_open_for_apply_yet"})
+                continue
             if key.endswith("_json"):
                 rejected_changes.append({"key": key, "label": self._humanize_field_name(key), "reason": "json_edit_not_enabled_yet"})
                 continue
@@ -258,6 +280,9 @@ class AdminService:
             "readOnly": True,
             "dryRun": True,
             "writeBlocked": True,
+            "applyReady": error_count == 0 and diff_count > 0,
+            "confirmTextRequired": self.MASTER_EDIT_APPLY_CONFIRM_TEXT,
+            "allowedFields": sorted(self.MASTER_EDIT_ALLOWED_FIELDS.get(domain, set())),
             "wouldBeValid": error_count == 0,
             "domain": domain,
             "domainLabel": config["label"],
@@ -277,6 +302,174 @@ class AdminService:
             "note": "편집 초안을 검증만 했습니다. 이 응답은 DB를 수정하지 않는 dry-run 결과입니다.",
         }
 
+    async def apply_master_data_edit(
+        self,
+        session: AsyncSession,
+        *,
+        domain: str,
+        row_id: int,
+        draft: dict[str, Any],
+        reason: str | None,
+        confirm_text: str,
+        admin_user_id: int,
+    ) -> dict[str, Any]:
+        """Apply a guarded scalar master-data edit and write an audit log.
+
+        This is the first real admin write path, so it intentionally supports only
+        a small allow-list of scalar fields. It always validates through the same
+        preview path first, requires an exact confirmation phrase, and stores before
+        and after values in admin_change_logs so the next step can add rollback.
+        """
+        preview = await self.preview_master_data_edit(
+            session,
+            domain=domain,
+            row_id=row_id,
+            draft=draft,
+            reason=reason,
+            dry_run=True,
+        )
+
+        if str(confirm_text or "").strip() != self.MASTER_EDIT_APPLY_CONFIRM_TEXT:
+            preview.update({
+                "status": "confirmation_required",
+                "readOnly": False,
+                "dryRun": False,
+                "writeBlocked": True,
+                "applied": False,
+                "applyReady": False,
+                "errorCount": int(preview.get("errorCount") or 0) + 1,
+                "wouldBeValid": False,
+                "warnings": [*(preview.get("warnings") or []), "confirm_text_mismatch"],
+                "note": "정확한 확인 문구를 입력해야 DB 적용이 가능합니다.",
+            })
+            return preview
+
+        if preview.get("status") != "preview_ready" or preview.get("errorCount") or not preview.get("acceptedChanges"):
+            preview.update({
+                "status": "apply_rejected",
+                "readOnly": False,
+                "dryRun": False,
+                "writeBlocked": True,
+                "applied": False,
+                "applyReady": False,
+                "wouldBeValid": False,
+                "warnings": [*(preview.get("warnings") or []), "preview_not_valid_for_apply"],
+                "note": "검증 오류가 있거나 변경된 값이 없어 DB에 적용하지 않았습니다.",
+            })
+            return preview
+
+        config = self.MASTER_CATALOG_DOMAINS.get(domain)
+        if not config:
+            preview.update({"status": "invalid_domain", "applied": False, "writeBlocked": True})
+            return preview
+
+        model = config["model"]
+        result = await session.execute(select(model).where(model.id == int(row_id)))
+        row = result.scalar_one_or_none()
+        if row is None:
+            preview.update({"status": "not_found", "applied": False, "writeBlocked": True})
+            return preview
+
+        column_map = self._master_edit_column_map(row)
+        before_values: dict[str, Any] = {}
+        after_values: dict[str, Any] = {}
+        applied_changes: list[dict[str, Any]] = []
+
+        for change in preview.get("acceptedChanges") or []:
+            key = str(change.get("key") or "").strip()
+            column = column_map.get(key)
+            if not key or column is None or not self._master_edit_field_is_allowed(domain, key):
+                continue
+            before_values[key] = serialize_value(getattr(row, key, None))
+            normalized_after, issue = self._normalize_master_edit_value(column, (draft or {}).get(key))
+            if issue:
+                continue
+            setattr(row, key, normalized_after)
+            after_values[key] = serialize_value(normalized_after)
+            applied_changes.append({**change, "after": serialize_value(normalized_after)})
+
+        if not applied_changes:
+            await session.rollback()
+            preview.update({
+                "status": "nothing_to_apply",
+                "readOnly": False,
+                "dryRun": False,
+                "writeBlocked": True,
+                "applied": False,
+                "applyReady": False,
+                "warnings": [*(preview.get("warnings") or []), "no_applyable_changes"],
+            })
+            return preview
+
+        title = getattr(row, "name", None) or getattr(row, "code", None) or f"#{row_id}"
+        change_log = AdminChangeLog(
+            admin_user_id=int(admin_user_id),
+            target_type=f"master_data.{domain}",
+            target_id=str(row_id),
+            action="update",
+            reason=str(reason or "")[:500] or None,
+            before_json=before_values,
+            after_json=after_values,
+            rollback_json={"domain": domain, "id": int(row_id), "draft": before_values},
+            applied=True,
+        )
+        session.add(change_log)
+        await session.commit()
+        await session.refresh(change_log)
+
+        return {
+            **preview,
+            "status": "applied",
+            "readOnly": False,
+            "dryRun": False,
+            "writeBlocked": False,
+            "applied": True,
+            "applyReady": False,
+            "wouldBeValid": True,
+            "title": title,
+            "diffCount": len(applied_changes),
+            "acceptedChanges": applied_changes,
+            "changeLogId": change_log.id,
+            "appliedByAdminUserId": int(admin_user_id),
+            "note": "관리자 마스터 데이터 변경을 DB에 적용했고, admin_change_logs에 이력을 저장했습니다. 게임 런타임은 새로고침 후 최신 master-data를 다시 읽습니다.",
+            "warnings": [*(preview.get("warnings") or []), "game_runtime_requires_reload"],
+        }
+
+    async def list_admin_change_logs(
+        self,
+        session: AsyncSession,
+        *,
+        limit: int = 20,
+        target_type: str | None = None,
+        target_id: str | None = None,
+    ) -> dict[str, Any]:
+        safe_limit = max(1, min(int(limit or 20), 100))
+        clauses = []
+        clean_target_type = self._clean_filter_text(target_type)
+        clean_target_id = self._clean_filter_text(target_id)
+        if clean_target_type:
+            clauses.append(AdminChangeLog.target_type == clean_target_type)
+        if clean_target_id:
+            clauses.append(AdminChangeLog.target_id == clean_target_id)
+
+        total = await self._count_admin_change_logs(session, clauses)
+        stmt = select(AdminChangeLog)
+        if clauses:
+            stmt = stmt.where(*clauses)
+        stmt = stmt.order_by(AdminChangeLog.created_at.desc(), AdminChangeLog.id.desc()).limit(safe_limit)
+        result = await session.execute(stmt)
+        rows = [self._serialize_admin_change_log(row) for row in result.scalars().all()]
+        return {
+            "status": "loaded",
+            "readOnly": True,
+            "count": len(rows),
+            "total": total,
+            "limit": safe_limit,
+            "filters": {"targetType": clean_target_type, "targetId": clean_target_id},
+            "rows": rows,
+            "rawBeforeAfterReturned": False,
+        }
+
     def _empty_edit_preview(
         self,
         *,
@@ -291,6 +484,9 @@ class AdminService:
             "readOnly": True,
             "dryRun": True,
             "writeBlocked": True,
+            "applyReady": False,
+            "confirmTextRequired": self.MASTER_EDIT_APPLY_CONFIRM_TEXT,
+            "allowedFields": [],
             "wouldBeValid": False,
             "domain": domain,
             "domainLabel": domain_label,
@@ -316,7 +512,16 @@ class AdminService:
     @staticmethod
     def _master_edit_field_is_readonly(key: str) -> bool:
         normalized = str(key or "").lower()
-        return normalized in {"id", "created_at", "updated_at"} or normalized.endswith("_id")
+        return (
+            normalized in {"id", "created_at", "updated_at", "code"}
+            or normalized.endswith("_id")
+            or normalized.endswith("_code")
+            or normalized.endswith("_json")
+        )
+
+    def _master_edit_field_is_allowed(self, domain: str, key: str) -> bool:
+        allowed = self.MASTER_EDIT_ALLOWED_FIELDS.get(domain) or set()
+        return str(key or "") in allowed
 
     def _normalize_master_edit_value(self, column: Any, raw_value: Any) -> tuple[Any, str | None]:
         column_type = column.type
@@ -978,6 +1183,32 @@ class AdminService:
             return (UserSaveSnapshot.slot_key.asc(), UserSaveSnapshot.user_id.asc(), UserSaveSnapshot.updated_at.desc())
         return (UserSaveSnapshot.updated_at.desc(), UserSaveSnapshot.user_id, UserSaveSnapshot.slot_key)
 
+    async def _count_admin_change_logs(self, session: AsyncSession, where_clauses: list[Any]) -> int:
+        stmt = select(func.count()).select_from(AdminChangeLog)
+        if where_clauses:
+            stmt = stmt.where(*where_clauses)
+        result = await session.execute(stmt)
+        return int(result.scalar_one() or 0)
+
+    def _serialize_admin_change_log(self, row: AdminChangeLog) -> dict[str, Any]:
+        before_json = serialize_value(row.before_json) or {}
+        after_json = serialize_value(row.after_json) or {}
+        changed_keys = sorted(set(before_json.keys()) | set(after_json.keys())) if isinstance(before_json, dict) and isinstance(after_json, dict) else []
+        return {
+            "id": row.id,
+            "adminUserId": row.admin_user_id,
+            "targetType": row.target_type,
+            "targetId": row.target_id,
+            "action": row.action,
+            "reason": row.reason,
+            "applied": row.applied,
+            "changedKeys": changed_keys,
+            "changedKeyCount": len(changed_keys),
+            "createdAt": serialize_value(row.created_at),
+            "updatedAt": serialize_value(row.updated_at),
+            "rawBeforeAfterReturned": False,
+        }
+
     async def _count_save_snapshots(self, session: AsyncSession, where_clauses: list[Any]) -> int:
         stmt = select(func.count()).select_from(UserSaveSnapshot)
         if where_clauses:
@@ -1274,7 +1505,8 @@ class AdminService:
             "warnings": warnings,
             "safeForAdminReadOnlyUi": True,
             "safeForAdminWriteUi": False,
-            "writeUiBlockedReason": "변경 이력/되돌리기/권한 정책이 붙기 전까지 관리자 쓰기 화면은 막아둡니다.",
+            "guardedMasterEditApplyReady": True,
+            "writeUiBlockedReason": "일반 지급/삭제/관계 변경은 계속 막혀 있습니다. 단, allow-list 마스터 데이터 필드는 확인 문구와 변경 이력을 거쳐 guarded apply가 가능합니다.",
         }
 
     async def _count(self, session: AsyncSession, model: Any, *, where_clause: Any | None = None) -> int:

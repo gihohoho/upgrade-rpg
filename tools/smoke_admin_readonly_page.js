@@ -18,7 +18,7 @@ function assertContains(file, patterns) {
 
 assertContains("admin.html", [
   "Upgrade RPG 관리자 페이지",
-  "Read-only Admin Preview",
+  "Guarded Admin Preview",
   "data-admin-action=\"refresh\"",
   "data-admin-api-base-url",
   "data-admin-cards",
@@ -37,11 +37,11 @@ assertContains("admin.html", [
   "data-admin-readiness",
   "src/api/game-api-client.js",
   "src/api/admin-page-readonly.js",
-  "DB/localStorage/게임 런타임을 수정하지 않습니다",
+  "localStorage와 현재 게임 런타임은 직접 수정하지 않습니다",
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v121.admin-value-hints",
+  "v122.admin-guarded-edit-apply",
   "fetchAdminReadOnlyPageData",
   "refreshAdminReadOnlyPage",
   "checkAdminReadOnlyPageReady",

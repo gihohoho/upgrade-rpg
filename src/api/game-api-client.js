@@ -230,6 +230,35 @@
 		});
 	}
 
+	async function applyAdminMasterDataEdit(options) {
+		const opts = options || {};
+		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
+		return request("/admin/master-data/edit-apply", {
+			method: "POST",
+			body: {
+				domain: opts.domain !== undefined ? String(opts.domain || "").trim() : "",
+				id: opts.id !== undefined ? Number(opts.id) : (opts.rowId !== undefined ? Number(opts.rowId) : undefined),
+				draft: opts.draft || {},
+				reason: opts.reason || undefined,
+				confirmText: opts.confirmText || "",
+				dryRun: false,
+			},
+			timeoutMs,
+		});
+	}
+
+	async function listAdminChangeLogs(options) {
+		const opts = options || {};
+		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
+		const limit = opts.limit !== undefined ? Number(opts.limit) : undefined;
+		const targetType = opts.targetType !== undefined ? String(opts.targetType || "").trim() : undefined;
+		const targetId = opts.targetId !== undefined ? String(opts.targetId || "").trim() : undefined;
+		return request("/admin/change-logs", {
+			query: { limit, targetType, targetId },
+			timeoutMs,
+		});
+	}
+
 	async function saveGameSnapshot(payload, options) {
 		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : undefined;
 		return request("/game/save", {
@@ -266,6 +295,8 @@
 		fetchAdminMasterDataDetail,
 		fetchAdminMasterDataRelations,
 		previewAdminMasterDataEdit,
+		applyAdminMasterDataEdit,
+		listAdminChangeLogs,
 		loadGameSnapshot,
 	};
 })();

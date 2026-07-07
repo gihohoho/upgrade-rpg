@@ -28,6 +28,7 @@
 - `ADMIN_EDIT_DRAFT_VALIDATION.md`
 - `ADMIN_FIELD_HELP.md`
 - `ADMIN_VALUE_HINTS.md`
+- `ADMIN_GUARDED_EDIT_APPLY.md`
 
 ### 현재 세이브 데이터 연결
 

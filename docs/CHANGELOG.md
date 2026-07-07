@@ -1,3 +1,12 @@
+## v122
+- 관리자 편집 초안에서 allow-list 필드만 실제 DB 적용할 수 있는 guarded apply를 추가했습니다.
+- 새 API `POST /api/v1/admin/master-data/edit-apply`를 추가했습니다.
+- 실제 적용에는 확인 문구 `APPLY MASTER DATA EDIT`가 필요합니다.
+- 적용 성공 시 `admin_change_logs`에 before/after/rollback 정보를 저장합니다.
+- 새 API `GET /api/v1/admin/change-logs`와 관리자 페이지 변경 이력 표를 추가했습니다.
+- code, *_code, *_id, *_json, 이미지/asset, 관계 필드는 계속 잠금 상태입니다.
+- DB reset/seed는 필요 없습니다.
+
 ## v121
 - 관리자 페이지의 `grade` 설명을 현재 DB 구조에 맞게 수정했습니다.
 - 현재 `itemTemplates.grade`는 normal/rare/epic 희귀도명이 아니라 기존 JS `item.tier`를 옮긴 숫자형 진행 등급입니다.

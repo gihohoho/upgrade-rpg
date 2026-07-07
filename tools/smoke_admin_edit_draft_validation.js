@@ -34,7 +34,10 @@ assertContains("backend/app/services/admin_service.py", [
 ]);
 
 const serviceText = read("backend/app/services/admin_service.py");
-const previewMethod = serviceText.slice(serviceText.indexOf("async def preview_master_data_edit"), serviceText.indexOf("async def get_readonly_overview"));
+const previewEnd = serviceText.includes("async def apply_master_data_edit")
+  ? serviceText.indexOf("async def apply_master_data_edit")
+  : serviceText.indexOf("async def get_readonly_overview");
+const previewMethod = serviceText.slice(serviceText.indexOf("async def preview_master_data_edit"), previewEnd);
 if (/\.commit\s*\(/.test(previewMethod) || /\.flush\s*\(/.test(previewMethod)) {
   throw new Error("preview_master_data_edit must not commit or flush");
 }
@@ -52,7 +55,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v121.admin-value-hints",
+  "v122.admin-guarded-edit-apply",
   "previewAdminEditDraft",
   "readAdminEditDraftValues",
   "resetAdminEditDraft",
@@ -60,14 +63,14 @@ assertContains("src/api/admin-page-readonly.js", [
   'data-admin-action="preview-admin-edit-draft"',
   "초안 검증",
   "fieldsEditable",
-  "saveButtonDisabled",
+  "guardedApply",
 ]);
 
 assertContains("admin.html", [
-  "v121 admin value hints",
+  "v122 admin guarded edit apply",
   ".edit-draft-result",
   ".draft-preview-summary",
-  "dry-run 검증",
+  "확인 문구",
 ]);
 
 assertContains("docs/ADMIN_EDIT_DRAFT_VALIDATION.md", [

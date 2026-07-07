@@ -21,8 +21,8 @@ assertContains("src/api/admin-page-readonly.js", [
   "getAdminEditDraftReadiness",
   "data-admin-edit-draft",
   "data-admin-edit-draft-field",
-  "변경 저장 잠김",
-  "writeLocked: true",
+  "검증 후 실제 적용",
+  "guardedApply: true",
 ]);
 
 assertContains("admin.html", [

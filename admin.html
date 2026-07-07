@@ -490,6 +490,24 @@
       align-items: center;
     }
 
+    .apply-confirm-field {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      min-width: 180px;
+    }
+
+    .apply-confirm-field input {
+      border: 1px solid rgba(248, 113, 113, 0.34);
+      border-radius: 9px;
+      background: rgba(2, 6, 23, 0.70);
+      color: var(--text);
+      padding: 7px 9px;
+      min-height: 30px;
+    }
+
 
     .draft-field input:not(:disabled),
     .draft-field textarea:not(:disabled) {
@@ -626,9 +644,9 @@
   <main class="admin-shell">
     <div class="topbar">
       <div>
-        <div class="eyebrow"><span class="dot"></span>Read-only Admin Preview</div>
+        <div class="eyebrow"><span class="dot"></span>Guarded Admin Preview</div>
         <h1>Upgrade RPG 관리자 페이지</h1>
-        <p class="subtitle">현재 단계에서는 DB 상태를 조회만 합니다. 마스터 데이터와 세이브 스냅샷 요약을 확인하고, 헷갈리는 필드에는 관리자용 설명을 함께 표시합니다.</p>
+        <p class="subtitle">마스터 데이터 조회/상세/검증에 더해, allow-list 필드만 확인 문구를 거쳐 실제 DB에 적용할 수 있습니다. 변경 이력은 admin_change_logs에 남깁니다.</p>
       </div>
       <div class="top-actions">
         <a class="btn" href="index.html" data-admin-game-url>게임으로 돌아가기</a>
@@ -636,8 +654,8 @@
       </div>
     </div>
 
-    <div class="notice">이 페이지는 관리자 화면으로 옮기기 전의 안전한 뼈대입니다. <strong>쓰기 기능은 아직 막혀 있고</strong>, 편집 초안은 dry-run 검증만 가능합니다. DB/localStorage/게임 런타임을 수정하지 않습니다.</div>
-    <div class="notice danger-notice">주의: 관리자 편집 초안 입력/검증은 가능하지만, 지급/삭제/DB 저장 버튼은 아직 만들지 않았습니다. 지금은 dry-run 확인 전용입니다.</div>
+    <div class="notice">이 페이지는 관리자 화면으로 옮기기 전의 안전한 뼈대입니다. 이제 <strong>마스터 데이터 allow-list 필드</strong>는 검증 + 확인 문구를 거쳐 실제 DB 적용까지 가능합니다. localStorage와 현재 게임 런타임은 직접 수정하지 않습니다.</div>
+    <div class="notice danger-notice">주의: 지급/삭제/JSON/이미지/관계 코드 변경은 아직 막혀 있습니다. 실제 적용은 name, description, 수치 밸런스, is_enabled 등 좁은 필드만 가능합니다.</div>
     <div class="notice location-notice">
       <div>
         <strong>현재 관리자 페이지 주소</strong>
@@ -652,6 +670,7 @@
       <a href="#section-field-help">필드 도움말</a>
       <a href="#section-master-catalog">마스터 목록</a>
       <a href="#section-master-detail">상세/편집 초안</a>
+      <a href="#section-change-logs">변경 이력</a>
       <a href="#section-save-snapshots">세이브 스냅샷</a>
       <a href="#section-readiness">준비 상태</a>
     </nav>
@@ -773,6 +792,16 @@
       <div data-admin-master-detail><div class="empty">마스터 데이터 카탈로그에서 행의 <strong>보기</strong> 버튼을 누르면 상세 정보가 여기에 표시됩니다.</div></div>
     </section>
 
+    <section class="section" id="section-change-logs">
+      <div class="section-header">
+        <h2 class="section-title">관리자 변경 이력</h2>
+        <div class="section-meta" data-admin-change-log-meta>-</div>
+      </div>
+      <div class="filter-help" style="padding:10px 14px; border-bottom:1px solid rgba(148, 163, 184, 0.14);">실제 적용된 관리자 변경은 여기에 남습니다. before/after 원본 JSON은 숨기고, 어떤 필드가 바뀌었는지만 요약합니다.</div>
+      <div style="padding:10px 14px; border-bottom:1px solid rgba(148, 163, 184, 0.14);"><button class="btn mini" type="button" data-admin-action="refresh-admin-change-logs">변경 이력 새로고침</button></div>
+      <div class="table-wrap" data-admin-change-log-table><div class="empty">불러오는 중...</div></div>
+    </section>
+
     <section class="filter-panel" id="section-save-snapshots" aria-label="최근 세이브 스냅샷 필터">
       <div class="filter-title">최근 세이브 스냅샷 필터</div>
       <div class="filter-grid">
@@ -827,12 +856,12 @@
     <section class="section" id="section-readiness">
       <div class="section-header">
         <h2 class="section-title">관리자 준비 상태</h2>
-        <div class="section-meta">write UI locked</div>
+        <div class="section-meta">guarded write ready</div>
       </div>
       <div data-admin-readiness><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <p class="footer-note">v121 admin value hints · static HTML + JS · FastAPI dry-run APIs</p>
+    <p class="footer-note">v122 admin guarded edit apply · static HTML + JS · FastAPI guarded write APIs</p>
   </main>
 
   <script src="src/api/game-api-client.js"></script>

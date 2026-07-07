@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.response import ok_response
 from app.core.security import CurrentUser, get_current_user_placeholder
 from app.db.session import get_db_session
-from app.schemas.admin import AdminChangePreviewRequest, AdminMasterDataEditPreviewRequest
+from app.schemas.admin import AdminChangePreviewRequest, AdminMasterDataEditApplyRequest, AdminMasterDataEditPreviewRequest
 from app.services.admin_service import AdminService
 
 router = APIRouter()
@@ -245,6 +245,85 @@ async def preview_admin_master_data_edit(
         meta={
             "source": "postgresql",
             "note": "관리자 마스터 데이터 편집 초안 검증 전용입니다. DB를 수정하지 않습니다.",
+        },
+    )
+
+
+
+@router.post("/master-data/edit-apply")
+async def apply_admin_master_data_edit(
+    payload: AdminMasterDataEditApplyRequest = Body(...),
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Apply a guarded scalar master-data edit and create an admin change log.
+
+    This endpoint is intentionally narrow: it only accepts allow-listed scalar fields
+    and requires an exact confirmation phrase. It does not edit JSON/asset/relationship
+    fields yet. The game runtime sees the changed master data after refresh/reload.
+    """
+    applied = await service.apply_master_data_edit(
+        session,
+        domain=payload.domain,
+        row_id=payload.id,
+        draft=payload.draft,
+        reason=payload.reason,
+        confirm_text=payload.confirm_text,
+        admin_user_id=current_user.id,
+    )
+    return ok_response(
+        type="admin.master_data.edit_apply",
+        payload=applied,
+        data={
+            "status": applied["status"],
+            "readOnly": applied.get("readOnly"),
+            "dryRun": applied.get("dryRun"),
+            "writeBlocked": applied.get("writeBlocked"),
+            "applied": applied.get("applied", False),
+            "adminUserId": current_user.id,
+            "domain": applied.get("domain"),
+            "id": applied.get("id"),
+            "diffCount": applied.get("diffCount", 0),
+            "errorCount": applied.get("errorCount", 0),
+            "changeLogId": applied.get("changeLogId"),
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 마스터 데이터 변경 적용 API입니다. 확인 문구와 allow-list를 통과한 스칼라 필드만 DB에 반영합니다.",
+        },
+    )
+
+
+@router.get("/change-logs")
+async def list_admin_change_logs(
+    limit: int = Query(default=20, ge=1, le=100),
+    target_type: str | None = Query(default=None, alias="targetType", max_length=120),
+    target_id: str | None = Query(default=None, alias="targetId", max_length=160),
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """List compact admin change logs without returning full before/after JSON."""
+    logs = await service.list_admin_change_logs(
+        session,
+        limit=limit,
+        target_type=target_type,
+        target_id=target_id,
+    )
+    return ok_response(
+        type="admin.change_logs",
+        payload=logs,
+        data={
+            "status": logs["status"],
+            "readOnly": logs["readOnly"],
+            "adminUserId": current_user.id,
+            "count": logs["count"],
+            "total": logs["total"],
+            "limit": logs["limit"],
+            "filters": logs["filters"],
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 변경 이력 읽기 전용 목록입니다. before/after JSON 원본은 내려주지 않습니다.",
         },
     )
 
