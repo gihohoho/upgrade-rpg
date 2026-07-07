@@ -60,3 +60,5 @@ docs/archive/stage-notes/
 - `ADMIN_SAFE_APPLY_REVIEW.md` - 관리자 적용 직전 before/after 비교와 high risk 추가 확인
 - `ADMIN_CATALOG_SELECTION_HELPER.md` - 마스터 데이터 카탈로그 현재 선택 행 표시
 - `ADMIN_RELATION_SAFE_EDIT.md` - 관계 필드 select 기반 안전 편집
+
+- [ADMIN_COMBO_RELATION_GUARD.md](ADMIN_COMBO_RELATION_GUARD.md) - 조합 관계 필드 안전 편집과 중복 조합 검증

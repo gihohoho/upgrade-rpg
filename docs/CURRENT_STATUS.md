@@ -1,8 +1,8 @@
 # Current Status
 
-현재 기준: **v141 admin relation safe edit**
+현재 기준: **v144 admin combo relation guard**
 
-v141에서는 v138의 관리자 적용 직전 before/after 비교 UI와 high risk 추가 확인을 유지하면서, 일부 관계 필드를 텍스트 직접 입력이 아니라 실제 DB 대상 목록 기반 `relation select`로 안전하게 편집할 수 있게 했습니다.
+v144에서는 v141의 relation select를 확장해서 조합 관계 필드를 안전하게 편집할 수 있게 했습니다. `skill_code + level`, `group_code + from_level`, `character_code + skill_code` 조합은 중복될 경우 백엔드 preview/apply 단계에서 차단됩니다.
 
 DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 
@@ -35,11 +35,22 @@ DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습�
   - itemTemplates.enhance_group_code
   - skills.slot_key
   - dropTables.owner_type
+  - dropTableItems.drop_table_code
   - dropTableItems.item_template_code
+  - skillLevels.skill_code
+  - skillLevels.level
+  - enhancementLevels.group_code
+  - enhancementLevels.from_level
+  - characterSkills.character_code
+  - characterSkills.skill_code
 - 관계 필드 안전 검증 정상.
   - itemTemplates.enhance_group_code는 enhancementGroups.code 존재 여부 검사
   - dropTableItems.item_template_code는 itemTemplates.code 존재 여부 검사
+  - dropTableItems.drop_table_code는 dropTables.code 존재 여부 검사
   - dropTables.owner_type은 현재 owner_code가 해당 타입의 보스/필드 코드에 존재하는지 검사
+  - skillLevels는 skill_code + level 중복 조합 검사
+  - enhancementLevels는 group_code + from_level 중복 조합 검사
+  - characterSkills는 character_code + skill_code 중복 조합 검사
 - 마스터 데이터 카탈로그 페이지네이션 정상.
   - 기본 표시 개수 20개
   - 기본 정렬 ID순
@@ -61,8 +72,10 @@ DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습�
 - itemTemplates.item_type / equip_slot은 아이템 분류와 장착 위치에 영향을 줄 수 있으므로 신규 획득/장착/툴팁 확인이 필요합니다.
 - itemTemplates.enhance_group_code는 강화 규칙 연결에 직접 영향을 줍니다.
 - dropTableItems.item_template_code는 실제 드랍 아이템을 바꿉니다.
+- dropTableItems.drop_table_code는 드랍 아이템이 어느 드랍 묶음에 속하는지 바꿉니다.
 - dropTables.owner_type은 owner_code의 의미를 보스/필드 중 어디로 볼지 바꿉니다.
+- skillLevels.skill_code/level, enhancementLevels.group_code/from_level, characterSkills.character_code/skill_code는 조합 관계를 바꾸므로 적용 후 연결 관계를 확인해야 합니다.
 - high risk 변경은 기존 `APPLY MASTER DATA EDIT` 외에 `HIGH RISK EDIT` 추가 확인 문구도 필요합니다.
 - 관리자 dev key는 정식 인증이 아니라 로컬 개발용 잠금장치입니다.
 - `.env`, `.gitignore`는 현재 로컬에 있으므로 변경되지 않았다면 zip에 없어도 됩니다.
-- v141은 관리자 UI/API 안전장치 중심 변경이라 **DB reset/seed가 필요 없습니다.**
+- v144는 관리자 UI/API 안전장치 중심 변경이라 **DB reset/seed가 필요 없습니다.**

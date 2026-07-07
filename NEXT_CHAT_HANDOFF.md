@@ -68,10 +68,10 @@ local-admin-dev-key
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v141: admin relation safe edit**
-- 최신 ZIP 이름: **rpg_v141_admin_relation_safe_edit.zip**
+- 최신 안정 버전: **v144: admin combo relation guard**
+- 최신 ZIP 이름: **rpg_v144_admin_combo_relation_guard.zip**
 
-v141은 v138의 적용 직전 before/after 비교와 high risk 추가 확인 위에, 일부 관계 필드를 실제 DB 대상 목록 기반 relation select로 안전하게 편집할 수 있게 만든 버전입니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
+v144는 v141의 relation select 위에 조합 관계 필드 안전 편집을 추가한 버전입니다. `skill_code + level`, `group_code + from_level`, `character_code + skill_code`처럼 중복되면 위험한 조합은 백엔드가 preview/apply 단계에서 한 번 더 검사합니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
 DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 DB reset/seed는 필요 없습니다.
 
@@ -131,6 +131,11 @@ DB reset/seed는 필요 없습니다.
   - dropTableItems.item_template_code relation select
   - dropTables.owner_type boss/field select
   - 백엔드 preview/apply 공통 관계 대상 존재 검증
+- v144에서 조합 관계 필드 안전 편집 완료.
+  - dropTableItems.drop_table_code relation select
+  - skillLevels.skill_code + level 중복 조합 검증
+  - enhancementLevels.group_code + from_level 중복 조합 검증
+  - characterSkills.character_code + skill_code 중복 조합 검증
 
 ### runtime 반영
 
@@ -211,12 +216,16 @@ getAdminDraftFieldInputKind({ key: "stackable", value: true });
 
 가장 안전한 다음 단계 후보:
 
-1. **조합 관계 필드 안전 편집 준비**
-   - skillLevels.skill_code + level, enhancementLevels.group_code + from_level 같은 유니크 조합 필드는 조합 중복 검증을 붙인 뒤 열어야 합니다.
+1. **dropTables.owner_code 안전 편집**
+   - owner_type이 boss면 bosses 목록에서 owner_code 선택.
+   - owner_type이 field면 fieldZones 목록에서 owner_code 선택.
+   - owner_type + owner_code가 실제 대상에 존재하는지 preview/apply 공통 검증.
 
-2. **관리자 allow-list 추가 확장 검토**
-   - dropTables.owner_type, skillLevels.level, enhancementLevels.from_level 같은 관계성 필드는 조심스럽게 검토.
-   - 관계 필드(`*_id`, `*_code`)와 JSON 필드는 아직 잠금 유지.
+2. **relation select 검색/필터 편의성**
+   - 대상 목록이 많아질 때 select에서 찾기 쉽게 검색/필터 UI를 붙이는 단계.
+
+3. **JSON 편집기 미리보기 준비**
+   - 아직 JSON 원본 적용은 막고, 먼저 sanitized preview와 schema hint부터 준비.
 
 3. **정식 인증/권한 설계 준비**
    - 현재 dev key는 로컬 개발용 안전장치일 뿐입니다.

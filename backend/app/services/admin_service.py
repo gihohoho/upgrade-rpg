@@ -52,21 +52,30 @@ class AdminService:
     MASTER_EDIT_ALLOWED_FIELDS: dict[str, set[str]] = {
         "itemTemplates": {"name", "item_type", "description", "grade", "stackable", "equip_slot", "enhance_group_code", "admin_note"},
         "skills": {"slot_key", "name", "description", "proc_rate", "cooldown_seconds"},
-        "skillLevels": {"damage_multiplier", "proc_rate_bonus"},
+        "skillLevels": {"skill_code", "level", "damage_multiplier", "proc_rate_bonus"},
         "bosses": {"name", "tier", "boss_type", "hp", "description", "cooldown_seconds", "is_enabled"},
         "fieldZones": {"name", "sort_order", "enemy_hp", "gold_reward", "description", "is_enabled"},
         "characters": {"name", "description", "is_enabled"},
         "dropTables": {"owner_type", "description", "is_enabled"},
-        "dropTableItems": {"item_template_code", "rate", "min_quantity", "max_quantity"},
+        "dropTableItems": {"drop_table_code", "item_template_code", "rate", "min_quantity", "max_quantity"},
         "enhancementGroups": {"name", "description", "max_level", "is_enabled"},
-        "enhancementLevels": {"to_level", "success_rate", "gold_cost"},
-        "characterSkills": {"sort_order", "is_default"},
+        "enhancementLevels": {"group_code", "from_level", "to_level", "success_rate", "gold_cost"},
+        "characterSkills": {"character_code", "skill_code", "sort_order", "is_default"},
     }
 
     MASTER_RELATION_EDIT_FIELDS: dict[str, set[str]] = {
         "itemTemplates": {"enhance_group_code"},
         "dropTables": {"owner_type"},
-        "dropTableItems": {"item_template_code"},
+        "dropTableItems": {"drop_table_code", "item_template_code"},
+        "skillLevels": {"skill_code"},
+        "enhancementLevels": {"group_code"},
+        "characterSkills": {"character_code", "skill_code"},
+    }
+
+    MASTER_COMBO_GUARDED_FIELDS: dict[str, set[str]] = {
+        "skillLevels": {"skill_code", "level"},
+        "enhancementLevels": {"group_code", "from_level"},
+        "characterSkills": {"character_code", "skill_code"},
     }
 
     MASTER_CATALOG_DOMAINS: dict[str, dict[str, Any]] = {
@@ -302,7 +311,7 @@ class AdminService:
                 })
                 continue
 
-            relation_issue = await self._validate_master_relation_edit_value(session, domain, key, normalized_after, row)
+            relation_issue = await self._validate_master_relation_edit_value(session, domain, key, normalized_after, row, safe_draft, column_map)
             if relation_issue:
                 rejected_changes.append({
                     "key": key,
@@ -913,8 +922,17 @@ class AdminService:
         relation_fields = self.MASTER_RELATION_EDIT_FIELDS.get(str(domain or "")) or set()
         return str(key or "") in relation_fields
 
-    async def _validate_master_relation_edit_value(self, session: AsyncSession, domain: str, key: str, value: Any, row: Any) -> str | None:
-        if not self._master_relation_edit_field_is_open(domain, key):
+    async def _validate_master_relation_edit_value(
+        self,
+        session: AsyncSession,
+        domain: str,
+        key: str,
+        value: Any,
+        row: Any,
+        draft: dict[str, Any] | None = None,
+        column_map: dict[str, Any] | None = None,
+    ) -> str | None:
+        if not self._master_relation_edit_field_is_open(domain, key) and key not in (self.MASTER_COMBO_GUARDED_FIELDS.get(domain) or set()):
             return None
         value_text = "" if value is None else str(value).strip()
         if domain == "itemTemplates" and key == "enhance_group_code":
@@ -922,6 +940,11 @@ class AdminService:
                 return None
             exists = await self._exists_by_code(session, EnhancementGroup, value_text)
             return None if exists else "relation_target_not_found_enhancement_group"
+        if domain == "dropTableItems" and key == "drop_table_code":
+            if not value_text:
+                return "relation_target_required_drop_table"
+            exists = await self._exists_by_code(session, DropTable, value_text)
+            return None if exists else "relation_target_not_found_drop_table"
         if domain == "dropTableItems" and key == "item_template_code":
             if not value_text:
                 return "relation_target_required_item_template"
@@ -936,6 +959,50 @@ class AdminService:
             model = Boss if value_text == "boss" else FieldZone
             exists = await self._exists_by_code(session, model, owner_code)
             return None if exists else "owner_code_not_found_for_owner_type"
+        if domain == "skillLevels" and key in {"skill_code", "level"}:
+            proposed = self._build_proposed_combo_values(row, column_map or {}, draft or {}, ["skill_code", "level"])
+            if proposed.get("issue"):
+                return proposed["issue"]
+            skill_code = str(proposed.get("skill_code") or "").strip()
+            level = proposed.get("level")
+            if not skill_code:
+                return "relation_target_required_skill"
+            if not await self._exists_by_code(session, Skill, skill_code):
+                return "relation_target_not_found_skill"
+            if level is None or int(level) < 0:
+                return "invalid_skill_level"
+            duplicate = await self._exists_duplicate_combo(session, SkillLevel, int(getattr(row, "id", 0) or 0), SkillLevel.skill_code == skill_code, SkillLevel.level == int(level))
+            return "duplicate_skill_code_level" if duplicate else None
+        if domain == "enhancementLevels" and key in {"group_code", "from_level"}:
+            proposed = self._build_proposed_combo_values(row, column_map or {}, draft or {}, ["group_code", "from_level"])
+            if proposed.get("issue"):
+                return proposed["issue"]
+            group_code = str(proposed.get("group_code") or "").strip()
+            from_level = proposed.get("from_level")
+            if not group_code:
+                return "relation_target_required_enhancement_group"
+            if not await self._exists_by_code(session, EnhancementGroup, group_code):
+                return "relation_target_not_found_enhancement_group"
+            if from_level is None or int(from_level) < 0:
+                return "invalid_enhancement_from_level"
+            duplicate = await self._exists_duplicate_combo(session, EnhancementLevel, int(getattr(row, "id", 0) or 0), EnhancementLevel.group_code == group_code, EnhancementLevel.from_level == int(from_level))
+            return "duplicate_enhancement_group_from_level" if duplicate else None
+        if domain == "characterSkills" and key in {"character_code", "skill_code"}:
+            proposed = self._build_proposed_combo_values(row, column_map or {}, draft or {}, ["character_code", "skill_code"])
+            if proposed.get("issue"):
+                return proposed["issue"]
+            character_code = str(proposed.get("character_code") or "").strip()
+            skill_code = str(proposed.get("skill_code") or "").strip()
+            if not character_code:
+                return "relation_target_required_character"
+            if not skill_code:
+                return "relation_target_required_skill"
+            if not await self._exists_by_code(session, Character, character_code):
+                return "relation_target_not_found_character"
+            if not await self._exists_by_code(session, Skill, skill_code):
+                return "relation_target_not_found_skill"
+            duplicate = await self._exists_duplicate_combo(session, CharacterSkill, int(getattr(row, "id", 0) or 0), CharacterSkill.character_code == character_code, CharacterSkill.skill_code == skill_code)
+            return "duplicate_character_skill_pair" if duplicate else None
         return None
 
     async def _describe_master_relation_edit_value(self, session: AsyncSession, domain: str, key: str, value: Any) -> dict[str, Any] | None:
@@ -947,12 +1014,42 @@ class AdminService:
                 return {"field": key, "targetDomain": "enhancementGroups", "targetCode": None, "targetLabel": "강화 그룹 없음"}
             target = await self._fetch_code_name(session, EnhancementGroup, value_text)
             return {"field": key, "targetDomain": "enhancementGroups", "targetCode": value_text, "targetLabel": target.get("name") if target else value_text}
+        if domain == "dropTableItems" and key == "drop_table_code":
+            target = await self._fetch_code_name(session, DropTable, value_text)
+            return {"field": key, "targetDomain": "dropTables", "targetCode": value_text, "targetLabel": target.get("name") if target else value_text}
         if domain == "dropTableItems" and key == "item_template_code":
             target = await self._fetch_code_name(session, ItemTemplate, value_text)
             return {"field": key, "targetDomain": "itemTemplates", "targetCode": value_text, "targetLabel": target.get("name") if target else value_text}
         if domain == "dropTables" and key == "owner_type":
             return {"field": key, "targetDomain": "bosses" if value_text == "boss" else "fieldZones", "targetCode": value_text, "targetLabel": "보스" if value_text == "boss" else "필드"}
+        if domain == "skillLevels" and key == "skill_code":
+            target = await self._fetch_code_name(session, Skill, value_text)
+            return {"field": key, "targetDomain": "skills", "targetCode": value_text, "targetLabel": target.get("name") if target else value_text}
+        if domain == "enhancementLevels" and key == "group_code":
+            target = await self._fetch_code_name(session, EnhancementGroup, value_text)
+            return {"field": key, "targetDomain": "enhancementGroups", "targetCode": value_text, "targetLabel": target.get("name") if target else value_text}
+        if domain == "characterSkills" and key == "character_code":
+            target = await self._fetch_code_name(session, Character, value_text)
+            return {"field": key, "targetDomain": "characters", "targetCode": value_text, "targetLabel": target.get("name") if target else value_text}
+        if domain == "characterSkills" and key == "skill_code":
+            target = await self._fetch_code_name(session, Skill, value_text)
+            return {"field": key, "targetDomain": "skills", "targetCode": value_text, "targetLabel": target.get("name") if target else value_text}
         return None
+
+    def _build_proposed_combo_values(self, row: Any, column_map: dict[str, Any], draft: dict[str, Any], keys: list[str]) -> dict[str, Any]:
+        proposed: dict[str, Any] = {}
+        for key in keys:
+            if key in draft:
+                column = column_map.get(key)
+                if column is None:
+                    return {"issue": f"combo_field_unknown_{key}"}
+                normalized, issue = self._normalize_master_edit_value(column, draft.get(key))
+                if issue:
+                    return {"issue": f"combo_field_invalid_{key}"}
+                proposed[key] = normalized
+            else:
+                proposed[key] = getattr(row, key, None)
+        return proposed
 
     async def _exists_by_code(self, session: AsyncSession, model: Any, code: str) -> bool:
         if not code:
@@ -967,7 +1064,14 @@ class AdminService:
         row = result.scalar_one_or_none()
         if row is None:
             return None
-        return {"code": getattr(row, "code", None), "name": getattr(row, "name", None)}
+        return {"code": getattr(row, "code", None), "name": getattr(row, "name", None) or getattr(row, "description", None)}
+
+    async def _exists_duplicate_combo(self, session: AsyncSession, model: Any, current_id: int, *where_clauses: Any) -> bool:
+        stmt = select(func.count()).select_from(model).where(*where_clauses)
+        if current_id > 0:
+            stmt = stmt.where(model.id != current_id)
+        result = await session.execute(stmt)
+        return int(result.scalar_one() or 0) > 0
 
     def _normalize_master_edit_value(self, column: Any, raw_value: Any) -> tuple[Any, str | None]:
         column_type = column.type
@@ -2082,17 +2186,30 @@ class AdminService:
                 "note": "선택한 강화 그룹 code가 실제 enhancementGroups에 있을 때만 적용됩니다.",
             }]
         if domain == "dropTableItems":
-            current = getattr(row, "item_template_code", None)
-            return [{
-                "field": "item_template_code",
-                "kind": "relation-select",
-                "targetDomain": "itemTemplates",
-                "targetLabel": "아이템 템플릿",
-                "nullable": False,
-                "allowApply": True,
-                "options": await self._fetch_relation_code_options(session, ItemTemplate, current_code=current, limit=300),
-                "note": "선택한 itemTemplates.code가 실제 존재할 때만 드랍 아이템 연결을 변경합니다.",
-            }]
+            current_item = getattr(row, "item_template_code", None)
+            current_table = getattr(row, "drop_table_code", None)
+            return [
+                {
+                    "field": "drop_table_code",
+                    "kind": "relation-select",
+                    "targetDomain": "dropTables",
+                    "targetLabel": "드랍 테이블",
+                    "nullable": False,
+                    "allowApply": True,
+                    "options": await self._fetch_relation_code_options(session, DropTable, current_code=current_table, limit=300),
+                    "note": "선택한 dropTables.code가 실제 존재할 때만 드랍 묶음을 변경합니다.",
+                },
+                {
+                    "field": "item_template_code",
+                    "kind": "relation-select",
+                    "targetDomain": "itemTemplates",
+                    "targetLabel": "아이템 템플릿",
+                    "nullable": False,
+                    "allowApply": True,
+                    "options": await self._fetch_relation_code_options(session, ItemTemplate, current_code=current_item, limit=300),
+                    "note": "선택한 itemTemplates.code가 실제 존재할 때만 드랍 아이템 연결을 변경합니다.",
+                },
+            ]
         if domain == "dropTables":
             return [{
                 "field": "owner_type",
@@ -2107,6 +2224,59 @@ class AdminService:
                 ],
                 "note": "owner_code가 선택한 종류의 실제 코드에 존재할 때만 적용됩니다. owner_code 자체는 아직 잠금입니다.",
             }]
+        if domain == "skillLevels":
+            current = getattr(row, "skill_code", None)
+            return [{
+                "field": "skill_code",
+                "kind": "relation-select",
+                "targetDomain": "skills",
+                "targetLabel": "스킬",
+                "nullable": False,
+                "allowApply": True,
+                "comboGuard": ["skill_code", "level"],
+                "options": await self._fetch_relation_code_options(session, Skill, current_code=current, limit=300),
+                "note": "스킬 코드 + 레벨 조합이 이미 존재하면 적용이 차단됩니다.",
+            }]
+        if domain == "enhancementLevels":
+            current = getattr(row, "group_code", None)
+            return [{
+                "field": "group_code",
+                "kind": "relation-select",
+                "targetDomain": "enhancementGroups",
+                "targetLabel": "강화 그룹",
+                "nullable": False,
+                "allowApply": True,
+                "comboGuard": ["group_code", "from_level"],
+                "options": await self._fetch_relation_code_options(session, EnhancementGroup, current_code=current, limit=300),
+                "note": "강화 그룹 + 시작 강화 단계 조합이 이미 존재하면 적용이 차단됩니다.",
+            }]
+        if domain == "characterSkills":
+            current_character = getattr(row, "character_code", None)
+            current_skill = getattr(row, "skill_code", None)
+            return [
+                {
+                    "field": "character_code",
+                    "kind": "relation-select",
+                    "targetDomain": "characters",
+                    "targetLabel": "캐릭터",
+                    "nullable": False,
+                    "allowApply": True,
+                    "comboGuard": ["character_code", "skill_code"],
+                    "options": await self._fetch_relation_code_options(session, Character, current_code=current_character, limit=200),
+                    "note": "캐릭터 + 스킬 조합이 이미 존재하면 적용이 차단됩니다.",
+                },
+                {
+                    "field": "skill_code",
+                    "kind": "relation-select",
+                    "targetDomain": "skills",
+                    "targetLabel": "스킬",
+                    "nullable": False,
+                    "allowApply": True,
+                    "comboGuard": ["character_code", "skill_code"],
+                    "options": await self._fetch_relation_code_options(session, Skill, current_code=current_skill, limit=300),
+                    "note": "캐릭터 + 스킬 조합이 이미 존재하면 적용이 차단됩니다.",
+                },
+            ]
         return []
 
     async def _fetch_relation_code_options(self, session: AsyncSession, model: Any, *, current_code: Any = None, limit: int = 200) -> list[dict[str, Any]]:

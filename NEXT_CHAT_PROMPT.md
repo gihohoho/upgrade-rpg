@@ -1,6 +1,6 @@
 # 새 채팅 시작용 프롬프트
 
-아래 내용을 그대로 새 채팅의 첫 메시지로 붙여넣고, 함께 `rpg_v141_admin_relation_safe_edit.zip`을 업로드해서 이어서 진행해줘.
+아래 내용을 그대로 새 채팅의 첫 메시지로 붙여넣고, 함께 `rpg_v144_admin_combo_relation_guard.zip`을 업로드해서 이어서 진행해줘.
 
 ---
 
@@ -51,10 +51,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v141: admin relation safe edit
+v144: admin combo relation guard
 
 최신 ZIP:
-rpg_v141_admin_relation_safe_edit.zip
+rpg_v144_admin_combo_relation_guard.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -86,13 +86,16 @@ docs/NEXT_STEPS.md
 21. v134에서 admin safe selects + allow-list 확장 완료.
 22. v135에서 마스터 데이터 카탈로그 페이지네이션 + 슬롯 이름 표시 완료.
 23. v138에서 관리자 적용 직전 비교 UI + high risk 추가 확인 완료.
+24. v141에서 관리자 관계 필드 안전 편집 완료.
+25. v144에서 조합 관계 필드 안전 편집과 중복 조합 검증 완료.
 
-v141 세부 완료:
-- 변경된 필드만 before/after 표시.
-- 위험도 순 정렬.
-- high risk 변경 시 HIGH RISK EDIT 추가 입력 필요.
-- 초안 검증 결과에도 위험도 컬럼 표시.
-- 카탈로그 현재 선택 행 강조.
+v144 세부 완료:
+- v141 관계 select 안전 편집 유지.
+- dropTableItems.drop_table_code relation select 추가.
+- skillLevels.skill_code + level 중복 조합 검증 추가.
+- enhancementLevels.group_code + from_level 중복 조합 검증 추가.
+- characterSkills.character_code + skill_code 중복 조합 검증 추가.
+- preview/apply 공통으로 관계 대상 존재 여부와 중복 조합 검사.
 
 현재 게임 실제 세이브 슬롯:
 default

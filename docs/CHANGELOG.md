@@ -1,5 +1,16 @@
 # Changelog
 
+## v144 - Admin Combo Relation Guard
+
+- `dropTableItems.drop_table_code` relation select 편집 추가.
+- `skillLevels.skill_code`, `skillLevels.level` 편집 추가.
+- `enhancementLevels.group_code`, `enhancementLevels.from_level` 편집 추가.
+- `characterSkills.character_code`, `characterSkills.skill_code` 편집 추가.
+- preview/apply 공통으로 관계 대상 존재 여부 검증.
+- `skill_code + level`, `group_code + from_level`, `character_code + skill_code` 중복 조합 검증 추가.
+- 관리자 UI relation note에 중복 조합 검사 항목 표시.
+- DB reset / seed는 필요 없음.
+
 ## v141 - Admin Relation Safe Edit
 
 - 관리자 편집 초안에 relation select 타입을 추가했습니다.
@@ -312,6 +323,17 @@
 - 기존 게임 동작은 유지하고, FastAPI 응답 구조로 옮기기 위한 중간 계층만 추가했습니다.
 
 # Changelog
+
+## v144 - Admin Combo Relation Guard
+
+- `dropTableItems.drop_table_code` relation select 편집 추가.
+- `skillLevels.skill_code`, `skillLevels.level` 편집 추가.
+- `enhancementLevels.group_code`, `enhancementLevels.from_level` 편집 추가.
+- `characterSkills.character_code`, `characterSkills.skill_code` 편집 추가.
+- preview/apply 공통으로 관계 대상 존재 여부 검증.
+- `skill_code + level`, `group_code + from_level`, `character_code + skill_code` 중복 조합 검증 추가.
+- 관리자 UI relation note에 중복 조합 검사 항목 표시.
+- DB reset / seed는 필요 없음.
 
 ## v138 - Admin Safe Apply Review
 

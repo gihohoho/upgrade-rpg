@@ -1,38 +1,25 @@
 # Next Steps
 
-## 1순위 추천: 조합 관계 필드 안전 편집 준비
+현재 기준: **v144 admin combo relation guard**
 
-v141에서 단일 대상 관계 select와 백엔드 존재 검증을 붙였으므로, 다음에는 조합 관계 필드를 열기 전에 더 강한 검증이 필요합니다.
+v144에서 조합 관계 필드 안전 편집과 백엔드 중복 조합 검증을 완료했습니다.
 
-우선 검토 후보:
+## 다음 추천 단계
 
-- `dropTableItems.drop_table_code`
-- `skillLevels.skill_code`
-- `skillLevels.level`
-- `enhancementLevels.group_code`
-- `enhancementLevels.from_level`
-- `characterSkills.character_code`
-- `characterSkills.skill_code`
+### v145 관리자 dropTables owner_code 안전 편집
 
-주의점:
+`dropTables.owner_type`은 이미 열려 있지만 `owner_code`는 아직 잠겨 있습니다. 다음에는 owner_type에 따라 실제 대상 목록을 바꾸는 select를 붙이는 것이 좋습니다.
 
-- `skillLevels.skill_code + level`은 유니크 조합입니다.
-- `enhancementLevels.group_code + from_level`은 유니크 조합입니다.
-- `characterSkills.character_code + skill_code`는 유니크 조합입니다.
-- 그래서 둘 중 하나만 바꾸더라도 변경 후 조합이 이미 존재하는지 백엔드에서 검사해야 합니다.
+- owner_type이 `boss`이면 bosses 목록에서 owner_code 선택
+- owner_type이 `field`이면 fieldZones 목록에서 owner_code 선택
+- owner_type + owner_code 조합이 실제 대상에 존재하는지 preview/apply 공통 검증
+- owner_type을 바꿨을 때 owner_code 후보 목록도 함께 바뀌는 UI 보강
 
-DB reset/seed는 필요 없을 가능성이 높습니다.
+이 단계도 DB reset/seed 없이 진행 가능합니다.
 
-## 2순위: 관계 변경 영향 시뮬레이션 강화
+## 이후 후보
 
-현재는 relation select와 존재 검증까지 들어갔습니다. 다음에는 변경하려는 연결값이 실제로 어떤 대상에 영향을 주는지 더 구체적으로 보여줄 수 있습니다.
-
-예시:
-
-- 아이템의 강화 그룹 변경 전/후 강화 단계 수 표시
-- 드랍 아이템 변경 전/후 아이템 이름과 장착 슬롯 표시
-- 드랍 테이블 owner_type 변경 전/후 연결 대상 표시
-
-## 3순위: 정식 인증/권한 설계 준비
-
-현재 `local-admin-dev-key`는 개발용 안전장치입니다. 실서비스 구조로 가려면 로그인, 권한, 관리자 계정 설계를 준비해야 합니다.
+- relation select 검색/필터 UI
+- 변경 preview 표에 relation target label 표시 강화
+- 관리자 마스터 데이터 신규 생성 기능 준비
+- JSON 편집기 미리보기 전용 UI 준비

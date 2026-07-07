@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v141.admin-relation-safe-edit";
+  const VERSION = "v144.admin-combo-relation-guard";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -18,21 +18,22 @@
   const ADMIN_EDIT_ALLOWED_FIELDS = {
     itemTemplates: ["name", "item_type", "grade", "description", "stackable", "equip_slot", "enhance_group_code", "admin_note"],
     skills: ["slot_key", "name", "description", "proc_rate", "cooldown_seconds"],
-    skillLevels: ["damage_multiplier", "proc_rate_bonus"],
+    skillLevels: ["skill_code", "level", "damage_multiplier", "proc_rate_bonus"],
     bosses: ["name", "tier", "boss_type", "hp", "description", "cooldown_seconds", "is_enabled"],
     fieldZones: ["name", "sort_order", "enemy_hp", "gold_reward", "description", "is_enabled"],
     characters: ["name", "description", "is_enabled"],
     dropTables: ["owner_type", "description", "is_enabled"],
-    dropTableItems: ["item_template_code", "rate", "min_quantity", "max_quantity"],
+    dropTableItems: ["drop_table_code", "item_template_code", "rate", "min_quantity", "max_quantity"],
     enhancementGroups: ["name", "description", "max_level", "is_enabled"],
-    enhancementLevels: ["to_level", "success_rate", "gold_cost"],
-    characterSkills: ["sort_order", "is_default"],
+    enhancementLevels: ["group_code", "from_level", "to_level", "success_rate", "gold_cost"],
+    characterSkills: ["character_code", "skill_code", "sort_order", "is_default"],
   };
   const ADMIN_DRAFT_BOOLEAN_FIELDS = new Set(["stackable", "is_enabled", "is_default"]);
   const ADMIN_DRAFT_NUMBER_FIELDS = new Set([
     "grade",
     "proc_rate",
     "cooldown_seconds",
+    "level",
     "damage_multiplier",
     "proc_rate_bonus",
     "tier",
@@ -44,6 +45,7 @@
     "min_quantity",
     "max_quantity",
     "max_level",
+    "from_level",
     "to_level",
     "success_rate",
     "gold_cost",
@@ -285,6 +287,31 @@
       title: "slot key / 스킬 슬롯",
       body: "스킬이 Q/W/E/R/T/F/D/M 또는 각성 슬롯 중 어디에 배치되는지 나타내는 값입니다. 같은 슬롯이 중복되면 UI 배치가 헷갈릴 수 있으니 변경 후 게임 화면에서 꼭 확인해야 합니다.",
       example: "예: Q, W, E, R, T, F, D, M, SQ, SW 같은 슬롯 키",
+    },
+    skillcode: {
+      title: "skill code / 스킬 연결 코드",
+      body: "스킬 레벨 또는 캐릭터 스킬 연결이 어떤 skills.code를 바라볼지 정하는 관계 필드입니다. 실제 존재하는 스킬 목록에서만 선택할 수 있습니다.",
+      example: "skillLevels에서는 skill_code + level 조합, characterSkills에서는 character_code + skill_code 조합이 중복되면 적용이 차단됩니다.",
+    },
+    level: {
+      title: "level / 스킬 레벨",
+      body: "스킬 강화 단계 숫자입니다. 같은 skill_code 안에서 같은 level이 이미 있으면 적용이 차단됩니다.",
+      example: "예: q_skill + level 1은 하나만 존재해야 합니다.",
+    },
+    fromlevel: {
+      title: "from level / 강화 시작 단계",
+      body: "강화 단계 규칙의 시작 레벨입니다. 같은 group_code 안에서 같은 from_level이 이미 있으면 적용이 차단됩니다.",
+      example: "예: weapon_basic +0→+1 규칙과 +1→+2 규칙처럼 시작 단계가 겹치면 안 됩니다.",
+    },
+    charactercode: {
+      title: "character code / 캐릭터 연결 코드",
+      body: "캐릭터 스킬 연결이 어떤 캐릭터에 속할지 정하는 관계 필드입니다. 실제 characters.code 목록에서만 선택할 수 있습니다.",
+      example: "character_code + skill_code 조합이 이미 있으면 적용이 차단됩니다.",
+    },
+    droptablecode: {
+      title: "drop table code / 드랍 테이블 연결 코드",
+      body: "드랍 아이템이 어느 드랍 테이블에 속할지 정하는 관계 필드입니다. 실제 dropTables.code 목록에서만 선택할 수 있습니다.",
+      example: "보스/필드 드랍 묶음 이동에 영향을 주므로 적용 후 관계 탭에서 연결을 확인하는 편이 안전합니다.",
     },
     bosstype: {
       title: "boss type / 보스 분류",
@@ -965,9 +992,10 @@
     if (rawDomain === "itemTemplates" && ["stackable", "itemtype", "equipslot", "enhancegroupcode"].includes(normalized)) return "high";
     if (rawDomain === "bosses" && ["hp", "isenabled"].includes(normalized)) return "high";
     if (rawDomain === "skills" && ["slotkey", "procrate", "cooldownseconds"].includes(normalized)) return "high";
-    if (rawDomain === "skillLevels" && ["damagemultiplier", "procratebonus"].includes(normalized)) return "high";
-    if (rawDomain === "dropTableItems" && ["itemtemplatecode", "rate", "minquantity", "maxquantity"].includes(normalized)) return "high";
-    if (rawDomain === "enhancementLevels" && ["successrate", "goldcost"].includes(normalized)) return "high";
+    if (rawDomain === "skillLevels" && ["skillcode", "level", "damagemultiplier", "procratebonus"].includes(normalized)) return "high";
+    if (rawDomain === "dropTableItems" && ["droptablecode", "itemtemplatecode", "rate", "minquantity", "maxquantity"].includes(normalized)) return "high";
+    if (rawDomain === "enhancementLevels" && ["groupcode", "fromlevel", "successrate", "goldcost"].includes(normalized)) return "high";
+    if (rawDomain === "characterSkills" && ["charactercode", "skillcode"].includes(normalized)) return "high";
     if (["grade", "bosstype", "ownertype", "tier", "sortorder", "enemyhp", "goldreward", "maxlevel", "tolevel", "isdefault"].includes(normalized)) return "medium";
     if (["adminnote", "description"].includes(normalized)) return "low";
     return "medium";
@@ -1061,11 +1089,20 @@
     return `<input type="text" value="${escapeHtml(valueText)}" ${commonAttrs} data-admin-edit-draft-value-type="text" />`;
   }
 
+  function getAdminRelationComboGuardLabels(domain) {
+    return getAdminRelationEditOptionDefinitions(domain)
+      .filter((definition) => definition && definition.allowApply && Array.isArray(definition.comboGuard) && definition.comboGuard.length)
+      .map((definition) => definition.comboGuard.join(" + "))
+      .filter((value, index, list) => value && list.indexOf(value) === index);
+  }
+
   function renderAdminRelationEditOptionsNote(domain) {
     const definitions = getAdminRelationEditOptionDefinitions(domain).filter((definition) => definition && definition.allowApply);
     if (!definitions.length) return "";
     const labels = definitions.map((definition) => `${definition.field} → ${definition.targetLabel || definition.targetDomain || "대상"}`).join(", ");
-    return `<div class="relation-edit-note"><span class="pill warn">relation select</span> ${escapeHtml(labels)}<br><span>${escapeHtml("관계 필드는 직접 텍스트 입력이 아니라 실제 존재하는 대상 목록에서 선택하고, 백엔드가 적용 직전에 대상 존재 여부를 다시 검사합니다.")}</span></div>`;
+    const comboLabels = getAdminRelationComboGuardLabels(domain);
+    const comboLine = comboLabels.length ? `<br><span><strong>중복 조합 검사:</strong> ${escapeHtml(comboLabels.join(", "))}</span>` : "";
+    return `<div class="relation-edit-note"><span class="pill warn">relation select</span> ${escapeHtml(labels)}<br><span>${escapeHtml("관계 필드는 직접 텍스트 입력이 아니라 실제 존재하는 대상 목록에서 선택하고, 백엔드가 적용 직전에 대상 존재 여부를 다시 검사합니다.")}</span>${comboLine}</div>`;
   }
 
   function renderMasterEditDraft(detail, fields) {
@@ -1385,11 +1422,27 @@
         reload: true,
       };
     }
+    if (rawDomain === "skillLevels" && ["skillcode", "level"].includes(key)) {
+      return {
+        severity: "high",
+        title: "스킬 레벨 조합 변경",
+        body: `${change.label || change.key} 변경은 어떤 스킬의 몇 레벨 규칙인지 바꿉니다. 백엔드가 skill_code + level 중복을 차단하지만, 적용 후 스킬 강화 화면을 확인하세요.`,
+        reload: true,
+      };
+    }
     if (rawDomain === "skillLevels" && ["damagemultiplier", "procratebonus"].includes(key)) {
       return {
         severity: "high",
         title: "스킬 레벨 효과 변경",
         body: `${change.label || change.key} 변경은 스킬 레벨별 피해량/발동 보너스에 영향을 줍니다.`,
+        reload: true,
+      };
+    }
+    if (rawDomain === "dropTableItems" && key === "droptablecode") {
+      return {
+        severity: "high",
+        title: "드랍 테이블 연결 변경",
+        body: `drop_table_code ${formatValue(before)} → ${formatValue(after)} 변경은 이 드랍 아이템 행이 어느 보스/필드 드랍 묶음에 속하는지 바꿉니다.`,
         reload: true,
       };
     }
@@ -1417,11 +1470,27 @@
         reload: true,
       };
     }
+    if (rawDomain === "enhancementLevels" && ["groupcode", "fromlevel"].includes(key)) {
+      return {
+        severity: "high",
+        title: "강화 단계 조합 변경",
+        body: `${change.label || change.key} 변경은 어떤 강화 그룹의 어느 단계 규칙인지 바꿉니다. 백엔드가 group_code + from_level 중복을 차단하지만, 적용 후 강화 단계 관계를 확인하세요.`,
+        reload: true,
+      };
+    }
     if (rawDomain === "enhancementLevels" && ["successrate", "goldcost"].includes(key)) {
       return {
         severity: "high",
         title: "강화 확률/비용 변경",
         body: `${change.label || change.key} 변경은 강화 난이도와 골드 소모량에 직접 영향을 줍니다.`,
+        reload: true,
+      };
+    }
+    if (rawDomain === "characterSkills" && ["charactercode", "skillcode"].includes(key)) {
+      return {
+        severity: "high",
+        title: "캐릭터 스킬 연결 변경",
+        body: `${change.label || change.key} 변경은 캐릭터가 어떤 스킬을 기본 연결로 갖는지 바꿉니다. 백엔드가 character_code + skill_code 중복을 차단합니다.`,
         reload: true,
       };
     }
@@ -2627,6 +2696,7 @@
     getAdminRelationEditOptionDefinitions,
     getAdminRelationEditOptionDefinition,
     isAdminRelationEditField,
+    getAdminRelationComboGuardLabels,
     renderAdminRelationEditOptionsNote,
     getAdminEquipSlotDisplayName,
     getAdminDraftFieldRisk,
@@ -2666,6 +2736,7 @@
   window.getAdminEquipSlotDisplayName = getAdminEquipSlotDisplayName;
   window.markSelectedMasterCatalogRow = markSelectedMasterCatalogRow;
   window.getAdminDraftFieldRisk = getAdminDraftFieldRisk;
+  window.getAdminRelationComboGuardLabels = getAdminRelationComboGuardLabels;
   window.getAdminDraftLockedReason = getAdminDraftLockedReason;
   window.buildAdminEditDraftReview = buildAdminEditDraftReview;
   window.sortAdminChangesByRisk = sortAdminChangesByRisk;

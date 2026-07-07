@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v141.admin-relation-safe-edit",
+  "v144.admin-combo-relation-guard",
   "relation-select",
   "relationEditOptions",
   "getAdminRelationEditOptionDefinition",
@@ -33,7 +33,7 @@ assertContains("src/api/admin-page-readonly.js", [
 assertContains("backend/app/services/admin_service.py", [
   "MASTER_RELATION_EDIT_FIELDS",
   '"itemTemplates": {"enhance_group_code"}',
-  '"dropTableItems": {"item_template_code"}',
+  '"dropTableItems": {"drop_table_code", "item_template_code"}',
   '"dropTables": {"owner_type"}',
   "_validate_master_relation_edit_value",
   "_build_master_relation_edit_options",
@@ -44,7 +44,7 @@ assertContains("backend/app/services/admin_service.py", [
 ]);
 
 assertContains("admin.html", [
-  "v141 admin relation safe edit",
+  "v144 admin combo relation guard",
   "relation-edit-note",
   "draft-field-relation-select",
 ]);
