@@ -101,3 +101,33 @@ v101 테스트 중 `local` 버튼을 누른 상태가 localStorage에 남아 있
 수동 저장에는 60초 쿨타임이 있습니다. 쿨타임 중 다시 누르면 실제 저장 로직이 실행되지 않기 때문에 DB 저장도 시도하지 않습니다. 이 경우 배지는 `skipped_manual_save_cooldown`으로 표시합니다.
 
 `skipped_local_only_mode`는 현재 `local` 모드라서 백엔드 저장을 일부러 건너뛰었다는 뜻입니다. DB 저장 테스트는 반드시 `dual` 버튼이 활성화된 상태에서 진행합니다.
+
+## v107: 복구 미리보기 버튼 추가
+
+v107부터 SAVE DATA 배지에 복구 관련 버튼이 추가됐습니다.
+
+| 버튼 | 역할 |
+|---|---|
+| `preview` | Console 명령어 없이 DB 세이브 복구 미리보기 모달을 엽니다. |
+| `backup` | 가장 최근 복구 전 백업을 localStorage로 되돌립니다. 누르면 브라우저 확인창이 먼저 뜹니다. |
+
+배지에는 `restore: ... · backups:n` 줄도 표시됩니다. 복구 완료 후에는 `restored_needs_reload`, 백업 복구 후에는 `backup_restored_needs_reload` 상태를 확인할 수 있습니다.
+
+주의: `preview`에서 DB 세이브로 복구해도 즉시 게임 화면 상태가 바뀌는 것은 아닙니다. 기존 안전장치대로 localStorage만 바꾸고, 새로고침 후 적용됩니다.
+
+## v110: 저장 후 무결성 검증
+
+v110부터 `sync DB`와 수동 저장의 백엔드 이중 저장은 저장 직후 DB 세이브를 다시 조회해서 localStorage와 완전히 같은지 확인합니다.
+
+| state | 의미 |
+|---|---|
+| `synced_verified` | DB 저장 성공 + DB 재조회 후 localStorage와 완전 동일 확인 |
+| `saved_verify_failed` | DB 저장 후 검증 실패. `preview`로 차이를 확인해야 함 |
+
+추가 Console 함수:
+
+```js
+await verifyBackendSaveSnapshotIntegrity();
+await pushLocalSaveToBackendAndVerify();
+await checkBackendSaveIntegrityReady();
+```

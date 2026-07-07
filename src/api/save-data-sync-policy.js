@@ -224,24 +224,47 @@
 
 		isSyncing = true;
 		try {
-			const response = await window.pushLocalSaveToBackend({
+			const requestOptions = {
 				slotKey: opts.slotKey || "default",
 				timeoutMs: opts.timeoutMs !== undefined ? opts.timeoutMs : DEFAULT_TIMEOUT_MS,
+				verifyTimeoutMs: opts.verifyTimeoutMs !== undefined ? opts.verifyTimeoutMs : opts.timeoutMs,
 				source: opts.source || "manual-save-dual-write",
 				note: opts.note || "수동 저장 버튼에서 localStorage 저장 직후 백엔드 DB에도 저장했습니다.",
-			});
+				log: opts.log,
+			};
+			const shouldVerify = opts.verify !== false && typeof window.pushLocalSaveToBackendAndVerify === "function";
+			const syncResult = shouldVerify
+				? await window.pushLocalSaveToBackendAndVerify(requestOptions)
+				: { ok: true, saveResponse: await window.pushLocalSaveToBackend(requestOptions), verify: null };
+			const response = syncResult.saveResponse || syncResult.response;
 			const payload = response && response.payload ? response.payload : {};
+			const verify = syncResult.verify || null;
+			const verified = !!(verify && verify.ok);
+			const integrity = payload.integrity || (verify && verify.backend ? verify.backend.integrity : null);
 			const status = setBackendSaveSyncStatus({
-				ok: true,
-				state: "synced",
+				ok: shouldVerify ? verified : true,
+				state: shouldVerify ? (verified ? "synced_verified" : "saved_verify_failed") : "synced",
 				reason: opts.reason || "manual-save",
 				slotKey: payload.slotKey || opts.slotKey || "default",
 				saveVersion: payload.saveVersion,
 				summary: payload.summary || null,
-				responseData: response && response.data ? response.data : null,
+				responseData: {
+					...(response && response.data ? response.data : {}),
+					verified: shouldVerify ? verified : null,
+					diffCount: verify ? verify.diffCount : null,
+					integrity,
+				},
+				error: shouldVerify && !verified && verify ? verify.error : null,
 			});
-			if (opts.log !== false) logSaveSync("[저장] 백엔드 DB에도 세이브 스냅샷을 저장했습니다.", true);
-			return { ok: true, response, status };
+			if (opts.log !== false) {
+				logSaveSync(
+					shouldVerify
+						? (verified ? "[저장] 백엔드 DB 저장 후 localStorage와 동일한 것까지 확인했습니다." : "[저장] DB 저장은 완료됐지만 검증이 실패했습니다. SAVE DATA preview로 차이를 확인하세요.")
+						: "[저장] 백엔드 DB에도 세이브 스냅샷을 저장했습니다.",
+					verified || !shouldVerify,
+				);
+			}
+			return { ok: !shouldVerify || verified, response, verify, status };
 		} catch (error) {
 			const status = setBackendSaveSyncStatus({
 				ok: false,

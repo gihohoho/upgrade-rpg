@@ -34,6 +34,10 @@ source
 note
 createdAt
 updatedAt
+integrity
+```
+
+From v110, `integrity` contains checksum/size metadata for debugging. It still does not include full `snapshot_json`.
 ```
 
 ## Added browser helpers

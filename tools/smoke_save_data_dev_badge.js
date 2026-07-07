@@ -39,7 +39,7 @@ assertIncludes("src/api/save-data-dev-badge.js", "loadBackendSaveSnapshot");
 assertIncludes("src/api/save-data-dev-badge.js", "enableBackendSaveDualWrite");
 assertIncludes("src/api/save-data-dev-badge.js", "disableBackendSaveDualWrite");
 assertIncludes("src/api/save-data-dev-badge.js", "refreshBackendSaveDataDevBadge");
-assertIncludes("src/api/save-data-dev-badge.js", "v109.backend-save-data-dev-badge-slots");
+assertIncludes("src/api/save-data-dev-badge.js", "v110.backend-save-data-dev-badge-integrity");
 assertIncludes("src/api/save-data-dev-badge.js", "bottom: calc(100% + 10px)");
 assertIncludes("src/api/save-data-dev-badge.js", "right: 20px");
 assertIncludes("src/api/save-data-dev-badge.js", "position: fixed");

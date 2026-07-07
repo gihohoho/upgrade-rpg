@@ -22,7 +22,7 @@ function assertOrder(file, first, second) {
   }
 }
 
-assertIncludes("src/api/save-data-dev-badge.js", "v109.backend-save-data-dev-badge-slots");
+assertIncludes("src/api/save-data-dev-badge.js", "v110.backend-save-data-dev-badge-integrity");
 assertIncludes("src/api/save-data-dev-badge.js", 'data-sd-action="preview"');
 assertIncludes("src/api/save-data-dev-badge.js", 'data-sd-action="backup"');
 assertIncludes("src/api/save-data-dev-badge.js", 'data-sd-action="slots"');

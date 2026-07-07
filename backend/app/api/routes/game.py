@@ -62,6 +62,7 @@ async def load_game(
             "userId": current_user.id,
             "slotKey": slot_key,
             "exists": save_data["exists"],
+            "integrity": save_data.get("integrity"),
         },
         meta={"source": "postgresql", "note": "localStorage 원본 세이브 스냅샷 조회 API입니다."},
     )
@@ -86,6 +87,8 @@ async def list_save_slots(
             "status": slots_data["status"],
             "userId": current_user.id,
             "count": slots_data["count"],
+            "defaultSlot": slots_data.get("defaultSlot"),
+            "latestSlot": slots_data.get("latestSlot"),
         },
         meta={
             "source": "postgresql",
@@ -120,6 +123,7 @@ async def save_game(
             "userId": current_user.id,
             "slotKey": saved["slotKey"],
             "saveVersion": saved["saveVersion"],
+            "integrity": saved.get("integrity"),
         },
         meta={"source": "postgresql", "note": "localStorage 원본 세이브 스냅샷 저장 API입니다."},
     )

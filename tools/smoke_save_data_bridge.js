@@ -33,6 +33,7 @@ assertContains("src/api/save-data-bridge.js", [
 assertContains("index.html", [
   'src/api/game-api-client.js',
   'src/api/save-data-bridge.js',
+  'src/api/save-data-integrity.js',
 ]);
 
 console.log("save data bridge smoke test passed");

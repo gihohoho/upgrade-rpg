@@ -6,7 +6,7 @@
 	const WRAPPER_ID = "backend-save-data-dev-badge-wrap";
 	const STYLE_ID = "backend-save-data-dev-badge-style";
 	const STORAGE_KEY = "upgradeRpgShowBackendSaveDataDevBadge";
-	const VERSION = "v109.backend-save-data-dev-badge-slots";
+	const VERSION = "v110.backend-save-data-dev-badge-integrity";
 
 	let currentAction = null;
 	let lastLoadResult = null;
@@ -75,7 +75,7 @@
 	function getStateKind(state, ok) {
 		const value = String(state || "");
 		if (currentAction) return "loading";
-		if (value === "synced") return "ok";
+		if (value === "synced" || value === "synced_verified") return "ok";
 		if (value === "skipped_local_only_mode" || value === "local_only_mode") return "local";
 		if (value === "ready_manual_dual" || value === "skipped_manual_save_cooldown") return "idle";
 		if (value === "never_synced") return "idle";

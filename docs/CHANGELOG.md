@@ -493,3 +493,13 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - Added a `slots` button to the `SAVE DATA` development badge.
 - Updated `backend/scripts/check_save_snapshot_api.py` to verify the saved slot appears in the slot list.
 - No DB reset or seed import is required because the existing `user_save_snapshots` table already has `slot_key`.
+
+## v110 - Save Data integrity verify
+
+- Added backend integrity metadata for save snapshots: `snapshotSha256`, `snapshotBytes`, summary keys, important item counts, and warnings.
+- Added `slotKey` validation to reject unsafe slot names before saving.
+- Added browser helper module `src/api/save-data-integrity.js`.
+- Added browser helpers: `verifyBackendSaveSnapshotIntegrity()`, `pushLocalSaveToBackendAndVerify()`, and `checkBackendSaveIntegrityReady()`.
+- Manual dual-write now verifies the DB snapshot after saving and records `synced_verified` or `saved_verify_failed`.
+- Updated the live save snapshot API checker to verify integrity metadata and invalid slot-key rejection.
+- No DB reset or seed import is required because the DB schema is unchanged.

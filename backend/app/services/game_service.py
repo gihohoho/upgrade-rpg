@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
+import hashlib
+import json
 from typing import Any
 
 from sqlalchemy import select
@@ -31,6 +33,8 @@ INLINE_ASSET_PREFIXES = (
     "data:image/jpeg",
     "data:image/webp",
 )
+
+SAVE_SNAPSHOT_WARN_SIZE_BYTES = 1_000_000
 
 
 def is_inline_asset_string(value: Any) -> bool:
@@ -85,6 +89,21 @@ def serialize_master_value(value: Any, *, include_assets: bool) -> Any:
     if isinstance(serialized, dict):
         return {key: serialize_master_value(item, include_assets=include_assets) for key, item in serialized.items()}
     return serialized
+
+
+def stable_json_string(value: Any) -> str:
+    """Return a deterministic JSON string for checksums and debugging.
+
+    PostgreSQL JSONB does not preserve key order. Sorting keys lets browser and
+    backend compare semantically identical snapshots more reliably.
+    """
+    return json.dumps(serialize_value(value), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def count_filled_items(value: Any) -> int:
+    if not isinstance(value, list):
+        return 0
+    return len([item for item in value if item])
 
 
 class GameService:
@@ -211,11 +230,15 @@ class GameService:
             .order_by(UserSaveSnapshot.updated_at.desc(), UserSaveSnapshot.slot_key)
         )
         slots = [self._serialize_save_slot(row) for row in result.scalars().all()]
+        default_slot = next((slot for slot in slots if slot.get("isDefault")), None)
+        latest_slot = slots[0] if slots else None
         return {
             "userId": user_id,
             "status": "loaded",
             "exists": bool(slots),
             "count": len(slots),
+            "defaultSlot": default_slot,
+            "latestSlot": latest_slot,
             "slots": slots,
         }
 
@@ -292,6 +315,51 @@ class GameService:
             await session.flush()
 
 
+    def _build_save_integrity(self, snapshot: UserSaveSnapshot) -> dict[str, Any]:
+        snapshot_json = serialize_value(snapshot.snapshot_json) or {}
+        summary_json = serialize_value(snapshot.summary_json) or {}
+        stable_json = stable_json_string(snapshot_json)
+        player = snapshot_json.get("player") if isinstance(snapshot_json, dict) else None
+        player = player if isinstance(player, dict) else {}
+        warnings: list[str] = []
+
+        snapshot_save_version = snapshot_json.get("saveVersion") if isinstance(snapshot_json, dict) else None
+        if snapshot_save_version is None:
+            warnings.append("snapshot_missing_saveVersion")
+        else:
+            try:
+                if int(snapshot_save_version) != int(snapshot.save_version or 0):
+                    warnings.append("saveVersion_mismatch")
+            except (TypeError, ValueError):
+                warnings.append("snapshot_saveVersion_invalid")
+        if not player:
+            warnings.append("snapshot_missing_player")
+        if not summary_json:
+            warnings.append("summary_empty")
+
+        size_bytes = len(stable_json.encode("utf-8"))
+        if size_bytes >= SAVE_SNAPSHOT_WARN_SIZE_BYTES:
+            warnings.append("snapshot_large")
+
+        return {
+            "algorithm": "sha256",
+            "snapshotSha256": hashlib.sha256(stable_json.encode("utf-8")).hexdigest(),
+            "snapshotBytes": size_bytes,
+            "saveVersion": snapshot.save_version,
+            "snapshotSaveVersion": snapshot_save_version,
+            "clientSaveKey": snapshot.client_save_key,
+            "slotKey": snapshot.slot_key,
+            "summaryKeys": sorted(summary_json.keys()) if isinstance(summary_json, dict) else [],
+            "counts": {
+                "inventoryItems": count_filled_items(player.get("inventory")),
+                "storageItems": count_filled_items(player.get("storage")),
+                "trashItems": count_filled_items(player.get("trash")),
+                "mailboxItems": count_filled_items(player.get("mailbox")),
+            },
+            "warnings": warnings,
+            "ok": len(warnings) == 0,
+        }
+
     def _serialize_save_slot(self, snapshot: UserSaveSnapshot) -> dict[str, Any]:
         return {
             "userId": snapshot.user_id,
@@ -303,6 +371,7 @@ class GameService:
             "summary": serialize_value(snapshot.summary_json),
             "source": snapshot.source,
             "note": snapshot.note,
+            "integrity": self._build_save_integrity(snapshot),
             "createdAt": serialize_value(snapshot.created_at),
             "updatedAt": serialize_value(snapshot.updated_at),
         }
@@ -319,6 +388,7 @@ class GameService:
             "summary": serialize_value(snapshot.summary_json),
             "source": snapshot.source,
             "note": snapshot.note,
+            "integrity": self._build_save_integrity(snapshot),
             "createdAt": serialize_value(snapshot.created_at),
             "updatedAt": serialize_value(snapshot.updated_at),
         }
