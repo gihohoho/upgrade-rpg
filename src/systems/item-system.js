@@ -75,10 +75,22 @@ function normalizePlayerSpecialStackItems() {
 	}
 }
 
+function isTruthyStackableFlag(value) {
+	return value === true || value === 1 || value === "1" || String(value).toLowerCase() === "true";
+}
+
+function isTemplateStackableItem(item) {
+	if (!item || !isTruthyStackableFlag(item.stackable)) return false;
+	// 관리자 stackable은 "기본 드랍 아이템을 수량으로 겹칠지"를 뜻합니다.
+	// 강화된 장비까지 겹치면 옵션/강화 상태가 섞일 수 있으므로 +0만 겹칩니다.
+	return (parseInt(item.level) || 0) === 0;
+}
+
 function isZeroLevelStackableItem(item) {
 	if (!item) return false;
 	if (item.type === "skill_book") return true;
 	if ((isTalismanStackItem(item) || isEmblemStackItem(item)) && (parseInt(item.level) || 0) === 0) return true;
+	if (isTemplateStackableItem(item)) return true;
 	return false;
 }
 
@@ -87,15 +99,34 @@ function prepareStackableItem(rawItem) {
 	item.name = getBaseStackName(item);
 	item.level = parseInt(item.level) || 0;
 	item.count = item.count || 1;
+	if (item.stackable !== undefined) item.stackable = isTruthyStackableFlag(item.stackable);
 	ensureSpecialStackIdentity(item);
 	return item;
 }
 
+function isSameStackableItem(left, right) {
+	if (!left || !right) return false;
+	// 신규 획득 아이템이 DB stackable=true이면, 기존 세이브에 stackable 필드가 없던 같은 +0 아이템도
+	// 앞으로는 같은 묶음으로 합칠 수 있게 허용합니다. 둘 다 stackable 대상이 아니면 합치지 않습니다.
+	if (!isZeroLevelStackableItem(left) && !isZeroLevelStackableItem(right)) return false;
+	if (getBaseStackName(left) !== getBaseStackName(right)) return false;
+	if ((parseInt(left.level) || 0) !== (parseInt(right.level) || 0)) return false;
+	if ((parseInt(left.level) || 0) !== 0) return false;
+	if (left.type && right.type && left.type !== right.type) return false;
+	if (left.templateKey && right.templateKey && left.templateKey !== right.templateKey) return false;
+	if (left.itemTemplateCode && right.itemTemplateCode && left.itemTemplateCode !== right.itemTemplateCode) return false;
+	if (left.equipGroup && right.equipGroup && left.equipGroup !== right.equipGroup) return false;
+	if (left.specialSlotIdx !== undefined && right.specialSlotIdx !== undefined && left.specialSlotIdx !== right.specialSlotIdx) return false;
+	const leftTier = left.tier ?? left.grade;
+	const rightTier = right.tier ?? right.grade;
+	if (leftTier !== undefined && rightTier !== undefined && String(leftTier) !== String(rightTier)) return false;
+	return true;
+}
+
 function findStackableItem(item, arrays = [player.inventory, player.storage]) {
 	if (!isZeroLevelStackableItem(item)) return null;
-	let keyName = getBaseStackName(item);
 	for (let arr of arrays) {
-		let found = arr.find((it) => isZeroLevelStackableItem(it) && getBaseStackName(it) === keyName && (parseInt(it.level) || 0) === 0);
+		let found = arr.find((it) => isSameStackableItem(it, item));
 		if (found) return found;
 	}
 	return null;
@@ -106,6 +137,12 @@ function addStackableItemToInventory(rawItem) {
 	let found = findStackableItem(item);
 	if (found) {
 		found.count = (found.count || 1) + (item.count || 1);
+		// 기존 세이브 아이템에는 stackable/templateKey가 없을 수 있으므로, 새 DB 드랍 정책을 발견한 스택에 보강합니다.
+		if (item.stackable === true) found.stackable = true;
+		if (!found.templateKey && item.templateKey) found.templateKey = item.templateKey;
+		if (!found.itemTemplateCode && item.itemTemplateCode) found.itemTemplateCode = item.itemTemplateCode;
+		if (found.grade === undefined && item.grade !== undefined) found.grade = item.grade;
+		if (found.tier === undefined && item.tier !== undefined) found.tier = item.tier;
 		if (typeof recordItemAcquired === "function") recordItemAcquired(item);
 		return { ok: true, item: found, stacked: true };
 	}
@@ -117,11 +154,14 @@ function addStackableItemToInventory(rawItem) {
 }
 
 function mergeStackableIntoArray(item, targetArr) {
-	if (!isZeroLevelStackableItem(item)) return false;
-	let keyName = getBaseStackName(item);
-	let found = targetArr.find((it) => isZeroLevelStackableItem(it) && getBaseStackName(it) === keyName && (parseInt(it.level) || 0) === 0);
+	if (!isZeroLevelStackableItem(item) || !Array.isArray(targetArr)) return false;
+	let prepared = prepareStackableItem(item);
+	let found = targetArr.find((it) => isSameStackableItem(it, prepared));
 	if (found) {
-		found.count = (found.count || 1) + (item.count || 1);
+		found.count = (found.count || 1) + (prepared.count || 1);
+		if (prepared.stackable === true) found.stackable = true;
+		if (!found.templateKey && prepared.templateKey) found.templateKey = prepared.templateKey;
+		if (!found.itemTemplateCode && prepared.itemTemplateCode) found.itemTemplateCode = prepared.itemTemplateCode;
 		return true;
 	}
 	return false;
@@ -494,6 +534,37 @@ function renderEnhanceResultLog(title, rows, goldSpent = 0) {
 	el.innerHTML = `<div class="ap-enhance-log-title">${title}</div>${goldRow}` + rows.map((row) => `<div class="ap-enhance-log-row">${row}</div>`).join("");
 }
 
+function getStackedEnhanceSpaceBlockReason(item, sourceArr, maxSize) {
+	if (!item || (item.count || 1) <= 1) return "";
+	if (!Array.isArray(sourceArr)) return "source_missing";
+	if (sourceArr.length >= maxSize) return "space_required";
+	return "";
+}
+
+function getStackedEnhanceSpaceMessage(reason) {
+	if (reason === "space_required") return `[시스템] 겹쳐진 장비를 강화하려면 먼저 1칸의 빈 공간이 필요합니다.`;
+	return `[시스템] 겹쳐진 장비를 강화 대상으로 분리할 수 없습니다.`;
+}
+
+function splitGenericStackableForEnhanceIfNeeded(item) {
+	if (!item || !isTemplateStackableItem(item) || item.type === "skill_book" || item.type === "special_equip") {
+		return { ok: true, item, split: false };
+	}
+	if ((item.count || 1) <= 1) return { ok: true, item, split: false };
+
+	let sourceArr = selectedSlot.type === "storage" ? player.storage : player.inventory;
+	const maxSize = selectedSlot.type === "storage" ? player.maxStorageSize : player.maxInventorySize;
+	const blockReason = getStackedEnhanceSpaceBlockReason(item, sourceArr, maxSize);
+	if (blockReason) return { ok: false, item, split: false, reason: blockReason };
+
+	item.count = (item.count || 1) - 1;
+	const remainingCount = item.count;
+	const splitItem = { ...item, id: Date.now() + Math.random(), count: 1, level: parseInt(item.level) || 0 };
+	sourceArr.push(splitItem);
+	selectedSlot = { type: selectedSlot.type === "storage" ? "storage" : "inv", index: sourceArr.indexOf(splitItem) };
+	return { ok: true, item: splitItem, split: true, remainingCount };
+}
+
 function actionReinforce(times) {
 	times = Math.max(1, parseInt(times) || 1);
 	let pack = getSelectedItemPack();
@@ -544,6 +615,14 @@ function actionReinforce(times) {
 			let isEquippedTarget = selectedSlot.type === "equip";
 			let isLooseZeroTarget = !isEquippedTarget && currentLevel === 0;
 			let sourceArr = selectedSlot.type === "storage" ? player.storage : player.inventory;
+			const sourceMaxSize = selectedSlot.type === "storage" ? player.maxStorageSize : player.maxInventorySize;
+			const splitBlockReason = !isEquippedTarget
+				? getStackedEnhanceSpaceBlockReason(currentItem, sourceArr, sourceMaxSize)
+				: "";
+			if (splitBlockReason) {
+				stoppedReason = splitBlockReason === "space_required" ? "분리 공간 부족" : "분리 실패";
+				break;
+			}
 
 			// getZeroLevelMaterialCount는 인벤토리/보관함의 0강 전체를 셉니다.
 			// 선택한 +0을 직접 강화하는 경우 이 숫자에는 "강화 대상 1개"도 포함되므로,
@@ -610,16 +689,19 @@ function actionReinforce(times) {
 		}
 
 		if (attempts === 0) {
+			const specialStackBlockedMessage = stoppedReason === "분리 공간 부족"
+				? getStackedEnhanceSpaceMessage("space_required")
+				: `[시스템] ${stoppedReason || "강화할 수 없습니다."}`;
 			if (enhanceResult) {
 				enhanceResult.ok = false;
 				enhanceResult.data = { attempts, successRows, stoppedReason, itemName: baseName };
-				addResultLog(enhanceResult, `[시스템] ${stoppedReason || "강화할 수 없습니다."}`);
+				addResultLog(enhanceResult, specialStackBlockedMessage);
 				setEnhanceResultView(enhanceResult, "강화 결과", [], 0);
 				requestUiRefresh(enhanceResult, "updateFullUI");
 				requestUiRefresh(enhanceResult, "refreshActionPanelStats");
 				return applyActionResultUi(enhanceResult);
 			}
-			addLog(`[시스템] ${stoppedReason || "강화할 수 없습니다."}`);
+			addLog(specialStackBlockedMessage);
 			renderEnhanceResultLog("강화 결과", [], 0);
 			updateFullUI();
 			refreshActionPanelStats();
@@ -640,6 +722,26 @@ function actionReinforce(times) {
 		updateFullUI();
 		refreshActionPanelStats();
 		return;
+	}
+
+	const genericStackSplit = splitGenericStackableForEnhanceIfNeeded(item);
+	if (!genericStackSplit.ok) {
+		const message = getStackedEnhanceSpaceMessage(genericStackSplit.reason);
+		if (enhanceResult) {
+			enhanceResult.ok = false;
+			enhanceResult.data = { reason: genericStackSplit.reason, itemName: item.name, stackedCount: item.count || 1 };
+			addResultLog(enhanceResult, message);
+			return applyActionResultUi(enhanceResult);
+		}
+		addLog(message);
+		return;
+	}
+	if (genericStackSplit.split) {
+		item = genericStackSplit.item;
+		if (enhanceResult) {
+			enhanceResult.data.splitFromStackForEnhance = true;
+			enhanceResult.data.remainingStackCount = genericStackSplit.remainingCount;
+		}
 	}
 
 	// 일반장비/강화 가능 특수장비: 성공해도 멈추지 않고 요청 횟수만큼 연속 강화합니다.
@@ -752,7 +854,7 @@ function actionSell() {
 	if (!item) return;
 
 	if (!player.trash) player.trash = [];
-	if (player.trash.length >= player.maxStorageSize) {
+	if (player.trash.length >= player.maxStorageSize && !(isZeroLevelStackableItem(item) && findStackableItem(item, [player.trash]))) {
 		addLog("[시스템] 휴지통이 꽉 찼습니다. 휴지통을 비워 주세요.");
 		return;
 	}
@@ -858,7 +960,7 @@ function actionMoveStorage() {
 		sourceArr = player.inventory;
 		item = sourceArr[selectedSlot.index];
 		if (!item) return;
-		if (player.storage.length >= player.maxStorageSize) {
+		if (player.storage.length >= player.maxStorageSize && !(isZeroLevelStackableItem(item) && findStackableItem(item, [player.storage]))) {
 			addLog("[시스템] 보관함이 꽉 찼습니다.");
 			return;
 		}
@@ -867,7 +969,7 @@ function actionMoveStorage() {
 		sourceArr = player.storage;
 		item = sourceArr[selectedSlot.index];
 		if (!item) return;
-		if (player.inventory.length >= player.maxInventorySize) {
+		if (player.inventory.length >= player.maxInventorySize && !(isZeroLevelStackableItem(item) && findStackableItem(item, [player.inventory]))) {
 			addLog("[시스템] 가방이 꽉 찼습니다.");
 			return;
 		}
@@ -876,7 +978,7 @@ function actionMoveStorage() {
 		sourceArr = player.trash;
 		item = sourceArr[selectedSlot.index];
 		if (!item) return;
-		if (player.inventory.length >= player.maxInventorySize) {
+		if (player.inventory.length >= player.maxInventorySize && !(isZeroLevelStackableItem(item) && findStackableItem(item, [player.inventory]))) {
 			addLog("[시스템] 가방이 꽉 찼습니다.");
 			return;
 		}

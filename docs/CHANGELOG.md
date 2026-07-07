@@ -1,3 +1,12 @@
+## v124
+- 관리자 페이지에서 수정한 `itemTemplates.stackable` 값을 인게임 신규 획득 장비 겹치기 로직에 연결했습니다.
+- master-data adapter가 보스 드랍 아이템에 `stackable`, `templateKey`, `itemTemplateCode` 런타임 필드를 붙입니다.
+- 일반 장비 드랍도 `addStackableItemToInventory()`를 통과하게 하여 `stackable=true`인 같은 +0 아이템은 count로 겹칩니다.
+- 기존 세이브 전체를 자동 병합하지는 않지만, 새 stackable 드랍이 기존 같은 +0 아이템과 만나면 그 슬롯에 겹치고 stackable 값을 보강합니다.
+- 겹쳐진 일반 장비를 강화할 때 스택 전체가 강화되지 않도록 1개만 분리해서 강화합니다.
+- 인벤토리/보관함/휴지통 슬롯 배지에서 일반 장비도 `count > 1`이면 `xN`을 표시합니다.
+- DB reset/seed는 필요 없습니다.
+
 ## v122
 - 관리자 편집 초안에서 allow-list 필드만 실제 DB 적용할 수 있는 guarded apply를 추가했습니다.
 - 새 API `POST /api/v1/admin/master-data/edit-apply`를 추가했습니다.
@@ -614,3 +623,11 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - Added `ROLLBACK MASTER DATA EDIT` confirmation text for rollback apply.
 - Added `stackable` true/false explanation to the admin field help and value hints.
 - No DB reset or seed import is required because the existing `admin_change_logs` table is reused.
+
+## v125 - Runtime stacked enhance space guard
+
+- Added a shared runtime guard for enhancing stacked items that require a temporary 1-slot split.
+- The guard now applies to DB `stackable=true` equipment, talisman stacks, and shining emblem stacks.
+- If a stacked item has `count > 1` and its current container is full, enhancement is blocked before any item count/material is consumed.
+- The user-facing message is `[시스템] 겹쳐진 장비를 강화하려면 먼저 1칸의 빈 공간이 필요합니다.`
+- No DB reset or seed import is required because only runtime enhancement logic changed.
