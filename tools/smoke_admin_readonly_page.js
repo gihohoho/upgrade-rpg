@@ -23,6 +23,8 @@ assertContains("admin.html", [
   "data-admin-api-base-url",
   "data-admin-cards",
   "data-admin-master-table",
+  "data-admin-master-domain",
+  "data-admin-master-catalog-table",
   "data-admin-snapshot-table",
   "data-admin-filter-limit",
   "data-admin-filter-user-id",
@@ -39,12 +41,13 @@ assertContains("admin.html", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v114.admin-save-snapshot-filters",
+  "v115.admin-master-data-catalog",
   "fetchAdminReadOnlyPageData",
   "refreshAdminReadOnlyPage",
   "checkAdminReadOnlyPageReady",
   "fetchAdminOverview",
   "listAdminSaveSnapshots",
+  "listAdminMasterCatalogRows",
   "rawSnapshotReturned",
   "saveApiBaseUrlFromInput",
   "resetApiBaseUrl",
@@ -56,6 +59,8 @@ assertContains("src/api/admin-page-readonly.js", [
   "resetSnapshotFilters",
   "describeSnapshotFilters",
   "snapshotFilterReady",
+  "masterCatalogReady",
+  "readMasterCatalogFiltersFromDom",
 ]);
 
 assertContains("src/api/admin-readonly-overview.js", [

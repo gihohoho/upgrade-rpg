@@ -1,10 +1,13 @@
 (function () {
   "use strict";
 
-  const VERSION = "v114.admin-save-snapshot-filters";
+  const VERSION = "v115.admin-master-data-catalog";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
+  const DEFAULT_MASTER_DOMAIN = "itemTemplates";
+  const DEFAULT_MASTER_LIMIT = 50;
+  const DEFAULT_MASTER_SORT = "code_asc";
 
   function $(selector) {
     return document.querySelector(selector);
@@ -116,6 +119,8 @@
     if (!window.RpgGameApi) throw new Error("RpgGameApi를 찾을 수 없습니다. game-api-client.js 로딩 순서를 확인하세요.");
     if (typeof window.RpgGameApi.fetchAdminOverview !== "function") throw new Error("fetchAdminOverview 함수를 찾을 수 없습니다.");
     if (typeof window.RpgGameApi.listAdminSaveSnapshots !== "function") throw new Error("listAdminSaveSnapshots 함수를 찾을 수 없습니다.");
+    if (typeof window.RpgGameApi.listAdminMasterCatalogDomains !== "function") throw new Error("listAdminMasterCatalogDomains 함수를 찾을 수 없습니다.");
+    if (typeof window.RpgGameApi.listAdminMasterCatalogRows !== "function") throw new Error("listAdminMasterCatalogRows 함수를 찾을 수 없습니다.");
   }
 
   function readSnapshotFiltersFromDom() {
@@ -165,16 +170,76 @@
     return parts.length ? parts.join(", ") : "필터 없음";
   }
 
+
+  function readMasterCatalogFiltersFromDom() {
+    const domainEl = $("[data-admin-master-domain]");
+    const limitEl = $("[data-admin-master-limit]");
+    const queryEl = $("[data-admin-master-query]");
+    const enabledEl = $("[data-admin-master-enabled]");
+    const sortEl = $("[data-admin-master-sort]");
+    return {
+      domain: domainEl && domainEl.value ? domainEl.value : DEFAULT_MASTER_DOMAIN,
+      limit: limitEl && limitEl.value ? Number(limitEl.value) : DEFAULT_MASTER_LIMIT,
+      query: queryEl ? queryEl.value.trim() : "",
+      enabled: enabledEl && enabledEl.value ? enabledEl.value : "all",
+      sort: sortEl && sortEl.value ? sortEl.value : DEFAULT_MASTER_SORT,
+    };
+  }
+
+  function resetMasterCatalogFilters(options) {
+    const opts = options || {};
+    const domainEl = $("[data-admin-master-domain]");
+    const limitEl = $("[data-admin-master-limit]");
+    const queryEl = $("[data-admin-master-query]");
+    const enabledEl = $("[data-admin-master-enabled]");
+    const sortEl = $("[data-admin-master-sort]");
+    if (domainEl) domainEl.value = DEFAULT_MASTER_DOMAIN;
+    if (limitEl) limitEl.value = String(DEFAULT_MASTER_LIMIT);
+    if (queryEl) queryEl.value = "";
+    if (enabledEl) enabledEl.value = "all";
+    if (sortEl) sortEl.value = DEFAULT_MASTER_SORT;
+    if (!opts.silent) setStatus("마스터 데이터 카탈로그 필터 초기화", "info");
+    return readMasterCatalogFiltersFromDom();
+  }
+
+  function describeMasterCatalogFilters(filters) {
+    const f = filters || {};
+    const parts = [];
+    if (f.domain) parts.push(`domain=${f.domain}`);
+    if (f.query) parts.push(`query=${f.query}`);
+    if (f.enabled && f.enabled !== "all") parts.push(`enabled=${f.enabled}`);
+    if (f.sort && f.sort !== DEFAULT_MASTER_SORT) parts.push(`sort=${f.sort}`);
+    return parts.length ? parts.join(", ") : "마스터 필터 없음";
+  }
+
+  function syncMasterDomainOptions(domainsPayload) {
+    const select = $("[data-admin-master-domain]");
+    const meta = $("[data-admin-master-domain-meta]");
+    if (!select) return;
+    const current = select.value || DEFAULT_MASTER_DOMAIN;
+    const domains = Array.isArray(domainsPayload && domainsPayload.domains) ? domainsPayload.domains : [];
+    if (!domains.length) return;
+    select.innerHTML = domains.map((domain) => `
+      <option value="${escapeHtml(domain.key)}">${escapeHtml(domain.label || domain.key)} (${escapeHtml(formatValue(domain.total))})</option>
+    `).join("");
+    const nextValue = domains.some((domain) => domain.key === current) ? current : (domainsPayload.defaultDomain || DEFAULT_MASTER_DOMAIN);
+    select.value = nextValue;
+    if (meta) meta.textContent = `${formatValue(domains.length)} domains · raw JSON hidden · assets hidden`;
+  }
+
   async function fetchAdminReadOnlyPageData(options) {
     ensureApi();
     const opts = options || {};
     const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : DEFAULT_TIMEOUT_MS;
     const filters = opts.snapshotFilters || readSnapshotFiltersFromDom();
-    const [overview, snapshots] = await Promise.all([
+    const masterCatalogFilters = opts.masterCatalogFilters || readMasterCatalogFiltersFromDom();
+    const [overview, snapshots, masterDomains, masterCatalog] = await Promise.all([
       window.RpgGameApi.fetchAdminOverview({ timeoutMs }),
       window.RpgGameApi.listAdminSaveSnapshots({ timeoutMs, ...filters }),
+      window.RpgGameApi.listAdminMasterCatalogDomains({ timeoutMs }),
+      window.RpgGameApi.listAdminMasterCatalogRows({ timeoutMs, ...masterCatalogFilters }),
     ]);
-    return { overview, snapshots, snapshotFilters: filters };
+    return { overview, snapshots, masterDomains, masterCatalog, snapshotFilters: filters, masterCatalogFilters };
   }
 
   function renderCards(overviewPayload) {
@@ -219,6 +284,41 @@
               <td>${escapeHtml(formatValue(value.disabled))}</td>
             </tr>
           `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+
+
+  function renderMasterCatalogTable(catalogPayload) {
+    const target = $("[data-admin-master-catalog-table]");
+    const meta = $("[data-admin-master-catalog-meta]");
+    if (!target) return;
+    const rows = Array.isArray(catalogPayload.rows) ? catalogPayload.rows : [];
+    const columns = Array.isArray(catalogPayload.columns) ? catalogPayload.columns : [];
+    const filters = catalogPayload.filters || {};
+    const totalAllNote = catalogPayload.totalAll !== undefined ? ` / 전체 ${formatValue(catalogPayload.totalAll)}` : "";
+    const filterNote = filters.hasActiveFilters ? ` · ${describeMasterCatalogFilters(filters)}` : "";
+    if (meta) meta.textContent = `${escapeHtml(catalogPayload.domainLabel || catalogPayload.domain || "-")} · ${formatValue(rows.length)} / ${formatValue(catalogPayload.total)} shown${totalAllNote}${filterNote}`;
+    if (!rows.length || !columns.length) {
+      target.innerHTML = `<div class="empty">마스터 데이터 카탈로그 결과가 없습니다.</div>`;
+      return;
+    }
+    target.innerHTML = `
+      <table>
+        <thead><tr>${columns.map((column) => `<th>${escapeHtml(column.label || column.key)}</th>`).join("")}<th>원본 JSON</th><th>이미지</th></tr></thead>
+        <tbody>
+          ${rows.map((row) => {
+            const cells = row.cells || {};
+            return `
+              <tr>
+                ${columns.map((column) => `<td>${escapeHtml(formatValue(cells[column.key]))}</td>`).join("")}
+                <td><span class="pill ${row.rawJsonReturned ? "blocked" : "good"}">${row.rawJsonReturned ? "returned" : "hidden"}</span></td>
+                <td><span class="pill ${row.assetsReturned ? "blocked" : "good"}">${row.assetsReturned ? "returned" : "hidden"}</span></td>
+              </tr>
+            `;
+          }).join("")}
         </tbody>
       </table>
     `;
@@ -284,10 +384,12 @@
     const cards = $("[data-admin-cards]");
     const master = $("[data-admin-master-table]");
     const snapshots = $("[data-admin-snapshot-table]");
+    const catalog = $("[data-admin-master-catalog-table]");
     const readiness = $("[data-admin-readiness]");
     if (cards) cards.innerHTML = `<div class="card"><div class="label">오류</div><div class="value small">API 연결 실패</div></div>`;
     if (master) master.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
     if (snapshots) snapshots.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
+    if (catalog) catalog.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
     if (readiness) readiness.innerHTML = `<div class="error">백엔드가 켜져 있는지, API URL이 맞는지 확인하세요.</div>`;
     setStatus(`불러오기 실패: ${message}`, "error");
   }
@@ -299,12 +401,17 @@
       const result = await fetchAdminReadOnlyPageData(options || {});
       const overviewPayload = result.overview && result.overview.payload ? result.overview.payload : {};
       const snapshotPayload = result.snapshots && result.snapshots.payload ? result.snapshots.payload : {};
+      const masterDomainsPayload = result.masterDomains && result.masterDomains.payload ? result.masterDomains.payload : {};
+      const masterCatalogPayload = result.masterCatalog && result.masterCatalog.payload ? result.masterCatalog.payload : {};
       renderCards(overviewPayload);
       renderMasterTable(overviewPayload.masterData || {});
+      syncMasterDomainOptions(masterDomainsPayload);
+      renderMasterCatalogTable(masterCatalogPayload);
       renderSnapshotTable(snapshotPayload);
       renderReadiness(overviewPayload.readiness || {});
       const filterText = describeSnapshotFilters(result.snapshotFilters || (snapshotPayload && snapshotPayload.filters));
-      setStatus(`정상 로드 · ${formatClock(new Date().toISOString())} · ${filterText} · API ${window.RpgGameApi.getApiBaseUrl()}`, "ok");
+      const masterFilterText = describeMasterCatalogFilters(result.masterCatalogFilters || (masterCatalogPayload && masterCatalogPayload.filters));
+      setStatus(`정상 로드 · ${formatClock(new Date().toISOString())} · ${filterText} · ${masterFilterText} · API ${window.RpgGameApi.getApiBaseUrl()}`, "ok");
       return { ok: true, ...result };
     } catch (error) {
       renderError(error);
@@ -336,10 +443,15 @@
       if (!button) return;
       const action = button.getAttribute("data-admin-action");
       if (action === "refresh") await refreshAdminReadOnlyPage();
-      if (action === "apply-snapshot-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom() });
+      if (action === "apply-snapshot-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() });
+      if (action === "apply-master-catalog-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() });
+      if (action === "reset-master-catalog-filters") {
+        resetMasterCatalogFilters();
+        await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() });
+      }
       if (action === "reset-snapshot-filters") {
         resetSnapshotFilters();
-        await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom() });
+        await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() });
       }
       if (action === "save-api-base-url") {
         try {
@@ -368,15 +480,17 @@
     syncLocationHints();
     syncApiInput();
     resetSnapshotFilters({ silent: true });
+    resetMasterCatalogFilters({ silent: true });
     refreshAdminReadOnlyPage();
   }
 
   function checkAdminReadOnlyPageReady(options) {
-    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function");
+    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function");
     const domReady = !!document.querySelector("[data-admin-cards]");
     const locationHintReady = !!document.querySelector("[data-admin-current-url]");
     const snapshotFilterReady = !!document.querySelector("[data-admin-filter-slot-key]");
-    const result = { ok: apiReady && domReady && snapshotFilterReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, readOnly: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom() };
+    const masterCatalogReady = !!document.querySelector("[data-admin-master-domain]");
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, readOnly: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -394,12 +508,17 @@
     readSnapshotFiltersFromDom,
     resetSnapshotFilters,
     describeSnapshotFilters,
+    readMasterCatalogFiltersFromDom,
+    resetMasterCatalogFilters,
+    describeMasterCatalogFilters,
     checkAdminReadOnlyPageReady,
   };
   window.refreshAdminReadOnlyPage = refreshAdminReadOnlyPage;
   window.fetchAdminReadOnlyPageData = fetchAdminReadOnlyPageData;
   window.readAdminSnapshotFilters = readSnapshotFiltersFromDom;
   window.resetAdminSnapshotFilters = resetSnapshotFilters;
+  window.readAdminMasterCatalogFilters = readMasterCatalogFiltersFromDom;
+  window.resetAdminMasterCatalogFilters = resetMasterCatalogFilters;
   window.checkAdminReadOnlyPageReady = checkAdminReadOnlyPageReady;
   window.getCurrentAdminPageUrl = getCurrentAdminPageUrl;
   window.copyCurrentAdminPageUrl = copyCurrentAdminPageUrl;

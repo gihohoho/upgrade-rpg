@@ -31,11 +31,11 @@ assertContains("admin.html", [
   "data-admin-game-url",
   "data-admin-action=\"copy-admin-url\"",
   "고정된 5500 주소가 아니라",
-  "v114 admin save snapshot filters",
+  "v115 admin master data catalog",
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v114.admin-save-snapshot-filters",
+  "v115.admin-master-data-catalog",
   "function buildSiblingPageUrl(fileName)",
   "function getCurrentAdminPageUrl()",
   "function getGamePageUrl()",

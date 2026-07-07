@@ -68,6 +68,73 @@ async def get_admin_readonly_overview(
     )
 
 
+@router.get("/master-data/domains")
+async def list_admin_master_catalog_domains(
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """List admin master-data catalog domains without returning row payloads."""
+    domains = await service.list_master_catalog_domains(session)
+    return ok_response(
+        type="admin.master_data.domains",
+        payload=domains,
+        data={
+            "status": domains["status"],
+            "readOnly": domains["readOnly"],
+            "adminUserId": current_user.id,
+            "count": domains["count"],
+            "defaultDomain": domains["defaultDomain"],
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 마스터 데이터 카탈로그 도메인 목록입니다. DB를 수정하지 않습니다.",
+        },
+    )
+
+
+@router.get("/master-data/catalog")
+async def list_admin_master_catalog_rows(
+    domain: str = Query(default="itemTemplates", max_length=80),
+    limit: int = Query(default=50, ge=1, le=200),
+    query: str | None = Query(default=None, max_length=120),
+    enabled: str = Query(default="all", max_length=20),
+    sort: str = Query(default="code_asc", max_length=30),
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """List safe master-data rows for the read-only admin catalog.
+
+    This is still read-only. It does not return inline assets or raw JSON blobs.
+    """
+    catalog = await service.list_master_catalog_rows(
+        session,
+        domain=domain,
+        limit=limit,
+        query=query,
+        enabled=enabled,
+        sort=sort,
+    )
+    return ok_response(
+        type="admin.master_data.catalog",
+        payload=catalog,
+        data={
+            "status": catalog["status"],
+            "readOnly": catalog["readOnly"],
+            "adminUserId": current_user.id,
+            "domain": catalog["domain"],
+            "count": catalog["count"],
+            "total": catalog["total"],
+            "filters": catalog["filters"],
+            "rawJsonReturned": catalog["rawJsonReturned"],
+            "assetsReturned": catalog["assetsReturned"],
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 마스터 데이터 카탈로그 조회 전용 목록입니다. 원본 JSON과 이미지 data URL은 내려주지 않습니다.",
+        },
+    )
+
+
 @router.get("/save-snapshots")
 async def list_admin_save_snapshots(
     limit: int = Query(default=20, ge=1, le=100),

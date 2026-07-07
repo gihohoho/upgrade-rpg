@@ -15,8 +15,12 @@ REQUIRED_PATTERNS = {
     "backend/app/api/routes/admin.py": [
         '@router.get("/overview")',
         '@router.get("/save-snapshots")',
+        '@router.get("/master-data/domains")',
+        '@router.get("/master-data/catalog")',
         'type="admin.overview"',
         'type="admin.save_snapshots"',
+        'type="admin.master_data.domains"',
+        'type="admin.master_data.catalog"',
         'readOnly',
         'snapshot_json 원본은 내려주지 않습니다',
     ],
@@ -33,6 +37,10 @@ REQUIRED_PATTERNS = {
         "safeForAdminWriteUi",
         "rawSnapshotReturned",
         "UserSaveSnapshot",
+        "MASTER_CATALOG_DOMAINS",
+        "list_master_catalog_domains",
+        "list_master_catalog_rows",
+        "assetsReturned",
     ],
     "src/api/game-api-client.js": [
         "fetchAdminOverview",
@@ -40,6 +48,8 @@ REQUIRED_PATTERNS = {
         "defaultOnly",
         "slotKey",
         "userId",
+        "listAdminMasterCatalogDomains",
+        "listAdminMasterCatalogRows",
     ],
     "backend/scripts/check_admin_readonly_api.py": [
         "admin/overview",
@@ -47,6 +57,9 @@ REQUIRED_PATTERNS = {
         "defaultOnly=true",
         "filters",
         "rawSnapshotReturned",
+        "admin/master-data/domains",
+        "admin/master-data/catalog",
+        "assetsReturned",
     ],
 }
 

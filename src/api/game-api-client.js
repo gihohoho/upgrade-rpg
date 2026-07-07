@@ -153,6 +153,34 @@
 		});
 	}
 
+
+	async function listAdminMasterCatalogDomains(options) {
+		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : undefined;
+		return request("/admin/master-data/domains", {
+			timeoutMs,
+		});
+	}
+
+	async function listAdminMasterCatalogRows(options) {
+		const opts = options || {};
+		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
+		const domain = opts.domain !== undefined ? String(opts.domain || "").trim() : undefined;
+		const limit = opts.limit !== undefined ? Number(opts.limit) : undefined;
+		const query = opts.query !== undefined ? String(opts.query || "").trim() : undefined;
+		const enabled = opts.enabled !== undefined ? String(opts.enabled || "").trim() : undefined;
+		const sort = opts.sort !== undefined ? String(opts.sort || "").trim() : undefined;
+		return request("/admin/master-data/catalog", {
+			query: {
+				domain,
+				limit,
+				query,
+				enabled,
+				sort,
+			},
+			timeoutMs,
+		});
+	}
+
 	async function saveGameSnapshot(payload, options) {
 		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : undefined;
 		return request("/game/save", {
@@ -184,6 +212,8 @@
 		saveGameSnapshot,
 		fetchAdminOverview,
 		listAdminSaveSnapshots,
+		listAdminMasterCatalogDomains,
+		listAdminMasterCatalogRows,
 		loadGameSnapshot,
 	};
 })();

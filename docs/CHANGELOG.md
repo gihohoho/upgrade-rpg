@@ -536,3 +536,13 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - The filtered admin API still does not return raw `snapshot_json` and keeps `rawSnapshotReturned=false`.
 - Added browser helpers `readAdminSnapshotFilters()` and `resetAdminSnapshotFilters()` for console diagnostics.
 - No DB reset or seed import is required because the existing `user_save_snapshots` table is only queried.
+
+## v115 - Admin master data catalog
+
+- Added read-only master-data catalog APIs for the admin page: `/admin/master-data/domains` and `/admin/master-data/catalog`.
+- Added admin page filters for master-data domain, search query, enabled status, limit, and sort.
+- Added generic catalog rendering in `admin.html` so item templates, skills, bosses, fields, drops, enhancement data, and character links can be browsed without editing.
+- The catalog deliberately keeps `rawJsonReturned=false` and `assetsReturned=false`; raw JSON blobs and inline image data URLs are not exposed.
+- Added browser helpers `readAdminMasterCatalogFilters()` and `resetAdminMasterCatalogFilters()`.
+- Updated `backend/scripts/check_admin_readonly_api.py` and smoke tests to include the new catalog endpoints.
+- No DB reset or seed import is required because the existing master-data tables are queried only.

@@ -407,6 +407,66 @@
       <div class="table-wrap" data-admin-master-table><div class="empty">불러오는 중...</div></div>
     </section>
 
+
+    <section class="filter-panel" aria-label="마스터 데이터 카탈로그 필터">
+      <div class="filter-title">마스터 데이터 카탈로그</div>
+      <div class="filter-grid">
+        <div class="filter-field">
+          <label for="admin-master-domain">도메인</label>
+          <select id="admin-master-domain" data-admin-master-domain>
+            <option value="itemTemplates" selected>아이템 템플릿</option>
+            <option value="skills">스킬</option>
+            <option value="bosses">보스</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="admin-master-limit">표시 개수</label>
+          <select id="admin-master-limit" data-admin-master-limit>
+            <option value="20">20</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+            <option value="200">200</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="admin-master-query">검색</label>
+          <input id="admin-master-query" data-admin-master-query type="text" placeholder="코드/이름/타입" />
+        </div>
+        <div class="filter-field">
+          <label for="admin-master-enabled">활성 상태</label>
+          <select id="admin-master-enabled" data-admin-master-enabled>
+            <option value="all" selected>전체</option>
+            <option value="enabled">활성만</option>
+            <option value="disabled">비활성만</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="admin-master-sort">정렬</label>
+          <select id="admin-master-sort" data-admin-master-sort>
+            <option value="code_asc" selected>코드순</option>
+            <option value="name_asc">이름순</option>
+            <option value="sort_asc">정렬값순</option>
+            <option value="updated_desc">최근 수정순</option>
+            <option value="id_asc">ID순</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-self:end;">
+          <button class="btn primary" type="button" data-admin-action="apply-master-catalog-filters">카탈로그 조회</button>
+          <button class="btn" type="button" data-admin-action="reset-master-catalog-filters">초기화</button>
+        </div>
+      </div>
+      <div class="filter-help">마스터 데이터 편집 화면으로 가기 전 단계입니다. 이 목록은 조회 전용이며 원본 JSON과 이미지 data URL은 숨깁니다.</div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">마스터 데이터 카탈로그</h2>
+        <div class="section-meta" data-admin-master-domain-meta>-</div>
+      </div>
+      <div class="section-meta" style="padding:10px 14px; border-bottom:1px solid rgba(148, 163, 184, 0.14); text-align:left;" data-admin-master-catalog-meta>-</div>
+      <div class="table-wrap" data-admin-master-catalog-table><div class="empty">불러오는 중...</div></div>
+    </section>
+
     <section class="filter-panel" aria-label="최근 세이브 스냅샷 필터">
       <div class="filter-title">최근 세이브 스냅샷 필터</div>
       <div class="filter-grid">
@@ -466,7 +526,7 @@
       <div data-admin-readiness><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <p class="footer-note">v114 admin save snapshot filters · static HTML + JS · FastAPI read-only APIs</p>
+    <p class="footer-note">v115 admin master data catalog · static HTML + JS · FastAPI read-only APIs</p>
   </main>
 
   <script src="src/api/game-api-client.js"></script>
