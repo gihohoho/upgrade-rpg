@@ -1,6 +1,6 @@
 # 새 채팅 시작용 프롬프트
 
-아래 내용을 그대로 새 채팅의 첫 메시지로 붙여넣고, 함께 `rpg_v134_admin_safe_selects.zip`을 업로드해서 이어서 진행해줘.
+아래 내용을 그대로 새 채팅의 첫 메시지로 붙여넣고, 함께 `rpg_v138_admin_safe_apply_review.zip`을 업로드해서 이어서 진행해줘.
 
 ---
 
@@ -11,24 +11,7 @@
 나는 이 게임 프로젝트의 기획/게임 제작자 이기호야. 앞으로 나를 기호라고 불러줘.
 나는 코딩/터미널/경로에 익숙하지 않아.
 명령어를 줄 때는 항상 먼저 어디에서 실행해야 하는지 적어줘.
-
-예:
-
-```bash
-# 위치: 프로젝트 루트
-bash tools/run_smoke_core.sh
-```
-
-```bash
-# 위치: backend 폴더 + 가상환경 activate 상태
-source .venv/Scripts/activate
-uvicorn app.main:app --reload
-```
-
-```js
-// 위치: 브라우저 개발자도구 Console
-checkAdminReadOnlyPageReady();
-```
+주석(`#`, `//`)은 명령어 코드블록 안에 넣지 말고 코드블록 밖에서 설명해줘.
 
 현재 프로젝트는 아직 Vue가 아니라 index.html + JS + CSS 기반 RPG 게임이야.
 기존 게임이 완전히 정상 작동하는 상태를 유지하면서 단계적으로 백엔드 분리 중이야.
@@ -41,10 +24,9 @@ https://github.com/gihohoho/upgrade-rpg.git
 프로젝트 루트: ~/Desktop/Upgrade RPG
 backend 폴더: ~/Desktop/Upgrade RPG/backend
 
-백엔드 실행:
+백엔드 실행 위치: backend 폴더 + 가상환경 activate 상태
 
 ```bash
-# 위치: backend 폴더 + 가상환경 activate 상태
 source .venv/Scripts/activate
 uvicorn app.main:app --reload
 ```
@@ -69,10 +51,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v134: admin safe selects
+v138: admin safe apply review
 
 최신 ZIP:
-rpg_v134_admin_safe_selects.zip
+rpg_v138_admin_safe_apply_review.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -101,16 +83,16 @@ docs/NEXT_STEPS.md
 18. 겹친 장비 강화 시 가방이 꽉 차 있으면 강화 차단 완료.
 19. v132에서 문서 정리와 smoke 실행 스크립트 정리 완료.
 20. v133에서 관리자 편집 초안 입력 UI 타입 개선 완료.
-    - boolean 필드 true/false select
-    - number 필드 number input
-    - description/admin_note textarea
-    - 읽기 전용/잠금 필드 카드 표시
 21. v134에서 admin safe selects + allow-list 확장 완료.
-    - itemTemplates.item_type 실제 적용 가능
-    - itemTemplates.equip_slot 실제 적용 가능
-    - skills.slot_key 실제 적용 가능
-    - item_type/equip_slot/boss_type/slot_key preset select
-    - risk high/medium/low 배지
+22. v135에서 마스터 데이터 카탈로그 페이지네이션 + 슬롯 이름 표시 완료.
+23. v138에서 관리자 적용 직전 비교 UI + high risk 추가 확인 완료.
+
+v138 세부 완료:
+- 변경된 필드만 before/after 표시.
+- 위험도 순 정렬.
+- high risk 변경 시 HIGH RISK EDIT 추가 입력 필요.
+- 초안 검증 결과에도 위험도 컬럼 표시.
+- 카탈로그 현재 선택 행 강조.
 
 현재 게임 실제 세이브 슬롯:
 default
@@ -120,6 +102,9 @@ localStorage idleRpgSaveV22 저장 + DB default 슬롯 갱신
 
 관리자 실제 적용 확인 문구:
 APPLY MASTER DATA EDIT
+
+관리자 high risk 추가 확인 문구:
+HIGH RISK EDIT
 
 관리자 되돌리기 확인 문구:
 ROLLBACK MASTER DATA EDIT
@@ -131,29 +116,28 @@ DB reset/seed가 필요한 단계인지 아닌지 반드시 알려줘.
 작업 후 ZIP으로 줘.
 커밋 명령어도 마지막에 같이 줘.
 명령어마다 반드시 실행 위치를 먼저 적어줘.
+주석(`#`, `//`)은 명령어 코드블록 안에 넣지 말고 코드블록 밖에서 설명해줘.
 가능하면 작업 후 smoke를 돌려줘.
 ZIP에는 전체 프로젝트 파일/폴더를 묶어줘. 단, .env, .gitignore는 바뀐 경우에만 포함하면 돼.
 
-smoke 실행:
+smoke 실행 위치: 프로젝트 루트
 
 ```bash
-# 위치: 프로젝트 루트
 bash tools/run_smoke_core.sh
 ```
 
+smoke 실행 위치: 프로젝트 루트
+
 ```bash
-# 위치: 프로젝트 루트
 bash tools/run_smoke_all.sh
 ```
 
 다음 추천 단계:
-v135 관리자 변경 전후 비교 UI 강화
+v139 관리자 관계 필드 안전 편집 준비
 
 구체적으로:
-실제 적용 직전에 바뀌는 필드만 더 크게 보여주고, risk high 변경은 상단에 한 번 더 강조.
-item_type / equip_slot / slot_key 변경 시 별도 경고 문구 표시.
-관계 필드(`*_id`, `*_code`)와 JSON 필드는 아직 잠금 유지.
+관계 필드(`*_code`, `owner_code`, `item_template_code`, `enhance_group_code`)를 바로 text input으로 열지 말고, 실제 존재하는 대상 목록 기반 select와 백엔드 관계 검증을 먼저 준비하는 게 좋아.
 
-이 단계는 DB reset/seed 없이 관리자 UI 중심으로 진행하는 게 좋아.
+이 단계도 가능하면 DB reset/seed 없이 관리자/검증 로직 중심으로 진행해줘.
 
-업로드한 ZIP 기준으로 구조 확인 후, v135부터 이어서 진행해줘.
+업로드한 ZIP 기준으로 구조 확인 후, v139부터 이어서 진행해줘.

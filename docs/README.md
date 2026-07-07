@@ -54,3 +54,7 @@ docs/archive/stage-notes/
 ```
 
 삭제하지 않고 이동만 했기 때문에, 필요하면 언제든 다시 참고할 수 있습니다.
+
+- `ADMIN_MASTER_CATALOG_PAGINATION.md` - 관리자 마스터 데이터 카탈로그 페이지네이션과 인게임 슬롯 이름 표시
+- `ADMIN_SAFE_APPLY_REVIEW.md` - 관리자 적용 직전 before/after 비교와 high risk 추가 확인
+- `ADMIN_CATALOG_SELECTION_HELPER.md` - 마스터 데이터 카탈로그 현재 선택 행 표시

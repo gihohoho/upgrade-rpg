@@ -68,10 +68,10 @@ local-admin-dev-key
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v134: admin safe selects**
-- 최신 ZIP 이름: **rpg_v134_admin_safe_selects.zip**
+- 최신 안정 버전: **v138: admin safe apply review**
+- 최신 ZIP 이름: **rpg_v138_admin_safe_apply_review.zip**
 
-v134는 관리자 편집 초안에서 enum 성격 필드를 preset select로 고르게 하고, itemTemplates/skills 일부 안전 필드를 실제 적용 allow-list에 추가한 버전입니다.
+v138은 관리자 마스터 데이터 편집에서 적용 직전 before/after 비교 UI를 추가하고, high risk 변경에는 `HIGH RISK EDIT` 추가 확인 문구를 요구하는 버전입니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
 DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 DB reset/seed는 필요 없습니다.
 
@@ -115,11 +115,17 @@ DB reset/seed는 필요 없습니다.
   - description/admin_note: textarea
   - 읽기 전용/잠금 필드 카드 표시
 - v134에서 admin safe selects + allow-list 확장 완료.
+- v135에서 마스터 데이터 카탈로그 페이지네이션 + 슬롯 이름 표시 완료.
   - itemTemplates.item_type 실제 적용 가능
   - itemTemplates.equip_slot 실제 적용 가능
   - skills.slot_key 실제 적용 가능
   - item_type/equip_slot/boss_type/slot_key preset select
   - risk high/medium/low 배지
+- v138에서 관리자 적용 직전 비교 UI + high risk 추가 확인 완료.
+  - 변경된 필드만 before/after 표시
+  - 위험도 순 정렬
+  - high risk 변경 시 HIGH RISK EDIT 추가 입력 필요
+  - 카탈로그 현재 선택 행 강조
 
 ### runtime 반영
 
@@ -148,6 +154,7 @@ DB reset/seed는 필요 없습니다.
 → 초안 검증
 → dev key 저장 상태 확인
 → 확인 문구 입력: APPLY MASTER DATA EDIT
+→ high risk 변경이 있으면 추가 확인 문구 입력: HIGH RISK EDIT
 → 검증 후 실제 적용
 → 변경 이력 저장
 → master-data API 자동 반영 확인
@@ -199,13 +206,14 @@ getAdminDraftFieldInputKind({ key: "stackable", value: true });
 
 가장 안전한 다음 단계 후보:
 
-1. **관리자 allow-list 확장**
-   - 스킬, 드랍, 강화 단계 일부 필드까지 실제 수정 가능하게 확장.
-   - 관계 필드(`*_id`, `*_code`)는 아직 잠금 유지.
-
-2. **관리자 변경 전후 비교 UI 강화**
+1. **관리자 변경 전후 비교 UI 강화**
    - 실제 적용 전에 “바뀌는 필드만” 더 눈에 잘 보이게 표시.
    - 위험도 높은 변경은 상단에 한 번 더 강조.
+   - item_type / equip_slot / slot_key 변경 시 별도 경고 문구 표시.
+
+2. **관리자 allow-list 추가 확장 검토**
+   - dropTables.owner_type, skillLevels.level, enhancementLevels.from_level 같은 관계성 필드는 조심스럽게 검토.
+   - 관계 필드(`*_id`, `*_code`)와 JSON 필드는 아직 잠금 유지.
 
 3. **정식 인증/권한 설계 준비**
    - 현재 dev key는 로컬 개발용 안전장치일 뿐입니다.

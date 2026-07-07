@@ -1,5 +1,24 @@
 # Changelog
 
+## v138 - Admin Safe Apply Review
+
+- 관리자 편집 초안 아래에 적용 직전 비교 UI를 추가했습니다.
+- 실제로 바뀐 필드만 before/after 형태로 보여줍니다.
+- 변경 필드를 risk high / medium / low 순으로 정렬해 위험한 변경을 먼저 보이게 했습니다.
+- high risk 변경이 있으면 기존 확인 문구 외에 `HIGH RISK EDIT` 추가 확인 문구를 요구합니다.
+- 초안 검증 결과의 변경 표에도 위험도 컬럼을 추가했습니다.
+- 마스터 데이터 카탈로그에서 현재 상세로 열어둔 행을 `선택됨` 배지와 강조 배경으로 표시합니다.
+- DB reset/seed는 필요 없습니다.
+
+## v135 - Master Catalog Pagination + Slot Labels
+
+- 관리자 마스터 데이터 카탈로그에 페이지네이션을 추가했습니다.
+- 기본 표시 개수를 20개로 바꿨습니다.
+- 기본 정렬을 ID순으로 바꿨습니다.
+- 카탈로그 API에 page/offset/totalPages/hasPrevPage/hasNextPage를 추가했습니다.
+- equip_slot 숫자 프리셋 6~14를 인게임 특수 장비 슬롯 이름으로 표시합니다.
+- DB reset/seed는 필요 없습니다.
+
 ## v134 - Admin Safe Selects + Allow-list Expansion
 
 - 관리자 편집 초안에 preset select 타입을 추가했습니다.
@@ -283,6 +302,16 @@
 - 기존 게임 동작은 유지하고, FastAPI 응답 구조로 옮기기 위한 중간 계층만 추가했습니다.
 
 # Changelog
+
+## v138 - Admin Safe Apply Review
+
+- 관리자 편집 초안 아래에 적용 직전 비교 UI를 추가했습니다.
+- 실제로 바뀐 필드만 before/after 형태로 보여줍니다.
+- 변경 필드를 risk high / medium / low 순으로 정렬해 위험한 변경을 먼저 보이게 했습니다.
+- high risk 변경이 있으면 기존 확인 문구 외에 `HIGH RISK EDIT` 추가 확인 문구를 요구합니다.
+- 초안 검증 결과의 변경 표에도 위험도 컬럼을 추가했습니다.
+- 마스터 데이터 카탈로그에서 현재 상세로 열어둔 행을 `선택됨` 배지와 강조 배경으로 표시합니다.
+- DB reset/seed는 필요 없습니다.
 
 ## v071 - 4순위 1차: Action Result 도입
 

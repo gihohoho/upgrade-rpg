@@ -21,9 +21,10 @@ docs/README.md
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v134: admin safe selects**
+- 최신 안정 버전: **v138: admin safe apply review**
 
-v134는 관리자 편집 초안에서 안전한 enum 필드를 preset select로 바꾸고, itemTemplates/skills의 일부 안전 필드를 allow-list에 추가한 버전입니다.
+v138은 관리자 마스터 데이터 편집에서 적용 직전 before/after 비교 UI를 추가하고, high risk 변경에는 `HIGH RISK EDIT` 추가 확인 문구를 요구하는 버전입니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
+
 DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 
 ## 백엔드 실행

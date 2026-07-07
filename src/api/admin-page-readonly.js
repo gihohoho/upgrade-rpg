@@ -1,16 +1,17 @@
 (function () {
   "use strict";
 
-  const VERSION = "v134.admin-safe-selects";
+  const VERSION = "v138.admin-safe-apply-review";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
   const DEFAULT_MASTER_DOMAIN = "itemTemplates";
-  const DEFAULT_MASTER_LIMIT = 50;
-  const DEFAULT_MASTER_SORT = "code_asc";
+  const DEFAULT_MASTER_LIMIT = 20;
+  const DEFAULT_MASTER_SORT = "id_asc";
   const DEFAULT_CHANGE_LOG_LIMIT = 20;
   const DEFAULT_CHANGE_LOG_SORT = "created_desc";
   const ADMIN_EDIT_APPLY_CONFIRM_TEXT = "APPLY MASTER DATA EDIT";
+  const ADMIN_EDIT_HIGH_RISK_CONFIRM_TEXT = "HIGH RISK EDIT";
   const ADMIN_ROLLBACK_CONFIRM_TEXT = "ROLLBACK MASTER DATA EDIT";
   const ADMIN_EDIT_APPLY_TIMEOUT_MS = 5000;
   const ADMIN_WRITE_DEV_KEY_EXAMPLE = "local-admin-dev-key";
@@ -48,6 +49,24 @@
     "gold_cost",
   ]);
   const ADMIN_DRAFT_TEXTAREA_FIELDS = new Set(["description", "admin_note"]);
+  const ADMIN_EQUIP_SLOT_PRESET_LABELS = {
+    skill_all: "일반장비 1 · 스킬피해+모든피해",
+    atk_inc: "일반장비 2 · 공격력 추가",
+    normal_dmg: "일반장비 3 · 평타피해",
+    skill_chance: "일반장비 4/5 · 추가 스킬피해",
+    normal_crit: "일반장비 4/5 · 평타 치명타",
+    all_dmg: "예비 슬롯 · 모든피해",
+    skill_dmg: "예비 슬롯 · 스킬피해",
+    "6": "특수무기",
+    "7": "특수목걸이",
+    "8": "특수반지",
+    "9": "무기아바타",
+    "10": "오라아바타",
+    "11": "클론 레어 아바타",
+    "12": "탈리스만 A",
+    "13": "탈리스만 B",
+    "14": "휘장",
+  };
   const ADMIN_DRAFT_SELECT_FIELD_OPTIONS = {
     item_type: [
       { value: "normal", label: "normal · 일반 장비" },
@@ -61,22 +80,22 @@
     ],
     equip_slot: [
       { value: "", label: "없음 · 장착 슬롯 없음" },
-      { value: "skill_all", label: "skill_all · 스킬피해+모든피해" },
-      { value: "skill_dmg", label: "skill_dmg · 스킬피해" },
-      { value: "skill_chance", label: "skill_chance · 스킬발동확률" },
-      { value: "atk_inc", label: "atk_inc · 공격력 추가" },
-      { value: "normal_dmg", label: "normal_dmg · 평타피해" },
-      { value: "normal_crit", label: "normal_crit · 평타치명" },
-      { value: "all_dmg", label: "all_dmg · 모든피해" },
-      { value: "6", label: "6 · 특수 슬롯 6" },
-      { value: "7", label: "7 · 특수 슬롯 7" },
-      { value: "8", label: "8 · 특수 슬롯 8" },
-      { value: "9", label: "9 · 특수 슬롯 9" },
-      { value: "10", label: "10 · 특수 슬롯 10" },
-      { value: "11", label: "11 · 특수 슬롯 11" },
-      { value: "12", label: "12 · 특수 슬롯 12" },
-      { value: "13", label: "13 · 특수 슬롯 13" },
-      { value: "14", label: "14 · 특수 슬롯 14" },
+      { value: "skill_all", label: "skill_all · 일반장비 1 · 스킬피해+모든피해" },
+      { value: "atk_inc", label: "atk_inc · 일반장비 2 · 공격력 추가" },
+      { value: "normal_dmg", label: "normal_dmg · 일반장비 3 · 평타피해" },
+      { value: "skill_chance", label: "skill_chance · 일반장비 4/5 · 추가 스킬피해" },
+      { value: "normal_crit", label: "normal_crit · 일반장비 4/5 · 평타 치명타" },
+      { value: "skill_dmg", label: "skill_dmg · 예비 슬롯 · 스킬피해" },
+      { value: "all_dmg", label: "all_dmg · 예비 슬롯 · 모든피해" },
+      { value: "6", label: "6 · 특수무기" },
+      { value: "7", label: "7 · 특수목걸이" },
+      { value: "8", label: "8 · 특수반지" },
+      { value: "9", label: "9 · 무기아바타" },
+      { value: "10", label: "10 · 오라아바타" },
+      { value: "11", label: "11 · 클론 레어 아바타" },
+      { value: "12", label: "12 · 탈리스만 A" },
+      { value: "13", label: "13 · 탈리스만 B" },
+      { value: "14", label: "14 · 휘장" },
     ],
     boss_type: [
       { value: "normal", label: "normal · 일반 보스" },
@@ -256,7 +275,7 @@
     equipslot: {
       title: "equip slot / 장착 슬롯",
       body: "장비가 어떤 장착 그룹 또는 특수 슬롯에 들어가는지 나타내는 값입니다. 잘못 바꾸면 장착 위치나 장비 효과 분류가 어색해질 수 있으니 select 프리셋 안에서만 고르는 편이 안전합니다.",
-      example: "예: skill_all, atk_inc, normal_dmg, skill_chance, 6~14 특수 슬롯",
+      example: "예: skill_all=일반장비 1, atk_inc=일반장비 2, 6=특수무기, 12=탈리스만 A",
     },
     slotkey: {
       title: "slot key / 스킬 슬롯",
@@ -345,8 +364,9 @@
     if (normalized === "equipslot") {
       const text = String(value || "");
       if (!text) return { label: "장착 슬롯 없음", body: "재료/강화권처럼 장착하지 않는 아이템에 어울립니다." };
-      if (/^\d+$/.test(text)) return { label: `특수 슬롯 ${text}`, body: "탈리스만/휘장 계열처럼 번호 기반 특수 슬롯으로 쓰는 값입니다." };
-      return { label: text, body: "일반 장비 장착/효과 그룹입니다. 변경 후 장착 위치와 툴팁을 확인하세요." };
+      const displayName = getAdminEquipSlotDisplayName(text);
+      if (/^\d+$/.test(text)) return { label: `${text} · ${displayName}`, body: "인게임 장비창 오른쪽 특수 장비 슬롯 이름입니다." };
+      return { label: `${text} · ${displayName}`, body: "일반 장비 장착/효과 그룹입니다. 변경 후 장착 위치와 툴팁을 확인하세요." };
     }
     if (normalized === "slotkey") {
       const text = String(value || "");
@@ -635,9 +655,12 @@
     const queryEl = $("[data-admin-master-query]");
     const enabledEl = $("[data-admin-master-enabled]");
     const sortEl = $("[data-admin-master-sort]");
+    const pageEl = $("[data-admin-master-page]");
+    const pageValue = pageEl && pageEl.value ? Number(pageEl.value) : 1;
     return {
       domain: domainEl && domainEl.value ? domainEl.value : DEFAULT_MASTER_DOMAIN,
       limit: limitEl && limitEl.value ? Number(limitEl.value) : DEFAULT_MASTER_LIMIT,
+      page: Number.isFinite(pageValue) && pageValue > 0 ? Math.floor(pageValue) : 1,
       query: queryEl ? queryEl.value.trim() : "",
       enabled: enabledEl && enabledEl.value ? enabledEl.value : "all",
       sort: sortEl && sortEl.value ? sortEl.value : DEFAULT_MASTER_SORT,
@@ -651,8 +674,10 @@
     const queryEl = $("[data-admin-master-query]");
     const enabledEl = $("[data-admin-master-enabled]");
     const sortEl = $("[data-admin-master-sort]");
+    const pageEl = $("[data-admin-master-page]");
     if (domainEl) domainEl.value = DEFAULT_MASTER_DOMAIN;
     if (limitEl) limitEl.value = String(DEFAULT_MASTER_LIMIT);
+    if (pageEl) pageEl.value = "1";
     if (queryEl) queryEl.value = "";
     if (enabledEl) enabledEl.value = "all";
     if (sortEl) sortEl.value = DEFAULT_MASTER_SORT;
@@ -667,6 +692,7 @@
     if (f.query) parts.push(`query=${f.query}`);
     if (f.enabled && f.enabled !== "all") parts.push(`enabled=${f.enabled}`);
     if (f.sort && f.sort !== DEFAULT_MASTER_SORT) parts.push(`sort=${f.sort}`);
+    if (f.page && Number(f.page) > 1) parts.push(`page=${f.page}`);
     return parts.length ? parts.join(", ") : "마스터 필터 없음";
   }
 
@@ -753,6 +779,52 @@
 
 
 
+  function syncMasterCatalogPageInput(page) {
+    const pageEl = $("[data-admin-master-page]");
+    if (pageEl) pageEl.value = String(Math.max(1, Number(page) || 1));
+  }
+
+  function renderMasterCatalogPagination(catalogPayload) {
+    const target = $("[data-admin-master-catalog-pagination]");
+    if (!target) return;
+    const page = Math.max(1, Number(catalogPayload.page) || 1);
+    const totalPages = Math.max(1, Number(catalogPayload.totalPages) || 1);
+    const total = Number(catalogPayload.total) || 0;
+    const limit = Math.max(1, Number(catalogPayload.limit) || DEFAULT_MASTER_LIMIT);
+    const start = total ? ((page - 1) * limit) + 1 : 0;
+    const end = total ? Math.min(page * limit, total) : 0;
+    syncMasterCatalogPageInput(page);
+    target.innerHTML = `
+      <div class="catalog-pagination-meta">${escapeHtml(formatValue(start))}~${escapeHtml(formatValue(end))} / ${escapeHtml(formatValue(total))} · ${escapeHtml(formatValue(page))}/${escapeHtml(formatValue(totalPages))} 페이지</div>
+      <div class="catalog-pagination-actions">
+        <button class="btn mini" type="button" data-admin-action="master-catalog-first-page" ${page <= 1 ? "disabled" : ""}>처음</button>
+        <button class="btn mini" type="button" data-admin-action="master-catalog-prev-page" ${page <= 1 ? "disabled" : ""}>이전</button>
+        <button class="btn mini" type="button" data-admin-action="master-catalog-next-page" ${page >= totalPages ? "disabled" : ""}>다음</button>
+        <button class="btn mini" type="button" data-admin-action="master-catalog-last-page" ${page >= totalPages ? "disabled" : ""} data-admin-master-total-pages="${escapeHtml(totalPages)}">끝</button>
+      </div>
+    `;
+  }
+
+  function markSelectedMasterCatalogRow(domain, id) {
+    const safeDomain = String(domain || "");
+    const safeId = String(id || "");
+    Array.from(document.querySelectorAll("[data-admin-master-row-id]")).forEach((row) => {
+      const matches = row.getAttribute("data-admin-master-row-domain") === safeDomain && row.getAttribute("data-admin-master-row-id") === safeId;
+      row.classList.toggle("catalog-row-selected", matches);
+      const marker = row.querySelector("[data-admin-master-row-selected]");
+      if (marker) marker.innerHTML = matches ? `<span class="pill good">선택됨</span>` : "";
+    });
+  }
+
+  async function refreshMasterCatalogWithPage(page) {
+    syncMasterCatalogPageInput(page);
+    return refreshAdminReadOnlyPage({
+      snapshotFilters: readSnapshotFiltersFromDom(),
+      masterCatalogFilters: readMasterCatalogFiltersFromDom(),
+      changeLogFilters: readChangeLogFiltersFromDom(),
+    });
+  }
+
   function renderMasterCatalogTable(catalogPayload) {
     const target = $("[data-admin-master-catalog-table]");
     const meta = $("[data-admin-master-catalog-meta]");
@@ -761,8 +833,11 @@
     const columns = Array.isArray(catalogPayload.columns) ? catalogPayload.columns : [];
     const filters = catalogPayload.filters || {};
     const totalAllNote = catalogPayload.totalAll !== undefined ? ` / 전체 ${formatValue(catalogPayload.totalAll)}` : "";
+    const page = Number(catalogPayload.page) || 1;
+    const totalPages = Number(catalogPayload.totalPages) || 1;
     const filterNote = filters.hasActiveFilters ? ` · ${describeMasterCatalogFilters(filters)}` : "";
-    if (meta) meta.textContent = `${escapeHtml(catalogPayload.domainLabel || catalogPayload.domain || "-")} · ${formatValue(rows.length)} / ${formatValue(catalogPayload.total)} shown${totalAllNote}${filterNote}`;
+    if (meta) meta.textContent = `${escapeHtml(catalogPayload.domainLabel || catalogPayload.domain || "-")} · ${formatValue(rows.length)} / ${formatValue(catalogPayload.total)} shown · page ${formatValue(page)} / ${formatValue(totalPages)}${totalAllNote}${filterNote}`;
+    renderMasterCatalogPagination(catalogPayload);
     if (!rows.length || !columns.length) {
       target.innerHTML = `<div class="empty">마스터 데이터 카탈로그 결과가 없습니다.</div>`;
       return;
@@ -774,8 +849,8 @@
           ${rows.map((row) => {
             const cells = row.cells || {};
             return `
-              <tr>
-                <td><button class="btn mini" type="button" data-admin-action="open-master-detail" data-admin-detail-domain="${escapeHtml(row.domain || catalogPayload.domain || "")}" data-admin-detail-id="${escapeHtml(row.id)}">보기</button></td>
+              <tr data-admin-master-row-domain="${escapeHtml(row.domain || catalogPayload.domain || "")}" data-admin-master-row-id="${escapeHtml(row.id)}">
+                <td><button class="btn mini" type="button" data-admin-action="open-master-detail" data-admin-detail-domain="${escapeHtml(row.domain || catalogPayload.domain || "")}" data-admin-detail-id="${escapeHtml(row.id)}">보기</button><span data-admin-master-row-selected></span></td>
                 ${columns.map((column) => `<td>${formatValueWithFieldHint(column.key, cells[column.key])}</td>`).join("")}
                 <td><span class="pill ${row.rawJsonReturned ? "blocked" : "good"}">${row.rawJsonReturned ? "returned" : "hidden"}</span></td>
                 <td><span class="pill ${row.assetsReturned ? "blocked" : "good"}">${row.assetsReturned ? "returned" : "hidden"}</span></td>
@@ -785,6 +860,9 @@
         </tbody>
       </table>
     `;
+    if (currentMasterDetailPayload && currentMasterDetailPayload.domain && currentMasterDetailPayload.id) {
+      markSelectedMasterCatalogRow(currentMasterDetailPayload.domain, currentMasterDetailPayload.id);
+    }
   }
 
 
@@ -807,12 +885,18 @@
     return String(key || "").trim().toLowerCase();
   }
 
+  function getAdminEquipSlotDisplayName(value) {
+    const key = value === null || value === undefined ? "" : String(value);
+    return ADMIN_EQUIP_SLOT_PRESET_LABELS[key] || key || "장착 슬롯 없음";
+  }
+
   function getAdminDraftSelectOptions(key, value) {
     const normalized = normalizeAdminDraftFieldKey(key);
     const baseOptions = (ADMIN_DRAFT_SELECT_FIELD_OPTIONS[normalized] || []).slice();
     const valueText = value === null || value === undefined ? "" : String(value);
     if (valueText && !baseOptions.some((option) => String(option.value) === valueText)) {
-      baseOptions.unshift({ value: valueText, label: `${valueText} · 현재 DB 값` });
+      const currentLabel = normalized === "equip_slot" ? `${valueText} · ${getAdminEquipSlotDisplayName(valueText)} · 현재 DB 값` : `${valueText} · 현재 DB 값`;
+      baseOptions.unshift({ value: valueText, label: currentLabel });
     }
     return baseOptions;
   }
@@ -988,11 +1072,18 @@
         <div class="edit-draft-grid">${rows}</div>
         ${editableOverflowCount ? `<div class="filter-help">표시 제한으로 실제 적용 가능 필드 ${escapeHtml(formatValue(editableOverflowCount))}개는 편집 초안에서 제외했습니다.</div>` : ""}
         ${renderAdminDraftLockedFields(lockedFields)}
+        <div class="edit-draft-review" data-admin-edit-review>
+          <div class="draft-review-banner draft-review-empty">
+            <span class="pill good">변경 0</span>
+            <span>값을 바꾸면 적용 직전 비교표가 여기에 표시됩니다.</span>
+          </div>
+        </div>
         <div class="edit-draft-impact" data-admin-edit-impact><div class="empty">값을 바꾸면 여기에 <strong>인게임 영향 안내</strong>가 표시됩니다.</div></div>
         <div class="edit-draft-actions">
           <button class="btn mini primary" type="button" data-admin-action="preview-admin-edit-draft">초안 검증</button>
           <button class="btn mini" type="button" data-admin-action="reset-admin-edit-draft">원래 값으로 되돌리기</button>
           <label class="apply-confirm-field"><span>확인 문구</span><input type="text" data-admin-edit-apply-confirm placeholder="${escapeHtml(ADMIN_EDIT_APPLY_CONFIRM_TEXT)}" autocomplete="off" /></label>
+          <label class="apply-confirm-field"><span>고위험 확인</span><input type="text" data-admin-edit-risk-confirm placeholder="${escapeHtml(ADMIN_EDIT_HIGH_RISK_CONFIRM_TEXT)}" autocomplete="off" /></label>
           <label class="apply-confirm-field"><span>변경 사유</span><input type="text" data-admin-edit-apply-reason placeholder="예: 보스 HP 밸런스 조정" autocomplete="off" /></label>
           <button class="btn mini danger" type="button" data-admin-action="apply-admin-edit-draft">검증 후 실제 적용</button>
           <span class="pill warn">DB write: dev-key guarded</span>
@@ -1037,9 +1128,11 @@
       if (type === "boolean") field.value = original ? "true" : "false";
       else field.value = original === null || original === undefined ? "" : String(original);
     });
+    const riskConfirm = $(`[data-admin-edit-risk-confirm]`);
+    if (riskConfirm) riskConfirm.value = "";
     const result = $(`[data-admin-edit-draft-result]`);
     if (result) result.innerHTML = `<div class="empty">원래 값으로 되돌렸습니다. 값을 바꾼 뒤 초안 검증을 누르세요.</div>`;
-    refreshAdminEditImpactGuide();
+    refreshAdminEditReviewAndImpact();
     setStatus("편집 초안을 원래 값으로 되돌렸습니다.", "ok");
     return true;
   }
@@ -1062,6 +1155,93 @@
       after: result.draft[key],
       domain: result.domain,
     }));
+  }
+
+  function getAdminRiskSortWeight(risk) {
+    if (risk === "high") return 0;
+    if (risk === "medium") return 1;
+    if (risk === "low") return 2;
+    return 3;
+  }
+
+  function sortAdminChangesByRisk(domain, changes) {
+    return (Array.isArray(changes) ? changes.slice() : []).sort((a, b) => {
+      const riskA = getAdminDraftFieldRisk(domain || a.domain, a.key);
+      const riskB = getAdminDraftFieldRisk(domain || b.domain, b.key);
+      const riskDiff = getAdminRiskSortWeight(riskA) - getAdminRiskSortWeight(riskB);
+      if (riskDiff) return riskDiff;
+      return String(a.key || "").localeCompare(String(b.key || ""));
+    });
+  }
+
+  function buildAdminEditDraftReview(values) {
+    const result = values || readAdminEditDraftValues();
+    if (!result || !result.ok) {
+      return { ok: false, domain: DEFAULT_MASTER_DOMAIN, changes: [], changeCount: 0, highCount: 0, mediumCount: 0, lowCount: 0 };
+    }
+    const changes = sortAdminChangesByRisk(result.domain, collectLocalDraftChangesForImpact(result)).map((change) => {
+      const risk = getAdminDraftFieldRisk(result.domain, change.key);
+      return { ...change, risk };
+    });
+    return {
+      ok: true,
+      version: VERSION,
+      domain: result.domain,
+      id: result.id,
+      changes,
+      changeCount: changes.length,
+      highCount: changes.filter((change) => change.risk === "high").length,
+      mediumCount: changes.filter((change) => change.risk === "medium").length,
+      lowCount: changes.filter((change) => change.risk === "low").length,
+    };
+  }
+
+  function renderAdminEditDraftReview(review) {
+    const target = $(`[data-admin-edit-review]`);
+    if (!target) return;
+    const info = review || buildAdminEditDraftReview();
+    if (!info.changeCount) {
+      target.innerHTML = `
+        <div class="draft-review-banner draft-review-empty">
+          <span class="pill good">변경 0</span>
+          <span>값을 바꾸면 적용 직전 비교표가 여기에 표시됩니다.</span>
+        </div>
+      `;
+      return;
+    }
+    const rows = info.changes.map((change) => `
+      <tr class="draft-review-row-${escapeHtml(change.risk)}">
+        <td>${escapeHtml(change.label || change.key)}</td>
+        <td><span class="pill ${change.risk === "high" ? "blocked" : (change.risk === "medium" ? "warn" : "good")}">${escapeHtml(change.risk)}</span></td>
+        <td>${escapeHtml(formatValue(change.before))}</td>
+        <td>${escapeHtml(formatValue(change.after))}</td>
+      </tr>
+    `).join("");
+    target.innerHTML = `
+      <div class="draft-review-banner ${info.highCount ? "draft-review-danger" : ""}">
+        <span class="pill ${info.highCount ? "blocked" : "good"}">변경 ${escapeHtml(formatValue(info.changeCount))}</span>
+        <span class="pill ${info.highCount ? "blocked" : "good"}">high ${escapeHtml(formatValue(info.highCount))}</span>
+        <span class="pill ${info.mediumCount ? "warn" : "good"}">medium ${escapeHtml(formatValue(info.mediumCount))}</span>
+        <span class="pill good">low ${escapeHtml(formatValue(info.lowCount))}</span>
+        ${info.highCount ? `<span class="pill blocked">고위험 변경은 ${escapeHtml(ADMIN_EDIT_HIGH_RISK_CONFIRM_TEXT)} 추가 입력 필요</span>` : ""}
+      </div>
+      <div class="table-wrap relation-table-wrap draft-review-table-wrap">
+        <table>
+          <thead><tr><th>필드</th><th>위험도</th><th>현재 기준값</th><th>초안 값</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function refreshAdminEditReviewAndImpact() {
+    const values = readAdminEditDraftValues();
+    if (!values.ok) return null;
+    const review = buildAdminEditDraftReview(values);
+    renderAdminEditDraftReview(review);
+    const guide = buildAdminEditImpactGuide(values.domain, review.changes);
+    renderAdminEditImpactGuide(guide);
+    return { review, guide };
   }
 
   function normalizeImpactKey(key) {
@@ -1261,12 +1441,8 @@
   }
 
   function refreshAdminEditImpactGuide() {
-    const values = readAdminEditDraftValues();
-    if (!values.ok) return null;
-    const changes = collectLocalDraftChangesForImpact(values);
-    const guide = buildAdminEditImpactGuide(values.domain, changes);
-    renderAdminEditImpactGuide(guide);
-    return guide;
+    const state = refreshAdminEditReviewAndImpact();
+    return state ? state.guide : null;
   }
 
   function renderAdminEditPreviewResult(preview) {
@@ -1278,9 +1454,14 @@
     const unchanged = Array.isArray(payload.unchangedChanges) ? payload.unchangedChanges : [];
     const stale = Array.isArray(payload.staleChanges) ? payload.staleChanges : [];
     const warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
-    const acceptedRows = accepted.length ? accepted.map((change) => `
-      <tr><td>${escapeHtml(change.label || change.key)}</td><td>${escapeHtml(formatValue(change.before))}</td><td>${escapeHtml(formatValue(change.after))}</td><td>${escapeHtml(change.type || "-")}</td></tr>
-    `).join("") : `<tr><td colspan="4">변경된 값 없음</td></tr>`;
+    const draftValuesForImpact = readAdminEditDraftValues();
+    const acceptedForDisplay = sortAdminChangesByRisk(draftValuesForImpact.domain, accepted);
+    const acceptedRows = acceptedForDisplay.length ? acceptedForDisplay.map((change) => {
+      const risk = getAdminDraftFieldRisk(draftValuesForImpact.domain, change.key);
+      return `
+        <tr class="draft-review-row-${escapeHtml(risk)}"><td>${escapeHtml(change.label || change.key)}</td><td><span class="pill ${risk === "high" ? "blocked" : (risk === "medium" ? "warn" : "good")}">${escapeHtml(risk)}</span></td><td>${escapeHtml(formatValue(change.before))}</td><td>${escapeHtml(formatValue(change.after))}</td><td>${escapeHtml(change.type || "-")}</td></tr>
+      `;
+    }).join("") : `<tr><td colspan="5">변경된 값 없음</td></tr>`;
     const rejectedRows = rejected.length ? rejected.map((change) => `
       <tr><td>${escapeHtml(change.label || change.key)}</td><td>${escapeHtml(formatValue(change.after))}</td><td>${escapeHtml(change.reason || "rejected")}</td></tr>
     `).join("") : `<tr><td colspan="3">오류 없음</td></tr>`;
@@ -1289,8 +1470,8 @@
     `).join("") : `<tr><td colspan="4">오래된 초안 아님</td></tr>`;
     const applied = payload.applied === true;
     const modeLabel = applied ? "applied" : (payload.dryRun ? "preview only" : "apply result");
-    const draftValuesForImpact = readAdminEditDraftValues();
     const impactChanges = accepted.length ? accepted.map((change) => ({ ...change, domain: draftValuesForImpact.domain })) : collectLocalDraftChangesForImpact(draftValuesForImpact);
+    renderAdminEditDraftReview(buildAdminEditDraftReview(draftValuesForImpact));
     renderAdminEditImpactGuide(buildAdminEditImpactGuide(draftValuesForImpact.domain, impactChanges, { applied }));
     target.innerHTML = `
       <div class="draft-preview-summary">
@@ -1309,7 +1490,7 @@
       ${payload.note ? `<div class="filter-help">${escapeHtml(payload.note)}</div>` : ""}
       <details class="json-detail" open>
         <summary>변경 값 <span class="pill good">${escapeHtml(modeLabel)}</span></summary>
-        <div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>이전 DB 값</th><th>적용/초안 값</th><th>타입</th></tr></thead><tbody>${acceptedRows}</tbody></table></div>
+        <div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>위험도</th><th>이전 DB 값</th><th>적용/초안 값</th><th>타입</th></tr></thead><tbody>${acceptedRows}</tbody></table></div>
       </details>
       <details class="json-detail" ${stale.length ? "open" : ""}>
         <summary>오래된 초안 검사 <span class="pill ${stale.length ? "blocked" : "good"}">${escapeHtml(formatValue(stale.length))}</span></summary>
@@ -1326,11 +1507,15 @@
 
   function readAdminEditApplyControls() {
     const confirmEl = $(`[data-admin-edit-apply-confirm]`);
+    const riskConfirmEl = $(`[data-admin-edit-risk-confirm]`);
     const reasonEl = $(`[data-admin-edit-apply-reason]`);
     return {
       confirmText: confirmEl ? confirmEl.value.trim() : "",
+      riskConfirmText: riskConfirmEl ? riskConfirmEl.value.trim() : "",
       reason: reasonEl ? reasonEl.value.trim() : "",
       confirmMatches: !!confirmEl && confirmEl.value.trim() === ADMIN_EDIT_APPLY_CONFIRM_TEXT,
+      highRiskConfirmRequired: buildAdminEditDraftReview().highCount > 0,
+      highRiskConfirmMatches: !!riskConfirmEl && riskConfirmEl.value.trim() === ADMIN_EDIT_HIGH_RISK_CONFIRM_TEXT,
     };
   }
 
@@ -1378,7 +1563,15 @@
       if (target) target.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
       throw error;
     }
-    const confirmed = window.confirm("정말 DB 마스터 데이터를 수정할까요? 적용 후 게임은 새로고침해야 최신 master-data를 읽습니다.");
+    const review = buildAdminEditDraftReview(values);
+    if (review.highCount > 0 && !controls.highRiskConfirmMatches) {
+      const error = new Error(`고위험 변경이 있어서 추가 확인 문구를 정확히 입력해야 합니다: ${ADMIN_EDIT_HIGH_RISK_CONFIRM_TEXT}`);
+      setStatus(error.message, "error");
+      const target = $(`[data-admin-edit-draft-result]`);
+      if (target) target.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+      throw error;
+    }
+    const confirmed = window.confirm(`정말 DB 마스터 데이터를 수정할까요? 변경 ${review.changeCount}개, high ${review.highCount}개입니다. 적용 후 게임은 새로고침해야 최신 master-data를 읽습니다.`);
     if (!confirmed) {
       setStatus("관리자 변경 적용을 취소했습니다.", "info");
       return { ok: false, canceled: true };
@@ -1424,7 +1617,10 @@
       guardedApply: true,
       adminWriteDevKeySet: hasAdminWriteDevKey(),
       confirmTextRequired: ADMIN_EDIT_APPLY_CONFIRM_TEXT,
+      highRiskConfirmTextRequired: ADMIN_EDIT_HIGH_RISK_CONFIRM_TEXT,
       confirmMatches: controls.confirmMatches,
+      highRiskConfirmRequired: controls.highRiskConfirmRequired,
+      highRiskConfirmMatches: controls.highRiskConfirmMatches,
       fieldsEditable: fields.every((field) => field.disabled === false),
       hasDraft: !!draft,
       fieldCount: fields.length,
@@ -1432,6 +1628,7 @@
       applyButtonReady: !!applyButton,
       currentDraft: readAdminEditDraftValues(),
       applyControls: controls,
+      draftReview: buildAdminEditDraftReview(),
     };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin edit draft readiness", result);
     return result;
@@ -1809,6 +2006,7 @@
     const response = await window.RpgGameApi.fetchAdminMasterDataDetail({ domain: safeDomain, id: safeId, timeoutMs });
     const detailPayload = response && response.payload ? response.payload : {};
     renderMasterDetail(detailPayload);
+    markSelectedMasterCatalogRow(safeDomain, safeId);
     if (!options || options.loadRelations !== false) {
       try {
         await openAdminMasterDataRelations(safeDomain, safeId, { timeoutMs, limit: 20 });
@@ -2147,6 +2345,19 @@
       if (action === "refresh") await refreshAdminReadOnlyPage();
       if (action === "apply-snapshot-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom() });
       if (action === "apply-master-catalog-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom() });
+      if (action === "master-catalog-first-page") await refreshMasterCatalogWithPage(1);
+      if (action === "master-catalog-prev-page") {
+        const current = readMasterCatalogFiltersFromDom().page || 1;
+        await refreshMasterCatalogWithPage(Math.max(1, current - 1));
+      }
+      if (action === "master-catalog-next-page") {
+        const current = readMasterCatalogFiltersFromDom().page || 1;
+        await refreshMasterCatalogWithPage(current + 1);
+      }
+      if (action === "master-catalog-last-page") {
+        const totalPages = Number(button.getAttribute("data-admin-master-total-pages")) || 1;
+        await refreshMasterCatalogWithPage(totalPages);
+      }
       if (action === "apply-change-log-filters") await refreshAdminChangeLogs({ filters: readChangeLogFiltersFromDom() });
       if (action === "open-master-detail") {
         const domain = button.getAttribute("data-admin-detail-domain");
@@ -2327,6 +2538,9 @@
     renderAdminEditPreviewResult,
     readAdminEditApplyControls,
     buildAdminEditImpactGuide,
+    renderAdminEditDraftReview,
+    buildAdminEditDraftReview,
+    sortAdminChangesByRisk,
     renderAdminEditImpactGuide,
     refreshAdminEditImpactGuide,
     getAdminEditDraftReadiness,
@@ -2355,6 +2569,7 @@
     getAdminEditAllowedFields,
     getAdminDraftFieldInputKind,
     getAdminDraftSelectOptions,
+    getAdminEquipSlotDisplayName,
     getAdminDraftFieldRisk,
     getAdminDraftLockedReason,
     checkAdminReadOnlyPageReady,
@@ -2386,8 +2601,12 @@
   window.getAdminFieldValueHint = getAdminFieldValueHint;
   window.getAdminDraftFieldInputKind = getAdminDraftFieldInputKind;
   window.getAdminDraftSelectOptions = getAdminDraftSelectOptions;
+  window.getAdminEquipSlotDisplayName = getAdminEquipSlotDisplayName;
+  window.markSelectedMasterCatalogRow = markSelectedMasterCatalogRow;
   window.getAdminDraftFieldRisk = getAdminDraftFieldRisk;
   window.getAdminDraftLockedReason = getAdminDraftLockedReason;
+  window.buildAdminEditDraftReview = buildAdminEditDraftReview;
+  window.sortAdminChangesByRisk = sortAdminChangesByRisk;
   window.getCurrentAdminPageUrl = getCurrentAdminPageUrl;
   window.copyCurrentAdminPageUrl = copyCurrentAdminPageUrl;
   window.openAdminChangeLogDetail = openAdminChangeLogDetail;

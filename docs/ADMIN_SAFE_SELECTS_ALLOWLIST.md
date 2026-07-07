@@ -1,8 +1,8 @@
 # Admin Safe Selects + Allow-list Expansion
 
-현재 기준: **v134 admin safe selects**
+현재 기준: **v138 admin safe apply review**
 
-v134에서는 관리자 마스터 데이터 편집 초안에서 enum 성격의 문자열 필드를 자유 텍스트가 아니라 프리셋 select로 고르게 했습니다.
+v134에서는 관리자 마스터 데이터 편집 초안에서 enum 성격의 문자열 필드를 자유 텍스트가 아니라 프리셋 select로 고르게 했고, v135에서는 equip_slot 숫자 프리셋의 표시 이름을 인게임 슬롯명으로 보강했습니다.
 실수로 오타를 넣어 런타임 분류가 깨지는 일을 줄이기 위한 단계입니다.
 
 ## 새로 실제 적용까지 연 필드
@@ -29,13 +29,13 @@ v134에서는 관리자 마스터 데이터 편집 초안에서 enum 성격의 �
 - `equip_slot`
   - 빈 값
   - `skill_all`
-  - `skill_dmg`
+  - `skill_dmg` 예비 슬롯
   - `skill_chance`
   - `atk_inc`
   - `normal_dmg`
   - `normal_crit`
-  - `all_dmg`
-  - `6` ~ `14` 특수 슬롯
+  - `all_dmg` 예비 슬롯
+  - `6` 특수무기, `7` 특수목걸이, `8` 특수반지, `9` 무기아바타, `10` 오라아바타, `11` 클론 레어 아바타, `12` 탈리스만 A, `13` 탈리스만 B, `14` 휘장
 - `boss_type`
   - `normal`
   - `special`

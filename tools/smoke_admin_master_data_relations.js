@@ -45,7 +45,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v134.admin-safe-selects",
+  "v138.admin-safe-apply-review",
   "renderMasterRelations",
   "openAdminMasterDataRelations",
   "fetchAdminMasterDataRelations",
@@ -60,7 +60,7 @@ assertContains("admin.html", [
   "선택한 마스터 데이터 상세",
   "data-admin-master-detail",
   ".relation-table-wrap",
-  "v134 admin safe selects",
+  "v138 admin safe apply review",
 ]);
 
 assertContains("backend/scripts/check_admin_readonly_api.py", [

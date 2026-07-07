@@ -255,6 +255,44 @@
       font-size: 12px;
     }
 
+
+    .catalog-pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+      color: #cbd5e1;
+      font-size: 13px;
+      background: rgba(15, 23, 42, 0.24);
+    }
+
+    .catalog-pagination-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .catalog-pagination-meta {
+      color: #e2e8f0;
+      font-weight: 700;
+    }
+
+
+    .catalog-row-selected {
+      outline: 2px solid rgba(96, 165, 250, 0.42);
+      outline-offset: -2px;
+      background: rgba(30, 64, 175, 0.13);
+    }
+
+    [data-admin-master-row-selected] {
+      display: inline-flex;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
     .status-line {
       color: var(--muted);
       font-size: 12px;
@@ -559,6 +597,51 @@
       color: var(--muted);
       font-size: 11px;
       font-style: normal;
+    }
+
+
+    .edit-draft-review {
+      margin-top: 12px;
+      border: 1px solid rgba(147, 197, 253, 0.24);
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.44);
+      overflow: hidden;
+    }
+
+    .draft-review-banner {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      padding: 10px 12px;
+      color: var(--soft);
+      font-size: 12px;
+      font-weight: 900;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .draft-review-banner.draft-review-empty {
+      border-bottom: 0;
+    }
+
+    .draft-review-danger {
+      background: rgba(127, 29, 29, 0.18);
+    }
+
+    .draft-review-table-wrap {
+      max-height: 260px;
+    }
+
+    .draft-review-row-high {
+      background: rgba(127, 29, 29, 0.15);
+    }
+
+    .draft-review-row-medium {
+      background: rgba(120, 53, 15, 0.10);
+    }
+
+    .draft-review-row-low {
+      background: rgba(20, 83, 45, 0.07);
     }
 
     .edit-draft-impact {
@@ -897,8 +980,8 @@
         <div class="filter-field">
           <label for="admin-master-limit">표시 개수</label>
           <select id="admin-master-limit" data-admin-master-limit>
-            <option value="20">20</option>
-            <option value="50" selected>50</option>
+            <option value="20" selected>20</option>
+            <option value="50">50</option>
             <option value="100">100</option>
             <option value="200">200</option>
           </select>
@@ -918,12 +1001,16 @@
         <div class="filter-field">
           <label for="admin-master-sort">정렬</label>
           <select id="admin-master-sort" data-admin-master-sort>
-            <option value="code_asc" selected>코드순</option>
+            <option value="id_asc" selected>ID순</option>
+            <option value="code_asc">코드순</option>
             <option value="name_asc">이름순</option>
             <option value="sort_asc">정렬값순</option>
             <option value="updated_desc">최근 수정순</option>
-            <option value="id_asc">ID순</option>
           </select>
+        </div>
+        <div class="filter-field">
+          <label for="admin-master-page">페이지</label>
+          <input id="admin-master-page" data-admin-master-page type="number" min="1" step="1" value="1" />
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-self:end;">
           <button class="btn primary" type="button" data-admin-action="apply-master-catalog-filters">카탈로그 조회</button>
@@ -939,6 +1026,7 @@
         <div class="section-meta" data-admin-master-domain-meta>-</div>
       </div>
       <div class="section-meta" style="padding:10px 14px; border-bottom:1px solid rgba(148, 163, 184, 0.14); text-align:left;" data-admin-master-catalog-meta>-</div>
+      <div class="catalog-pagination" data-admin-master-catalog-pagination>페이지 정보를 불러오는 중...</div>
       <div class="table-wrap" data-admin-master-catalog-table><div class="empty">불러오는 중...</div></div>
     </section>
 
@@ -1079,7 +1167,7 @@
       <div data-admin-readiness><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <p class="footer-note">v134 admin safe selects · static HTML + JS · FastAPI guarded write/rollback APIs</p>
+    <p class="footer-note">v138 admin safe apply review · static HTML + JS · FastAPI guarded write/rollback APIs</p>
   </main>
 
   <script src="src/api/game-api-client.js"></script>

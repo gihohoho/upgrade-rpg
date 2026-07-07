@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v134.admin-safe-selects",
+  "v138.admin-safe-apply-review",
   "getAdminFieldValueHint",
   "renderFieldValueHintInline",
   "formatValueWithFieldHint",
@@ -29,7 +29,7 @@ assertContains("src/api/admin-page-readonly.js", [
 ]);
 
 assertContains("admin.html", [
-  "v134 admin safe selects",
+  "v138 admin safe apply review",
   "field-value-hint",
   "grade / 등급 숫자",
   "기존 JS 아이템의 <strong>tier 숫자</strong>",

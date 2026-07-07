@@ -43,16 +43,18 @@ assertContains("src/api/game-api-client.js", [
   'request("/admin/master-data/domains"',
   'request("/admin/master-data/catalog"',
   "domain",
+  "page",
   "enabled",
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v134.admin-safe-selects",
+  "v138.admin-safe-apply-review",
   "readMasterCatalogFiltersFromDom",
   "resetMasterCatalogFilters",
   "describeMasterCatalogFilters",
   "syncMasterDomainOptions",
   "renderMasterCatalogTable",
+  "renderMasterCatalogPagination",
   "apply-master-catalog-filters",
   "reset-master-catalog-filters",
   "masterCatalogReady",
@@ -65,6 +67,8 @@ assertContains("admin.html", [
   "data-admin-master-query",
   "data-admin-master-enabled",
   "data-admin-master-sort",
+  "data-admin-master-page",
+  "data-admin-master-catalog-pagination",
   "data-admin-master-catalog-table",
   "data-admin-action=\"apply-master-catalog-filters\"",
   "원본 JSON과 이미지 data URL은 숨깁니다",

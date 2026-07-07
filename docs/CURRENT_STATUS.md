@@ -1,8 +1,9 @@
 # Current Status
 
-현재 기준: **v134 admin safe selects**
+현재 기준: **v138 admin safe apply review**
 
-v134에서는 관리자 마스터 데이터 편집 초안에서 enum 성격 필드를 preset select로 고르게 하고, 일부 안전한 allow-list 필드를 추가로 열었습니다.
+v138에서는 v135의 마스터 데이터 카탈로그 페이지네이션 위에 관리자 실제 적용 안전 UI를 더 강화했습니다. 적용 직전에 바뀌는 필드만 before/after로 보여주고, high risk 변경은 추가 확인 문구 `HIGH RISK EDIT`를 요구합니다. 마스터 데이터 카탈로그에서는 현재 상세로 열어둔 행을 `선택됨`으로 표시합니다.
+
 DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 
 ## 정상 확인된 흐름
@@ -14,7 +15,7 @@ DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습�
 - save preview / restore / backup rollback 정상.
 - save restore reload lock 정상.
 - 관리자 페이지 열기 정상.
-- 관리자 마스터 데이터 목록/상세/관계 조회 정상.
+- 관리자 overview, save snapshot 필터, 마스터 데이터 목록/상세/관계 조회 정상.
 - 관리자 allow-list 필드 실제 적용 정상.
 - 보스 hp 수정 후 게임 새로고침 시 인게임 반영 확인됨.
 - 변경 이력 rollback 정상.
@@ -27,10 +28,20 @@ DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습�
   - description/admin_note: textarea
   - 읽기 전용/잠금 필드 카드 표시
   - 필드 위험도 배지 표시
-- v134에서 추가로 실제 적용까지 연 필드 정상.
+- v134에서 실제 적용까지 연 필드 정상.
   - itemTemplates.item_type
   - itemTemplates.equip_slot
   - skills.slot_key
+- v135에서 마스터 데이터 카탈로그 페이지네이션 정상.
+  - 기본 표시 개수 20개
+  - 기본 정렬 ID순
+  - equip_slot 숫자 값 6~14를 인게임 특수 장비 슬롯 이름으로 표시
+- v138에서 관리자 적용 직전 비교 UI 정상.
+  - 변경된 필드만 before/after로 표시
+  - risk high / medium / low 순서로 표시
+  - high risk 변경 시 `HIGH RISK EDIT` 추가 확인 필요
+  - 초안 검증 결과에도 위험도 컬럼 표시
+  - 카탈로그 현재 선택 행 강조 표시
 - itemTemplates.stackable=true 신규 획득 아이템 겹치기 반영 정상.
 - 겹친 장비 강화 시 빈 칸 없으면 강화 차단 정상.
 
@@ -40,6 +51,7 @@ DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습�
 - 기존 세이브에 이미 따로 들어간 stackable 아이템은 자동 병합하지 않습니다.
 - skills.slot_key는 스킬 버튼 배치에 직접 영향을 줄 수 있으므로 변경 후 게임 화면에서 버튼 중복/배치를 확인해야 합니다.
 - itemTemplates.item_type / equip_slot은 아이템 분류와 장착 위치에 영향을 줄 수 있으므로 신규 획득/장착/툴팁 확인이 필요합니다.
+- high risk 변경은 기존 `APPLY MASTER DATA EDIT` 외에 `HIGH RISK EDIT` 추가 확인 문구도 필요합니다.
 - 관리자 dev key는 정식 인증이 아니라 로컬 개발용 잠금장치입니다.
 - `.env`, `.gitignore`는 현재 로컬에 있으므로 변경되지 않았다면 zip에 없어도 됩니다.
-- v134는 allow-list + 관리자 UI 중심 변경이라 **DB reset/seed가 필요 없습니다.**
+- v138은 관리자 UI 안전장치 중심 변경이라 **DB reset/seed가 필요 없습니다.**
