@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import func, inspect as sa_inspect, or_, select
+from sqlalchemy import Boolean, Integer, Numeric, String, Text, func, inspect as sa_inspect, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
@@ -135,6 +135,252 @@ class AdminService:
             "readOnly": True,
             "note": "현재 단계에서는 관리자 변경 적용 없이 미리보기/검증 구조만 준비합니다.",
         }
+
+
+    async def preview_master_data_edit(
+        self,
+        session: AsyncSession,
+        *,
+        domain: str,
+        row_id: int,
+        draft: dict[str, Any],
+        reason: str | None = None,
+        dry_run: bool = True,
+    ) -> dict[str, Any]:
+        """Validate an admin edit draft without mutating the database.
+
+        The static admin page can now behave like a real edit screen, but this
+        endpoint is still preview-only. It loads the current row from PostgreSQL,
+        normalizes proposed scalar values, builds a diff, and returns validation
+        errors/warnings. It never assigns attributes, flushes, commits, or returns
+        raw JSON/assets.
+        """
+        config = self.MASTER_CATALOG_DOMAINS.get(domain)
+        if not config:
+            return self._empty_edit_preview(
+                status="invalid_domain",
+                domain=domain,
+                domain_label=domain,
+                row_id=row_id,
+                warnings=["domain_invalid"],
+            )
+
+        safe_row_id = int(row_id or 0)
+        if safe_row_id <= 0:
+            return self._empty_edit_preview(
+                status="invalid_id",
+                domain=domain,
+                domain_label=config["label"],
+                row_id=row_id,
+                warnings=["id_invalid"],
+            )
+
+        model = config["model"]
+        result = await session.execute(select(model).where(model.id == safe_row_id))
+        row = result.scalar_one_or_none()
+        if row is None:
+            return self._empty_edit_preview(
+                status="not_found",
+                domain=domain,
+                domain_label=config["label"],
+                row_id=safe_row_id,
+                warnings=["row_not_found"],
+            )
+
+        safe_draft = draft if isinstance(draft, dict) else {}
+        if len(safe_draft) > 80:
+            # The UI only sends visible fields, but this keeps manual API calls bounded.
+            safe_draft = dict(list(safe_draft.items())[:80])
+
+        column_map = self._master_edit_column_map(row)
+        accepted_changes: list[dict[str, Any]] = []
+        unchanged: list[dict[str, Any]] = []
+        rejected_changes: list[dict[str, Any]] = []
+        warnings: list[str] = []
+
+        for raw_key, raw_after in safe_draft.items():
+            key = str(raw_key or "").strip()
+            if not key:
+                rejected_changes.append({"key": raw_key, "reason": "empty_field_key"})
+                continue
+
+            column = column_map.get(key)
+            if column is None:
+                rejected_changes.append({"key": key, "reason": "unknown_field"})
+                continue
+
+            if self._master_edit_field_is_readonly(key):
+                rejected_changes.append({"key": key, "label": self._humanize_field_name(key), "reason": "read_only_field"})
+                continue
+            if key.endswith("_json"):
+                rejected_changes.append({"key": key, "label": self._humanize_field_name(key), "reason": "json_edit_not_enabled_yet"})
+                continue
+            if self._is_asset_field(key):
+                rejected_changes.append({"key": key, "label": self._humanize_field_name(key), "reason": "asset_edit_not_enabled_yet"})
+                continue
+
+            before_value = serialize_value(getattr(row, key, None))
+            normalized_after, issue = self._normalize_master_edit_value(column, raw_after)
+            if issue:
+                rejected_changes.append({
+                    "key": key,
+                    "label": self._humanize_field_name(key),
+                    "before": before_value,
+                    "after": raw_after,
+                    "reason": issue,
+                })
+                continue
+
+            normalized_after = serialize_value(normalized_after)
+            change = {
+                "key": key,
+                "label": self._humanize_field_name(key),
+                "before": before_value,
+                "after": normalized_after,
+                "rawAfter": raw_after,
+                "type": self._master_edit_column_type(column),
+            }
+            if before_value == normalized_after:
+                unchanged.append(change)
+            else:
+                accepted_changes.append(change)
+
+        if not safe_draft:
+            warnings.append("draft_empty")
+        if reason and len(str(reason)) > 300:
+            warnings.append("reason_truncated_in_preview")
+
+        error_count = len(rejected_changes)
+        diff_count = len(accepted_changes)
+        title = getattr(row, "name", None) or getattr(row, "code", None) or f"#{safe_row_id}"
+        return {
+            "status": "preview_ready",
+            "readOnly": True,
+            "dryRun": True,
+            "writeBlocked": True,
+            "wouldBeValid": error_count == 0,
+            "domain": domain,
+            "domainLabel": config["label"],
+            "id": safe_row_id,
+            "title": title,
+            "reason": str(reason or "")[:300] if reason else None,
+            "diffCount": diff_count,
+            "errorCount": error_count,
+            "unchangedCount": len(unchanged),
+            "acceptedChanges": accepted_changes,
+            "rejectedChanges": rejected_changes,
+            "unchangedChanges": unchanged[:30],
+            "rawJsonReturned": False,
+            "assetsReturned": False,
+            "safeForAdminWriteUi": False,
+            "warnings": warnings,
+            "note": "편집 초안을 검증만 했습니다. 이 응답은 DB를 수정하지 않는 dry-run 결과입니다.",
+        }
+
+    def _empty_edit_preview(
+        self,
+        *,
+        status: str,
+        domain: str,
+        domain_label: str,
+        row_id: int,
+        warnings: list[str],
+    ) -> dict[str, Any]:
+        return {
+            "status": status,
+            "readOnly": True,
+            "dryRun": True,
+            "writeBlocked": True,
+            "wouldBeValid": False,
+            "domain": domain,
+            "domainLabel": domain_label,
+            "id": row_id,
+            "title": "-",
+            "reason": None,
+            "diffCount": 0,
+            "errorCount": 1,
+            "unchangedCount": 0,
+            "acceptedChanges": [],
+            "rejectedChanges": [],
+            "unchangedChanges": [],
+            "rawJsonReturned": False,
+            "assetsReturned": False,
+            "safeForAdminWriteUi": False,
+            "warnings": warnings,
+        }
+
+    def _master_edit_column_map(self, row: Any) -> dict[str, Any]:
+        mapper = sa_inspect(row.__class__)
+        return {column_attr.key: column_attr.columns[0] for column_attr in mapper.mapper.column_attrs}
+
+    @staticmethod
+    def _master_edit_field_is_readonly(key: str) -> bool:
+        normalized = str(key or "").lower()
+        return normalized in {"id", "created_at", "updated_at"} or normalized.endswith("_id")
+
+    def _normalize_master_edit_value(self, column: Any, raw_value: Any) -> tuple[Any, str | None]:
+        column_type = column.type
+        nullable = bool(getattr(column, "nullable", False))
+        if raw_value == "" or raw_value is None:
+            if nullable:
+                return None, None
+            if isinstance(column_type, (String, Text)):
+                return "", None
+            return None, "empty_value_not_allowed"
+
+        if isinstance(column_type, Boolean):
+            if isinstance(raw_value, bool):
+                return raw_value, None
+            text = str(raw_value).strip().lower()
+            if text in {"true", "1", "yes", "y", "on", "활성", "예"}:
+                return True, None
+            if text in {"false", "0", "no", "n", "off", "비활성", "아니오"}:
+                return False, None
+            return None, "invalid_boolean"
+
+        if isinstance(column_type, Integer):
+            try:
+                text = str(raw_value).strip()
+                if not text or any(ch in text for ch in [".", "e", "E"]):
+                    return None, "invalid_integer"
+                return int(text), None
+            except (TypeError, ValueError):
+                return None, "invalid_integer"
+
+        if isinstance(column_type, Numeric):
+            try:
+                text = str(raw_value).strip().replace(",", "")
+                if not text:
+                    return None, "invalid_number"
+                return float(text), None
+            except (TypeError, ValueError):
+                return None, "invalid_number"
+
+        # For this dry-run stage, normal scalar fields are treated as text.
+        text = str(raw_value)
+        if text.startswith("data:"):
+            return None, "asset_like_value_blocked"
+        max_length = getattr(column_type, "length", None)
+        if max_length and len(text) > int(max_length):
+            return None, f"text_too_long_max_{max_length}"
+        if len(text) > 2000:
+            return None, "text_too_long_max_2000"
+        return text, None
+
+    @staticmethod
+    def _master_edit_column_type(column: Any) -> str:
+        column_type = column.type
+        if isinstance(column_type, Boolean):
+            return "boolean"
+        if isinstance(column_type, Integer):
+            return "integer"
+        if isinstance(column_type, Numeric):
+            return "number"
+        if isinstance(column_type, Text):
+            return "text"
+        if isinstance(column_type, String):
+            return "string"
+        return column_type.__class__.__name__
 
     async def get_readonly_overview(self, session: AsyncSession, *, admin_user_id: int, admin_username: str) -> dict[str, Any]:
         """Return a safe admin dashboard summary without returning raw save JSON."""

@@ -35,7 +35,7 @@
     }
 
     a { color: inherit; }
-    button, input { font: inherit; }
+    button, input, textarea, select { font: inherit; }
 
     .admin-shell {
       width: min(1180px, calc(100% - 32px));
@@ -123,6 +123,30 @@
       padding: 12px 14px;
       margin-bottom: 14px;
       font-size: 13px;
+    }
+
+    .admin-jump-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0 16px;
+    }
+
+    .admin-jump-nav a {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.62);
+      color: var(--soft);
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .admin-jump-nav a:hover {
+      border-color: rgba(147, 197, 253, 0.58);
+      color: var(--blue);
+      background: rgba(59, 130, 246, 0.12);
     }
 
     .danger-notice {
@@ -421,6 +445,75 @@
       word-break: break-word;
     }
 
+    .edit-draft-card {
+      border-color: rgba(248, 113, 113, 0.22);
+      background: rgba(127, 29, 29, 0.10);
+    }
+
+    .edit-draft-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .draft-field {
+      display: grid;
+      gap: 5px;
+      color: var(--soft);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .draft-field input,
+    .draft-field textarea {
+      width: 100%;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 10px;
+      background: rgba(2, 6, 23, 0.56);
+      color: var(--muted);
+      padding: 9px 10px;
+      resize: vertical;
+    }
+
+    .draft-field input:disabled,
+    .draft-field textarea:disabled {
+      opacity: 0.84;
+      cursor: not-allowed;
+    }
+
+    .edit-draft-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+
+    .draft-field input:not(:disabled),
+    .draft-field textarea:not(:disabled) {
+      color: var(--text);
+      border-color: rgba(147, 197, 253, 0.42);
+      background: rgba(15, 23, 42, 0.78);
+    }
+
+    .edit-draft-result {
+      margin-top: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 12px;
+      background: rgba(2, 6, 23, 0.34);
+      overflow: hidden;
+    }
+
+    .draft-preview-summary {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
     .footer-note {
       margin-top: 18px;
       color: #64748b;
@@ -434,6 +527,7 @@
       .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .detail-grid { grid-template-columns: 1fr; }
+      .edit-draft-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 560px) {
@@ -458,8 +552,8 @@
       </div>
     </div>
 
-    <div class="notice">이 페이지는 관리자 화면으로 옮기기 전의 안전한 뼈대입니다. <strong>쓰기 기능은 아직 막혀 있고</strong>, 원본 save snapshot JSON도 표시하지 않습니다.</div>
-    <div class="notice danger-notice">주의: 관리자 편집/지급/삭제 버튼은 아직 만들지 않았습니다. 지금은 확인 전용입니다.</div>
+    <div class="notice">이 페이지는 관리자 화면으로 옮기기 전의 안전한 뼈대입니다. <strong>쓰기 기능은 아직 막혀 있고</strong>, 편집 초안은 dry-run 검증만 가능합니다.</div>
+    <div class="notice danger-notice">주의: 관리자 편집 초안 입력/검증은 가능하지만, 지급/삭제/DB 저장 버튼은 아직 만들지 않았습니다. 지금은 dry-run 확인 전용입니다.</div>
     <div class="notice location-notice">
       <div>
         <strong>현재 관리자 페이지 주소</strong>
@@ -469,7 +563,15 @@
       <div class="location-help">직접 열 때는 고정된 5500 주소가 아니라, 현재 게임이 열린 주소와 같은 host/port 기준의 admin.html 주소를 사용하면 됩니다.</div>
     </div>
 
-    <div class="toolbar">
+    <nav class="admin-jump-nav" aria-label="관리자 페이지 바로가기">
+      <a href="#section-overview">요약</a>
+      <a href="#section-master-catalog">마스터 목록</a>
+      <a href="#section-master-detail">상세/편집 초안</a>
+      <a href="#section-save-snapshots">세이브 스냅샷</a>
+      <a href="#section-readiness">준비 상태</a>
+    </nav>
+
+    <div class="toolbar" id="section-overview">
       <input class="api-input" data-admin-api-base-url type="text" aria-label="API base URL" />
       <button class="btn" type="button" data-admin-action="save-api-base-url">API URL 저장</button>
       <button class="btn" type="button" data-admin-action="reset-api-base-url">기본값</button>
@@ -480,7 +582,7 @@
       <div class="card"><div class="label">상태</div><div class="value small">불러오는 중...</div></div>
     </section>
 
-    <section class="section">
+    <section class="section" id="section-master-counts">
       <div class="section-header">
         <h2 class="section-title">마스터 데이터 counts</h2>
         <div class="section-meta" data-admin-master-meta>-</div>
@@ -489,7 +591,7 @@
     </section>
 
 
-    <section class="filter-panel" aria-label="마스터 데이터 카탈로그 필터">
+    <section class="filter-panel" id="section-master-catalog" aria-label="마스터 데이터 카탈로그 필터">
       <div class="filter-title">마스터 데이터 카탈로그</div>
       <div class="filter-grid">
         <div class="filter-field">
@@ -550,7 +652,7 @@
 
 
 
-    <section class="section">
+    <section class="section" id="section-master-detail">
       <div class="section-header">
         <h2 class="section-title">선택한 마스터 데이터 상세</h2>
         <div class="section-meta" data-admin-master-detail-meta>선택 없음</div>
@@ -558,7 +660,7 @@
       <div data-admin-master-detail><div class="empty">마스터 데이터 카탈로그에서 행의 <strong>보기</strong> 버튼을 누르면 상세 정보가 여기에 표시됩니다.</div></div>
     </section>
 
-    <section class="filter-panel" aria-label="최근 세이브 스냅샷 필터">
+    <section class="filter-panel" id="section-save-snapshots" aria-label="최근 세이브 스냅샷 필터">
       <div class="filter-title">최근 세이브 스냅샷 필터</div>
       <div class="filter-grid">
         <div class="filter-field">
@@ -609,7 +711,7 @@
       <div class="table-wrap" data-admin-snapshot-table><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <section class="section">
+    <section class="section" id="section-readiness">
       <div class="section-header">
         <h2 class="section-title">관리자 준비 상태</h2>
         <div class="section-meta">write UI locked</div>
@@ -617,7 +719,7 @@
       <div data-admin-readiness><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <p class="footer-note">v117 admin master data relations · static HTML + JS · FastAPI read-only APIs</p>
+    <p class="footer-note">v119 admin edit draft validation · static HTML + JS · FastAPI dry-run APIs</p>
   </main>
 
   <script src="src/api/game-api-client.js"></script>

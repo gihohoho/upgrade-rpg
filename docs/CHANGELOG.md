@@ -1,3 +1,18 @@
+## v119
+- 관리자 편집 초안 입력칸을 활성화하고, 값을 바꾼 뒤 백엔드 dry-run 검증을 할 수 있게 했습니다.
+- `POST /api/v1/admin/master-data/edit-preview` API를 추가했습니다.
+- 편집 초안 검증은 현재 DB 값과 초안 값을 비교해 변경될 값/오류/변경 없음 항목을 반환합니다.
+- `id`, `created_at`, `updated_at`, JSON 필드, 이미지/아이콘 asset 필드는 수정 불가로 검증합니다.
+- 실제 DB 저장 버튼은 계속 disabled이며, DB reset/seed는 필요 없습니다.
+
+## v118
+- 관리자 마스터 데이터 상세 화면에 `관리자 편집 초안` 잠금 폼을 추가했습니다.
+- 선택한 항목의 일반 필드를 disabled 입력칸으로 보여주며, 저장/되돌리기 버튼은 아직 잠금 상태입니다.
+- `getAdminEditDraftReadiness()` Console 헬퍼를 추가해 편집 초안이 읽기 전용으로 잠겨 있는지 확인할 수 있습니다.
+- 관리자 페이지 상단에 섹션 바로가기 nav를 추가했습니다.
+- 문서가 너무 쌓이지 않도록 기록성 MD 파일을 `docs/archive/stage-notes/`로 이동하고 `docs/README.md` 문서 인덱스를 추가했습니다.
+- DB reset/seed는 필요 없습니다.
+
 ## v117
 - 관리자 마스터 데이터 상세 화면에 실제 연결 항목 조회를 추가했습니다.
 - `GET /api/v1/admin/master-data/relations` API를 추가했습니다.

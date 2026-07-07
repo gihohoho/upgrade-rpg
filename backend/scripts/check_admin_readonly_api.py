@@ -17,8 +17,13 @@ from typing import Any
 DEFAULT_BASE_URL = "http://127.0.0.1:8000/api/v1"
 
 
-def request_json(method: str, url: str) -> dict[str, Any]:
-    req = urllib.request.Request(url, method=method, headers={"Accept": "application/json"})
+def request_json(method: str, url: str, body: dict[str, Any] | None = None) -> dict[str, Any]:
+    data = None
+    headers = {"Accept": "application/json"}
+    if body is not None:
+        data = json.dumps(body).encode("utf-8")
+        headers["Content-Type"] = "application/json"
+    req = urllib.request.Request(url, method=method, headers=headers, data=data)
     try:
         with urllib.request.urlopen(req, timeout=5) as response:
             return json.loads(response.read().decode("utf-8"))
@@ -41,6 +46,7 @@ def main() -> int:
     master_catalog_url = f"{base_url}/admin/master-data/catalog?domain=itemTemplates&limit=10&sort=code_asc"
     master_detail_url = None
     master_relations_url = None
+    master_edit_preview_url = None
 
     overview = request_json("GET", overview_url)
     snapshots = request_json("GET", snapshots_url)
@@ -51,11 +57,14 @@ def main() -> int:
     if first_catalog_row and first_catalog_row.get("id"):
         master_detail_url = f"{base_url}/admin/master-data/detail?domain=itemTemplates&id={first_catalog_row.get('id')}"
         master_relations_url = f"{base_url}/admin/master-data/relations?domain=itemTemplates&id={first_catalog_row.get('id')}&limit=10"
+        master_edit_preview_url = f"{base_url}/admin/master-data/edit-preview"
         master_detail = request_json("GET", master_detail_url)
         master_relations = request_json("GET", master_relations_url)
+        master_edit_preview = request_json("POST", master_edit_preview_url, {"domain": "itemTemplates", "id": first_catalog_row.get("id"), "draft": {"name": "dry-run smoke name"}, "dryRun": True})
     else:
         master_detail = None
         master_relations = None
+        master_edit_preview = None
 
     failures: list[str] = []
     if not overview.get("ok"):
@@ -76,6 +85,8 @@ def main() -> int:
         failures.append("master-data detail type mismatch")
     if master_relations is not None and master_relations.get("type") != "admin.master_data.relations":
         failures.append("master-data relations type mismatch")
+    if master_edit_preview is not None and master_edit_preview.get("type") != "admin.master_data.edit_preview":
+        failures.append("master-data edit-preview type mismatch")
 
     overview_payload = overview.get("payload") or {}
     snapshots_payload = snapshots.get("payload") or {}
@@ -84,6 +95,7 @@ def main() -> int:
     master_catalog_payload = master_catalog.get("payload") or {}
     master_detail_payload = master_detail.get("payload") if master_detail else None
     master_relations_payload = master_relations.get("payload") if master_relations else None
+    master_edit_preview_payload = master_edit_preview.get("payload") if master_edit_preview else None
     if overview_payload.get("readOnly") is not True:
         failures.append("overview readOnly should be true")
     if snapshots_payload.get("readOnly") is not True:
@@ -132,6 +144,15 @@ def main() -> int:
             failures.append("master-data detail fields missing")
         if not isinstance(master_detail_payload.get("jsonFields"), list):
             failures.append("master-data detail jsonFields missing")
+    if master_edit_preview_payload is not None:
+        if master_edit_preview_payload.get("readOnly") is not True or master_edit_preview_payload.get("dryRun") is not True:
+            failures.append("master-data edit-preview should be readOnly dryRun")
+        if master_edit_preview_payload.get("writeBlocked") is not True or master_edit_preview_payload.get("safeForAdminWriteUi") is not False:
+            failures.append("master-data edit-preview write should remain blocked")
+        if master_edit_preview_payload.get("rawJsonReturned") is not False or master_edit_preview_payload.get("assetsReturned") is not False:
+            failures.append("master-data edit-preview should hide raw JSON and assets")
+        if not isinstance(master_edit_preview_payload.get("acceptedChanges"), list):
+            failures.append("master-data edit-preview acceptedChanges missing")
     if master_relations_payload is not None:
         if master_relations_payload.get("rawJsonReturned") is not False or master_relations_payload.get("assetsReturned") is not False:
             failures.append("master-data relations should hide raw JSON and assets")
@@ -175,6 +196,7 @@ def main() -> int:
         "masterCatalogUrl": master_catalog_url,
         "masterDetailUrl": master_detail_url,
         "masterRelationsUrl": master_relations_url,
+        "masterEditPreviewUrl": master_edit_preview_url,
         "overview": overview.get("data"),
         "readiness": readiness,
         "saveSnapshots": snapshots.get("data"),
@@ -183,6 +205,7 @@ def main() -> int:
         "masterCatalog": master_catalog.get("data"),
         "masterDetail": master_detail.get("data") if master_detail else None,
         "masterRelations": master_relations.get("data") if master_relations else None,
+        "masterEditPreview": master_edit_preview.get("data") if master_edit_preview else None,
         "failures": failures,
     }
 

@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v117.admin-master-data-relations";
+  const VERSION = "v119.admin-edit-draft-validation";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -328,6 +328,206 @@
   }
 
 
+
+  function fieldKeyLooksReadOnly(key) {
+    const normalized = String(key || "").toLowerCase();
+    return normalized === "id" || normalized.endsWith("_id") || normalized === "created_at" || normalized === "updated_at" || normalized === "createdat" || normalized === "updatedat";
+  }
+
+  function inputTypeForDraftField(field) {
+    const value = field ? field.value : null;
+    if (typeof value === "number") return "number";
+    if (typeof value === "boolean") return "checkbox";
+    return "text";
+  }
+
+  function makeDraftOriginalValue(value) {
+    try {
+      return JSON.stringify(value);
+    } catch (error) {
+      return JSON.stringify(formatValue(value));
+    }
+  }
+
+  function parseDraftOriginalValue(value) {
+    try {
+      return JSON.parse(value || "null");
+    } catch (error) {
+      return value;
+    }
+  }
+
+  function renderMasterEditDraft(detail, fields) {
+    const safeFields = Array.isArray(fields) ? fields : [];
+    const editableFields = safeFields.filter((field) => !fieldKeyLooksReadOnly(field.key)).slice(0, 14);
+    const hiddenCount = Math.max(0, safeFields.filter((field) => !fieldKeyLooksReadOnly(field.key)).length - editableFields.length);
+    const rows = editableFields.length ? editableFields.map((field) => {
+      const value = field.value;
+      const valueText = value === null || value === undefined ? "" : String(value);
+      const isLong = String(valueText).length > 90 || String(valueText).includes("\n");
+      const type = inputTypeForDraftField(field);
+      const label = field.label || field.key;
+      const original = makeDraftOriginalValue(value);
+      if (type === "checkbox") {
+        return `
+          <label class="draft-field draft-field-check">
+            <span>${escapeHtml(label)}</span>
+            <label class="check-field" style="margin:0; padding:9px 10px; border-radius:10px; border:1px solid rgba(148, 163, 184, 0.22); background:rgba(2, 6, 23, 0.56);">
+              <input type="checkbox" ${value ? "checked" : ""} data-admin-edit-draft-field="${escapeHtml(field.key)}" data-admin-edit-draft-original="${escapeHtml(original)}" data-admin-edit-draft-value-type="boolean" />
+              true / false
+            </label>
+          </label>
+        `;
+      }
+      return `
+        <label class="draft-field">
+          <span>${escapeHtml(label)}</span>
+          ${isLong
+            ? `<textarea rows="3" data-admin-edit-draft-field="${escapeHtml(field.key)}" data-admin-edit-draft-original="${escapeHtml(original)}" data-admin-edit-draft-value-type="text">${escapeHtml(valueText)}</textarea>`
+            : `<input type="${type === "number" ? "number" : "text"}" value="${escapeHtml(valueText)}" data-admin-edit-draft-field="${escapeHtml(field.key)}" data-admin-edit-draft-original="${escapeHtml(original)}" data-admin-edit-draft-value-type="${escapeHtml(type)}" />`}
+        </label>
+      `;
+    }).join("") : `<div class="empty">편집 초안으로 표시할 일반 필드가 없습니다.</div>`;
+
+    return `
+      <div class="detail-card edit-draft-card" data-admin-edit-draft data-admin-edit-draft-domain="${escapeHtml(detail.domain || "")}" data-admin-edit-draft-id="${escapeHtml(detail.id || "")}">
+        <div class="detail-title">관리자 편집 초안 <span class="pill warn">dry-run validation</span><span class="pill blocked">save locked</span></div>
+        <div class="filter-help">이제 입력값은 직접 바꿔볼 수 있습니다. 단, <strong>검증만 가능</strong>하고 DB 저장은 계속 잠겨 있습니다. 변경 저장은 변경 이력/되돌리기/권한 정책이 붙기 전까지 열지 않습니다.</div>
+        <div class="edit-draft-grid">${rows}</div>
+        ${hiddenCount ? `<div class="filter-help">표시 제한으로 ${escapeHtml(formatValue(hiddenCount))}개 필드는 숨김 처리했습니다.</div>` : ""}
+        <div class="edit-draft-actions">
+          <button class="btn mini primary" type="button" data-admin-action="preview-admin-edit-draft">초안 검증</button>
+          <button class="btn mini" type="button" data-admin-action="reset-admin-edit-draft">원래 값으로 되돌리기</button>
+          <button class="btn mini" type="button" disabled title="변경 이력/되돌리기/권한 정책 전까지 저장은 비활성화 상태입니다.">변경 저장 잠김</button>
+          <span class="pill good">DB write: blocked</span>
+        </div>
+        <div class="edit-draft-result" data-admin-edit-draft-result><div class="empty">값을 바꾼 뒤 <strong>초안 검증</strong>을 누르면 백엔드가 dry-run으로 차이와 오류를 확인합니다.</div></div>
+      </div>
+    `;
+  }
+
+  function readAdminEditDraftValues() {
+    const draft = $(`[data-admin-edit-draft]`);
+    if (!draft) return { ok: false, reason: "draft_missing", draft: {} };
+    const fields = Array.from(draft.querySelectorAll("[data-admin-edit-draft-field]"));
+    const values = {};
+    const originals = {};
+    fields.forEach((field) => {
+      const key = field.getAttribute("data-admin-edit-draft-field");
+      if (!key) return;
+      const type = field.getAttribute("data-admin-edit-draft-value-type") || "text";
+      const original = parseDraftOriginalValue(field.getAttribute("data-admin-edit-draft-original"));
+      originals[key] = original;
+      if (type === "boolean") values[key] = !!field.checked;
+      else values[key] = field.value;
+    });
+    return {
+      ok: true,
+      domain: draft.getAttribute("data-admin-edit-draft-domain") || DEFAULT_MASTER_DOMAIN,
+      id: Number(draft.getAttribute("data-admin-edit-draft-id") || 0),
+      draft: values,
+      originals,
+      fieldCount: fields.length,
+    };
+  }
+
+  function resetAdminEditDraft() {
+    const draft = $(`[data-admin-edit-draft]`);
+    if (!draft) return false;
+    Array.from(draft.querySelectorAll("[data-admin-edit-draft-field]")).forEach((field) => {
+      const type = field.getAttribute("data-admin-edit-draft-value-type") || "text";
+      const original = parseDraftOriginalValue(field.getAttribute("data-admin-edit-draft-original"));
+      if (type === "boolean") field.checked = !!original;
+      else field.value = original === null || original === undefined ? "" : String(original);
+    });
+    const result = $(`[data-admin-edit-draft-result]`);
+    if (result) result.innerHTML = `<div class="empty">원래 값으로 되돌렸습니다. 값을 바꾼 뒤 초안 검증을 누르세요.</div>`;
+    setStatus("편집 초안을 원래 값으로 되돌렸습니다.", "ok");
+    return true;
+  }
+
+  function renderAdminEditPreviewResult(preview) {
+    const target = $(`[data-admin-edit-draft-result]`);
+    if (!target) return;
+    const payload = preview || {};
+    const accepted = Array.isArray(payload.acceptedChanges) ? payload.acceptedChanges : [];
+    const rejected = Array.isArray(payload.rejectedChanges) ? payload.rejectedChanges : [];
+    const unchanged = Array.isArray(payload.unchangedChanges) ? payload.unchangedChanges : [];
+    const warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
+    const acceptedRows = accepted.length ? accepted.map((change) => `
+      <tr><td>${escapeHtml(change.label || change.key)}</td><td>${escapeHtml(formatValue(change.before))}</td><td>${escapeHtml(formatValue(change.after))}</td><td>${escapeHtml(change.type || "-")}</td></tr>
+    `).join("") : `<tr><td colspan="4">변경된 값 없음</td></tr>`;
+    const rejectedRows = rejected.length ? rejected.map((change) => `
+      <tr><td>${escapeHtml(change.label || change.key)}</td><td>${escapeHtml(formatValue(change.after))}</td><td>${escapeHtml(change.reason || "rejected")}</td></tr>
+    `).join("") : `<tr><td colspan="3">오류 없음</td></tr>`;
+    target.innerHTML = `
+      <div class="draft-preview-summary">
+        <span class="pill ${payload.wouldBeValid ? "good" : "blocked"}">valid: ${escapeHtml(formatValue(payload.wouldBeValid))}</span>
+        <span class="pill warn">dryRun: ${escapeHtml(formatValue(payload.dryRun))}</span>
+        <span class="pill blocked">writeBlocked: ${escapeHtml(formatValue(payload.writeBlocked))}</span>
+        <span class="pill">diff ${escapeHtml(formatValue(payload.diffCount))}</span>
+        <span class="pill">errors ${escapeHtml(formatValue(payload.errorCount))}</span>
+        <span class="pill">unchanged ${escapeHtml(formatValue(payload.unchangedCount || unchanged.length))}</span>
+      </div>
+      ${warnings.length ? `<div class="filter-help">warnings: ${escapeHtml(warnings.join(", "))}</div>` : ""}
+      <details class="json-detail" open>
+        <summary>변경될 값 <span class="pill good">preview only</span></summary>
+        <div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>현재 DB 값</th><th>초안 값</th><th>타입</th></tr></thead><tbody>${acceptedRows}</tbody></table></div>
+      </details>
+      <details class="json-detail" ${rejected.length ? "open" : ""}>
+        <summary>검증 오류 <span class="pill ${rejected.length ? "blocked" : "good"}">${escapeHtml(formatValue(rejected.length))}</span></summary>
+        <div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>초안 값</th><th>사유</th></tr></thead><tbody>${rejectedRows}</tbody></table></div>
+      </details>
+      <div class="filter-help">이 결과는 DB를 수정하지 않는 dry-run입니다. 실제 저장 버튼은 계속 잠겨 있습니다.</div>
+    `;
+  }
+
+  async function previewAdminEditDraft(options) {
+    ensureApi();
+    const values = readAdminEditDraftValues();
+    if (!values.ok || !values.id) {
+      const error = new Error("검증할 편집 초안이 없습니다. 먼저 마스터 데이터 상세를 열어주세요.");
+      setStatus(error.message, "error");
+      throw error;
+    }
+    const target = $(`[data-admin-edit-draft-result]`);
+    if (target) target.innerHTML = `<div class="empty">백엔드에서 초안을 검증하는 중...</div>`;
+    const timeoutMs = options && options.timeoutMs !== undefined ? options.timeoutMs : DEFAULT_TIMEOUT_MS;
+    const response = await window.RpgGameApi.previewAdminMasterDataEdit({
+      domain: values.domain,
+      id: values.id,
+      draft: values.draft,
+      dryRun: true,
+      timeoutMs,
+    });
+    const payload = response && response.payload ? response.payload : {};
+    renderAdminEditPreviewResult(payload);
+    setStatus(`초안 검증 완료: diff ${formatValue(payload.diffCount)} · errors ${formatValue(payload.errorCount)} · DB 저장 없음`, payload.errorCount ? "error" : "ok");
+    return response;
+  }
+
+  function getAdminEditDraftReadiness(options) {
+    const draft = $(`[data-admin-edit-draft]`);
+    const fields = draft ? Array.from(draft.querySelectorAll("[data-admin-edit-draft-field]")) : [];
+    const validateButton = draft ? draft.querySelector('[data-admin-action="preview-admin-edit-draft"]') : null;
+    const saveLockedButton = draft ? Array.from(draft.querySelectorAll("button")).find((button) => button.textContent.includes("변경 저장 잠김")) : null;
+    const result = {
+      ok: !!draft && fields.length >= 0 && !!validateButton && validateButton.disabled === false && (!saveLockedButton || saveLockedButton.disabled === true),
+      version: VERSION,
+      readOnly: true,
+      dryRun: true,
+      writeLocked: true,
+      fieldsEditable: fields.every((field) => field.disabled === false),
+      hasDraft: !!draft,
+      fieldCount: fields.length,
+      validateButtonEnabled: !!validateButton && validateButton.disabled === false,
+      saveButtonDisabled: !saveLockedButton || saveLockedButton.disabled === true,
+      currentDraft: readAdminEditDraftValues(),
+    };
+    if (!options || options.log !== false) console.log("[Upgrade RPG] admin edit draft readiness", result);
+    return result;
+  }
+
   function renderMasterDetail(detailPayload) {
     const target = $("[data-admin-master-detail]");
     const meta = $("[data-admin-master-detail-meta]");
@@ -385,6 +585,7 @@
           <table class="detail-table"><tbody>${assetRows}</tbody></table>
         </div>
       </div>
+      <div style="margin:0 14px 12px;">${renderMasterEditDraft(detail, fields)}</div>
       <div class="detail-card" style="margin:0 14px 12px;">
         <div class="detail-title">실제 연결 항목</div>
         <div class="filter-help">관련 마스터 데이터를 축약된 목록으로 보여줍니다. 행의 보기 버튼을 누르면 해당 항목 상세로 이동합니다.</div>
@@ -636,6 +837,16 @@
           renderError(error);
         }
       }
+      if (action === "preview-admin-edit-draft") {
+        try {
+          await previewAdminEditDraft();
+        } catch (error) {
+          renderError(error);
+        }
+      }
+      if (action === "reset-admin-edit-draft") {
+        resetAdminEditDraft();
+      }
       if (action === "reset-master-catalog-filters") {
         resetMasterCatalogFilters();
         await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() });
@@ -677,14 +888,15 @@
   }
 
   function checkAdminReadOnlyPageReady(options) {
-    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function");
+    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function" && typeof window.RpgGameApi.previewAdminMasterDataEdit === "function");
     const domReady = !!document.querySelector("[data-admin-cards]");
     const locationHintReady = !!document.querySelector("[data-admin-current-url]");
     const snapshotFilterReady = !!document.querySelector("[data-admin-filter-slot-key]");
     const masterCatalogReady = !!document.querySelector("[data-admin-master-domain]");
     const masterDetailReady = !!document.querySelector("[data-admin-master-detail]");
     const masterRelationsReady = true;
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, readOnly: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom() };
+    const editDraftReady = !!document.querySelector("[data-admin-edit-draft]");
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, readOnly: true, writeLocked: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -709,6 +921,12 @@
     openAdminMasterDataRelations,
     renderMasterDetail,
     renderMasterRelations,
+    renderMasterEditDraft,
+    readAdminEditDraftValues,
+    resetAdminEditDraft,
+    previewAdminEditDraft,
+    renderAdminEditPreviewResult,
+    getAdminEditDraftReadiness,
     checkAdminReadOnlyPageReady,
   };
   window.refreshAdminReadOnlyPage = refreshAdminReadOnlyPage;
@@ -720,6 +938,10 @@
   window.openAdminMasterDataDetail = openAdminMasterDataDetail;
   window.openAdminMasterDataRelations = openAdminMasterDataRelations;
   window.checkAdminReadOnlyPageReady = checkAdminReadOnlyPageReady;
+  window.getAdminEditDraftReadiness = getAdminEditDraftReadiness;
+  window.readAdminEditDraftValues = readAdminEditDraftValues;
+  window.resetAdminEditDraft = resetAdminEditDraft;
+  window.previewAdminEditDraft = previewAdminEditDraft;
   window.getCurrentAdminPageUrl = getCurrentAdminPageUrl;
   window.copyCurrentAdminPageUrl = copyCurrentAdminPageUrl;
 

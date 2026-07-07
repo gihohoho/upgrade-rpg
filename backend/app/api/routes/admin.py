@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.response import ok_response
 from app.core.security import CurrentUser, get_current_user_placeholder
 from app.db.session import get_db_session
-from app.schemas.admin import AdminChangePreviewRequest
+from app.schemas.admin import AdminChangePreviewRequest, AdminMasterDataEditPreviewRequest
 from app.services.admin_service import AdminService
 
 router = APIRouter()
@@ -204,6 +204,47 @@ async def get_admin_master_catalog_relations(
         meta={
             "source": "postgresql",
             "note": "관리자 마스터 데이터 연결 항목 조회 전용입니다. 관련 행도 축약된 목록만 내려줍니다.",
+        },
+    )
+
+
+@router.post("/master-data/edit-preview")
+async def preview_admin_master_data_edit(
+    payload: AdminMasterDataEditPreviewRequest = Body(...),
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Validate an admin master-data edit draft without applying it.
+
+    This is the first safe bridge from read-only admin pages toward future writes:
+    the browser can edit fields and ask FastAPI what would change, but the service
+    never commits or flushes database mutations.
+    """
+    preview = await service.preview_master_data_edit(
+        session,
+        domain=payload.domain,
+        row_id=payload.id,
+        draft=payload.draft,
+        reason=payload.reason,
+        dry_run=payload.dry_run,
+    )
+    return ok_response(
+        type="admin.master_data.edit_preview",
+        payload=preview,
+        data={
+            "status": preview["status"],
+            "readOnly": preview["readOnly"],
+            "dryRun": preview["dryRun"],
+            "adminUserId": current_user.id,
+            "domain": preview["domain"],
+            "id": preview["id"],
+            "diffCount": preview["diffCount"],
+            "errorCount": preview["errorCount"],
+            "wouldBeValid": preview["wouldBeValid"],
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 마스터 데이터 편집 초안 검증 전용입니다. DB를 수정하지 않습니다.",
         },
     )
 

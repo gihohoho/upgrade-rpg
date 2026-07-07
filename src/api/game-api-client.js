@@ -213,6 +213,23 @@
 	}
 
 
+
+	async function previewAdminMasterDataEdit(options) {
+		const opts = options || {};
+		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
+		return request("/admin/master-data/edit-preview", {
+			method: "POST",
+			body: {
+				domain: opts.domain !== undefined ? String(opts.domain || "").trim() : "",
+				id: opts.id !== undefined ? Number(opts.id) : (opts.rowId !== undefined ? Number(opts.rowId) : undefined),
+				draft: opts.draft || {},
+				reason: opts.reason || undefined,
+				dryRun: true,
+			},
+			timeoutMs,
+		});
+	}
+
 	async function saveGameSnapshot(payload, options) {
 		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : undefined;
 		return request("/game/save", {
@@ -248,6 +265,7 @@
 		listAdminMasterCatalogRows,
 		fetchAdminMasterDataDetail,
 		fetchAdminMasterDataRelations,
+		previewAdminMasterDataEdit,
 		loadGameSnapshot,
 	};
 })();
