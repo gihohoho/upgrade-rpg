@@ -31,7 +31,7 @@ assertContains("src/api/save-data-sync-policy.js", [
 
 assertContains("src/api/save-data-dev-badge.js", [
   "synced_verified",
-  "v110.backend-save-data-dev-badge-integrity",
+  "v111.backend-save-data-dev-badge-admin-overview",
 ]);
 
 assertContains("index.html", [

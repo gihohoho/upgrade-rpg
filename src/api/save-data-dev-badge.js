@@ -6,7 +6,7 @@
 	const WRAPPER_ID = "backend-save-data-dev-badge-wrap";
 	const STYLE_ID = "backend-save-data-dev-badge-style";
 	const STORAGE_KEY = "upgradeRpgShowBackendSaveDataDevBadge";
-	const VERSION = "v110.backend-save-data-dev-badge-integrity";
+	const VERSION = "v111.backend-save-data-dev-badge-admin-overview";
 
 	let currentAction = null;
 	let lastLoadResult = null;
@@ -370,6 +370,7 @@
 				<button type="button" data-sd-action="sync" title="현재 localStorage 저장값을 백엔드 DB에 즉시 저장합니다. 게임 저장 버튼이 아니라 DB 전송 확인용입니다.">sync DB</button>
 				<button type="button" data-sd-action="load" title="백엔드 DB에 저장된 세이브 스냅샷을 조회만 합니다. 아직 게임에 적용하지 않습니다.">load DB</button>
 				<button type="button" data-sd-action="slots" title="DB에 저장된 세이브 슬롯 목록을 조회합니다. 게임 저장값은 변경하지 않습니다.">slots</button>
+				<button type="button" data-sd-action="admin" title="관리자 페이지 준비용 읽기 전용 overview를 엽니다. DB/localStorage를 수정하지 않습니다.">admin</button>
 				<button type="button" data-sd-action="preview" title="DB 세이브와 현재 localStorage 세이브를 비교하는 복구 미리보기 모달을 엽니다.">preview</button>
 				<button type="button" data-sd-action="backup" title="가장 최근 복구 전 백업을 localStorage로 되돌립니다. 되돌린 뒤 새로고침이 필요합니다.">backup</button>
 				<button type="button" data-sd-action="dual" title="수동 저장 시 localStorage와 백엔드 DB에 함께 저장합니다.">dual</button>
@@ -395,6 +396,9 @@
 			} else if (action === "slots") {
 				if (typeof window.openBackendSaveSlotsModal !== "function") throw new Error("openBackendSaveSlotsModal 함수를 찾을 수 없습니다.");
 				await window.openBackendSaveSlotsModal({ log: false });
+			} else if (action === "admin") {
+				if (typeof window.openAdminReadOnlyOverviewModal !== "function") throw new Error("openAdminReadOnlyOverviewModal 함수를 찾을 수 없습니다.");
+				await window.openAdminReadOnlyOverviewModal({ log: false });
 			} else if (action === "preview") {
 				if (typeof window.openBackendSaveRestorePreviewModal !== "function") throw new Error("openBackendSaveRestorePreviewModal 함수를 찾을 수 없습니다.");
 				await window.openBackendSaveRestorePreviewModal({ log: false });
@@ -431,6 +435,7 @@
 		const syncButton = badge.querySelector('button[data-sd-action="sync"]');
 		const loadButton = badge.querySelector('button[data-sd-action="load"]');
 		const slotsButton = badge.querySelector('button[data-sd-action="slots"]');
+		const adminButton = badge.querySelector('button[data-sd-action="admin"]');
 		const previewButton = badge.querySelector('button[data-sd-action="preview"]');
 		const backupButton = badge.querySelector('button[data-sd-action="backup"]');
 		if (dualButton) dualButton.dataset.active = mode === "manual_dual" ? "true" : "false";
@@ -438,6 +443,7 @@
 		if (syncButton) syncButton.dataset.busy = currentAction === "sync" ? "true" : "false";
 		if (loadButton) loadButton.dataset.busy = currentAction === "load" ? "true" : "false";
 		if (slotsButton) slotsButton.dataset.busy = currentAction === "slots" ? "true" : "false";
+		if (adminButton) adminButton.dataset.busy = currentAction === "admin" ? "true" : "false";
 		if (previewButton) previewButton.dataset.busy = currentAction === "preview" ? "true" : "false";
 		if (backupButton) backupButton.dataset.busy = currentAction === "backup" ? "true" : "false";
 	}

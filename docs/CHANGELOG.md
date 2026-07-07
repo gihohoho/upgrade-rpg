@@ -1,3 +1,11 @@
+## v111
+- 관리자 페이지 준비를 위해 읽기 전용 `/api/v1/admin/overview` API를 추가했습니다.
+- 최근 세이브 스냅샷 요약을 조회하는 `/api/v1/admin/save-snapshots` API를 추가했습니다.
+- 관리자 조회 API는 `snapshot_json` 원본을 내려주지 않고 요약/카운트만 반환합니다.
+- 브라우저에서 `openAdminReadOnlyOverviewModal()`로 관리자 준비 overview 모달을 열 수 있게 했습니다.
+- SAVE DATA 개발 배지에 `admin` 버튼을 추가했습니다. 이 버튼은 조회 전용이며 localStorage/DB를 수정하지 않습니다.
+- DB reset/seed는 필요 없습니다.
+
 ## v108
 - DB 세이브/백업 복구 직후 새로고침할 때 `beforeunload` 자동 저장이 기존 런타임 상태를 다시 localStorage에 덮어쓰는 문제를 수정했습니다.
 - 복구 성공 시 `pending_reload` 잠금을 남겨서 새로고침 전 자동저장/수동저장이 복구된 localStorage 값을 덮어쓰지 못하게 했습니다.

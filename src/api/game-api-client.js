@@ -124,6 +124,23 @@
 		});
 	}
 
+	async function fetchAdminOverview(options) {
+		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : undefined;
+		return request("/admin/overview", {
+			timeoutMs,
+		});
+	}
+
+	async function listAdminSaveSnapshots(options) {
+		const opts = options || {};
+		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
+		const limit = opts.limit !== undefined ? Number(opts.limit) : undefined;
+		return request("/admin/save-snapshots", {
+			query: limit ? { limit } : undefined,
+			timeoutMs,
+		});
+	}
+
 	async function saveGameSnapshot(payload, options) {
 		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : undefined;
 		return request("/game/save", {
@@ -153,6 +170,8 @@
 		fetchMasterData,
 		listGameSaveSlots,
 		saveGameSnapshot,
+		fetchAdminOverview,
+		listAdminSaveSnapshots,
 		loadGameSnapshot,
 	};
 })();
