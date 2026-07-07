@@ -631,3 +631,11 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - If a stacked item has `count > 1` and its current container is full, enhancement is blocked before any item count/material is consumed.
 - The user-facing message is `[시스템] 겹쳐진 장비를 강화하려면 먼저 1칸의 빈 공간이 필요합니다.`
 - No DB reset or seed import is required because only runtime enhancement logic changed.
+## v126 - Admin edit impact guide
+
+- Added an in-page impact guide to the guarded admin edit draft UI.
+- Changing a draft value now shows likely in-game impact before validation/apply.
+- Added specific guidance for `stackable`, boss HP, field rewards, skill proc/cooldown, drop rate/quantity, and enhancement success/cost fields.
+- The guide explicitly notes when game reload is needed and that existing saved stackable items are not automatically merged.
+- No DB reset or seed import is required because this is admin UI guidance only.
+

@@ -482,6 +482,54 @@
       cursor: not-allowed;
     }
 
+    .edit-draft-impact {
+      margin-top: 12px;
+      border: 1px solid rgba(96, 165, 250, 0.22);
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.46);
+      overflow: hidden;
+    }
+
+    .impact-summary {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .impact-row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px 12px;
+      border-top: 1px solid rgba(148, 163, 184, 0.10);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .impact-row:first-of-type {
+      border-top: 0;
+    }
+
+    .impact-row strong {
+      color: var(--text);
+    }
+
+    .impact-high {
+      background: rgba(127, 29, 29, 0.16);
+    }
+
+    .impact-medium {
+      background: rgba(120, 53, 15, 0.14);
+    }
+
+    .impact-low {
+      background: rgba(20, 83, 45, 0.10);
+    }
+
     .edit-draft-actions {
       margin-top: 12px;
       display: flex;
@@ -646,7 +694,7 @@
       <div>
         <div class="eyebrow"><span class="dot"></span>Guarded Admin Rollback</div>
         <h1>Upgrade RPG 관리자 페이지</h1>
-        <p class="subtitle">마스터 데이터 allow-list 필드를 실제 DB에 적용하고, admin_change_logs 변경 이력에서 안전하게 되돌리기까지 준비합니다.</p>
+        <p class="subtitle">마스터 데이터 allow-list 필드를 실제 DB에 적용하고, 저장 전 인게임 영향 안내와 admin_change_logs 안전 되돌리기를 함께 확인합니다.</p>
       </div>
       <div class="top-actions">
         <a class="btn" href="index.html" data-admin-game-url>게임으로 돌아가기</a>
@@ -654,7 +702,7 @@
       </div>
     </div>
 
-    <div class="notice">이 페이지는 관리자 화면으로 옮기기 전의 안전한 뼈대입니다. <strong>마스터 데이터 allow-list 필드</strong>는 검증 + 확인 문구를 거쳐 실제 DB 적용이 가능하고, 변경 이력에서 현재값 검사를 통과한 경우 되돌리기도 가능합니다. localStorage와 현재 게임 런타임은 직접 수정하지 않습니다.</div>
+    <div class="notice">이 페이지는 관리자 화면으로 옮기기 전의 안전한 뼈대입니다. <strong>마스터 데이터 allow-list 필드</strong>는 검증 + 확인 문구를 거쳐 실제 DB 적용이 가능하고, 변경 전에는 어떤 인게임 영역에 영향이 있는지 안내합니다. localStorage와 현재 게임 런타임은 직접 수정하지 않습니다.</div>
     <div class="notice danger-notice">주의: 지급/삭제/JSON/이미지/관계 코드 변경은 아직 막혀 있습니다. 실제 적용/되돌리기는 name, description, 수치 밸런스, is_enabled 등 좁은 필드만 가능합니다.</div>
     <div class="notice location-notice">
       <div>
@@ -867,7 +915,7 @@
       <div data-admin-readiness><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <p class="footer-note">v123 admin change log rollback · static HTML + JS · FastAPI guarded write/rollback APIs</p>
+    <p class="footer-note">v126 admin edit impact guide · static HTML + JS · FastAPI guarded write/rollback APIs</p>
   </main>
 
   <script src="src/api/game-api-client.js"></script>

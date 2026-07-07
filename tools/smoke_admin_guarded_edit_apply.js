@@ -64,7 +64,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v123.admin-change-log-rollback",
+  "v126.admin-edit-impact-guide",
   "ADMIN_EDIT_APPLY_CONFIRM_TEXT",
   "ADMIN_EDIT_ALLOWED_FIELDS",
   "isAdminEditApplyAllowedField",
@@ -80,7 +80,7 @@ assertContains("admin.html", [
   "Guarded Admin Rollback",
   "data-admin-change-log-table",
   "data-admin-action=\"refresh-admin-change-logs\"",
-  "v123 admin change log rollback",
+  "v126 admin edit impact guide",
   "allow-list 필드",
 ]);
 

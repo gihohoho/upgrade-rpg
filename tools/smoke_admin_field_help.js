@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("admin.html", [
-  "v123 admin change log rollback",
+  "v126 admin edit impact guide",
   "data-admin-field-help",
   "필드 용어 도움말",
   "grade / 등급",
@@ -29,7 +29,7 @@ assertContains("admin.html", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v123.admin-change-log-rollback",
+  "v126.admin-edit-impact-guide",
   "ADMIN_FIELD_HELP_DEFINITIONS",
   "getAdminFieldHelp",
   "listAdminFieldHelp",

@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v123.admin-change-log-rollback";
+  const VERSION = "v126.admin-edit-impact-guide";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -548,6 +548,7 @@
         ${lockedFields.length ? `<div class="filter-help">연결/식별자라 잠근 필드: ${escapeHtml(lockedFields.slice(0, 12).join(", "))}${lockedFields.length > 12 ? " ..." : ""}</div>` : ""}
         <div class="edit-draft-grid">${rows}</div>
         ${hiddenCount ? `<div class="filter-help">표시 제한/잠금으로 ${escapeHtml(formatValue(hiddenCount))}개 필드는 편집 초안에서 제외했습니다.</div>` : ""}
+        <div class="edit-draft-impact" data-admin-edit-impact><div class="empty">값을 바꾸면 여기에 <strong>인게임 영향 안내</strong>가 표시됩니다.</div></div>
         <div class="edit-draft-actions">
           <button class="btn mini primary" type="button" data-admin-action="preview-admin-edit-draft">초안 검증</button>
           <button class="btn mini" type="button" data-admin-action="reset-admin-edit-draft">원래 값으로 되돌리기</button>
@@ -597,8 +598,218 @@
     });
     const result = $(`[data-admin-edit-draft-result]`);
     if (result) result.innerHTML = `<div class="empty">원래 값으로 되돌렸습니다. 값을 바꾼 뒤 초안 검증을 누르세요.</div>`;
+    refreshAdminEditImpactGuide();
     setStatus("편집 초안을 원래 값으로 되돌렸습니다.", "ok");
     return true;
+  }
+
+  function valuesEqualForImpact(before, after) {
+    if (before === after) return true;
+    if (before === null || before === undefined) return after === "" || after === null || after === undefined;
+    if (typeof before === "number") return Number(after) === before;
+    if (typeof before === "boolean") return after === before || String(after).toLowerCase() === String(before);
+    return String(before) === String(after);
+  }
+
+  function collectLocalDraftChangesForImpact(values) {
+    const result = values || readAdminEditDraftValues();
+    if (!result || !result.ok) return [];
+    return Object.keys(result.draft || {}).filter((key) => !valuesEqualForImpact(result.originals[key], result.draft[key])).map((key) => ({
+      key,
+      label: key,
+      before: result.originals[key],
+      after: result.draft[key],
+      domain: result.domain,
+    }));
+  }
+
+  function normalizeImpactKey(key) {
+    return String(key || "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+  }
+
+  function getAdminEditImpactHint(domain, change) {
+    const key = normalizeImpactKey(change && change.key);
+    const rawDomain = String(domain || (change && change.domain) || "");
+    const before = change ? change.before : undefined;
+    const after = change ? change.after : undefined;
+    if (!key) return null;
+
+    if (rawDomain === "itemTemplates" && key === "stackable") {
+      return {
+        severity: "high",
+        title: "인벤토리 겹치기 동작 변경",
+        body: `stackable ${formatValue(before)} → ${formatValue(after)} 변경은 새로 획득하는 같은 +0 아이템의 겹치기 여부에 영향을 줍니다. 기존 세이브에 이미 따로 들어간 아이템은 자동 병합하지 않습니다. 겹친 장비를 강화할 때는 1개 분리용 빈 칸이 필요합니다.`,
+        reload: true,
+      };
+    }
+    if (rawDomain === "itemTemplates" && ["name", "description", "grade"].includes(key)) {
+      return {
+        severity: "medium",
+        title: "아이템 표시/구간 정보 변경",
+        body: `${change.label || change.key} 변경은 드랍 목록, 툴팁, 관리자 목록, 일부 정렬/구간 판단에 영향을 줄 수 있습니다. 게임 화면은 새로고침 후 최신 master-data를 다시 읽습니다.`,
+        reload: true,
+      };
+    }
+    if (rawDomain === "itemTemplates" && key === "adminnote") {
+      return {
+        severity: "low",
+        title: "관리자 메모만 변경",
+        body: "admin_note는 게임 화면에는 표시되지 않는 내부 메모입니다. 인게임 밸런스에는 직접 영향이 없습니다.",
+        reload: false,
+      };
+    }
+
+    if (rawDomain === "bosses" && key === "hp") {
+      return {
+        severity: "high",
+        title: "보스 체력 변경",
+        body: `보스 HP ${formatValue(before)} → ${formatValue(after)} 변경은 보스 전투의 최대 체력에 직접 반영됩니다. 이미 떠 있는 게임 화면은 새로고침 후 최신 값을 읽습니다.`,
+        reload: true,
+      };
+    }
+    if (rawDomain === "bosses" && ["name", "description", "boss_type", "tier", "cooldown_seconds"].includes(key)) {
+      return {
+        severity: "medium",
+        title: "보스 표시/소환 규칙 변경",
+        body: `${change.label || change.key} 변경은 보스 카드, 전투 표시, 쿨타임/구간 정보에 영향을 줄 수 있습니다. 적용 후 게임 새로고침을 권장합니다.`,
+        reload: true,
+      };
+    }
+    if (rawDomain === "bosses" && key === "isenabled") {
+      return {
+        severity: "high",
+        title: "보스 활성 상태 변경",
+        body: "is_enabled 변경은 보스가 게임 기준 데이터에 포함되는지 여부에 영향을 줄 수 있습니다. 비활성화 전에는 드랍/퀘스트 연결 상태를 확인하는 편이 안전합니다.",
+        reload: true,
+      };
+    }
+
+    if (rawDomain === "fieldZones" && ["enemyhp", "goldreward"].includes(key)) {
+      return {
+        severity: "high",
+        title: "필드 사냥 보상/난이도 변경",
+        body: `${change.label || change.key} 변경은 필드 몬스터 체력 또는 골드 보상에 직접 영향을 줍니다. 게임 새로고침 후 적용됩니다.`,
+        reload: true,
+      };
+    }
+    if (rawDomain === "fieldZones" && ["name", "description", "sortorder", "isenabled"].includes(key)) {
+      return {
+        severity: "medium",
+        title: "필드 표시/노출 변경",
+        body: `${change.label || change.key} 변경은 필드 목록 표시와 진입 가능 상태에 영향을 줄 수 있습니다.`,
+        reload: true,
+      };
+    }
+
+    if (rawDomain === "skills" && ["procrate", "cooldownseconds"].includes(key)) {
+      return {
+        severity: "high",
+        title: "스킬 발동/쿨타임 변경",
+        body: `${change.label || change.key} 변경은 전투 스킬 발동 확률 또는 쿨타임에 영향을 줍니다. 게임 새로고침 후 최신 master-data가 적용됩니다.`,
+        reload: true,
+      };
+    }
+    if (rawDomain === "skillLevels" && ["damagemultiplier", "procratebonus"].includes(key)) {
+      return {
+        severity: "high",
+        title: "스킬 레벨 효과 변경",
+        body: `${change.label || change.key} 변경은 스킬 레벨별 피해량/발동 보너스에 영향을 줍니다.`,
+        reload: true,
+      };
+    }
+    if (rawDomain === "dropTableItems" && ["rate", "minquantity", "maxquantity"].includes(key)) {
+      return {
+        severity: "high",
+        title: "드랍 확률/수량 변경",
+        body: `${change.label || change.key} 변경은 보스/필드 드랍 결과에 직접 영향을 줍니다. 너무 높은 rate나 수량은 밸런스가 크게 바뀔 수 있습니다.`,
+        reload: true,
+      };
+    }
+    if (rawDomain === "enhancementLevels" && ["successrate", "goldcost"].includes(key)) {
+      return {
+        severity: "high",
+        title: "강화 확률/비용 변경",
+        body: `${change.label || change.key} 변경은 강화 난이도와 골드 소모량에 직접 영향을 줍니다.`,
+        reload: true,
+      };
+    }
+    if (rawDomain === "enhancementGroups" && ["name", "description", "maxlevel", "isenabled"].includes(key)) {
+      return {
+        severity: "medium",
+        title: "강화 그룹 설정 변경",
+        body: `${change.label || change.key} 변경은 해당 그룹을 쓰는 장비들의 강화 표시/최대 단계에 영향을 줄 수 있습니다.`,
+        reload: true,
+      };
+    }
+    if (["name", "description", "isenabled"].includes(key)) {
+      return {
+        severity: key === "isenabled" ? "medium" : "low",
+        title: "표시/활성 상태 변경",
+        body: `${change.label || change.key} 변경은 화면 표시 또는 데이터 활성 상태에 영향을 줄 수 있습니다.`,
+        reload: key === "isenabled",
+      };
+    }
+    return {
+      severity: "low",
+      title: "일반 마스터 데이터 변경",
+      body: `${change.label || change.key} 값이 변경됩니다. 인게임 반영은 이 필드를 사용하는 화면/시스템에서 새로고침 후 확인하세요.`,
+      reload: true,
+    };
+  }
+
+  function buildAdminEditImpactGuide(domain, changes, options) {
+    const safeChanges = Array.isArray(changes) ? changes : [];
+    const hints = safeChanges.map((change) => getAdminEditImpactHint(domain, change)).filter(Boolean);
+    const requiresGameReload = hints.some((hint) => hint.reload);
+    const highCount = hints.filter((hint) => hint.severity === "high").length;
+    const mediumCount = hints.filter((hint) => hint.severity === "medium").length;
+    return {
+      ok: true,
+      version: VERSION,
+      domain: domain || DEFAULT_MASTER_DOMAIN,
+      changeCount: safeChanges.length,
+      hintCount: hints.length,
+      highCount,
+      mediumCount,
+      requiresGameReload,
+      applied: !!(options && options.applied),
+      hints,
+    };
+  }
+
+  function renderAdminEditImpactGuide(guide) {
+    const target = $(`[data-admin-edit-impact]`);
+    if (!target) return;
+    const info = guide || buildAdminEditImpactGuide(DEFAULT_MASTER_DOMAIN, []);
+    if (!info.changeCount) {
+      target.innerHTML = `<div class="empty">값을 바꾸면 여기에 <strong>인게임 영향 안내</strong>가 표시됩니다.</div>`;
+      return;
+    }
+    const rows = info.hints.map((hint) => `
+      <div class="impact-row impact-${escapeHtml(hint.severity)}">
+        <span class="pill ${hint.severity === "high" ? "blocked" : (hint.severity === "medium" ? "warn" : "good")}">${escapeHtml(hint.severity)}</span>
+        <div><strong>${escapeHtml(hint.title)}</strong><br><span>${escapeHtml(hint.body)}</span></div>
+      </div>
+    `).join("");
+    target.innerHTML = `
+      <div class="impact-summary">
+        <span class="pill ${info.requiresGameReload ? "warn" : "good"}">게임 새로고침 ${info.requiresGameReload ? "필요" : "불필요"}</span>
+        <span class="pill">변경 ${escapeHtml(formatValue(info.changeCount))}</span>
+        <span class="pill ${info.highCount ? "blocked" : "good"}">high ${escapeHtml(formatValue(info.highCount))}</span>
+        <span class="pill ${info.mediumCount ? "warn" : "good"}">medium ${escapeHtml(formatValue(info.mediumCount))}</span>
+      </div>
+      ${rows}
+      <div class="filter-help">이 안내는 저장 전 이해를 돕는 가이드입니다. 실제 저장 여부는 백엔드 검증과 확인 문구로 한 번 더 막습니다.</div>
+    `;
+  }
+
+  function refreshAdminEditImpactGuide() {
+    const values = readAdminEditDraftValues();
+    if (!values.ok) return null;
+    const changes = collectLocalDraftChangesForImpact(values);
+    const guide = buildAdminEditImpactGuide(values.domain, changes);
+    renderAdminEditImpactGuide(guide);
+    return guide;
   }
 
   function renderAdminEditPreviewResult(preview) {
@@ -617,6 +828,9 @@
     `).join("") : `<tr><td colspan="3">오류 없음</td></tr>`;
     const applied = payload.applied === true;
     const modeLabel = applied ? "applied" : (payload.dryRun ? "preview only" : "apply result");
+    const draftValuesForImpact = readAdminEditDraftValues();
+    const impactChanges = accepted.length ? accepted.map((change) => ({ ...change, domain: draftValuesForImpact.domain })) : collectLocalDraftChangesForImpact(draftValuesForImpact);
+    renderAdminEditImpactGuide(buildAdminEditImpactGuide(draftValuesForImpact.domain, impactChanges, { applied }));
     target.innerHTML = `
       <div class="draft-preview-summary">
         <span class="pill ${payload.wouldBeValid ? "good" : "blocked"}">valid: ${escapeHtml(formatValue(payload.wouldBeValid))}</span>
@@ -1217,6 +1431,16 @@
   }
 
   function bindEvents() {
+    document.addEventListener("input", (event) => {
+      if (event.target && event.target.closest && event.target.closest("[data-admin-edit-draft]")) {
+        refreshAdminEditImpactGuide();
+      }
+    });
+    document.addEventListener("change", (event) => {
+      if (event.target && event.target.closest && event.target.closest("[data-admin-edit-draft]")) {
+        refreshAdminEditImpactGuide();
+      }
+    });
     document.addEventListener("click", async (event) => {
       const button = event.target && event.target.closest ? event.target.closest("[data-admin-action]") : null;
       if (!button) return;
@@ -1372,6 +1596,9 @@
     applyAdminEditDraft,
     renderAdminEditPreviewResult,
     readAdminEditApplyControls,
+    buildAdminEditImpactGuide,
+    renderAdminEditImpactGuide,
+    refreshAdminEditImpactGuide,
     getAdminEditDraftReadiness,
     refreshAdminChangeLogs,
     renderAdminChangeLogs,
@@ -1402,6 +1629,8 @@
   window.readAdminEditDraftValues = readAdminEditDraftValues;
   window.resetAdminEditDraft = resetAdminEditDraft;
   window.previewAdminEditDraft = previewAdminEditDraft;
+  window.buildAdminEditImpactGuide = buildAdminEditImpactGuide;
+  window.refreshAdminEditImpactGuide = refreshAdminEditImpactGuide;
   window.getAdminFieldHelp = getAdminFieldHelp;
   window.listAdminFieldHelp = listAdminFieldHelp;
   window.getAdminFieldValueHint = getAdminFieldValueHint;
