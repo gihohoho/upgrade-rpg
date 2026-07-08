@@ -36,6 +36,7 @@
 - `ADMIN_CREATE_DELETE_ROLLBACK.md` — 생성 row 삭제 preview/apply
 - `ADMIN_CREATE_DELETE_RESTORE.md` — 삭제 row 복원 preview/apply
 - `ADMIN_CHANGE_LOG_RELATION_TOOLS.md` — 변경 이력 / rollback preview relation label 강화
+- `ADMIN_CHANGE_LOGS_SPLIT.md` — v187 change logs 실제 1차 분리
 
 ## 3. 관리자 편집/관계 안전장치 문서
 
@@ -83,3 +84,4 @@ docs/archive/stage-notes/
 삭제하지 않고 이동만 했기 때문에, 필요하면 다시 참고할 수 있습니다.
 
 - `ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`: v186 change logs 실제 분리 전 API/window/DOM 계약 문서.
+- `ADMIN_CHANGE_LOGS_SPLIT.md`: v187 change logs 실제 1차 분리 문서.

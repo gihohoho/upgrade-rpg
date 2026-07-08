@@ -1,8 +1,8 @@
 # Current Status
 
-현재 기준: **v186 admin change log split contract**
+현재 기준: **v187 admin change logs split**
 
-이 패키지 기준 ZIP: **rpg_v186_admin_change_log_split_contract_ready.zip**
+이 패키지 기준 ZIP: **rpg_v187_admin_change_logs_split_ready.zip**
 
 ## 현재 상태
 
@@ -17,6 +17,19 @@
 - 신규 row create/delete/restore 제한 흐름 유지.
 - 관리자 페이지 레이아웃 shell, sidebar, sticky header, 접기/펼치기 유지.
 
+
+
+## v187 완료
+
+- `src/api/admin/admin-change-logs.js` 신규 추가.
+- 변경 이력 필터/목록/상세/rollback/create-delete/restore 구현을 외부 파일로 1차 분리.
+- `admin-page-readonly.js`에는 기존 window export 호환 wrapper 유지.
+- `admin.html` script 순서를 `game-api-client.js` → `admin-layout-shell.js` → `admin/admin-change-logs.js` → `admin-page-readonly.js`로 변경.
+- `checkAdminReadOnlyPageReady().changeLogsExternalReady` 추가.
+- `getAdminChangeLogsReadiness()` 추가.
+- 새 smoke `tools/smoke_admin_change_logs_split.js` 추가 및 core smoke 포함.
+- 새 쓰기 도메인 오픈 없음.
+- DB reset / seed 필요 없음.
 
 ## v186 완료
 

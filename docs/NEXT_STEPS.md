@@ -1,30 +1,36 @@
 # Next Steps
 
-## 현재 완료: v186 admin change log split contract
+## 현재 완료: v187 admin change logs split
 
-`change logs` 묶음을 실제로 분리하기 전에 필요한 계약을 먼저 고정했습니다.
+`change logs` 묶음을 `src/api/admin/admin-change-logs.js`로 1차 분리했습니다.
 
-고정된 항목:
+완료된 항목:
 
-- 변경 이력 백엔드 API 함수
-- 변경 이력 window export 함수
-- 변경 이력 DOM target
-- delegated action 이름
-- action filter 값
-- 다음 후보 파일명 `src/api/admin/admin-change-logs.js`
+- `src/api/admin/` 폴더 생성
+- `src/api/admin/admin-change-logs.js` 파일 생성
+- 변경 이력 필터/목록/상세 렌더링 이동
+- rollback preview/apply 이동
+- 생성 row 삭제 preview/apply 이동
+- 삭제 row 복원 preview/apply 이동
+- `admin-page-readonly.js`에는 호환 wrapper 유지
+- `admin.html` script 순서 고정
+- 새 smoke `tools/smoke_admin_change_logs_split.js` 추가
 
-## 다음 추천: v187 change logs 실제 분리 1단계
+## 다음 추천: v188 create lifecycle 분리 계약 고정
 
-다음 단계에서는 `src/api/admin/admin-change-logs.js` 파일을 새로 만들고, 변경 이력 관련 함수만 외부 파일로 옮기는 것이 좋습니다.
+다음 단계에서는 바로 `create lifecycle` 구현을 외부 파일로 옮기지 말고, 먼저 분리 전 계약을 고정하는 것이 좋습니다.
 
-권장 순서:
+권장 고정 항목:
 
-1. `src/api/admin/` 폴더 생성.
-2. `src/api/admin/admin-change-logs.js` 파일 생성.
-3. 변경 이력 필터, 목록 렌더, 상세 렌더, rollback/create-delete/restore 관련 함수만 이동.
-4. `admin.html` script 순서를 `game-api-client.js` → `admin-layout-shell.js` → `admin/admin-change-logs.js` → `admin-page-readonly.js`로 유지.
-5. `admin-page-readonly.js`에는 기존 window export 호환 wrapper를 유지.
-6. v186 계약 smoke와 core/all smoke 통과 확인.
+1. 생성 초안 관련 window export 목록.
+2. 생성→삭제→복원 batch check 함수 목록.
+3. 생성/삭제/복원 결과 렌더링 함수 목록.
+4. 확인 문구 상수 목록.
+5. DOM target 목록.
+6. delegated action 목록.
+7. 다음 후보 파일명 `src/api/admin/admin-create-lifecycle.js`.
+
+이 계약이 안정적이면 그 다음 v189에서 실제 `admin-create-lifecycle.js` 분리로 넘어가면 됩니다.
 
 ## 계속 가능한 브라우저 일괄 점검
 
@@ -41,8 +47,8 @@
 
 ## 그 다음 후보
 
-1. create lifecycle 기능 분리.
-2. edit draft 기능 분리.
+1. create lifecycle 실제 분리.
+2. edit draft 기능 분리 전 계약 고정.
 3. FastAPI 관리자 라우터/서비스 파일 분리.
 4. Vue 전환 전 관리자 기능 목록 정리.
 

@@ -54,10 +54,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v186: admin change log split contract
+v187: admin change logs split
 
 현재 인수인계 ZIP:
-rpg_v186_admin_change_log_split_contract_ready.zip
+rpg_v187_admin_change_logs_split_ready.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -75,28 +75,30 @@ docs/PROJECT_STRUCTURE.md
 6. 생성→삭제→복원 일괄 점검 UI 유지.
 7. 관리자 JS 분리 전 readiness UI 유지.
 8. 관리자 layout shell은 src/api/admin-layout-shell.js로 실제 분리 완료.
-9. change logs는 실제 파일 분리 전 API/window/DOM 계약을 v186에서 고정 완료.
+9. change logs는 src/api/admin/admin-change-logs.js로 실제 1차 분리 완료.
 
 현재 create apply 열린 도메인:
 characters, enhancementGroups, fieldZones, bosses, skills, dropTables, itemTemplates, dropTableItems, skillLevels, enhancementLevels, characterSkills
 
-v186 완료:
-- 실제 change logs 파일 분리는 아직 하지 않았음.
-- 다음 분리 후보 파일을 src/api/admin/admin-change-logs.js로 고정.
-- 변경 이력 API/window export/DOM target/delegated action 계약 고정.
-- 새 함수 getAdminChangeLogSplitContractReadiness(), renderAdminChangeLogSplitContractReadiness() 추가.
-- checkAdminReadOnlyPageReady().changeLogSplitContractReady 가 true면 정상.
-- 새 smoke tools/smoke_admin_change_log_split_contract.js 추가 및 core smoke 포함.
+v187 완료:
+- src/api/admin/ 폴더 생성.
+- src/api/admin/admin-change-logs.js 신규 추가.
+- 변경 이력 필터/목록/상세/rollback/create-delete/restore 구현을 외부 파일로 1차 분리.
+- admin-page-readonly.js에는 기존 window export 호환 wrapper 유지.
+- admin.html script 순서를 game-api-client.js → admin-layout-shell.js → admin/admin-change-logs.js → admin-page-readonly.js 로 변경.
+- 새 함수 getAdminChangeLogsReadiness() 추가.
+- checkAdminReadOnlyPageReady().changeLogsExternalReady 가 true면 정상.
+- 새 smoke tools/smoke_admin_change_logs_split.js 추가 및 core smoke 포함.
 - DB reset / seed 필요 없음.
 - .env, .gitignore 변경 없음.
 
 다음 추천 단계:
-v187 change logs 실제 분리 1단계.
+v188 create lifecycle split contract.
 
 권장 방향:
-1. src/api/admin/ 폴더 생성.
-2. src/api/admin/admin-change-logs.js 파일 생성.
-3. 변경 이력 필터/목록/상세/rollback/create-delete/restore 함수만 이동.
-4. admin.html script 순서를 game-api-client.js → admin-layout-shell.js → admin/admin-change-logs.js → admin-page-readonly.js로 유지.
-5. admin-page-readonly.js에는 기존 window export 호환 wrapper를 남김.
-6. v186 contract smoke + core/all smoke 통과 확인.
+1. 바로 create lifecycle 구현을 외부 파일로 옮기지 말고 계약부터 고정.
+2. 생성 초안/window export/DOM target/delegated action 목록 정리.
+3. runAdminCreateLifecycleBatchCheck, 생성/삭제/복원 결과 렌더링 함수 목록 고정.
+4. 다음 후보 파일명 src/api/admin/admin-create-lifecycle.js 로 고정.
+5. 새 smoke tools/smoke_admin_create_lifecycle_split_contract.js 추가.
+6. 안정적이면 v189에서 실제 create lifecycle 파일 분리.

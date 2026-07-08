@@ -1,5 +1,15 @@
 # Changelog
 
+## v187
+
+- `src/api/admin/admin-change-logs.js` 신규 추가.
+- 관리자 change logs 구현을 외부 JS 파일로 1차 분리.
+- `admin-page-readonly.js`에는 기존 window export 호환 wrapper 유지.
+- `admin.html` script 순서를 game api → layout shell → change logs → admin page로 변경.
+- 새 smoke `tools/smoke_admin_change_logs_split.js` 추가.
+- DB schema 변경 없음, DB reset / seed 필요 없음.
+
+
 ## v184 - Admin JS Split Readiness
 
 - 관리자 페이지에 `관리자 JS 분리 준비` 섹션을 추가했습니다.

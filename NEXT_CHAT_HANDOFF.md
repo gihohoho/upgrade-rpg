@@ -57,8 +57,8 @@ uvicorn app.main:app --reload
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v186 admin change log split contract**
-- 새 채팅용 ZIP: **rpg_v186_admin_change_log_split_contract_ready.zip**
+- 최신 안정 버전: **v187 admin change logs split**
+- 새 채팅용 ZIP: **rpg_v187_admin_change_logs_split_ready.zip**
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -78,7 +78,8 @@ uvicorn app.main:app --reload
 - 생성→삭제→복원 일괄 점검 UI 유지.
 - 관리자 JS 분리 전 readiness UI 유지.
 - 관리자 layout shell은 `src/api/admin-layout-shell.js`로 실제 분리 완료.
-- change logs는 실제 파일 분리 전 API/window/DOM 계약을 v186에서 고정 완료.
+- change logs는 `src/api/admin/admin-change-logs.js`로 실제 1차 분리 완료.
+- `admin-page-readonly.js`에는 호환 wrapper가 남아 있습니다.
 
 ## 현재 create apply 열린 도메인
 
@@ -96,15 +97,16 @@ uvicorn app.main:app --reload
 
 위 도메인들은 생성 row delete/restore도 제한적으로 열려 있습니다.
 
-## v186 완료
+## v187 완료
 
-- 실제 `change logs` 파일 분리는 아직 하지 않았습니다.
-- 다음 분리 후보 파일을 `src/api/admin/admin-change-logs.js`로 고정했습니다.
-- 변경 이력 API/window export/DOM target/delegated action 계약을 먼저 고정했습니다.
-- 새 함수: `getAdminChangeLogSplitContractReadiness()`.
-- 새 함수: `renderAdminChangeLogSplitContractReadiness()`.
-- `checkAdminReadOnlyPageReady().changeLogSplitContractReady`가 true면 정상입니다.
-- 새 smoke: `tools/smoke_admin_change_log_split_contract.js`.
+- `src/api/admin/` 폴더 생성.
+- `src/api/admin/admin-change-logs.js` 신규 추가.
+- 변경 이력 필터/목록/상세/rollback/create-delete/restore 구현을 외부 파일로 1차 분리.
+- `admin-page-readonly.js`에는 기존 window export 호환 wrapper 유지.
+- `admin.html` script 순서 변경: game api → layout shell → change logs → admin page.
+- 새 함수: `getAdminChangeLogsReadiness()`.
+- `checkAdminReadOnlyPageReady().changeLogsExternalReady`가 true면 정상입니다.
+- 새 smoke: `tools/smoke_admin_change_logs_split.js`.
 - core smoke에 위 smoke를 포함했습니다.
 - 새 쓰기 도메인 오픈 없음, DB schema 변경 없음, DB reset / seed 필요 없음.
 - `.env`, `.gitignore` 변경 없음.
@@ -119,12 +121,14 @@ checkAdminReadOnlyPageReady().version
 예상 결과:
 
 ```txt
-v186.admin-change-log-split-contract
+v187.admin-change-logs-split
 ```
+
+추가 확인:
 
 ```js
 위치: 브라우저 개발자도구 Console
-checkAdminReadOnlyPageReady().changeLogSplitContractReady
+checkAdminReadOnlyPageReady().changeLogsExternalReady
 ```
 
 예상 결과:
@@ -133,32 +137,31 @@ checkAdminReadOnlyPageReady().changeLogSplitContractReady
 true
 ```
 
+그리고:
+
 ```js
 위치: 브라우저 개발자도구 Console
-getAdminChangeLogSplitContractReadiness()
+window.RpgAdminChangeLogs.VERSION
 ```
 
-## smoke 실행
+예상 결과:
 
-```bash
-위치: 프로젝트 루트
-bash tools/run_smoke_core.sh
-```
-
-```bash
-위치: 프로젝트 루트
-bash tools/run_smoke_all.sh
+```txt
+v187.admin-change-logs-split
 ```
 
 ## 다음 추천 단계
 
-다음 v187은 **change logs 실제 분리 1단계**가 좋습니다.
+**v188 create lifecycle split contract**를 추천합니다.
 
-권장 방향:
+바로 `create lifecycle` 구현을 외부 파일로 옮기지 말고, 먼저 아래 계약을 고정하는 것이 안전합니다.
 
-1. `src/api/admin/` 폴더 생성.
-2. `src/api/admin/admin-change-logs.js` 파일 생성.
-3. 변경 이력 필터/목록/상세/rollback/create-delete/restore 함수만 이동.
-4. `admin.html` script 순서를 `game-api-client.js` → `admin-layout-shell.js` → `admin/admin-change-logs.js` → `admin-page-readonly.js`로 유지.
-5. `admin-page-readonly.js`에는 기존 window export 호환 wrapper를 남김.
-6. v186 contract smoke + core/all smoke 통과 확인.
+- 생성 초안 관련 window export 목록
+- 생성→삭제→복원 batch check 함수 목록
+- 생성/삭제/복원 결과 렌더링 함수 목록
+- 확인 문구 상수 목록
+- DOM target 목록
+- delegated action 목록
+- 다음 후보 파일명 `src/api/admin/admin-create-lifecycle.js`
+
+그 다음 v189에서 실제 `admin-create-lifecycle.js` 분리로 넘어가는 흐름이 좋습니다.
