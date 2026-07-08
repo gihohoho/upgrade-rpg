@@ -22,7 +22,7 @@ assert(adminHtml.includes('data-admin-change-log-filter-target-type'), 'admin.ht
 assert(adminHtml.includes('data-admin-change-log-filter-changed-key'), 'admin.html has changed field filter');
 assert(adminHtml.includes('data-admin-action="apply-change-log-filters"'), 'admin.html has apply change log filters action');
 assert(adminHtml.includes('data-admin-action="reset-change-log-filters"'), 'admin.html has reset change log filters action');
-assert(adminHtml.includes('guarded_update') && adminHtml.includes('guarded_rollback'), 'admin.html exposes guarded update/rollback action filter options');
+assert(adminHtml.includes('value="update"') && adminHtml.includes('value="rollback"') && adminHtml.includes('value="create"') && adminHtml.includes('value="create_delete"') && adminHtml.includes('value="create_delete_restore"'), 'admin.html exposes current update/rollback/create lifecycle action filter options');
 
 assert(adminJs.includes('function readChangeLogFiltersFromDom()'), 'admin page can read change log filters');
 assert(adminJs.includes('function resetChangeLogFilters'), 'admin page can reset change log filters');
@@ -36,6 +36,7 @@ assert(adminJs.includes('changedKey') && adminJs.includes('targetType') && admin
 assert(clientJs.includes('changedKey') && clientJs.includes('applied') && clientJs.includes('sort'), 'game api client sends new change log query params');
 assert(routePy.includes('changed_key: str | None') && routePy.includes('alias="changedKey"'), 'admin route accepts changedKey query param');
 assert(routePy.includes('applied: bool | None') && routePy.includes('sort: str | None'), 'admin route accepts applied/sort query params');
+assert(servicePy.includes('ADMIN_CHANGE_LOG_ACTION_FILTERS'), 'admin service declares allowed change log action filters');
 assert(servicePy.includes('def _clean_admin_change_log_filters'), 'admin service cleans change log filters');
 assert(servicePy.includes('def _build_admin_change_log_where_clauses'), 'admin service builds change log clauses');
 assert(servicePy.includes('AdminChangeLog.before_json.op("?")'), 'admin service filters JSONB by changed key safely');

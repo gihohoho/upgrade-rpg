@@ -1,8 +1,8 @@
 # Current Status
 
-현재 기준: **v179 create apply level/link tables**
+현재 기준: **v180 admin create lifecycle guide**
 
-이 패키지 기준 ZIP: **rpg_v179_level_links_create_apply_ready.zip**
+이 패키지 기준 ZIP: **rpg_v180_create_lifecycle_guide_ready.zip**
 
 ## 현재 상태
 
@@ -16,6 +16,16 @@
 - 관리자 guarded edit apply, stale guard, high risk 확인, change log, rollback 유지.
 - 신규 row create/delete/restore 제한 흐름 유지.
 - 관리자 페이지 레이아웃 shell, sidebar, sticky header, 접기/펼치기 유지.
+
+## v180 완료
+
+- 관리자 페이지에 `신규 row 생성·삭제·복원 점검` 섹션 추가.
+- 생성 blueprint 응답에 `createLifecycle` 메타데이터 추가.
+- 생성/삭제/복원 가능 여부, id/code 삭제 key, combo guard, JSON/asset 잠금 필드 표시.
+- 변경 이력 action 필터를 실제 저장되는 `update`, `rollback`, `create`, `create_delete`, `create_delete_restore` 기준으로 정리.
+- 기존 생성/삭제/복원 guard, dev key, 확인 문구 유지.
+- 새 쓰기 도메인 오픈 없음.
+- DB reset / seed 없이 진행 가능.
 
 ## v179 완료
 
@@ -74,6 +84,7 @@
 
 ## 이전 완료
 
+- v179: `skillLevels`, `enhancementLevels`, `characterSkills` 신규 row 생성 apply 제한 오픈.
 - v178: `itemTemplates`, `dropTableItems` 신규 row 생성 apply 제한 오픈.
 - v177: `skills`, `dropTables` 신규 row 생성 apply 제한 오픈.
 - v176: `bosses` 신규 row 생성 apply 제한 오픈.

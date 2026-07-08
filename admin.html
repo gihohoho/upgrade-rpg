@@ -322,6 +322,43 @@
       font-weight: 900;
     }
 
+    .create-lifecycle-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .create-lifecycle-card {
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 12px;
+      padding: 12px;
+      background: rgba(15, 23, 42, 0.36);
+    }
+
+    .create-lifecycle-card strong {
+      display: block;
+      color: #e2e8f0;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .create-lifecycle-card ol,
+    .create-lifecycle-card ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .create-lifecycle-card code {
+      color: #c4b5fd;
+      font-size: 11px;
+      word-break: break-word;
+    }
+
 
     .catalog-pagination {
       display: flex;
@@ -1161,6 +1198,7 @@
             <a href="#section-admin-write-guard">쓰기 잠금</a>
             <a href="#section-master-catalog">마스터 목록</a>
             <a href="#section-create-blueprint">신규 row 준비</a>
+            <a href="#section-create-lifecycle-guide">생성 흐름 점검</a>
             <a href="#section-master-detail">상세/편집/API확인</a>
             <a href="#section-change-logs">변경 이력</a>
             <a href="#section-save-snapshots">세이브 스냅샷</a>
@@ -1352,6 +1390,14 @@
       <div data-admin-create-blueprint><div class="empty">생성 설계를 불러오면 필수 필드, 기본값, relation 후보가 여기에 표시됩니다.</div></div>
     </section>
 
+    <section class="section" id="section-create-lifecycle-guide" data-admin-collapsible data-admin-section-key="create-lifecycle-guide" aria-label="신규 row 생성 흐름 점검">
+      <div class="section-header">
+        <h2 class="section-title">신규 row 생성·삭제·복원 점검</h2>
+        <div class="section-meta">v180 browser check guide</div>
+      </div>
+      <div data-admin-create-lifecycle-guide><div class="empty">생성 설계를 불러오면 현재 도메인의 생성→삭제→복원 점검 순서가 여기에 표시됩니다.</div></div>
+    </section>
+
 
     <section class="section" id="section-master-detail" data-admin-collapsible data-admin-section-key="master-detail">
       <div class="section-header">
@@ -1392,8 +1438,11 @@
             <label for="admin-change-log-filter-action">액션</label>
             <select id="admin-change-log-filter-action" data-admin-change-log-filter-action>
               <option value="" selected>전체</option>
-              <option value="guarded_update">guarded_update</option>
-              <option value="guarded_rollback">guarded_rollback</option>
+              <option value="update">update</option>
+              <option value="rollback">rollback</option>
+              <option value="create">create</option>
+              <option value="create_delete">create_delete</option>
+              <option value="create_delete_restore">create_delete_restore</option>
             </select>
           </div>
           <div class="filter-field">
@@ -1492,8 +1541,8 @@
     </div>
 
     <footer class="admin-footer" data-admin-footer>
-      <p class="footer-note"><strong>v179 admin create apply level/link tables · v178 admin create apply itemTemplates/dropTableItems</strong> · v177 admin create apply skills/dropTables · v176 admin create apply bosses · static HTML + JS · FastAPI guarded write/rollback APIs</p>
-      <p class="footer-note">legacy smoke marker: v165 admin create apply limited · v171 admin create delete restore · v174 admin collapsed panel style fix</p>
+      <p class="footer-note"><strong>v180 admin create lifecycle guide · v179 admin create apply level/link tables</strong> · v177 admin create apply skills/dropTables · v176 admin create apply bosses · static HTML + JS · FastAPI guarded write/rollback APIs</p>
+      <p class="footer-note">legacy smoke marker: v165 admin create apply limited · v171 admin create delete restore · v174 admin collapsed panel style fix · v178 admin create apply itemTemplates/dropTableItems</p>
     </footer>
   </main>
 

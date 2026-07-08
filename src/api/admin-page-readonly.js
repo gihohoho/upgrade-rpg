@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  const VERSION = "v179.admin-create-apply-level-links";
-  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems";
+  const VERSION = "v180.admin-create-lifecycle-guide";
+  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -11,6 +11,7 @@
   const DEFAULT_MASTER_SORT = "id_asc";
   const DEFAULT_CHANGE_LOG_LIMIT = 20;
   const DEFAULT_CHANGE_LOG_SORT = "created_desc";
+  const ADMIN_CHANGE_LOG_ACTION_FILTERS = ["update", "rollback", "create", "create_delete", "create_delete_restore"];
   const ADMIN_EDIT_APPLY_CONFIRM_TEXT = "APPLY MASTER DATA EDIT";
   const ADMIN_EDIT_HIGH_RISK_CONFIRM_TEXT = "HIGH RISK EDIT";
   const ADMIN_ROLLBACK_CONFIRM_TEXT = "ROLLBACK MASTER DATA EDIT";
@@ -1169,6 +1170,70 @@
     `;
   }
 
+  function formatAdminCreateLifecyclePill(value, trueText, falseText) {
+    return `<span class="pill ${value ? "good" : "blocked"}">${escapeHtml(value ? trueText : falseText)}</span>`;
+  }
+
+  function renderAdminCreateLifecycleGuide(blueprintPayload) {
+    const target = $("[data-admin-create-lifecycle-guide]");
+    if (!target) return;
+    const payload = blueprintPayload && blueprintPayload.domain ? blueprintPayload : {};
+    if (!payload.domain) {
+      target.innerHTML = `<div class="empty">생성 설계를 불러오면 현재 도메인의 생성→삭제→복원 점검 순서가 여기에 표시됩니다.</div>`;
+      return;
+    }
+    const lifecycle = payload.createLifecycle && typeof payload.createLifecycle === "object" ? payload.createLifecycle : {};
+    const order = Array.isArray(lifecycle.browserCheckOrder) ? lifecycle.browserCheckOrder : [];
+    const lockedFields = Array.isArray(lifecycle.lockedFields) ? lifecycle.lockedFields : [];
+    const comboGuards = Array.isArray(lifecycle.comboGuards) ? lifecycle.comboGuards : (Array.isArray(payload.comboGuards) ? payload.comboGuards : []);
+    const confirmTexts = lifecycle.confirmTexts && typeof lifecycle.confirmTexts === "object" ? lifecycle.confirmTexts : {};
+    const relationCount = Number(payload.relationFieldCount || 0);
+    const actionFilters = ADMIN_CHANGE_LOG_ACTION_FILTERS.map((action) => `<code>${escapeHtml(action)}</code>`).join(" · ");
+    const orderItems = order.length ? order.map((item) => `<li>${escapeHtml(item)}</li>`).join("") : `<li>생성 preview/apply 후 change log에서 create 이력을 열어 삭제/복원 미리보기를 확인합니다.</li>`;
+    const lockedText = lockedFields.length ? lockedFields.map((field) => `<code>${escapeHtml(field)}</code>`).join(" · ") : "잠긴 JSON/asset 필드 없음";
+    const comboText = comboGuards.length ? comboGuards.map((guard) => `<code>${escapeHtml(guard.join(" + "))}</code>`).join(" · ") : "combo 중복 검사 없음";
+    target.innerHTML = `
+      <div class="create-lifecycle-grid">
+        <div class="create-lifecycle-card">
+          <strong>${escapeHtml(payload.domainLabel || payload.domain)} 흐름 상태</strong>
+          <div class="draft-preview-summary">
+            ${formatAdminCreateLifecyclePill(lifecycle.createApplyUnlocked !== false && payload.createApplyUnlocked !== false, "생성 가능", "생성 잠금")}
+            ${formatAdminCreateLifecyclePill(lifecycle.createDeleteUnlocked !== false, "삭제 가능", "삭제 잠금")}
+            ${formatAdminCreateLifecyclePill(lifecycle.createDeleteRestoreUnlocked !== false, "복원 가능", "복원 잠금")}
+            <span class="pill warn">key: ${escapeHtml(lifecycle.deleteRestoreKey || lifecycle.identityMode || "id")}</span>
+          </div>
+          <ul>
+            <li>relation 필드: ${escapeHtml(formatValue(relationCount))}개</li>
+            <li>중복 검사: ${comboText}</li>
+            <li>잠금 필드: ${lockedText}</li>
+          </ul>
+        </div>
+        <div class="create-lifecycle-card">
+          <strong>브라우저 점검 순서</strong>
+          <ol>${orderItems}</ol>
+        </div>
+        <div class="create-lifecycle-card">
+          <strong>확인 문구 / 이력 필터</strong>
+          <ul>
+            <li>생성: <code>${escapeHtml(confirmTexts.create || ADMIN_CREATE_APPLY_CONFIRM_TEXT)}</code></li>
+            <li>생성 row 삭제: <code>${escapeHtml(confirmTexts.deleteCreatedRow || ADMIN_CREATE_DELETE_CONFIRM_TEXT)}</code></li>
+            <li>삭제 row 복원: <code>${escapeHtml(confirmTexts.restoreDeletedCreatedRow || ADMIN_CREATE_DELETE_RESTORE_CONFIRM_TEXT)}</code></li>
+            <li>변경 이력 action 필터: ${actionFilters}</li>
+          </ul>
+        </div>
+      </div>
+      <div class="filter-help" style="padding:0 14px 12px;">이 점검 가이드는 DB를 수정하지 않습니다. 실제 적용은 기존처럼 dev key, 확인 문구, 백엔드 preview 안전검사를 모두 통과해야 합니다.</div>
+    `;
+  }
+
+  function getAdminCreateLifecycleGuideReadiness() {
+    return {
+      ok: !!document.querySelector("[data-admin-create-lifecycle-guide]") && typeof renderAdminCreateLifecycleGuide === "function",
+      hasGuideContainer: !!document.querySelector("[data-admin-create-lifecycle-guide]"),
+      actionFilters: ADMIN_CHANGE_LOG_ACTION_FILTERS.slice(),
+    };
+  }
+
   function renderAdminCreateBlueprint(blueprintPayload) {
     currentAdminCreateBlueprintPayload = blueprintPayload && blueprintPayload.status === "loaded" ? blueprintPayload : null;
     const target = $("[data-admin-create-blueprint]");
@@ -1176,10 +1241,12 @@
     const payload = blueprintPayload || {};
     if (payload.status && payload.status !== "loaded") {
       target.innerHTML = `<div class="error">신규 row 생성 설계를 불러오지 못했습니다: ${escapeHtml(payload.status)}</div>`;
+      renderAdminCreateLifecycleGuide({});
       return;
     }
     if (!payload.domain) {
       target.innerHTML = `<div class="empty">생성 설계를 불러오면 필수 필드, 기본값, relation 후보가 여기에 표시됩니다.</div>`;
+      renderAdminCreateLifecycleGuide({});
       return;
     }
     const fields = Array.isArray(payload.fields) ? payload.fields : [];
@@ -1220,6 +1287,7 @@
       ${renderAdminCreateDraft(payload)}
       <div class="filter-help" style="padding:0 14px 12px;">relation 후보 반환=${escapeHtml(formatValue(payload.relationOptionsReturned))} · rawJsonReturned=${escapeHtml(formatValue(payload.rawJsonReturned))} · assetsReturned=${escapeHtml(formatValue(payload.assetsReturned))}</div>
     `;
+    renderAdminCreateLifecycleGuide(payload);
   }
 
   async function refreshAdminCreateBlueprint(options) {
@@ -3875,6 +3943,7 @@
     const snapshotFilterReady = !!document.querySelector("[data-admin-filter-slot-key]");
     const masterCatalogReady = !!document.querySelector("[data-admin-master-domain]");
     const createBlueprintReady = !!document.querySelector("[data-admin-create-blueprint]") && typeof renderAdminCreateBlueprint === "function" && typeof getAdminCreateBlueprintReadiness === "function";
+    const createLifecycleGuideReady = !!document.querySelector("[data-admin-create-lifecycle-guide]") && typeof renderAdminCreateLifecycleGuide === "function" && typeof getAdminCreateLifecycleGuideReadiness === "function";
     const createDraftPreviewReady = typeof previewAdminCreateDraft === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminMasterDataCreate === "function");
     const createApplyReady = typeof applyAdminCreateDraft === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.applyAdminMasterDataCreate === "function");
     const masterDetailReady = !!document.querySelector("[data-admin-master-detail]");
@@ -3893,7 +3962,7 @@
     const createDeleteRollbackReady = typeof previewAdminCreateDeleteRollback === "function" && typeof applyAdminCreateDeleteRollback === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRollback === "function");
     const createDeleteRestoreReady = typeof previewAdminCreateDeleteRestore === "function" && typeof applyAdminCreateDeleteRestore === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRestore === "function");
     const layoutShell = getAdminLayoutShellReadiness();
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -3925,6 +3994,8 @@
     getAdminCreateBlueprintRequiredKeys,
     getAdminCreateBlueprintDefaultDraft,
     getAdminCreateBlueprintReadiness,
+    renderAdminCreateLifecycleGuide,
+    getAdminCreateLifecycleGuideReadiness,
     readAdminCreateDraftValues,
     resetAdminCreateDraft,
     previewAdminCreateDraft,
@@ -4025,6 +4096,8 @@
   window.getAdminCreateBlueprintRequiredKeys = getAdminCreateBlueprintRequiredKeys;
   window.getAdminCreateBlueprintDefaultDraft = getAdminCreateBlueprintDefaultDraft;
   window.getAdminCreateBlueprintReadiness = getAdminCreateBlueprintReadiness;
+  window.renderAdminCreateLifecycleGuide = renderAdminCreateLifecycleGuide;
+  window.getAdminCreateLifecycleGuideReadiness = getAdminCreateLifecycleGuideReadiness;
   window.readAdminCreateDraftValues = readAdminCreateDraftValues;
   window.resetAdminCreateDraft = resetAdminCreateDraft;
   window.previewAdminCreateDraft = previewAdminCreateDraft;

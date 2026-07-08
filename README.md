@@ -1,8 +1,8 @@
 # Upgrade RPG
 
-현재 안정 버전: **v179 create apply level/link tables**
+현재 안정 버전: **v180 admin create lifecycle guide**
 
-새 채팅 인수인계 ZIP: **rpg_v179_level_links_create_apply_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v180_create_lifecycle_guide_ready.zip**
 
 현재 프로젝트는 아직 Vue가 아니라 `index.html + JS + CSS` 기반 RPG 게임입니다. 기존 게임 동작을 유지하면서 FastAPI + PostgreSQL + 관리자 페이지 구조로 단계적으로 분리 중입니다.
 
@@ -21,6 +21,7 @@
 - `skills`, `dropTables` 신규 row create apply 제한 오픈 완료
 - `itemTemplates`, `dropTableItems` 신규 row create apply 제한 오픈 완료
 - `skillLevels`, `enhancementLevels`, `characterSkills` 신규 row create apply 제한 오픈 완료
+- 관리자 신규 row 생성·삭제·복원 점검 가이드 추가 완료
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -45,7 +46,7 @@ bash tools/run_smoke_all.sh
 
 ## 다음 추천 단계
 
-`skillLevels`, `enhancementLevels`, `characterSkills`까지 생성 apply가 열렸으므로 다음은 브라우저에서 레벨/연결 row 생성·삭제·복원 흐름을 확인하는 것이 안전합니다. 이후에는 관리자 페이지 코드 분리를 준비하는 것이 좋습니다.
+다음은 브라우저에서 `신규 row 생성·삭제·복원 점검` 섹션을 보면서 레벨/연결 row 생성·삭제·복원 흐름을 실제 확인하는 것이 안전합니다. 이후에는 관리자 페이지 코드 분리를 준비하는 것이 좋습니다.
 
 ## DB / env
 

@@ -57,6 +57,7 @@ class AdminService:
     MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT = "RESTORE DELETED CREATED ROW"
     MASTER_CREATE_APPLY_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses", "skills", "dropTables", "itemTemplates", "dropTableItems", "skillLevels", "enhancementLevels", "characterSkills"}
     MASTER_CREATE_DELETE_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses", "skills", "dropTables", "itemTemplates", "dropTableItems", "skillLevels", "enhancementLevels", "characterSkills"}
+    ADMIN_CHANGE_LOG_ACTION_FILTERS: set[str] = {"update", "rollback", "create", "create_delete", "create_delete_restore"}
 
     MASTER_EDIT_ALLOWED_FIELDS: dict[str, set[str]] = {
         "itemTemplates": {"name", "item_type", "description", "grade", "stackable", "equip_slot", "enhance_group_code", "admin_note"},
@@ -269,6 +270,45 @@ class AdminService:
             {"key": "is_default", "required": False, "inputKind": "boolean-select", "defaultValue": True},
         ],
     }
+
+    def _master_create_lifecycle_payload(self, domain: str) -> dict[str, Any]:
+        create_unlocked = domain in self.MASTER_CREATE_APPLY_ALLOWED_DOMAINS
+        delete_unlocked = domain in self.MASTER_CREATE_DELETE_ALLOWED_DOMAINS
+        field_defs = self.MASTER_CREATE_BLUEPRINT_FIELDS.get(domain) or []
+        has_code_field = any(str(field.get("key") or "") == "code" for field in field_defs)
+        locked_fields = [str(field.get("key")) for field in field_defs if str(field.get("inputKind") or "") == "json-readonly" or str(field.get("key") or "").endswith("_json") or self._is_asset_field(str(field.get("key") or ""))]
+        combo_guards: list[list[str]] = []
+        for field in field_defs:
+            combo_guard = field.get("comboGuard") if isinstance(field.get("comboGuard"), list) else None
+            if combo_guard and combo_guard not in combo_guards:
+                combo_guards.append(combo_guard)
+        return {
+            "createApplyUnlocked": create_unlocked,
+            "createDeleteUnlocked": delete_unlocked,
+            "createDeleteRestoreUnlocked": delete_unlocked,
+            "identityMode": "code+id" if has_code_field else "id",
+            "deleteRestoreKey": "code/id" if has_code_field else "id",
+            "confirmTexts": {
+                "create": self.MASTER_CREATE_APPLY_CONFIRM_TEXT,
+                "deleteCreatedRow": self.MASTER_CREATE_DELETE_CONFIRM_TEXT,
+                "restoreDeletedCreatedRow": self.MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT,
+            },
+            "comboGuards": combo_guards,
+            "lockedFieldCount": len(locked_fields),
+            "lockedFields": locked_fields[:30],
+            "jsonAssetLocked": bool(locked_fields),
+            "manualCheckRequired": True,
+            "browserCheckOrder": [
+                "생성 설계 불러오기",
+                "relation 후보/검색 확인",
+                "생성 초안 검증",
+                "실제 생성 적용",
+                "change log에서 create 이력 열기",
+                "생성 row 삭제 미리보기/apply",
+                "change log에서 create_delete 이력 열기",
+                "삭제 row 복원 미리보기/apply",
+            ],
+        }
 
     async def preview_change(self, target_type: str, before: dict, after: dict) -> dict:
         return {
@@ -2396,6 +2436,7 @@ class AdminService:
                 "insertLocked": True,
                 "confirmTextRequired": self.MASTER_CREATE_APPLY_CONFIRM_TEXT,
                 "allowedCreateApplyDomains": sorted(self.MASTER_CREATE_APPLY_ALLOWED_DOMAINS),
+                "createLifecycle": self._master_create_lifecycle_payload(domain),
                 "domain": domain,
                 "domainLabel": domain,
                 "description": None,
@@ -2459,6 +2500,7 @@ class AdminService:
             "insertLocked": not create_apply_unlocked,
             "confirmTextRequired": self.MASTER_CREATE_APPLY_CONFIRM_TEXT,
             "allowedCreateApplyDomains": sorted(self.MASTER_CREATE_APPLY_ALLOWED_DOMAINS),
+            "createLifecycle": self._master_create_lifecycle_payload(domain),
             "domain": domain,
             "domainLabel": config["label"],
             "description": config.get("description"),
@@ -3080,13 +3122,18 @@ class AdminService:
         else:
             clean_applied = str(applied).strip().lower() in {"true", "1", "yes", "applied"}
 
+        safe_action = self._clean_filter_text(action)
+        if safe_action and safe_action not in self.ADMIN_CHANGE_LOG_ACTION_FILTERS:
+            safe_action = None
+
         active = {
             "targetType": self._clean_filter_text(target_type),
             "targetId": self._clean_filter_text(target_id),
-            "action": self._clean_filter_text(action),
+            "action": safe_action,
             "changedKey": safe_changed_key,
             "applied": clean_applied,
             "sort": safe_sort,
+            "allowedActions": sorted(self.ADMIN_CHANGE_LOG_ACTION_FILTERS),
         }
         active["hasActiveFilters"] = any(
             active.get(key) not in (None, "") for key in ("targetType", "targetId", "action", "changedKey", "applied")

@@ -80,9 +80,9 @@ uvicorn app.main:app --reload
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v179: create apply level/link tables**
-- 새 채팅용 ZIP: **rpg_v179_level_links_create_apply_ready.zip**
-- 이 ZIP은 `skillLevels`, `enhancementLevels`, `characterSkills` 신규 row 생성 apply 제한 오픈과 id 기반 생성 row 삭제/복원 안전검사 확장을 포함합니다.
+- 최신 안정 버전: **v180: admin create lifecycle guide**
+- 새 채팅용 ZIP: **rpg_v180_create_lifecycle_guide_ready.zip**
+- 이 ZIP은 신규 row 생성·삭제·복원 점검 UI, createLifecycle 메타데이터, change log action filter 정리를 포함합니다.
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -140,6 +140,18 @@ uvicorn app.main:app --reload
 44. `itemTemplates`, `dropTableItems` 생성 row 삭제/복원 allow-list 및 dependency guard 완료.
 45. `skillLevels`, `enhancementLevels`, `characterSkills` 신규 row create apply 제한 오픈 완료.
 46. `skillLevels`, `enhancementLevels`, `characterSkills` 생성 row 삭제/복원 allow-list 및 id 기반 guard 완료.
+47. 신규 row 생성·삭제·복원 점검 UI와 createLifecycle 메타데이터 추가 완료.
+48. change log action filter를 실제 action 값 기준으로 정리 완료.
+
+## v180 admin create lifecycle guide
+
+- 관리자 페이지에 `신규 row 생성·삭제·복원 점검` 섹션을 추가했습니다.
+- `create-blueprint` 응답에 `createLifecycle` 메타데이터를 추가했습니다.
+- 생성/삭제/복원 가능 여부, id/code 삭제 key, combo guard, JSON/asset 잠금 필드를 표시합니다.
+- 변경 이력 action 필터를 실제 저장되는 `update`, `rollback`, `create`, `create_delete`, `create_delete_restore` 기준으로 정리했습니다.
+- 새 쓰기 도메인을 열지 않았고 기존 dev key/확인 문구/preview guard는 유지합니다.
+- DB schema 변경 없음, DB reset / seed 필요 없음.
+- `.env`, `.gitignore` 변경 없음.
 
 ## v179 create apply level/link tables
 
@@ -253,7 +265,7 @@ true
 
 ## 다음 추천 단계
 
-다음은 **skillLevels/enhancementLevels/characterSkills 생성·삭제·복원 브라우저 검증**이 좋습니다.
+다음은 **신규 row 생성·삭제·복원 점검 섹션을 보면서 skillLevels/enhancementLevels/characterSkills 생성·삭제·복원 브라우저 검증**이 좋습니다.
 
 안전한 순서:
 

@@ -27,6 +27,7 @@
 - `ADMIN_CREATE_APPLY_SKILLS_DROPTABLES.md` — skills/dropTables 생성 apply 제한 오픈
 - `ADMIN_CREATE_APPLY_ITEMS_DROPITEMS.md` — itemTemplates/dropTableItems 생성 apply 제한 오픈
 - `ADMIN_CREATE_APPLY_LEVEL_LINKS.md` — skillLevels/enhancementLevels/characterSkills 생성 apply 제한 오픈
+- `ADMIN_CREATE_LIFECYCLE_GUIDE.md` — 생성→삭제→복원 브라우저 점검 가이드
 - `ADMIN_CREATE_DELETE_ROLLBACK.md` — 생성 row 삭제 preview/apply
 - `ADMIN_CREATE_DELETE_RESTORE.md` — 삭제 row 복원 preview/apply
 - `ADMIN_CHANGE_LOG_RELATION_TOOLS.md` — 변경 이력 / rollback preview relation label 강화

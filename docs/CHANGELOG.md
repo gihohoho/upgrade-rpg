@@ -1,5 +1,14 @@
 # Changelog
 
+## v180 - Admin Create Lifecycle Guide
+
+- 관리자 페이지에 `신규 row 생성·삭제·복원 점검` 섹션을 추가했습니다.
+- 생성 blueprint 응답에 `createLifecycle` 메타데이터를 추가했습니다.
+- 생성/삭제/복원 가능 여부, id/code 삭제 key, combo guard, JSON/asset 잠금 필드를 한 화면에서 확인할 수 있습니다.
+- 변경 이력 action 필터를 실제 저장되는 `update`, `rollback`, `create`, `create_delete`, `create_delete_restore` 기준으로 정리했습니다.
+- 새 쓰기 도메인을 열지 않았고 기존 create/delete/restore guard는 유지했습니다.
+- DB schema 변경 없음, DB reset / seed 필요 없음.
+
 ## v179 - Create Apply Level and Link Tables
 
 - `skillLevels`, `enhancementLevels`, `characterSkills` 신규 row 생성 apply 제한 오픈.

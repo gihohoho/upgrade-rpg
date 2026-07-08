@@ -64,10 +64,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v179: create apply level/link tables
+v180: admin create lifecycle guide
 
 현재 인수인계 ZIP:
-rpg_v179_level_links_create_apply_ready.zip
+rpg_v180_create_lifecycle_guide_ready.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -143,7 +143,7 @@ bash tools/run_smoke_core.sh
 bash tools/run_smoke_all.sh
 
 다음 추천 단계:
-skillLevels/enhancementLevels/characterSkills 생성/삭제/복원 브라우저 확인부터 추천.
+신규 row 생성·삭제·복원 점검 섹션을 보면서 skillLevels/enhancementLevels/characterSkills 생성/삭제/복원 브라우저 확인부터 추천.
 그 다음 관리자 페이지 코드 분리 또는 create/delete/restore UI dependency 표시 강화 추천.
 
 v179에서 완료된 일:
@@ -160,3 +160,11 @@ v179에서 완료된 일:
 현재 인수인계 패키지 작업:
 - DB schema 변경 없음.
 - DB reset / seed 필요 없음.
+
+
+v180에서 완료된 일:
+1. 관리자 페이지에 신규 row 생성·삭제·복원 점검 섹션 추가.
+2. create-blueprint 응답에 createLifecycle 메타데이터 추가.
+3. change log action filter를 update/rollback/create/create_delete/create_delete_restore 기준으로 정리.
+4. 새 쓰기 도메인 오픈 없음.
+5. DB schema 변경 없음, DB reset / seed 필요 없음.
