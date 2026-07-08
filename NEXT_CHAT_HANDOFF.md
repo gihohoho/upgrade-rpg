@@ -80,9 +80,9 @@ uvicorn app.main:app --reload
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v180: admin create lifecycle guide**
-- 새 채팅용 ZIP: **rpg_v180_create_lifecycle_guide_ready.zip**
-- 이 ZIP은 신규 row 생성·삭제·복원 점검 UI, createLifecycle 메타데이터, change log action filter 정리를 포함합니다.
+- 최신 안정 버전: **v181: admin create lifecycle guard helper**
+- 새 채팅용 ZIP: **rpg_v181_create_lifecycle_guard_helper_ready.zip**
+- 이 ZIP은 신규 row 생성·삭제·복원 점검 UI, createLifecycle 삭제 차단 기준 표시, change log action 바로가기를 포함합니다.
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -142,6 +142,20 @@ uvicorn app.main:app --reload
 46. `skillLevels`, `enhancementLevels`, `characterSkills` 생성 row 삭제/복원 allow-list 및 id 기반 guard 완료.
 47. 신규 row 생성·삭제·복원 점검 UI와 createLifecycle 메타데이터 추가 완료.
 48. change log action filter를 실제 action 값 기준으로 정리 완료.
+49. 생성 lifecycle 삭제 preview 차단 기준 표시와 변경 이력 action 바로가기 완료.
+
+
+## v181 admin create lifecycle guard helper
+
+- `createLifecycle` 메타데이터에 `deleteDependencyGuards`, `deleteGuardMode`를 추가했습니다.
+- 관리자 `신규 row 생성·삭제·복원 점검` 섹션에 삭제 preview 차단 기준을 표시합니다.
+- 변경 이력 action 필터 바로가기 버튼을 추가했습니다.
+  - `create` 이력 보기
+  - `create_delete` 이력 보기
+  - `create_delete_restore` 이력 보기
+- `checkAdminReadOnlyPageReady().createLifecycleDependencyGuideReady`가 true면 정상입니다.
+- 새 쓰기 도메인 오픈 없음, DB schema 변경 없음, DB reset / seed 필요 없음.
+- `.env`, `.gitignore` 변경 없음.
 
 ## v180 admin create lifecycle guide
 
@@ -221,7 +235,7 @@ uvicorn app.main:app --reload
 
 ## DB / seed
 
-- v179 기준 DB reset / seed 필요 없음.
+- v181 기준 DB reset / seed 필요 없음.
 - DB schema 변경 없음.
 - `.env`, `.gitignore` 변경 없음.
 
@@ -237,7 +251,7 @@ bash tools/run_smoke_core.sh
 bash tools/run_smoke_all.sh
 ```
 
-v179 작업 후 둘 다 통과했습니다.
+v181 작업 후 둘 다 통과했습니다.
 
 ## 브라우저 확인용
 

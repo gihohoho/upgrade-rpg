@@ -271,6 +271,51 @@ class AdminService:
         ],
     }
 
+    def _master_create_lifecycle_dependency_guards(self, domain: str) -> list[dict[str, Any]]:
+        guard_map: dict[str, list[dict[str, Any]]] = {
+            "characters": [
+                {"label": "캐릭터 스킬 연결", "target": "character_skills.character_code", "blocksDelete": True, "note": "기본 스킬 연결이 있으면 캐릭터 삭제를 막습니다."},
+                {"label": "유저 캐릭터 스킬", "target": "user_character_skills.character_code", "blocksDelete": True, "note": "유저 진행 데이터에서 사용 중이면 삭제를 막습니다."},
+                {"label": "유저 장비 슬롯", "target": "user_equipment_slots.character_code", "blocksDelete": True, "note": "장비 슬롯 데이터에서 사용 중이면 삭제를 막습니다."},
+                {"label": "유저 현재 캐릭터", "target": "user_profiles.current_character_id", "blocksDelete": True, "note": "현재 선택 캐릭터로 사용 중이면 삭제를 막습니다."},
+            ],
+            "enhancementGroups": [
+                {"label": "강화 단계", "target": "enhancement_levels.group_code", "blocksDelete": True, "note": "강화 단계가 있으면 그룹 삭제를 막습니다."},
+                {"label": "아이템 강화 그룹", "target": "item_templates.enhance_group_code", "blocksDelete": True, "note": "아이템 템플릿에서 사용 중이면 삭제를 막습니다."},
+            ],
+            "fieldZones": [
+                {"label": "필드 드랍 테이블", "target": "drop_tables.owner_type=field + owner_code", "blocksDelete": True, "note": "필드에 연결된 드랍 테이블이 있으면 삭제를 막습니다."},
+            ],
+            "bosses": [
+                {"label": "보스 드랍 테이블", "target": "drop_tables.owner_type=boss + owner_code", "blocksDelete": True, "note": "보스에 연결된 드랍 테이블이 있으면 삭제를 막습니다."},
+            ],
+            "skills": [
+                {"label": "스킬 레벨", "target": "skill_levels.skill_code", "blocksDelete": True, "note": "스킬 레벨이 있으면 삭제를 막습니다."},
+                {"label": "캐릭터 스킬 연결", "target": "character_skills.skill_code", "blocksDelete": True, "note": "캐릭터 기본 스킬로 쓰이면 삭제를 막습니다."},
+                {"label": "유저 캐릭터 스킬", "target": "user_character_skills.skill_code", "blocksDelete": True, "note": "유저 진행 데이터에서 사용 중이면 삭제를 막습니다."},
+            ],
+            "dropTables": [
+                {"label": "드랍 아이템", "target": "drop_table_items.drop_table_code", "blocksDelete": True, "note": "드랍 아이템 row가 있으면 드랍 테이블 삭제를 막습니다."},
+            ],
+            "itemTemplates": [
+                {"label": "드랍 아이템", "target": "drop_table_items.item_template_code", "blocksDelete": True, "note": "드랍 테이블에서 사용 중이면 아이템 템플릿 삭제를 막습니다."},
+                {"label": "유저 아이템 인스턴스", "target": "item_instances.template_code", "blocksDelete": True, "note": "유저 인벤토리/창고에 생성된 아이템이면 삭제를 막습니다."},
+            ],
+            "dropTableItems": [
+                {"label": "id 기반 leaf row", "target": "drop_table_items.id", "blocksDelete": False, "note": "하위 연결이 없는 row라 현재값 일치 검사 후 id 기준으로 삭제합니다."},
+            ],
+            "skillLevels": [
+                {"label": "id 기반 leaf row", "target": "skill_levels.id", "blocksDelete": False, "note": "스킬을 참조하는 레벨 row라 현재값 일치 검사 후 id 기준으로 삭제합니다."},
+            ],
+            "enhancementLevels": [
+                {"label": "id 기반 leaf row", "target": "enhancement_levels.id", "blocksDelete": False, "note": "강화 그룹을 참조하는 단계 row라 현재값 일치 검사 후 id 기준으로 삭제합니다."},
+            ],
+            "characterSkills": [
+                {"label": "id 기반 leaf row", "target": "character_skills.id", "blocksDelete": False, "note": "캐릭터와 스킬을 연결하는 row라 현재값 일치 검사 후 id 기준으로 삭제합니다."},
+            ],
+        }
+        return guard_map.get(domain, [])
+
     def _master_create_lifecycle_payload(self, domain: str) -> dict[str, Any]:
         create_unlocked = domain in self.MASTER_CREATE_APPLY_ALLOWED_DOMAINS
         delete_unlocked = domain in self.MASTER_CREATE_DELETE_ALLOWED_DOMAINS
@@ -282,6 +327,8 @@ class AdminService:
             combo_guard = field.get("comboGuard") if isinstance(field.get("comboGuard"), list) else None
             if combo_guard and combo_guard not in combo_guards:
                 combo_guards.append(combo_guard)
+        dependency_guards = self._master_create_lifecycle_dependency_guards(domain)
+        dependency_blocker_count = sum(1 for guard in dependency_guards if guard.get("blocksDelete"))
         return {
             "createApplyUnlocked": create_unlocked,
             "createDeleteUnlocked": delete_unlocked,
@@ -297,6 +344,10 @@ class AdminService:
             "lockedFieldCount": len(locked_fields),
             "lockedFields": locked_fields[:30],
             "jsonAssetLocked": bool(locked_fields),
+            "deleteDependencyGuards": dependency_guards,
+            "deleteDependencyGuardCount": len(dependency_guards),
+            "deleteDependencyBlockerGuardCount": dependency_blocker_count,
+            "deleteGuardMode": "dependency-blocking" if dependency_blocker_count else "leaf-id-current-match",
             "manualCheckRequired": True,
             "browserCheckOrder": [
                 "생성 설계 불러오기",

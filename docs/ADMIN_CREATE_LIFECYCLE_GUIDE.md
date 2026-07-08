@@ -1,6 +1,8 @@
 # Admin Create Lifecycle Guide
 
-현재 기준: **v180 admin create lifecycle guide**
+현재 기준: **v181 admin create lifecycle guard helper**
+
+이 문서는 v180 생성 lifecycle guide를 설명하고, v181에서 추가된 삭제 차단 기준 표시도 함께 추적합니다.
 
 ## 목적
 
@@ -18,6 +20,7 @@ v180은 새 쓰기 기능을 크게 열지 않고, 기존 생성/삭제/복원 �
 - combo guard 표시.
 - 생성/삭제/복원 확인 문구 표시.
 - change log action filter를 현재 실제 이력 액션 기준으로 정리.
+- v181에서 삭제 preview 차단 기준과 변경 이력 action 바로가기 추가.
 
 ## change log action filter
 
@@ -47,6 +50,8 @@ v180부터 관리자 변경 이력 필터의 action 선택지는 실제 저장�
 - `lockedFields`
 - `jsonAssetLocked`
 - `browserCheckOrder`
+- `deleteDependencyGuards`
+- `deleteGuardMode`
 
 ## 안전 범위
 

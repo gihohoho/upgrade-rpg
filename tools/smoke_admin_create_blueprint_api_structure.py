@@ -45,6 +45,8 @@ assert_contains(
         "relationOptionsReturned",
         "defaultDraft",
         "comboGuards",
+        "deleteDependencyGuards",
+        "deleteGuardMode",
     ],
 )
 

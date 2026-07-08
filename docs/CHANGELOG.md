@@ -1,5 +1,14 @@
 # Changelog
 
+## v181 - Admin Create Lifecycle Guard Helper
+
+- `createLifecycle` 메타데이터에 도메인별 삭제 preview 차단 기준을 추가했습니다.
+- 관리자 `신규 row 생성·삭제·복원 점검` 섹션에 삭제 차단 기준 카드를 추가했습니다.
+- 변경 이력 action 필터 바로가기 버튼을 추가했습니다.
+- `checkAdminReadOnlyPageReady()`에 `createLifecycleDependencyGuideReady` 상태를 추가했습니다.
+- 새 쓰기 도메인은 열지 않았고 기존 create/delete/restore guard는 유지했습니다.
+- DB schema 변경 없음, DB reset / seed 필요 없음.
+
 ## v180 - Admin Create Lifecycle Guide
 
 - 관리자 페이지에 `신규 row 생성·삭제·복원 점검` 섹션을 추가했습니다.

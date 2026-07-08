@@ -330,6 +330,10 @@
       border-bottom: 1px solid rgba(148, 163, 184, 0.14);
     }
 
+    .create-lifecycle-grid-wide {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
     .create-lifecycle-card {
       border: 1px solid rgba(148, 163, 184, 0.18);
       border-radius: 12px;
@@ -357,6 +361,44 @@
       color: #c4b5fd;
       font-size: 11px;
       word-break: break-word;
+    }
+
+    .create-lifecycle-card-wide {
+      grid-column: 1 / -1;
+    }
+
+    .create-lifecycle-guard-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin: 8px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .create-lifecycle-guard-list li {
+      display: grid;
+      gap: 4px;
+      padding: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 10px;
+      background: rgba(2, 6, 23, 0.26);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .create-lifecycle-guard-list strong {
+      margin: 0;
+      color: #e2e8f0;
+      font-size: 12px;
+    }
+
+    .create-lifecycle-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
     }
 
 
@@ -1149,6 +1191,9 @@
       .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .detail-grid { grid-template-columns: 1fr; }
       .edit-draft-grid { grid-template-columns: 1fr; }
+      .create-lifecycle-grid,
+      .create-lifecycle-grid-wide { grid-template-columns: 1fr; }
+      .create-lifecycle-guard-list { grid-template-columns: 1fr; }
       .locked-field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .field-help-grid { grid-template-columns: 1fr; }
     }
@@ -1159,6 +1204,7 @@
       .filter-grid { grid-template-columns: 1fr; }
       .grid { grid-template-columns: 1fr; }
       .locked-field-grid { grid-template-columns: 1fr; }
+      .create-lifecycle-actions { flex-direction: column; }
       th, td { padding: 8px 10px; }
     }
   </style>
@@ -1393,7 +1439,7 @@
     <section class="section" id="section-create-lifecycle-guide" data-admin-collapsible data-admin-section-key="create-lifecycle-guide" aria-label="신규 row 생성 흐름 점검">
       <div class="section-header">
         <h2 class="section-title">신규 row 생성·삭제·복원 점검</h2>
-        <div class="section-meta">v180 browser check guide</div>
+        <div class="section-meta">v181 dependency/action helper</div>
       </div>
       <div data-admin-create-lifecycle-guide><div class="empty">생성 설계를 불러오면 현재 도메인의 생성→삭제→복원 점검 순서가 여기에 표시됩니다.</div></div>
     </section>
@@ -1541,8 +1587,8 @@
     </div>
 
     <footer class="admin-footer" data-admin-footer>
-      <p class="footer-note"><strong>v180 admin create lifecycle guide · v179 admin create apply level/link tables</strong> · v177 admin create apply skills/dropTables · v176 admin create apply bosses · static HTML + JS · FastAPI guarded write/rollback APIs</p>
-      <p class="footer-note">legacy smoke marker: v165 admin create apply limited · v171 admin create delete restore · v174 admin collapsed panel style fix · v178 admin create apply itemTemplates/dropTableItems</p>
+      <p class="footer-note"><strong>v181 admin create lifecycle guard helper · v180 admin create lifecycle guide</strong> · v177 admin create apply skills/dropTables · v176 admin create apply bosses · static HTML + JS · FastAPI guarded write/rollback APIs</p>
+      <p class="footer-note">legacy smoke marker: v165 admin create apply limited · v171 admin create delete restore · v174 admin collapsed panel style fix · v178 admin create apply itemTemplates/dropTableItems · v179 admin create apply level/link tables</p>
     </footer>
   </main>
 

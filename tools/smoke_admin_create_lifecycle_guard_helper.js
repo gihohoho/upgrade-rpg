@@ -21,61 +21,36 @@ function assertContains(file, patterns) {
 }
 
 assertContains("admin.html", [
-  "section-create-lifecycle-guide",
-  "data-admin-create-lifecycle-guide",
-  "신규 row 생성·삭제·복원 점검",
   "v181 dependency/action helper",
-  "create_delete_restore",
+  "create-lifecycle-guard-list",
+  "create-lifecycle-actions",
   "v181 admin create lifecycle guard helper",
-  "v180 admin create lifecycle guide",
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
   "v181.admin-create-lifecycle-guard-helper",
-  "v180.admin-create-lifecycle-guide",
-  "v179.admin-create-apply-level-links",
-  "ADMIN_CHANGE_LOG_ACTION_FILTERS",
-  "renderAdminCreateLifecycleGuide",
-  "getAdminCreateLifecycleGuideReadiness",
   "renderAdminCreateLifecycleDependencyGuards",
+  "renderAdminCreateLifecycleActionShortcuts",
   "applyAdminChangeLogActionShortcut",
-  "createLifecycleGuideReady",
+  "set-change-log-action-filter",
+  "data-admin-change-log-action-shortcut",
   "createLifecycleDependencyGuideReady",
-  "createLifecycle",
-  "browserCheckOrder",
   "deleteDependencyGuards",
   "deleteGuardMode",
-  "CREATE MASTER DATA ROW",
-  "DELETE CREATED MASTER DATA ROW",
-  "RESTORE DELETED CREATED ROW",
 ]);
 
 assertContains("backend/app/services/admin_service.py", [
-  "ADMIN_CHANGE_LOG_ACTION_FILTERS",
-  "_master_create_lifecycle_payload",
-  "createLifecycle",
-  "identityMode",
-  "deleteRestoreKey",
   "_master_create_lifecycle_dependency_guards",
   "deleteDependencyGuards",
+  "deleteDependencyGuardCount",
+  "deleteDependencyBlockerGuardCount",
   "deleteGuardMode",
-  "browserCheckOrder",
-  "deleteDependencyGuards",
-  "deleteGuardMode",
-  "create_delete_restore",
+  "dependency-blocking",
+  "leaf-id-current-match",
 ]);
 
 assertContains("tools/run_smoke_core.sh", [
-  "node tools/smoke_admin_create_lifecycle_guide.js",
+  "node tools/smoke_admin_create_lifecycle_guard_helper.js",
 ]);
 
-assertContains("docs/ADMIN_CREATE_LIFECYCLE_GUIDE.md", [
-  "Admin Create Lifecycle Guide",
-  "v181",
-  "v180",
-  "생성→삭제→복원",
-  "change log action filter",
-  "DB reset / seed",
-]);
-
-console.log("admin create lifecycle guide smoke test passed");
+console.log("admin create lifecycle guard helper smoke test passed");

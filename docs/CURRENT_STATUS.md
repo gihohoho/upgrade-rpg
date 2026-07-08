@@ -1,8 +1,8 @@
 # Current Status
 
-현재 기준: **v180 admin create lifecycle guide**
+현재 기준: **v181 admin create lifecycle guard helper**
 
-이 패키지 기준 ZIP: **rpg_v180_create_lifecycle_guide_ready.zip**
+이 패키지 기준 ZIP: **rpg_v181_create_lifecycle_guard_helper_ready.zip**
 
 ## 현재 상태
 
@@ -17,6 +17,18 @@
 - 신규 row create/delete/restore 제한 흐름 유지.
 - 관리자 페이지 레이아웃 shell, sidebar, sticky header, 접기/펼치기 유지.
 
+## v181 완료
+
+- `createLifecycle` 메타데이터에 도메인별 삭제 preview 차단 기준 추가.
+- 관리자 페이지 `신규 row 생성·삭제·복원 점검` 섹션에 삭제 차단 기준 표시 추가.
+- 변경 이력 action 필터 바로가기 버튼 추가.
+  - `create` 이력 보기
+  - `create_delete` 이력 보기
+  - `create_delete_restore` 이력 보기
+- readiness에 `createLifecycleDependencyGuideReady` 추가.
+- 새 쓰기 도메인 오픈 없음.
+- DB reset / seed 없이 진행 가능.
+
 ## v180 완료
 
 - 관리자 페이지에 `신규 row 생성·삭제·복원 점검` 섹션 추가.
@@ -25,31 +37,6 @@
 - 변경 이력 action 필터를 실제 저장되는 `update`, `rollback`, `create`, `create_delete`, `create_delete_restore` 기준으로 정리.
 - 기존 생성/삭제/복원 guard, dev key, 확인 문구 유지.
 - 새 쓰기 도메인 오픈 없음.
-- DB reset / seed 없이 진행 가능.
-
-## v179 완료
-
-- 신규 row 실제 생성 apply 제한 도메인에 `skillLevels`, `enhancementLevels`, `characterSkills` 추가.
-- 위 3개 도메인 생성 row 삭제/복원 allow-list 추가.
-- `skillLevels`, `enhancementLevels`, `characterSkills`는 `code` 없는 row라 id 기반 생성 row 삭제/복원 흐름을 사용.
-- `skillLevels` 생성 검증 추가/유지:
-  - `skill_code`는 `skills.code`에 존재해야 함.
-  - `level >= 0`
-  - `skill_code + level` 중복 차단.
-- `enhancementLevels` 생성 검증 추가/유지:
-  - `group_code`는 `enhancementGroups.code`에 존재해야 함.
-  - `from_level >= 0`
-  - `to_level > from_level`
-  - `success_rate >= 0`
-  - `gold_cost >= 0`
-  - `group_code + from_level` 중복 차단.
-- `characterSkills` 생성 검증 추가/유지:
-  - `character_code`는 `characters.code`에 존재해야 함.
-  - `skill_code`는 `skills.code`에 존재해야 함.
-  - `character_code + skill_code` 중복 차단.
-  - `sort_order >= 0`
-- JSON 계열 필드는 생성 입력에서 계속 잠금.
-- 관리자 생성 준비 UI 안내 문구를 `characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems/skillLevels/enhancementLevels/characterSkills` 기준으로 갱신.
 - DB reset / seed 없이 진행 가능.
 
 ## 제한 생성/삭제/복원 상태
@@ -84,6 +71,8 @@
 
 ## 이전 완료
 
+- v181: 생성 lifecycle 삭제 차단 기준 표시 + 변경 이력 action 바로가기.
+- v180: 생성·삭제·복원 브라우저 점검 UI.
 - v179: `skillLevels`, `enhancementLevels`, `characterSkills` 신규 row 생성 apply 제한 오픈.
 - v178: `itemTemplates`, `dropTableItems` 신규 row 생성 apply 제한 오픈.
 - v177: `skills`, `dropTables` 신규 row 생성 apply 제한 오픈.
