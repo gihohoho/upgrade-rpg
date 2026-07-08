@@ -1,8 +1,8 @@
 # Upgrade RPG
 
-현재 안정 버전: **v187 admin change logs split**
+현재 안정 버전: **v188 admin create lifecycle split contract**
 
-새 채팅 인수인계 ZIP: **rpg_v187_admin_change_logs_split_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v188_admin_create_lifecycle_split_contract_ready.zip**
 
 현재 프로젝트는 아직 Vue가 아니라 `index.html + JS + CSS` 기반 RPG 게임입니다. 기존 게임 동작을 유지하면서 FastAPI + PostgreSQL + 관리자 페이지 구조로 단계적으로 분리 중입니다.
 
@@ -26,6 +26,7 @@
 - 생성→삭제→복원 일괄 점검 버튼 추가 완료
 - 관리자 JS 분리 전 readiness 진단 UI 추가 완료
 - 관리자 change logs 구현 1차 외부 파일 분리 완료
+- 관리자 create lifecycle 실제 분리 전 계약 고정 완료
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -50,7 +51,7 @@ bash tools/run_smoke_all.sh
 
 ## 다음 추천 단계
 
-다음은 `create lifecycle` 분리 전 계약 smoke를 추가하는 것이 좋습니다. 생성→삭제→복원 batch check는 DB 쓰기 흐름이 있으므로, 실제 분리 전에 함수/window/DOM 계약을 먼저 고정하는 방향이 안전합니다.
+다음은 `create lifecycle` 실제 분리 1단계가 좋습니다. v188에서 함수/window/DOM/확인 문구 계약을 고정했으므로, v189에서는 `src/api/admin/admin-create-lifecycle.js`를 만들고 `admin-page-readonly.js`에는 호환 wrapper를 남기는 방향이 안전합니다.
 
 ## DB / env
 
@@ -87,4 +88,15 @@ bash tools/run_smoke_all.sh
 - `admin-page-readonly.js`에는 호환 wrapper 유지
 - `admin.html` script 순서: game api → layout shell → change logs → admin page
 - 새 smoke `tools/smoke_admin_change_logs_split.js` 추가
+- DB reset / seed 필요 없음
+
+
+## v188 완료
+
+- `create lifecycle` 실제 분리 전 계약을 `contract-frozen-v188` 상태로 고정
+- 다음 후보 파일 `src/api/admin/admin-create-lifecycle.js` 고정
+- 생성 초안/생성 apply/생성→삭제→복원 batch check 함수 목록 고정
+- 확인 문구/DOM target/delegated action 목록 고정
+- 새 smoke `tools/smoke_admin_create_lifecycle_split_contract.js` 추가
+- 실제 JS 파일 분리는 아직 하지 않음
 - DB reset / seed 필요 없음

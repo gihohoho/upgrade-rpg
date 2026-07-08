@@ -37,6 +37,7 @@
 - `ADMIN_CREATE_DELETE_RESTORE.md` — 삭제 row 복원 preview/apply
 - `ADMIN_CHANGE_LOG_RELATION_TOOLS.md` — 변경 이력 / rollback preview relation label 강화
 - `ADMIN_CHANGE_LOGS_SPLIT.md` — v187 change logs 실제 1차 분리
+- `ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md` — v188 create lifecycle 분리 전 계약 고정
 
 ## 3. 관리자 편집/관계 안전장치 문서
 

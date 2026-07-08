@@ -1,3 +1,12 @@
+# v188 admin create lifecycle split contract
+
+- create lifecycle 실제 분리 전 계약을 `contract-frozen-v188` 상태로 고정했습니다.
+- 다음 후보 파일명을 `src/api/admin/admin-create-lifecycle.js`로 고정했습니다.
+- 생성 초안, 생성 preview/apply, lifecycle guide, batch check 관련 API/window/DOM 계약 진단을 추가했습니다.
+- 새 smoke `tools/smoke_admin_create_lifecycle_split_contract.js`를 추가하고 core smoke에 포함했습니다.
+- 실제 파일 분리는 아직 하지 않았습니다.
+- DB schema 변경, DB reset, seed 재실행은 필요 없습니다.
+
 # Changelog
 
 ## v187

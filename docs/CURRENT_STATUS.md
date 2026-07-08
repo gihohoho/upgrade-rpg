@@ -1,8 +1,8 @@
 # Current Status
 
-현재 기준: **v187 admin change logs split**
+현재 기준: **v188 admin create lifecycle split contract**
 
-이 패키지 기준 ZIP: **rpg_v187_admin_change_logs_split_ready.zip**
+이 패키지 기준 ZIP: **rpg_v188_admin_create_lifecycle_split_contract_ready.zip**
 
 ## 현재 상태
 
@@ -18,6 +18,17 @@
 - 관리자 페이지 레이아웃 shell, sidebar, sticky header, 접기/펼치기 유지.
 
 
+
+## v188 완료
+
+- `create lifecycle` 실제 분리 전에 API/window/DOM/확인 문구 계약을 먼저 고정.
+- 새 계약 상태: `contract-frozen-v188`.
+- 다음 후보 파일: `src/api/admin/admin-create-lifecycle.js`.
+- `getAdminCreateLifecycleSplitContractReadiness()` / `renderAdminCreateLifecycleSplitContractReadiness()` 추가.
+- `checkAdminReadOnlyPageReady().createLifecycleSplitContractReady` 추가.
+- 새 smoke `tools/smoke_admin_create_lifecycle_split_contract.js` 추가 및 core smoke 포함.
+- 실제 파일 분리는 아직 하지 않음.
+- 새 쓰기 도메인 오픈 없음, DB reset / seed 필요 없음.
 
 ## v187 완료
 
@@ -109,6 +120,8 @@
 
 ## 이전 완료
 
+- v188: 관리자 create lifecycle 분리 전 계약 고정.
+- v187: 관리자 change logs 실제 1차 분리.
 - v186: 관리자 change logs 분리 전 계약 고정.
 - v185: 관리자 layout shell 실제 분리 1단계.
 - v184: 관리자 JS 분리 전 readiness 진단 UI.

@@ -57,8 +57,8 @@ uvicorn app.main:app --reload
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v187 admin change logs split**
-- 새 채팅용 ZIP: **rpg_v187_admin_change_logs_split_ready.zip**
+- 최신 안정 버전: **v188 admin create lifecycle split contract**
+- 새 채팅용 ZIP: **rpg_v188_admin_create_lifecycle_split_contract_ready.zip**
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -79,6 +79,7 @@ uvicorn app.main:app --reload
 - 관리자 JS 분리 전 readiness UI 유지.
 - 관리자 layout shell은 `src/api/admin-layout-shell.js`로 실제 분리 완료.
 - change logs는 `src/api/admin/admin-change-logs.js`로 실제 1차 분리 완료.
+- create lifecycle은 실제 분리 전 계약을 `contract-frozen-v188`로 고정했습니다.
 - `admin-page-readonly.js`에는 호환 wrapper가 남아 있습니다.
 
 ## 현재 create apply 열린 도메인
@@ -96,6 +97,18 @@ uvicorn app.main:app --reload
 - `characterSkills`
 
 위 도메인들은 생성 row delete/restore도 제한적으로 열려 있습니다.
+
+## v188 완료
+
+- `create lifecycle` 실제 분리 전에 API/window/DOM/확인 문구 계약 고정.
+- 계약 상태: `contract-frozen-v188`.
+- 다음 후보 파일: `src/api/admin/admin-create-lifecycle.js`.
+- 새 함수: `getAdminCreateLifecycleSplitContractReadiness()`, `renderAdminCreateLifecycleSplitContractReadiness()`.
+- `checkAdminReadOnlyPageReady().createLifecycleSplitContractReady`가 true면 정상입니다.
+- 새 smoke: `tools/smoke_admin_create_lifecycle_split_contract.js`.
+- 실제 파일 분리는 아직 하지 않았습니다.
+- 새 쓰기 도메인 오픈 없음, DB schema 변경 없음, DB reset / seed 필요 없음.
+- `.env`, `.gitignore` 변경 없음.
 
 ## v187 완료
 
@@ -121,7 +134,7 @@ checkAdminReadOnlyPageReady().version
 예상 결과:
 
 ```txt
-v187.admin-change-logs-split
+v188.admin-create-lifecycle-split-contract
 ```
 
 추가 확인:
@@ -152,16 +165,6 @@ v187.admin-change-logs-split
 
 ## 다음 추천 단계
 
-**v188 create lifecycle split contract**를 추천합니다.
+**v189 create lifecycle split**를 추천합니다.
 
-바로 `create lifecycle` 구현을 외부 파일로 옮기지 말고, 먼저 아래 계약을 고정하는 것이 안전합니다.
-
-- 생성 초안 관련 window export 목록
-- 생성→삭제→복원 batch check 함수 목록
-- 생성/삭제/복원 결과 렌더링 함수 목록
-- 확인 문구 상수 목록
-- DOM target 목록
-- delegated action 목록
-- 다음 후보 파일명 `src/api/admin/admin-create-lifecycle.js`
-
-그 다음 v189에서 실제 `admin-create-lifecycle.js` 분리로 넘어가는 흐름이 좋습니다.
+v188에서 계약을 고정했으므로 다음에는 실제로 `src/api/admin/admin-create-lifecycle.js` 파일을 만들고, 생성 설계/초안/preview/apply/lifecycle guide/batch check 구현을 1차 분리하면 됩니다. `admin-page-readonly.js`에는 기존 window export 호환 wrapper를 남기는 흐름이 안전합니다.

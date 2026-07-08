@@ -7,7 +7,7 @@
 
 이 ZIP은 기존 게임 기능을 유지하면서, 백엔드/관리자 분리를 쉽게 하기 위해 파일 위치와 역할을 단계적으로 정리한 버전입니다.
 
-현재 v187 기준으로는 관리자 layout shell과 change logs가 외부 JS 파일로 1차 분리되어 있습니다.
+현재 v188 기준으로는 관리자 layout shell과 change logs가 외부 JS 파일로 1차 분리되어 있고, create lifecycle 실제 분리 전 계약이 고정되어 있습니다.
 
 ## 먼저 읽을 문서
 
@@ -319,3 +319,14 @@ If SAVE DATA shows `skipped_local_only_mode`, click `dual` once and try `성장/
 - 관리자 change logs 분리 전 계약 고정.
 - 실제 DB schema/backend env 변경 없음.
 - DB reset / seed 필요 없음.
+
+
+## v188 완료
+
+- `create lifecycle` 실제 분리 전 계약을 `contract-frozen-v188` 상태로 고정
+- 다음 후보 파일 `src/api/admin/admin-create-lifecycle.js` 고정
+- 생성 초안/생성 apply/생성→삭제→복원 batch check 함수 목록 고정
+- 확인 문구/DOM target/delegated action 목록 고정
+- 새 smoke `tools/smoke_admin_create_lifecycle_split_contract.js` 추가
+- 실제 JS 파일 분리는 아직 하지 않음
+- DB reset / seed 필요 없음
