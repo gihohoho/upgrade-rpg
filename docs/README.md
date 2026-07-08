@@ -75,3 +75,12 @@ docs/archive/stage-notes/
 - `ADMIN_CREATE_APPLY_LIMITED.md` - 신규 row 제한 생성 apply 단계
 
 - [Admin Create Delete Rollback](ADMIN_CREATE_DELETE_ROLLBACK.md)
+
+- [Admin Create Delete Restore](ADMIN_CREATE_DELETE_RESTORE.md)
+
+- [Admin Layout Navigation Shell](ADMIN_LAYOUT_NAVIGATION_SHELL.md)
+
+
+- [Admin Layout Collapse Polish](ADMIN_LAYOUT_COLLAPSE_POLISH.md)
+
+- [Admin Collapsed Panel Style Fix](ADMIN_COLLAPSED_PANEL_STYLE_FIX.md)

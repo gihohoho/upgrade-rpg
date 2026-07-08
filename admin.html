@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upgrade RPG Admin - Relation Search Tools</title>
+  <title>Upgrade RPG Admin - Collapsed Panel Style Fix</title>
   <style>
     :root {
       color-scheme: dark;
@@ -19,6 +19,8 @@
       --green: #86efac;
       --red: #fecaca;
       --amber: #fde68a;
+      --admin-sticky-top: 132px;
+      --admin-scroll-margin-top: 150px;
     }
 
     * { box-sizing: border-box; }
@@ -38,17 +40,24 @@
     button, input, textarea, select { font: inherit; }
 
     .admin-shell {
-      width: min(1180px, calc(100% - 32px));
+      width: min(1440px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 24px 0 44px;
+      padding: 16px 0 44px;
     }
 
     .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
       gap: 16px;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
+      padding: 14px 0 12px;
+      background: linear-gradient(180deg, rgba(5, 8, 22, 0.96), rgba(5, 8, 22, 0.82));
+      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+      backdrop-filter: blur(14px);
     }
 
     .eyebrow {
@@ -143,7 +152,9 @@
       text-decoration: none;
     }
 
-    .admin-jump-nav a:hover {
+    .admin-jump-nav a:hover,
+    .admin-jump-nav a.active,
+    .admin-jump-nav a[aria-current="location"] {
       border-color: rgba(147, 197, 253, 0.58);
       color: var(--blue);
       background: rgba(59, 130, 246, 0.12);
@@ -951,14 +962,151 @@
     .field-value-hint strong { color: var(--amber); }
 
     .footer-note {
-      margin-top: 18px;
+      margin: 0;
       color: #64748b;
       font-size: 12px;
     }
 
+
+    .admin-layout {
+      display: grid;
+      grid-template-columns: 230px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .admin-sidebar {
+      position: sticky;
+      top: var(--admin-sticky-top);
+      z-index: 20;
+      display: grid;
+      gap: 10px;
+      max-height: calc(100vh - var(--admin-sticky-top) - 16px);
+      overflow: auto;
+      padding-right: 2px;
+      scroll-margin-top: var(--admin-scroll-margin-top);
+    }
+
+    .admin-sidebar-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.70);
+      padding: 12px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+    }
+
+    .admin-sidebar-title {
+      color: var(--soft);
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .admin-sidebar-help {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .admin-main-content {
+      min-width: 0;
+    }
+
+    [id^="section-"] {
+      scroll-margin-top: var(--admin-scroll-margin-top);
+    }
+
+    .admin-collapse-toggle {
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    .filter-title.admin-collapse-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .section-header .admin-collapse-toggle,
+    .filter-title .admin-collapse-toggle {
+      flex: 0 0 auto;
+    }
+
+    .admin-section-collapsed > :not(.section-header):not(.filter-title) {
+      display: none !important;
+    }
+
+    .admin-section-collapsed .section-header,
+    .admin-section-collapsed .filter-title {
+      border-bottom: 0;
+    }
+
+    .admin-section-collapsed {
+      opacity: 0.98;
+      border-color: rgba(251, 191, 36, 0.30) !important;
+      background: rgba(30, 41, 59, 0.46) !important;
+      box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.08);
+    }
+
+    .filter-panel.admin-section-collapsed,
+    .field-help-panel.admin-section-collapsed {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .filter-panel.admin-section-collapsed > .filter-title.admin-collapse-header,
+    .field-help-panel.admin-section-collapsed > .filter-title.admin-collapse-header {
+      width: 100%;
+      min-height: 54px;
+      margin: 0;
+      padding: 13px 14px;
+      border-radius: 0;
+    }
+
+    .admin-section-collapsed .section-header,
+    .admin-section-collapsed .filter-title {
+      background: linear-gradient(90deg, rgba(251, 191, 36, 0.14), rgba(15, 23, 42, 0));
+      color: var(--amber);
+    }
+
+    .admin-section-collapsed .section-title {
+      color: var(--amber);
+    }
+
+    .admin-section-collapsed .admin-collapse-toggle {
+      border-color: rgba(251, 191, 36, 0.45);
+      background: rgba(251, 191, 36, 0.14);
+      color: var(--amber);
+    }
+
+    .admin-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+      color: #64748b;
+      font-size: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.54);
+      padding: 12px 14px;
+    }
+
+    .admin-footer strong {
+      color: var(--soft);
+    }
+
     @media (max-width: 920px) {
-      .topbar { flex-direction: column; }
+      .topbar { flex-direction: column; position: static; }
       .top-actions { justify-content: flex-start; min-width: 0; }
+      .admin-layout { grid-template-columns: 1fr; }
+      .admin-sidebar { position: static; max-height: none; }
+      .admin-jump-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .admin-jump-nav a { text-align: center; }
       .toolbar { grid-template-columns: 1fr; }
       .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -969,7 +1117,8 @@
     }
 
     @media (max-width: 560px) {
-      .admin-shell { width: min(100% - 20px, 1180px); padding-top: 16px; }
+      .admin-shell { width: min(100% - 20px, 1440px); padding-top: 12px; }
+      .admin-jump-nav { grid-template-columns: 1fr; }
       .filter-grid { grid-template-columns: 1fr; }
       .grid { grid-template-columns: 1fr; }
       .locked-field-grid { grid-template-columns: 1fr; }
@@ -979,7 +1128,7 @@
 </head>
 <body>
   <main class="admin-shell">
-    <div class="topbar">
+    <div class="topbar" data-admin-sticky-header>
       <div>
         <div class="eyebrow"><span class="dot"></span>Guarded Admin + API Verify</div>
         <h1>Upgrade RPG 관리자 페이지</h1>
@@ -1002,17 +1151,28 @@
       <div class="location-help">직접 열 때는 고정된 5500 주소가 아니라, 현재 게임이 열린 주소와 같은 host/port 기준의 admin.html 주소를 사용하면 됩니다.</div>
     </div>
 
-    <nav class="admin-jump-nav" aria-label="관리자 페이지 바로가기">
-      <a href="#section-overview">요약</a>
-      <a href="#section-field-help">필드 도움말</a>
-      <a href="#section-admin-write-guard">쓰기 잠금</a>
-      <a href="#section-master-catalog">마스터 목록</a>
-      <a href="#section-create-blueprint">신규 row 준비</a>
-      <a href="#section-master-detail">상세/편집/API확인</a>
-      <a href="#section-change-logs">변경 이력</a>
-      <a href="#section-save-snapshots">세이브 스냅샷</a>
-      <a href="#section-readiness">준비 상태</a>
-    </nav>
+    <div class="admin-layout" data-admin-layout-shell>
+      <aside class="admin-sidebar" data-admin-sidebar aria-label="관리자 사이드바">
+        <div class="admin-sidebar-card">
+          <div class="admin-sidebar-title">빠른 이동</div>
+          <nav class="admin-jump-nav" aria-label="관리자 페이지 바로가기">
+            <a href="#section-overview">요약</a>
+            <a href="#section-field-help">필드 도움말</a>
+            <a href="#section-admin-write-guard">쓰기 잠금</a>
+            <a href="#section-master-catalog">마스터 목록</a>
+            <a href="#section-create-blueprint">신규 row 준비</a>
+            <a href="#section-master-detail">상세/편집/API확인</a>
+            <a href="#section-change-logs">변경 이력</a>
+            <a href="#section-save-snapshots">세이브 스냅샷</a>
+            <a href="#section-readiness">준비 상태</a>
+          </nav>
+        </div>
+        <div class="admin-sidebar-card">
+          <div class="admin-sidebar-title">접기/펼치기</div>
+          <p class="admin-sidebar-help">각 큰 섹션 오른쪽의 버튼으로 지금 안 보는 영역을 접어둘 수 있습니다. 기존 데이터 조회/적용 기능은 그대로 유지됩니다.</p>
+        </div>
+      </aside>
+      <div class="admin-main-content" data-admin-main-content>
 
     <div class="toolbar" id="section-overview">
       <input class="api-input" data-admin-api-base-url type="text" aria-label="API base URL" />
@@ -1025,7 +1185,7 @@
       <div class="card"><div class="label">상태</div><div class="value small">불러오는 중...</div></div>
     </section>
 
-    <section class="section" id="section-master-counts">
+    <section class="section" id="section-master-counts" data-admin-collapsible data-admin-section-key="master-counts">
       <div class="section-header">
         <h2 class="section-title">마스터 데이터 counts</h2>
         <div class="section-meta" data-admin-master-meta>-</div>
@@ -1034,7 +1194,7 @@
     </section>
 
 
-    <section class="field-help-panel" id="section-field-help" data-admin-field-help aria-label="관리자 필드 도움말">
+    <section class="field-help-panel" id="section-field-help" data-admin-field-help data-admin-collapsible data-admin-section-key="field-help" aria-label="관리자 필드 도움말">
       <div class="filter-title">필드 용어 도움말</div>
       <div class="filter-help">관리자 페이지에서 자주 헷갈리는 값입니다. 표 제목이나 편집 초안 입력칸 옆의 <span class="field-help-badge">?</span> 에 마우스를 올려도 같은 설명을 볼 수 있습니다.</div>
       <div class="field-help-grid">
@@ -1067,7 +1227,7 @@
     </section>
 
 
-    <section class="filter-panel" id="section-admin-write-guard" aria-label="관리자 쓰기 dev key 잠금">
+    <section class="filter-panel" id="section-admin-write-guard" data-admin-collapsible data-admin-section-key="admin-write-guard" aria-label="관리자 쓰기 dev key 잠금">
       <div class="filter-title">관리자 쓰기 dev key 잠금</div>
       <div class="filter-help">조회/미리보기는 그대로 가능하지만, <strong>검증 후 실제 적용</strong>과 <strong>검사 후 되돌리기</strong>는 여기서 dev key를 설정해야 백엔드가 허용합니다. 이 키는 임시 로컬 개발용 안전장치이고, 나중에 로그인/RBAC로 대체할 예정입니다.</div>
       <div class="filter-grid">
@@ -1091,7 +1251,7 @@
     </section>
 
 
-    <section class="filter-panel" id="section-master-catalog" aria-label="마스터 데이터 카탈로그 필터">
+    <section class="filter-panel" id="section-master-catalog" data-admin-collapsible data-admin-section-key="master-catalog-filter" aria-label="마스터 데이터 카탈로그 필터">
       <div class="filter-title">마스터 데이터 카탈로그</div>
       <div class="filter-grid">
         <div class="filter-field">
@@ -1145,7 +1305,7 @@
       <div class="filter-help">마스터 데이터 편집 화면으로 가기 전 단계입니다. 이 목록은 조회 전용이며 원본 JSON과 이미지 data URL은 숨깁니다.</div>
     </section>
 
-    <section class="section">
+    <section class="section" id="section-master-catalog-table" data-admin-collapsible data-admin-section-key="master-catalog-table">
       <div class="section-header">
         <h2 class="section-title">마스터 데이터 카탈로그</h2>
         <div class="section-meta" data-admin-master-domain-meta>-</div>
@@ -1155,7 +1315,7 @@
       <div class="table-wrap" data-admin-master-catalog-table><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <section class="filter-panel" id="section-create-blueprint" aria-label="신규 row 생성 준비">
+    <section class="filter-panel" id="section-create-blueprint" data-admin-collapsible data-admin-section-key="create-blueprint" aria-label="신규 row 생성 준비">
       <div class="filter-title">신규 row 생성 준비 <span class="pill warn">limited apply</span></div>
       <div class="filter-help">characters/enhancementGroups부터 실제 생성 적용을 제한적으로 열고, 나머지 도메인은 계속 preview-only로 유지합니다.</div>
       <div class="filter-grid" style="grid-template-columns: 180px auto auto; margin-top:10px;">
@@ -1177,7 +1337,7 @@
     </section>
 
 
-    <section class="section" id="section-master-detail">
+    <section class="section" id="section-master-detail" data-admin-collapsible data-admin-section-key="master-detail">
       <div class="section-header">
         <h2 class="section-title">선택한 마스터 데이터 상세</h2>
         <div class="section-meta" data-admin-master-detail-meta>선택 없음</div>
@@ -1185,7 +1345,7 @@
       <div data-admin-master-detail><div class="empty">마스터 데이터 카탈로그에서 행의 <strong>보기</strong> 버튼을 누르면 상세 정보가 여기에 표시됩니다.</div></div>
     </section>
 
-    <section class="section" id="section-change-logs">
+    <section class="section" id="section-change-logs" data-admin-collapsible data-admin-section-key="change-logs">
       <div class="section-header">
         <h2 class="section-title">관리자 변경 이력</h2>
         <div class="section-meta" data-admin-change-log-meta>-</div>
@@ -1253,7 +1413,7 @@
       <div style="padding:12px 14px; border-top:1px solid rgba(148, 163, 184, 0.14);" data-admin-change-log-detail><div class="empty">변경 이력의 <strong>보기</strong> 버튼을 누르면 상세/되돌리기 미리보기가 여기에 표시됩니다.</div></div>
     </section>
 
-    <section class="filter-panel" id="section-save-snapshots" aria-label="최근 세이브 스냅샷 필터">
+    <section class="filter-panel" id="section-save-snapshots" data-admin-collapsible data-admin-section-key="save-snapshot-filter" aria-label="최근 세이브 스냅샷 필터">
       <div class="filter-title">최근 세이브 스냅샷 필터</div>
       <div class="filter-grid">
         <div class="filter-field">
@@ -1296,7 +1456,7 @@
       <div class="filter-help">필터는 조회 조건만 바꾸며 DB/localStorage/게임 세이브를 수정하지 않습니다. 원본 snapshot_json은 계속 숨김 상태입니다.</div>
     </section>
 
-    <section class="section">
+    <section class="section" id="section-save-snapshot-summary" data-admin-collapsible data-admin-section-key="save-snapshot-summary">
       <div class="section-header">
         <h2 class="section-title">최근 세이브 스냅샷 요약</h2>
         <div class="section-meta" data-admin-snapshot-meta>-</div>
@@ -1304,7 +1464,7 @@
       <div class="table-wrap" data-admin-snapshot-table><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <section class="section" id="section-readiness">
+    <section class="section" id="section-readiness" data-admin-collapsible data-admin-section-key="readiness">
       <div class="section-header">
         <h2 class="section-title">관리자 준비 상태</h2>
         <div class="section-meta">guarded write/rollback ready</div>
@@ -1312,8 +1472,13 @@
       <div data-admin-readiness><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <!-- legacy smoke marker: v165 admin create apply limited -->
-    <p class="footer-note">v168 admin create delete rollback · static HTML + JS · FastAPI guarded write/rollback APIs</p>
+      </div>
+    </div>
+
+    <footer class="admin-footer" data-admin-footer>
+      <p class="footer-note"><strong>v174 admin collapsed panel style fix</strong> · static HTML + JS · FastAPI guarded write/rollback APIs</p>
+      <p class="footer-note">legacy smoke marker: v165 admin create apply limited · v171 admin create delete restore</p>
+    </footer>
   </main>
 
   <script src="src/api/game-api-client.js"></script>

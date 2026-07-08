@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  const VERSION = "v168.admin-create-delete-rollback";
-  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited";
+  const VERSION = "v174.admin-collapsed-panel-style-fix";
+  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -16,8 +16,12 @@
   const ADMIN_ROLLBACK_CONFIRM_TEXT = "ROLLBACK MASTER DATA EDIT";
   const ADMIN_CREATE_APPLY_CONFIRM_TEXT = "CREATE MASTER DATA ROW";
   const ADMIN_CREATE_DELETE_CONFIRM_TEXT = "DELETE CREATED MASTER DATA ROW";
+  const ADMIN_CREATE_DELETE_RESTORE_CONFIRM_TEXT = "RESTORE DELETED CREATED ROW";
   const ADMIN_EDIT_APPLY_TIMEOUT_MS = 5000;
   const ADMIN_WRITE_DEV_KEY_EXAMPLE = "local-admin-dev-key";
+  const ADMIN_LAYOUT_COLLAPSE_STORAGE_KEY = "upgradeRpgAdminCollapsedSectionsV2";
+  const ADMIN_DEFAULT_COLLAPSED_SECTION_KEYS = ["field-help", "create-blueprint", "change-logs"];
+
   const ADMIN_EDIT_ALLOWED_FIELDS = {
     itemTemplates: ["name", "item_type", "grade", "description", "stackable", "equip_slot", "enhance_group_code", "admin_note"],
     skills: ["slot_key", "name", "description", "proc_rate", "cooldown_seconds"],
@@ -3022,13 +3026,14 @@
     const changes = Array.isArray(payload.changes) ? payload.changes : [];
     const rollback = payload.rollback || {};
     const createDelete = payload.createDelete || {};
+    const createDeleteRestore = payload.createDeleteRestore || {};
     const rows = changes.length ? changes.map((change) => `
       <tr><td>${escapeHtml(change.label || change.key)}${change.relation ? ` <span class="pill warn">relation</span>` : ""}</td><td>${renderAdminChangeValueCell(payload.rollback && payload.rollback.domain, change, "before", {})}</td><td>${renderAdminChangeValueCell(payload.rollback && payload.rollback.domain, change, "after", {})}</td></tr>
     `).join("") : `<tr><td colspan="3">변경 필드 없음</td></tr>`;
     const relationCount = payload.relationChangeCount || changes.filter((change) => change.relation).length;
     target.innerHTML = `
       <div class="detail-card" data-admin-change-log-detail-card data-admin-change-log-id="${escapeHtml(payload.id)}">
-        <div class="detail-title">변경 이력 #${escapeHtml(formatValue(payload.id))} <span class="pill ${rollback.available ? "good" : "blocked"}">rollback ${rollback.available ? "ready" : "blocked"}</span> <span class="pill ${createDelete.available ? "warn" : "blocked"}">create delete ${createDelete.available ? "ready" : "blocked"}</span>${relationCount ? ` <span class="pill warn">relation ${escapeHtml(formatValue(relationCount))}</span>` : ""}</div>
+        <div class="detail-title">변경 이력 #${escapeHtml(formatValue(payload.id))} <span class="pill ${rollback.available ? "good" : "blocked"}">rollback ${rollback.available ? "ready" : "blocked"}</span> <span class="pill ${createDelete.available ? "warn" : "blocked"}">create delete ${createDelete.available ? "ready" : "blocked"}</span> <span class="pill ${createDeleteRestore.available ? "good" : "blocked"}">restore ${createDeleteRestore.available ? "ready" : "blocked"}</span>${relationCount ? ` <span class="pill warn">relation ${escapeHtml(formatValue(relationCount))}</span>` : ""}</div>
         <div class="filter-help">대상: ${escapeHtml(formatValue(payload.targetType))} / 행 ${escapeHtml(formatValue(payload.targetId))} · action=${escapeHtml(formatValue(payload.action))} · applied=${escapeHtml(formatValue(payload.applied))}</div>
         <div class="filter-help">사유: ${escapeHtml(formatValue(payload.reason))} · 시각: ${escapeHtml(formatClock(payload.createdAt))}</div>
         <div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>이전 값</th><th>적용 값</th></tr></thead><tbody>${rows}</tbody></table></div>
@@ -3048,6 +3053,14 @@
           <span class="pill ${createDelete.available ? "warn" : "blocked"}">${createDelete.available ? "create-delete guarded" : "create-delete locked"}</span>
         </div>
         <div class="edit-draft-result" data-admin-create-delete-result><div class="empty">create action으로 생성된 제한 도메인 row만 삭제 되돌리기를 미리보기할 수 있습니다.</div></div>
+        <div class="edit-draft-actions">
+          <button class="btn mini primary" type="button" data-admin-action="preview-admin-create-delete-restore" ${createDeleteRestore.available ? "" : "disabled"}>삭제 row 복원 미리보기</button>
+          <label class="apply-confirm-field"><span>삭제 row 복원 확인 문구</span><input type="text" data-admin-create-delete-restore-confirm placeholder="${escapeHtml(ADMIN_CREATE_DELETE_RESTORE_CONFIRM_TEXT)}" autocomplete="off" /></label>
+          <label class="apply-confirm-field"><span>삭제 row 복원 사유</span><input type="text" data-admin-create-delete-restore-reason placeholder="예: 실수로 삭제한 생성 row 복원" autocomplete="off" /></label>
+          <button class="btn mini danger" type="button" data-admin-action="apply-admin-create-delete-restore" ${createDeleteRestore.available ? "" : "disabled"}>검사 후 삭제 row 복원</button>
+          <span class="pill ${createDeleteRestore.available ? "good" : "blocked"}">${createDeleteRestore.available ? "create-delete restore guarded" : "restore locked"}</span>
+        </div>
+        <div class="edit-draft-result" data-admin-create-delete-restore-result><div class="empty">create_delete action으로 삭제된 제한 도메인 row만 복원 미리보기를 할 수 있습니다.</div></div>
       </div>
     `;
   }
@@ -3254,6 +3267,102 @@
     return response;
   }
 
+
+  function readAdminCreateDeleteRestoreControls() {
+    const card = $(`[data-admin-change-log-detail-card]`);
+    const confirmEl = $(`[data-admin-create-delete-restore-confirm]`);
+    const reasonEl = $(`[data-admin-create-delete-restore-reason]`);
+    return {
+      changeLogId: card ? Number(card.getAttribute("data-admin-change-log-id") || 0) : 0,
+      confirmText: confirmEl ? confirmEl.value.trim() : "",
+      reason: reasonEl ? reasonEl.value.trim() : "",
+      confirmMatches: !!confirmEl && confirmEl.value.trim() === ADMIN_CREATE_DELETE_RESTORE_CONFIRM_TEXT,
+    };
+  }
+
+  function renderAdminCreateDeleteRestoreResult(payload) {
+    const target = $(`[data-admin-create-delete-restore-result]`);
+    if (!target) return;
+    const result = payload || {};
+    const changes = Array.isArray(result.changes) ? result.changes : [];
+    const validationErrors = Array.isArray(result.validationErrors) ? result.validationErrors : [];
+    const warnings = Array.isArray(result.warnings) ? result.warnings : [];
+    const rows = changes.length ? changes.map((change) => `
+      <tr><td>${escapeHtml(change.label || change.key)}${change.relation ? ` <span class="pill warn">relation</span>` : ""}</td><td><span class="pill blocked">복원 전 없음</span></td><td>${renderAdminChangeValueCell(result.domain, change, "after", {})}</td></tr>
+    `).join("") : `<tr><td colspan="3">복원 대상 필드 없음</td></tr>`;
+    const errorRows = validationErrors.length ? validationErrors.map((item) => `
+      <tr><td>${escapeHtml(item.label || item.key)}</td><td>${escapeHtml(formatValue(item.after))}</td><td>${escapeHtml(formatValue(item.reason || "blocked"))}</td></tr>
+    `).join("") : `<tr><td colspan="3">복원 검증 오류 없음</td></tr>`;
+    target.innerHTML = `
+      <div class="draft-preview-summary">
+        <span class="pill ${result.createDeleteRestoreReady ? "good" : "blocked"}">createDeleteRestoreReady: ${escapeHtml(formatValue(result.createDeleteRestoreReady))}</span>
+        <span class="pill ${result.targetRowMissing ? "good" : "blocked"}">targetRowMissing: ${escapeHtml(formatValue(result.targetRowMissing))}</span>
+        <span class="pill ${result.idConflict ? "blocked" : "good"}">idConflict: ${escapeHtml(formatValue(result.idConflict === true))}</span>
+        <span class="pill ${result.codeConflict ? "blocked" : "good"}">codeConflict: ${escapeHtml(formatValue(result.codeConflict === true))}</span>
+        <span class="pill ${Number(result.validationErrorCount || 0) ? "blocked" : "good"}">validation errors: ${escapeHtml(formatValue(result.validationErrorCount || 0))}</span>
+        <span class="pill ${result.dryRun ? "warn" : "good"}">dryRun: ${escapeHtml(formatValue(result.dryRun))}</span>
+        <span class="pill ${result.writeBlocked ? "blocked" : "good"}">writeBlocked: ${escapeHtml(formatValue(result.writeBlocked))}</span>
+        <span class="pill ${result.restored ? "good" : "warn"}">restored: ${escapeHtml(formatValue(result.restored === true))}</span>
+        ${result.restoreChangeLogId ? `<span class="pill good">restore log #${escapeHtml(formatValue(result.restoreChangeLogId))}</span>` : ""}
+      </div>
+      ${warnings.length ? `<div class="filter-help">warnings: ${escapeHtml(warnings.join(", "))}</div>` : ""}
+      ${result.note ? `<div class="filter-help">${escapeHtml(result.note)}</div>` : ""}
+      <details class="json-detail" open><summary>복원될 값</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>복원 전</th><th>복원 후</th></tr></thead><tbody>${rows}</tbody></table></div></details>
+      <details class="json-detail" ${validationErrors.length ? "open" : ""}><summary>복원 검증 오류</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>값</th><th>사유</th></tr></thead><tbody>${errorRows}</tbody></table></div></details>
+    `;
+  }
+
+  async function previewAdminCreateDeleteRestore(options) {
+    ensureApi();
+    const controls = readAdminCreateDeleteRestoreControls();
+    if (!controls.changeLogId) throw new Error("복원할 create_delete 변경 이력 상세를 먼저 열어주세요.");
+    const target = $(`[data-admin-create-delete-restore-result]`);
+    if (target) target.innerHTML = `<div class="empty">삭제 row 복원 안전 검사 중...</div>`;
+    const timeoutMs = options && options.timeoutMs !== undefined ? options.timeoutMs : DEFAULT_TIMEOUT_MS;
+    const response = await window.RpgGameApi.previewAdminCreateDeleteRestore({ id: controls.changeLogId, reason: controls.reason || undefined, timeoutMs });
+    const payload = response && response.payload ? response.payload : {};
+    renderAdminCreateDeleteRestoreResult(payload);
+    setStatus(`삭제 row 복원 미리보기: ${formatValue(payload.status)} · ready ${formatValue(payload.createDeleteRestoreReady)}`, payload.createDeleteRestoreReady ? "ok" : "error");
+    return response;
+  }
+
+  async function applyAdminCreateDeleteRestore(options) {
+    ensureApi();
+    const controls = readAdminCreateDeleteRestoreControls();
+    if (!controls.changeLogId) throw new Error("복원할 create_delete 변경 이력 상세를 먼저 열어주세요.");
+    requireAdminWriteDevKeyForUi("삭제 row 복원 적용");
+    if (!controls.confirmMatches) {
+      const error = new Error(`삭제 row 복원 확인 문구를 정확히 입력해야 합니다: ${ADMIN_CREATE_DELETE_RESTORE_CONFIRM_TEXT}`);
+      setStatus(error.message, "error");
+      const target = $(`[data-admin-create-delete-restore-result]`);
+      if (target) target.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+      throw error;
+    }
+    const confirmed = window.confirm("정말 create_delete 이력으로 삭제된 row를 DB에 다시 복원할까요? id/code 충돌 검사를 통과해야 적용됩니다.");
+    if (!confirmed) {
+      setStatus("삭제 row 복원 적용을 취소했습니다.", "info");
+      return { ok: false, canceled: true };
+    }
+    const target = $(`[data-admin-create-delete-restore-result]`);
+    if (target) target.innerHTML = `<div class="empty">백엔드에서 삭제 row 복원을 적용하는 중...</div>`;
+    const timeoutMs = options && options.timeoutMs !== undefined ? options.timeoutMs : ADMIN_EDIT_APPLY_TIMEOUT_MS;
+    const response = await window.RpgGameApi.applyAdminCreateDeleteRestore({ id: controls.changeLogId, confirmText: controls.confirmText, reason: controls.reason || undefined, timeoutMs });
+    const payload = response && response.payload ? response.payload : {};
+    renderAdminCreateDeleteRestoreResult(payload);
+    if (payload.restored) {
+      await refreshAdminChangeLogs({ filters: readChangeLogFiltersFromDom() });
+      await refreshAdminMasterCatalog({ filters: readMasterCatalogFiltersFromDom() });
+      await runPostWriteMasterApiVerification(payload.domain, payload.id, {
+        label: "생성 row 복원",
+        contextLabel: `restore log #${formatValue(payload.restoreChangeLogId)} 적용 후 자동 확인`,
+      });
+      setStatus(`삭제 row 복원 완료: restore log #${formatValue(payload.restoreChangeLogId)}`, "ok");
+    } else {
+      setStatus(`삭제 row 복원 실패/차단: ${formatValue(payload.status)}`, "error");
+    }
+    return response;
+  }
+
   async function refreshAdminChangeLogs(options) {
     ensureApi();
     const opts = options || {};
@@ -3351,6 +3460,151 @@
     syncApiInput();
     setStatus(`API URL 기본값 복구: ${next}`, "ok");
     return next;
+  }
+
+
+  function getAdminDefaultCollapsedSectionSet() {
+    return new Set(ADMIN_DEFAULT_COLLAPSED_SECTION_KEYS.map(String));
+  }
+
+  function readAdminCollapsedSectionSet() {
+    try {
+      const raw = window.localStorage ? window.localStorage.getItem(ADMIN_LAYOUT_COLLAPSE_STORAGE_KEY) : null;
+      if (!raw) return getAdminDefaultCollapsedSectionSet();
+      const values = JSON.parse(raw);
+      return new Set(Array.isArray(values) ? values.map(String) : []);
+    } catch (_) {
+      return getAdminDefaultCollapsedSectionSet();
+    }
+  }
+
+  function writeAdminCollapsedSectionSet(keys) {
+    try {
+      if (!window.localStorage) return false;
+      window.localStorage.setItem(ADMIN_LAYOUT_COLLAPSE_STORAGE_KEY, JSON.stringify(Array.from(keys || [])));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function getAdminCollapsibleSectionKey(section) {
+    if (!section) return "";
+    return section.getAttribute("data-admin-section-key") || section.id || "";
+  }
+
+  function setAdminSectionCollapsed(section, collapsed, options) {
+    if (!section) return false;
+    const key = getAdminCollapsibleSectionKey(section);
+    const button = section.querySelector("[data-admin-layout-collapse-toggle]");
+    section.classList.toggle("admin-section-collapsed", !!collapsed);
+    section.setAttribute("data-admin-section-collapsed", collapsed ? "true" : "false");
+    if (button) {
+      button.textContent = collapsed ? "펼치기" : "접기";
+      button.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      button.setAttribute("aria-label", `${key || "section"} ${collapsed ? "펼치기" : "접기"}`);
+    }
+    if (!options || !options.silent) {
+      const collapsedSet = readAdminCollapsedSectionSet();
+      if (collapsed) collapsedSet.add(key);
+      else collapsedSet.delete(key);
+      writeAdminCollapsedSectionSet(collapsedSet);
+    }
+    return true;
+  }
+
+  function ensureAdminSectionCollapseControl(section, collapsedSet) {
+    if (!section || section.querySelector("[data-admin-layout-collapse-toggle]")) return false;
+    const key = getAdminCollapsibleSectionKey(section);
+    const header = section.querySelector(":scope > .section-header") || section.querySelector(":scope > .filter-title");
+    if (!header) return false;
+    header.classList.add("admin-collapse-header");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn mini admin-collapse-toggle";
+    button.setAttribute("data-admin-layout-collapse-toggle", key);
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setAdminSectionCollapsed(section, !section.classList.contains("admin-section-collapsed"));
+    });
+    header.appendChild(button);
+    setAdminSectionCollapsed(section, collapsedSet && collapsedSet.has(key), { silent: true });
+    return true;
+  }
+
+  function setAdminActiveSidebarLink(hash) {
+    const links = Array.from(document.querySelectorAll(".admin-jump-nav a[href^='#']"));
+    const nextHash = hash || window.location.hash || "#section-overview";
+    links.forEach((link) => {
+      const active = link.getAttribute("href") === nextHash;
+      link.classList.toggle("active", active);
+      if (active) link.setAttribute("aria-current", "location");
+      else link.removeAttribute("aria-current");
+    });
+    return nextHash;
+  }
+
+  function updateAdminStickyLayoutOffsets() {
+    const header = document.querySelector("[data-admin-sticky-header]") || document.querySelector(".topbar");
+    const height = header && header.getBoundingClientRect ? Math.ceil(header.getBoundingClientRect().height) : 112;
+    const stickyTop = Math.max(96, height + 18);
+    const scrollMargin = stickyTop + 18;
+    document.documentElement.style.setProperty("--admin-sticky-top", `${stickyTop}px`);
+    document.documentElement.style.setProperty("--admin-scroll-margin-top", `${scrollMargin}px`);
+    return { height, stickyTop, scrollMargin };
+  }
+
+  function initializeAdminLayoutShell() {
+    const stickyOffsets = updateAdminStickyLayoutOffsets();
+    const collapsedSet = readAdminCollapsedSectionSet();
+    const sections = Array.from(document.querySelectorAll("[data-admin-collapsible]"));
+    sections.forEach((section) => ensureAdminSectionCollapseControl(section, collapsedSet));
+    setAdminActiveSidebarLink(window.location.hash || "#section-overview");
+    if (!window.__upgradeRpgAdminLayoutHashBound) {
+      window.__upgradeRpgAdminLayoutHashBound = true;
+      window.addEventListener("hashchange", () => setAdminActiveSidebarLink(window.location.hash || "#section-overview"));
+      window.addEventListener("resize", () => updateAdminStickyLayoutOffsets());
+      document.addEventListener("click", (event) => {
+        const link = event.target && event.target.closest ? event.target.closest(".admin-jump-nav a[href^='#']") : null;
+        if (!link) return;
+        setTimeout(() => setAdminActiveSidebarLink(link.getAttribute("href")), 0);
+      });
+    }
+    const readiness = getAdminLayoutShellReadiness();
+    readiness.stickyOffsets = stickyOffsets;
+    return readiness;
+  }
+
+  function getAdminLayoutShellReadiness() {
+    const collapsibleCount = document.querySelectorAll("[data-admin-collapsible]").length;
+    const collapseToggleCount = document.querySelectorAll("[data-admin-layout-collapse-toggle]").length;
+    const defaultCollapsedKeys = Array.from(getAdminDefaultCollapsedSectionSet());
+    const defaultCollapsedReady = defaultCollapsedKeys.every((key) => {
+      const section = document.querySelector(`[data-admin-section-key="${key}"]`);
+      return !!section && section.classList.contains("admin-section-collapsed");
+    });
+    const stickyTop = getComputedStyle(document.documentElement).getPropertyValue("--admin-sticky-top").trim();
+    const collapsedPanelHeaderCount = document.querySelectorAll(".filter-panel[data-admin-collapsible] > .filter-title.admin-collapse-header, .field-help-panel[data-admin-collapsible] > .filter-title.admin-collapse-header").length;
+    const collapsedPanelStyleReady = collapsedPanelHeaderCount >= document.querySelectorAll(".filter-panel[data-admin-collapsible], .field-help-panel[data-admin-collapsible]").length;
+    const result = {
+      layoutReady: !!document.querySelector("[data-admin-layout-shell]"),
+      sidebarReady: !!document.querySelector("[data-admin-sidebar]"),
+      mainContentReady: !!document.querySelector("[data-admin-main-content]"),
+      footerReady: !!document.querySelector("[data-admin-footer]"),
+      collapsibleCount,
+      collapseToggleCount,
+      collapseReady: collapsibleCount > 0 && collapseToggleCount >= collapsibleCount,
+      collapsedPanelHeaderCount,
+      collapsedPanelStyleReady,
+      activeNavReady: !!document.querySelector(".admin-jump-nav a.active, .admin-jump-nav a[aria-current='location']"),
+      defaultCollapsedKeys,
+      defaultCollapsedReady,
+      stickyTop,
+      stickyOffsetReady: !!stickyTop && stickyTop !== "92px",
+    };
+    result.ok = result.layoutReady && result.sidebarReady && result.mainContentReady && result.footerReady && result.collapseReady && result.collapsedPanelStyleReady && result.stickyOffsetReady;
+    return result;
   }
 
   function bindEvents() {
@@ -3532,6 +3786,20 @@
           if (!(error && (String(error.message || "").includes("확인 문구") || String(error.message || "").includes("dev key")))) renderError(error);
         }
       }
+      if (action === "preview-admin-create-delete-restore") {
+        try {
+          await previewAdminCreateDeleteRestore();
+        } catch (error) {
+          renderError(error);
+        }
+      }
+      if (action === "apply-admin-create-delete-restore") {
+        try {
+          await applyAdminCreateDeleteRestore();
+        } catch (error) {
+          if (!(error && (String(error.message || "").includes("확인 문구") || String(error.message || "").includes("dev key")))) renderError(error);
+        }
+      }
       if (action === "verify-master-api-target") {
         try {
           await verifySelectedMasterDataApi();
@@ -3588,6 +3856,7 @@
 
   function bootAdminReadOnlyPage() {
     bindEvents();
+    initializeAdminLayoutShell();
     syncLocationHints();
     syncApiInput();
     syncAdminWriteDevKeyInput();
@@ -3600,7 +3869,7 @@
   }
 
   function checkAdminReadOnlyPageReady(options) {
-    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterCreateBlueprint === "function" && typeof window.RpgGameApi.previewAdminMasterDataCreate === "function" && typeof window.RpgGameApi.applyAdminMasterDataCreate === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function" && typeof window.RpgGameApi.previewAdminMasterDataEdit === "function" && typeof window.RpgGameApi.applyAdminMasterDataEdit === "function" && typeof window.RpgGameApi.listAdminChangeLogs === "function" && typeof window.RpgGameApi.fetchAdminChangeLogDetail === "function" && typeof window.RpgGameApi.previewAdminChangeLogRollback === "function" && typeof window.RpgGameApi.applyAdminChangeLogRollback === "function" && typeof window.RpgGameApi.previewAdminCreateDeleteRollback === "function" && typeof window.RpgGameApi.applyAdminCreateDeleteRollback === "function" && typeof window.RpgGameApi.setAdminWriteDevKey === "function" && typeof window.RpgGameApi.hasAdminWriteDevKey === "function");
+    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterCreateBlueprint === "function" && typeof window.RpgGameApi.previewAdminMasterDataCreate === "function" && typeof window.RpgGameApi.applyAdminMasterDataCreate === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function" && typeof window.RpgGameApi.previewAdminMasterDataEdit === "function" && typeof window.RpgGameApi.applyAdminMasterDataEdit === "function" && typeof window.RpgGameApi.listAdminChangeLogs === "function" && typeof window.RpgGameApi.fetchAdminChangeLogDetail === "function" && typeof window.RpgGameApi.previewAdminChangeLogRollback === "function" && typeof window.RpgGameApi.applyAdminChangeLogRollback === "function" && typeof window.RpgGameApi.previewAdminCreateDeleteRollback === "function" && typeof window.RpgGameApi.applyAdminCreateDeleteRollback === "function" && typeof window.RpgGameApi.previewAdminCreateDeleteRestore === "function" && typeof window.RpgGameApi.applyAdminCreateDeleteRestore === "function" && typeof window.RpgGameApi.setAdminWriteDevKey === "function" && typeof window.RpgGameApi.hasAdminWriteDevKey === "function");
     const domReady = !!document.querySelector("[data-admin-cards]");
     const locationHintReady = !!document.querySelector("[data-admin-current-url]");
     const snapshotFilterReady = !!document.querySelector("[data-admin-filter-slot-key]");
@@ -3622,7 +3891,9 @@
     const relationPreviewReady = typeof formatAdminChangeValueText === "function" && typeof getAdminRelationValueDisplay === "function" && typeof openAdminMasterDataDetailByCode === "function";
     const changeLogRelationReady = typeof getAdminChangeRelationInfo === "function" && typeof renderAdminRollbackMismatchValueCell === "function" && typeof getAdminRelationOpenTargetFromChange === "function";
     const createDeleteRollbackReady = typeof previewAdminCreateDeleteRollback === "function" && typeof applyAdminCreateDeleteRollback === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRollback === "function");
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && masterApiVerifyReady && adminWriteGuardReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createBlueprint: getAdminCreateBlueprintReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const createDeleteRestoreReady = typeof previewAdminCreateDeleteRestore === "function" && typeof applyAdminCreateDeleteRestore === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRestore === "function");
+    const layoutShell = getAdminLayoutShellReadiness();
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -3694,6 +3965,10 @@
     applyAdminCreateDeleteRollback,
     readAdminCreateDeleteControls,
     renderAdminCreateDeleteResult,
+    previewAdminCreateDeleteRestore,
+    applyAdminCreateDeleteRestore,
+    readAdminCreateDeleteRestoreControls,
+    renderAdminCreateDeleteRestoreResult,
     syncAdminWriteDevKeyInput,
     saveAdminWriteDevKeyFromInput,
     clearAdminWriteDevKey,
@@ -3729,6 +4004,10 @@
     getAdminRelationOpenTargetFromChange,
     renderAdminRollbackMismatchValueCell,
     getAdminDraftLockedReason,
+    initializeAdminLayoutShell,
+    getAdminLayoutShellReadiness,
+    setAdminSectionCollapsed,
+    setAdminActiveSidebarLink,
     checkAdminReadOnlyPageReady,
   };
   window.refreshAdminReadOnlyPage = refreshAdminReadOnlyPage;
@@ -3759,6 +4038,12 @@
   window.openAdminMasterDataDetailByCode = openAdminMasterDataDetailByCode;
   window.openAdminMasterDataRelations = openAdminMasterDataRelations;
   window.checkAdminReadOnlyPageReady = checkAdminReadOnlyPageReady;
+  window.initializeAdminLayoutShell = initializeAdminLayoutShell;
+  window.getAdminLayoutShellReadiness = getAdminLayoutShellReadiness;
+  window.getAdminDefaultCollapsedSectionKeys = () => Array.from(getAdminDefaultCollapsedSectionSet());
+  window.updateAdminStickyLayoutOffsets = updateAdminStickyLayoutOffsets;
+  window.setAdminSectionCollapsed = setAdminSectionCollapsed;
+  window.setAdminActiveSidebarLink = setAdminActiveSidebarLink;
   window.getAdminEditDraftReadiness = getAdminEditDraftReadiness;
   window.syncAdminWriteDevKeyInput = syncAdminWriteDevKeyInput;
   window.saveAdminWriteDevKeyFromInput = saveAdminWriteDevKeyFromInput;
@@ -3805,6 +4090,10 @@
   window.previewAdminCreateDeleteRollback = previewAdminCreateDeleteRollback;
   window.applyAdminCreateDeleteRollback = applyAdminCreateDeleteRollback;
   window.readAdminCreateDeleteControls = readAdminCreateDeleteControls;
+  window.previewAdminCreateDeleteRestore = previewAdminCreateDeleteRestore;
+  window.applyAdminCreateDeleteRestore = applyAdminCreateDeleteRestore;
+  window.readAdminCreateDeleteRestoreControls = readAdminCreateDeleteRestoreControls;
+  window.renderAdminCreateDeleteRestoreResult = renderAdminCreateDeleteRestoreResult;
   window.verifySelectedMasterDataApi = verifySelectedMasterDataApi;
   window.runPostWriteMasterApiVerification = runPostWriteMasterApiVerification;
 

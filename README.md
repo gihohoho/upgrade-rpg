@@ -1,71 +1,14 @@
 # Upgrade RPG
 
-현재 안정 버전: v168 admin create delete rollback
+현재 안정 버전: v174 admin collapsed panel style fix
 
-관리자 신규 row 생성 제한 적용과 create 이력 기반 생성 row 삭제 되돌리기 안전 검사가 준비되어 있습니다.
-# Upgrade RPG
+관리자 페이지 sidebar, sticky header, section 접기/펼치기, footer를 유지하면서 접힌 탭 스타일을 공통 규칙으로 보정했습니다. 기존 관리자 edit/create/delete/restore 기능은 유지됩니다.
 
-현재 프로젝트는 아직 Vue가 아니라 **index.html + JS + CSS 기반 RPG 게임**입니다.
-기존 게임을 정상 작동 상태로 유지하면서, FastAPI + PostgreSQL 백엔드를 단계적으로 붙이고 있습니다.
+백엔드/관리자 인수인계는 `NEXT_CHAT_HANDOFF.md`, 현재 상태는 `docs/CURRENT_STATUS.md`, 다음 단계는 `docs/NEXT_STEPS.md`를 참고하세요.
 
-## 새 채팅 인수인계
 
-새 채팅에서 이어갈 때는 이 파일을 먼저 참고하세요.
+## v174 관리자 접힌 탭 스타일 보정
 
-```txt
-NEXT_CHAT_HANDOFF.md
-```
-
-그다음 현재 상태와 다음 단계를 보려면:
-
-```txt
-docs/CURRENT_STATUS.md
-docs/NEXT_STEPS.md
-docs/README.md
-```
-
-## 현재 안정 버전
-
-- 최신 안정 버전: **v162: admin create draft preview**
-
-v162는 v159의 신규 row 생성 blueprint 위에 생성 draft 입력 UI와 preview-only 백엔드 검증을 추가한 버전입니다. 실제 DB insert는 아직 잠금 상태이며, unique/relation/combo guard 검증만 안전하게 확인합니다.
-
-DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
-
-## 백엔드 실행
-
-```bash
-# 위치: backend 폴더 + 가상환경 activate 상태
-source .venv/Scripts/activate
-uvicorn app.main:app --reload
-```
-
-## smoke test
-
-핵심 검사:
-
-```bash
-# 위치: 프로젝트 루트
-bash tools/run_smoke_core.sh
-```
-
-전체 검사:
-
-```bash
-# 위치: 프로젝트 루트
-bash tools/run_smoke_all.sh
-```
-
-## 관리자 페이지
-
-게임 화면에서:
-
-```txt
-SAVE DATA → admin → 관리자 페이지 열기
-```
-
-관리자 실제 쓰기 기능은 로컬 개발용 dev key가 필요합니다.
-
-```txt
-local-admin-dev-key
-```
+- `filter-panel` / `field-help-panel` 접힘 상태에서도 전체 카드 색상이 통일되도록 수정.
+- 필드 용어 도움말, 신규 row 생성 준비, 관리자 쓰기 잠금, 세이브 스냅샷 필터 등 모든 접힘 탭이 같은 스타일로 보이도록 보강.
+- 기존 기능/API/DB는 변경 없음.

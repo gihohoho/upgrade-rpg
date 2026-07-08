@@ -57,23 +57,32 @@ HIGH RISK EDIT
 관리자 되돌리기 확인 문구:
 ROLLBACK MASTER DATA EDIT
 
+신규 row 생성 확인 문구:
+CREATE MASTER DATA ROW
+
+생성 row 삭제 확인 문구:
+DELETE CREATED MASTER DATA ROW
+
+삭제 row 복원 확인 문구:
+RESTORE DELETED CREATED ROW
+
 .env / .gitignore 처리:
 내 로컬에는 .env, .gitignore가 이미 있어.
 둘이 바뀌지 않았으면 ZIP에 굳이 포함하지 않아도 돼.
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v168: admin create delete rollback
+v174: admin collapsed panel style fix
 
 최신 ZIP:
-rpg_v168_admin_create_delete_rollback.zip
+rpg_v174_admin_collapsed_panel_style_fix.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
 NEXT_CHAT_PROMPT.md
 docs/CURRENT_STATUS.md
 docs/NEXT_STEPS.md
-docs/ADMIN_CREATE_DRAFT_PREVIEW.md
+docs/ADMIN_CREATE_DELETE_RESTORE.md
 
 현재 완료된 핵심:
 1. master-data PostgreSQL → FastAPI → 브라우저 연결 완료.
@@ -96,22 +105,19 @@ docs/ADMIN_CREATE_DRAFT_PREVIEW.md
 18. 겹친 장비 강화 시 가방이 꽉 차 있으면 강화 차단 완료.
 19. 관리자 relation select / relation label / change log relation 도구 완료.
 20. 신규 row 생성 준비 blueprint read-only 완료.
-21. v162에서 신규 row 생성 draft 입력 UI와 preview-only 검증 API 완료.
+21. 신규 row 생성 draft 입력 UI와 preview-only 검증 API 완료.
+22. characters / enhancementGroups 신규 row 실제 생성 apply 제한 오픈 완료.
+23. create 이력 기반 생성 row 삭제 preview/apply 제한 오픈 완료.
+24. create_delete 이력 기반 삭제 row 복원 preview/apply 제한 오픈 완료.
 
-v162 세부 완료:
-- 생성 초안 입력 UI 추가.
-- boolean / number / textarea / preset-select / relation-select 입력 타입 적용.
-- relation 후보 검색/필터 적용.
-- owner_type 변경 시 owner_code 후보 자동 전환.
-- POST /api/v1/admin/master-data/create-preview 추가.
-- code unique 중복 검사.
-- relation 대상 존재 검사.
-- combo guard 중복 검사.
-- 실제 DB insert는 아직 잠금 상태.
+v172 세부 완료:
+관리자 페이지 sidebar navigation shell 추가.
+sticky header 추가.
+주요 섹션 접기/펼치기 추가.
+접힘 상태 localStorage 저장.
+footer 버전/상태 영역 정리.
+기존 관리자 edit/create/delete/restore 기능 유지.
 
-중요한 안전 원칙:
-기존 게임 동작을 깨면 안 됨.
-localStorage 저장은 계속 유지해야 함.
 DB reset/seed가 필요한 단계인지 아닌지 반드시 알려줘.
 작업 후 ZIP으로 줘.
 커밋 명령어도 마지막에 add부터 push까지 같이 줘.
@@ -128,27 +134,23 @@ bash tools/run_smoke_core.sh
 bash tools/run_smoke_all.sh
 
 다음 추천 단계:
-v163 관리자 신규 row 생성 apply 준비
+v175 create apply 도메인 제한 확장
+fieldZones create apply 제한 오픈부터 추천.
+itemTemplates, skills, dropTables, dropTableItems는 아직 바로 열지 않는 것이 안전함.
 
-구체적으로:
-바로 모든 도메인을 insert 가능하게 열지 말고, characters 또는 enhancementGroups처럼 relation 의존도가 낮은 도메인부터 실제 생성 apply를 열어줘.
-생성 확인 문구, admin dev key guard, create change log, 생성 후 상세 자동 열기까지 붙이면 좋아.
-rollback은 삭제가 아니라 soft-disabled 또는 별도 안전 정책을 먼저 설계하는 방향이 좋아.
 
-업로드한 ZIP 기준으로 구조 확인 후, v163부터 이어서 진행해줘.
+## v173 세부 완료
 
-추가 완료: v165 admin create apply limited. `characters`, `enhancementGroups` 신규 row 생성 apply만 제한적으로 열림. 생성 확인 문구는 `CREATE MASTER DATA ROW`. create rollback/delete는 아직 잠금. DB reset/seed 필요 없음.
+- sidebar sticky top offset을 header 높이 기준으로 자동 보정했습니다.
+- `필드 용어 도움말`, `신규 row 생성 준비`, `관리자 변경 이력` 기본 상태를 접기로 변경했습니다.
+- 접힌 섹션은 amber 계열 색상으로 구분되도록 표시를 강화했습니다.
+- DB reset / seed 필요 없습니다.
 
-## v168 세부 완료
 
-- `create-apply`로 생성된 제한 도메인 row 삭제 되돌리기 preview/apply 추가.
-- 대상 도메인: `characters`, `enhancementGroups`.
-- 현재값이 생성 당시 값과 다르면 삭제 차단.
-- 연결 데이터 blocker가 있으면 삭제 차단.
-- 실제 삭제 적용은 관리자 쓰기 dev key와 `DELETE CREATED MASTER DATA ROW` 확인 문구 필요.
-- 삭제 성공 시 `admin_change_logs.action=create_delete` 기록.
-- DB reset / seed 필요 없음.
+## v174 세부 완료
 
-## 다음 추천 단계
-
-- v169 create_delete 이력 기반 restore preview 설계, 또는 fieldZones처럼 relation 의존도가 낮은 도메인의 create apply 제한 확장.
+- 접힌 탭 공통 CSS를 보정했습니다.
+- `.section`, `.filter-panel`, `.field-help-panel` 기반 접힘 상태가 모두 같은 amber 계열 카드 스타일로 보이게 했습니다.
+- `필드 용어 도움말`, `신규 row 생성 준비`처럼 filter/help panel 구조인 탭이 안쪽 header만 색칠되던 문제를 수정했습니다.
+- `getAdminLayoutShellReadiness().collapsedPanelStyleReady` 확인 상태를 추가했습니다.
+- DB reset / seed 필요 없습니다.

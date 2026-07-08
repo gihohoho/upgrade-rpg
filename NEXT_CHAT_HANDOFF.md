@@ -60,14 +60,15 @@ uvicorn app.main:app --reload
 - 현재 게임 실제 세이브 슬롯: `default`
 - 수동저장 시 localStorage `idleRpgSaveV22` 저장 + DB `default` 슬롯 갱신
 
-## 관리자 쓰기 dev key
+## 관리자 쓰기 dev key / 확인 문구
 
 - 관리자 쓰기 dev key: `local-admin-dev-key`
 - 관리자 실제 적용 확인 문구: `APPLY MASTER DATA EDIT`
 - high risk 추가 확인 문구: `HIGH RISK EDIT`
 - 관리자 되돌리기 확인 문구: `ROLLBACK MASTER DATA EDIT`
-
+- 신규 row 생성 확인 문구: `CREATE MASTER DATA ROW`
 - 생성 row 삭제 확인 문구: `DELETE CREATED MASTER DATA ROW`
+- 삭제 row 복원 확인 문구: `RESTORE DELETED CREATED ROW`
 
 ## .env / .gitignore 처리
 
@@ -77,10 +78,8 @@ uvicorn app.main:app --reload
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v168: admin create delete rollback**
-- 최신 ZIP 이름: **rpg_v168_admin_create_delete_rollback.zip**
-
-v162는 v159의 신규 row 생성 blueprint 위에 생성 draft 입력 UI와 preview-only 백엔드 검증 API를 추가한 버전입니다. 실제 DB insert는 아직 잠금 상태입니다.
+- 최신 안정 버전: **v174: admin collapsed panel style fix**
+- 최신 ZIP 이름: **rpg_v174_admin_collapsed_panel_style_fix.zip**
 
 ## 지금까지 완료된 핵심
 
@@ -115,40 +114,22 @@ v162는 v159의 신규 row 생성 blueprint 위에 생성 draft 입력 UI와 pre
 29. change log / rollback preview relation label 완료.
 30. 신규 row 생성 blueprint read-only 완료.
 31. 신규 row 생성 draft 입력 UI + preview-only 검증 완료.
+32. `characters`, `enhancementGroups` 신규 row 실제 생성 apply 제한 오픈 완료.
+33. `create` 이력 기반 생성 row 삭제 preview/apply 제한 오픈 완료.
+34. `create_delete` 이력 기반 삭제 row 복원 preview/apply 제한 오픈 완료.
 
-## v162 세부 완료
+## v172 세부 완료
 
-- 관리자 신규 row 생성 준비 섹션에 생성 초안 입력 UI 추가.
-- blueprint 필드 기반으로 input 자동 구성.
-- boolean 필드는 true/false select.
-- number 필드는 number input.
-- description/admin_note는 textarea.
-- preset 필드는 select.
-- relation 필드는 실제 후보 목록 기반 select.
-- relation 후보 검색/필터 지원.
-- dropTables의 owner_type 변경 시 owner_code 후보 목록 자동 전환.
-- `POST /api/v1/admin/master-data/create-preview` 추가.
-- create-preview는 preview-only입니다.
-- code unique 중복 검사 추가.
-- relation 대상 존재 검사 추가.
-- combo guard 중복 검사 추가.
-- 실제 DB insert / commit / change log / rollback은 아직 열지 않았습니다.
-
-## 유지된 안전장치
-
-- 기존 게임 동작 유지.
-- localStorage 저장 유지.
-- DB save snapshot dual write 유지.
-- dev key guard 유지.
-- `APPLY MASTER DATA EDIT` 확인 문구 유지.
-- high risk 변경 시 `HIGH RISK EDIT` 추가 확인 유지.
-- rollback 시 `ROLLBACK MASTER DATA EDIT` 확인 문구 유지.
-- stale guard 유지.
-- post-edit master-data API verify 유지.
+- 관리자 페이지에 sidebar navigation shell 추가.
+- 상단 header sticky 처리.
+- 주요 관리자 섹션 접기/펼치기 버튼 추가.
+- 접힘 상태 localStorage 저장.
+- footer를 관리자 버전/상태 표시 영역으로 정리.
+- 기존 edit/create/delete/restore 기능 유지.
 
 ## DB / seed
 
-- v162는 DB reset / seed 필요 없음.
+- v172는 DB reset / seed 필요 없음.
 - DB schema 변경 없음.
 - `.env`, `.gitignore` 변경 없음.
 
@@ -164,13 +145,13 @@ bash tools/run_smoke_core.sh
 bash tools/run_smoke_all.sh
 ```
 
-v162 작업 후 둘 다 통과했습니다.
+v172 작업 후 둘 다 통과했습니다.
 
 ## 브라우저 확인용
 
 ```js
 위치: 브라우저 개발자도구 Console
-checkAdminReadOnlyPageReady().createDraftPreviewReady
+checkAdminReadOnlyPageReady().layoutShellReady
 ```
 
 예상 결과:
@@ -181,51 +162,28 @@ true
 
 ```js
 위치: 브라우저 개발자도구 Console
-getAdminCreateBlueprintReadiness()
-```
-
-예상 결과에 들어있어야 하는 값:
-
-```txt
-previewReady: true
-createApplyReady: false
+getAdminLayoutShellReadiness()
 ```
 
 ## 다음 추천 단계
 
-### v163 관리자 신규 row 생성 apply 준비
+- v175 create apply 도메인 제한 확장
+- 우선 `fieldZones` create apply를 제한적으로 여는 방향이 안전합니다.
+- `itemTemplates`, `skills`, `dropTables`, `dropTableItems`는 아직 바로 생성 apply를 열지 않는 것이 좋습니다.
 
-바로 모든 도메인의 실제 생성 기능을 열기보다는, relation 의존도가 낮은 도메인부터 한 개씩 실제 insert apply를 여는 것이 안전합니다.
 
-추천 순서:
+## v173 세부 완료
 
-1. `characters` 또는 `enhancementGroups`처럼 관계 의존도가 낮은 도메인부터 시작.
-2. 생성 확인 문구 추가.
-3. admin dev key guard 연결.
-4. create change log 기록.
-5. 생성 성공 후 새 row 상세 자동 열기.
-6. rollback은 삭제가 아니라 soft-disabled 또는 별도 안전 정책을 먼저 설계.
+- sidebar sticky top offset을 header 높이 기준으로 자동 보정했습니다.
+- `필드 용어 도움말`, `신규 row 생성 준비`, `관리자 변경 이력` 기본 상태를 접기로 변경했습니다.
+- 접힌 섹션은 amber 계열 색상으로 구분되도록 표시를 강화했습니다.
+- DB reset / seed 필요 없습니다.
 
-## 다음 채팅에서 먼저 확인할 파일
 
-- `NEXT_CHAT_HANDOFF.md`
-- `NEXT_CHAT_PROMPT.md`
-- `docs/CURRENT_STATUS.md`
-- `docs/NEXT_STEPS.md`
-- `docs/ADMIN_CREATE_DRAFT_PREVIEW.md`
+## v174 세부 완료
 
-추가 완료: v165 admin create apply limited. `characters`, `enhancementGroups` 신규 row 생성 apply만 제한적으로 열림. 생성 확인 문구는 `CREATE MASTER DATA ROW`. create rollback/delete는 아직 잠금. DB reset/seed 필요 없음.
-
-## v168 세부 완료
-
-- `create-apply`로 생성된 제한 도메인 row 삭제 되돌리기 preview/apply 추가.
-- 대상 도메인: `characters`, `enhancementGroups`.
-- 현재값이 생성 당시 값과 다르면 삭제 차단.
-- 연결 데이터 blocker가 있으면 삭제 차단.
-- 실제 삭제 적용은 관리자 쓰기 dev key와 `DELETE CREATED MASTER DATA ROW` 확인 문구 필요.
-- 삭제 성공 시 `admin_change_logs.action=create_delete` 기록.
-- DB reset / seed 필요 없음.
-
-## 다음 추천 단계
-
-- v169 create_delete 이력 기반 restore preview 설계, 또는 fieldZones처럼 relation 의존도가 낮은 도메인의 create apply 제한 확장.
+- 접힌 탭 공통 CSS를 보정했습니다.
+- `.section`, `.filter-panel`, `.field-help-panel` 기반 접힘 상태가 모두 같은 amber 계열 카드 스타일로 보이게 했습니다.
+- `필드 용어 도움말`, `신규 row 생성 준비`처럼 filter/help panel 구조인 탭이 안쪽 header만 색칠되던 문제를 수정했습니다.
+- `getAdminLayoutShellReadiness().collapsedPanelStyleReady` 확인 상태를 추가했습니다.
+- DB reset / seed 필요 없습니다.

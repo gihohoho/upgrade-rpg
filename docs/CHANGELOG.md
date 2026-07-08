@@ -1,5 +1,25 @@
 # Changelog
 
+## v174 - Admin Collapsed Panel Style Fix
+
+- 접힌 섹션 스타일을 `.section`, `.filter-panel`, `.field-help-panel` 모두에서 통일했습니다.
+- `필드 용어 도움말`, `신규 row 생성 준비` 같은 filter/help 기반 탭이 접혔을 때 내부 header만 색칠되던 문제를 수정했습니다.
+- 접힌 filter/help 패널은 padding을 제거하고 header가 전체 너비를 차지하도록 보정했습니다.
+- `getAdminLayoutShellReadiness()`에 `collapsedPanelStyleReady` 상태를 추가했습니다.
+- 기존 관리자 기능과 DB schema는 변경하지 않았습니다.
+- DB reset / seed는 필요 없습니다.
+
+## v172 - Admin Layout Navigation Shell
+
+- 관리자 페이지에 sidebar navigation shell을 추가했습니다.
+- 상단 header를 sticky 형태로 정리했습니다.
+- 주요 섹션에 접기/펼치기 버튼을 추가했습니다.
+- 접힌 섹션 상태는 브라우저 localStorage에 저장합니다.
+- footer를 현재 버전/상태 표시 영역으로 정리했습니다.
+- 기존 edit/create/delete/restore API 기능은 변경하지 않았습니다.
+- DB reset / seed는 필요 없습니다.
+
+
 ## v168 - Admin Create Delete Rollback
 
 - `create-apply`로 만든 제한 도메인 row 삭제 되돌리기 preview/apply API를 추가했습니다.
@@ -395,6 +415,15 @@
 - 기존 게임 동작은 유지하고, FastAPI 응답 구조로 옮기기 위한 중간 계층만 추가했습니다.
 
 # Changelog
+
+## v174 - Admin Collapsed Panel Style Fix
+
+- 접힌 섹션 스타일을 `.section`, `.filter-panel`, `.field-help-panel` 모두에서 통일했습니다.
+- `필드 용어 도움말`, `신규 row 생성 준비` 같은 filter/help 기반 탭이 접혔을 때 내부 header만 색칠되던 문제를 수정했습니다.
+- 접힌 filter/help 패널은 padding을 제거하고 header가 전체 너비를 차지하도록 보정했습니다.
+- `getAdminLayoutShellReadiness()`에 `collapsedPanelStyleReady` 상태를 추가했습니다.
+- 기존 관리자 기능과 DB schema는 변경하지 않았습니다.
+- DB reset / seed는 필요 없습니다.
 
 ## v168 - Admin Create Delete Rollback
 
@@ -894,3 +923,12 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - create rollback/delete는 아직 잠금 상태다.
 - DB reset / seed 필요 없음.
 
+
+## v171 - Admin Create Delete Restore
+
+- `create_delete` 이력으로 삭제한 제한 도메인 row를 복원하는 preview/apply 흐름을 추가했다.
+- 복원 대상은 `characters`, `enhancementGroups`로 제한했다.
+- 복원 전 `idConflict`, `codeConflict`, `validationErrorCount`를 검사한다.
+- 복원 apply에는 dev key와 `RESTORE DELETED CREATED ROW` 확인 문구가 필요하다.
+- 복원 성공 시 `admin_change_logs`에 `action=create_delete_restore` 이력을 남긴다.
+- DB reset / seed 필요 없음.
