@@ -201,6 +201,7 @@
 		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
 		const domain = opts.domain !== undefined ? String(opts.domain || "").trim() : undefined;
 		const limit = opts.limit !== undefined ? Number(opts.limit) : undefined;
+		const page = opts.page !== undefined ? Number(opts.page) : undefined;
 		const query = opts.query !== undefined ? String(opts.query || "").trim() : undefined;
 		const enabled = opts.enabled !== undefined ? String(opts.enabled || "").trim() : undefined;
 		const sort = opts.sort !== undefined ? String(opts.sort || "").trim() : undefined;
@@ -208,6 +209,7 @@
 			query: {
 				domain,
 				limit,
+				page,
 				query,
 				enabled,
 				sort,
@@ -215,6 +217,19 @@
 			timeoutMs,
 		});
 	}
+
+	async function fetchAdminMasterCreateBlueprint(options) {
+		const opts = options || {};
+		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
+		const domain = opts.domain !== undefined ? String(opts.domain || "").trim() : undefined;
+		return request("/admin/master-data/create-blueprint", {
+			query: {
+				domain,
+			},
+			timeoutMs,
+		});
+	}
+
 
 	async function fetchAdminMasterDataDetail(options) {
 		const opts = options || {};
@@ -258,6 +273,7 @@
 				domain: opts.domain !== undefined ? String(opts.domain || "").trim() : "",
 				id: opts.id !== undefined ? Number(opts.id) : (opts.rowId !== undefined ? Number(opts.rowId) : undefined),
 				draft: opts.draft || {},
+				baseValues: opts.baseValues || undefined,
 				reason: opts.reason || undefined,
 				dryRun: true,
 			},
@@ -274,6 +290,7 @@
 				domain: opts.domain !== undefined ? String(opts.domain || "").trim() : "",
 				id: opts.id !== undefined ? Number(opts.id) : (opts.rowId !== undefined ? Number(opts.rowId) : undefined),
 				draft: opts.draft || {},
+				baseValues: opts.baseValues || undefined,
 				reason: opts.reason || undefined,
 				confirmText: opts.confirmText || "",
 				dryRun: false,
@@ -378,6 +395,7 @@
 		listAdminSaveSnapshots,
 		listAdminMasterCatalogDomains,
 		listAdminMasterCatalogRows,
+		fetchAdminMasterCreateBlueprint,
 		fetchAdminMasterDataDetail,
 		fetchAdminMasterDataRelations,
 		previewAdminMasterDataEdit,

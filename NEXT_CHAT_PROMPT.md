@@ -1,6 +1,6 @@
 # 새 채팅 시작용 프롬프트
 
-아래 내용을 그대로 새 채팅의 첫 메시지로 붙여넣고, 함께 `rpg_v156_admin_change_log_relation_tools.zip`을 업로드해서 이어서 진행해줘.
+아래 내용을 그대로 새 채팅의 첫 메시지로 붙여넣고, 함께 `rpg_v159_admin_create_blueprint_readonly.zip`을 업로드해서 이어서 진행해줘.
 
 ---
 
@@ -51,10 +51,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v156: admin change log relation tools
+v159: admin create blueprint readonly
 
 최신 ZIP:
-rpg_v156_admin_change_log_relation_tools.zip
+rpg_v159_admin_create_blueprint_readonly.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -95,8 +95,15 @@ docs/NEXT_STEPS.md
 30. v152에서 relation 대상 빠른 열기 버튼 완료.
 31. v153에서 relation 변경 개수 표시 완료.
 32. v156에서 change log 상세/rollback preview relation label 강화 완료.
+33. v159에서 신규 row 생성 준비용 read-only blueprint/API/UI 완료.
 
-v156 세부 완료:
+v159 세부 완료:
+- 신규 row 생성 준비용 read-only blueprint API 추가.
+- 관리자 페이지 신규 row 생성 준비 섹션 추가.
+- 도메인별 필수 필드/기본값/unique/combo guard/relation 후보 표시.
+- 실제 insert API는 아직 잠금.
+
+v156 세부 유지:
 - v147 관계 필드 안전 편집 유지.
 - v150 relation select 후보 검색/필터 유지.
 - v153 변경 preview relation label/대상 열기 유지.
@@ -144,13 +151,18 @@ bash tools/run_smoke_all.sh
 ```
 
 다음 추천 단계:
-v157 관리자 신규 row 생성 준비용 read-only 설계
+- v160 관리자 생성 draft 입력 UI 준비
+- 생성 preview-only unique/relation/combo guard 검증
+- 실제 insert apply는 아직 잠금 유지
 
 구체적으로:
-이미 저장된 change log 상세와 rollback preview에서도 relation 값이 코드만 보이지 않도록 before/after에 대상 이름 label을 붙여줘.
+신규 row 생성 기능을 바로 적용하지 말고, v159 blueprint를 바탕으로 생성 초안 입력 UI와 preview-only 검증부터 붙여줘.
 
-rollback 대상도 열 수 있으면 대상 열기 버튼을 붙이고, 기존 rollback guard는 그대로 유지해줘.
+- code unique 중복 검사
+- relation 대상 존재 검사
+- combo guard 중복 검사
+- 실제 insert apply는 아직 잠금
 
-이 단계도 가능하면 DB reset/seed 없이 관리자 UI 편의 기능 중심으로 진행해줘.
+이 단계도 가능하면 DB reset/seed 없이 관리자 UI/preview 중심으로 진행해줘.
 
-업로드한 ZIP 기준으로 구조 확인 후, v148부터 이어서 진행해줘.
+업로드한 ZIP 기준으로 구조 확인 후, v160부터 이어서 진행해줘.

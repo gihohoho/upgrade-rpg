@@ -43,7 +43,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v156.admin-change-log-relation-tools",
+  "v159.admin-create-blueprint-readonly",
   "renderMasterDetail",
   "openAdminMasterDataDetail",
   "fetchAdminMasterDataDetail",
@@ -60,7 +60,7 @@ assertContains("admin.html", [
   "data-admin-master-detail-meta",
   ".json-preview",
   ".detail-grid",
-  "v156 admin change log relation tools",
+  "v159 admin create blueprint readonly",
 ]);
 
 assertContains("backend/scripts/check_admin_readonly_api.py", [

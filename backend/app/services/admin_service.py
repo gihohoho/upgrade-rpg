@@ -158,6 +158,109 @@ class AdminService:
         },
     }
 
+
+
+    MASTER_CREATE_BLUEPRINT_FIELDS: dict[str, list[dict[str, Any]]] = {
+        "itemTemplates": [
+            {"key": "code", "required": True, "unique": True, "inputKind": "text", "defaultValue": "", "note": "아이템을 식별하는 고유 코드입니다. 생성 기능을 열기 전까지는 read-only 설계만 보여줍니다."},
+            {"key": "name", "required": True, "inputKind": "text", "defaultValue": ""},
+            {"key": "item_type", "required": True, "inputKind": "preset-select", "defaultValue": "normal"},
+            {"key": "grade", "required": False, "inputKind": "number", "defaultValue": None},
+            {"key": "description", "required": False, "inputKind": "textarea", "defaultValue": ""},
+            {"key": "stackable", "required": False, "inputKind": "boolean-select", "defaultValue": False},
+            {"key": "equip_slot", "required": False, "inputKind": "preset-select", "defaultValue": ""},
+            {"key": "enhance_group_code", "required": False, "inputKind": "relation-select", "defaultValue": "", "targetDomain": "enhancementGroups", "nullable": True},
+            {"key": "base_stats_json", "required": False, "inputKind": "json-readonly", "defaultValue": {}, "lockedReason": "JSON 필드는 생성 적용 단계 전까지 잠금"},
+            {"key": "options_json", "required": False, "inputKind": "json-readonly", "defaultValue": {}, "lockedReason": "JSON 필드는 생성 적용 단계 전까지 잠금"},
+            {"key": "admin_note", "required": False, "inputKind": "textarea", "defaultValue": ""},
+        ],
+        "skills": [
+            {"key": "code", "required": True, "unique": True, "inputKind": "text", "defaultValue": ""},
+            {"key": "name", "required": True, "inputKind": "text", "defaultValue": ""},
+            {"key": "slot_key", "required": True, "inputKind": "preset-select", "defaultValue": "Q"},
+            {"key": "description", "required": False, "inputKind": "textarea", "defaultValue": ""},
+            {"key": "proc_rate", "required": False, "inputKind": "number", "defaultValue": None},
+            {"key": "cooldown_seconds", "required": False, "inputKind": "number", "defaultValue": 0},
+            {"key": "options_json", "required": False, "inputKind": "json-readonly", "defaultValue": {}, "lockedReason": "JSON 필드는 생성 적용 단계 전까지 잠금"},
+        ],
+        "skillLevels": [
+            {"key": "skill_code", "required": True, "inputKind": "relation-select", "targetDomain": "skills", "defaultValue": "", "comboGuard": ["skill_code", "level"]},
+            {"key": "level", "required": True, "inputKind": "number", "defaultValue": 1, "comboGuard": ["skill_code", "level"]},
+            {"key": "damage_multiplier", "required": False, "inputKind": "number", "defaultValue": 0},
+            {"key": "proc_rate_bonus", "required": False, "inputKind": "number", "defaultValue": 0},
+            {"key": "options_json", "required": False, "inputKind": "json-readonly", "defaultValue": {}, "lockedReason": "JSON 필드는 생성 적용 단계 전까지 잠금"},
+        ],
+        "bosses": [
+            {"key": "code", "required": True, "unique": True, "inputKind": "text", "defaultValue": ""},
+            {"key": "name", "required": True, "inputKind": "text", "defaultValue": ""},
+            {"key": "tier", "required": False, "inputKind": "number", "defaultValue": None},
+            {"key": "boss_type", "required": False, "inputKind": "preset-select", "defaultValue": "normal"},
+            {"key": "hp", "required": False, "inputKind": "number", "defaultValue": 1},
+            {"key": "description", "required": False, "inputKind": "textarea", "defaultValue": ""},
+            {"key": "summon_rules_json", "required": False, "inputKind": "json-readonly", "defaultValue": {}, "lockedReason": "JSON 필드는 생성 적용 단계 전까지 잠금"},
+            {"key": "cooldown_seconds", "required": False, "inputKind": "number", "defaultValue": 0},
+            {"key": "is_enabled", "required": False, "inputKind": "boolean-select", "defaultValue": True},
+        ],
+        "fieldZones": [
+            {"key": "code", "required": True, "unique": True, "inputKind": "text", "defaultValue": ""},
+            {"key": "name", "required": True, "inputKind": "text", "defaultValue": ""},
+            {"key": "sort_order", "required": False, "inputKind": "number", "defaultValue": 0},
+            {"key": "enemy_hp", "required": False, "inputKind": "number", "defaultValue": 1},
+            {"key": "gold_reward", "required": False, "inputKind": "number", "defaultValue": 0},
+            {"key": "description", "required": False, "inputKind": "textarea", "defaultValue": ""},
+            {"key": "entry_rules_json", "required": False, "inputKind": "json-readonly", "defaultValue": {}, "lockedReason": "JSON 필드는 생성 적용 단계 전까지 잠금"},
+            {"key": "farm_rules_json", "required": False, "inputKind": "json-readonly", "defaultValue": {}, "lockedReason": "JSON 필드는 생성 적용 단계 전까지 잠금"},
+            {"key": "is_enabled", "required": False, "inputKind": "boolean-select", "defaultValue": True},
+        ],
+        "characters": [
+            {"key": "code", "required": True, "unique": True, "inputKind": "text", "defaultValue": ""},
+            {"key": "name", "required": True, "inputKind": "text", "defaultValue": ""},
+            {"key": "description", "required": False, "inputKind": "textarea", "defaultValue": ""},
+            {"key": "is_enabled", "required": False, "inputKind": "boolean-select", "defaultValue": True},
+            {"key": "meta_json", "required": False, "inputKind": "json-readonly", "defaultValue": {}, "lockedReason": "JSON 필드는 생성 적용 단계 전까지 잠금"},
+        ],
+        "dropTables": [
+            {"key": "code", "required": True, "unique": True, "inputKind": "text", "defaultValue": ""},
+            {"key": "owner_type", "required": True, "inputKind": "preset-select", "defaultValue": "boss"},
+            {"key": "owner_code", "required": True, "inputKind": "relation-select", "targetDomain": "bosses", "defaultValue": "", "dependsOn": "owner_type", "optionGroups": ["boss", "field"]},
+            {"key": "description", "required": False, "inputKind": "textarea", "defaultValue": ""},
+            {"key": "rules_json", "required": False, "inputKind": "json-readonly", "defaultValue": {}, "lockedReason": "JSON 필드는 생성 적용 단계 전까지 잠금"},
+            {"key": "is_enabled", "required": False, "inputKind": "boolean-select", "defaultValue": True},
+        ],
+        "dropTableItems": [
+            {"key": "drop_table_code", "required": True, "inputKind": "relation-select", "targetDomain": "dropTables", "defaultValue": ""},
+            {"key": "item_template_code", "required": True, "inputKind": "relation-select", "targetDomain": "itemTemplates", "defaultValue": ""},
+            {"key": "rate", "required": True, "inputKind": "number", "defaultValue": 0},
+            {"key": "min_quantity", "required": False, "inputKind": "number", "defaultValue": 1},
+            {"key": "max_quantity", "required": False, "inputKind": "number", "defaultValue": 1},
+            {"key": "conditions_json", "required": False, "inputKind": "json-readonly", "defaultValue": {}, "lockedReason": "JSON 필드는 생성 적용 단계 전까지 잠금"},
+        ],
+        "enhancementGroups": [
+            {"key": "code", "required": True, "unique": True, "inputKind": "text", "defaultValue": ""},
+            {"key": "name", "required": True, "inputKind": "text", "defaultValue": ""},
+            {"key": "description", "required": False, "inputKind": "textarea", "defaultValue": ""},
+            {"key": "max_level", "required": False, "inputKind": "number", "defaultValue": 0},
+            {"key": "rules_json", "required": False, "inputKind": "json-readonly", "defaultValue": {}, "lockedReason": "JSON 필드는 생성 적용 단계 전까지 잠금"},
+            {"key": "is_enabled", "required": False, "inputKind": "boolean-select", "defaultValue": True},
+        ],
+        "enhancementLevels": [
+            {"key": "group_code", "required": True, "inputKind": "relation-select", "targetDomain": "enhancementGroups", "defaultValue": "", "comboGuard": ["group_code", "from_level"]},
+            {"key": "from_level", "required": True, "inputKind": "number", "defaultValue": 0, "comboGuard": ["group_code", "from_level"]},
+            {"key": "to_level", "required": True, "inputKind": "number", "defaultValue": 1},
+            {"key": "success_rate", "required": False, "inputKind": "number", "defaultValue": 0},
+            {"key": "gold_cost", "required": False, "inputKind": "number", "defaultValue": 0},
+            {"key": "material_rules_json", "required": False, "inputKind": "json-readonly", "defaultValue": {}, "lockedReason": "JSON 필드는 생성 적용 단계 전까지 잠금"},
+            {"key": "result_stats_json", "required": False, "inputKind": "json-readonly", "defaultValue": {}, "lockedReason": "JSON 필드는 생성 적용 단계 전까지 잠금"},
+            {"key": "fail_rules_json", "required": False, "inputKind": "json-readonly", "defaultValue": {}, "lockedReason": "JSON 필드는 생성 적용 단계 전까지 잠금"},
+        ],
+        "characterSkills": [
+            {"key": "character_code", "required": True, "inputKind": "relation-select", "targetDomain": "characters", "defaultValue": "", "comboGuard": ["character_code", "skill_code"]},
+            {"key": "skill_code", "required": True, "inputKind": "relation-select", "targetDomain": "skills", "defaultValue": "", "comboGuard": ["character_code", "skill_code"]},
+            {"key": "sort_order", "required": False, "inputKind": "number", "defaultValue": 0},
+            {"key": "is_default", "required": False, "inputKind": "boolean-select", "defaultValue": True},
+        ],
+    }
+
     async def preview_change(self, target_type: str, before: dict, after: dict) -> dict:
         return {
             "targetType": target_type,
@@ -1236,6 +1339,130 @@ class AdminService:
             "note": "관리자 준비용 조회 전용 목록입니다. 필터를 써도 snapshot_json 원본은 내려주지 않습니다.",
         }
 
+
+
+    async def get_master_create_blueprint(self, session: AsyncSession, *, domain: str = "itemTemplates") -> dict[str, Any]:
+        """Return a read-only create blueprint for a master-data domain.
+
+        This prepares the future new-row UI without opening a DB insert path. It
+        exposes required fields, safe defaults, relation candidates, and duplicate
+        guard hints only. No database mutation is performed.
+        """
+        config = self.MASTER_CATALOG_DOMAINS.get(domain)
+        if not config:
+            return {
+                "status": "invalid_domain",
+                "readOnly": True,
+                "createApplyReady": False,
+                "domain": domain,
+                "domainLabel": domain,
+                "description": None,
+                "fields": [],
+                "requiredFields": [],
+                "uniqueFields": [],
+                "comboGuards": [],
+                "defaultDraft": {},
+                "relationOptionsReturned": False,
+                "rawJsonReturned": False,
+                "assetsReturned": False,
+                "warnings": ["domain_invalid"],
+                "note": "알 수 없는 도메인이라 신규 row 생성 설계를 만들 수 없습니다.",
+            }
+
+        blueprint_defs = list(self.MASTER_CREATE_BLUEPRINT_FIELDS.get(domain) or [])
+        relation_options = await self._build_master_create_relation_options(session, domain)
+        fields: list[dict[str, Any]] = []
+        default_draft: dict[str, Any] = {}
+        combo_guards: list[list[str]] = []
+        relation_count = 0
+        for field_def in blueprint_defs:
+            key = str(field_def.get("key") or "")
+            if not key:
+                continue
+            default_value = field_def.get("defaultValue")
+            input_kind = str(field_def.get("inputKind") or "text")
+            is_json_locked = input_kind == "json-readonly" or key.endswith("_json")
+            if not is_json_locked:
+                default_draft[key] = default_value
+            combo_guard = field_def.get("comboGuard") if isinstance(field_def.get("comboGuard"), list) else None
+            if combo_guard and combo_guard not in combo_guards:
+                combo_guards.append(combo_guard)
+            relation_payload = relation_options.get(key)
+            if relation_payload:
+                relation_count += 1
+            fields.append({
+                "key": key,
+                "label": self._humanize_field_name(key),
+                "inputKind": input_kind,
+                "required": bool(field_def.get("required")),
+                "unique": bool(field_def.get("unique")),
+                "nullable": bool(field_def.get("nullable")) if "nullable" in field_def else not bool(field_def.get("required")),
+                "defaultValue": serialize_value(default_value),
+                "targetDomain": field_def.get("targetDomain"),
+                "dependsOn": field_def.get("dependsOn"),
+                "comboGuard": combo_guard or [],
+                "relation": relation_payload,
+                "locked": True,
+                "futureEditable": not is_json_locked,
+                "lockedReason": field_def.get("lockedReason") or "현재 단계는 생성 설계 read-only입니다. 실제 insert API는 아직 열지 않았습니다.",
+                "note": field_def.get("note"),
+            })
+
+        return {
+            "status": "loaded",
+            "readOnly": True,
+            "createApplyReady": False,
+            "domain": domain,
+            "domainLabel": config["label"],
+            "description": config.get("description"),
+            "fieldCount": len(fields),
+            "requiredFields": [field["key"] for field in fields if field.get("required")],
+            "uniqueFields": [field["key"] for field in fields if field.get("unique")],
+            "comboGuards": combo_guards,
+            "defaultDraft": default_draft,
+            "fields": fields,
+            "relationOptionsReturned": relation_count > 0,
+            "relationFieldCount": relation_count,
+            "rawJsonReturned": False,
+            "assetsReturned": False,
+            "warnings": [],
+            "note": "신규 row 생성 기능을 열기 전 read-only 설계 응답입니다. 필수 필드, 기본값, 관계 후보만 보여주며 DB를 수정하지 않습니다.",
+        }
+
+    async def _build_master_create_relation_options(self, session: AsyncSession, domain: str) -> dict[str, Any]:
+        if domain == "itemTemplates":
+            options = [{"value": "", "label": "없음 · 강화 그룹 연결 안 함", "current": True}]
+            options.extend(await self._fetch_relation_code_options(session, EnhancementGroup, limit=300))
+            return {"enhance_group_code": {"targetDomain": "enhancementGroups", "targetLabel": "강화 그룹", "nullable": True, "options": options}}
+        if domain == "skillLevels":
+            return {"skill_code": {"targetDomain": "skills", "targetLabel": "스킬", "nullable": False, "comboGuard": ["skill_code", "level"], "options": await self._fetch_relation_code_options(session, Skill, limit=300)}}
+        if domain == "dropTables":
+            return {
+                "owner_code": {
+                    "targetDomain": "bosses/fieldZones",
+                    "targetLabel": "드랍 테이블 소유자 코드",
+                    "nullable": False,
+                    "dependsOn": "owner_type",
+                    "optionGroups": {
+                        "boss": await self._fetch_relation_code_options(session, Boss, limit=300),
+                        "field": await self._fetch_relation_code_options(session, FieldZone, limit=300),
+                    },
+                    "options": await self._fetch_relation_code_options(session, Boss, limit=300),
+                }
+            }
+        if domain == "dropTableItems":
+            return {
+                "drop_table_code": {"targetDomain": "dropTables", "targetLabel": "드랍 테이블", "nullable": False, "options": await self._fetch_relation_code_options(session, DropTable, limit=300)},
+                "item_template_code": {"targetDomain": "itemTemplates", "targetLabel": "아이템 템플릿", "nullable": False, "options": await self._fetch_relation_code_options(session, ItemTemplate, limit=300)},
+            }
+        if domain == "enhancementLevels":
+            return {"group_code": {"targetDomain": "enhancementGroups", "targetLabel": "강화 그룹", "nullable": False, "comboGuard": ["group_code", "from_level"], "options": await self._fetch_relation_code_options(session, EnhancementGroup, limit=300)}}
+        if domain == "characterSkills":
+            return {
+                "character_code": {"targetDomain": "characters", "targetLabel": "캐릭터", "nullable": False, "comboGuard": ["character_code", "skill_code"], "options": await self._fetch_relation_code_options(session, Character, limit=200)},
+                "skill_code": {"targetDomain": "skills", "targetLabel": "스킬", "nullable": False, "comboGuard": ["character_code", "skill_code"], "options": await self._fetch_relation_code_options(session, Skill, limit=300)},
+            }
+        return {}
 
     async def list_master_catalog_domains(self, session: AsyncSession) -> dict[str, Any]:
         """Return editable master-data domains for the admin page without row payloads."""

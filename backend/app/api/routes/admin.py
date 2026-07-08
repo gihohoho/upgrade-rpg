@@ -95,10 +95,11 @@ async def list_admin_master_catalog_domains(
 @router.get("/master-data/catalog")
 async def list_admin_master_catalog_rows(
     domain: str = Query(default="itemTemplates", max_length=80),
-    limit: int = Query(default=50, ge=1, le=200),
+    limit: int = Query(default=20, ge=1, le=200),
+    page: int = Query(default=1, ge=1, le=100000),
     query: str | None = Query(default=None, max_length=120),
     enabled: str = Query(default="all", max_length=20),
-    sort: str = Query(default="code_asc", max_length=30),
+    sort: str = Query(default="id_asc", max_length=30),
     current_user: CurrentUser = Depends(get_current_user_placeholder),
     session: AsyncSession = Depends(get_db_session),
 ):
@@ -110,6 +111,7 @@ async def list_admin_master_catalog_rows(
         session,
         domain=domain,
         limit=limit,
+        page=page,
         query=query,
         enabled=enabled,
         sort=sort,
@@ -124,6 +126,8 @@ async def list_admin_master_catalog_rows(
             "domain": catalog["domain"],
             "count": catalog["count"],
             "total": catalog["total"],
+            "page": catalog["page"],
+            "totalPages": catalog["totalPages"],
             "filters": catalog["filters"],
             "rawJsonReturned": catalog["rawJsonReturned"],
             "assetsReturned": catalog["assetsReturned"],
@@ -134,6 +138,38 @@ async def list_admin_master_catalog_rows(
         },
     )
 
+
+
+
+
+@router.get("/master-data/create-blueprint")
+async def get_admin_master_create_blueprint(
+    domain: str = Query(default="itemTemplates", max_length=80),
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Return a read-only new-row blueprint for one master-data domain."""
+    blueprint = await service.get_master_create_blueprint(session, domain=domain)
+    return ok_response(
+        type="admin.master_data.create_blueprint",
+        payload=blueprint,
+        data={
+            "status": blueprint["status"],
+            "readOnly": blueprint["readOnly"],
+            "createApplyReady": blueprint["createApplyReady"],
+            "adminUserId": current_user.id,
+            "domain": blueprint["domain"],
+            "fieldCount": blueprint.get("fieldCount", 0),
+            "requiredFields": blueprint.get("requiredFields", []),
+            "relationOptionsReturned": blueprint.get("relationOptionsReturned", False),
+            "rawJsonReturned": blueprint.get("rawJsonReturned", False),
+            "assetsReturned": blueprint.get("assetsReturned", False),
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 신규 row 생성 준비용 read-only blueprint입니다. DB를 수정하지 않습니다.",
+        },
+    )
 
 
 @router.get("/master-data/detail")
@@ -225,6 +261,7 @@ async def preview_admin_master_data_edit(
         domain=payload.domain,
         row_id=payload.id,
         draft=payload.draft,
+        base_values=payload.base_values,
         reason=payload.reason,
         dry_run=payload.dry_run,
     )
@@ -268,6 +305,7 @@ async def apply_admin_master_data_edit(
         domain=payload.domain,
         row_id=payload.id,
         draft=payload.draft,
+        base_values=payload.base_values,
         reason=payload.reason,
         confirm_text=payload.confirm_text,
         admin_user_id=current_user.id,

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
+
+echo "[core smoke] project root: $ROOT_DIR"
+
+node tools/smoke_admin_edit_stale_guard.js
+node tools/smoke_admin_write_dev_key_guard.js
+node tools/smoke_admin_guarded_edit_apply.js
+node tools/smoke_admin_change_log_rollback.js
+node tools/smoke_admin_create_blueprint_readonly.js
+node tools/smoke_admin_post_edit_api_verify.js
+node tools/smoke_admin_master_api_verify.js
+node tools/smoke_runtime_stacked_enhance_space_guard.js
+node tools/smoke_runtime_stackable_items.js
+node tools/smoke_save_data_integrity_verify.js
+node tools/smoke_save_data_restore_reload_lock.js
+node tools/smoke_save_data_restore_guard.js
+python tools/smoke_admin_readonly_api_structure.py
+python tools/smoke_admin_create_blueprint_api_structure.py
+python tools/smoke_save_snapshot_integrity_api_structure.py
+python tools/smoke_save_snapshot_api_structure.py
+
+echo "[core smoke] passed"

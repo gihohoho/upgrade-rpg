@@ -1,5 +1,15 @@
 # Changelog
 
+## v159 - Admin Create Blueprint Read-only
+
+- 관리자 신규 row 생성 준비용 read-only blueprint API를 추가했습니다.
+- 관리자 페이지에 신규 row 생성 준비 섹션을 추가했습니다.
+- 도메인별 필수 필드, unique 필드, combo guard, 기본값 draft JSON을 표시합니다.
+- relation 필드는 대상 후보 개수를 보여주지만 실제 insert는 아직 잠금 상태입니다.
+- JSON 필드는 생성 적용 전까지 잠금으로 표시합니다.
+- 기존 edit apply, rollback, change log, localStorage 저장 구조는 유지합니다.
+- DB reset / seed는 필요 없습니다.
+
 ## v156 - Admin Change Log Relation Tools
 
 - 변경 이력 목록에 relation 변경 개수 배지를 추가했습니다.
@@ -364,6 +374,16 @@
 - 기존 게임 동작은 유지하고, FastAPI 응답 구조로 옮기기 위한 중간 계층만 추가했습니다.
 
 # Changelog
+
+## v159 - Admin Create Blueprint Read-only
+
+- 관리자 신규 row 생성 준비용 read-only blueprint API를 추가했습니다.
+- 관리자 페이지에 신규 row 생성 준비 섹션을 추가했습니다.
+- 도메인별 필수 필드, unique 필드, combo guard, 기본값 draft JSON을 표시합니다.
+- relation 필드는 대상 후보 개수를 보여주지만 실제 insert는 아직 잠금 상태입니다.
+- JSON 필드는 생성 적용 전까지 잠금으로 표시합니다.
+- 기존 edit apply, rollback, change log, localStorage 저장 구조는 유지합니다.
+- DB reset / seed는 필요 없습니다.
 
 ## v153 - Admin Relation Preview Tools
 

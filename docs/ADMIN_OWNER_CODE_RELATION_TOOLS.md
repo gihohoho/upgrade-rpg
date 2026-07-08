@@ -1,6 +1,6 @@
 # Admin Owner Code Relation Tools
 
-기준 버전: **v147 admin owner code relation tools**
+기준 버전: **v153 admin relation preview tools**
 
 ## 목적
 

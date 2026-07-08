@@ -68,10 +68,10 @@ local-admin-dev-key
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v156: admin change log relation tools**
-- 최신 ZIP 이름: **rpg_v156_admin_change_log_relation_tools.zip**
+- 최신 안정 버전: **v159: admin create blueprint readonly**
+- 최신 ZIP 이름: **rpg_v159_admin_create_blueprint_readonly.zip**
 
-v156은 v153의 relation preview 도구 위에 변경 이력 상세와 rollback preview relation label/대상 열기 표시를 확장한 버전입니다. relation 표시는 DB를 수정하지 않는 관리자 UI/응답 보강입니다. owner_type 변경 시 owner_code 후보와 검색 상태도 안전하게 갱신됩니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
+v159는 v156의 change log/rollback relation label 기능 위에 신규 row 생성 준비용 read-only blueprint 화면과 API를 추가한 버전입니다. 실제 DB insert는 아직 잠금 상태이며, 도메인별 필수 필드/기본값/unique/combo guard/relation 후보만 안전하게 확인합니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
 DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 DB reset/seed는 필요 없습니다.
 
@@ -156,6 +156,7 @@ DB reset/seed는 필요 없습니다.
   - relation 대상 빠른 열기 버튼 추가
   - 변경 요약 배너에 relation 변경 개수 표시
 - v156에서 change log / rollback relation 도구 완료.
+- v159에서 신규 row 생성 준비용 read-only blueprint/API/UI 완료.
   - 변경 이력 목록/상세에 relation 변경 개수 표시
   - 변경 이력 상세 before/after relation label 표시
   - rollback preview와 현재값 안전 검사 표에 relation label 표시
@@ -240,17 +241,15 @@ getAdminDraftFieldInputKind({ key: "stackable", value: true });
 
 가장 안전한 다음 단계 후보:
 
-1. **relation select 검색/필터 편의성**
-   - 대상 목록이 많아질 때 select에서 찾기 쉽게 코드/이름 검색 UI를 붙이는 단계.
-   - 현재 선택값은 필터와 상관없이 항상 유지.
-   - 프론트 UI 편의 기능이라 DB reset/seed 없이 진행 가능.
+1. **v160 관리자 생성 draft 입력 UI 준비**
+   - v159 blueprint를 바탕으로 생성 초안 입력칸을 만들되 실제 insert는 계속 잠급니다.
+   - code unique, relation 존재 여부, combo guard 중복 검증은 preview-only로 먼저 붙입니다.
 
-2. **변경 preview relation before/after label 강화**
-   - 현재는 적용/초안 값 쪽 relation target label을 보여줍니다.
-   - 다음에는 이전 DB 값 쪽도 대상 이름을 함께 표시하면 비교가 더 쉬워집니다.
+2. **JSON 편집기 미리보기 준비**
+   - 아직 JSON 원본 적용은 막고, 먼저 sanitized preview와 schema hint부터 준비합니다.
 
-3. **JSON 편집기 미리보기 준비**
-   - 아직 JSON 원본 적용은 막고, 먼저 sanitized preview와 schema hint부터 준비.
+3. **마스터 데이터 빠른 이동/통합 검색**
+   - 도메인이 많아져도 코드/이름으로 빠르게 상세를 여는 관리자 편의 기능입니다.
 
 4. **정식 인증/권한 설계 준비**
    - 현재 dev key는 로컬 개발용 안전장치일 뿐입니다.

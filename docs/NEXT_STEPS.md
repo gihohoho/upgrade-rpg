@@ -1,20 +1,20 @@
 # Next Steps
 
-현재 기준: **v156 admin change log relation tools**
+현재 기준: **v159 admin create blueprint readonly**
 
-v156에서 저장된 change log 상세와 rollback preview까지 relation label/대상 열기 표시를 확장했습니다.
+v159에서 신규 row 생성 준비 화면을 read-only로 추가했습니다. 실제 생성 적용은 아직 열지 않았습니다.
 
 ## 다음 추천 단계
 
-### v157 관리자 신규 row 생성 준비용 read-only 설계
+### v160 관리자 생성 draft 입력 UI 준비
 
-바로 생성 기능을 열기보다, 먼저 도메인별 생성 가능 필드/필수 필드/관계 후보를 읽기 전용으로 보여주는 설계 단계가 안전합니다.
+바로 insert apply를 열기보다, v159 blueprint를 바탕으로 생성 초안 입력 UI와 preview-only 검증부터 붙이는 단계가 안전합니다.
 
-- 도메인별 create blueprint 조회
-- 필수 필드/기본값 표시
-- relation select 후보 표시
-- 실제 DB insert는 아직 잠금
-- smoke로 생성 준비 UI만 검증
+- blueprint 기반 생성 draft 입력 UI
+- code unique 중복 preview 검증
+- relation 대상 존재 preview 검증
+- combo guard 중복 preview 검증
+- 실제 DB insert는 계속 잠금
 
 이 단계도 DB reset/seed 없이 진행 가능합니다.
 

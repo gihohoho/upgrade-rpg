@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v156.admin-change-log-relation-tools";
+  const VERSION = "v159.admin-create-blueprint-readonly";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -130,6 +130,7 @@
 
   let currentMasterDetailPayload = null;
   let currentAdminChangeLogDetailPayload = null;
+  let currentAdminCreateBlueprintPayload = null;
 
   const ADMIN_TO_MASTER_API_FIELD_MAP = {
     itemTemplates: {
@@ -568,6 +569,7 @@
     if (typeof window.RpgGameApi.listAdminSaveSnapshots !== "function") throw new Error("listAdminSaveSnapshots 함수를 찾을 수 없습니다.");
     if (typeof window.RpgGameApi.listAdminMasterCatalogDomains !== "function") throw new Error("listAdminMasterCatalogDomains 함수를 찾을 수 없습니다.");
     if (typeof window.RpgGameApi.listAdminMasterCatalogRows !== "function") throw new Error("listAdminMasterCatalogRows 함수를 찾을 수 없습니다.");
+    if (typeof window.RpgGameApi.fetchAdminMasterCreateBlueprint !== "function") throw new Error("fetchAdminMasterCreateBlueprint 함수를 찾을 수 없습니다.");
     if (typeof window.RpgGameApi.fetchAdminMasterDataDetail !== "function") throw new Error("fetchAdminMasterDataDetail 함수를 찾을 수 없습니다.");
     if (typeof window.RpgGameApi.fetchAdminMasterDataRelations !== "function") throw new Error("fetchAdminMasterDataRelations 함수를 찾을 수 없습니다.");
     if (typeof window.RpgGameApi.applyAdminMasterDataEdit !== "function") throw new Error("applyAdminMasterDataEdit 함수를 찾을 수 없습니다.");
@@ -740,6 +742,35 @@
     const nextValue = domains.some((domain) => domain.key === current) ? current : (domainsPayload.defaultDomain || DEFAULT_MASTER_DOMAIN);
     select.value = nextValue;
     if (meta) meta.textContent = `${formatValue(domains.length)} domains · raw JSON hidden · assets hidden`;
+    syncAdminCreateDomainOptions(domainsPayload);
+  }
+
+
+  function readAdminCreateBlueprintFiltersFromDom() {
+    const domainEl = $("[data-admin-create-domain]");
+    const masterDomainEl = $("[data-admin-master-domain]");
+    return {
+      domain: domainEl && domainEl.value ? domainEl.value : (masterDomainEl && masterDomainEl.value ? masterDomainEl.value : DEFAULT_MASTER_DOMAIN),
+    };
+  }
+
+  function syncAdminCreateDomainOptions(domainsPayload) {
+    const select = $("[data-admin-create-domain]");
+    if (!select) return;
+    const current = select.value || DEFAULT_MASTER_DOMAIN;
+    const domains = Array.isArray(domainsPayload && domainsPayload.domains) ? domainsPayload.domains : [];
+    if (!domains.length) return;
+    select.innerHTML = domains.map((domain) => `
+      <option value="${escapeHtml(domain.key)}">${escapeHtml(domain.label || domain.key)} (${escapeHtml(formatValue(domain.total))})</option>
+    `).join("");
+    select.value = domains.some((domain) => domain.key === current) ? current : (domainsPayload.defaultDomain || DEFAULT_MASTER_DOMAIN);
+  }
+
+  function syncAdminCreateDomainFromCatalog() {
+    const createDomainEl = $("[data-admin-create-domain]");
+    const masterDomainEl = $("[data-admin-master-domain]");
+    if (createDomainEl && masterDomainEl && masterDomainEl.value) createDomainEl.value = masterDomainEl.value;
+    return readAdminCreateBlueprintFiltersFromDom();
   }
 
   async function fetchAdminReadOnlyPageData(options) {
@@ -749,14 +780,16 @@
     const filters = opts.snapshotFilters || readSnapshotFiltersFromDom();
     const masterCatalogFilters = opts.masterCatalogFilters || readMasterCatalogFiltersFromDom();
     const changeLogFilters = opts.changeLogFilters || readChangeLogFiltersFromDom();
-    const [overview, snapshots, masterDomains, masterCatalog, changeLogs] = await Promise.all([
+    const createBlueprintFilters = opts.createBlueprintFilters || readAdminCreateBlueprintFiltersFromDom();
+    const [overview, snapshots, masterDomains, masterCatalog, changeLogs, createBlueprint] = await Promise.all([
       window.RpgGameApi.fetchAdminOverview({ timeoutMs }),
       window.RpgGameApi.listAdminSaveSnapshots({ timeoutMs, ...filters }),
       window.RpgGameApi.listAdminMasterCatalogDomains({ timeoutMs }),
       window.RpgGameApi.listAdminMasterCatalogRows({ timeoutMs, ...masterCatalogFilters }),
       window.RpgGameApi.listAdminChangeLogs({ timeoutMs, ...changeLogFilters }),
+      window.RpgGameApi.fetchAdminMasterCreateBlueprint({ timeoutMs, ...createBlueprintFilters }),
     ]);
-    return { overview, snapshots, masterDomains, masterCatalog, changeLogs, snapshotFilters: filters, masterCatalogFilters, changeLogFilters };
+    return { overview, snapshots, masterDomains, masterCatalog, changeLogs, createBlueprint, snapshotFilters: filters, masterCatalogFilters, changeLogFilters, createBlueprintFilters };
   }
 
   function renderCards(overviewPayload) {
@@ -897,6 +930,121 @@
   }
 
 
+
+
+  function getAdminCreateBlueprintFieldInputKind(field) {
+    return String((field && field.inputKind) || "text");
+  }
+
+  function getAdminCreateBlueprintRequiredKeys(domain, blueprint) {
+    const payload = blueprint || currentAdminCreateBlueprintPayload || {};
+    if (domain && payload.domain && payload.domain !== domain) return [];
+    return Array.isArray(payload.requiredFields) ? payload.requiredFields.slice() : [];
+  }
+
+  function getAdminCreateBlueprintDefaultDraft(domain, blueprint) {
+    const payload = blueprint || currentAdminCreateBlueprintPayload || {};
+    if (domain && payload.domain && payload.domain !== domain) return {};
+    return payload.defaultDraft && typeof payload.defaultDraft === "object" ? { ...payload.defaultDraft } : {};
+  }
+
+  function getAdminCreateBlueprintRelationOptionCount(field) {
+    const relation = field && field.relation ? field.relation : null;
+    if (!relation) return 0;
+    if (relation.optionGroups && typeof relation.optionGroups === "object") {
+      return Object.values(relation.optionGroups).reduce((sum, options) => sum + (Array.isArray(options) ? options.length : 0), 0);
+    }
+    return Array.isArray(relation.options) ? relation.options.length : 0;
+  }
+
+  function renderAdminCreateBlueprintRelationCell(field) {
+    const relation = field && field.relation ? field.relation : null;
+    if (!relation) return "-";
+    const target = relation.targetLabel || relation.targetDomain || field.targetDomain || "relation";
+    const count = getAdminCreateBlueprintRelationOptionCount(field);
+    const guard = Array.isArray(field.comboGuard) && field.comboGuard.length ? ` · 중복검사 ${field.comboGuard.join(" + ")}` : "";
+    const depends = field.dependsOn ? ` · ${field.dependsOn} 연동` : "";
+    return `${escapeHtml(target)} <span class="pill warn">후보 ${escapeHtml(formatValue(count))}</span>${escapeHtml(depends + guard)}`;
+  }
+
+  function renderAdminCreateBlueprint(blueprintPayload) {
+    currentAdminCreateBlueprintPayload = blueprintPayload && blueprintPayload.status === "loaded" ? blueprintPayload : null;
+    const target = $("[data-admin-create-blueprint]");
+    if (!target) return;
+    const payload = blueprintPayload || {};
+    if (payload.status && payload.status !== "loaded") {
+      target.innerHTML = `<div class="error">신규 row 생성 설계를 불러오지 못했습니다: ${escapeHtml(payload.status)}</div>`;
+      return;
+    }
+    if (!payload.domain) {
+      target.innerHTML = `<div class="empty">생성 설계를 불러오면 필수 필드, 기본값, relation 후보가 여기에 표시됩니다.</div>`;
+      return;
+    }
+    const fields = Array.isArray(payload.fields) ? payload.fields : [];
+    const requiredFields = Array.isArray(payload.requiredFields) ? payload.requiredFields : [];
+    const uniqueFields = Array.isArray(payload.uniqueFields) ? payload.uniqueFields : [];
+    const comboGuards = Array.isArray(payload.comboGuards) ? payload.comboGuards : [];
+    const defaultDraft = payload.defaultDraft && typeof payload.defaultDraft === "object" ? payload.defaultDraft : {};
+    const rows = fields.length ? fields.map((field) => {
+      const inputKind = getAdminCreateBlueprintFieldInputKind(field);
+      const relationText = renderAdminCreateBlueprintRelationCell(field);
+      return `
+        <tr>
+          <td>${escapeHtml(field.label || field.key)}${renderFieldHelpBadge(field.key)}</td>
+          <td>${field.required ? `<span class="pill blocked">필수</span>` : `<span class="pill good">선택</span>`}${field.unique ? ` <span class="pill warn">unique</span>` : ""}</td>
+          <td><span class="pill">${escapeHtml(inputKind)}</span></td>
+          <td>${formatValueWithFieldHint(field.key, field.defaultValue)}</td>
+          <td>${relationText}</td>
+          <td><span class="create-blueprint-locked">잠금</span><div class="filter-help" style="margin-top:4px;">${escapeHtml(field.lockedReason || "read-only")}</div></td>
+        </tr>
+      `;
+    }).join("") : `<tr><td colspan="6">필드 설계가 없습니다.</td></tr>`;
+    target.innerHTML = `
+      <div class="create-blueprint-summary">
+        <div class="create-blueprint-card"><strong>${escapeHtml(payload.domainLabel || payload.domain)}</strong><span>${escapeHtml(payload.description || "설명 없음")}</span></div>
+        <div class="create-blueprint-card"><strong>필수 필드</strong><span>${escapeHtml(requiredFields.join(", ") || "없음")}</span></div>
+        <div class="create-blueprint-card"><strong>고유/중복 검사</strong><span>unique: ${escapeHtml(uniqueFields.join(", ") || "없음")}<br>combo: ${escapeHtml(comboGuards.map((guard) => guard.join(" + ")).join(", ") || "없음")}</span></div>
+        <div class="create-blueprint-card"><strong>적용 상태</strong><span><span class="pill blocked">insert API locked</span><br>DB 수정 없음 · read-only</span></div>
+      </div>
+      <div class="table-wrap relation-table-wrap">
+        <table>
+          <thead><tr><th>필드</th><th>필수</th><th>입력 타입</th><th>기본값</th><th>관계 후보</th><th>현재 상태</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div class="create-blueprint-default">
+        <pre>${escapeHtml(JSON.stringify(defaultDraft, null, 2))}</pre>
+      </div>
+      <div class="filter-help" style="padding:0 14px 12px;">relation 후보 반환=${escapeHtml(formatValue(payload.relationOptionsReturned))} · rawJsonReturned=${escapeHtml(formatValue(payload.rawJsonReturned))} · assetsReturned=${escapeHtml(formatValue(payload.assetsReturned))}</div>
+    `;
+  }
+
+  async function refreshAdminCreateBlueprint(options) {
+    ensureApi();
+    const filters = options || readAdminCreateBlueprintFiltersFromDom();
+    const response = await window.RpgGameApi.fetchAdminMasterCreateBlueprint({ timeoutMs: DEFAULT_TIMEOUT_MS, ...filters });
+    const payload = response && response.payload ? response.payload : {};
+    renderAdminCreateBlueprint(payload);
+    setStatus(`신규 row 생성 설계 로드: ${formatValue(payload.domainLabel || payload.domain)} · ${formatValue(payload.fieldCount)} fields · read-only`, "ok");
+    return payload;
+  }
+
+  function getAdminCreateBlueprintReadiness() {
+    const target = $("[data-admin-create-blueprint]");
+    const filters = readAdminCreateBlueprintFiltersFromDom();
+    const payload = currentAdminCreateBlueprintPayload || {};
+    return {
+      ready: !!target,
+      readOnly: true,
+      createApplyReady: false,
+      domain: filters.domain,
+      loadedDomain: payload.domain || null,
+      fieldCount: Number(payload.fieldCount || 0),
+      requiredFields: getAdminCreateBlueprintRequiredKeys(payload.domain, payload),
+      defaultDraft: getAdminCreateBlueprintDefaultDraft(payload.domain, payload),
+      relationOptionsReturned: !!payload.relationOptionsReturned,
+    };
+  }
 
   function getAdminRelationEditOptionDefinitions(domain) {
     const detail = currentMasterDetailPayload && currentMasterDetailPayload.domain === domain ? currentMasterDetailPayload : {};
@@ -2699,17 +2847,20 @@
       const masterDomainsPayload = result.masterDomains && result.masterDomains.payload ? result.masterDomains.payload : {};
       const masterCatalogPayload = result.masterCatalog && result.masterCatalog.payload ? result.masterCatalog.payload : {};
       const changeLogPayload = result.changeLogs && result.changeLogs.payload ? result.changeLogs.payload : {};
+      const createBlueprintPayload = result.createBlueprint && result.createBlueprint.payload ? result.createBlueprint.payload : {};
       renderCards(overviewPayload);
       renderMasterTable(overviewPayload.masterData || {});
       syncMasterDomainOptions(masterDomainsPayload);
       renderMasterCatalogTable(masterCatalogPayload);
+      renderAdminCreateBlueprint(createBlueprintPayload);
       renderSnapshotTable(snapshotPayload);
       renderAdminChangeLogs(changeLogPayload);
       renderReadiness(overviewPayload.readiness || {});
       const filterText = describeSnapshotFilters(result.snapshotFilters || (snapshotPayload && snapshotPayload.filters));
       const masterFilterText = describeMasterCatalogFilters(result.masterCatalogFilters || (masterCatalogPayload && masterCatalogPayload.filters));
       const changeFilterText = describeChangeLogFilters(result.changeLogFilters || (changeLogPayload && changeLogPayload.filters));
-      setStatus(`정상 로드 · ${formatClock(new Date().toISOString())} · 세이브 ${filterText} · 마스터 ${masterFilterText} · 이력 ${changeFilterText} · API ${window.RpgGameApi.getApiBaseUrl()}`, "ok");
+      const createFilterText = result.createBlueprintFilters && result.createBlueprintFilters.domain ? ` · 생성설계 domain=${result.createBlueprintFilters.domain}` : "";
+      setStatus(`정상 로드 · ${formatClock(new Date().toISOString())} · 세이브 ${filterText} · 마스터 ${masterFilterText} · 이력 ${changeFilterText}${createFilterText} · API ${window.RpgGameApi.getApiBaseUrl()}`, "ok");
       return { ok: true, ...result };
     } catch (error) {
       renderError(error);
@@ -2771,7 +2922,22 @@
       const action = button.getAttribute("data-admin-action");
       if (action === "refresh") await refreshAdminReadOnlyPage();
       if (action === "apply-snapshot-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom() });
-      if (action === "apply-master-catalog-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom() });
+      if (action === "apply-master-catalog-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), createBlueprintFilters: readAdminCreateBlueprintFiltersFromDom() });
+      if (action === "load-create-blueprint") {
+        try {
+          await refreshAdminCreateBlueprint(readAdminCreateBlueprintFiltersFromDom());
+        } catch (error) {
+          renderError(error);
+        }
+      }
+      if (action === "sync-create-domain-from-catalog") {
+        try {
+          const filters = syncAdminCreateDomainFromCatalog();
+          await refreshAdminCreateBlueprint(filters);
+        } catch (error) {
+          renderError(error);
+        }
+      }
       if (action === "master-catalog-first-page") await refreshMasterCatalogWithPage(1);
       if (action === "master-catalog-prev-page") {
         const current = readMasterCatalogFiltersFromDom().page || 1;
@@ -2919,15 +3085,17 @@
     resetMasterCatalogFilters({ silent: true });
     resetChangeLogFilters({ silent: true });
     renderMasterDetail({});
+    renderAdminCreateBlueprint({});
     refreshAdminReadOnlyPage();
   }
 
   function checkAdminReadOnlyPageReady(options) {
-    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function" && typeof window.RpgGameApi.previewAdminMasterDataEdit === "function" && typeof window.RpgGameApi.applyAdminMasterDataEdit === "function" && typeof window.RpgGameApi.listAdminChangeLogs === "function" && typeof window.RpgGameApi.fetchAdminChangeLogDetail === "function" && typeof window.RpgGameApi.previewAdminChangeLogRollback === "function" && typeof window.RpgGameApi.applyAdminChangeLogRollback === "function" && typeof window.RpgGameApi.setAdminWriteDevKey === "function" && typeof window.RpgGameApi.hasAdminWriteDevKey === "function");
+    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterCreateBlueprint === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function" && typeof window.RpgGameApi.previewAdminMasterDataEdit === "function" && typeof window.RpgGameApi.applyAdminMasterDataEdit === "function" && typeof window.RpgGameApi.listAdminChangeLogs === "function" && typeof window.RpgGameApi.fetchAdminChangeLogDetail === "function" && typeof window.RpgGameApi.previewAdminChangeLogRollback === "function" && typeof window.RpgGameApi.applyAdminChangeLogRollback === "function" && typeof window.RpgGameApi.setAdminWriteDevKey === "function" && typeof window.RpgGameApi.hasAdminWriteDevKey === "function");
     const domReady = !!document.querySelector("[data-admin-cards]");
     const locationHintReady = !!document.querySelector("[data-admin-current-url]");
     const snapshotFilterReady = !!document.querySelector("[data-admin-filter-slot-key]");
     const masterCatalogReady = !!document.querySelector("[data-admin-master-domain]");
+    const createBlueprintReady = !!document.querySelector("[data-admin-create-blueprint]") && typeof renderAdminCreateBlueprint === "function" && typeof getAdminCreateBlueprintReadiness === "function";
     const masterDetailReady = !!document.querySelector("[data-admin-master-detail]");
     const masterRelationsReady = true;
     const editDraftReady = !!document.querySelector("[data-admin-edit-draft]");
@@ -2941,7 +3109,7 @@
     const relationSearchReady = typeof applyAdminRelationOptionFilter === "function" && typeof filterAdminDraftSelectOptions === "function";
     const relationPreviewReady = typeof formatAdminChangeValueText === "function" && typeof getAdminRelationValueDisplay === "function" && typeof openAdminMasterDataDetailByCode === "function";
     const changeLogRelationReady = typeof getAdminChangeRelationInfo === "function" && typeof renderAdminRollbackMismatchValueCell === "function" && typeof getAdminRelationOpenTargetFromChange === "function";
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && masterApiVerifyReady && adminWriteGuardReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && masterApiVerifyReady && adminWriteGuardReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createBlueprint: getAdminCreateBlueprintReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -2965,6 +3133,14 @@
     readChangeLogFiltersFromDom,
     resetChangeLogFilters,
     describeChangeLogFilters,
+    readAdminCreateBlueprintFiltersFromDom,
+    syncAdminCreateDomainFromCatalog,
+    refreshAdminCreateBlueprint,
+    renderAdminCreateBlueprint,
+    getAdminCreateBlueprintFieldInputKind,
+    getAdminCreateBlueprintRequiredKeys,
+    getAdminCreateBlueprintDefaultDraft,
+    getAdminCreateBlueprintReadiness,
     openAdminMasterDataDetail,
     openAdminMasterDataDetailByCode,
     openAdminMasterDataRelations,
@@ -3037,6 +3213,13 @@
   window.resetAdminMasterCatalogFilters = resetMasterCatalogFilters;
   window.readAdminChangeLogFilters = readChangeLogFiltersFromDom;
   window.resetAdminChangeLogFilters = resetChangeLogFilters;
+  window.readAdminCreateBlueprintFilters = readAdminCreateBlueprintFiltersFromDom;
+  window.syncAdminCreateDomainFromCatalog = syncAdminCreateDomainFromCatalog;
+  window.refreshAdminCreateBlueprint = refreshAdminCreateBlueprint;
+  window.getAdminCreateBlueprintFieldInputKind = getAdminCreateBlueprintFieldInputKind;
+  window.getAdminCreateBlueprintRequiredKeys = getAdminCreateBlueprintRequiredKeys;
+  window.getAdminCreateBlueprintDefaultDraft = getAdminCreateBlueprintDefaultDraft;
+  window.getAdminCreateBlueprintReadiness = getAdminCreateBlueprintReadiness;
   window.refreshAdminChangeLogs = refreshAdminChangeLogs;
   window.openAdminMasterDataDetail = openAdminMasterDataDetail;
   window.openAdminMasterDataDetailByCode = openAdminMasterDataDetailByCode;

@@ -256,6 +256,62 @@
     }
 
 
+    .create-blueprint-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .create-blueprint-card {
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 12px;
+      padding: 11px;
+      background: rgba(15, 23, 42, 0.42);
+      min-height: 82px;
+    }
+
+    .create-blueprint-card strong {
+      display: block;
+      color: #e2e8f0;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .create-blueprint-card span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .create-blueprint-default {
+      margin: 12px 14px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(2, 6, 23, 0.34);
+    }
+
+    .create-blueprint-default pre {
+      margin: 0;
+      padding: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #cbd5e1;
+      font-size: 12px;
+    }
+
+    .create-blueprint-locked {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #fbbf24;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+
     .catalog-pagination {
       display: flex;
       justify-content: space-between;
@@ -951,6 +1007,7 @@
       <a href="#section-field-help">필드 도움말</a>
       <a href="#section-admin-write-guard">쓰기 잠금</a>
       <a href="#section-master-catalog">마스터 목록</a>
+      <a href="#section-create-blueprint">신규 row 준비</a>
       <a href="#section-master-detail">상세/편집/API확인</a>
       <a href="#section-change-logs">변경 이력</a>
       <a href="#section-save-snapshots">세이브 스냅샷</a>
@@ -1098,6 +1155,26 @@
       <div class="table-wrap" data-admin-master-catalog-table><div class="empty">불러오는 중...</div></div>
     </section>
 
+    <section class="filter-panel" id="section-create-blueprint" aria-label="신규 row 생성 준비">
+      <div class="filter-title">신규 row 생성 준비 <span class="pill warn">read-only</span></div>
+      <div class="filter-help">아직 실제 생성 버튼은 열지 않고, 도메인별 필수 필드/기본값/관계 후보만 확인합니다. 이 영역은 DB를 절대 수정하지 않습니다.</div>
+      <div class="filter-grid" style="grid-template-columns: 180px auto auto; margin-top:10px;">
+        <div class="filter-field">
+          <label for="admin-create-domain">도메인</label>
+          <select id="admin-create-domain" data-admin-create-domain>
+            <option value="itemTemplates" selected>아이템 템플릿</option>
+            <option value="skills">스킬</option>
+            <option value="bosses">보스</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-self:end;">
+          <button class="btn primary" type="button" data-admin-action="load-create-blueprint">생성 설계 불러오기</button>
+          <button class="btn" type="button" data-admin-action="sync-create-domain-from-catalog">카탈로그 도메인과 맞추기</button>
+        </div>
+        <div class="filter-help" style="align-self:end; margin:0;">실제 insert API는 아직 잠금 상태입니다. insert API locked</div>
+      </div>
+      <div data-admin-create-blueprint><div class="empty">생성 설계를 불러오면 필수 필드, 기본값, relation 후보가 여기에 표시됩니다.</div></div>
+    </section>
 
 
     <section class="section" id="section-master-detail">
@@ -1235,7 +1312,7 @@
       <div data-admin-readiness><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <p class="footer-note">v156 admin change log relation tools · static HTML + JS · FastAPI guarded write/rollback APIs</p>
+    <p class="footer-note">v159 admin create blueprint readonly · static HTML + JS · FastAPI guarded write/rollback APIs</p>
   </main>
 
   <script src="src/api/game-api-client.js"></script>

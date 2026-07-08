@@ -21,9 +21,9 @@ docs/README.md
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v156: admin change log relation tools**
+- 최신 안정 버전: **v159: admin create blueprint readonly**
 
-v156은 v153의 relation preview 도구 위에 변경 이력 상세와 rollback preview relation label/대상 열기 표시를 확장한 버전입니다. 관계 후보 검색, preview, change log 표시는 기존 DB 데이터를 더 알아보기 쉽게 보여주는 관리자 UI/응답 보강입니다.
+v159는 v156의 change log/rollback relation label 기능 위에 신규 row 생성 준비용 read-only blueprint 화면과 API를 추가한 버전입니다. 실제 DB insert는 아직 잠금 상태이며, 필수 필드/기본값/relation 후보만 안전하게 확인합니다.
 
 DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 

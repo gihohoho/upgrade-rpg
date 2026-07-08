@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("admin.html", [
-  "v156 admin change log relation tools",
+  "v159 admin create blueprint readonly",
   "data-admin-field-help",
   "필드 용어 도움말",
   "grade / 등급",
@@ -29,7 +29,7 @@ assertContains("admin.html", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v156.admin-change-log-relation-tools",
+  "v159.admin-create-blueprint-readonly",
   "ADMIN_FIELD_HELP_DEFINITIONS",
   "getAdminFieldHelp",
   "listAdminFieldHelp",
