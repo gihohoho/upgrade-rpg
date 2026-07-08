@@ -80,9 +80,9 @@ uvicorn app.main:app --reload
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v177: create apply skills/dropTables**
-- 새 채팅용 ZIP: **rpg_v177_skills_droptables_create_apply_ready.zip**
-- 이 ZIP은 `skills`, `dropTables` 신규 row 생성 apply 제한 오픈과 생성 row 삭제/복원 안전검사 확장을 포함합니다.
+- 최신 안정 버전: **v178: create apply itemTemplates/dropTableItems**
+- 새 채팅용 ZIP: **rpg_v178_items_dropitems_create_apply_ready.zip**
+- 이 ZIP은 `itemTemplates`, `dropTableItems` 신규 row 생성 apply 제한 오픈과 생성 row 삭제/복원 안전검사 확장을 포함합니다.
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -136,15 +136,19 @@ uvicorn app.main:app --reload
 40. `bosses` 생성 row 삭제/복원 allow-list 및 dropTables dependency guard 완료.
 41. `skills`, `dropTables` 신규 row create apply 제한 오픈 완료.
 42. `skills`, `dropTables` 생성 row 삭제/복원 allow-list 및 dependency guard 완료.
+43. `itemTemplates`, `dropTableItems` 신규 row create apply 제한 오픈 완료.
+44. `itemTemplates`, `dropTableItems` 생성 row 삭제/복원 allow-list 및 dependency guard 완료.
 
-## v177 create apply skills/dropTables
+## v178 create apply itemTemplates/dropTableItems
 
-- 신규 row 실제 생성 apply 제한 도메인에 `skills`, `dropTables`를 추가했습니다.
-- `characters`, `enhancementGroups`, `fieldZones`, `bosses`, `skills`, `dropTables`만 생성 apply가 가능합니다.
-- `itemTemplates`, `dropTableItems`, `skillLevels`, `enhancementLevels`, `characterSkills`는 계속 생성 apply 잠금 상태입니다.
-- `skills`, `dropTables` 생성 row 삭제/복원도 제한 allow-list에 추가했습니다.
-- `skills` 삭제 preview에서 `skillLevels.skill_code`, `characterSkills.skill_code`, `userCharacterSkills.skill_code` 연결 검사를 수행합니다.
-- `dropTables` 삭제 preview에서 `dropTableItems.drop_table_code` 연결 검사를 수행합니다.
+- 신규 row 실제 생성 apply 제한 도메인에 `itemTemplates`, `dropTableItems`를 추가했습니다.
+- `characters`, `enhancementGroups`, `fieldZones`, `bosses`, `skills`, `dropTables`, `itemTemplates`, `dropTableItems`만 생성 apply가 가능합니다.
+- `skillLevels`, `enhancementLevels`, `characterSkills`는 계속 생성 apply 잠금 상태입니다.
+- `itemTemplates`, `dropTableItems` 생성 row 삭제/복원도 제한 allow-list에 추가했습니다.
+- `itemTemplates` 삭제 preview에서 `dropTableItems.item_template_code`, `itemInstances.template_code` 연결 검사를 수행합니다.
+- `dropTableItems`는 code 없는 leaf row라 id 기반 삭제/복원 흐름을 제한 오픈했습니다.
+- `dropTableItems` 생성 검증에서 `rate`, `min_quantity`, `max_quantity` 범위를 검사합니다.
+- JSON/asset 계열 필드(`base_stats_json`, `options_json`, `conditions_json`, `icon_url`)는 생성 입력에서 계속 잠금 상태입니다.
 - DB schema 변경 없음, DB reset / seed 필요 없음.
 - `.env`, `.gitignore` 변경 없음.
 
@@ -192,7 +196,7 @@ uvicorn app.main:app --reload
 
 ## DB / seed
 
-- v177 기준 DB reset / seed 필요 없음.
+- v178 기준 DB reset / seed 필요 없음.
 - DB schema 변경 없음.
 - `.env`, `.gitignore` 변경 없음.
 
@@ -208,7 +212,7 @@ bash tools/run_smoke_core.sh
 bash tools/run_smoke_all.sh
 ```
 
-v177 작업 후 둘 다 통과했습니다.
+v178 작업 후 둘 다 통과했습니다.
 
 ## 브라우저 확인용
 
@@ -236,14 +240,14 @@ true
 
 ## 다음 추천 단계
 
-다음은 **skills/dropTables 생성/삭제/복원 브라우저 검증**이 좋습니다.
+다음은 **itemTemplates/dropTableItems 생성/삭제/복원 브라우저 검증**이 좋습니다.
 
 안전한 순서:
 
-1. 브라우저에서 `skills` 생성 preview/apply를 실제 확인.
-2. 생성된 `skills` 삭제 preview에서 `skillLevels.skill_code`, `characterSkills.skill_code`, `userCharacterSkills.skill_code` blocker 표시 확인.
-3. 브라우저에서 `dropTables` 생성 preview/apply를 실제 확인.
-4. 생성된 `dropTables` 삭제 preview에서 `dropTableItems.drop_table_code` blocker 표시 확인.
-5. 삭제/복원 apply까지 확인.
-6. `itemTemplates`, `dropTableItems` 생성 apply는 아직 열지 않음.
-7. 다음 코드 단계는 create/delete/restore UI의 dependency 표시 강화 또는 관리자 코드 분리 준비를 추천.
+1. 브라우저에서 `itemTemplates` 생성 preview/apply를 실제 확인.
+2. 생성된 `itemTemplates` 삭제 preview에서 `dropTableItems.item_template_code`, `itemInstances.template_code` blocker 표시 확인.
+3. 브라우저에서 `dropTableItems` 생성 preview/apply를 실제 확인.
+4. `dropTableItems`에서 `rate`, `min_quantity`, `max_quantity` 검증이 동작하는지 확인.
+5. 생성된 `dropTableItems`가 id 기반으로 삭제/복원되는지 확인.
+6. `skillLevels`, `enhancementLevels`, `characterSkills` 생성 apply는 아직 열지 않음.
+7. 다음 코드 단계는 세 단계 도메인 중 하나를 별도 오픈하거나, create/delete/restore UI의 dependency 표시 강화를 추천.

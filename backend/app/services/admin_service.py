@@ -12,6 +12,7 @@ from app.models import (
     CharacterSkill,
     DropTable,
     DropTableItem,
+    ItemInstance,
     EnhancementGroup,
     EnhancementLevel,
     FieldZone,
@@ -54,8 +55,8 @@ class AdminService:
     MASTER_CREATE_APPLY_CONFIRM_TEXT = "CREATE MASTER DATA ROW"
     MASTER_CREATE_DELETE_CONFIRM_TEXT = "DELETE CREATED MASTER DATA ROW"
     MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT = "RESTORE DELETED CREATED ROW"
-    MASTER_CREATE_APPLY_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses", "skills", "dropTables"}
-    MASTER_CREATE_DELETE_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses", "skills", "dropTables"}
+    MASTER_CREATE_APPLY_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses", "skills", "dropTables", "itemTemplates", "dropTableItems"}
+    MASTER_CREATE_DELETE_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses", "skills", "dropTables", "itemTemplates", "dropTableItems"}
 
     MASTER_EDIT_ALLOWED_FIELDS: dict[str, set[str]] = {
         "itemTemplates": {"name", "item_type", "description", "grade", "stackable", "equip_slot", "enhance_group_code", "admin_note"},
@@ -1078,7 +1079,7 @@ class AdminService:
                 })
 
         created_code = getattr(master_row, "code", None)
-        dependency_checks = await self._build_create_delete_dependency_checks(session, domain, created_code)
+        dependency_checks = await self._build_create_delete_dependency_checks(session, domain, created_code, int(row_id))
         blocker_count = sum(int(check.get("count") or 0) for check in dependency_checks if check.get("blocksDelete"))
         changes = await self._build_change_log_changes_with_relations(session, domain, {}, after_json)
         create_delete_ready = len(current_mismatches) == 0 and blocker_count == 0
@@ -1471,15 +1472,27 @@ class AdminService:
             "warnings": warnings,
         }
 
-    async def _build_create_delete_dependency_checks(self, session: AsyncSession, domain: str, code: Any) -> list[dict[str, Any]]:
+    async def _build_create_delete_dependency_checks(self, session: AsyncSession, domain: str, code: Any, row_id: int | None = None) -> list[dict[str, Any]]:
         code_text = "" if code is None else str(code).strip()
-        if not code_text:
-            return [{"label": "code", "count": 1, "blocksDelete": True, "note": "삭제 대상 code를 찾을 수 없어 삭제를 막았습니다."}]
 
         async def check(label: str, model: Any, column_name: str, note: str) -> dict[str, Any]:
             column = getattr(model, column_name)
             count = await self._count_where(session, model, column == code_text)
             return {"label": label, "target": f"{model.__tablename__}.{column_name}", "count": count, "blocksDelete": count > 0, "note": note}
+
+        if domain == "dropTableItems":
+            return [
+                {
+                    "label": "id 기반 드랍 아이템",
+                    "target": "drop_table_items.id",
+                    "count": 0,
+                    "blocksDelete": False,
+                    "note": "dropTableItems는 하위 연결이 없는 leaf row라 현재값 일치 검사 후 id 기준으로 삭제할 수 있습니다.",
+                }
+            ]
+
+        if not code_text:
+            return [{"label": "code", "count": 1, "blocksDelete": True, "note": "삭제 대상 code를 찾을 수 없어 삭제를 막았습니다."}]
 
         if domain == "characters":
             return [
@@ -1524,6 +1537,11 @@ class AdminService:
         if domain == "dropTables":
             return [
                 await check("드랍 아이템", DropTableItem, "drop_table_code", "dropTableItems에서 사용 중이면 드랍 테이블 삭제를 막습니다."),
+            ]
+        if domain == "itemTemplates":
+            return [
+                await check("드랍 아이템", DropTableItem, "item_template_code", "dropTableItems에서 사용 중이면 아이템 템플릿 삭제를 막습니다."),
+                await check("유저 아이템 인스턴스", ItemInstance, "template_code", "유저 인벤토리에 생성된 아이템 인스턴스가 있으면 삭제를 막습니다."),
             ]
         return [{"label": "도메인 잠금", "count": 1, "blocksDelete": True, "note": "이 도메인은 생성 row 삭제 되돌리기 allow-list에 없습니다."}]
 
@@ -2008,7 +2026,7 @@ class AdminService:
             "rawJsonReturned": False,
             "assetsReturned": False,
             "warnings": warnings,
-            "note": "신규 row 생성 초안을 검증했습니다. characters/enhancementGroups/fieldZones/bosses/skills/dropTables는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 초안을 검증했습니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
+            "note": "신규 row 생성 초안을 검증했습니다. characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 초안을 검증했습니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
         }
 
     async def apply_master_data_create(
@@ -2048,7 +2066,7 @@ class AdminService:
                 "wouldBeValid": False,
                 "errorCount": int(preview.get("errorCount") or 0) + 1,
                 "warnings": [*(preview.get("warnings") or []), "create_apply_domain_locked"],
-                "note": "이 도메인의 실제 신규 row 생성은 아직 열지 않았습니다. 현재는 characters/enhancementGroups/fieldZones/bosses/skills/dropTables만 제한적으로 생성 가능합니다.",
+                "note": "이 도메인의 실제 신규 row 생성은 아직 열지 않았습니다. 현재는 characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems만 제한적으로 생성 가능합니다.",
             })
             return preview
 
@@ -2234,10 +2252,21 @@ class AdminService:
         elif domain == "dropTableItems":
             drop_table_code = str(values.get("drop_table_code") or "").strip()
             item_template_code = str(values.get("item_template_code") or "").strip()
+            rate = values.get("rate")
+            min_quantity = values.get("min_quantity")
+            max_quantity = values.get("max_quantity")
             if not drop_table_code or not await self._exists_by_code(session, DropTable, drop_table_code):
                 add("drop_table_code", "relation_target_not_found_drop_table", drop_table_code)
             if not item_template_code or not await self._exists_by_code(session, ItemTemplate, item_template_code):
                 add("item_template_code", "relation_target_not_found_item_template", item_template_code)
+            if rate is None or float(rate) < 0:
+                add("rate", "invalid_drop_rate", rate)
+            if min_quantity is None or int(min_quantity) < 1:
+                add("min_quantity", "invalid_min_quantity", min_quantity)
+            if max_quantity is None or int(max_quantity) < 1:
+                add("max_quantity", "invalid_max_quantity", max_quantity)
+            if min_quantity is not None and max_quantity is not None and int(max_quantity) < int(min_quantity):
+                add("max_quantity", "max_quantity_less_than_min_quantity", max_quantity)
         elif domain == "skillLevels":
             skill_code = str(values.get("skill_code") or "").strip()
             level = values.get("level")
@@ -2402,7 +2431,7 @@ class AdminService:
             "rawJsonReturned": False,
             "assetsReturned": False,
             "warnings": [],
-            "note": "신규 row 생성 설계 응답입니다. characters/enhancementGroups/fieldZones/bosses/skills/dropTables는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 설계 응답입니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
+            "note": "신규 row 생성 설계 응답입니다. characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 설계 응답입니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
         }
 
     async def _build_master_create_relation_options(self, session: AsyncSession, domain: str) -> dict[str, Any]:

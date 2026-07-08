@@ -25,7 +25,7 @@ function parseSet(text, name) {
   assert(match, `missing set: ${name}`);
   return match[1]
     .split(",")
-    .map((value) => value.trim().replace(/^['\"]|['\"]$/g, ""))
+    .map((value) => value.trim().replace(/^[ '\"]|[ '\"]$/g, ""))
     .filter(Boolean)
     .sort();
 }
@@ -44,36 +44,41 @@ lockedDomains.forEach((domain) => {
 });
 
 assertContains("backend/app/services/admin_service.py", [
-  "if domain == \"fieldZones\"",
-  "DropTable.owner_type == \"field\"",
-  "DropTable.owner_code == code_text",
-  "drop_tables.owner_type=field + owner_code",
+  "if domain == \"itemTemplates\"",
+  "DropTableItem, \"item_template_code\"",
+  "ItemInstance, \"template_code\"",
+  "if domain == \"dropTableItems\"",
+  "drop_table_items.id",
+  "invalid_drop_rate",
+  "invalid_min_quantity",
+  "max_quantity_less_than_min_quantity",
   "characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems",
-  "create_delete_restore_preview_enabled",
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
+  "v178.admin-create-apply-items-dropitems",
   "v177.admin-create-apply-skills-droptables",
-  "v176.admin-create-apply-bosses",
-  "v175.admin-create-apply-fieldzones",
   "characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems",
-  "v174.admin-collapsed-panel-style-fix",
 ]);
 
 assertContains("admin.html", [
+  "v178 admin create apply itemTemplates/dropTableItems",
   "characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems",
-  "<option value=\"fieldZones\">필드</option>",
-  "<option value=\"enhancementGroups\">강화 그룹</option>",
+  "<option value=\"itemTemplates\" selected>아이템 템플릿</option>",
+  "<option value=\"dropTableItems\">드랍 아이템</option>",
 ]);
 
-assertContains("docs/ADMIN_CREATE_APPLY_FIELDZONES.md", [
-  "Admin Create Apply FieldZones",
-  "fieldZones",
-  "dropTables.owner_type = field",
-  "dropTables.owner_code = fieldZones.code",
+assertContains("docs/ADMIN_CREATE_APPLY_ITEMS_DROPITEMS.md", [
+  "Admin Create Apply ItemTemplates and DropTableItems",
   "itemTemplates",
   "dropTableItems",
+  "base_stats_json",
+  "options_json",
+  "conditions_json",
+  "dropTableItems.item_template_code",
+  "itemInstances.template_code",
+  "id 기반",
   "DB reset / seed",
 ]);
 
-console.log("admin create apply fieldZones smoke test passed");
+console.log("admin create apply itemTemplates/dropTableItems smoke test passed");

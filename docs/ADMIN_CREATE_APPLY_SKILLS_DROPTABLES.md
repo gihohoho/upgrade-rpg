@@ -79,10 +79,8 @@ v177에서는 신규 row 생성 apply 제한 도메인에 `skills`와 `dropTable
 
 ## 이번 단계에서 열지 않은 도메인
 
-아래 도메인은 게임 런타임 영향, JSON/asset 입력, id 기반 삭제 복원 처리 등이 더 필요해서 아직 create apply를 열지 않는다.
+v178에서 `itemTemplates`와 `dropTableItems`는 JSON/asset 필드 잠금과 id 기반 삭제/복원 guard를 추가한 뒤 열었다. 아래 도메인은 아직 create apply를 열지 않는다.
 
-- `itemTemplates`
-- `dropTableItems`
 - `skillLevels`
 - `enhancementLevels`
 - `characterSkills`

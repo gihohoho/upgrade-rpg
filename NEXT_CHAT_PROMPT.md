@@ -64,10 +64,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v177: create apply skills/dropTables
+v178: create apply itemTemplates/dropTableItems
 
 현재 인수인계 ZIP:
-rpg_v177_skills_droptables_create_apply_ready.zip
+rpg_v178_items_dropitems_create_apply_ready.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -113,11 +113,14 @@ docs/PROJECT_STRUCTURE.md
 34. create_delete 이력 기반 삭제 row 복원 preview/apply 제한 오픈 완료.
 35. 관리자 페이지 sidebar / sticky header / footer / 섹션 접기·펼치기 완료.
 36. 접힌 섹션 공통 CSS 보정 완료.
+37. fieldZones / bosses / skills / dropTables 신규 row 실제 생성 apply 제한 오픈 완료.
+38. itemTemplates / dropTableItems 신규 row 실제 생성 apply 제한 오픈 완료.
+39. 생성 row 삭제/복원 guard에 itemTemplates 연결 검사와 dropTableItems id 기반 삭제/복원 지원 추가.
 
-v174 현재 상태:
-관리자 페이지가 길어져서 v172~v174에서 레이아웃 정리를 먼저 했어.
-sidebar, sticky header, 섹션 접기/펼치기, footer 상태 표시가 있고, 접힌 탭은 amber 계열로 구분돼.
-스크롤 시 sidebar가 header에 가려지던 문제와 일부 탭만 색상이 이상하던 문제까지 수정 완료했어.
+v178 현재 상태:
+관리자 신규 row 생성 apply는 characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems까지 제한적으로 열려 있어.
+itemTemplates는 JSON/asset 필드를 잠근 상태로 scalar/relation 필드만 생성 가능하고, dropTableItems는 code 없는 leaf row라 id 기반 삭제/복원 흐름이 추가되어 있어.
+skillLevels/enhancementLevels/characterSkills는 아직 create apply 잠금 상태야.
 
 중요한 안전 원칙:
 기존 게임 동작을 깨면 안 됨.
@@ -137,18 +140,18 @@ bash tools/run_smoke_core.sh
 bash tools/run_smoke_all.sh
 
 다음 추천 단계:
-skills/dropTables 생성/삭제/복원 브라우저 확인부터 추천.
-그 다음 create/delete/restore UI dependency 표시 강화 또는 관리자 코드 분리 준비 추천.
+itemTemplates/dropTableItems 생성/삭제/복원 브라우저 확인부터 추천.
+그 다음 skillLevels/enhancementLevels/characterSkills 중 하나를 별도 단계로 열지 검토하거나, create/delete/restore UI dependency 표시 강화 추천.
 
-v177에서 완료된 일:
-1. skills create apply allow-list 추가.
-2. dropTables create apply allow-list 추가.
-3. skills/dropTables 생성 preview/apply smoke 추가.
-4. 생성 row 삭제 dependency guard에 skills 관련 연결과 dropTableItems.drop_table_code 검사 추가.
-5. create_delete restore에도 skills/dropTables 복원 충돌 검증 포함.
-6. itemTemplates, dropTableItems 생성 apply는 아직 열지 않음.
+v178에서 완료된 일:
+1. itemTemplates create apply allow-list 추가.
+2. dropTableItems create apply allow-list 추가.
+3. itemTemplates/dropTableItems 생성 preview/apply smoke 추가.
+4. itemTemplates 생성 row 삭제 dependency guard에 dropTableItems.item_template_code, itemInstances.template_code 검사 추가.
+5. dropTableItems는 id 기반 생성 row 삭제/복원 흐름 지원 추가.
+6. dropTableItems rate/min/max 수량 검증 추가.
+7. skillLevels, enhancementLevels, characterSkills 생성 apply는 아직 열지 않음.
 
 현재 인수인계 패키지 작업:
-- 런타임 코드 변경 없음.
-- 문서/인수인계 정리 중심.
+- DB schema 변경 없음.
 - DB reset / seed 필요 없음.

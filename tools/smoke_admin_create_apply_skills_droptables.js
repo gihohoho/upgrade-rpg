@@ -33,8 +33,8 @@ function parseSet(text, name) {
 const service = read("backend/app/services/admin_service.py");
 const createAllowed = parseSet(service, "MASTER_CREATE_APPLY_ALLOWED_DOMAINS");
 const deleteAllowed = parseSet(service, "MASTER_CREATE_DELETE_ALLOWED_DOMAINS");
-const expectedAllowed = ["bosses", "characters", "dropTables", "enhancementGroups", "fieldZones", "skills"].sort();
-const lockedDomains = ["itemTemplates", "dropTableItems"];
+const expectedAllowed = ["bosses", "characters", "dropTables", "dropTableItems", "enhancementGroups", "fieldZones", "itemTemplates", "skills"].sort();
+const lockedDomains = ["skillLevels", "enhancementLevels", "characterSkills"];
 
 assert(JSON.stringify(createAllowed) === JSON.stringify(expectedAllowed), `create allow-list mismatch: ${createAllowed.join(",")}`);
 assert(JSON.stringify(deleteAllowed) === JSON.stringify(expectedAllowed), `delete/restore allow-list mismatch: ${deleteAllowed.join(",")}`);
@@ -50,18 +50,18 @@ assertContains("backend/app/services/admin_service.py", [
   "UserCharacterSkill, \"skill_code\"",
   "if domain == \"dropTables\"",
   "DropTableItem, \"drop_table_code\"",
-  "characters/enhancementGroups/fieldZones/bosses/skills/dropTables",
+  "characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems",
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
   "v177.admin-create-apply-skills-droptables",
   "v176.admin-create-apply-bosses",
-  "characters/enhancementGroups/fieldZones/bosses/skills/dropTables",
+  "characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems",
 ]);
 
 assertContains("admin.html", [
   "v177 admin create apply skills/dropTables",
-  "characters/enhancementGroups/fieldZones/bosses/skills/dropTables",
+  "characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems",
   "<option value=\"skills\">스킬</option>",
   "<option value=\"dropTables\">드랍 테이블</option>",
 ]);

@@ -1,5 +1,13 @@
 # Changelog
 
+## v178 - Create Apply ItemTemplates and DropTableItems
+
+- `itemTemplates`, `dropTableItems` 신규 row 생성 apply 제한 오픈.
+- `itemTemplates` 생성 row 삭제 guard에 `dropTableItems.item_template_code`, `itemInstances.template_code` 연결 검사 추가.
+- `dropTableItems`는 code 없는 leaf row라 id 기반 생성 row 삭제/복원 흐름을 제한 오픈.
+- `dropTableItems` 생성 검증에 rate/min/max 수량 guard 추가.
+- DB schema 변경 없음, DB reset / seed 필요 없음.
+
 ## v177 - Create Apply Skills and DropTables
 
 - 신규 row 생성 apply 제한 도메인에 `skills`와 `dropTables`를 추가했습니다.
