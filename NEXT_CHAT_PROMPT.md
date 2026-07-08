@@ -57,6 +57,7 @@ local-admin-dev-key
 신규 row 생성 확인 문구: CREATE MASTER DATA ROW
 생성 row 삭제 확인 문구: DELETE CREATED MASTER DATA ROW
 삭제 row 복원 확인 문구: RESTORE DELETED CREATED ROW
+생성→삭제→복원 일괄 점검 확인 문구: RUN CREATE DELETE RESTORE CHECK
 
 .env / .gitignore 처리:
 내 로컬에는 .env, .gitignore가 이미 있어.
@@ -64,10 +65,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v182: admin create lifecycle result summary
+v183: admin create lifecycle batch check
 
 현재 인수인계 ZIP:
-rpg_v182_create_lifecycle_result_summary_ready.zip
+rpg_v183_create_lifecycle_batch_check_ready.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -143,7 +144,7 @@ bash tools/run_smoke_core.sh
 bash tools/run_smoke_all.sh
 
 다음 추천 단계:
-v182 결과 요약 카드를 보면서 skillLevels/enhancementLevels/characterSkills 생성/삭제/복원 브라우저 확인부터 추천.
+v183 일괄 점검 버튼으로 skillLevels/enhancementLevels/characterSkills 생성→삭제→복원 브라우저 확인부터 추천.
 그 다음 안정적이면 관리자 페이지 JS 코드 분리 준비 추천.
 
 v179에서 완료된 일:
@@ -189,3 +190,11 @@ v182에서 완료된 일:
 5. 백엔드 응답에 dependencyCheckCount, dependencyBlockerGuardCount, restoreConflictCount 추가.
 6. 새 쓰기 도메인 오픈 없음.
 7. DB schema 변경 없음, DB reset / seed 필요 없음.
+
+
+추가 최신 상태 v183:
+- 관리자 `신규 row 생성·삭제·복원 점검` 섹션에 일괄 점검 카드가 추가됨.
+- 현재 생성 초안 기준으로 생성 preview/apply → 삭제 preview/apply → 복원 preview/apply를 한 번에 실행 가능.
+- 일괄 점검 확인 문구: RUN CREATE DELETE RESTORE CHECK.
+- 성공하면 row가 다시 복원되어 DB에 남으므로 테스트 row가 불필요하면 create 이력에서 다시 삭제하면 됨.
+- checkAdminReadOnlyPageReady().createLifecycleBatchCheckReady 가 true면 정상.

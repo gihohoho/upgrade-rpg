@@ -401,6 +401,24 @@
       margin-top: 10px;
     }
 
+    .create-lifecycle-batch-card {
+      border-color: rgba(248, 113, 113, 0.28);
+      background: rgba(127, 29, 29, 0.10);
+    }
+
+    .create-lifecycle-batch-controls {
+      display: flex;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .create-lifecycle-batch-controls .apply-confirm-field {
+      min-width: 220px;
+      flex: 1 1 220px;
+    }
+
 
     .create-result-banner {
       margin: 12px 0;
@@ -1536,7 +1554,7 @@
     <section class="section" id="section-create-lifecycle-guide" data-admin-collapsible data-admin-section-key="create-lifecycle-guide" aria-label="신규 row 생성 흐름 점검">
       <div class="section-header">
         <h2 class="section-title">신규 row 생성·삭제·복원 점검</h2>
-        <div class="section-meta">v182 result summary helper · v181 dependency/action helper</div>
+        <div class="section-meta">v183 batch lifecycle check · v182 result summary helper · v181 dependency/action helper</div>
       </div>
       <div data-admin-create-lifecycle-guide><div class="empty">생성 설계를 불러오면 현재 도메인의 생성→삭제→복원 점검 순서가 여기에 표시됩니다.</div></div>
     </section>
@@ -1684,8 +1702,8 @@
     </div>
 
     <footer class="admin-footer" data-admin-footer>
-      <p class="footer-note"><strong>v182 admin create lifecycle result summary · v181 admin create lifecycle guard helper</strong> · v180 admin create lifecycle guide · v177 admin create apply skills/dropTables · v176 admin create apply bosses · static HTML + JS · FastAPI guarded write/rollback APIs</p>
-      <p class="footer-note">legacy smoke marker: v165 admin create apply limited · v171 admin create delete restore · v174 admin collapsed panel style fix · v178 admin create apply itemTemplates/dropTableItems · v179 admin create apply level/link tables</p>
+      <p class="footer-note"><strong>v183 admin create lifecycle batch check · v182 admin create lifecycle result summary</strong> · v181 admin create lifecycle guard helper · v180 admin create lifecycle guide · static HTML + JS · FastAPI guarded write/rollback APIs</p>
+      <p class="footer-note">legacy smoke marker: v165 admin create apply limited · v171 admin create delete restore · v174 admin collapsed panel style fix · v175 admin create apply fieldZones · v176 admin create apply bosses · v177 admin create apply skills/dropTables · v178 admin create apply itemTemplates/dropTableItems · v179 admin create apply level/link tables</p>
     </footer>
   </main>
 

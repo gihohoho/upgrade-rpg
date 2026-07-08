@@ -1,8 +1,8 @@
 # Upgrade RPG
 
-현재 안정 버전: **v182 admin create lifecycle result summary**
+현재 안정 버전: **v183 admin create lifecycle batch check**
 
-새 채팅 인수인계 ZIP: **rpg_v182_create_lifecycle_result_summary_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v183_create_lifecycle_batch_check_ready.zip**
 
 현재 프로젝트는 아직 Vue가 아니라 `index.html + JS + CSS` 기반 RPG 게임입니다. 기존 게임 동작을 유지하면서 FastAPI + PostgreSQL + 관리자 페이지 구조로 단계적으로 분리 중입니다.
 
@@ -23,6 +23,7 @@
 - `skillLevels`, `enhancementLevels`, `characterSkills` 신규 row create apply 제한 오픈 완료
 - 관리자 신규 row 생성·삭제·복원 점검 가이드 추가 완료
 - 삭제 preview 차단 기준 표시와 변경 이력 action 바로가기 추가 완료
+- 생성→삭제→복원 일괄 점검 버튼 추가 완료
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -47,7 +48,7 @@ bash tools/run_smoke_all.sh
 
 ## 다음 추천 단계
 
-다음은 브라우저에서 `신규 row 생성·삭제·복원 점검` 섹션의 삭제 차단 기준과 이력 바로가기를 보면서 생성→삭제→복원 흐름을 실제 확인하는 것이 안전합니다. 이후에는 관리자 페이지 코드 분리를 준비하는 것이 좋습니다.
+다음은 브라우저에서 `신규 row 생성·삭제·복원 점검` 섹션의 일괄 점검 버튼으로 leaf row부터 생성→삭제→복원 흐름을 확인하는 것이 좋습니다. 이후에는 관리자 페이지 코드 분리를 준비하는 것이 좋습니다.
 
 ## DB / env
 

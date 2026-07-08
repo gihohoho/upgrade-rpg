@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  const VERSION = "v182.admin-create-lifecycle-result-summary";
-  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper";
+  const VERSION = "v183.admin-create-lifecycle-batch-check";
+  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -18,6 +18,7 @@
   const ADMIN_CREATE_APPLY_CONFIRM_TEXT = "CREATE MASTER DATA ROW";
   const ADMIN_CREATE_DELETE_CONFIRM_TEXT = "DELETE CREATED MASTER DATA ROW";
   const ADMIN_CREATE_DELETE_RESTORE_CONFIRM_TEXT = "RESTORE DELETED CREATED ROW";
+  const ADMIN_CREATE_LIFECYCLE_BATCH_CONFIRM_TEXT = "RUN CREATE DELETE RESTORE CHECK";
   const ADMIN_EDIT_APPLY_TIMEOUT_MS = 5000;
   const ADMIN_WRITE_DEV_KEY_EXAMPLE = "local-admin-dev-key";
   const ADMIN_LAYOUT_COLLAPSE_STORAGE_KEY = "upgradeRpgAdminCollapsedSectionsV2";
@@ -1198,6 +1199,137 @@
         <button class="btn mini" type="button" data-admin-action="set-change-log-action-filter" data-admin-change-log-action-shortcut="create_delete_restore">restore 이력 보기</button>
       </div>
     `;
+  }
+
+  function readAdminCreateLifecycleBatchControls() {
+    const confirmEl = $(`[data-admin-create-lifecycle-batch-confirm]`);
+    const reasonEl = $(`[data-admin-create-lifecycle-batch-reason]`);
+    return {
+      confirmText: confirmEl ? confirmEl.value.trim() : "",
+      reason: reasonEl ? reasonEl.value.trim() : "",
+      confirmMatches: !!confirmEl && confirmEl.value.trim() === ADMIN_CREATE_LIFECYCLE_BATCH_CONFIRM_TEXT,
+    };
+  }
+
+  function renderAdminCreateLifecycleBatchResult(steps, options) {
+    const target = $(`[data-admin-create-lifecycle-batch-result]`);
+    if (!target) return;
+    const safeSteps = Array.isArray(steps) ? steps : [];
+    const opts = options || {};
+    const doneCount = safeSteps.filter((step) => step && step.status !== "pending").length;
+    const failCount = safeSteps.filter((step) => step && step.ok === false).length;
+    const rows = safeSteps.length ? safeSteps.map((step, index) => {
+      const tone = step.status === "pending" ? "warn" : (step.ok ? "good" : "blocked");
+      const payload = step.payload && typeof step.payload === "object" ? step.payload : {};
+      const logText = payload.changeLogId || payload.deleteChangeLogId || payload.restoreChangeLogId || "-";
+      const idText = payload.id || (payload.createdRow && payload.createdRow.id) || payload.targetId || "-";
+      return `<tr><td>${escapeHtml(formatValue(index + 1))}</td><td>${escapeHtml(step.label || step.key || "step")}</td><td><span class="pill ${tone}">${escapeHtml(step.status || (step.ok ? "ok" : "blocked"))}</span></td><td>${escapeHtml(formatValue(idText))}</td><td>${escapeHtml(formatValue(logText))}</td><td>${escapeHtml(formatValue(step.message || payload.status || "-"))}</td></tr>`;
+    }).join("") : `<tr><td colspan="6">아직 일괄 점검을 실행하지 않았습니다.</td></tr>`;
+    target.innerHTML = `
+      ${renderAdminOperationResultBanner({
+        tone: failCount ? "blocked" : (opts.finished ? "good" : "warn"),
+        title: opts.finished ? "생성→삭제→복원 일괄 점검 완료" : "생성→삭제→복원 일괄 점검 진행 상태",
+        subtitle: opts.note || "현재 생성 초안을 기준으로 preview/apply 안전검사를 순서대로 실행합니다.",
+        metrics: [
+          { label: "완료 단계", value: doneCount, tone: doneCount ? "good" : "warn" },
+          { label: "실패 단계", value: failCount, tone: failCount ? "blocked" : "good" },
+          { label: "전체 단계", value: safeSteps.length, tone: "warn" },
+        ],
+      })}
+      <div class="table-wrap relation-table-wrap"><table><thead><tr><th>#</th><th>단계</th><th>상태</th><th>row</th><th>log</th><th>메시지</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="filter-help">일괄 점검은 성공 시 마지막에 row를 다시 복원합니다. 테스트 row는 DB에 남으므로, 필요 없으면 create 이력에서 다시 삭제할 수 있습니다.</div>
+    `;
+  }
+
+  async function runAdminCreateLifecycleBatchCheck() {
+    ensureApi();
+    requireAdminWriteDevKeyForUi("생성→삭제→복원 일괄 점검");
+    const values = readAdminCreateDraftValues();
+    if (!values.ok) throw new Error("일괄 점검할 생성 초안이 없습니다. 먼저 생성 설계를 불러와 주세요.");
+    if (values.confirmText !== ADMIN_CREATE_APPLY_CONFIRM_TEXT) {
+      throw new Error(`생성 확인 문구를 먼저 입력해야 합니다: ${ADMIN_CREATE_APPLY_CONFIRM_TEXT}`);
+    }
+    const controls = readAdminCreateLifecycleBatchControls();
+    if (!controls.confirmMatches) {
+      throw new Error(`일괄 점검 확인 문구를 정확히 입력해야 합니다: ${ADMIN_CREATE_LIFECYCLE_BATCH_CONFIRM_TEXT}`);
+    }
+    const confirmed = window.confirm("현재 생성 초안으로 DB에 row를 생성한 뒤 삭제하고 다시 복원하는 일괄 점검을 실행할까요? 성공하면 최종 row는 복원되어 DB에 남습니다.");
+    if (!confirmed) {
+      setStatus("생성→삭제→복원 일괄 점검을 취소했습니다.", "info");
+      return { ok: false, canceled: true };
+    }
+
+    const reason = controls.reason || values.reason || `v183 create lifecycle batch check: ${values.domain}`;
+    const timeoutMs = ADMIN_EDIT_APPLY_TIMEOUT_MS;
+    const steps = [];
+    const renderBatchProgress = (note, finished) => renderAdminCreateLifecycleBatchResult(steps, { note, finished });
+    const pushPending = (key, label) => {
+      steps.push({ key, label, status: "pending", ok: null, message: "실행 중" });
+      renderBatchProgress(`${label} 실행 중`, false);
+      return steps.length - 1;
+    };
+    const finishPending = (index, payload, ok, message) => {
+      steps[index] = { ...steps[index], payload: payload || {}, ok: ok === true, status: ok === true ? "ok" : "blocked", message: message || (payload && payload.status) || "" };
+      renderBatchProgress(`${steps[index].label} 완료`, false);
+    };
+
+    try {
+      let stepIndex = pushPending("createPreview", "1. 생성 preview");
+      let response = await window.RpgGameApi.previewAdminMasterDataCreate({ domain: values.domain, draft: values.draft, reason, dryRun: true, timeoutMs: DEFAULT_TIMEOUT_MS });
+      let payload = response && response.payload ? response.payload : {};
+      finishPending(stepIndex, payload, !!payload.createApplyReady, payload.status);
+      if (!payload.createApplyReady) throw new Error(`생성 preview 차단: ${formatValue(payload.status)}`);
+
+      stepIndex = pushPending("createApply", "2. 생성 apply");
+      response = await window.RpgGameApi.applyAdminMasterDataCreate({ domain: values.domain, draft: values.draft, reason, confirmText: ADMIN_CREATE_APPLY_CONFIRM_TEXT, dryRun: false, timeoutMs });
+      payload = response && response.payload ? response.payload : {};
+      const createChangeLogId = Number(payload.changeLogId || 0);
+      finishPending(stepIndex, payload, !!payload.created && createChangeLogId > 0, payload.status);
+      if (!payload.created || !createChangeLogId) throw new Error(`생성 apply 실패: ${formatValue(payload.status)}`);
+
+      stepIndex = pushPending("deletePreview", "3. 삭제 preview");
+      response = await window.RpgGameApi.previewAdminCreateDeleteRollback({ id: createChangeLogId, reason, timeoutMs: DEFAULT_TIMEOUT_MS });
+      payload = response && response.payload ? response.payload : {};
+      finishPending(stepIndex, payload, !!payload.createDeleteReady, payload.status);
+      if (!payload.createDeleteReady) throw new Error(`삭제 preview 차단: ${formatValue(payload.status)}`);
+
+      stepIndex = pushPending("deleteApply", "4. 삭제 apply");
+      response = await window.RpgGameApi.applyAdminCreateDeleteRollback({ id: createChangeLogId, reason, confirmText: ADMIN_CREATE_DELETE_CONFIRM_TEXT, timeoutMs });
+      payload = response && response.payload ? response.payload : {};
+      const deleteChangeLogId = Number(payload.deleteChangeLogId || 0);
+      finishPending(stepIndex, payload, !!payload.deleted && deleteChangeLogId > 0, payload.status);
+      if (!payload.deleted || !deleteChangeLogId) throw new Error(`삭제 apply 실패: ${formatValue(payload.status)}`);
+
+      stepIndex = pushPending("restorePreview", "5. 복원 preview");
+      response = await window.RpgGameApi.previewAdminCreateDeleteRestore({ id: deleteChangeLogId, reason, timeoutMs: DEFAULT_TIMEOUT_MS });
+      payload = response && response.payload ? response.payload : {};
+      finishPending(stepIndex, payload, !!payload.createDeleteRestoreReady, payload.status);
+      if (!payload.createDeleteRestoreReady) throw new Error(`복원 preview 차단: ${formatValue(payload.status)}`);
+
+      stepIndex = pushPending("restoreApply", "6. 복원 apply");
+      response = await window.RpgGameApi.applyAdminCreateDeleteRestore({ id: deleteChangeLogId, reason, confirmText: ADMIN_CREATE_DELETE_RESTORE_CONFIRM_TEXT, timeoutMs });
+      payload = response && response.payload ? response.payload : {};
+      finishPending(stepIndex, payload, !!payload.restored, payload.status);
+      if (!payload.restored) throw new Error(`복원 apply 실패: ${formatValue(payload.status)}`);
+
+      await refreshAdminChangeLogs({ filters: readChangeLogFiltersFromDom() });
+      await refreshAdminReadOnlyPage({
+        snapshotFilters: readSnapshotFiltersFromDom(),
+        masterCatalogFilters: { ...readMasterCatalogFiltersFromDom(), domain: values.domain, page: 1 },
+        changeLogFilters: readChangeLogFiltersFromDom(),
+        createBlueprintFilters: { domain: values.domain },
+      });
+      renderAdminCreateLifecycleBatchResult(steps, { finished: true, note: `생성→삭제→복원 일괄 점검 완료 · restore log #${formatValue(payload.restoreChangeLogId)}` });
+      if (payload.domain && payload.id) {
+        await runPostWriteMasterApiVerification(payload.domain, payload.id, { label: "생성 lifecycle 일괄 점검", contextLabel: `restore log #${formatValue(payload.restoreChangeLogId)} 적용 후 자동 확인` });
+      }
+      setStatus(`생성→삭제→복원 일괄 점검 완료: ${formatValue(values.domain)} #${formatValue(payload.id)} · restore log #${formatValue(payload.restoreChangeLogId)}`, "ok");
+      return { ok: true, steps };
+    } catch (error) {
+      renderAdminCreateLifecycleBatchResult(steps, { note: error && error.message ? error.message : "일괄 점검이 중단되었습니다." });
+      setStatus(`생성→삭제→복원 일괄 점검 중단: ${error && error.message ? error.message : error}`, "error");
+      throw error;
+    }
   }
 
   function renderAdminCreateLifecycleMetric(label, value, tone) {
@@ -3545,6 +3677,16 @@
     return response;
   }
 
+  async function refreshAdminMasterCatalog(options) {
+    const opts = options || {};
+    return refreshAdminReadOnlyPage({
+      snapshotFilters: readSnapshotFiltersFromDom(),
+      masterCatalogFilters: opts.filters || readMasterCatalogFiltersFromDom(),
+      changeLogFilters: readChangeLogFiltersFromDom(),
+      createBlueprintFilters: readAdminCreateBlueprintFiltersFromDom(),
+    });
+  }
+
   async function refreshAdminChangeLogs(options) {
     ensureApi();
     const opts = options || {};
@@ -3887,6 +4029,13 @@
           renderError(error);
         }
       }
+      if (action === "run-create-lifecycle-batch-check") {
+        try {
+          await runAdminCreateLifecycleBatchCheck();
+        } catch (error) {
+          if (!(error && (String(error.message || "").includes("확인 문구") || String(error.message || "").includes("dev key")))) renderError(error);
+        }
+      }
       if (action === "master-catalog-first-page") await refreshMasterCatalogWithPage(1);
       if (action === "master-catalog-prev-page") {
         const current = readMasterCatalogFiltersFromDom().page || 1;
@@ -4084,6 +4233,7 @@
     const createLifecycleGuideReady = !!document.querySelector("[data-admin-create-lifecycle-guide]") && typeof renderAdminCreateLifecycleGuide === "function" && typeof getAdminCreateLifecycleGuideReadiness === "function";
     const createLifecycleDependencyGuideReady = typeof renderAdminCreateLifecycleDependencyGuards === "function" && typeof applyAdminChangeLogActionShortcut === "function";
     const createLifecycleResultSummaryReady = typeof renderAdminOperationResultBanner === "function" && typeof renderAdminCreateDeleteBlockerSummary === "function";
+    const createLifecycleBatchCheckReady = typeof runAdminCreateLifecycleBatchCheck === "function" && typeof renderAdminCreateLifecycleBatchResult === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.applyAdminMasterDataCreate === "function" && typeof window.RpgGameApi.applyAdminCreateDeleteRollback === "function" && typeof window.RpgGameApi.applyAdminCreateDeleteRestore === "function");
     const createDraftPreviewReady = typeof previewAdminCreateDraft === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminMasterDataCreate === "function");
     const createApplyReady = typeof applyAdminCreateDraft === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.applyAdminMasterDataCreate === "function");
     const masterDetailReady = !!document.querySelector("[data-admin-master-detail]");
@@ -4102,7 +4252,7 @@
     const createDeleteRollbackReady = typeof previewAdminCreateDeleteRollback === "function" && typeof applyAdminCreateDeleteRollback === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRollback === "function");
     const createDeleteRestoreReady = typeof previewAdminCreateDeleteRestore === "function" && typeof applyAdminCreateDeleteRestore === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRestore === "function");
     const layoutShell = getAdminLayoutShellReadiness();
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createLifecycleBatchCheckReady, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }

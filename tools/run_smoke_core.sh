@@ -21,6 +21,7 @@ node tools/smoke_admin_create_apply_level_links.js
 node tools/smoke_admin_create_lifecycle_guide.js
 node tools/smoke_admin_create_lifecycle_guard_helper.js
 node tools/smoke_admin_create_lifecycle_result_summary.js
+node tools/smoke_admin_create_lifecycle_batch_check.js
 node tools/smoke_admin_create_delete_rollback.js
 node tools/smoke_admin_create_delete_restore.js
 node tools/smoke_admin_layout_navigation_shell.js

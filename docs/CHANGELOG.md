@@ -1,5 +1,25 @@
 # Changelog
 
+## v183 - Admin Create Lifecycle Batch Check
+
+- 관리자 `신규 row 생성·삭제·복원 점검` 섹션에 일괄 점검 카드를 추가했습니다.
+- 현재 생성 초안을 기준으로 생성 preview → 생성 apply → 삭제 preview → 삭제 apply → 복원 preview → 복원 apply를 순서대로 실행할 수 있습니다.
+- 일괄 점검 전용 확인 문구 `RUN CREATE DELETE RESTORE CHECK`를 추가했습니다.
+- dev key, 생성 확인 문구, 브라우저 confirm, 기존 백엔드 preview guard를 모두 유지했습니다.
+- 단계별 결과 테이블과 요약 카드를 표시합니다.
+- 새 쓰기 도메인은 열지 않았고 기존 create/delete/restore guard는 유지했습니다.
+- DB schema 변경 없음, DB reset / seed 필요 없음.
+
+## v182 - Admin Create Lifecycle Result Summary
+
+- 생성 row 삭제 preview/apply 결과 상단에 요약 카드를 추가했습니다.
+- 삭제 결과에서 현재값 불일치, 연결 검사 수, 차단 guard 수, 차단 row 수를 바로 볼 수 있게 했습니다.
+- 삭제 row 복원 preview/apply 결과 상단에 요약 카드를 추가했습니다.
+- 복원 결과에서 id/code 충돌, validation error, relation 값 수를 바로 볼 수 있게 했습니다.
+- 백엔드 응답에 `dependencyCheckCount`, `dependencyBlockerGuardCount`, `restoreConflictCount` 보조 count를 추가했습니다.
+- 새 쓰기 도메인은 열지 않았고 기존 create/delete/restore guard는 유지했습니다.
+- DB schema 변경 없음, DB reset / seed 필요 없음.
+
 ## v181 - Admin Create Lifecycle Guard Helper
 
 - `createLifecycle` 메타데이터에 도메인별 삭제 preview 차단 기준을 추가했습니다.

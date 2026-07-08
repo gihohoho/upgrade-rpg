@@ -1,31 +1,33 @@
 # Next Steps
 
-## 현재 완료: v182 admin create lifecycle result summary
+## 현재 완료: v183 admin create lifecycle batch check
 
-신규 row 생성 apply 도메인을 더 열지 않고, 이미 열린 생성→삭제→복원 흐름의 결과 화면을 더 안전하게 읽을 수 있도록 요약 카드를 추가했습니다.
+현재 생성 초안을 기준으로 생성 preview/apply, 삭제 preview/apply, 복원 preview/apply를 한 번에 실행할 수 있는 관리자 일괄 점검 UI를 추가했습니다.
 
-## 다음 추천: 브라우저 실제 검증
+## 다음 추천: leaf row부터 일괄 점검
 
-이제 다음은 코드 변경보다 브라우저 실제 확인이 안전합니다.
+일괄 점검은 성공하면 마지막에 row를 다시 복원하므로 테스트 row가 DB에 남습니다.
+처음에는 하위 연결이 없는 leaf row부터 확인하는 것이 안전합니다.
 
 권장 확인 순서:
 
 1. 관리자 페이지에서 `skillLevels` 생성 blueprint 로드.
-2. `신규 row 생성·삭제·복원 점검` 섹션에서 삭제 preview 차단 기준이 보이는지 확인.
-3. `create` 이력 보기 버튼으로 변경 이력 필터가 바로 적용되는지 확인.
-4. `skillLevels` 생성 preview/apply 확인.
-5. 변경 이력에서 create 이력을 열고 id 기반 삭제 preview를 눌러 결과 요약 카드가 보이는지 확인.
-6. 삭제 apply 후 `create_delete` 이력에서 복원 preview를 눌러 결과 요약 카드가 보이는지 확인.
+2. 기존 스킬을 선택하고 중복되지 않는 `level` 값 입력.
+3. 생성 확인 문구에 `CREATE MASTER DATA ROW` 입력.
+4. 일괄 점검 확인 문구에 `RUN CREATE DELETE RESTORE CHECK` 입력.
+5. `생성→삭제→복원 한 번에 점검` 실행.
+6. 단계별 결과가 6단계 모두 ok인지 확인.
 7. 같은 흐름을 `enhancementLevels`, `characterSkills`에 반복.
-8. 부모 도메인(`skills`, `itemTemplates`, `dropTables`)은 연결 데이터가 있을 때 삭제 preview가 차단되는지만 확인.
+8. 이후 `dropTableItems`처럼 id 기반 leaf row도 확인.
+9. 부모 도메인(`skills`, `itemTemplates`, `dropTables`)은 연결 데이터가 있을 때 삭제 preview가 차단되는지만 확인.
 
 ## 그 다음 후보
 
-브라우저 확인까지 안정적이면 다음은 아래 순서가 좋습니다.
+브라우저 일괄 점검까지 안정적이면 다음은 아래 순서가 좋습니다.
 
 1. 관리자 페이지 코드 분리 준비.
-2. 관리자 페이지 JS를 도메인별/기능별 파일로 나누기 전 smoke 고정.
-3. 관리자 페이지 JS 파일 분리 전 smoke 범위 고정.
+2. 관리자 페이지 JS를 기능별 파일로 나누기 전 smoke 범위 고정.
+3. `admin-page-readonly.js`를 create/edit/change-log/save 쪽으로 나누는 계획 문서 작성.
 4. FastAPI 관리자 라우터/서비스 파일 분리.
 5. Vue 전환 전 관리자 기능 목록 정리.
 
@@ -36,7 +38,7 @@
 - 모든 JSON/asset 필드 생성 입력 오픈.
 - master-data schema 변경.
 
-## v182 DB reset / seed 결과
+## v183 DB reset / seed 결과
 
 - DB schema 변경 없음.
 - DB reset / seed 필요 없음.
