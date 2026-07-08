@@ -247,6 +247,23 @@
 	}
 
 
+	async function applyAdminMasterDataCreate(options) {
+		const opts = options || {};
+		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
+		return request("/admin/master-data/create-apply", {
+			method: "POST",
+			body: {
+				domain: opts.domain !== undefined ? String(opts.domain || "").trim() : "",
+				draft: opts.draft || {},
+				reason: opts.reason || undefined,
+				confirmText: opts.confirmText || "",
+				dryRun: false,
+			},
+			timeoutMs,
+			headers: getAdminWriteHeaders(),
+		});
+	}
+
 	async function fetchAdminMasterDataDetail(options) {
 		const opts = options || {};
 		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
@@ -413,6 +430,7 @@
 		listAdminMasterCatalogRows,
 		fetchAdminMasterCreateBlueprint,
 		previewAdminMasterDataCreate,
+		applyAdminMasterDataCreate,
 		fetchAdminMasterDataDetail,
 		fetchAdminMasterDataRelations,
 		previewAdminMasterDataEdit,

@@ -55,7 +55,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v162.admin-create-draft-preview",
+  "v165.admin-create-apply-limited",
   "previewAdminEditDraft",
   "readAdminEditDraftValues",
   "resetAdminEditDraft",
@@ -67,7 +67,7 @@ assertContains("src/api/admin-page-readonly.js", [
 ]);
 
 assertContains("admin.html", [
-  "v162 admin create draft preview",
+  "v165 admin create apply limited",
   ".edit-draft-result",
   ".draft-preview-summary",
   "확인 문구",

@@ -48,6 +48,8 @@ class AdminService:
 
     MASTER_EDIT_APPLY_CONFIRM_TEXT = "APPLY MASTER DATA EDIT"
     MASTER_EDIT_ROLLBACK_CONFIRM_TEXT = "ROLLBACK MASTER DATA EDIT"
+    MASTER_CREATE_APPLY_CONFIRM_TEXT = "CREATE MASTER DATA ROW"
+    MASTER_CREATE_APPLY_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups"}
 
     MASTER_EDIT_ALLOWED_FIELDS: dict[str, set[str]] = {
         "itemTemplates": {"name", "item_type", "description", "grade", "stackable", "equip_slot", "enhance_group_code", "admin_note"},
@@ -1428,12 +1430,18 @@ class AdminService:
         error_count = len(rejected_fields)
         relation_count = sum(1 for field in accepted_fields if field.get("relation"))
         combo_labels = self._create_combo_guard_labels(domain)
+        create_apply_unlocked = domain in self.MASTER_CREATE_APPLY_ALLOWED_DOMAINS
+        create_apply_ready = create_apply_unlocked and error_count == 0 and len(accepted_fields) > 0
         return {
             "status": "previewed",
             "readOnly": True,
             "dryRun": True,
             "writeBlocked": True,
-            "createApplyReady": False,
+            "createApplyReady": create_apply_ready,
+            "createApplyUnlocked": create_apply_unlocked,
+            "insertLocked": not create_apply_unlocked,
+            "confirmTextRequired": self.MASTER_CREATE_APPLY_CONFIRM_TEXT,
+            "allowedCreateApplyDomains": sorted(self.MASTER_CREATE_APPLY_ALLOWED_DOMAINS),
             "wouldBeValid": error_count == 0,
             "domain": domain,
             "domainLabel": config["label"],
@@ -1450,7 +1458,156 @@ class AdminService:
             "rawJsonReturned": False,
             "assetsReturned": False,
             "warnings": warnings,
-            "note": "신규 row 생성 초안을 검증했습니다. 이 단계는 preview-only라 DB insert, commit, change log 생성을 하지 않습니다.",
+            "note": "신규 row 생성 초안을 검증했습니다. characters/enhancementGroups는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 초안을 검증했습니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
+        }
+
+    async def apply_master_data_create(
+        self,
+        session: AsyncSession,
+        *,
+        domain: str,
+        draft: dict[str, Any],
+        reason: str | None,
+        confirm_text: str,
+        admin_user_id: int,
+    ) -> dict[str, Any]:
+        """Apply a guarded new-row insert for a very small safe domain allow-list.
+
+        The create path is deliberately narrower than edit apply. It only opens
+        relation-light domains first, validates through the same preview function,
+        requires the admin dev key at the route layer, requires an exact
+        confirmation phrase, and records a create change log. Create rollback/delete
+        is intentionally not opened in this step.
+        """
+        preview = await self.preview_master_data_create(
+            session,
+            domain=domain,
+            draft=draft,
+            reason=reason,
+            dry_run=True,
+        )
+
+        if domain not in self.MASTER_CREATE_APPLY_ALLOWED_DOMAINS:
+            preview.update({
+                "status": "create_domain_locked",
+                "readOnly": False,
+                "dryRun": False,
+                "writeBlocked": True,
+                "created": False,
+                "createApplyReady": False,
+                "wouldBeValid": False,
+                "errorCount": int(preview.get("errorCount") or 0) + 1,
+                "warnings": [*(preview.get("warnings") or []), "create_apply_domain_locked"],
+                "note": "이 도메인의 실제 신규 row 생성은 아직 열지 않았습니다. 현재는 characters/enhancementGroups만 제한적으로 생성 가능합니다.",
+            })
+            return preview
+
+        if str(confirm_text or "").strip() != self.MASTER_CREATE_APPLY_CONFIRM_TEXT:
+            preview.update({
+                "status": "create_confirmation_required",
+                "readOnly": False,
+                "dryRun": False,
+                "writeBlocked": True,
+                "created": False,
+                "createApplyReady": False,
+                "wouldBeValid": False,
+                "errorCount": int(preview.get("errorCount") or 0) + 1,
+                "warnings": [*(preview.get("warnings") or []), "create_confirm_text_mismatch"],
+                "note": "정확한 생성 확인 문구를 입력해야 DB insert가 가능합니다.",
+            })
+            return preview
+
+        if preview.get("status") != "previewed" or preview.get("errorCount") or not preview.get("acceptedFields"):
+            preview.update({
+                "status": "create_rejected",
+                "readOnly": False,
+                "dryRun": False,
+                "writeBlocked": True,
+                "created": False,
+                "createApplyReady": False,
+                "wouldBeValid": False,
+                "warnings": [*(preview.get("warnings") or []), "create_preview_not_valid_for_apply"],
+                "note": "검증 오류가 있거나 생성 가능한 필드가 없어 DB에 insert하지 않았습니다.",
+            })
+            return preview
+
+        config = self.MASTER_CATALOG_DOMAINS.get(domain)
+        if not config:
+            preview.update({"status": "invalid_domain", "created": False, "writeBlocked": True})
+            return preview
+
+        model = config["model"]
+        column_map = self._master_create_column_map(model)
+        field_defs = {str(field["key"]): field for field in self.MASTER_CREATE_BLUEPRINT_FIELDS.get(domain, []) if field.get("key")}
+        row_values: dict[str, Any] = {}
+        after_values: dict[str, Any] = {}
+        for field in preview.get("acceptedFields") or []:
+            key = str(field.get("key") or "").strip()
+            if not key or key not in field_defs or key not in column_map:
+                continue
+            field_def = field_defs[key]
+            if str(field_def.get("inputKind") or "") == "json-readonly" or key.endswith("_json") or self._is_asset_field(key):
+                continue
+            raw_value = (draft or {}).get(key, field_def.get("defaultValue"))
+            normalized, issue = self._normalize_master_edit_value(column_map[key], raw_value)
+            if issue:
+                continue
+            row_values[key] = normalized
+            after_values[key] = serialize_value(normalized)
+
+        if not row_values:
+            await session.rollback()
+            preview.update({
+                "status": "nothing_to_create",
+                "readOnly": False,
+                "dryRun": False,
+                "writeBlocked": True,
+                "created": False,
+                "createApplyReady": False,
+                "warnings": [*(preview.get("warnings") or []), "no_insertable_values"],
+            })
+            return preview
+
+        row = model(**row_values)
+        session.add(row)
+        await session.flush()
+
+        created_id = int(getattr(row, "id", 0) or 0)
+        created_code = getattr(row, "code", None)
+        created_title = getattr(row, "name", None) or created_code or f"#{created_id}"
+        change_log = AdminChangeLog(
+            admin_user_id=int(admin_user_id),
+            target_type=f"master_data.{domain}",
+            target_id=str(created_id),
+            action="create",
+            reason=str(reason or "")[:500] or None,
+            before_json={},
+            after_json=after_values,
+            rollback_json={"domain": domain, "id": created_id, "delete": True},
+            applied=True,
+        )
+        session.add(change_log)
+        await session.commit()
+        await session.refresh(row)
+        await session.refresh(change_log)
+
+        return {
+            **preview,
+            "status": "created",
+            "readOnly": False,
+            "dryRun": False,
+            "writeBlocked": False,
+            "created": True,
+            "createApplyReady": False,
+            "wouldBeValid": True,
+            "id": created_id,
+            "code": serialize_value(created_code),
+            "title": serialize_value(created_title),
+            "createdRow": {"domain": domain, "id": created_id, "code": serialize_value(created_code), "title": serialize_value(created_title)},
+            "changeLogId": int(change_log.id),
+            "appliedByAdminUserId": int(admin_user_id),
+            "note": "신규 master-data row를 DB에 생성했고 admin_change_logs에 create 이력을 저장했습니다. create rollback/delete는 아직 잠겨 있습니다.",
+            "warnings": [*(preview.get("warnings") or []), "create_rollback_delete_not_enabled_yet", "game_runtime_requires_reload"],
         }
 
     def _empty_create_preview(self, *, status: str, domain: str, domain_label: str, warnings: list[str]) -> dict[str, Any]:
@@ -1460,6 +1617,10 @@ class AdminService:
             "dryRun": True,
             "writeBlocked": True,
             "createApplyReady": False,
+            "createApplyUnlocked": False,
+            "insertLocked": True,
+            "confirmTextRequired": self.MASTER_CREATE_APPLY_CONFIRM_TEXT,
+            "allowedCreateApplyDomains": sorted(self.MASTER_CREATE_APPLY_ALLOWED_DOMAINS),
             "wouldBeValid": False,
             "domain": domain,
             "domainLabel": domain_label,
@@ -1610,6 +1771,10 @@ class AdminService:
                 "status": "invalid_domain",
                 "readOnly": True,
                 "createApplyReady": False,
+                "createApplyUnlocked": False,
+                "insertLocked": True,
+                "confirmTextRequired": self.MASTER_CREATE_APPLY_CONFIRM_TEXT,
+                "allowedCreateApplyDomains": sorted(self.MASTER_CREATE_APPLY_ALLOWED_DOMAINS),
                 "domain": domain,
                 "domainLabel": domain,
                 "description": None,
@@ -1664,10 +1829,15 @@ class AdminService:
                 "note": field_def.get("note"),
             })
 
+        create_apply_unlocked = domain in self.MASTER_CREATE_APPLY_ALLOWED_DOMAINS
         return {
             "status": "loaded",
             "readOnly": True,
             "createApplyReady": False,
+            "createApplyUnlocked": create_apply_unlocked,
+            "insertLocked": not create_apply_unlocked,
+            "confirmTextRequired": self.MASTER_CREATE_APPLY_CONFIRM_TEXT,
+            "allowedCreateApplyDomains": sorted(self.MASTER_CREATE_APPLY_ALLOWED_DOMAINS),
             "domain": domain,
             "domainLabel": config["label"],
             "description": config.get("description"),
@@ -1682,7 +1852,7 @@ class AdminService:
             "rawJsonReturned": False,
             "assetsReturned": False,
             "warnings": [],
-            "note": "신규 row 생성 기능을 열기 전 read-only 설계 응답입니다. 필수 필드, 기본값, 관계 후보만 보여주며 DB를 수정하지 않습니다.",
+            "note": "신규 row 생성 설계 응답입니다. characters/enhancementGroups는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 설계 응답입니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
         }
 
     async def _build_master_create_relation_options(self, session: AsyncSession, domain: str) -> dict[str, Any]:

@@ -72,3 +72,4 @@ docs/archive/stage-notes/
 - [ADMIN_CREATE_BLUEPRINT_READONLY.md](ADMIN_CREATE_BLUEPRINT_READONLY.md) - 신규 row 생성 준비 read-only blueprint
 
 - [ADMIN_CREATE_DRAFT_PREVIEW.md](ADMIN_CREATE_DRAFT_PREVIEW.md) - 신규 row 생성 초안 입력 UI와 preview-only 검증
+- `ADMIN_CREATE_APPLY_LIMITED.md` - 신규 row 제한 생성 apply 단계

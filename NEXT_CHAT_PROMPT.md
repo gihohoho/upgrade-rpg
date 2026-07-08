@@ -136,3 +136,5 @@ v163 관리자 신규 row 생성 apply 준비
 rollback은 삭제가 아니라 soft-disabled 또는 별도 안전 정책을 먼저 설계하는 방향이 좋아.
 
 업로드한 ZIP 기준으로 구조 확인 후, v163부터 이어서 진행해줘.
+
+추가 완료: v165 admin create apply limited. `characters`, `enhancementGroups` 신규 row 생성 apply만 제한적으로 열림. 생성 확인 문구는 `CREATE MASTER DATA ROW`. create rollback/delete는 아직 잠금. DB reset/seed 필요 없음.

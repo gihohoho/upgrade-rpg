@@ -39,7 +39,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v162.admin-create-draft-preview",
+  "v165.admin-create-apply-limited",
   "const DEFAULT_MASTER_LIMIT = 20",
   'const DEFAULT_MASTER_SORT = "id_asc"',
   "data-admin-master-page",

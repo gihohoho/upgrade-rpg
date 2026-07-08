@@ -211,3 +211,5 @@ createApplyReady: false
 - `docs/CURRENT_STATUS.md`
 - `docs/NEXT_STEPS.md`
 - `docs/ADMIN_CREATE_DRAFT_PREVIEW.md`
+
+추가 완료: v165 admin create apply limited. `characters`, `enhancementGroups` 신규 row 생성 apply만 제한적으로 열림. 생성 확인 문구는 `CREATE MASTER DATA ROW`. create rollback/delete는 아직 잠금. DB reset/seed 필요 없음.

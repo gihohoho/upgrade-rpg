@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v162.admin-create-draft-preview",
+  "v165.admin-create-apply-limited",
   "renderAdminCreateDraft",
   "data-admin-create-draft",
   "readAdminCreateDraftValues",

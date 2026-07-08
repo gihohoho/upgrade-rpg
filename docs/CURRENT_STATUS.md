@@ -1,6 +1,6 @@
 # Current Status
 
-현재 기준: **v162 admin create draft preview**
+현재 기준: **v165 admin create apply limited**
 
 ## 상태
 

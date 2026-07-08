@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.response import ok_response
 from app.core.security import CurrentUser, get_current_user_placeholder, require_admin_write_dev_key
 from app.db.session import get_db_session
-from app.schemas.admin import AdminChangeLogRollbackApplyRequest, AdminChangeLogRollbackPreviewRequest, AdminChangePreviewRequest, AdminMasterDataCreatePreviewRequest, AdminMasterDataEditApplyRequest, AdminMasterDataEditPreviewRequest
+from app.schemas.admin import AdminChangeLogRollbackApplyRequest, AdminChangeLogRollbackPreviewRequest, AdminChangePreviewRequest, AdminMasterDataCreateApplyRequest, AdminMasterDataCreatePreviewRequest, AdminMasterDataEditApplyRequest, AdminMasterDataEditPreviewRequest
 from app.services.admin_service import AdminService
 
 router = APIRouter()
@@ -157,6 +157,9 @@ async def get_admin_master_create_blueprint(
             "status": blueprint["status"],
             "readOnly": blueprint["readOnly"],
             "createApplyReady": blueprint["createApplyReady"],
+            "createApplyUnlocked": blueprint.get("createApplyUnlocked", False),
+            "insertLocked": blueprint.get("insertLocked", True),
+            "confirmTextRequired": blueprint.get("confirmTextRequired"),
             "adminUserId": current_user.id,
             "domain": blueprint["domain"],
             "fieldCount": blueprint.get("fieldCount", 0),
@@ -167,7 +170,7 @@ async def get_admin_master_create_blueprint(
         },
         meta={
             "source": "postgresql",
-            "note": "관리자 신규 row 생성 준비용 read-only blueprint입니다. DB를 수정하지 않습니다.",
+            "note": "관리자 신규 row 생성 준비용 blueprint입니다. 일부 제한 도메인만 dev key와 확인 문구로 생성 적용 가능합니다.",
         },
     )
 
@@ -200,10 +203,53 @@ async def preview_admin_master_data_create(
             "errorCount": preview.get("errorCount", 0),
             "wouldBeValid": preview.get("wouldBeValid", False),
             "createApplyReady": preview.get("createApplyReady", False),
+            "createApplyUnlocked": preview.get("createApplyUnlocked", False),
+            "insertLocked": preview.get("insertLocked", True),
+            "confirmTextRequired": preview.get("confirmTextRequired"),
         },
         meta={
             "source": "postgresql",
-            "note": "관리자 신규 row 생성 초안 검증 전용입니다. DB insert는 아직 잠겨 있고, 이 API는 DB를 수정하지 않습니다.",
+            "note": "관리자 신규 row 생성 초안 검증 전용입니다. 이 API 자체는 DB를 수정하지 않고, 제한 도메인의 apply 가능 여부만 알려줍니다.",
+        },
+    )
+
+
+@router.post("/master-data/create-apply")
+async def apply_admin_master_data_create(
+    payload: AdminMasterDataCreateApplyRequest = Body(...),
+    _write_guard: bool = Depends(require_admin_write_dev_key),
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Apply a guarded new master-data row insert for limited safe domains."""
+    created = await service.apply_master_data_create(
+        session,
+        domain=payload.domain,
+        draft=payload.draft,
+        reason=payload.reason,
+        confirm_text=payload.confirm_text,
+        admin_user_id=current_user.id,
+    )
+    return ok_response(
+        type="admin.master_data.create_apply",
+        payload=created,
+        data={
+            "status": created["status"],
+            "readOnly": created.get("readOnly"),
+            "dryRun": created.get("dryRun"),
+            "writeBlocked": created.get("writeBlocked"),
+            "created": created.get("created", False),
+            "adminUserId": current_user.id,
+            "domain": created.get("domain"),
+            "id": created.get("id"),
+            "code": created.get("code"),
+            "fieldCount": created.get("fieldCount", 0),
+            "errorCount": created.get("errorCount", 0),
+            "changeLogId": created.get("changeLogId"),
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 신규 row 생성 적용 API입니다. X-Admin-Dev-Key, 확인 문구, create allow-list를 통과한 제한 도메인만 DB에 insert합니다.",
         },
     )
 

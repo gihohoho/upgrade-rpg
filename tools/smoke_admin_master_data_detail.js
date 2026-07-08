@@ -43,7 +43,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v162.admin-create-draft-preview",
+  "v165.admin-create-apply-limited",
   "renderMasterDetail",
   "openAdminMasterDataDetail",
   "fetchAdminMasterDataDetail",
@@ -60,7 +60,7 @@ assertContains("admin.html", [
   "data-admin-master-detail-meta",
   ".json-preview",
   ".detail-grid",
-  "v162 admin create draft preview",
+  "v165 admin create apply limited",
 ]);
 
 assertContains("backend/scripts/check_admin_readonly_api.py", [

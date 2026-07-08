@@ -22,6 +22,16 @@ class AdminMasterDataCreatePreviewRequest(BaseModel):
     dry_run: bool = Field(default=True, alias="dryRun")
 
 
+class AdminMasterDataCreateApplyRequest(AdminMasterDataCreatePreviewRequest):
+    """Guarded request that can insert a new master-data row for limited domains.
+
+    The endpoint must require the exact confirmation phrase and the admin dev key.
+    """
+
+    confirm_text: str = Field(default="", alias="confirmText", max_length=80)
+    dry_run: bool = Field(default=False, alias="dryRun")
+
+
 class AdminMasterDataEditPreviewRequest(BaseModel):
     """Dry-run request for the static admin edit draft form.
 

@@ -863,3 +863,12 @@ Docker PostgreSQL + Adminer 로컬 실행 준비 완료
 - The guide explicitly notes when game reload is needed and that existing saved stackable items are not automatically merged.
 - No DB reset or seed import is required because this is admin UI guidance only.
 
+## v165 - Admin Create Apply Limited
+
+- 신규 row 생성 apply를 `characters`, `enhancementGroups`에 한해 제한적으로 열었다.
+- 생성 적용에는 dev key와 `CREATE MASTER DATA ROW` 확인 문구가 필요하다.
+- 생성 전 preview 검증을 apply에서도 다시 실행한다.
+- 성공 시 `admin_change_logs`에 `action=create` 이력을 남긴다.
+- create rollback/delete는 아직 잠금 상태다.
+- DB reset / seed 필요 없음.
+

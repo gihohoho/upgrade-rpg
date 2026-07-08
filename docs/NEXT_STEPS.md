@@ -1,6 +1,6 @@
 # Next Steps
 
-현재 기준: **v162 admin create draft preview**
+현재 기준: **v165 admin create apply limited**
 
 v162에서 신규 row 생성 초안 입력 UI와 preview-only 검증 API를 추가했습니다. 실제 생성 적용은 아직 열지 않았습니다.
 
@@ -26,3 +26,9 @@ v162에서 신규 row 생성 초안 입력 UI와 preview-only 검증 API를 추�
 - JSON 편집기 미리보기 전용 UI
 - 마스터 데이터 일괄 검색/빠른 이동 패널
 - 관리자 도메인별 빠른 프리셋 필터
+
+## 추천 다음 단계: v166 create rollback delete preview
+
+- create change log에 대해 바로 삭제 적용을 열지 말고, 먼저 삭제/되돌리기 preview를 만든다.
+- 연결된 row가 생겼는지 확인하고, 연결이 있으면 삭제를 차단한다.
+- 실제 delete apply는 그 다음 단계에서 제한적으로 여는 것이 안전하다.

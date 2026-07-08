@@ -17,12 +17,13 @@ function assertContains(file, patterns) {
 }
 
 assertContains("admin.html", [
-  "v162 admin create draft preview",
+  "v165 admin create apply limited",
   "section-create-blueprint",
   "data-admin-create-domain",
   "data-admin-create-blueprint",
   "load-create-blueprint",
   "insert API locked",
+  "limited apply",
 ]);
 
 assertContains("src/api/game-api-client.js", [
@@ -30,10 +31,12 @@ assertContains("src/api/game-api-client.js", [
   "/admin/master-data/create-blueprint",
   "previewAdminMasterDataCreate",
   "/admin/master-data/create-preview",
+  "applyAdminMasterDataCreate",
+  "/admin/master-data/create-apply",
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v162.admin-create-draft-preview",
+  "v165.admin-create-apply-limited",
   "readAdminCreateBlueprintFiltersFromDom",
   "renderAdminCreateBlueprint",
   "refreshAdminCreateBlueprint",
@@ -47,6 +50,8 @@ assertContains("src/api/admin-page-readonly.js", [
   "renderAdminCreatePreviewResult",
   "createDraftPreviewReady",
   "preview-admin-create-draft",
+  "apply-admin-create-draft",
+  "data-admin-create-confirm",
   "data-admin-create-draft",
 ]);
 

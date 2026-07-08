@@ -45,7 +45,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v162.admin-create-draft-preview",
+  "v165.admin-create-apply-limited",
   "renderMasterRelations",
   "openAdminMasterDataRelations",
   "fetchAdminMasterDataRelations",
@@ -60,7 +60,7 @@ assertContains("admin.html", [
   "선택한 마스터 데이터 상세",
   "data-admin-master-detail",
   ".relation-table-wrap",
-  "v162 admin create draft preview",
+  "v165 admin create apply limited",
 ]);
 
 assertContains("backend/scripts/check_admin_readonly_api.py", [

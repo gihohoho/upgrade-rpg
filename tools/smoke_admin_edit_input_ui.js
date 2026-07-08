@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v162.admin-create-draft-preview",
+  "v165.admin-create-apply-limited",
   "ADMIN_DRAFT_BOOLEAN_FIELDS",
   "ADMIN_DRAFT_NUMBER_FIELDS",
   "ADMIN_DRAFT_TEXTAREA_FIELDS",
@@ -33,7 +33,7 @@ assertContains("src/api/admin-page-readonly.js", [
 ]);
 
 assertContains("admin.html", [
-  "v162 admin create draft preview",
+  "v165 admin create apply limited",
   ".draft-field select",
   ".draft-field-heading",
   ".locked-field-panel",

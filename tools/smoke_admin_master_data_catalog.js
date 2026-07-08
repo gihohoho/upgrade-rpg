@@ -48,7 +48,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v162.admin-create-draft-preview",
+  "v165.admin-create-apply-limited",
   "readMasterCatalogFiltersFromDom",
   "resetMasterCatalogFilters",
   "describeMasterCatalogFilters",

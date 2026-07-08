@@ -1156,8 +1156,8 @@
     </section>
 
     <section class="filter-panel" id="section-create-blueprint" aria-label="신규 row 생성 준비">
-      <div class="filter-title">신규 row 생성 준비 <span class="pill warn">read-only</span></div>
-      <div class="filter-help">아직 실제 생성 버튼은 열지 않고, 도메인별 필수 필드/기본값/관계 후보만 확인합니다. 이 영역은 DB를 절대 수정하지 않습니다.</div>
+      <div class="filter-title">신규 row 생성 준비 <span class="pill warn">limited apply</span></div>
+      <div class="filter-help">characters/enhancementGroups부터 실제 생성 적용을 제한적으로 열고, 나머지 도메인은 계속 preview-only로 유지합니다.</div>
       <div class="filter-grid" style="grid-template-columns: 180px auto auto; margin-top:10px;">
         <div class="filter-field">
           <label for="admin-create-domain">도메인</label>
@@ -1171,7 +1171,7 @@
           <button class="btn primary" type="button" data-admin-action="load-create-blueprint">생성 설계 불러오기</button>
           <button class="btn" type="button" data-admin-action="sync-create-domain-from-catalog">카탈로그 도메인과 맞추기</button>
         </div>
-        <div class="filter-help" style="align-self:end; margin:0;">실제 insert API는 아직 잠금 상태입니다. insert API locked</div>
+        <div class="filter-help" style="align-self:end; margin:0;">제한 도메인은 dev key + 확인 문구가 필요합니다. 나머지는 insert API locked</div>
       </div>
       <div data-admin-create-blueprint><div class="empty">생성 설계를 불러오면 필수 필드, 기본값, relation 후보가 여기에 표시됩니다.</div></div>
     </section>
@@ -1312,7 +1312,7 @@
       <div data-admin-readiness><div class="empty">불러오는 중...</div></div>
     </section>
 
-    <p class="footer-note">v162 admin create draft preview · static HTML + JS · FastAPI guarded write/rollback APIs</p>
+    <p class="footer-note">v165 admin create apply limited · static HTML + JS · FastAPI guarded write/rollback APIs</p>
   </main>
 
   <script src="src/api/game-api-client.js"></script>
