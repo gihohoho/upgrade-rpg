@@ -38,6 +38,7 @@
 - `ADMIN_CHANGE_LOG_RELATION_TOOLS.md` — 변경 이력 / rollback preview relation label 강화
 - `ADMIN_CHANGE_LOGS_SPLIT.md` — v187 change logs 실제 1차 분리
 - `ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md` — v188 create lifecycle 분리 전 계약 고정
+- `ADMIN_CREATE_LIFECYCLE_SPLIT.md` — v189 create lifecycle 실제 1차 분리
 
 ## 3. 관리자 편집/관계 안전장치 문서
 
@@ -86,3 +87,4 @@ docs/archive/stage-notes/
 
 - `ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`: v186 change logs 실제 분리 전 API/window/DOM 계약 문서.
 - `ADMIN_CHANGE_LOGS_SPLIT.md`: v187 change logs 실제 1차 분리 문서.
+- `ADMIN_CREATE_LIFECYCLE_SPLIT.md`: v189 create lifecycle 실제 1차 분리 문서.

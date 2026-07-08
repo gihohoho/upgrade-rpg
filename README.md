@@ -1,8 +1,8 @@
 # Upgrade RPG
 
-현재 안정 버전: **v188 admin create lifecycle split contract**
+현재 안정 버전: **v189 admin create lifecycle split**
 
-새 채팅 인수인계 ZIP: **rpg_v188_admin_create_lifecycle_split_contract_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v189_admin_create_lifecycle_split_ready.zip**
 
 현재 프로젝트는 아직 Vue가 아니라 `index.html + JS + CSS` 기반 RPG 게임입니다. 기존 게임 동작을 유지하면서 FastAPI + PostgreSQL + 관리자 페이지 구조로 단계적으로 분리 중입니다.
 
@@ -26,7 +26,7 @@
 - 생성→삭제→복원 일괄 점검 버튼 추가 완료
 - 관리자 JS 분리 전 readiness 진단 UI 추가 완료
 - 관리자 change logs 구현 1차 외부 파일 분리 완료
-- 관리자 create lifecycle 실제 분리 전 계약 고정 완료
+- 관리자 create lifecycle 구현 1차 외부 파일 분리 완료
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -51,7 +51,7 @@ bash tools/run_smoke_all.sh
 
 ## 다음 추천 단계
 
-다음은 `create lifecycle` 실제 분리 1단계가 좋습니다. v188에서 함수/window/DOM/확인 문구 계약을 고정했으므로, v189에서는 `src/api/admin/admin-create-lifecycle.js`를 만들고 `admin-page-readonly.js`에는 호환 wrapper를 남기는 방향이 안전합니다.
+다음은 `edit draft` 분리 전 계약 고정이 좋습니다. create lifecycle까지 외부 파일로 분리했으므로, 바로 큰 분리를 하기보다 edit draft 함수/window/DOM 계약을 먼저 고정하는 방향이 안전합니다.
 
 ## DB / env
 
@@ -59,6 +59,16 @@ bash tools/run_smoke_all.sh
 - DB schema 변경 없음.
 - `.env`, `.gitignore` 변경 없음.
 - 이 ZIP에는 `.env`, `.gitignore`를 포함하지 않았습니다.
+
+
+## v189 완료
+
+- `src/api/admin/admin-create-lifecycle.js` 신규 추가
+- 생성 설계/초안/preview/apply/lifecycle guide/batch check 구현 1차 분리
+- `admin-page-readonly.js`에는 기존 window export 호환 wrapper 유지
+- `admin.html` script 순서: game api → layout shell → change logs → create lifecycle → admin page
+- 새 smoke `tools/smoke_admin_create_lifecycle_split.js` 추가
+- DB reset / seed 필요 없음
 
 
 ## v185 완료

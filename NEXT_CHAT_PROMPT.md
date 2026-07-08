@@ -54,10 +54,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v188: admin create lifecycle split contract
+v189: admin create lifecycle split
 
 현재 인수인계 ZIP:
-rpg_v188_admin_create_lifecycle_split_contract_ready.zip
+rpg_v189_admin_create_lifecycle_split_ready.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -76,31 +76,27 @@ docs/PROJECT_STRUCTURE.md
 7. 관리자 JS 분리 전 readiness UI 유지.
 8. 관리자 layout shell은 src/api/admin-layout-shell.js로 실제 분리 완료.
 9. change logs는 src/api/admin/admin-change-logs.js로 실제 1차 분리 완료.
-10. create lifecycle 실제 분리 전 계약은 contract-frozen-v188로 고정 완료.
+10. create lifecycle은 src/api/admin/admin-create-lifecycle.js로 실제 1차 분리 완료.
 
 현재 create apply 열린 도메인:
 characters, enhancementGroups, fieldZones, bosses, skills, dropTables, itemTemplates, dropTableItems, skillLevels, enhancementLevels, characterSkills
 
-v188 완료:
-- create lifecycle 실제 분리 전에 계약을 먼저 고정.
-- 계약 상태 contract-frozen-v188.
-- 다음 후보 파일명 src/api/admin/admin-create-lifecycle.js 고정.
-- 생성 초안/window export/DOM target/delegated action 목록 고정.
-- runAdminCreateLifecycleBatchCheck, 생성/삭제/복원 결과 렌더링 함수 목록 고정.
-- 새 함수 getAdminCreateLifecycleSplitContractReadiness(), renderAdminCreateLifecycleSplitContractReadiness() 추가.
-- checkAdminReadOnlyPageReady().createLifecycleSplitContractReady 가 true면 정상.
-- 새 smoke tools/smoke_admin_create_lifecycle_split_contract.js 추가 및 core smoke 포함.
-- 실제 파일 분리는 아직 하지 않음.
+v189 완료:
+- src/api/admin/admin-create-lifecycle.js 신규 추가.
+- 생성 설계/초안/preview/apply/lifecycle guide/batch check 구현을 외부 파일로 1차 분리.
+- admin-page-readonly.js에는 기존 window export 호환 wrapper 유지.
+- admin.html script 순서를 game-api-client.js → admin-layout-shell.js → admin/admin-change-logs.js → admin/admin-create-lifecycle.js → admin-page-readonly.js 로 변경.
+- checkAdminReadOnlyPageReady().createLifecycleExternalReady 가 true면 정상.
+- 새 smoke tools/smoke_admin_create_lifecycle_split.js 추가 및 core smoke 포함.
 - DB reset / seed 필요 없음.
 - .env, .gitignore 변경 없음.
 
 다음 추천 단계:
-v189 create lifecycle split.
+v190 edit draft split contract.
 
 권장 방향:
-1. src/api/admin/admin-create-lifecycle.js 파일 생성.
-2. 생성 설계/초안/preview/apply 함수 이동.
-3. 생성 lifecycle guide / batch check 함수 이동.
-4. admin-page-readonly.js에는 기존 window export 호환 wrapper 유지.
-5. admin.html script 순서를 game-api-client.js → admin-layout-shell.js → admin/admin-change-logs.js → admin/admin-create-lifecycle.js → admin-page-readonly.js 로 변경.
-6. v188 contract smoke가 깨지지 않는지 확인.
+1. edit draft 실제 분리 전 계약을 먼저 고정.
+2. 편집 초안/preview/apply/impact guide/relation select 함수 목록 고정.
+3. window export/DOM target/delegated action 목록 고정.
+4. 다음 후보 파일명 src/api/admin/admin-edit-draft.js 고정.
+5. contract smoke를 추가한 뒤, 그 다음 단계에서 실제 파일 분리.

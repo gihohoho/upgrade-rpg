@@ -53,7 +53,7 @@ FastAPI 백엔드입니다.
 
 - master-data fetch / fallback
 - save-data bridge
-- admin page helper / 분리된 관리자 layout·change logs helper
+- admin page helper / 분리된 관리자 layout·change logs·create lifecycle helper
 - smoke에서 확인하는 브라우저 helper 함수 제공
 
 중요 파일 예시:
@@ -61,6 +61,7 @@ FastAPI 백엔드입니다.
 - `src/api/game-api-client.js`
 - `src/api/admin-layout-shell.js`
 - `src/api/admin/admin-change-logs.js`
+- `src/api/admin/admin-create-lifecycle.js`
 - `src/api/admin-page-readonly.js`
 
 ## docs

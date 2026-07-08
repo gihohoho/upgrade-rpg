@@ -1,8 +1,8 @@
 # Current Status
 
-현재 기준: **v188 admin create lifecycle split contract**
+현재 기준: **v189 admin create lifecycle split**
 
-이 패키지 기준 ZIP: **rpg_v188_admin_create_lifecycle_split_contract_ready.zip**
+이 패키지 기준 ZIP: **rpg_v189_admin_create_lifecycle_split_ready.zip**
 
 ## 현재 상태
 
@@ -18,6 +18,18 @@
 - 관리자 페이지 레이아웃 shell, sidebar, sticky header, 접기/펼치기 유지.
 
 
+## v189 완료
+
+- `src/api/admin/admin-create-lifecycle.js` 신규 추가.
+- 생성 설계/초안/preview/apply/lifecycle guide/batch check 구현을 외부 파일로 1차 분리.
+- `admin-page-readonly.js`에는 기존 window export 호환 wrapper 유지.
+- `admin.html` script 순서를 `game-api-client.js` → `admin-layout-shell.js` → `admin/admin-change-logs.js` → `admin/admin-create-lifecycle.js` → `admin-page-readonly.js`로 변경.
+- `checkAdminReadOnlyPageReady().createLifecycleExternalReady` 추가.
+- `getAdminCreateLifecycleReadiness()` 추가.
+- 새 smoke `tools/smoke_admin_create_lifecycle_split.js` 추가 및 core smoke 포함.
+- 새 쓰기 도메인 오픈 없음.
+- DB reset / seed 필요 없음.
+
 
 ## v188 완료
 
@@ -27,7 +39,7 @@
 - `getAdminCreateLifecycleSplitContractReadiness()` / `renderAdminCreateLifecycleSplitContractReadiness()` 추가.
 - `checkAdminReadOnlyPageReady().createLifecycleSplitContractReady` 추가.
 - 새 smoke `tools/smoke_admin_create_lifecycle_split_contract.js` 추가 및 core smoke 포함.
-- 실제 파일 분리는 아직 하지 않음.
+- 실제 파일 분리는 v189에서 완료.
 - 새 쓰기 도메인 오픈 없음, DB reset / seed 필요 없음.
 
 ## v187 완료
@@ -50,7 +62,7 @@
 - `getAdminChangeLogSplitContractReadiness()` / `renderAdminChangeLogSplitContractReadiness()` 추가.
 - `checkAdminReadOnlyPageReady().changeLogSplitContractReady` 추가.
 - 새 smoke `tools/smoke_admin_change_log_split_contract.js` 추가 및 core smoke 포함.
-- 실제 파일 분리는 아직 하지 않음.
+- 실제 파일 분리는 v189에서 완료.
 - DB reset / seed 필요 없음.
 
 ## v185 완료

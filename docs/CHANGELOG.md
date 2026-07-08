@@ -1,3 +1,12 @@
+# v189 admin create lifecycle split
+
+- `src/api/admin/admin-create-lifecycle.js` 신규 추가.
+- 생성 설계/초안/preview/apply/lifecycle guide/batch check 구현을 외부 JS 파일로 1차 분리했습니다.
+- `admin-page-readonly.js`에는 기존 window export 호환 wrapper를 유지했습니다.
+- `admin.html` script 순서를 game api → layout shell → change logs → create lifecycle → admin page로 변경했습니다.
+- 새 smoke `tools/smoke_admin_create_lifecycle_split.js`를 추가하고 core smoke에 포함했습니다.
+- DB schema 변경, DB reset, seed 재실행은 필요 없습니다.
+
 # v188 admin create lifecycle split contract
 
 - create lifecycle 실제 분리 전 계약을 `contract-frozen-v188` 상태로 고정했습니다.
