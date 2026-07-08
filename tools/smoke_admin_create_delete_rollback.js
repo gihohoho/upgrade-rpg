@@ -28,7 +28,9 @@ assertContains("backend/app/services/admin_service.py", [
   "currentMatchesCreateValues",
   "dependencyBlockerCount",
   "action=\"create_delete\"",
-  "create_delete_restore_not_enabled",
+  "create_delete_restore_preview_enabled",
+  "DropTable.owner_type == \"field\"",
+  "DropTable.owner_code == code_text",
 ]);
 
 assertContains("backend/app/api/routes/admin.py", [
@@ -56,7 +58,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v168.admin-create-delete-rollback",
+  "v171.admin-create-delete-restore",
   "ADMIN_CREATE_DELETE_CONFIRM_TEXT",
   "DELETE CREATED MASTER DATA ROW",
   "previewAdminCreateDeleteRollback",

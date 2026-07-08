@@ -419,6 +419,36 @@
 		});
 	}
 
+	async function previewAdminCreateDeleteRestore(options) {
+		const opts = options || {};
+		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
+		const id = opts.id !== undefined ? Number(opts.id) : (opts.changeLogId !== undefined ? Number(opts.changeLogId) : undefined);
+		return request(`/admin/change-logs/${id}/create-delete-restore-preview`, {
+			method: "POST",
+			body: {
+				reason: opts.reason || undefined,
+				dryRun: true,
+			},
+			timeoutMs,
+		});
+	}
+
+	async function applyAdminCreateDeleteRestore(options) {
+		const opts = options || {};
+		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
+		const id = opts.id !== undefined ? Number(opts.id) : (opts.changeLogId !== undefined ? Number(opts.changeLogId) : undefined);
+		return request(`/admin/change-logs/${id}/create-delete-restore-apply`, {
+			method: "POST",
+			body: {
+				reason: opts.reason || undefined,
+				confirmText: opts.confirmText || "",
+				dryRun: false,
+			},
+			timeoutMs,
+			headers: getAdminWriteHeaders(),
+		});
+	}
+
 	async function saveGameSnapshot(payload, options) {
 		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : undefined;
 		return request("/game/save", {
@@ -471,6 +501,8 @@
 		applyAdminChangeLogRollback,
 		previewAdminCreateDeleteRollback,
 		applyAdminCreateDeleteRollback,
+		previewAdminCreateDeleteRestore,
+		applyAdminCreateDeleteRestore,
 		loadGameSnapshot,
 	};
 })();

@@ -66,7 +66,10 @@ def main() -> int:
         master_edit_apply_url = f"{base_url}/admin/master-data/edit-apply"
         master_detail = request_json("GET", master_detail_url)
         master_relations = request_json("GET", master_relations_url)
-        master_edit_preview = request_json("POST", master_edit_preview_url, {"domain": "itemTemplates", "id": first_catalog_row.get("id"), "draft": {"name": "dry-run smoke name"}, "dryRun": True})
+        detail_fields = (master_detail.get("payload") or {}).get("fields") or []
+        current_name = next((field.get("value") for field in detail_fields if field.get("key") == "name"), "")
+        master_edit_preview = request_json("POST", master_edit_preview_url, {"domain": "itemTemplates", "id": first_catalog_row.get("id"), "draft": {"name": "dry-run smoke name"}, "baseValues": {"name": current_name}, "dryRun": True})
+        master_edit_stale_preview = request_json("POST", master_edit_preview_url, {"domain": "itemTemplates", "id": first_catalog_row.get("id"), "draft": {"name": "dry-run smoke name"}, "baseValues": {"name": "__stale_base_value__"}, "dryRun": True})
         # 기본 live check는 실제 DB 변경을 하지 않습니다.
         # 1) dev key 없이 쓰기 API가 차단되는지 확인합니다.
         try:
@@ -78,7 +81,7 @@ def main() -> int:
         master_edit_apply = request_json(
             "POST",
             master_edit_apply_url,
-            {"domain": "itemTemplates", "id": first_catalog_row.get("id"), "draft": {"name": "blocked apply smoke name"}, "confirmText": "WRONG", "dryRun": False},
+            {"domain": "itemTemplates", "id": first_catalog_row.get("id"), "draft": {"name": "blocked apply smoke name"}, "baseValues": {"name": current_name}, "confirmText": "WRONG", "dryRun": False},
             {"X-Admin-Dev-Key": args.admin_write_dev_key},
         )
     else:
@@ -86,6 +89,7 @@ def main() -> int:
         master_relations = None
         master_edit_preview = None
         master_edit_apply = None
+        master_edit_stale_preview = None
         master_edit_apply_missing_key_blocked = None
     admin_change_logs = request_json("GET", admin_change_logs_url)
 
@@ -126,6 +130,7 @@ def main() -> int:
     master_relations_payload = master_relations.get("payload") if master_relations else None
     master_edit_preview_payload = master_edit_preview.get("payload") if master_edit_preview else None
     master_edit_apply_payload = master_edit_apply.get("payload") if master_edit_apply else None
+    master_edit_stale_preview_payload = master_edit_stale_preview.get("payload") if master_edit_stale_preview else None
     admin_change_logs_payload = admin_change_logs.get("payload") or {}
     if overview_payload.get("readOnly") is not True:
         failures.append("overview readOnly should be true")
@@ -186,6 +191,13 @@ def main() -> int:
             failures.append("master-data edit-preview should hide raw JSON and assets")
         if not isinstance(master_edit_preview_payload.get("acceptedChanges"), list):
             failures.append("master-data edit-preview acceptedChanges missing")
+        if master_edit_preview_payload.get("staleGuardEnabled") is not True:
+            failures.append("master-data edit-preview should enable stale guard when baseValues are sent")
+    if master_edit_stale_preview_payload is not None:
+        if master_edit_stale_preview_payload.get("staleCount", 0) < 1:
+            failures.append("master-data stale preview should detect stale baseValues")
+        if master_edit_stale_preview_payload.get("wouldBeValid") is not False:
+            failures.append("master-data stale preview should not be valid")
     if master_edit_apply_payload is not None:
         if master_edit_apply_payload.get("status") != "confirmation_required":
             failures.append("master-data edit-apply should be blocked with wrong confirmText")

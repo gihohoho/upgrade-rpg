@@ -10,8 +10,9 @@ v168에서는 `create-apply`로 새로 만든 제한 도메인 row를 안전하�
 
 - `characters`
 - `enhancementGroups`
+- `fieldZones`
 
-두 도메인은 v165에서 실제 생성이 열린 제한 도메인과 동일하다.
+세 도메인은 현재 실제 생성이 열린 제한 도메인과 동일하다.
 
 ## 안전 검사
 
@@ -39,6 +40,10 @@ v168에서는 `create-apply`로 새로 만든 제한 도메인 row를 안전하�
 - `enhancementLevels.group_code`
 - `itemTemplates.enhance_group_code`
 
+`fieldZones` 삭제는 아래 참조가 있으면 차단한다.
+
+- `dropTables.owner_type=field + owner_code`
+
 ## 적용 조건
 
 실제 삭제 적용에는 아래가 모두 필요하다.
@@ -53,7 +58,7 @@ v168에서는 `create-apply`로 새로 만든 제한 도메인 row를 안전하�
 
 삭제가 성공하면 `admin_change_logs`에 `action=create_delete`로 기록한다.
 
-삭제된 row의 자동 복원은 아직 잠겨 있다. 필요하면 다음 단계에서 restore preview부터 별도로 설계한다.
+삭제된 row의 복원은 별도 restore preview/apply 안전 검사를 통과해야 한다.
 
 ## DB reset / seed
 

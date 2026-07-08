@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.response import ok_response
 from app.core.security import CurrentUser, get_current_user_placeholder, require_admin_write_dev_key
 from app.db.session import get_db_session
-from app.schemas.admin import AdminChangeLogRollbackApplyRequest, AdminChangeLogRollbackPreviewRequest, AdminChangePreviewRequest, AdminCreateDeleteApplyRequest, AdminCreateDeletePreviewRequest, AdminMasterDataCreateApplyRequest, AdminMasterDataCreatePreviewRequest, AdminMasterDataEditApplyRequest, AdminMasterDataEditPreviewRequest
+from app.schemas.admin import AdminChangeLogRollbackApplyRequest, AdminChangeLogRollbackPreviewRequest, AdminChangePreviewRequest, AdminCreateDeleteApplyRequest, AdminCreateDeletePreviewRequest, AdminCreateDeleteRestoreApplyRequest, AdminCreateDeleteRestorePreviewRequest, AdminMasterDataCreateApplyRequest, AdminMasterDataCreatePreviewRequest, AdminMasterDataEditApplyRequest, AdminMasterDataEditPreviewRequest
 from app.services.admin_service import AdminService
 
 router = APIRouter()
@@ -479,6 +479,7 @@ async def get_admin_change_log_detail(
             "changedKeyCount": detail.get("changedKeyCount", 0),
             "rollbackAvailable": (detail.get("rollback") or {}).get("available", False),
             "createDeleteAvailable": (detail.get("createDelete") or {}).get("available", False),
+            "createDeleteRestoreAvailable": (detail.get("createDeleteRestore") or {}).get("available", False),
         },
         meta={
             "source": "postgresql",
@@ -557,6 +558,82 @@ async def apply_admin_create_delete_rollback(
         meta={
             "source": "postgresql",
             "note": "관리자 create 이력의 생성 row 삭제 적용 API입니다. X-Admin-Dev-Key, 확인 문구, 현재값/연결 데이터 검사를 통과한 경우에만 DB에서 삭제합니다.",
+        },
+    )
+
+
+@router.post("/change-logs/{change_log_id}/create-delete-restore-preview")
+async def preview_admin_create_delete_restore(
+    change_log_id: int,
+    payload: AdminCreateDeleteRestorePreviewRequest | None = Body(default=None),
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Preview restoring a row deleted by create-delete apply without mutating DB."""
+    preview = await service.preview_admin_create_delete_restore(
+        session,
+        change_log_id=change_log_id,
+        reason=payload.reason if payload else None,
+    )
+    return ok_response(
+        type="admin.change_log.create_delete_restore_preview",
+        payload=preview,
+        data={
+            "status": preview["status"],
+            "readOnly": preview.get("readOnly"),
+            "dryRun": preview.get("dryRun"),
+            "writeBlocked": preview.get("writeBlocked"),
+            "adminUserId": current_user.id,
+            "changeLogId": preview.get("changeLogId"),
+            "createDeleteRestoreReady": preview.get("createDeleteRestoreReady", False),
+            "wouldRestore": preview.get("wouldRestore", False),
+            "targetRowMissing": preview.get("targetRowMissing", False),
+            "idConflict": preview.get("idConflict", False),
+            "codeConflict": preview.get("codeConflict", False),
+            "validationErrorCount": preview.get("validationErrorCount", 0),
+            "diffCount": preview.get("diffCount", 0),
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 create_delete 이력의 삭제 row 복원 미리보기입니다. id/code 충돌과 생성 검증을 통과해야만 apply가 가능합니다.",
+        },
+    )
+
+
+@router.post("/change-logs/{change_log_id}/create-delete-restore-apply")
+async def apply_admin_create_delete_restore(
+    change_log_id: int,
+    payload: AdminCreateDeleteRestoreApplyRequest = Body(...),
+    _write_guard: bool = Depends(require_admin_write_dev_key),
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Apply a guarded restore for a row deleted by create-delete apply."""
+    result = await service.apply_admin_create_delete_restore(
+        session,
+        change_log_id=change_log_id,
+        confirm_text=payload.confirm_text,
+        reason=payload.reason,
+        admin_user_id=current_user.id,
+    )
+    return ok_response(
+        type="admin.change_log.create_delete_restore_apply",
+        payload=result,
+        data={
+            "status": result["status"],
+            "readOnly": result.get("readOnly"),
+            "dryRun": result.get("dryRun"),
+            "writeBlocked": result.get("writeBlocked"),
+            "restored": result.get("restored", False),
+            "adminUserId": current_user.id,
+            "changeLogId": result.get("changeLogId"),
+            "restoreChangeLogId": result.get("restoreChangeLogId"),
+            "validationErrorCount": result.get("validationErrorCount", 0),
+            "diffCount": result.get("diffCount", 0),
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 create_delete 이력의 삭제 row 복원 적용 API입니다. X-Admin-Dev-Key, 확인 문구, id/code 충돌 검사를 통과한 경우에만 DB에 다시 생성합니다.",
         },
     )
 

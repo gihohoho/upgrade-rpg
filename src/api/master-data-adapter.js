@@ -200,6 +200,7 @@
 						itemTemplateCode: row.itemTemplateCode,
 						itemName: item.name || itemRaw.name || row.itemTemplateCode,
 						itemType: item.itemType || itemRaw.type || null,
+						stackable: !!item.stackable,
 						rate: row.rate,
 						quantityMin: row.minQuantity,
 						quantityMax: row.maxQuantity,
@@ -225,6 +226,28 @@
 		});
 	}
 
+	function applyTemplateRuntimeFields(rawDrop, template, row) {
+		const drop = cloneJson(rawDrop || {});
+		const templateOptions = (template && template.options) || {};
+		const templateRaw = templateOptions.raw || {};
+		const rowConditions = (row && row.conditions) || {};
+
+		if (!drop.name) drop.name = (template && template.name) || (row && row.itemTemplateCode) || "알 수 없는 아이템";
+		if (!drop.type) drop.type = (template && template.itemType) || templateRaw.type || null;
+		if (drop.img === undefined || drop.img === null || drop.img === "") drop.img = (template && template.iconUrl) || templateRaw.img || null;
+
+		// v124: 관리자 페이지에서 바꾼 itemTemplates.stackable 값을 실제 드랍 아이템에 붙입니다.
+		// 기존 raw 옵션에는 stackable이 없을 수 있으므로 DB 템플릿 값을 런타임 필드로 보강합니다.
+		drop.stackable = !!(template && template.stackable);
+		drop.templateKey = (template && template.code) || (row && row.itemTemplateCode) || drop.templateKey || null;
+		drop.itemTemplateCode = (template && template.code) || (row && row.itemTemplateCode) || drop.itemTemplateCode || null;
+		if (drop.grade === undefined && template && template.grade !== undefined) drop.grade = template.grade;
+		if (drop.tier === undefined) drop.tier = templateOptions.tier ?? templateRaw.tier ?? (template && template.grade) ?? null;
+		if (drop.enhanceGroupCode === undefined && template && template.enhanceGroupCode) drop.enhanceGroupCode = template.enhanceGroupCode;
+		if (drop.raw === undefined && Object.keys(rowConditions).length) drop.raw = cloneJson(rowConditions.raw || rowConditions);
+		return drop;
+	}
+
 	function buildBossLists(payload) {
 		const dropTableByOwnerCode = {};
 		asArray(payload.dropTables).forEach((table) => {
@@ -242,10 +265,11 @@
 			const drops = dropRows.map((row) => {
 				const template = itemTemplates[row.itemTemplateCode] || {};
 				const templateOptions = template.options || {};
-				return cloneJson(templateOptions.raw || row.conditions && row.conditions.raw || {
+				const rawDrop = templateOptions.raw || (row.conditions && row.conditions.raw) || {
 					name: template.name || row.itemTemplateCode,
 					type: template.itemType || null,
-				});
+				};
+				return applyTemplateRuntimeFields(rawDrop, template, row);
 			});
 
 			return {

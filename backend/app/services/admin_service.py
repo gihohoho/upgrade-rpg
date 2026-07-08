@@ -53,8 +53,9 @@ class AdminService:
     MASTER_EDIT_ROLLBACK_CONFIRM_TEXT = "ROLLBACK MASTER DATA EDIT"
     MASTER_CREATE_APPLY_CONFIRM_TEXT = "CREATE MASTER DATA ROW"
     MASTER_CREATE_DELETE_CONFIRM_TEXT = "DELETE CREATED MASTER DATA ROW"
-    MASTER_CREATE_APPLY_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups"}
-    MASTER_CREATE_DELETE_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups"}
+    MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT = "RESTORE DELETED CREATED ROW"
+    MASTER_CREATE_APPLY_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones"}
+    MASTER_CREATE_DELETE_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones"}
 
     MASTER_EDIT_ALLOWED_FIELDS: dict[str, set[str]] = {
         "itemTemplates": {"name", "item_type", "description", "grade", "stackable", "equip_slot", "enhance_group_code", "admin_note"},
@@ -703,6 +704,7 @@ class AdminService:
         domain, row_id = self._extract_master_change_target(row)
         rollback_available = bool(row.applied and row.action == "update" and domain and row_id and isinstance(serialize_value(row.rollback_json), dict))
         create_delete_available = bool(row.applied and row.action == "create" and domain in self.MASTER_CREATE_DELETE_ALLOWED_DOMAINS and row_id and isinstance(serialize_value(row.rollback_json), dict))
+        create_delete_restore_available = bool(row.applied and row.action == "create_delete" and domain in self.MASTER_CREATE_DELETE_ALLOWED_DOMAINS and row_id and isinstance(serialize_value(row.before_json), dict) and isinstance(serialize_value(row.rollback_json), dict))
         detail["rollback"] = {
             "available": rollback_available,
             "domain": domain,
@@ -716,6 +718,13 @@ class AdminService:
             "id": row_id,
             "confirmTextRequired": self.MASTER_CREATE_DELETE_CONFIRM_TEXT,
             "note": "create 이력으로 만든 제한 도메인 row만, 현재값이 생성 당시 값과 같고 연결 데이터가 없을 때 삭제 되돌리기가 가능합니다.",
+        }
+        detail["createDeleteRestore"] = {
+            "available": create_delete_restore_available,
+            "domain": domain,
+            "id": row_id,
+            "confirmTextRequired": self.MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT,
+            "note": "create_delete 이력으로 삭제된 제한 도메인 row만, 같은 id/code 충돌이 없을 때 복원할 수 있습니다. fieldZones는 dropTables(owner_type=field) 연결 검사까지 거칩니다.",
         }
         return detail
 
@@ -1173,10 +1182,258 @@ class AdminService:
             "wouldDelete": False,
             "deleteChangeLogId": int(delete_log.id),
             "appliedByAdminUserId": int(admin_user_id),
-            "warnings": [*(preview.get("warnings") or []), "create_delete_restore_not_enabled", "game_runtime_requires_reload"],
-            "note": "create 이력으로 생성한 master-data row를 안전 검사 후 삭제했고 create_delete 이력을 저장했습니다. 삭제 복원은 아직 잠겨 있습니다.",
+            "warnings": [*(preview.get("warnings") or []), "create_delete_restore_preview_enabled", "game_runtime_requires_reload"],
+            "note": "create 이력으로 생성한 master-data row를 안전 검사 후 삭제했고 create_delete 이력을 저장했습니다. 삭제 복원은 별도 preview/apply 안전 검사를 통과해야 가능합니다.",
         })
         return preview
+
+    async def preview_admin_create_delete_restore(
+        self,
+        session: AsyncSession,
+        *,
+        change_log_id: int,
+        reason: str | None = None,
+    ) -> dict[str, Any]:
+        """Preview restoring a row that was removed by create-delete apply.
+
+        Restore is intentionally limited to create_delete logs produced by this admin
+        flow. It only restores the exact deleted id when the row is still missing and
+        the original code has not been reused.
+        """
+        row = await self._get_admin_change_log(session, change_log_id)
+        if row is None:
+            return self._empty_create_delete_restore_preview(status="not_found", change_log_id=change_log_id, warnings=["change_log_not_found"])
+
+        domain, row_id = self._extract_master_change_target(row)
+        before_json = serialize_value(row.before_json) or {}
+        rollback_json = serialize_value(row.rollback_json) or {}
+        if not row.applied or row.action != "create_delete" or not domain or not row_id or not isinstance(before_json, dict):
+            return self._empty_create_delete_restore_preview(
+                status="create_delete_restore_not_available",
+                change_log_id=change_log_id,
+                warnings=["change_log_is_not_guarded_create_delete"],
+                target_type=row.target_type,
+                target_id=row.target_id,
+                domain=domain,
+                row_id=row_id,
+            )
+        if domain not in self.MASTER_CREATE_DELETE_ALLOWED_DOMAINS:
+            return self._empty_create_delete_restore_preview(
+                status="create_delete_restore_domain_locked",
+                change_log_id=change_log_id,
+                warnings=["create_delete_restore_domain_locked"],
+                target_type=row.target_type,
+                target_id=row.target_id,
+                domain=domain,
+                row_id=row_id,
+            )
+        if not isinstance(rollback_json, dict) or rollback_json.get("domain") != domain or int(rollback_json.get("id") or 0) != int(row_id) or rollback_json.get("sourceChangeLogId") is None:
+            return self._empty_create_delete_restore_preview(
+                status="create_delete_restore_metadata_invalid",
+                change_log_id=change_log_id,
+                warnings=["create_delete_restore_rollback_json_invalid"],
+                target_type=row.target_type,
+                target_id=row.target_id,
+                domain=domain,
+                row_id=row_id,
+            )
+
+        existing_row = await self._get_master_row(session, domain, int(row_id))
+        id_conflict = existing_row is not None
+        config = self.MASTER_CATALOG_DOMAINS.get(domain) or {}
+        model = config.get("model")
+        code = str(before_json.get("code") or "").strip()
+        code_conflict = False
+        if model is not None and code:
+            result = await session.execute(select(model).where(model.code == code))
+            code_row = result.scalar_one_or_none()
+            code_conflict = code_row is not None and int(getattr(code_row, "id", 0) or 0) != int(row_id)
+
+        validation_errors: list[dict[str, Any]] = []
+        normalized_restore: dict[str, Any] = {}
+        if model is None:
+            validation_errors.append({"key": "domain", "label": "도메인", "reason": "invalid_restore_domain"})
+        else:
+            column_map = self._master_create_column_map(model)
+            field_defs = {str(field["key"]): field for field in self.MASTER_CREATE_BLUEPRINT_FIELDS.get(domain, []) if field.get("key")}
+            for key, value in before_json.items():
+                if key not in field_defs or key not in column_map:
+                    validation_errors.append({"key": key, "label": self._humanize_field_name(key), "after": serialize_value(value), "reason": "unknown_or_locked_restore_field"})
+                    continue
+                field_def = field_defs[key]
+                if str(field_def.get("inputKind") or "") == "json-readonly" or key.endswith("_json") or self._is_asset_field(key):
+                    validation_errors.append({"key": key, "label": self._humanize_field_name(key), "after": serialize_value(value), "reason": "json_or_asset_restore_field_locked"})
+                    continue
+                normalized, issue = self._normalize_master_edit_value(column_map[key], value)
+                if issue:
+                    validation_errors.append({"key": key, "label": self._humanize_field_name(key), "after": serialize_value(value), "reason": issue})
+                    continue
+                normalized_restore[key] = normalized
+            for field_def in self.MASTER_CREATE_BLUEPRINT_FIELDS.get(domain, []) or []:
+                key = str(field_def.get("key") or "")
+                if field_def.get("required") and key not in normalized_restore:
+                    validation_errors.append({"key": key, "label": self._humanize_field_name(key), "reason": "required_restore_field_missing"})
+            relation_errors = await self._validate_master_create_relations(session, domain, normalized_restore)
+            validation_errors.extend(relation_errors)
+
+        changes = await self._build_change_log_changes_with_relations(session, domain, {}, before_json)
+        restore_ready = not id_conflict and not code_conflict and len(validation_errors) == 0 and len(normalized_restore) > 0
+        warnings: list[str] = []
+        if id_conflict:
+            warnings.append("create_delete_restore_id_conflict")
+        if code_conflict:
+            warnings.append("create_delete_restore_code_conflict")
+        if validation_errors:
+            warnings.append("create_delete_restore_validation_errors")
+        return {
+            "status": "create_delete_restore_preview_ready" if restore_ready else "create_delete_restore_blocked",
+            "readOnly": False,
+            "dryRun": True,
+            "writeBlocked": True,
+            "createDeleteRestoreReady": restore_ready,
+            "wouldRestore": restore_ready,
+            "confirmTextRequired": self.MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT,
+            "changeLogId": int(change_log_id),
+            "targetType": row.target_type,
+            "targetId": row.target_id,
+            "domain": domain,
+            "id": int(row_id),
+            "code": serialize_value(code),
+            "action": row.action,
+            "reason": str(reason or "")[:300] if reason else None,
+            "sourceChangeReason": row.reason,
+            "sourceCreateChangeLogId": int(rollback_json.get("sourceChangeLogId") or 0),
+            "changes": changes,
+            "changedKeys": [change["key"] for change in changes],
+            "diffCount": len(changes),
+            "relationChangedKeys": [change["key"] for change in changes if change.get("relation")],
+            "relationChangeCount": sum(1 for change in changes if change.get("relation")),
+            "targetRowMissing": not id_conflict,
+            "idConflict": id_conflict,
+            "codeConflict": code_conflict,
+            "validationErrors": validation_errors[:30],
+            "validationErrorCount": len(validation_errors),
+            "normalizedRestoreDraft": {key: serialize_value(value) for key, value in normalized_restore.items()},
+            "rawBeforeAfterReturned": False,
+            "warnings": warnings,
+            "note": "create_delete 이력으로 삭제된 row 복원 미리보기입니다. 같은 id/code 충돌이 없고 생성 검증을 다시 통과해야만 복원 적용할 수 있습니다.",
+        }
+
+    async def apply_admin_create_delete_restore(
+        self,
+        session: AsyncSession,
+        *,
+        change_log_id: int,
+        confirm_text: str,
+        reason: str | None,
+        admin_user_id: int,
+    ) -> dict[str, Any]:
+        """Restore a row deleted through create-delete apply after preview guards."""
+        preview = await self.preview_admin_create_delete_restore(session, change_log_id=change_log_id, reason=reason)
+        if str(confirm_text or "").strip() != self.MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT:
+            preview.update({
+                "status": "create_delete_restore_confirmation_required",
+                "dryRun": False,
+                "writeBlocked": True,
+                "restored": False,
+                "createDeleteRestoreReady": False,
+                "wouldRestore": False,
+                "warnings": [*(preview.get("warnings") or []), "create_delete_restore_confirm_text_mismatch"],
+                "note": "정확한 생성 row 복원 확인 문구를 입력해야 DB에 다시 생성할 수 있습니다.",
+            })
+            return preview
+        if not preview.get("createDeleteRestoreReady"):
+            preview.update({
+                "status": "create_delete_restore_rejected",
+                "dryRun": False,
+                "writeBlocked": True,
+                "restored": False,
+                "createDeleteRestoreReady": False,
+                "wouldRestore": False,
+                "warnings": [*(preview.get("warnings") or []), "create_delete_restore_preview_not_safe_to_apply"],
+            })
+            return preview
+
+        domain = str(preview.get("domain") or "")
+        row_id = int(preview.get("id") or 0)
+        config = self.MASTER_CATALOG_DOMAINS.get(domain) or {}
+        model = config.get("model")
+        if model is None or row_id <= 0:
+            preview.update({"status": "invalid_restore_target", "restored": False, "writeBlocked": True})
+            return preview
+
+        restore_values = dict(preview.get("normalizedRestoreDraft") or {})
+        row = model(id=row_id, **restore_values)
+        session.add(row)
+        await session.flush()
+
+        restore_log = AdminChangeLog(
+            admin_user_id=int(admin_user_id),
+            target_type=f"master_data.{domain}",
+            target_id=str(row_id),
+            action="create_delete_restore",
+            reason=(str(reason or "")[:500] or f"Restore deleted created row from change log #{change_log_id}"),
+            before_json={},
+            after_json={key: serialize_value(value) for key, value in restore_values.items()},
+            rollback_json={"domain": domain, "id": row_id, "deleteLocked": True, "sourceDeleteChangeLogId": int(change_log_id)},
+            applied=True,
+        )
+        session.add(restore_log)
+        await session.commit()
+        await session.refresh(row)
+        await session.refresh(restore_log)
+
+        preview.update({
+            "status": "created_row_restored",
+            "dryRun": False,
+            "writeBlocked": False,
+            "restored": True,
+            "createDeleteRestoreReady": False,
+            "wouldRestore": False,
+            "restoreChangeLogId": int(restore_log.id),
+            "appliedByAdminUserId": int(admin_user_id),
+            "warnings": [*(preview.get("warnings") or []), "create_delete_restore_redelete_not_enabled", "game_runtime_requires_reload"],
+            "note": "create_delete 이력으로 삭제했던 master-data row를 같은 id로 복원했고 create_delete_restore 이력을 저장했습니다.",
+        })
+        return preview
+
+    def _empty_create_delete_restore_preview(
+        self,
+        *,
+        status: str,
+        change_log_id: int,
+        warnings: list[str],
+        target_type: str | None = None,
+        target_id: str | None = None,
+        domain: str | None = None,
+        row_id: int | None = None,
+    ) -> dict[str, Any]:
+        return {
+            "status": status,
+            "readOnly": False,
+            "dryRun": True,
+            "writeBlocked": True,
+            "createDeleteRestoreReady": False,
+            "wouldRestore": False,
+            "confirmTextRequired": self.MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT,
+            "changeLogId": int(change_log_id or 0),
+            "targetType": target_type,
+            "targetId": target_id,
+            "domain": domain,
+            "id": row_id,
+            "changes": [],
+            "changedKeys": [],
+            "diffCount": 0,
+            "relationChangedKeys": [],
+            "relationChangeCount": 0,
+            "targetRowMissing": False,
+            "idConflict": False,
+            "codeConflict": False,
+            "validationErrors": [],
+            "validationErrorCount": 0,
+            "rawBeforeAfterReturned": False,
+            "warnings": warnings,
+        }
 
     def _empty_create_delete_preview(
         self,
@@ -1236,8 +1493,18 @@ class AdminService:
                 await check("강화 단계", EnhancementLevel, "group_code", "enhancementLevels에서 사용 중이면 강화 그룹 삭제를 막습니다."),
                 await check("아이템 강화 그룹", ItemTemplate, "enhance_group_code", "itemTemplates에서 사용 중이면 강화 그룹 삭제를 막습니다."),
             ]
+        if domain == "fieldZones":
+            drop_table_count = await self._count_where(session, DropTable, DropTable.owner_type == "field", DropTable.owner_code == code_text)
+            return [
+                {
+                    "label": "필드 드랍 테이블",
+                    "target": "drop_tables.owner_type=field + owner_code",
+                    "count": drop_table_count,
+                    "blocksDelete": drop_table_count > 0,
+                    "note": "dropTables에서 owner_type=field와 owner_code로 사용 중이면 필드 삭제를 막습니다.",
+                },
+            ]
         return [{"label": "도메인 잠금", "count": 1, "blocksDelete": True, "note": "이 도메인은 생성 row 삭제 되돌리기 allow-list에 없습니다."}]
-        return preview
 
     def _empty_edit_preview(
         self,
@@ -1720,7 +1987,7 @@ class AdminService:
             "rawJsonReturned": False,
             "assetsReturned": False,
             "warnings": warnings,
-            "note": "신규 row 생성 초안을 검증했습니다. characters/enhancementGroups는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 초안을 검증했습니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
+            "note": "신규 row 생성 초안을 검증했습니다. characters/enhancementGroups/fieldZones는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 초안을 검증했습니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
         }
 
     async def apply_master_data_create(
@@ -1760,7 +2027,7 @@ class AdminService:
                 "wouldBeValid": False,
                 "errorCount": int(preview.get("errorCount") or 0) + 1,
                 "warnings": [*(preview.get("warnings") or []), "create_apply_domain_locked"],
-                "note": "이 도메인의 실제 신규 row 생성은 아직 열지 않았습니다. 현재는 characters/enhancementGroups만 제한적으로 생성 가능합니다.",
+                "note": "이 도메인의 실제 신규 row 생성은 아직 열지 않았습니다. 현재는 characters/enhancementGroups/fieldZones만 제한적으로 생성 가능합니다.",
             })
             return preview
 
@@ -1868,8 +2135,8 @@ class AdminService:
             "createdRow": {"domain": domain, "id": created_id, "code": serialize_value(created_code), "title": serialize_value(created_title)},
             "changeLogId": int(change_log.id),
             "appliedByAdminUserId": int(admin_user_id),
-            "note": "신규 master-data row를 DB에 생성했고 admin_change_logs에 create 이력을 저장했습니다. create rollback/delete는 아직 잠겨 있습니다.",
-            "warnings": [*(preview.get("warnings") or []), "create_rollback_delete_not_enabled_yet", "game_runtime_requires_reload"],
+            "note": "신규 master-data row를 DB에 생성했고 admin_change_logs에 create 이력을 저장했습니다. 제한 도메인 생성 row 삭제/복원은 별도 preview/apply 안전 검사를 통과해야 가능합니다.",
+            "warnings": [*(preview.get("warnings") or []), "create_delete_restore_preview_enabled", "game_runtime_requires_reload"],
         }
 
     def _empty_create_preview(self, *, status: str, domain: str, domain_label: str, warnings: list[str]) -> dict[str, Any]:
@@ -2114,7 +2381,7 @@ class AdminService:
             "rawJsonReturned": False,
             "assetsReturned": False,
             "warnings": [],
-            "note": "신규 row 생성 설계 응답입니다. characters/enhancementGroups는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 설계 응답입니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
+            "note": "신규 row 생성 설계 응답입니다. characters/enhancementGroups/fieldZones는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 설계 응답입니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
         }
 
     async def _build_master_create_relation_options(self, session: AsyncSession, domain: str) -> dict[str, Any]:

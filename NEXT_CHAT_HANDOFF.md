@@ -3,9 +3,11 @@
 ## 사용자/응답 방식
 
 - 사용자는 이 게임 프로젝트의 기획/게임 제작자 이기호입니다.
-- 앞으로 사용자를 기호라고 부릅니다.
+- 앞으로 사용자를 **기호**라고 부릅니다.
 - 기호는 코딩/터미널/경로에 익숙하지 않습니다.
 - 명령어를 줄 때는 항상 먼저 실행 위치를 적습니다.
+- 코드블록 안에 설명용 주석 기호를 넣지 않습니다. 설명은 코드블록 밖에서 합니다.
+- 커밋 명령어는 마지막에 `git add`부터 `git push`까지 한 번에 제공합니다.
 
 예:
 
@@ -78,8 +80,17 @@ uvicorn app.main:app --reload
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v174: admin collapsed panel style fix**
-- 최신 ZIP 이름: **rpg_v174_admin_collapsed_panel_style_fix.zip**
+- 최신 안정 버전: **v175: create apply fieldZones**
+- 새 채팅용 ZIP: **rpg_v175_fieldzones_create_apply_ready.zip**
+- 이 ZIP은 `fieldZones` 신규 row 생성 apply 제한 오픈과 생성 row 삭제/복원 안전검사 확장을 포함합니다.
+
+## 새 채팅에서 먼저 볼 파일
+
+1. `NEXT_CHAT_HANDOFF.md`
+2. `docs/CURRENT_STATUS.md`
+3. `docs/NEXT_STEPS.md`
+4. `docs/README.md`
+5. `docs/PROJECT_STRUCTURE.md`
 
 ## 지금까지 완료된 핵심
 
@@ -117,8 +128,25 @@ uvicorn app.main:app --reload
 32. `characters`, `enhancementGroups` 신규 row 실제 생성 apply 제한 오픈 완료.
 33. `create` 이력 기반 생성 row 삭제 preview/apply 제한 오픈 완료.
 34. `create_delete` 이력 기반 삭제 row 복원 preview/apply 제한 오픈 완료.
+35. 관리자 페이지 sidebar / sticky header / 섹션 접기·펼치기 / footer 완료.
+36. 접힌 섹션 공통 CSS 보정 완료.
+37. `fieldZones` 신규 row create apply 제한 오픈 완료.
+38. `fieldZones` 생성 row 삭제/복원 allow-list 및 dropTables dependency guard 완료.
 
-## v172 세부 완료
+
+## v175 create apply fieldZones
+
+- 신규 row 실제 생성 apply 제한 도메인에 `fieldZones`를 추가했습니다.
+- `characters`, `enhancementGroups`, `fieldZones`만 생성 apply가 가능합니다.
+- `itemTemplates`, `skills`, `dropTables`, `dropTableItems`는 계속 생성 apply 잠금 상태입니다.
+- `fieldZones` 생성 row 삭제/복원도 제한 allow-list에 추가했습니다.
+- `fieldZones` 삭제 preview에서 `dropTables.owner_type=field + owner_code` 연결 검사를 수행합니다.
+- DB schema 변경 없음, DB reset / seed 필요 없음.
+- `.env`, `.gitignore` 변경 없음.
+
+## v172~v174 관리자 레이아웃 정리
+
+### v172 admin layout navigation shell
 
 - 관리자 페이지에 sidebar navigation shell 추가.
 - 상단 header sticky 처리.
@@ -127,9 +155,22 @@ uvicorn app.main:app --reload
 - footer를 관리자 버전/상태 표시 영역으로 정리.
 - 기존 edit/create/delete/restore 기능 유지.
 
+### v173 admin layout collapse polish
+
+- sidebar sticky top offset을 header 높이 기준으로 자동 보정.
+- `필드 용어 도움말`, `신규 row 생성 준비`, `관리자 변경 이력` 기본 상태를 접기로 변경.
+- 접힌 섹션을 amber 계열 색상으로 구분.
+
+### v174 admin collapsed panel style fix
+
+- 접힌 탭 공통 CSS 보정.
+- `.section`, `.filter-panel`, `.field-help-panel` 기반 접힘 상태가 모두 같은 amber 계열 카드 스타일로 보이게 수정.
+- `필드 용어 도움말`, `신규 row 생성 준비`처럼 filter/help panel 구조인 탭이 안쪽 header만 색칠되던 문제 수정.
+- `getAdminLayoutShellReadiness().collapsedPanelStyleReady` 확인 상태 추가.
+
 ## DB / seed
 
-- v172는 DB reset / seed 필요 없음.
+- v175 기준 DB reset / seed 필요 없음.
 - DB schema 변경 없음.
 - `.env`, `.gitignore` 변경 없음.
 
@@ -145,7 +186,7 @@ bash tools/run_smoke_core.sh
 bash tools/run_smoke_all.sh
 ```
 
-v172 작업 후 둘 다 통과했습니다.
+v175 작업 후 둘 다 통과했습니다.
 
 ## 브라우저 확인용
 
@@ -162,28 +203,23 @@ true
 
 ```js
 위치: 브라우저 개발자도구 Console
-getAdminLayoutShellReadiness()
+getAdminLayoutShellReadiness().collapsedPanelStyleReady
+```
+
+예상 결과:
+
+```txt
+true
 ```
 
 ## 다음 추천 단계
 
-- v175 create apply 도메인 제한 확장
-- 우선 `fieldZones` create apply를 제한적으로 여는 방향이 안전합니다.
-- `itemTemplates`, `skills`, `dropTables`, `dropTableItems`는 아직 바로 생성 apply를 열지 않는 것이 좋습니다.
+다음은 **v176 bosses create apply 검토**가 좋습니다.
 
+안전한 순서:
 
-## v173 세부 완료
-
-- sidebar sticky top offset을 header 높이 기준으로 자동 보정했습니다.
-- `필드 용어 도움말`, `신규 row 생성 준비`, `관리자 변경 이력` 기본 상태를 접기로 변경했습니다.
-- 접힌 섹션은 amber 계열 색상으로 구분되도록 표시를 강화했습니다.
-- DB reset / seed 필요 없습니다.
-
-
-## v174 세부 완료
-
-- 접힌 탭 공통 CSS를 보정했습니다.
-- `.section`, `.filter-panel`, `.field-help-panel` 기반 접힘 상태가 모두 같은 amber 계열 카드 스타일로 보이게 했습니다.
-- `필드 용어 도움말`, `신규 row 생성 준비`처럼 filter/help panel 구조인 탭이 안쪽 header만 색칠되던 문제를 수정했습니다.
-- `getAdminLayoutShellReadiness().collapsedPanelStyleReady` 확인 상태를 추가했습니다.
-- DB reset / seed 필요 없습니다.
+1. 브라우저에서 `fieldZones` 생성 preview/apply를 실제 확인.
+2. 생성된 `fieldZones` 삭제 preview에서 `dropTables.owner_type=field + owner_code` blocker 표시 확인.
+3. 삭제/복원 apply까지 확인.
+4. 이후 `bosses` create apply 제한 오픈 검토.
+5. `itemTemplates`, `skills`, `dropTables`, `dropTableItems` 생성 apply는 아직 열지 않음.

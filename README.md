@@ -1,14 +1,53 @@
 # Upgrade RPG
 
-현재 안정 버전: v174 admin collapsed panel style fix
+현재 안정 버전: **v175 create apply fieldZones**
 
-관리자 페이지 sidebar, sticky header, section 접기/펼치기, footer를 유지하면서 접힌 탭 스타일을 공통 규칙으로 보정했습니다. 기존 관리자 edit/create/delete/restore 기능은 유지됩니다.
+새 채팅 인수인계 ZIP: **rpg_v175_fieldzones_create_apply_ready.zip**
 
-백엔드/관리자 인수인계는 `NEXT_CHAT_HANDOFF.md`, 현재 상태는 `docs/CURRENT_STATUS.md`, 다음 단계는 `docs/NEXT_STEPS.md`를 참고하세요.
+현재 프로젝트는 아직 Vue가 아니라 `index.html + JS + CSS` 기반 RPG 게임입니다. 기존 게임 동작을 유지하면서 FastAPI + PostgreSQL + 관리자 페이지 구조로 단계적으로 분리 중입니다.
 
+## 현재 핵심 상태
 
-## v174 관리자 접힌 탭 스타일 보정
+- 게임 localStorage 저장 유지: `idleRpgSaveV22`
+- DB save snapshot dual write 유지
+- master-data PostgreSQL → FastAPI → 브라우저 연결 유지
+- 백엔드 실패 시 static JS fallback 유지
+- 관리자 페이지 `admin.html` 분리 유지
+- 관리자 edit/create/delete/restore 제한 기능 유지
+- 관리자 sidebar / sticky header / 접기·펼치기 shell 유지
+- 접힌 탭 공통 CSS 보정 완료
+- `fieldZones` 신규 row create apply 제한 오픈 완료
 
-- `filter-panel` / `field-help-panel` 접힘 상태에서도 전체 카드 색상이 통일되도록 수정.
-- 필드 용어 도움말, 신규 row 생성 준비, 관리자 쓰기 잠금, 세이브 스냅샷 필터 등 모든 접힘 탭이 같은 스타일로 보이도록 보강.
-- 기존 기능/API/DB는 변경 없음.
+## 새 채팅에서 먼저 볼 파일
+
+- `NEXT_CHAT_HANDOFF.md`
+- `NEXT_CHAT_PROMPT.md`
+- `docs/CURRENT_STATUS.md`
+- `docs/NEXT_STEPS.md`
+- `docs/PROJECT_STRUCTURE.md`
+- `docs/README.md`
+
+## smoke 실행
+
+```bash
+위치: 프로젝트 루트
+bash tools/run_smoke_core.sh
+```
+
+```bash
+위치: 프로젝트 루트
+bash tools/run_smoke_all.sh
+```
+
+## 다음 추천 단계
+
+**다음 추천 단계**
+
+`fieldZones` create apply가 열렸으므로 다음은 실제 브라우저에서 필드 생성/삭제/복원 흐름을 한 번 확인한 뒤, `bosses` create apply 제한 오픈을 검토하는 것이 안전합니다. `itemTemplates`, `skills`, `dropTables`, `dropTableItems`는 아직 신규 생성 apply를 열지 않는 것이 좋습니다.
+
+## DB / env
+
+- DB reset / seed 필요 없음.
+- DB schema 변경 없음.
+- `.env`, `.gitignore` 변경 없음.
+- 이 ZIP에는 `.env`, `.gitignore`를 포함하지 않았습니다.

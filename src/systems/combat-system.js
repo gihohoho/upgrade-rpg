@@ -358,12 +358,14 @@ function killEnemy(zoneData) {
 
 		if (isEquipDropAllowed && equipDrops.length > 0) {
 			if (Math.random() <= currentBoss.equipDropRate * (1 + t.dropInc / 100)) {
-				if (player.inventory.length < player.maxInventorySize) {
-					let randomEquip = equipDrops[Math.floor(Math.random() * equipDrops.length)];
-					let newItem = { ...randomEquip, id: Date.now(), level: 0 };
-					player.inventory.push(newItem);
-					if (typeof recordItemAcquired === "function") recordItemAcquired(newItem);
-					addDropLog(newItem.name, `🎉 [득템] ${newItem.name} 획득!`, { dropType: "equipment" });
+				let randomEquip = equipDrops[Math.floor(Math.random() * equipDrops.length)];
+				let newItem = { ...randomEquip, id: Date.now(), level: 0, count: randomEquip.count || 1 };
+				let result = typeof addStackableItemToInventory === "function"
+					? addStackableItemToInventory(newItem)
+					: null;
+
+				if (result && result.ok) {
+					addDropLog(result.item.name, result.stacked ? `🎉 [득템] ${result.item.name} 획득! (현재 겹침: ${result.item.count}개)` : `🎉 [득템] ${result.item.name} 획득!`, { stacked: result.stacked, dropType: "equipment" });
 					dropped = true;
 					if (grantFirstEquipSkillBookIfNeeded(currentBoss, skillDrops, killResult)) dropped = true;
 				} else {

@@ -5,8 +5,10 @@
 나는 이 게임 프로젝트의 기획/게임 제작자 이기호야. 앞으로 나를 기호라고 불러줘.
 나는 코딩/터미널/경로에 익숙하지 않아.
 명령어를 줄 때는 항상 먼저 어디에서 실행해야 하는지 적어줘.
+주석 기호가 들어간 설명은 코드블록 안에 넣지 말고 코드블록 밖에서 설명해줘.
+커밋 명령어는 마지막에 add부터 push까지 한 번에 알려줘.
 
-예:
+명령어 예시:
 
 위치: 프로젝트 루트
 bash tools/run_smoke_core.sh
@@ -48,23 +50,13 @@ idleRpgSaveV22
 관리자 쓰기 dev key:
 local-admin-dev-key
 
-관리자 실제 적용 확인 문구:
-APPLY MASTER DATA EDIT
-
-관리자 high risk 추가 확인 문구:
-HIGH RISK EDIT
-
-관리자 되돌리기 확인 문구:
-ROLLBACK MASTER DATA EDIT
-
-신규 row 생성 확인 문구:
-CREATE MASTER DATA ROW
-
-생성 row 삭제 확인 문구:
-DELETE CREATED MASTER DATA ROW
-
-삭제 row 복원 확인 문구:
-RESTORE DELETED CREATED ROW
+관리자 확인 문구:
+관리자 실제 적용 확인 문구: APPLY MASTER DATA EDIT
+관리자 high risk 추가 확인 문구: HIGH RISK EDIT
+관리자 되돌리기 확인 문구: ROLLBACK MASTER DATA EDIT
+신규 row 생성 확인 문구: CREATE MASTER DATA ROW
+생성 row 삭제 확인 문구: DELETE CREATED MASTER DATA ROW
+삭제 row 복원 확인 문구: RESTORE DELETED CREATED ROW
 
 .env / .gitignore 처리:
 내 로컬에는 .env, .gitignore가 이미 있어.
@@ -72,17 +64,17 @@ RESTORE DELETED CREATED ROW
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v174: admin collapsed panel style fix
+v175: create apply fieldZones
 
-최신 ZIP:
-rpg_v174_admin_collapsed_panel_style_fix.zip
+현재 인수인계 ZIP:
+rpg_v175_fieldzones_create_apply_ready.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
-NEXT_CHAT_PROMPT.md
 docs/CURRENT_STATUS.md
 docs/NEXT_STEPS.md
-docs/ADMIN_CREATE_DELETE_RESTORE.md
+docs/README.md
+docs/PROJECT_STRUCTURE.md
 
 현재 완료된 핵심:
 1. master-data PostgreSQL → FastAPI → 브라우저 연결 완료.
@@ -103,28 +95,39 @@ docs/ADMIN_CREATE_DELETE_RESTORE.md
 16. master-data API 반영 확인 및 post-edit 자동 확인 완료.
 17. DB itemTemplates.stackable 값이 인게임 신규 획득 아이템 겹치기에 연결 완료.
 18. 겹친 장비 강화 시 가방이 꽉 차 있으면 강화 차단 완료.
-19. 관리자 relation select / relation label / change log relation 도구 완료.
-20. 신규 row 생성 준비 blueprint read-only 완료.
-21. 신규 row 생성 draft 입력 UI와 preview-only 검증 API 완료.
-22. characters / enhancementGroups 신규 row 실제 생성 apply 제한 오픈 완료.
-23. create 이력 기반 생성 row 삭제 preview/apply 제한 오픈 완료.
-24. create_delete 이력 기반 삭제 row 복원 preview/apply 제한 오픈 완료.
+19. 관리자 편집 입력 UI 타입 개선 완료.
+20. 관리자 safe select / allow-list 확장 완료.
+21. 장비 슬롯 표시명을 인게임 이름으로 개선 완료.
+22. 마스터 데이터 카탈로그 페이지네이션 완료.
+23. 관리자 변경 전후 비교 UI + high risk 추가 확인 완료.
+24. relation select 기반 안전 편집 완료.
+25. 조합 관계 필드 중복 검증 완료.
+26. dropTables.owner_code owner_type 연동 select 완료.
+27. relation select 검색/필터 완료.
+28. 변경 preview relation label / 대상 열기 완료.
+29. change log / rollback preview relation label 완료.
+30. 신규 row 생성 blueprint read-only 완료.
+31. 신규 row 생성 draft 입력 UI + preview-only 검증 완료.
+32. characters / enhancementGroups 신규 row 실제 생성 apply 제한 오픈 완료.
+33. create 이력 기반 생성 row 삭제 preview/apply 제한 오픈 완료.
+34. create_delete 이력 기반 삭제 row 복원 preview/apply 제한 오픈 완료.
+35. 관리자 페이지 sidebar / sticky header / footer / 섹션 접기·펼치기 완료.
+36. 접힌 섹션 공통 CSS 보정 완료.
 
-v172 세부 완료:
-관리자 페이지 sidebar navigation shell 추가.
-sticky header 추가.
-주요 섹션 접기/펼치기 추가.
-접힘 상태 localStorage 저장.
-footer 버전/상태 영역 정리.
-기존 관리자 edit/create/delete/restore 기능 유지.
+v174 현재 상태:
+관리자 페이지가 길어져서 v172~v174에서 레이아웃 정리를 먼저 했어.
+sidebar, sticky header, 섹션 접기/펼치기, footer 상태 표시가 있고, 접힌 탭은 amber 계열로 구분돼.
+스크롤 시 sidebar가 header에 가려지던 문제와 일부 탭만 색상이 이상하던 문제까지 수정 완료했어.
 
+중요한 안전 원칙:
+기존 게임 동작을 깨면 안 됨.
+localStorage 저장은 계속 유지해야 함.
 DB reset/seed가 필요한 단계인지 아닌지 반드시 알려줘.
 작업 후 ZIP으로 줘.
-커밋 명령어도 마지막에 add부터 push까지 같이 줘.
 명령어마다 반드시 실행 위치를 먼저 적어줘.
-주석(#, //)들은 코드블록 밖에서 설명해줘.
 가능하면 작업 후 smoke를 돌려줘.
-ZIP에는 전체 프로젝트 파일/폴더를 묶어줘. 단, .env, .gitignore는 바뀐 경우에만 포함하면 돼.
+ZIP에는 전체 프로젝트 파일/폴더를 묶어줘.
+단, .env, .gitignore는 바뀐 경우에만 포함하면 돼.
 
 smoke 실행:
 위치: 프로젝트 루트
@@ -134,23 +137,17 @@ bash tools/run_smoke_core.sh
 bash tools/run_smoke_all.sh
 
 다음 추천 단계:
-v175 create apply 도메인 제한 확장
-fieldZones create apply 제한 오픈부터 추천.
-itemTemplates, skills, dropTables, dropTableItems는 아직 바로 열지 않는 것이 안전함.
+v176 bosses create apply 검토
+먼저 fieldZones 생성/삭제/복원 브라우저 확인부터 추천.
 
+v175에서 안전하게 할 일:
+1. fieldZones create apply allow-list 추가.
+2. fieldZones 생성 preview/apply smoke 추가.
+3. 생성 row 삭제 dependency guard에 dropTables.owner_type=field + owner_code 검사 추가.
+4. create_delete restore에도 fieldZones 복원 충돌 검증 포함.
+5. itemTemplates, skills, dropTables, dropTableItems 생성 apply는 아직 열지 말 것.
 
-## v173 세부 완료
-
-- sidebar sticky top offset을 header 높이 기준으로 자동 보정했습니다.
-- `필드 용어 도움말`, `신규 row 생성 준비`, `관리자 변경 이력` 기본 상태를 접기로 변경했습니다.
-- 접힌 섹션은 amber 계열 색상으로 구분되도록 표시를 강화했습니다.
-- DB reset / seed 필요 없습니다.
-
-
-## v174 세부 완료
-
-- 접힌 탭 공통 CSS를 보정했습니다.
-- `.section`, `.filter-panel`, `.field-help-panel` 기반 접힘 상태가 모두 같은 amber 계열 카드 스타일로 보이게 했습니다.
-- `필드 용어 도움말`, `신규 row 생성 준비`처럼 filter/help panel 구조인 탭이 안쪽 header만 색칠되던 문제를 수정했습니다.
-- `getAdminLayoutShellReadiness().collapsedPanelStyleReady` 확인 상태를 추가했습니다.
-- DB reset / seed 필요 없습니다.
+현재 인수인계 패키지 작업:
+- 런타임 코드 변경 없음.
+- 문서/인수인계 정리 중심.
+- DB reset / seed 필요 없음.

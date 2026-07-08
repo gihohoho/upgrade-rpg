@@ -158,7 +158,12 @@ function getSlotBadgeHtml(item, equipped = false) {
 		let combined = (levelText + countText).trim();
 		return combined ? `<div class="level-badge">${combined}</div>` : "";
 	}
-	if (item.type !== "skill_book") return lvl > 0 ? `<div class="level-badge">+${lvl}</div>` : "";
+	if (item.type !== "skill_book") {
+		let countText = !equipped && item.count && item.count > 1 ? ` x${item.count}` : "";
+		let levelText = lvl > 0 ? `+${lvl}` : "";
+		let combined = `${levelText}${countText}`.trim();
+		return combined ? `<div class="level-badge">${combined}</div>` : "";
+	}
 	return "";
 }
 
