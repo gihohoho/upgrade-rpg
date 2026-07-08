@@ -54,8 +54,8 @@ class AdminService:
     MASTER_CREATE_APPLY_CONFIRM_TEXT = "CREATE MASTER DATA ROW"
     MASTER_CREATE_DELETE_CONFIRM_TEXT = "DELETE CREATED MASTER DATA ROW"
     MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT = "RESTORE DELETED CREATED ROW"
-    MASTER_CREATE_APPLY_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones"}
-    MASTER_CREATE_DELETE_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones"}
+    MASTER_CREATE_APPLY_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses"}
+    MASTER_CREATE_DELETE_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses"}
 
     MASTER_EDIT_ALLOWED_FIELDS: dict[str, set[str]] = {
         "itemTemplates": {"name", "item_type", "description", "grade", "stackable", "equip_slot", "enhance_group_code", "admin_note"},
@@ -724,7 +724,7 @@ class AdminService:
             "domain": domain,
             "id": row_id,
             "confirmTextRequired": self.MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT,
-            "note": "create_delete 이력으로 삭제된 제한 도메인 row만, 같은 id/code 충돌이 없을 때 복원할 수 있습니다. fieldZones는 dropTables(owner_type=field) 연결 검사까지 거칩니다.",
+            "note": "create_delete 이력으로 삭제된 제한 도메인 row만, 같은 id/code 충돌이 없을 때 복원할 수 있습니다. fieldZones/bosses는 dropTables(owner_type=field/boss) 연결 검사까지 거칩니다.",
         }
         return detail
 
@@ -1504,6 +1504,17 @@ class AdminService:
                     "note": "dropTables에서 owner_type=field와 owner_code로 사용 중이면 필드 삭제를 막습니다.",
                 },
             ]
+        if domain == "bosses":
+            drop_table_count = await self._count_where(session, DropTable, DropTable.owner_type == "boss", DropTable.owner_code == code_text)
+            return [
+                {
+                    "label": "보스 드랍 테이블",
+                    "target": "drop_tables.owner_type=boss + owner_code",
+                    "count": drop_table_count,
+                    "blocksDelete": drop_table_count > 0,
+                    "note": "dropTables에서 owner_type=boss와 owner_code로 사용 중이면 보스 삭제를 막습니다.",
+                },
+            ]
         return [{"label": "도메인 잠금", "count": 1, "blocksDelete": True, "note": "이 도메인은 생성 row 삭제 되돌리기 allow-list에 없습니다."}]
 
     def _empty_edit_preview(
@@ -1987,7 +1998,7 @@ class AdminService:
             "rawJsonReturned": False,
             "assetsReturned": False,
             "warnings": warnings,
-            "note": "신규 row 생성 초안을 검증했습니다. characters/enhancementGroups/fieldZones는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 초안을 검증했습니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
+            "note": "신규 row 생성 초안을 검증했습니다. characters/enhancementGroups/fieldZones/bosses는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 초안을 검증했습니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
         }
 
     async def apply_master_data_create(
@@ -2027,7 +2038,7 @@ class AdminService:
                 "wouldBeValid": False,
                 "errorCount": int(preview.get("errorCount") or 0) + 1,
                 "warnings": [*(preview.get("warnings") or []), "create_apply_domain_locked"],
-                "note": "이 도메인의 실제 신규 row 생성은 아직 열지 않았습니다. 현재는 characters/enhancementGroups/fieldZones만 제한적으로 생성 가능합니다.",
+                "note": "이 도메인의 실제 신규 row 생성은 아직 열지 않았습니다. 현재는 characters/enhancementGroups/fieldZones/bosses만 제한적으로 생성 가능합니다.",
             })
             return preview
 
@@ -2381,7 +2392,7 @@ class AdminService:
             "rawJsonReturned": False,
             "assetsReturned": False,
             "warnings": [],
-            "note": "신규 row 생성 설계 응답입니다. characters/enhancementGroups/fieldZones는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 설계 응답입니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
+            "note": "신규 row 생성 설계 응답입니다. characters/enhancementGroups/fieldZones/bosses는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 설계 응답입니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
         }
 
     async def _build_master_create_relation_options(self, session: AsyncSession, domain: str) -> dict[str, Any]:

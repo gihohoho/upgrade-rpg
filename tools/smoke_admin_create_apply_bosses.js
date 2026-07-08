@@ -25,7 +25,7 @@ function parseSet(text, name) {
   assert(match, `missing set: ${name}`);
   return match[1]
     .split(",")
-    .map((value) => value.trim().replace(/^['\"]|['\"]$/g, ""))
+    .map((value) => value.trim().replace(/^[ '\"]|[ '\"]$/g, ""))
     .filter(Boolean)
     .sort();
 }
@@ -33,7 +33,7 @@ function parseSet(text, name) {
 const service = read("backend/app/services/admin_service.py");
 const createAllowed = parseSet(service, "MASTER_CREATE_APPLY_ALLOWED_DOMAINS");
 const deleteAllowed = parseSet(service, "MASTER_CREATE_DELETE_ALLOWED_DOMAINS");
-const expectedAllowed = ["characters", "enhancementGroups", "fieldZones", "bosses"].sort();
+const expectedAllowed = ["bosses", "characters", "enhancementGroups", "fieldZones"].sort();
 const lockedDomains = ["itemTemplates", "skills", "dropTables", "dropTableItems"];
 
 assert(JSON.stringify(createAllowed) === JSON.stringify(expectedAllowed), `create allow-list mismatch: ${createAllowed.join(",")}`);
@@ -44,35 +44,34 @@ lockedDomains.forEach((domain) => {
 });
 
 assertContains("backend/app/services/admin_service.py", [
-  "if domain == \"fieldZones\"",
-  "DropTable.owner_type == \"field\"",
+  "if domain == \"bosses\"",
+  "DropTable.owner_type == \"boss\"",
   "DropTable.owner_code == code_text",
-  "drop_tables.owner_type=field + owner_code",
+  "drop_tables.owner_type=boss + owner_code",
   "characters/enhancementGroups/fieldZones/bosses",
-  "create_delete_restore_preview_enabled",
+  "fieldZones/bosses는 dropTables(owner_type=field/boss)",
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
   "v176.admin-create-apply-bosses",
   "v175.admin-create-apply-fieldzones",
   "characters/enhancementGroups/fieldZones/bosses",
-  "v174.admin-collapsed-panel-style-fix",
 ]);
 
 assertContains("admin.html", [
+  "v176 admin create apply bosses",
   "characters/enhancementGroups/fieldZones/bosses",
-  "<option value=\"fieldZones\">필드</option>",
-  "<option value=\"enhancementGroups\">강화 그룹</option>",
+  "<option value=\"bosses\">보스</option>",
 ]);
 
-assertContains("docs/ADMIN_CREATE_APPLY_FIELDZONES.md", [
-  "Admin Create Apply FieldZones",
-  "fieldZones",
-  "dropTables.owner_type = field",
-  "dropTables.owner_code = fieldZones.code",
+assertContains("docs/ADMIN_CREATE_APPLY_BOSSES.md", [
+  "Admin Create Apply Bosses",
+  "bosses",
+  "dropTables.owner_type = boss",
+  "dropTables.owner_code = bosses.code",
   "itemTemplates",
   "dropTableItems",
   "DB reset / seed",
 ]);
 
-console.log("admin create apply fieldZones smoke test passed");
+console.log("admin create apply bosses smoke test passed");

@@ -80,9 +80,9 @@ uvicorn app.main:app --reload
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v175: create apply fieldZones**
-- 새 채팅용 ZIP: **rpg_v175_fieldzones_create_apply_ready.zip**
-- 이 ZIP은 `fieldZones` 신규 row 생성 apply 제한 오픈과 생성 row 삭제/복원 안전검사 확장을 포함합니다.
+- 최신 안정 버전: **v176: create apply bosses**
+- 새 채팅용 ZIP: **rpg_v176_bosses_create_apply_ready.zip**
+- 이 ZIP은 `bosses` 신규 row 생성 apply 제한 오픈과 생성 row 삭제/복원 안전검사 확장을 포함합니다.
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -132,13 +132,22 @@ uvicorn app.main:app --reload
 36. 접힌 섹션 공통 CSS 보정 완료.
 37. `fieldZones` 신규 row create apply 제한 오픈 완료.
 38. `fieldZones` 생성 row 삭제/복원 allow-list 및 dropTables dependency guard 완료.
+39. `bosses` 신규 row create apply 제한 오픈 완료.
+40. `bosses` 생성 row 삭제/복원 allow-list 및 dropTables dependency guard 완료.
 
+## v176 create apply bosses
+
+- 신규 row 실제 생성 apply 제한 도메인에 `bosses`를 추가했습니다.
+- `characters`, `enhancementGroups`, `fieldZones`, `bosses`만 생성 apply가 가능합니다.
+- `itemTemplates`, `skills`, `dropTables`, `dropTableItems`는 계속 생성 apply 잠금 상태입니다.
+- `bosses` 생성 row 삭제/복원도 제한 allow-list에 추가했습니다.
+- `bosses` 삭제 preview에서 `dropTables.owner_type=boss + owner_code` 연결 검사를 수행합니다.
+- DB schema 변경 없음, DB reset / seed 필요 없음.
+- `.env`, `.gitignore` 변경 없음.
 
 ## v175 create apply fieldZones
 
 - 신규 row 실제 생성 apply 제한 도메인에 `fieldZones`를 추가했습니다.
-- `characters`, `enhancementGroups`, `fieldZones`만 생성 apply가 가능합니다.
-- `itemTemplates`, `skills`, `dropTables`, `dropTableItems`는 계속 생성 apply 잠금 상태입니다.
 - `fieldZones` 생성 row 삭제/복원도 제한 allow-list에 추가했습니다.
 - `fieldZones` 삭제 preview에서 `dropTables.owner_type=field + owner_code` 연결 검사를 수행합니다.
 - DB schema 변경 없음, DB reset / seed 필요 없음.
@@ -170,7 +179,7 @@ uvicorn app.main:app --reload
 
 ## DB / seed
 
-- v175 기준 DB reset / seed 필요 없음.
+- v176 기준 DB reset / seed 필요 없음.
 - DB schema 변경 없음.
 - `.env`, `.gitignore` 변경 없음.
 
@@ -186,7 +195,7 @@ bash tools/run_smoke_core.sh
 bash tools/run_smoke_all.sh
 ```
 
-v175 작업 후 둘 다 통과했습니다.
+v176 작업 후 둘 다 통과했습니다.
 
 ## 브라우저 확인용
 
@@ -214,12 +223,12 @@ true
 
 ## 다음 추천 단계
 
-다음은 **v176 bosses create apply 검토**가 좋습니다.
+다음은 **bosses 생성/삭제/복원 브라우저 검증**이 좋습니다.
 
 안전한 순서:
 
-1. 브라우저에서 `fieldZones` 생성 preview/apply를 실제 확인.
-2. 생성된 `fieldZones` 삭제 preview에서 `dropTables.owner_type=field + owner_code` blocker 표시 확인.
+1. 브라우저에서 `bosses` 생성 preview/apply를 실제 확인.
+2. 생성된 `bosses` 삭제 preview에서 `dropTables.owner_type=boss + owner_code` blocker 표시 확인.
 3. 삭제/복원 apply까지 확인.
-4. 이후 `bosses` create apply 제한 오픈 검토.
-5. `itemTemplates`, `skills`, `dropTables`, `dropTableItems` 생성 apply는 아직 열지 않음.
+4. `itemTemplates`, `skills`, `dropTables`, `dropTableItems` 생성 apply는 아직 열지 않음.
+5. 다음 코드 단계는 create/delete/restore UI의 dependency 표시 강화 또는 관리자 코드 분리 준비를 추천.

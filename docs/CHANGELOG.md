@@ -1,5 +1,15 @@
 # Changelog
 
+## v176 - Create Apply Bosses
+
+- 신규 row 생성 apply 제한 도메인에 `bosses`를 추가했습니다.
+- `characters`, `enhancementGroups`, `fieldZones`, `bosses`만 실제 생성 apply가 가능합니다.
+- `itemTemplates`, `skills`, `dropTables`, `dropTableItems` 생성 apply는 계속 잠금 상태입니다.
+- `bosses` 생성 row 삭제/복원 allow-list를 추가했습니다.
+- `bosses` 삭제 preview에서 `dropTables.owner_type=boss + owner_code` 연결을 검사해 사용 중인 보스는 삭제를 차단합니다.
+- 관리자 생성 준비 UI 안내 문구를 새 allow-list에 맞춰 갱신했습니다.
+- DB reset / seed는 필요 없습니다.
+
 ## v175 - Create Apply FieldZones
 
 - 신규 row 생성 apply 제한 도메인에 `fieldZones`를 추가했습니다.
