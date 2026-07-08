@@ -33,8 +33,8 @@ function parseSet(text, name) {
 const service = read("backend/app/services/admin_service.py");
 const createAllowed = parseSet(service, "MASTER_CREATE_APPLY_ALLOWED_DOMAINS");
 const deleteAllowed = parseSet(service, "MASTER_CREATE_DELETE_ALLOWED_DOMAINS");
-const expectedAllowed = ["bosses", "characters", "enhancementGroups", "fieldZones"].sort();
-const lockedDomains = ["itemTemplates", "skills", "dropTables", "dropTableItems"];
+const expectedAllowed = ["bosses", "characters", "enhancementGroups", "fieldZones", "skills", "dropTables"].sort();
+const lockedDomains = ["itemTemplates", "dropTableItems"];
 
 assert(JSON.stringify(createAllowed) === JSON.stringify(expectedAllowed), `create allow-list mismatch: ${createAllowed.join(",")}`);
 assert(JSON.stringify(deleteAllowed) === JSON.stringify(expectedAllowed), `delete/restore allow-list mismatch: ${deleteAllowed.join(",")}`);
@@ -48,19 +48,20 @@ assertContains("backend/app/services/admin_service.py", [
   "DropTable.owner_type == \"boss\"",
   "DropTable.owner_code == code_text",
   "drop_tables.owner_type=boss + owner_code",
-  "characters/enhancementGroups/fieldZones/bosses",
+  "characters/enhancementGroups/fieldZones/bosses/skills/dropTables",
   "fieldZones/bosses는 dropTables(owner_type=field/boss)",
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
+  "v177.admin-create-apply-skills-droptables",
   "v176.admin-create-apply-bosses",
   "v175.admin-create-apply-fieldzones",
-  "characters/enhancementGroups/fieldZones/bosses",
+  "characters/enhancementGroups/fieldZones/bosses/skills/dropTables",
 ]);
 
 assertContains("admin.html", [
-  "v176 admin create apply bosses",
-  "characters/enhancementGroups/fieldZones/bosses",
+  "v177 admin create apply skills/dropTables",
+  "characters/enhancementGroups/fieldZones/bosses/skills/dropTables",
   "<option value=\"bosses\">보스</option>",
 ]);
 

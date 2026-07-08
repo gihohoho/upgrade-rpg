@@ -25,7 +25,7 @@ function parseSet(text, name) {
   assert(match, `missing set: ${name}`);
   return match[1]
     .split(",")
-    .map((value) => value.trim().replace(/^['\"]|['\"]$/g, ""))
+    .map((value) => value.trim().replace(/^[ '\"]|[ '\"]$/g, ""))
     .filter(Boolean)
     .sort();
 }
@@ -33,7 +33,7 @@ function parseSet(text, name) {
 const service = read("backend/app/services/admin_service.py");
 const createAllowed = parseSet(service, "MASTER_CREATE_APPLY_ALLOWED_DOMAINS");
 const deleteAllowed = parseSet(service, "MASTER_CREATE_DELETE_ALLOWED_DOMAINS");
-const expectedAllowed = ["characters", "enhancementGroups", "fieldZones", "bosses", "skills", "dropTables"].sort();
+const expectedAllowed = ["bosses", "characters", "dropTables", "enhancementGroups", "fieldZones", "skills"].sort();
 const lockedDomains = ["itemTemplates", "dropTableItems"];
 
 assert(JSON.stringify(createAllowed) === JSON.stringify(expectedAllowed), `create allow-list mismatch: ${createAllowed.join(",")}`);
@@ -44,36 +44,39 @@ lockedDomains.forEach((domain) => {
 });
 
 assertContains("backend/app/services/admin_service.py", [
-  "if domain == \"fieldZones\"",
-  "DropTable.owner_type == \"field\"",
-  "DropTable.owner_code == code_text",
-  "drop_tables.owner_type=field + owner_code",
+  "if domain == \"skills\"",
+  "SkillLevel, \"skill_code\"",
+  "CharacterSkill, \"skill_code\"",
+  "UserCharacterSkill, \"skill_code\"",
+  "if domain == \"dropTables\"",
+  "DropTableItem, \"drop_table_code\"",
   "characters/enhancementGroups/fieldZones/bosses/skills/dropTables",
-  "create_delete_restore_preview_enabled",
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
   "v177.admin-create-apply-skills-droptables",
   "v176.admin-create-apply-bosses",
-  "v175.admin-create-apply-fieldzones",
   "characters/enhancementGroups/fieldZones/bosses/skills/dropTables",
-  "v174.admin-collapsed-panel-style-fix",
 ]);
 
 assertContains("admin.html", [
+  "v177 admin create apply skills/dropTables",
   "characters/enhancementGroups/fieldZones/bosses/skills/dropTables",
-  "<option value=\"fieldZones\">필드</option>",
-  "<option value=\"enhancementGroups\">강화 그룹</option>",
+  "<option value=\"skills\">스킬</option>",
+  "<option value=\"dropTables\">드랍 테이블</option>",
 ]);
 
-assertContains("docs/ADMIN_CREATE_APPLY_FIELDZONES.md", [
-  "Admin Create Apply FieldZones",
-  "fieldZones",
-  "dropTables.owner_type = field",
-  "dropTables.owner_code = fieldZones.code",
+assertContains("docs/ADMIN_CREATE_APPLY_SKILLS_DROPTABLES.md", [
+  "Admin Create Apply Skills and DropTables",
+  "skills",
+  "dropTables",
+  "skillLevels.skill_code",
+  "characterSkills.skill_code",
+  "userCharacterSkills.skill_code",
+  "dropTableItems.drop_table_code",
   "itemTemplates",
   "dropTableItems",
   "DB reset / seed",
 ]);
 
-console.log("admin create apply fieldZones smoke test passed");
+console.log("admin create apply skills/dropTables smoke test passed");

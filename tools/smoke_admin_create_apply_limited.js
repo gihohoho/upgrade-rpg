@@ -69,6 +69,9 @@ assertContains("docs/ADMIN_CREATE_APPLY_LIMITED.md", [
   "characters",
   "enhancementGroups",
   "fieldZones",
+  "bosses",
+  "skills",
+  "dropTables",
   "DB reset / seed",
 ]);
 

@@ -64,10 +64,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v176: create apply bosses
+v177: create apply skills/dropTables
 
 현재 인수인계 ZIP:
-rpg_v176_bosses_create_apply_ready.zip
+rpg_v177_skills_droptables_create_apply_ready.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -137,15 +137,16 @@ bash tools/run_smoke_core.sh
 bash tools/run_smoke_all.sh
 
 다음 추천 단계:
-bosses 생성/삭제/복원 브라우저 확인부터 추천.
+skills/dropTables 생성/삭제/복원 브라우저 확인부터 추천.
 그 다음 create/delete/restore UI dependency 표시 강화 또는 관리자 코드 분리 준비 추천.
 
-v176에서 완료된 일:
-1. bosses create apply allow-list 추가.
-2. bosses 생성 preview/apply smoke 추가.
-3. 생성 row 삭제 dependency guard에 dropTables.owner_type=boss + owner_code 검사 추가.
-4. create_delete restore에도 bosses 복원 충돌 검증 포함.
-5. itemTemplates, skills, dropTables, dropTableItems 생성 apply는 아직 열지 않음.
+v177에서 완료된 일:
+1. skills create apply allow-list 추가.
+2. dropTables create apply allow-list 추가.
+3. skills/dropTables 생성 preview/apply smoke 추가.
+4. 생성 row 삭제 dependency guard에 skills 관련 연결과 dropTableItems.drop_table_code 검사 추가.
+5. create_delete restore에도 skills/dropTables 복원 충돌 검증 포함.
+6. itemTemplates, dropTableItems 생성 apply는 아직 열지 않음.
 
 현재 인수인계 패키지 작업:
 - 런타임 코드 변경 없음.

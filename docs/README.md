@@ -24,6 +24,7 @@
 - `ADMIN_CREATE_APPLY_LIMITED.md` — 신규 row 제한 생성 apply
 - `ADMIN_CREATE_APPLY_FIELDZONES.md` — fieldZones 생성 apply 제한 오픈
 - `ADMIN_CREATE_APPLY_BOSSES.md` — bosses 생성 apply 제한 오픈
+- `ADMIN_CREATE_APPLY_SKILLS_DROPTABLES.md` — skills/dropTables 생성 apply 제한 오픈
 - `ADMIN_CREATE_DELETE_ROLLBACK.md` — 생성 row 삭제 preview/apply
 - `ADMIN_CREATE_DELETE_RESTORE.md` — 삭제 row 복원 preview/apply
 - `ADMIN_CHANGE_LOG_RELATION_TOOLS.md` — 변경 이력 / rollback preview relation label 강화

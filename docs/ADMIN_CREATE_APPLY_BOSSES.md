@@ -4,7 +4,7 @@ v176에서는 신규 row 생성 apply 제한 도메인에 `bosses`를 추가했�
 
 ## 열린 범위
 
-실제 DB insert가 가능한 도메인은 아래 네 개다.
+v176 당시 실제 DB insert가 가능한 도메인은 아래 네 개였다.
 
 - `characters`
 - `enhancementGroups`
@@ -15,7 +15,7 @@ v176에서는 신규 row 생성 apply 제한 도메인에 `bosses`를 추가했�
 
 ## 계속 잠긴 범위
 
-아래 도메인은 계속 preview-only다.
+v176 당시 아래 도메인은 계속 preview-only였다.
 
 - `itemTemplates`
 - `skills`
@@ -59,11 +59,9 @@ v176에서는 신규 row 생성 apply 제한 도메인에 `bosses`를 추가했�
 
 ## 이번 단계에서 열지 않은 도메인
 
-아래 도메인은 게임 런타임 영향과 relation 의존도가 커서 아직 create apply를 열지 않는다.
+v177에서 `skills`와 `dropTables`는 별도 guard를 추가한 뒤 열었다. 아래 도메인은 아직 create apply를 열지 않는다.
 
 - `itemTemplates`
-- `skills`
-- `dropTables`
 - `dropTableItems`
 
 ## DB reset / seed

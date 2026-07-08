@@ -54,8 +54,8 @@ class AdminService:
     MASTER_CREATE_APPLY_CONFIRM_TEXT = "CREATE MASTER DATA ROW"
     MASTER_CREATE_DELETE_CONFIRM_TEXT = "DELETE CREATED MASTER DATA ROW"
     MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT = "RESTORE DELETED CREATED ROW"
-    MASTER_CREATE_APPLY_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses"}
-    MASTER_CREATE_DELETE_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses"}
+    MASTER_CREATE_APPLY_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses", "skills", "dropTables"}
+    MASTER_CREATE_DELETE_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses", "skills", "dropTables"}
 
     MASTER_EDIT_ALLOWED_FIELDS: dict[str, set[str]] = {
         "itemTemplates": {"name", "item_type", "description", "grade", "stackable", "equip_slot", "enhance_group_code", "admin_note"},
@@ -1515,6 +1515,16 @@ class AdminService:
                     "note": "dropTables에서 owner_type=boss와 owner_code로 사용 중이면 보스 삭제를 막습니다.",
                 },
             ]
+        if domain == "skills":
+            return [
+                await check("스킬 레벨", SkillLevel, "skill_code", "skillLevels에서 사용 중이면 스킬 삭제를 막습니다."),
+                await check("캐릭터 스킬 연결", CharacterSkill, "skill_code", "characterSkills에서 사용 중이면 스킬 삭제를 막습니다."),
+                await check("유저 캐릭터 스킬", UserCharacterSkill, "skill_code", "유저 스킬 데이터에서 사용 중이면 삭제를 막습니다."),
+            ]
+        if domain == "dropTables":
+            return [
+                await check("드랍 아이템", DropTableItem, "drop_table_code", "dropTableItems에서 사용 중이면 드랍 테이블 삭제를 막습니다."),
+            ]
         return [{"label": "도메인 잠금", "count": 1, "blocksDelete": True, "note": "이 도메인은 생성 row 삭제 되돌리기 allow-list에 없습니다."}]
 
     def _empty_edit_preview(
@@ -1998,7 +2008,7 @@ class AdminService:
             "rawJsonReturned": False,
             "assetsReturned": False,
             "warnings": warnings,
-            "note": "신규 row 생성 초안을 검증했습니다. characters/enhancementGroups/fieldZones/bosses는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 초안을 검증했습니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
+            "note": "신규 row 생성 초안을 검증했습니다. characters/enhancementGroups/fieldZones/bosses/skills/dropTables는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 초안을 검증했습니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
         }
 
     async def apply_master_data_create(
@@ -2038,7 +2048,7 @@ class AdminService:
                 "wouldBeValid": False,
                 "errorCount": int(preview.get("errorCount") or 0) + 1,
                 "warnings": [*(preview.get("warnings") or []), "create_apply_domain_locked"],
-                "note": "이 도메인의 실제 신규 row 생성은 아직 열지 않았습니다. 현재는 characters/enhancementGroups/fieldZones/bosses만 제한적으로 생성 가능합니다.",
+                "note": "이 도메인의 실제 신규 row 생성은 아직 열지 않았습니다. 현재는 characters/enhancementGroups/fieldZones/bosses/skills/dropTables만 제한적으로 생성 가능합니다.",
             })
             return preview
 
@@ -2392,7 +2402,7 @@ class AdminService:
             "rawJsonReturned": False,
             "assetsReturned": False,
             "warnings": [],
-            "note": "신규 row 생성 설계 응답입니다. characters/enhancementGroups/fieldZones/bosses는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 설계 응답입니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
+            "note": "신규 row 생성 설계 응답입니다. characters/enhancementGroups/fieldZones/bosses/skills/dropTables는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 설계 응답입니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
         }
 
     async def _build_master_create_relation_options(self, session: AsyncSession, domain: str) -> dict[str, Any]:

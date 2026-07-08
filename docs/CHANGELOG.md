@@ -1,5 +1,16 @@
 # Changelog
 
+## v177 - Create Apply Skills and DropTables
+
+- 신규 row 생성 apply 제한 도메인에 `skills`와 `dropTables`를 추가했습니다.
+- `characters`, `enhancementGroups`, `fieldZones`, `bosses`, `skills`, `dropTables`만 실제 생성 apply가 가능합니다.
+- `itemTemplates`, `dropTableItems` 생성 apply는 계속 잠금 상태입니다.
+- `skills`, `dropTables` 생성 row 삭제/복원 allow-list를 추가했습니다.
+- `skills` 삭제 preview에서 `skillLevels.skill_code`, `characterSkills.skill_code`, `userCharacterSkills.skill_code` 연결을 검사합니다.
+- `dropTables` 삭제 preview에서 `dropTableItems.drop_table_code` 연결을 검사합니다.
+- 관리자 생성 준비 UI 안내 문구를 새 allow-list에 맞춰 갱신했습니다.
+- DB reset / seed는 필요 없습니다.
+
 ## v176 - Create Apply Bosses
 
 - 신규 row 생성 apply 제한 도메인에 `bosses`를 추가했습니다.
