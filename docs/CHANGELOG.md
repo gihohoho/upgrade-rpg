@@ -1,5 +1,15 @@
 # Changelog
 
+## v184 - Admin JS Split Readiness
+
+- 관리자 페이지에 `관리자 JS 분리 준비` 섹션을 추가했습니다.
+- 실제 파일 분리는 하지 않고 script 순서, 필수 global, export 계약, 분리 후보 묶음을 진단합니다.
+- `getAdminJsSplitReadiness()`와 `renderAdminJsSplitReadiness()`를 추가했습니다.
+- `checkAdminReadOnlyPageReady()`에 `adminJsSplitReadinessReady`와 `adminJsSplitReadiness`를 추가했습니다.
+- 첫 실제 분리 후보를 DB 쓰기와 무관한 `layout shell`로 잡았습니다.
+- 새 smoke `tools/smoke_admin_js_split_readiness.js`를 추가하고 core smoke에 포함했습니다.
+- 새 쓰기 도메인은 열지 않았고 DB schema 변경 없음, DB reset / seed 필요 없음.
+
 ## v183 - Admin Create Lifecycle Batch Check
 
 - 관리자 `신규 row 생성·삭제·복원 점검` 섹션에 일괄 점검 카드를 추가했습니다.

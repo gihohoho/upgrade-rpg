@@ -1,8 +1,8 @@
 # Current Status
 
-현재 기준: **v183 admin create lifecycle batch check**
+현재 기준: **v185 admin layout shell split**
 
-이 패키지 기준 ZIP: **rpg_v183_create_lifecycle_batch_check_ready.zip**
+이 패키지 기준 ZIP: **rpg_v185_admin_layout_shell_split_ready.zip**
 
 ## 현재 상태
 
@@ -16,6 +16,25 @@
 - 관리자 guarded edit apply, stale guard, high risk 확인, change log, rollback 유지.
 - 신규 row create/delete/restore 제한 흐름 유지.
 - 관리자 페이지 레이아웃 shell, sidebar, sticky header, 접기/펼치기 유지.
+
+## v185 완료
+
+- `src/api/admin-layout-shell.js` 신규 추가.
+- sidebar / sticky header / section collapse / active nav 기능을 외부 파일로 분리.
+- `admin-page-readonly.js`에는 기존 호출 호환 wrapper만 유지.
+- 관리자 JS 분리 준비 진단에 `layoutShellExternalReady` 추가.
+- DB reset / seed 필요 없음.
+
+## v184 완료
+
+- 관리자 페이지에 `관리자 JS 분리 준비` 섹션 추가.
+- 실제 파일 분리는 하지 않고 script 순서, 필수 global, export 계약을 진단.
+- `getAdminJsSplitReadiness()` / `renderAdminJsSplitReadiness()` 추가.
+- `checkAdminReadOnlyPageReady().adminJsSplitReadinessReady` 추가.
+- 다음 실제 분리 후보를 DB 쓰기와 무관한 `layout shell`로 정리.
+- 새 smoke `tools/smoke_admin_js_split_readiness.js` 추가 및 core smoke 포함.
+- 새 쓰기 도메인 오픈 없음.
+- DB reset / seed 없이 진행 가능.
 
 ## v183 완료
 
@@ -65,6 +84,8 @@
 
 ## 이전 완료
 
+- v185: 관리자 layout shell 실제 분리 1단계.
+- v184: 관리자 JS 분리 전 readiness 진단 UI.
 - v183: 생성→삭제→복원 일괄 점검 UI.
 - v182: 생성 row 삭제/복원 결과 요약 카드와 blocker count 표시 강화.
 - v181: 생성 lifecycle 삭제 차단 기준 표시 + 변경 이력 action 바로가기.

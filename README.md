@@ -1,8 +1,8 @@
 # Upgrade RPG
 
-현재 안정 버전: **v183 admin create lifecycle batch check**
+현재 안정 버전: **v185 admin layout shell split**
 
-새 채팅 인수인계 ZIP: **rpg_v183_create_lifecycle_batch_check_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v185_admin_layout_shell_split_ready.zip**
 
 현재 프로젝트는 아직 Vue가 아니라 `index.html + JS + CSS` 기반 RPG 게임입니다. 기존 게임 동작을 유지하면서 FastAPI + PostgreSQL + 관리자 페이지 구조로 단계적으로 분리 중입니다.
 
@@ -24,6 +24,7 @@
 - 관리자 신규 row 생성·삭제·복원 점검 가이드 추가 완료
 - 삭제 preview 차단 기준 표시와 변경 이력 action 바로가기 추가 완료
 - 생성→삭제→복원 일괄 점검 버튼 추가 완료
+- 관리자 JS 분리 전 readiness 진단 UI 추가 완료
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -48,7 +49,7 @@ bash tools/run_smoke_all.sh
 
 ## 다음 추천 단계
 
-다음은 브라우저에서 `신규 row 생성·삭제·복원 점검` 섹션의 일괄 점검 버튼으로 leaf row부터 생성→삭제→복원 흐름을 확인하는 것이 좋습니다. 이후에는 관리자 페이지 코드 분리를 준비하는 것이 좋습니다.
+다음은 `change logs` 묶음 분리 전 readiness/contract smoke를 추가하는 것이 좋습니다. 생성→삭제→복원 일괄 점검은 계속 leaf row부터 사용할 수 있습니다.
 
 ## DB / env
 
@@ -56,3 +57,12 @@ bash tools/run_smoke_all.sh
 - DB schema 변경 없음.
 - `.env`, `.gitignore` 변경 없음.
 - 이 ZIP에는 `.env`, `.gitignore`를 포함하지 않았습니다.
+
+
+## v185 완료
+
+- `src/api/admin-layout-shell.js` 신규 추가
+- 관리자 layout shell 기능을 `admin-page-readonly.js` 밖으로 1차 분리
+- `admin-page-readonly.js`에는 기존 window export 호환 wrapper 유지
+- `admin.html` script 순서: game api → layout shell → admin page
+- DB reset / seed 필요 없음

@@ -31,6 +31,8 @@
 - `ADMIN_CREATE_LIFECYCLE_GUARD_HELPER.md` — 삭제 preview 차단 기준 표시와 변경 이력 action 바로가기
 - `ADMIN_CREATE_LIFECYCLE_RESULT_SUMMARY.md` — 생성 row 삭제/복원 결과 요약 카드
 - `ADMIN_CREATE_LIFECYCLE_BATCH_CHECK.md` — 생성→삭제→복원 일괄 점검 버튼
+- `ADMIN_LAYOUT_SHELL_SPLIT.md` — v185 관리자 layout shell 실제 분리
+- `ADMIN_JS_SPLIT_READINESS.md` — 관리자 JS 분리 전 readiness 진단
 - `ADMIN_CREATE_DELETE_ROLLBACK.md` — 생성 row 삭제 preview/apply
 - `ADMIN_CREATE_DELETE_RESTORE.md` — 삭제 row 복원 preview/apply
 - `ADMIN_CHANGE_LOG_RELATION_TOOLS.md` — 변경 이력 / rollback preview relation label 강화

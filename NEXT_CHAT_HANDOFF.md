@@ -80,9 +80,9 @@ uvicorn app.main:app --reload
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v183: admin create lifecycle batch check**
-- 새 채팅용 ZIP: **rpg_v183_create_lifecycle_batch_check_ready.zip**
-- 이 ZIP은 신규 row 생성·삭제·복원 점검 UI, createLifecycle 삭제 차단 기준 표시, change log action 바로가기, 삭제/복원 결과 요약 카드를 포함합니다.
+- 최신 안정 버전: **v185: admin layout shell split**
+- 새 채팅용 ZIP: **rpg_v185_admin_layout_shell_split_ready.zip**
+- 이 ZIP은 신규 row 생성·삭제·복원 일괄 점검 UI와 관리자 JS 분리 전 readiness 진단 UI를 포함합니다.
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -144,7 +144,20 @@ uvicorn app.main:app --reload
 48. change log action filter를 실제 action 값 기준으로 정리 완료.
 49. 생성 lifecycle 삭제 preview 차단 기준 표시와 변경 이력 action 바로가기 완료.
 50. 생성 row 삭제/복원 preview 결과 요약 카드와 dependency/conflict count 표시 강화 완료.
+51. 생성→삭제→복원 일괄 점검 버튼 추가 완료.
+52. 관리자 JS 분리 전 readiness 진단 UI 추가 완료.
 
+
+## v185 admin layout shell split
+
+- 관리자 페이지에 `관리자 JS 분리 준비` 섹션을 추가했습니다.
+- 실제 파일 분리는 하지 않고 script 순서, 필수 global, `window.RpgAdminReadOnlyPage` export 계약을 진단합니다.
+- `getAdminJsSplitReadiness()`와 `renderAdminJsSplitReadiness()`를 추가했습니다.
+- `checkAdminReadOnlyPageReady().adminJsSplitReadinessReady`가 true면 정상입니다.
+- 다음 실제 분리 후보는 DB 쓰기와 무관한 `layout shell`입니다.
+- 새 smoke `tools/smoke_admin_js_split_readiness.js`를 추가하고 core smoke에 포함했습니다.
+- 새 쓰기 도메인 오픈 없음, DB schema 변경 없음, DB reset / seed 필요 없음.
+- `.env`, `.gitignore` 변경 없음.
 
 ## v183 admin create lifecycle batch check
 
@@ -291,7 +304,7 @@ true
 
 ## 다음 추천 단계
 
-다음은 **v183 일괄 점검 버튼으로 skillLevels/enhancementLevels/characterSkills 생성→삭제→복원 브라우저 검증**이 좋습니다.
+다음은 **change logs 분리 전 readiness/contract smoke 추가**가 좋습니다. layout shell은 이미 외부 파일로 분리되었습니다.
 
 안전한 순서:
 
@@ -306,3 +319,14 @@ true
 9. `character_code + skill_code` 중복 검증 확인.
 10. 생성된 `characterSkills` 삭제/복원 preview에서 결과 요약 카드가 보이는지 확인.
 11. 이후 관리자 페이지 코드 분리 준비를 추천.
+
+
+## v185 admin layout shell split
+
+- `src/api/admin-layout-shell.js` 신규 추가.
+- sidebar / sticky header / section collapse / active nav를 외부 JS로 분리.
+- `admin-page-readonly.js`에는 기존 window export 호환 wrapper 유지.
+- `admin.html` script 로드 순서에 `src/api/admin-layout-shell.js` 추가.
+- 새 smoke: `tools/smoke_admin_layout_shell_split.js`.
+- 다음 추천: change logs 분리 전 contract smoke 고정.
+- DB reset / seed 필요 없음.

@@ -39,6 +39,18 @@ assertContains("src/api/admin-page-readonly.js", [
   "v173.admin-layout-collapse-polish",
   "v172.admin-layout-navigation-shell",
   "v171.admin-create-delete-restore",
+  "updateAdminStickyLayoutOffsets",
+  "initializeAdminLayoutShell",
+  "getAdminLayoutShellReadiness",
+  "setAdminSectionCollapsed",
+  "setAdminActiveSidebarLink",
+  "getAdminDefaultCollapsedSectionKeys",
+  "layoutShellReady",
+]);
+
+
+assertContains("src/api/admin-layout-shell.js", [
+  "v185.admin-layout-shell-split",
   "ADMIN_LAYOUT_COLLAPSE_STORAGE_KEY",
   "ADMIN_DEFAULT_COLLAPSED_SECTION_KEYS",
   "upgradeRpgAdminCollapsedSectionsV2",
@@ -50,8 +62,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "getAdminLayoutShellReadiness",
   "setAdminSectionCollapsed",
   "setAdminActiveSidebarLink",
-  "getAdminDefaultCollapsedSectionKeys",
-  "layoutShellReady",
+  "window.RpgAdminLayoutShell",
   "collapsedPanelStyleReady",
 ]);
 

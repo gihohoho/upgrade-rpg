@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  const VERSION = "v183.admin-create-lifecycle-batch-check";
-  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary";
+  const VERSION = "v185.admin-layout-shell-split";
+  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary v183.admin-create-lifecycle-batch-check v184.admin-js-split-readiness";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -21,8 +21,24 @@
   const ADMIN_CREATE_LIFECYCLE_BATCH_CONFIRM_TEXT = "RUN CREATE DELETE RESTORE CHECK";
   const ADMIN_EDIT_APPLY_TIMEOUT_MS = 5000;
   const ADMIN_WRITE_DEV_KEY_EXAMPLE = "local-admin-dev-key";
-  const ADMIN_LAYOUT_COLLAPSE_STORAGE_KEY = "upgradeRpgAdminCollapsedSectionsV2";
-  const ADMIN_DEFAULT_COLLAPSED_SECTION_KEYS = ["field-help", "create-blueprint", "change-logs"];
+  const ADMIN_JS_SPLIT_PHASES = [
+    { key: "api-client", label: "API client", currentFile: "src/api/game-api-client.js", nextFile: "src/api/admin/admin-api-client.js", status: "already-external", note: "관리자 API 호출 기반은 이미 admin.html 밖에 있습니다." },
+    { key: "layout-shell", label: "Layout shell", currentFile: "src/api/admin-layout-shell.js", nextFile: "src/api/admin-layout-shell.js", status: "extracted-v185", note: "sidebar, sticky header, section collapse 계열을 외부 파일로 분리했습니다." },
+    { key: "change-logs", label: "Change logs", currentFile: "src/api/admin-page-readonly.js", nextFile: "src/api/admin/admin-change-logs.js", status: "ready-after-layout", note: "이력 목록/상세/rollback/create-delete 흐름은 함수 묶음이 명확합니다." },
+    { key: "create-lifecycle", label: "Create lifecycle", currentFile: "src/api/admin-page-readonly.js", nextFile: "src/api/admin/admin-create-lifecycle.js", status: "ready-after-smoke-freeze", note: "생성→삭제→복원 batch check smoke가 있으므로 분리 후보입니다." },
+    { key: "edit-draft", label: "Edit draft", currentFile: "src/api/admin-page-readonly.js", nextFile: "src/api/admin/admin-edit-draft.js", status: "later", note: "relation select, value hint, impact guide 의존이 많아서 create lifecycle 다음이 안전합니다." },
+    { key: "bootstrap", label: "Page bootstrap", currentFile: "src/api/admin-page-readonly.js", nextFile: "src/api/admin-page-readonly.js", status: "keep-last", note: "초기 boot/bindEvents/window export는 마지막까지 thin entry 파일로 남기는 방향이 안전합니다." },
+  ];
+  const ADMIN_JS_SPLIT_REQUIRED_GLOBALS = [
+    "RpgGameApi",
+    "RpgAdminReadOnlyPage",
+    "RpgAdminLayoutShell",
+    "checkAdminReadOnlyPageReady",
+    "refreshAdminReadOnlyPage",
+    "refreshAdminCreateBlueprint",
+    "runAdminCreateLifecycleBatchCheck",
+    "initializeAdminLayoutShell",
+  ];
 
   const ADMIN_EDIT_ALLOWED_FIELDS = {
     itemTemplates: ["name", "item_type", "grade", "description", "stackable", "equip_slot", "enhance_group_code", "admin_note"],
@@ -1446,6 +1462,66 @@
       dependencyGuardCount: dependencyGuards.length,
       deleteGuardMode: guide.deleteGuardMode || null,
     };
+  }
+
+  function getAdminJsSplitReadiness() {
+    const scriptSources = Array.from(document.querySelectorAll("script[src]")).map((script) => script.getAttribute("src") || "");
+    const gameApiIndex = scriptSources.findIndex((src) => src.includes("game-api-client.js"));
+    const layoutShellIndex = scriptSources.findIndex((src) => src.includes("admin-layout-shell.js"));
+    const adminPageIndex = scriptSources.findIndex((src) => src.includes("admin-page-readonly.js"));
+    const requiredGlobals = ADMIN_JS_SPLIT_REQUIRED_GLOBALS.map((key) => ({
+      key,
+      ok: key === "RpgGameApi" ? !!window.RpgGameApi : typeof window[key] !== "undefined",
+    }));
+    const missingGlobals = requiredGlobals.filter((item) => !item.ok).map((item) => item.key);
+    const exportCount = window.RpgAdminReadOnlyPage && typeof window.RpgAdminReadOnlyPage === "object" ? Object.keys(window.RpgAdminReadOnlyPage).length : 0;
+    const entryFileStillSingle = scriptSources.some((src) => src.includes("admin-page-readonly.js"));
+    const scriptOrderReady = gameApiIndex >= 0 && layoutShellIndex >= 0 && adminPageIndex >= 0 && gameApiIndex < layoutShellIndex && layoutShellIndex < adminPageIndex;
+    const candidateCount = ADMIN_JS_SPLIT_PHASES.filter((phase) => phase.status !== "keep-last").length;
+    return {
+      ok: !!document.querySelector("[data-admin-js-split-readiness]") && scriptOrderReady && missingGlobals.length === 0 && exportCount > 0,
+      hasPanel: !!document.querySelector("[data-admin-js-split-readiness]"),
+      scriptSources,
+      scriptOrderReady,
+      requiredGlobals,
+      missingGlobals,
+      exportCount,
+      layoutShellIndex,
+      entryFileStillSingle,
+      layoutShellExternalReady: layoutShellIndex >= 0 && !!window.RpgAdminLayoutShell,
+      candidateCount,
+      phases: ADMIN_JS_SPLIT_PHASES.slice(),
+      nextSafeStep: "layout shell 분리 안정 확인 후 change logs 분리 준비",
+    };
+  }
+
+  function renderAdminJsSplitReadiness() {
+    const target = $("[data-admin-js-split-readiness]");
+    if (!target) return null;
+    const readiness = getAdminJsSplitReadiness();
+    const globalsHtml = readiness.requiredGlobals.map((item) => `<span class="pill ${item.ok ? "good" : "blocked"}">${escapeHtml(item.key)}: ${item.ok ? "ok" : "missing"}</span>`).join(" ");
+    const rows = readiness.phases.map((phase, index) => {
+      const tone = phase.status === "already-external" ? "good" : (phase.status === "later" || phase.status === "keep-last" ? "warn" : "good");
+      return `<tr><td>${escapeHtml(String(index + 1))}</td><td><strong>${escapeHtml(phase.label)}</strong><br><span class="muted">${escapeHtml(phase.key)}</span></td><td>${escapeHtml(phase.currentFile)}</td><td>${escapeHtml(phase.nextFile)}</td><td><span class="pill ${tone}">${escapeHtml(phase.status)}</span></td><td>${escapeHtml(phase.note)}</td></tr>`;
+    }).join("");
+    target.innerHTML = `
+      ${renderAdminOperationResultBanner({
+        tone: readiness.ok ? "good" : "warn",
+        title: readiness.ok ? "관리자 layout shell 분리 상태 양호" : "관리자 JS 분리 확인 필요",
+        subtitle: "layout shell은 외부 JS 파일로 분리했고, 다음 단계에서는 change logs 분리 전 계약을 확인합니다.",
+        metrics: [
+          { label: "script 순서", value: readiness.scriptOrderReady, tone: readiness.scriptOrderReady ? "good" : "blocked" },
+          { label: "layout shell 파일", value: readiness.layoutShellExternalReady, tone: readiness.layoutShellExternalReady ? "good" : "blocked" },
+          { label: "필수 global 누락", value: readiness.missingGlobals.length, tone: readiness.missingGlobals.length ? "blocked" : "good" },
+          { label: "admin export", value: readiness.exportCount, tone: readiness.exportCount ? "good" : "blocked" },
+          { label: "분리 후보", value: readiness.candidateCount, tone: "warn" },
+        ],
+      })}
+      <div class="draft-preview-summary">${globalsHtml}</div>
+      <div class="filter-help">다음 안전 단계: ${escapeHtml(readiness.nextSafeStep)}. layout shell은 분리 완료 상태이며, 다음 분리도 DB 쓰기와 직접 무관한 묶음부터 진행하는 것이 좋습니다.</div>
+      <div class="table-wrap relation-table-wrap"><table><thead><tr><th>#</th><th>묶음</th><th>현재 파일</th><th>분리 후보 파일</th><th>상태</th><th>메모</th></tr></thead><tbody>${rows}</tbody></table></div>
+    `;
+    return readiness;
   }
 
   function renderAdminCreateBlueprint(blueprintPayload) {
@@ -3773,6 +3849,7 @@
       renderSnapshotTable(snapshotPayload);
       renderAdminChangeLogs(changeLogPayload);
       renderReadiness(overviewPayload.readiness || {});
+      renderAdminJsSplitReadiness();
       const filterText = describeSnapshotFilters(result.snapshotFilters || (snapshotPayload && snapshotPayload.filters));
       const masterFilterText = describeMasterCatalogFilters(result.masterCatalogFilters || (masterCatalogPayload && masterCatalogPayload.filters));
       const changeFilterText = describeChangeLogFilters(result.changeLogFilters || (changeLogPayload && changeLogPayload.filters));
@@ -3804,148 +3881,33 @@
   }
 
 
-  function getAdminDefaultCollapsedSectionSet() {
-    return new Set(ADMIN_DEFAULT_COLLAPSED_SECTION_KEYS.map(String));
-  }
-
-  function readAdminCollapsedSectionSet() {
-    try {
-      const raw = window.localStorage ? window.localStorage.getItem(ADMIN_LAYOUT_COLLAPSE_STORAGE_KEY) : null;
-      if (!raw) return getAdminDefaultCollapsedSectionSet();
-      const values = JSON.parse(raw);
-      return new Set(Array.isArray(values) ? values.map(String) : []);
-    } catch (_) {
-      return getAdminDefaultCollapsedSectionSet();
-    }
-  }
-
-  function writeAdminCollapsedSectionSet(keys) {
-    try {
-      if (!window.localStorage) return false;
-      window.localStorage.setItem(ADMIN_LAYOUT_COLLAPSE_STORAGE_KEY, JSON.stringify(Array.from(keys || [])));
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  function getAdminCollapsibleSectionKey(section) {
-    if (!section) return "";
-    return section.getAttribute("data-admin-section-key") || section.id || "";
-  }
-
-  function setAdminSectionCollapsed(section, collapsed, options) {
-    if (!section) return false;
-    const key = getAdminCollapsibleSectionKey(section);
-    const button = section.querySelector("[data-admin-layout-collapse-toggle]");
-    section.classList.toggle("admin-section-collapsed", !!collapsed);
-    section.setAttribute("data-admin-section-collapsed", collapsed ? "true" : "false");
-    if (button) {
-      button.textContent = collapsed ? "펼치기" : "접기";
-      button.setAttribute("aria-expanded", collapsed ? "false" : "true");
-      button.setAttribute("aria-label", `${key || "section"} ${collapsed ? "펼치기" : "접기"}`);
-    }
-    if (!options || !options.silent) {
-      const collapsedSet = readAdminCollapsedSectionSet();
-      if (collapsed) collapsedSet.add(key);
-      else collapsedSet.delete(key);
-      writeAdminCollapsedSectionSet(collapsedSet);
-    }
-    return true;
-  }
-
-  function ensureAdminSectionCollapseControl(section, collapsedSet) {
-    if (!section || section.querySelector("[data-admin-layout-collapse-toggle]")) return false;
-    const key = getAdminCollapsibleSectionKey(section);
-    const header = section.querySelector(":scope > .section-header") || section.querySelector(":scope > .filter-title");
-    if (!header) return false;
-    header.classList.add("admin-collapse-header");
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "btn mini admin-collapse-toggle";
-    button.setAttribute("data-admin-layout-collapse-toggle", key);
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      setAdminSectionCollapsed(section, !section.classList.contains("admin-section-collapsed"));
-    });
-    header.appendChild(button);
-    setAdminSectionCollapsed(section, collapsedSet && collapsedSet.has(key), { silent: true });
-    return true;
-  }
-
-  function setAdminActiveSidebarLink(hash) {
-    const links = Array.from(document.querySelectorAll(".admin-jump-nav a[href^='#']"));
-    const nextHash = hash || window.location.hash || "#section-overview";
-    links.forEach((link) => {
-      const active = link.getAttribute("href") === nextHash;
-      link.classList.toggle("active", active);
-      if (active) link.setAttribute("aria-current", "location");
-      else link.removeAttribute("aria-current");
-    });
-    return nextHash;
-  }
-
-  function updateAdminStickyLayoutOffsets() {
-    const header = document.querySelector("[data-admin-sticky-header]") || document.querySelector(".topbar");
-    const height = header && header.getBoundingClientRect ? Math.ceil(header.getBoundingClientRect().height) : 112;
-    const stickyTop = Math.max(96, height + 18);
-    const scrollMargin = stickyTop + 18;
-    document.documentElement.style.setProperty("--admin-sticky-top", `${stickyTop}px`);
-    document.documentElement.style.setProperty("--admin-scroll-margin-top", `${scrollMargin}px`);
-    return { height, stickyTop, scrollMargin };
+  function getAdminLayoutShellApi() {
+    if (!window.RpgAdminLayoutShell) throw new Error("RpgAdminLayoutShell is not loaded");
+    return window.RpgAdminLayoutShell;
   }
 
   function initializeAdminLayoutShell() {
-    const stickyOffsets = updateAdminStickyLayoutOffsets();
-    const collapsedSet = readAdminCollapsedSectionSet();
-    const sections = Array.from(document.querySelectorAll("[data-admin-collapsible]"));
-    sections.forEach((section) => ensureAdminSectionCollapseControl(section, collapsedSet));
-    setAdminActiveSidebarLink(window.location.hash || "#section-overview");
-    if (!window.__upgradeRpgAdminLayoutHashBound) {
-      window.__upgradeRpgAdminLayoutHashBound = true;
-      window.addEventListener("hashchange", () => setAdminActiveSidebarLink(window.location.hash || "#section-overview"));
-      window.addEventListener("resize", () => updateAdminStickyLayoutOffsets());
-      document.addEventListener("click", (event) => {
-        const link = event.target && event.target.closest ? event.target.closest(".admin-jump-nav a[href^='#']") : null;
-        if (!link) return;
-        setTimeout(() => setAdminActiveSidebarLink(link.getAttribute("href")), 0);
-      });
-    }
-    const readiness = getAdminLayoutShellReadiness();
-    readiness.stickyOffsets = stickyOffsets;
-    return readiness;
+    return getAdminLayoutShellApi().initializeAdminLayoutShell();
   }
 
   function getAdminLayoutShellReadiness() {
-    const collapsibleCount = document.querySelectorAll("[data-admin-collapsible]").length;
-    const collapseToggleCount = document.querySelectorAll("[data-admin-layout-collapse-toggle]").length;
-    const defaultCollapsedKeys = Array.from(getAdminDefaultCollapsedSectionSet());
-    const defaultCollapsedReady = defaultCollapsedKeys.every((key) => {
-      const section = document.querySelector(`[data-admin-section-key="${key}"]`);
-      return !!section && section.classList.contains("admin-section-collapsed");
-    });
-    const stickyTop = getComputedStyle(document.documentElement).getPropertyValue("--admin-sticky-top").trim();
-    const collapsedPanelHeaderCount = document.querySelectorAll(".filter-panel[data-admin-collapsible] > .filter-title.admin-collapse-header, .field-help-panel[data-admin-collapsible] > .filter-title.admin-collapse-header").length;
-    const collapsedPanelStyleReady = collapsedPanelHeaderCount >= document.querySelectorAll(".filter-panel[data-admin-collapsible], .field-help-panel[data-admin-collapsible]").length;
-    const result = {
-      layoutReady: !!document.querySelector("[data-admin-layout-shell]"),
-      sidebarReady: !!document.querySelector("[data-admin-sidebar]"),
-      mainContentReady: !!document.querySelector("[data-admin-main-content]"),
-      footerReady: !!document.querySelector("[data-admin-footer]"),
-      collapsibleCount,
-      collapseToggleCount,
-      collapseReady: collapsibleCount > 0 && collapseToggleCount >= collapsibleCount,
-      collapsedPanelHeaderCount,
-      collapsedPanelStyleReady,
-      activeNavReady: !!document.querySelector(".admin-jump-nav a.active, .admin-jump-nav a[aria-current='location']"),
-      defaultCollapsedKeys,
-      defaultCollapsedReady,
-      stickyTop,
-      stickyOffsetReady: !!stickyTop && stickyTop !== "92px",
-    };
-    result.ok = result.layoutReady && result.sidebarReady && result.mainContentReady && result.footerReady && result.collapseReady && result.collapsedPanelStyleReady && result.stickyOffsetReady;
-    return result;
+    return getAdminLayoutShellApi().getAdminLayoutShellReadiness();
+  }
+
+  function setAdminSectionCollapsed(section, collapsed, options) {
+    return getAdminLayoutShellApi().setAdminSectionCollapsed(section, collapsed, options);
+  }
+
+  function setAdminActiveSidebarLink(hash) {
+    return getAdminLayoutShellApi().setAdminActiveSidebarLink(hash);
+  }
+
+  function updateAdminStickyLayoutOffsets() {
+    return getAdminLayoutShellApi().updateAdminStickyLayoutOffsets();
+  }
+
+  function getAdminDefaultCollapsedSectionKeys() {
+    return getAdminLayoutShellApi().getAdminDefaultCollapsedSectionKeys();
   }
 
   function bindEvents() {
@@ -4220,6 +4182,7 @@
     resetChangeLogFilters({ silent: true });
     renderMasterDetail({});
     renderAdminCreateBlueprint({});
+    renderAdminJsSplitReadiness();
     refreshAdminReadOnlyPage();
   }
 
@@ -4234,6 +4197,8 @@
     const createLifecycleDependencyGuideReady = typeof renderAdminCreateLifecycleDependencyGuards === "function" && typeof applyAdminChangeLogActionShortcut === "function";
     const createLifecycleResultSummaryReady = typeof renderAdminOperationResultBanner === "function" && typeof renderAdminCreateDeleteBlockerSummary === "function";
     const createLifecycleBatchCheckReady = typeof runAdminCreateLifecycleBatchCheck === "function" && typeof renderAdminCreateLifecycleBatchResult === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.applyAdminMasterDataCreate === "function" && typeof window.RpgGameApi.applyAdminCreateDeleteRollback === "function" && typeof window.RpgGameApi.applyAdminCreateDeleteRestore === "function");
+    const adminJsSplitReadiness = typeof getAdminJsSplitReadiness === "function" ? getAdminJsSplitReadiness() : { ok: false };
+    const adminJsSplitReadinessReady = !!(adminJsSplitReadiness && adminJsSplitReadiness.ok && typeof renderAdminJsSplitReadiness === "function");
     const createDraftPreviewReady = typeof previewAdminCreateDraft === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminMasterDataCreate === "function");
     const createApplyReady = typeof applyAdminCreateDraft === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.applyAdminMasterDataCreate === "function");
     const masterDetailReady = !!document.querySelector("[data-admin-master-detail]");
@@ -4252,7 +4217,7 @@
     const createDeleteRollbackReady = typeof previewAdminCreateDeleteRollback === "function" && typeof applyAdminCreateDeleteRollback === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRollback === "function");
     const createDeleteRestoreReady = typeof previewAdminCreateDeleteRestore === "function" && typeof applyAdminCreateDeleteRestore === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRestore === "function");
     const layoutShell = getAdminLayoutShellReadiness();
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createLifecycleBatchCheckReady, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && adminJsSplitReadinessReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createLifecycleBatchCheckReady, adminJsSplitReadinessReady, adminJsSplitReadiness, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -4286,8 +4251,12 @@
     getAdminCreateBlueprintReadiness,
     renderAdminCreateLifecycleGuide,
     renderAdminCreateLifecycleDependencyGuards,
+    renderAdminCreateLifecycleBatchResult,
+    runAdminCreateLifecycleBatchCheck,
     applyAdminChangeLogActionShortcut,
     getAdminCreateLifecycleGuideReadiness,
+    getAdminJsSplitReadiness,
+    renderAdminJsSplitReadiness,
     readAdminCreateDraftValues,
     resetAdminCreateDraft,
     previewAdminCreateDraft,
@@ -4389,7 +4358,11 @@
   window.getAdminCreateBlueprintDefaultDraft = getAdminCreateBlueprintDefaultDraft;
   window.getAdminCreateBlueprintReadiness = getAdminCreateBlueprintReadiness;
   window.renderAdminCreateLifecycleGuide = renderAdminCreateLifecycleGuide;
+  window.renderAdminCreateLifecycleBatchResult = renderAdminCreateLifecycleBatchResult;
+  window.runAdminCreateLifecycleBatchCheck = runAdminCreateLifecycleBatchCheck;
   window.getAdminCreateLifecycleGuideReadiness = getAdminCreateLifecycleGuideReadiness;
+  window.getAdminJsSplitReadiness = getAdminJsSplitReadiness;
+  window.renderAdminJsSplitReadiness = renderAdminJsSplitReadiness;
   window.readAdminCreateDraftValues = readAdminCreateDraftValues;
   window.resetAdminCreateDraft = resetAdminCreateDraft;
   window.previewAdminCreateDraft = previewAdminCreateDraft;
@@ -4405,7 +4378,7 @@
   window.checkAdminReadOnlyPageReady = checkAdminReadOnlyPageReady;
   window.initializeAdminLayoutShell = initializeAdminLayoutShell;
   window.getAdminLayoutShellReadiness = getAdminLayoutShellReadiness;
-  window.getAdminDefaultCollapsedSectionKeys = () => Array.from(getAdminDefaultCollapsedSectionSet());
+  window.getAdminDefaultCollapsedSectionKeys = getAdminDefaultCollapsedSectionKeys;
   window.updateAdminStickyLayoutOffsets = updateAdminStickyLayoutOffsets;
   window.setAdminSectionCollapsed = setAdminSectionCollapsed;
   window.setAdminActiveSidebarLink = setAdminActiveSidebarLink;

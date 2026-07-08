@@ -419,6 +419,11 @@
       flex: 1 1 220px;
     }
 
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
 
     .create-result-banner {
       margin: 12px 0;
@@ -1360,6 +1365,7 @@
             <a href="#section-master-catalog">마스터 목록</a>
             <a href="#section-create-blueprint">신규 row 준비</a>
             <a href="#section-create-lifecycle-guide">생성 흐름 점검</a>
+            <a href="#section-admin-js-split-readiness">JS 분리 준비</a>
             <a href="#section-master-detail">상세/편집/API확인</a>
             <a href="#section-change-logs">변경 이력</a>
             <a href="#section-save-snapshots">세이브 스냅샷</a>
@@ -1559,6 +1565,14 @@
       <div data-admin-create-lifecycle-guide><div class="empty">생성 설계를 불러오면 현재 도메인의 생성→삭제→복원 점검 순서가 여기에 표시됩니다.</div></div>
     </section>
 
+    <section class="section" id="section-admin-js-split-readiness" data-admin-collapsible data-admin-section-key="admin-js-split-readiness" aria-label="관리자 JS 분리 준비">
+      <div class="section-header">
+        <h2 class="section-title">관리자 JS 분리 준비</h2>
+        <div class="section-meta">v185 layout shell split · v184 split readiness · no runtime behavior change</div>
+      </div>
+      <div data-admin-js-split-readiness><div class="empty">관리자 JS 분리 전에 script 순서, 필수 global, export 계약을 확인하는 중...</div></div>
+    </section>
+
 
     <section class="section" id="section-master-detail" data-admin-collapsible data-admin-section-key="master-detail">
       <div class="section-header">
@@ -1702,12 +1716,13 @@
     </div>
 
     <footer class="admin-footer" data-admin-footer>
-      <p class="footer-note"><strong>v183 admin create lifecycle batch check · v182 admin create lifecycle result summary</strong> · v181 admin create lifecycle guard helper · v180 admin create lifecycle guide · static HTML + JS · FastAPI guarded write/rollback APIs</p>
+      <p class="footer-note"><strong>v185 admin layout shell split · v183 admin create lifecycle batch check</strong> · v182 admin create lifecycle result summary · v181 admin create lifecycle guard helper · v180 admin create lifecycle guide · static HTML + JS · FastAPI guarded write/rollback APIs</p>
       <p class="footer-note">legacy smoke marker: v165 admin create apply limited · v171 admin create delete restore · v174 admin collapsed panel style fix · v175 admin create apply fieldZones · v176 admin create apply bosses · v177 admin create apply skills/dropTables · v178 admin create apply itemTemplates/dropTableItems · v179 admin create apply level/link tables</p>
     </footer>
   </main>
 
   <script src="src/api/game-api-client.js"></script>
+  <script src="src/api/admin-layout-shell.js"></script>
   <script src="src/api/admin-page-readonly.js"></script>
 </body>
 </html>
