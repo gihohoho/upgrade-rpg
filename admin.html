@@ -402,6 +402,102 @@
     }
 
 
+    .create-result-banner {
+      margin: 12px 0;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 14px;
+      padding: 13px;
+      background: rgba(15, 23, 42, 0.46);
+    }
+
+    .create-result-banner.good {
+      border-color: rgba(34, 197, 94, 0.38);
+      background: rgba(22, 101, 52, 0.16);
+    }
+
+    .create-result-banner.blocked {
+      border-color: rgba(248, 113, 113, 0.44);
+      background: rgba(127, 29, 29, 0.16);
+    }
+
+    .create-result-banner.warn {
+      border-color: rgba(251, 191, 36, 0.38);
+      background: rgba(113, 63, 18, 0.15);
+    }
+
+    .create-result-banner-title {
+      color: #f8fafc;
+      font-weight: 900;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .create-result-banner-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .create-result-metric-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .create-result-metric {
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 10px;
+      padding: 9px;
+      background: rgba(2, 6, 23, 0.32);
+      min-height: 54px;
+    }
+
+    .create-result-metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .create-result-metric strong {
+      display: block;
+      color: #e2e8f0;
+      font-size: 16px;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .create-result-metric.good strong { color: #86efac; }
+    .create-result-metric.warn strong { color: #fde68a; }
+    .create-result-metric.blocked strong { color: #fca5a5; }
+
+    .create-result-blocker-list {
+      margin: 10px 0;
+      border: 1px solid rgba(248, 113, 113, 0.32);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(127, 29, 29, 0.12);
+      color: #fecaca;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .create-result-blocker-list strong {
+      display: block;
+      margin-bottom: 6px;
+      color: #fee2e2;
+    }
+
+    .create-result-blocker-list ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .create-result-safe-note {
+      margin: 10px 0;
+    }
+
     .catalog-pagination {
       display: flex;
       justify-content: space-between;
@@ -1194,6 +1290,7 @@
       .create-lifecycle-grid,
       .create-lifecycle-grid-wide { grid-template-columns: 1fr; }
       .create-lifecycle-guard-list { grid-template-columns: 1fr; }
+      .create-result-metric-grid { grid-template-columns: 1fr; }
       .locked-field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .field-help-grid { grid-template-columns: 1fr; }
     }
@@ -1439,7 +1536,7 @@
     <section class="section" id="section-create-lifecycle-guide" data-admin-collapsible data-admin-section-key="create-lifecycle-guide" aria-label="신규 row 생성 흐름 점검">
       <div class="section-header">
         <h2 class="section-title">신규 row 생성·삭제·복원 점검</h2>
-        <div class="section-meta">v181 dependency/action helper</div>
+        <div class="section-meta">v182 result summary helper · v181 dependency/action helper</div>
       </div>
       <div data-admin-create-lifecycle-guide><div class="empty">생성 설계를 불러오면 현재 도메인의 생성→삭제→복원 점검 순서가 여기에 표시됩니다.</div></div>
     </section>
@@ -1587,7 +1684,7 @@
     </div>
 
     <footer class="admin-footer" data-admin-footer>
-      <p class="footer-note"><strong>v181 admin create lifecycle guard helper · v180 admin create lifecycle guide</strong> · v177 admin create apply skills/dropTables · v176 admin create apply bosses · static HTML + JS · FastAPI guarded write/rollback APIs</p>
+      <p class="footer-note"><strong>v182 admin create lifecycle result summary · v181 admin create lifecycle guard helper</strong> · v180 admin create lifecycle guide · v177 admin create apply skills/dropTables · v176 admin create apply bosses · static HTML + JS · FastAPI guarded write/rollback APIs</p>
       <p class="footer-note">legacy smoke marker: v165 admin create apply limited · v171 admin create delete restore · v174 admin collapsed panel style fix · v178 admin create apply itemTemplates/dropTableItems · v179 admin create apply level/link tables</p>
     </footer>
   </main>

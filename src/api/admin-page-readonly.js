@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  const VERSION = "v181.admin-create-lifecycle-guard-helper";
-  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide";
+  const VERSION = "v182.admin-create-lifecycle-result-summary";
+  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -1196,6 +1196,49 @@
         <button class="btn mini" type="button" data-admin-action="set-change-log-action-filter" data-admin-change-log-action-shortcut="create">create 이력 보기</button>
         <button class="btn mini" type="button" data-admin-action="set-change-log-action-filter" data-admin-change-log-action-shortcut="create_delete">create_delete 이력 보기</button>
         <button class="btn mini" type="button" data-admin-action="set-change-log-action-filter" data-admin-change-log-action-shortcut="create_delete_restore">restore 이력 보기</button>
+      </div>
+    `;
+  }
+
+  function renderAdminCreateLifecycleMetric(label, value, tone) {
+    return `
+      <div class="create-result-metric ${escapeHtml(tone || "")}">
+        <span>${escapeHtml(label)}</span>
+        <strong>${escapeHtml(formatValue(value))}</strong>
+      </div>
+    `;
+  }
+
+  function renderAdminOperationResultBanner(options) {
+    const opts = options || {};
+    const metrics = Array.isArray(opts.metrics) ? opts.metrics : [];
+    const tone = opts.tone || "warn";
+    const metricHtml = metrics.length ? `
+      <div class="create-result-metric-grid">
+        ${metrics.map((metric) => renderAdminCreateLifecycleMetric(metric.label, metric.value, metric.tone)).join("")}
+      </div>
+    ` : "";
+    return `
+      <div class="create-result-banner ${escapeHtml(tone)}">
+        <div class="create-result-banner-title">${escapeHtml(opts.title || "검사 결과")}</div>
+        ${opts.subtitle ? `<div class="create-result-banner-subtitle">${escapeHtml(opts.subtitle)}</div>` : ""}
+        ${metricHtml}
+      </div>
+    `;
+  }
+
+  function renderAdminCreateDeleteBlockerSummary(dependencyChecks) {
+    const checks = Array.isArray(dependencyChecks) ? dependencyChecks : [];
+    const blockers = checks.filter((item) => item && item.blocksDelete);
+    if (!blockers.length) {
+      return `<div class="filter-help create-result-safe-note">연결 데이터 차단 없음: 현재값 안전 검사만 통과하면 삭제할 수 있습니다.</div>`;
+    }
+    return `
+      <div class="create-result-blocker-list">
+        <strong>삭제 차단 연결 ${escapeHtml(formatValue(blockers.length))}개</strong>
+        <ul>
+          ${blockers.map((item) => `<li>${escapeHtml(item.label || item.target || "dependency")} · ${escapeHtml(formatValue(item.count || 0))}건 · <code>${escapeHtml(item.target || "-")}</code></li>`).join("")}
+        </ul>
       </div>
     `;
   }
@@ -3309,16 +3352,33 @@
     const dependencyRows = dependencyChecks.length ? dependencyChecks.map((item) => `
       <tr><td>${escapeHtml(formatValue(item.label))}</td><td>${escapeHtml(formatValue(item.target))}</td><td>${escapeHtml(formatValue(item.count))}</td><td><span class="pill ${item.blocksDelete ? "blocked" : "good"}">${item.blocksDelete ? "차단" : "통과"}</span><div class="filter-help">${escapeHtml(formatValue(item.note))}</div></td></tr>
     `).join("") : `<tr><td colspan="4">연결 검사 없음</td></tr>`;
+    const dependencyCheckCount = Number(result.dependencyCheckCount !== undefined ? result.dependencyCheckCount : dependencyChecks.length);
+    const dependencyBlockerGuardCount = Number(result.dependencyBlockerGuardCount !== undefined ? result.dependencyBlockerGuardCount : dependencyChecks.filter((item) => item && item.blocksDelete).length);
+    const dependencyBlockerRowCount = Number(result.dependencyBlockerCount || 0);
+    const currentMismatchCount = Number(result.currentMismatchCount || mismatches.length || 0);
     target.innerHTML = `
+      ${renderAdminOperationResultBanner({
+        tone: result.createDeleteReady ? "good" : "blocked",
+        title: result.createDeleteReady ? "생성 row 삭제 가능" : "생성 row 삭제 차단",
+        subtitle: result.createDeleteReady ? "현재값과 연결 데이터 검사를 통과했습니다." : "아래 차단 개수/현재값 불일치를 먼저 확인해야 합니다.",
+        metrics: [
+          { label: "현재값 불일치", value: currentMismatchCount, tone: currentMismatchCount ? "blocked" : "good" },
+          { label: "연결 검사", value: dependencyCheckCount, tone: dependencyCheckCount ? "warn" : "good" },
+          { label: "차단 guard", value: dependencyBlockerGuardCount, tone: dependencyBlockerGuardCount ? "blocked" : "good" },
+          { label: "차단 row", value: dependencyBlockerRowCount, tone: dependencyBlockerRowCount ? "blocked" : "good" },
+          { label: "dryRun", value: result.dryRun, tone: result.dryRun ? "warn" : "good" },
+        ],
+      })}
       <div class="draft-preview-summary">
         <span class="pill ${result.createDeleteReady ? "good" : "blocked"}">createDeleteReady: ${escapeHtml(formatValue(result.createDeleteReady))}</span>
         <span class="pill ${result.currentMatchesCreateValues ? "good" : "blocked"}">currentMatchesCreateValues: ${escapeHtml(formatValue(result.currentMatchesCreateValues))}</span>
-        <span class="pill ${Number(result.dependencyBlockerCount || 0) ? "blocked" : "good"}">dependency blockers: ${escapeHtml(formatValue(result.dependencyBlockerCount || 0))}</span>
+        <span class="pill ${dependencyBlockerRowCount ? "blocked" : "good"}">dependency blockers: ${escapeHtml(formatValue(dependencyBlockerRowCount))}</span>
         <span class="pill ${result.dryRun ? "warn" : "good"}">dryRun: ${escapeHtml(formatValue(result.dryRun))}</span>
         <span class="pill ${result.writeBlocked ? "blocked" : "good"}">writeBlocked: ${escapeHtml(formatValue(result.writeBlocked))}</span>
         <span class="pill ${result.deleted ? "good" : "warn"}">deleted: ${escapeHtml(formatValue(result.deleted === true))}</span>
         ${result.deleteChangeLogId ? `<span class="pill good">delete log #${escapeHtml(formatValue(result.deleteChangeLogId))}</span>` : ""}
       </div>
+      ${renderAdminCreateDeleteBlockerSummary(dependencyChecks)}
       ${warnings.length ? `<div class="filter-help">warnings: ${escapeHtml(warnings.join(", "))}</div>` : ""}
       ${result.note ? `<div class="filter-help">${escapeHtml(result.note)}</div>` : ""}
       <details class="json-detail" open><summary>삭제될 생성 값</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>생성 값</th><th>삭제 후</th></tr></thead><tbody>${rows}</tbody></table></div></details>
@@ -3400,13 +3460,28 @@
     const errorRows = validationErrors.length ? validationErrors.map((item) => `
       <tr><td>${escapeHtml(item.label || item.key)}</td><td>${escapeHtml(formatValue(item.after))}</td><td>${escapeHtml(formatValue(item.reason || "blocked"))}</td></tr>
     `).join("") : `<tr><td colspan="3">복원 검증 오류 없음</td></tr>`;
+    const validationErrorCount = Number(result.validationErrorCount || validationErrors.length || 0);
+    const restoreConflictCount = Number(result.restoreConflictCount !== undefined ? result.restoreConflictCount : ((result.idConflict ? 1 : 0) + (result.codeConflict ? 1 : 0) + validationErrorCount));
+    const relationChangeCount = Number(result.relationChangeCount || 0);
     target.innerHTML = `
+      ${renderAdminOperationResultBanner({
+        tone: result.createDeleteRestoreReady ? "good" : "blocked",
+        title: result.createDeleteRestoreReady ? "삭제 row 복원 가능" : "삭제 row 복원 차단",
+        subtitle: result.createDeleteRestoreReady ? "id/code 충돌과 생성 검증을 통과했습니다." : "id/code 충돌 또는 복원 검증 오류를 먼저 확인해야 합니다.",
+        metrics: [
+          { label: "충돌/오류", value: restoreConflictCount, tone: restoreConflictCount ? "blocked" : "good" },
+          { label: "검증 오류", value: validationErrorCount, tone: validationErrorCount ? "blocked" : "good" },
+          { label: "relation 값", value: relationChangeCount, tone: relationChangeCount ? "warn" : "good" },
+          { label: "id 충돌", value: result.idConflict === true, tone: result.idConflict ? "blocked" : "good" },
+          { label: "code 충돌", value: result.codeConflict === true, tone: result.codeConflict ? "blocked" : "good" },
+        ],
+      })}
       <div class="draft-preview-summary">
         <span class="pill ${result.createDeleteRestoreReady ? "good" : "blocked"}">createDeleteRestoreReady: ${escapeHtml(formatValue(result.createDeleteRestoreReady))}</span>
         <span class="pill ${result.targetRowMissing ? "good" : "blocked"}">targetRowMissing: ${escapeHtml(formatValue(result.targetRowMissing))}</span>
         <span class="pill ${result.idConflict ? "blocked" : "good"}">idConflict: ${escapeHtml(formatValue(result.idConflict === true))}</span>
         <span class="pill ${result.codeConflict ? "blocked" : "good"}">codeConflict: ${escapeHtml(formatValue(result.codeConflict === true))}</span>
-        <span class="pill ${Number(result.validationErrorCount || 0) ? "blocked" : "good"}">validation errors: ${escapeHtml(formatValue(result.validationErrorCount || 0))}</span>
+        <span class="pill ${validationErrorCount ? "blocked" : "good"}">validation errors: ${escapeHtml(formatValue(validationErrorCount))}</span>
         <span class="pill ${result.dryRun ? "warn" : "good"}">dryRun: ${escapeHtml(formatValue(result.dryRun))}</span>
         <span class="pill ${result.writeBlocked ? "blocked" : "good"}">writeBlocked: ${escapeHtml(formatValue(result.writeBlocked))}</span>
         <span class="pill ${result.restored ? "good" : "warn"}">restored: ${escapeHtml(formatValue(result.restored === true))}</span>
@@ -4008,6 +4083,7 @@
     const createBlueprintReady = !!document.querySelector("[data-admin-create-blueprint]") && typeof renderAdminCreateBlueprint === "function" && typeof getAdminCreateBlueprintReadiness === "function";
     const createLifecycleGuideReady = !!document.querySelector("[data-admin-create-lifecycle-guide]") && typeof renderAdminCreateLifecycleGuide === "function" && typeof getAdminCreateLifecycleGuideReadiness === "function";
     const createLifecycleDependencyGuideReady = typeof renderAdminCreateLifecycleDependencyGuards === "function" && typeof applyAdminChangeLogActionShortcut === "function";
+    const createLifecycleResultSummaryReady = typeof renderAdminOperationResultBanner === "function" && typeof renderAdminCreateDeleteBlockerSummary === "function";
     const createDraftPreviewReady = typeof previewAdminCreateDraft === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminMasterDataCreate === "function");
     const createApplyReady = typeof applyAdminCreateDraft === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.applyAdminMasterDataCreate === "function");
     const masterDetailReady = !!document.querySelector("[data-admin-master-detail]");
@@ -4026,7 +4102,7 @@
     const createDeleteRollbackReady = typeof previewAdminCreateDeleteRollback === "function" && typeof applyAdminCreateDeleteRollback === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRollback === "function");
     const createDeleteRestoreReady = typeof previewAdminCreateDeleteRestore === "function" && typeof applyAdminCreateDeleteRestore === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRestore === "function");
     const layoutShell = getAdminLayoutShellReadiness();
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }

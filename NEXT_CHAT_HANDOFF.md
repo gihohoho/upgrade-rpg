@@ -80,9 +80,9 @@ uvicorn app.main:app --reload
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v181: admin create lifecycle guard helper**
-- 새 채팅용 ZIP: **rpg_v181_create_lifecycle_guard_helper_ready.zip**
-- 이 ZIP은 신규 row 생성·삭제·복원 점검 UI, createLifecycle 삭제 차단 기준 표시, change log action 바로가기를 포함합니다.
+- 최신 안정 버전: **v182: admin create lifecycle result summary**
+- 새 채팅용 ZIP: **rpg_v182_create_lifecycle_result_summary_ready.zip**
+- 이 ZIP은 신규 row 생성·삭제·복원 점검 UI, createLifecycle 삭제 차단 기준 표시, change log action 바로가기, 삭제/복원 결과 요약 카드를 포함합니다.
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -143,7 +143,19 @@ uvicorn app.main:app --reload
 47. 신규 row 생성·삭제·복원 점검 UI와 createLifecycle 메타데이터 추가 완료.
 48. change log action filter를 실제 action 값 기준으로 정리 완료.
 49. 생성 lifecycle 삭제 preview 차단 기준 표시와 변경 이력 action 바로가기 완료.
+50. 생성 row 삭제/복원 preview 결과 요약 카드와 dependency/conflict count 표시 강화 완료.
 
+
+## v182 admin create lifecycle result summary
+
+- 생성 row 삭제 preview/apply 결과 상단에 큰 요약 카드를 추가했습니다.
+- 삭제 결과에서 현재값 불일치, 연결 검사 수, 차단 guard 수, 차단 row 수를 바로 표시합니다.
+- 삭제 row 복원 preview/apply 결과 상단에 큰 요약 카드를 추가했습니다.
+- 복원 결과에서 id/code 충돌, validation error, relation 값 수를 바로 표시합니다.
+- 백엔드 응답에 `dependencyCheckCount`, `dependencyBlockerGuardCount`, `restoreConflictCount` 보조 count를 추가했습니다.
+- `checkAdminReadOnlyPageReady().createLifecycleResultSummaryReady`가 true면 정상입니다.
+- 새 쓰기 도메인 오픈 없음, DB schema 변경 없음, DB reset / seed 필요 없음.
+- `.env`, `.gitignore` 변경 없음.
 
 ## v181 admin create lifecycle guard helper
 
@@ -235,7 +247,7 @@ uvicorn app.main:app --reload
 
 ## DB / seed
 
-- v181 기준 DB reset / seed 필요 없음.
+- v182 기준 DB reset / seed 필요 없음.
 - DB schema 변경 없음.
 - `.env`, `.gitignore` 변경 없음.
 
@@ -251,7 +263,7 @@ bash tools/run_smoke_core.sh
 bash tools/run_smoke_all.sh
 ```
 
-v181 작업 후 둘 다 통과했습니다.
+v182 작업 후 둘 다 통과했습니다.
 
 ## 브라우저 확인용
 
@@ -279,17 +291,18 @@ true
 
 ## 다음 추천 단계
 
-다음은 **신규 row 생성·삭제·복원 점검 섹션을 보면서 skillLevels/enhancementLevels/characterSkills 생성·삭제·복원 브라우저 검증**이 좋습니다.
+다음은 **v182 결과 요약 카드를 보면서 skillLevels/enhancementLevels/characterSkills 생성·삭제·복원 브라우저 검증**이 좋습니다.
 
 안전한 순서:
 
 1. 브라우저에서 `skillLevels` 생성 preview/apply를 실제 확인.
 2. `skill_code + level` 중복 검증 확인.
-3. 생성된 `skillLevels`가 id 기반으로 삭제/복원되는지 확인.
-4. 브라우저에서 `enhancementLevels` 생성 preview/apply를 실제 확인.
-5. `group_code + from_level`, `to_level > from_level`, 확률/비용 검증 확인.
-6. 생성된 `enhancementLevels`가 id 기반으로 삭제/복원되는지 확인.
-7. 브라우저에서 `characterSkills` 생성 preview/apply를 실제 확인.
-8. `character_code + skill_code` 중복 검증 확인.
-9. 생성된 `characterSkills`가 id 기반으로 삭제/복원되는지 확인.
-10. 이후 관리자 페이지 코드 분리 또는 create/delete/restore UI 표시 개선을 추천.
+3. 생성된 `skillLevels` 삭제 preview에서 결과 요약 카드가 보이는지 확인.
+4. 생성된 `skillLevels`가 id 기반으로 삭제/복원되는지 확인.
+5. 브라우저에서 `enhancementLevels` 생성 preview/apply를 실제 확인.
+6. `group_code + from_level`, `to_level > from_level`, 확률/비용 검증 확인.
+7. 생성된 `enhancementLevels` 삭제/복원 preview에서 결과 요약 카드가 보이는지 확인.
+8. 브라우저에서 `characterSkills` 생성 preview/apply를 실제 확인.
+9. `character_code + skill_code` 중복 검증 확인.
+10. 생성된 `characterSkills` 삭제/복원 preview에서 결과 요약 카드가 보이는지 확인.
+11. 이후 관리자 페이지 코드 분리 준비를 추천.

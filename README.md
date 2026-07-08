@@ -1,8 +1,8 @@
 # Upgrade RPG
 
-현재 안정 버전: **v181 admin create lifecycle guard helper**
+현재 안정 버전: **v182 admin create lifecycle result summary**
 
-새 채팅 인수인계 ZIP: **rpg_v181_create_lifecycle_guard_helper_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v182_create_lifecycle_result_summary_ready.zip**
 
 현재 프로젝트는 아직 Vue가 아니라 `index.html + JS + CSS` 기반 RPG 게임입니다. 기존 게임 동작을 유지하면서 FastAPI + PostgreSQL + 관리자 페이지 구조로 단계적으로 분리 중입니다.
 

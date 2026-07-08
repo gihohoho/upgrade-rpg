@@ -1171,6 +1171,7 @@ class AdminService:
 
         created_code = getattr(master_row, "code", None)
         dependency_checks = await self._build_create_delete_dependency_checks(session, domain, created_code, int(row_id))
+        blocker_guard_count = sum(1 for check in dependency_checks if check.get("blocksDelete"))
         blocker_count = sum(int(check.get("count") or 0) for check in dependency_checks if check.get("blocksDelete"))
         changes = await self._build_change_log_changes_with_relations(session, domain, {}, after_json)
         create_delete_ready = len(current_mismatches) == 0 and blocker_count == 0
@@ -1200,6 +1201,8 @@ class AdminService:
             "currentMismatches": current_mismatches[:30],
             "currentMismatchCount": len(current_mismatches),
             "dependencyChecks": dependency_checks,
+            "dependencyCheckCount": len(dependency_checks),
+            "dependencyBlockerGuardCount": blocker_guard_count,
             "dependencyBlockerCount": blocker_count,
             "rawBeforeAfterReturned": False,
             "warnings": [] if create_delete_ready else ["create_delete_has_blockers"],
@@ -1369,6 +1372,7 @@ class AdminService:
             validation_errors.extend(relation_errors)
 
         changes = await self._build_change_log_changes_with_relations(session, domain, {}, before_json)
+        restore_conflict_count = int(bool(id_conflict)) + int(bool(code_conflict)) + len(validation_errors)
         restore_ready = not id_conflict and not code_conflict and len(validation_errors) == 0 and len(normalized_restore) > 0
         warnings: list[str] = []
         if id_conflict:
@@ -1405,6 +1409,7 @@ class AdminService:
             "codeConflict": code_conflict,
             "validationErrors": validation_errors[:30],
             "validationErrorCount": len(validation_errors),
+            "restoreConflictCount": restore_conflict_count,
             "normalizedRestoreDraft": {key: serialize_value(value) for key, value in normalized_restore.items()},
             "rawBeforeAfterReturned": False,
             "warnings": warnings,
@@ -1523,6 +1528,7 @@ class AdminService:
             "codeConflict": False,
             "validationErrors": [],
             "validationErrorCount": 0,
+            "restoreConflictCount": 0,
             "rawBeforeAfterReturned": False,
             "warnings": warnings,
         }
@@ -1558,6 +1564,8 @@ class AdminService:
             "currentMismatches": [],
             "currentMismatchCount": 0,
             "dependencyChecks": [],
+            "dependencyCheckCount": 0,
+            "dependencyBlockerGuardCount": 0,
             "dependencyBlockerCount": 0,
             "rawBeforeAfterReturned": False,
             "warnings": warnings,

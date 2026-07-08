@@ -1,8 +1,8 @@
 # Current Status
 
-현재 기준: **v181 admin create lifecycle guard helper**
+현재 기준: **v182 admin create lifecycle result summary**
 
-이 패키지 기준 ZIP: **rpg_v181_create_lifecycle_guard_helper_ready.zip**
+이 패키지 기준 ZIP: **rpg_v182_create_lifecycle_result_summary_ready.zip**
 
 ## 현재 상태
 
@@ -16,6 +16,16 @@
 - 관리자 guarded edit apply, stale guard, high risk 확인, change log, rollback 유지.
 - 신규 row create/delete/restore 제한 흐름 유지.
 - 관리자 페이지 레이아웃 shell, sidebar, sticky header, 접기/펼치기 유지.
+
+## v182 완료
+
+- 생성 row 삭제 preview/apply 결과 상단에 큰 요약 카드 추가.
+- 삭제 결과에서 현재값 불일치, 연결 검사 수, 차단 guard 수, 차단 row 수를 바로 표시.
+- 삭제 row 복원 preview/apply 결과 상단에 큰 요약 카드 추가.
+- 복원 결과에서 id/code 충돌, validation error, relation 값 수를 바로 표시.
+- 백엔드 응답에 `dependencyCheckCount`, `dependencyBlockerGuardCount`, `restoreConflictCount` 보조 count 추가.
+- 새 쓰기 도메인 오픈 없음.
+- DB reset / seed 없이 진행 가능.
 
 ## v181 완료
 
@@ -71,6 +81,7 @@
 
 ## 이전 완료
 
+- v182: 생성 row 삭제/복원 결과 요약 카드와 blocker count 표시 강화.
 - v181: 생성 lifecycle 삭제 차단 기준 표시 + 변경 이력 action 바로가기.
 - v180: 생성·삭제·복원 브라우저 점검 UI.
 - v179: `skillLevels`, `enhancementLevels`, `characterSkills` 신규 row 생성 apply 제한 오픈.
