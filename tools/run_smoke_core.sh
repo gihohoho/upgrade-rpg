@@ -24,6 +24,7 @@ node tools/smoke_admin_create_lifecycle_result_summary.js
 node tools/smoke_admin_create_lifecycle_batch_check.js
 node tools/smoke_admin_js_split_readiness.js
 node tools/smoke_admin_layout_shell_split.js
+node tools/smoke_admin_change_log_split_contract.js
 node tools/smoke_admin_create_delete_rollback.js
 node tools/smoke_admin_create_delete_restore.js
 node tools/smoke_admin_layout_navigation_shell.js

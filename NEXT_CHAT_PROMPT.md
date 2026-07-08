@@ -7,18 +7,7 @@
 명령어를 줄 때는 항상 먼저 어디에서 실행해야 하는지 적어줘.
 주석 기호가 들어간 설명은 코드블록 안에 넣지 말고 코드블록 밖에서 설명해줘.
 커밋 명령어는 마지막에 add부터 push까지 한 번에 알려줘.
-
-명령어 예시:
-
-위치: 프로젝트 루트
-bash tools/run_smoke_core.sh
-
-위치: backend 폴더 + 가상환경 activate 상태
-source .venv/Scripts/activate
-uvicorn app.main:app --reload
-
-위치: 브라우저 개발자도구 Console
-checkAdminReadOnlyPageReady();
+앞으로 다음 단계로 넘어갈 때는 무엇을 할지 먼저 설명해줘.
 
 현재 프로젝트는 아직 Vue가 아니라 index.html + JS + CSS 기반 RPG 게임이야.
 기존 게임이 완전히 정상 작동하는 상태를 유지하면서 단계적으로 백엔드 분리 중이야.
@@ -65,10 +54,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v184: admin JS split readiness
+v186: admin change log split contract
 
 현재 인수인계 ZIP:
-rpg_v185_admin_layout_shell_split_ready.zip
+rpg_v186_admin_change_log_split_contract_ready.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -77,139 +66,37 @@ docs/NEXT_STEPS.md
 docs/README.md
 docs/PROJECT_STRUCTURE.md
 
-현재 완료된 핵심:
-1. master-data PostgreSQL → FastAPI → 브라우저 연결 완료.
-2. master-data 기본 mode는 auto.
-3. 백엔드 실패 시 static JS 데이터 fallback 유지.
-4. localStorage 저장 유지.
-5. save snapshot API + dual write 완료.
-6. SAVE DATA dev badge 완료.
-7. DB 세이브 preview/restore/backup/rollback/reload lock 완료.
-8. save slot 목록, integrity verify 완료.
-9. admin.html 관리자 페이지 분리 완료.
-10. 관리자 overview, 세이브 스냅샷 필터, 마스터 데이터 목록/상세/relations 완료.
-11. 관리자 편집 초안, 백엔드 검증, field help, value hints, impact guide 완료.
-12. guarded edit apply 완료.
-13. change log 상세/rollback/filter 완료.
-14. admin write dev key guard 완료.
-15. stale guard 완료.
-16. master-data API 반영 확인 및 post-edit 자동 확인 완료.
-17. DB itemTemplates.stackable 값이 인게임 신규 획득 아이템 겹치기에 연결 완료.
-18. 겹친 장비 강화 시 가방이 꽉 차 있으면 강화 차단 완료.
-19. 관리자 편집 입력 UI 타입 개선 완료.
-20. 관리자 safe select / allow-list 확장 완료.
-21. 장비 슬롯 표시명을 인게임 이름으로 개선 완료.
-22. 마스터 데이터 카탈로그 페이지네이션 완료.
-23. 관리자 변경 전후 비교 UI + high risk 추가 확인 완료.
-24. relation select 기반 안전 편집 완료.
-25. 조합 관계 필드 중복 검증 완료.
-26. dropTables.owner_code owner_type 연동 select 완료.
-27. relation select 검색/필터 완료.
-28. 변경 preview relation label / 대상 열기 완료.
-29. change log / rollback preview relation label 완료.
-30. 신규 row 생성 blueprint read-only 완료.
-31. 신규 row 생성 draft 입력 UI + preview-only 검증 완료.
-32. characters / enhancementGroups 신규 row 실제 생성 apply 제한 오픈 완료.
-33. create 이력 기반 생성 row 삭제 preview/apply 제한 오픈 완료.
-34. create_delete 이력 기반 삭제 row 복원 preview/apply 제한 오픈 완료.
-35. 관리자 페이지 sidebar / sticky header / footer / 섹션 접기·펼치기 완료.
-36. 접힌 섹션 공통 CSS 보정 완료.
-37. fieldZones / bosses / skills / dropTables 신규 row 실제 생성 apply 제한 오픈 완료.
-38. itemTemplates / dropTableItems 신규 row 실제 생성 apply 제한 오픈 완료.
-39. 생성 row 삭제/복원 guard에 itemTemplates 연결 검사와 dropTableItems id 기반 삭제/복원 지원 추가.
-40. skillLevels / enhancementLevels / characterSkills 신규 row 실제 생성 apply 제한 오픈 완료.
-41. skillLevels / enhancementLevels / characterSkills 생성 row 삭제/복원 id 기반 guard 추가.
+현재 핵심 상태:
+1. 기존 게임 정상 동작 유지.
+2. master-data PostgreSQL → FastAPI → 브라우저 연결 유지.
+3. 백엔드 실패 시 static JS fallback 유지.
+4. save snapshot dual write 유지.
+5. 관리자 guarded edit apply / rollback / create / delete / restore 제한 흐름 유지.
+6. 생성→삭제→복원 일괄 점검 UI 유지.
+7. 관리자 JS 분리 전 readiness UI 유지.
+8. 관리자 layout shell은 src/api/admin-layout-shell.js로 실제 분리 완료.
+9. change logs는 실제 파일 분리 전 API/window/DOM 계약을 v186에서 고정 완료.
 
-v179 현재 상태:
-관리자 신규 row 생성 apply는 characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems/skillLevels/enhancementLevels/characterSkills까지 제한적으로 열려 있어.
-itemTemplates는 JSON/asset 필드를 잠근 상태로 scalar/relation 필드만 생성 가능하고, dropTableItems는 code 없는 leaf row라 id 기반 삭제/복원 흐름이 추가되어 있어.
-skillLevels/enhancementLevels/characterSkills도 code 없는 relation/level row라 id 기반 삭제/복원 흐름이 추가되어 있어.
-skillLevels는 skill_code + level 중복을 막고, enhancementLevels는 group_code + from_level 중복과 to_level > from_level 검증을 하고, characterSkills는 character_code + skill_code 중복을 막아.
+현재 create apply 열린 도메인:
+characters, enhancementGroups, fieldZones, bosses, skills, dropTables, itemTemplates, dropTableItems, skillLevels, enhancementLevels, characterSkills
 
-중요한 안전 원칙:
-기존 게임 동작을 깨면 안 됨.
-localStorage 저장은 계속 유지해야 함.
-DB reset/seed가 필요한 단계인지 아닌지 반드시 알려줘.
-작업 후 ZIP으로 줘.
-명령어마다 반드시 실행 위치를 먼저 적어줘.
-가능하면 작업 후 smoke를 돌려줘.
-ZIP에는 전체 프로젝트 파일/폴더를 묶어줘.
-단, .env, .gitignore는 바뀐 경우에만 포함하면 돼.
-
-smoke 실행:
-위치: 프로젝트 루트
-bash tools/run_smoke_core.sh
-
-위치: 프로젝트 루트
-bash tools/run_smoke_all.sh
+v186 완료:
+- 실제 change logs 파일 분리는 아직 하지 않았음.
+- 다음 분리 후보 파일을 src/api/admin/admin-change-logs.js로 고정.
+- 변경 이력 API/window export/DOM target/delegated action 계약 고정.
+- 새 함수 getAdminChangeLogSplitContractReadiness(), renderAdminChangeLogSplitContractReadiness() 추가.
+- checkAdminReadOnlyPageReady().changeLogSplitContractReady 가 true면 정상.
+- 새 smoke tools/smoke_admin_change_log_split_contract.js 추가 및 core smoke 포함.
+- DB reset / seed 필요 없음.
+- .env, .gitignore 변경 없음.
 
 다음 추천 단계:
-v186에서는 change logs 분리 전 readiness/contract smoke 추가를 추천.
-layout shell은 이미 src/api/admin-layout-shell.js로 실제 분리 완료.
-생성→삭제→복원 일괄 점검은 계속 leaf row부터 사용 가능.
+v187 change logs 실제 분리 1단계.
 
-v179에서 완료된 일:
-1. skillLevels create apply allow-list 추가.
-2. enhancementLevels create apply allow-list 추가.
-3. characterSkills create apply allow-list 추가.
-4. 위 3개 도메인 생성 row 삭제/복원 allow-list 추가.
-5. skillLevels/enhancementLevels/characterSkills는 id 기반 생성 row 삭제/복원 흐름 지원.
-6. skillLevels skill_code + level 중복 검증 유지.
-7. enhancementLevels group_code + from_level 중복, to_level, success_rate, gold_cost 검증 강화.
-8. characterSkills character_code + skill_code 중복, sort_order 검증 강화.
-9. JSON 계열 필드는 계속 생성 입력에서 잠금.
-
-현재 인수인계 패키지 작업:
-- DB schema 변경 없음.
-- DB reset / seed 필요 없음.
-
-
-v181에서 완료된 일:
-1. 관리자 페이지에 신규 row 생성·삭제·복원 점검 섹션 추가.
-2. create-blueprint 응답에 createLifecycle 메타데이터 추가.
-3. change log action filter를 update/rollback/create/create_delete/create_delete_restore 기준으로 정리.
-4. 새 쓰기 도메인 오픈 없음.
-5. DB schema 변경 없음, DB reset / seed 필요 없음.
-
-
-추가 최신 상태 v182:
-1. createLifecycle 메타데이터에 삭제 preview 차단 기준 추가.
-2. 신규 row 생성·삭제·복원 점검 섹션에서 삭제 차단 기준 표시.
-3. 변경 이력 action 필터 바로가기 버튼 추가.
-4. 생성 row 삭제/복원 preview 결과 상단에 큰 요약 카드 추가.
-5. 삭제 결과에서 dependencyCheckCount / dependencyBlockerGuardCount / dependencyBlockerCount 표시 강화.
-6. 복원 결과에서 restoreConflictCount / validationErrorCount / idConflict / codeConflict 표시 강화.
-7. 새 쓰기 도메인 오픈 없음.
-8. DB schema 변경 없음, DB reset / seed 필요 없음.
-
-
-v182에서 완료된 일:
-1. 생성 row 삭제 preview/apply 결과 요약 카드 추가.
-2. 삭제 결과의 현재값 불일치, 연결 검사 수, 차단 guard 수, 차단 row 수 표시 강화.
-3. 삭제 row 복원 preview/apply 결과 요약 카드 추가.
-4. 복원 결과의 id/code 충돌, validation error, relation 값 수 표시 강화.
-5. 백엔드 응답에 dependencyCheckCount, dependencyBlockerGuardCount, restoreConflictCount 추가.
-6. 새 쓰기 도메인 오픈 없음.
-7. DB schema 변경 없음, DB reset / seed 필요 없음.
-
-
-추가 최신 상태 v183:
-- 관리자 `신규 row 생성·삭제·복원 점검` 섹션에 일괄 점검 카드가 추가됨.
-- 현재 생성 초안 기준으로 생성 preview/apply → 삭제 preview/apply → 복원 preview/apply를 한 번에 실행 가능.
-- 일괄 점검 확인 문구: RUN CREATE DELETE RESTORE CHECK.
-- 성공하면 row가 다시 복원되어 DB에 남으므로 테스트 row가 불필요하면 create 이력에서 다시 삭제하면 됨.
-- checkAdminReadOnlyPageReady().createLifecycleBatchCheckReady 가 true면 정상.
-
-추가 최신 상태 v184:
-- 관리자 페이지에 `관리자 JS 분리 준비` 섹션이 추가됨.
-- 실제 파일 분리는 아직 하지 않고 script 순서, 필수 global, export 계약을 진단함.
-- checkAdminReadOnlyPageReady().adminJsSplitReadinessReady 가 true면 정상.
-- getAdminJsSplitReadiness()로 자세한 진단값을 볼 수 있음.
-- 다음 추천 단계는 change logs 분리 전 readiness/contract smoke를 먼저 추가하는 것.
-- 새 쓰기 도메인 오픈 없음, DB schema 변경 없음, DB reset / seed 필요 없음.
-
-
-추가 인수인계 v185:
-- layout shell은 `src/api/admin-layout-shell.js`로 실제 분리 완료.
-- `admin-page-readonly.js`에는 wrapper만 유지.
-- 다음 단계는 change logs 분리 전 readiness/contract smoke 추가 추천.
+권장 방향:
+1. src/api/admin/ 폴더 생성.
+2. src/api/admin/admin-change-logs.js 파일 생성.
+3. 변경 이력 필터/목록/상세/rollback/create-delete/restore 함수만 이동.
+4. admin.html script 순서를 game-api-client.js → admin-layout-shell.js → admin/admin-change-logs.js → admin-page-readonly.js로 유지.
+5. admin-page-readonly.js에는 기존 window export 호환 wrapper를 남김.
+6. v186 contract smoke + core/all smoke 통과 확인.

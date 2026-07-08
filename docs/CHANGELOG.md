@@ -392,6 +392,15 @@
 
 # 변경 기록
 
+## v186 - Admin change log split contract
+
+- `change logs` 실제 분리 전에 API/window/DOM 계약을 먼저 고정했습니다.
+- `getAdminChangeLogSplitContractReadiness()`와 `renderAdminChangeLogSplitContractReadiness()`를 추가했습니다.
+- 관리자 JS 분리 준비 카드에서 change logs 계약 상태를 같이 볼 수 있게 했습니다.
+- `tools/smoke_admin_change_log_split_contract.js`를 추가하고 core smoke에 포함했습니다.
+- 실제 JS 파일 분리는 아직 하지 않았고, DB schema/reset/seed 변경은 없습니다.
+
+
 ## v103 - 개발자 배지 하단 HUD 위 배치
 
 - `MASTER DATA`와 `SAVE DATA` 개발자 배지를 하단 HUD 내부가 아니라 하단 인터페이스 바로 위쪽에 고정 배치했습니다.

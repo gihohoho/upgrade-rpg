@@ -1,8 +1,8 @@
 # Upgrade RPG
 
-현재 안정 버전: **v185 admin layout shell split**
+현재 안정 버전: **v186 admin change log split contract**
 
-새 채팅 인수인계 ZIP: **rpg_v185_admin_layout_shell_split_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v186_admin_change_log_split_contract_ready.zip**
 
 현재 프로젝트는 아직 Vue가 아니라 `index.html + JS + CSS` 기반 RPG 게임입니다. 기존 게임 동작을 유지하면서 FastAPI + PostgreSQL + 관리자 페이지 구조로 단계적으로 분리 중입니다.
 
@@ -25,6 +25,7 @@
 - 삭제 preview 차단 기준 표시와 변경 이력 action 바로가기 추가 완료
 - 생성→삭제→복원 일괄 점검 버튼 추가 완료
 - 관리자 JS 분리 전 readiness 진단 UI 추가 완료
+- 관리자 change logs 분리 전 API/window/DOM 계약 고정 완료
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -49,7 +50,7 @@ bash tools/run_smoke_all.sh
 
 ## 다음 추천 단계
 
-다음은 `change logs` 묶음 분리 전 readiness/contract smoke를 추가하는 것이 좋습니다. 생성→삭제→복원 일괄 점검은 계속 leaf row부터 사용할 수 있습니다.
+다음은 실제 `change logs` 묶음 1차 분리로 넘어가는 것이 좋습니다. 단, v186에서 고정한 계약을 유지하고 `admin-page-readonly.js`에는 호환 wrapper를 남기는 방식이 안전합니다.
 
 ## DB / env
 
@@ -65,4 +66,15 @@ bash tools/run_smoke_all.sh
 - 관리자 layout shell 기능을 `admin-page-readonly.js` 밖으로 1차 분리
 - `admin-page-readonly.js`에는 기존 window export 호환 wrapper 유지
 - `admin.html` script 순서: game api → layout shell → admin page
+- DB reset / seed 필요 없음
+
+
+## v186 완료
+
+- `change logs` 분리 전 계약을 `contract-frozen-v186` 상태로 고정
+- 변경 이력 API/window export/DOM target 진단 추가
+- `getAdminChangeLogSplitContractReadiness()` 추가
+- `renderAdminChangeLogSplitContractReadiness()` 추가
+- 새 smoke `tools/smoke_admin_change_log_split_contract.js` 추가
+- 실제 JS 파일 분리는 아직 하지 않음
 - DB reset / seed 필요 없음

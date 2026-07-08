@@ -81,3 +81,5 @@ docs/archive/stage-notes/
 ```
 
 삭제하지 않고 이동만 했기 때문에, 필요하면 다시 참고할 수 있습니다.
+
+- `ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`: v186 change logs 실제 분리 전 API/window/DOM 계약 문서.

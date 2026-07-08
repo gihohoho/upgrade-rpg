@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  const VERSION = "v185.admin-layout-shell-split";
-  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary v183.admin-create-lifecycle-batch-check v184.admin-js-split-readiness";
+  const VERSION = "v186.admin-change-log-split-contract";
+  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary v183.admin-create-lifecycle-batch-check v184.admin-js-split-readiness v185.admin-layout-shell-split";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -24,7 +24,7 @@
   const ADMIN_JS_SPLIT_PHASES = [
     { key: "api-client", label: "API client", currentFile: "src/api/game-api-client.js", nextFile: "src/api/admin/admin-api-client.js", status: "already-external", note: "관리자 API 호출 기반은 이미 admin.html 밖에 있습니다." },
     { key: "layout-shell", label: "Layout shell", currentFile: "src/api/admin-layout-shell.js", nextFile: "src/api/admin-layout-shell.js", status: "extracted-v185", note: "sidebar, sticky header, section collapse 계열을 외부 파일로 분리했습니다." },
-    { key: "change-logs", label: "Change logs", currentFile: "src/api/admin-page-readonly.js", nextFile: "src/api/admin/admin-change-logs.js", status: "ready-after-layout", note: "이력 목록/상세/rollback/create-delete 흐름은 함수 묶음이 명확합니다." },
+    { key: "change-logs", label: "Change logs", currentFile: "src/api/admin-page-readonly.js", nextFile: "src/api/admin/admin-change-logs.js", status: "contract-frozen-v186", note: "이력 목록/상세/rollback/create-delete/restore 함수와 DOM/API 계약을 v186에서 고정했습니다." },
     { key: "create-lifecycle", label: "Create lifecycle", currentFile: "src/api/admin-page-readonly.js", nextFile: "src/api/admin/admin-create-lifecycle.js", status: "ready-after-smoke-freeze", note: "생성→삭제→복원 batch check smoke가 있으므로 분리 후보입니다." },
     { key: "edit-draft", label: "Edit draft", currentFile: "src/api/admin-page-readonly.js", nextFile: "src/api/admin/admin-edit-draft.js", status: "later", note: "relation select, value hint, impact guide 의존이 많아서 create lifecycle 다음이 안전합니다." },
     { key: "bootstrap", label: "Page bootstrap", currentFile: "src/api/admin-page-readonly.js", nextFile: "src/api/admin-page-readonly.js", status: "keep-last", note: "초기 boot/bindEvents/window export는 마지막까지 thin entry 파일로 남기는 방향이 안전합니다." },
@@ -39,6 +39,83 @@
     "runAdminCreateLifecycleBatchCheck",
     "initializeAdminLayoutShell",
   ];
+
+  const ADMIN_CHANGE_LOG_SPLIT_CONTRACT = {
+    key: "change-logs",
+    label: "Change logs",
+    status: "contract-frozen-v186",
+    currentFile: "src/api/admin-page-readonly.js",
+    nextFile: "src/api/admin/admin-change-logs.js",
+    requiredApiMethods: [
+      "listAdminChangeLogs",
+      "fetchAdminChangeLogDetail",
+      "previewAdminChangeLogRollback",
+      "applyAdminChangeLogRollback",
+      "previewAdminCreateDeleteRollback",
+      "applyAdminCreateDeleteRollback",
+      "previewAdminCreateDeleteRestore",
+      "applyAdminCreateDeleteRestore",
+    ],
+    requiredWindowExports: [
+      "readChangeLogFiltersFromDom",
+      "resetChangeLogFilters",
+      "describeChangeLogFilters",
+      "refreshAdminChangeLogs",
+      "renderAdminChangeLogs",
+      "openAdminChangeLogDetail",
+      "renderAdminChangeLogDetail",
+      "previewAdminChangeLogRollback",
+      "applyAdminChangeLogRollback",
+      "readAdminRollbackControls",
+      "renderAdminRollbackResult",
+      "previewAdminCreateDeleteRollback",
+      "applyAdminCreateDeleteRollback",
+      "readAdminCreateDeleteControls",
+      "renderAdminCreateDeleteResult",
+      "previewAdminCreateDeleteRestore",
+      "applyAdminCreateDeleteRestore",
+      "readAdminCreateDeleteRestoreControls",
+      "renderAdminCreateDeleteRestoreResult",
+      "applyAdminChangeLogActionShortcut",
+      "getAdminChangeLogSplitContractReadiness",
+      "renderAdminChangeLogSplitContractReadiness",
+    ],
+    domTargets: [
+      "#section-change-logs",
+      "[data-admin-change-log-meta]",
+      "[data-admin-change-log-filter-limit]",
+      "[data-admin-change-log-filter-target-type]",
+      "[data-admin-change-log-filter-target-id]",
+      "[data-admin-change-log-filter-action]",
+      "[data-admin-change-log-filter-changed-key]",
+      "[data-admin-change-log-filter-applied]",
+      "[data-admin-change-log-filter-sort]",
+      "[data-admin-change-log-table]",
+      "[data-admin-change-log-detail]",
+      "[data-admin-js-split-readiness]",
+    ],
+    actionFilters: ADMIN_CHANGE_LOG_ACTION_FILTERS.slice(),
+    delegatedActions: [
+      "refresh-admin-change-logs",
+      "open-admin-change-log-detail",
+      "preview-admin-change-log-rollback",
+      "apply-admin-change-log-rollback",
+      "preview-admin-create-delete-rollback",
+      "apply-admin-create-delete-rollback",
+      "preview-admin-create-delete-restore",
+      "apply-admin-create-delete-restore",
+      "set-change-log-action-filter",
+    ],
+    splitBoundary: [
+      "filters",
+      "list render",
+      "detail render",
+      "rollback preview/apply",
+      "create delete preview/apply",
+      "create delete restore preview/apply",
+      "action shortcut",
+    ],
+  };
 
   const ADMIN_EDIT_ALLOWED_FIELDS = {
     itemTemplates: ["name", "item_type", "grade", "description", "stackable", "equip_slot", "enhance_group_code", "admin_note"],
@@ -1491,8 +1568,84 @@
       layoutShellExternalReady: layoutShellIndex >= 0 && !!window.RpgAdminLayoutShell,
       candidateCount,
       phases: ADMIN_JS_SPLIT_PHASES.slice(),
-      nextSafeStep: "layout shell 분리 안정 확인 후 change logs 분리 준비",
+      nextSafeStep: "layout shell 분리 안정 확인 후 change logs 계약 고정, 다음 실제 admin-change-logs.js 분리",
     };
+  }
+
+  function getAdminChangeLogSplitContractReadiness() {
+    const contract = ADMIN_CHANGE_LOG_SPLIT_CONTRACT;
+    const requiredApiMethods = contract.requiredApiMethods.map((key) => ({
+      key,
+      ok: !!(window.RpgGameApi && typeof window.RpgGameApi[key] === "function"),
+    }));
+    const requiredWindowExports = contract.requiredWindowExports.map((key) => ({
+      key,
+      ok: typeof window[key] === "function" || !!(window.RpgAdminReadOnlyPage && typeof window.RpgAdminReadOnlyPage[key] === "function"),
+    }));
+    const domTargets = contract.domTargets.map((selector) => ({
+      selector,
+      ok: !!document.querySelector(selector),
+    }));
+    const actionFilters = contract.actionFilters.map((key) => ({
+      key,
+      ok: ADMIN_CHANGE_LOG_ACTION_FILTERS.includes(key),
+    }));
+    const missingApiMethods = requiredApiMethods.filter((item) => !item.ok).map((item) => item.key);
+    const missingWindowExports = requiredWindowExports.filter((item) => !item.ok).map((item) => item.key);
+    const missingDomTargets = domTargets.filter((item) => !item.ok).map((item) => item.selector);
+    const missingActionFilters = actionFilters.filter((item) => !item.ok).map((item) => item.key);
+    const ok = contract.status === "contract-frozen-v186" && missingApiMethods.length === 0 && missingWindowExports.length === 0 && missingDomTargets.length === 0 && missingActionFilters.length === 0;
+    return {
+      ok,
+      contract,
+      status: contract.status,
+      currentFile: contract.currentFile,
+      nextFile: contract.nextFile,
+      requiredApiMethods,
+      requiredWindowExports,
+      domTargets,
+      actionFilters,
+      delegatedActions: contract.delegatedActions.slice(),
+      splitBoundary: contract.splitBoundary.slice(),
+      missingApiMethods,
+      missingWindowExports,
+      missingDomTargets,
+      missingActionFilters,
+      apiMethodCount: requiredApiMethods.length,
+      windowExportCount: requiredWindowExports.length,
+      domTargetCount: domTargets.length,
+      delegatedActionCount: contract.delegatedActions.length,
+    };
+  }
+
+  function renderAdminChangeLogSplitContractReadiness(contractReadiness) {
+    const readiness = contractReadiness || getAdminChangeLogSplitContractReadiness();
+    const apiHtml = readiness.requiredApiMethods.map((item) => `<span class="pill ${item.ok ? "good" : "blocked"}">${escapeHtml(item.key)}: ${item.ok ? "ok" : "missing"}</span>`).join(" ");
+    const exportRows = readiness.requiredWindowExports.map((item) => `<tr><td>${escapeHtml(item.key)}</td><td><span class="pill ${item.ok ? "good" : "blocked"}">${item.ok ? "ok" : "missing"}</span></td></tr>`).join("");
+    const domRows = readiness.domTargets.map((item) => `<tr><td><code>${escapeHtml(item.selector)}</code></td><td><span class="pill ${item.ok ? "good" : "blocked"}">${item.ok ? "ok" : "missing"}</span></td></tr>`).join("");
+    const boundaryHtml = readiness.splitBoundary.map((item) => `<span class="pill warn">${escapeHtml(item)}</span>`).join(" ");
+    return `
+      <div class="create-lifecycle-card create-lifecycle-card-wide">
+        ${renderAdminOperationResultBanner({
+          tone: readiness.ok ? "good" : "warn",
+          title: readiness.ok ? "change logs 분리 계약 고정 완료" : "change logs 분리 계약 확인 필요",
+          subtitle: `${readiness.currentFile} → ${readiness.nextFile} 이동 전, 필요한 API/window/DOM 계약을 먼저 고정했습니다.`,
+          metrics: [
+            { label: "API 함수", value: readiness.apiMethodCount, tone: readiness.missingApiMethods.length ? "blocked" : "good" },
+            { label: "window export", value: readiness.windowExportCount, tone: readiness.missingWindowExports.length ? "blocked" : "good" },
+            { label: "DOM target", value: readiness.domTargetCount, tone: readiness.missingDomTargets.length ? "blocked" : "good" },
+            { label: "delegated action", value: readiness.delegatedActionCount, tone: "warn" },
+          ],
+        })}
+        <div class="draft-preview-summary">${apiHtml}</div>
+        <div class="draft-preview-summary">${boundaryHtml}</div>
+        <div class="filter-help">다음 v187에서 실제 파일을 분리할 때는 이 계약이 깨지지 않는지 먼저 확인하고, <code>admin-page-readonly.js</code>에는 호환 wrapper만 남기는 방향이 안전합니다.</div>
+        <div class="create-blueprint-summary" style="grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);">
+          <div class="table-wrap relation-table-wrap"><table><thead><tr><th>window export</th><th>상태</th></tr></thead><tbody>${exportRows}</tbody></table></div>
+          <div class="table-wrap relation-table-wrap"><table><thead><tr><th>DOM target</th><th>상태</th></tr></thead><tbody>${domRows}</tbody></table></div>
+        </div>
+      </div>
+    `;
   }
 
   function renderAdminJsSplitReadiness() {
@@ -1501,9 +1654,10 @@
     const readiness = getAdminJsSplitReadiness();
     const globalsHtml = readiness.requiredGlobals.map((item) => `<span class="pill ${item.ok ? "good" : "blocked"}">${escapeHtml(item.key)}: ${item.ok ? "ok" : "missing"}</span>`).join(" ");
     const rows = readiness.phases.map((phase, index) => {
-      const tone = phase.status === "already-external" ? "good" : (phase.status === "later" || phase.status === "keep-last" ? "warn" : "good");
+      const tone = phase.status === "already-external" || phase.status === "extracted-v185" || phase.status === "contract-frozen-v186" ? "good" : (phase.status === "later" || phase.status === "keep-last" ? "warn" : "good");
       return `<tr><td>${escapeHtml(String(index + 1))}</td><td><strong>${escapeHtml(phase.label)}</strong><br><span class="muted">${escapeHtml(phase.key)}</span></td><td>${escapeHtml(phase.currentFile)}</td><td>${escapeHtml(phase.nextFile)}</td><td><span class="pill ${tone}">${escapeHtml(phase.status)}</span></td><td>${escapeHtml(phase.note)}</td></tr>`;
     }).join("");
+    const changeLogContract = getAdminChangeLogSplitContractReadiness();
     target.innerHTML = `
       ${renderAdminOperationResultBanner({
         tone: readiness.ok ? "good" : "warn",
@@ -1518,8 +1672,9 @@
         ],
       })}
       <div class="draft-preview-summary">${globalsHtml}</div>
-      <div class="filter-help">다음 안전 단계: ${escapeHtml(readiness.nextSafeStep)}. layout shell은 분리 완료 상태이며, 다음 분리도 DB 쓰기와 직접 무관한 묶음부터 진행하는 것이 좋습니다.</div>
+      <div class="filter-help">다음 안전 단계: ${escapeHtml(readiness.nextSafeStep)}. layout shell은 분리 완료 상태이며, change logs는 실제 이동 전에 계약을 먼저 고정했습니다.</div>
       <div class="table-wrap relation-table-wrap"><table><thead><tr><th>#</th><th>묶음</th><th>현재 파일</th><th>분리 후보 파일</th><th>상태</th><th>메모</th></tr></thead><tbody>${rows}</tbody></table></div>
+      ${renderAdminChangeLogSplitContractReadiness(changeLogContract)}
     `;
     return readiness;
   }
@@ -4199,6 +4354,8 @@
     const createLifecycleBatchCheckReady = typeof runAdminCreateLifecycleBatchCheck === "function" && typeof renderAdminCreateLifecycleBatchResult === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.applyAdminMasterDataCreate === "function" && typeof window.RpgGameApi.applyAdminCreateDeleteRollback === "function" && typeof window.RpgGameApi.applyAdminCreateDeleteRestore === "function");
     const adminJsSplitReadiness = typeof getAdminJsSplitReadiness === "function" ? getAdminJsSplitReadiness() : { ok: false };
     const adminJsSplitReadinessReady = !!(adminJsSplitReadiness && adminJsSplitReadiness.ok && typeof renderAdminJsSplitReadiness === "function");
+    const changeLogSplitContract = typeof getAdminChangeLogSplitContractReadiness === "function" ? getAdminChangeLogSplitContractReadiness() : { ok: false };
+    const changeLogSplitContractReady = !!(changeLogSplitContract && changeLogSplitContract.ok && typeof renderAdminChangeLogSplitContractReadiness === "function");
     const createDraftPreviewReady = typeof previewAdminCreateDraft === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminMasterDataCreate === "function");
     const createApplyReady = typeof applyAdminCreateDraft === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.applyAdminMasterDataCreate === "function");
     const masterDetailReady = !!document.querySelector("[data-admin-master-detail]");
@@ -4217,7 +4374,7 @@
     const createDeleteRollbackReady = typeof previewAdminCreateDeleteRollback === "function" && typeof applyAdminCreateDeleteRollback === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRollback === "function");
     const createDeleteRestoreReady = typeof previewAdminCreateDeleteRestore === "function" && typeof applyAdminCreateDeleteRestore === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRestore === "function");
     const layoutShell = getAdminLayoutShellReadiness();
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && adminJsSplitReadinessReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createLifecycleBatchCheckReady, adminJsSplitReadinessReady, adminJsSplitReadiness, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && adminJsSplitReadinessReady && changeLogSplitContractReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createLifecycleBatchCheckReady, adminJsSplitReadinessReady, adminJsSplitReadiness, changeLogSplitContractReady, changeLogSplitContract, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -4257,6 +4414,8 @@
     getAdminCreateLifecycleGuideReadiness,
     getAdminJsSplitReadiness,
     renderAdminJsSplitReadiness,
+    getAdminChangeLogSplitContractReadiness,
+    renderAdminChangeLogSplitContractReadiness,
     readAdminCreateDraftValues,
     resetAdminCreateDraft,
     previewAdminCreateDraft,
@@ -4363,6 +4522,8 @@
   window.getAdminCreateLifecycleGuideReadiness = getAdminCreateLifecycleGuideReadiness;
   window.getAdminJsSplitReadiness = getAdminJsSplitReadiness;
   window.renderAdminJsSplitReadiness = renderAdminJsSplitReadiness;
+  window.getAdminChangeLogSplitContractReadiness = getAdminChangeLogSplitContractReadiness;
+  window.renderAdminChangeLogSplitContractReadiness = renderAdminChangeLogSplitContractReadiness;
   window.readAdminCreateDraftValues = readAdminCreateDraftValues;
   window.resetAdminCreateDraft = resetAdminCreateDraft;
   window.previewAdminCreateDraft = previewAdminCreateDraft;

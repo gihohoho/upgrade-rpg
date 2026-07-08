@@ -312,3 +312,10 @@ node tools/smoke_save_data_dual_write.js
 ## v102 SAVE DATA test note
 
 If SAVE DATA shows `skipped_local_only_mode`, click `dual` once and try `성장/시스템 → 수동 저장` again after the 60 second manual-save cooldown. During cooldown, the badge shows `skipped_manual_save_cooldown`.
+
+
+## v186 완료
+
+- 관리자 change logs 분리 전 계약 고정.
+- 실제 DB schema/backend env 변경 없음.
+- DB reset / seed 필요 없음.

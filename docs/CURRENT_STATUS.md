@@ -1,8 +1,8 @@
 # Current Status
 
-현재 기준: **v185 admin layout shell split**
+현재 기준: **v186 admin change log split contract**
 
-이 패키지 기준 ZIP: **rpg_v185_admin_layout_shell_split_ready.zip**
+이 패키지 기준 ZIP: **rpg_v186_admin_change_log_split_contract_ready.zip**
 
 ## 현재 상태
 
@@ -16,6 +16,18 @@
 - 관리자 guarded edit apply, stale guard, high risk 확인, change log, rollback 유지.
 - 신규 row create/delete/restore 제한 흐름 유지.
 - 관리자 페이지 레이아웃 shell, sidebar, sticky header, 접기/펼치기 유지.
+
+
+## v186 완료
+
+- `change logs` 실제 분리 전에 API/window/DOM 계약을 먼저 고정.
+- 새 계약 상태: `contract-frozen-v186`.
+- 다음 후보 파일: `src/api/admin/admin-change-logs.js`.
+- `getAdminChangeLogSplitContractReadiness()` / `renderAdminChangeLogSplitContractReadiness()` 추가.
+- `checkAdminReadOnlyPageReady().changeLogSplitContractReady` 추가.
+- 새 smoke `tools/smoke_admin_change_log_split_contract.js` 추가 및 core smoke 포함.
+- 실제 파일 분리는 아직 하지 않음.
+- DB reset / seed 필요 없음.
 
 ## v185 완료
 
@@ -84,6 +96,7 @@
 
 ## 이전 완료
 
+- v186: 관리자 change logs 분리 전 계약 고정.
 - v185: 관리자 layout shell 실제 분리 1단계.
 - v184: 관리자 JS 분리 전 readiness 진단 UI.
 - v183: 생성→삭제→복원 일괄 점검 UI.
