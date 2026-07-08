@@ -38,7 +38,7 @@ v165에서는 신규 row 생성 기능을 처음으로 아주 제한적으로 �
 
 생성이 성공하면 `admin_change_logs`에 `action=create`로 기록한다.
 
-현재 create rollback/delete는 일부러 열지 않았다. 생성 이력 상세 조회는 가능하지만 되돌리기 적용은 기존 update rollback과 분리해서 다음 단계에서 설계한다.
+v168부터 create rollback/delete 중 **생성 row 삭제 되돌리기**가 제한적으로 열렸다. 대상은 `characters`, `enhancementGroups`의 `action=create` 이력이며, 현재값/연결 데이터 검사를 통과해야 한다.
 
 ## DB reset / seed
 

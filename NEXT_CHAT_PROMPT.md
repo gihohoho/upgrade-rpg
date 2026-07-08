@@ -63,10 +63,10 @@ ROLLBACK MASTER DATA EDIT
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v162: admin create draft preview
+v168: admin create delete rollback
 
 최신 ZIP:
-rpg_v162_admin_create_draft_preview.zip
+rpg_v168_admin_create_delete_rollback.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -138,3 +138,17 @@ rollback은 삭제가 아니라 soft-disabled 또는 별도 안전 정책을 먼
 업로드한 ZIP 기준으로 구조 확인 후, v163부터 이어서 진행해줘.
 
 추가 완료: v165 admin create apply limited. `characters`, `enhancementGroups` 신규 row 생성 apply만 제한적으로 열림. 생성 확인 문구는 `CREATE MASTER DATA ROW`. create rollback/delete는 아직 잠금. DB reset/seed 필요 없음.
+
+## v168 세부 완료
+
+- `create-apply`로 생성된 제한 도메인 row 삭제 되돌리기 preview/apply 추가.
+- 대상 도메인: `characters`, `enhancementGroups`.
+- 현재값이 생성 당시 값과 다르면 삭제 차단.
+- 연결 데이터 blocker가 있으면 삭제 차단.
+- 실제 삭제 적용은 관리자 쓰기 dev key와 `DELETE CREATED MASTER DATA ROW` 확인 문구 필요.
+- 삭제 성공 시 `admin_change_logs.action=create_delete` 기록.
+- DB reset / seed 필요 없음.
+
+## 다음 추천 단계
+
+- v169 create_delete 이력 기반 restore preview 설계, 또는 fieldZones처럼 relation 의존도가 낮은 도메인의 create apply 제한 확장.

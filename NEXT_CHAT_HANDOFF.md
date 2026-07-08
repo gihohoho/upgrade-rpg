@@ -67,6 +67,8 @@ uvicorn app.main:app --reload
 - high risk 추가 확인 문구: `HIGH RISK EDIT`
 - 관리자 되돌리기 확인 문구: `ROLLBACK MASTER DATA EDIT`
 
+- 생성 row 삭제 확인 문구: `DELETE CREATED MASTER DATA ROW`
+
 ## .env / .gitignore 처리
 
 - 기호 로컬에는 `.env`, `.gitignore`가 이미 있습니다.
@@ -75,8 +77,8 @@ uvicorn app.main:app --reload
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v162: admin create draft preview**
-- 최신 ZIP 이름: **rpg_v162_admin_create_draft_preview.zip**
+- 최신 안정 버전: **v168: admin create delete rollback**
+- 최신 ZIP 이름: **rpg_v168_admin_create_delete_rollback.zip**
 
 v162는 v159의 신규 row 생성 blueprint 위에 생성 draft 입력 UI와 preview-only 백엔드 검증 API를 추가한 버전입니다. 실제 DB insert는 아직 잠금 상태입니다.
 
@@ -213,3 +215,17 @@ createApplyReady: false
 - `docs/ADMIN_CREATE_DRAFT_PREVIEW.md`
 
 추가 완료: v165 admin create apply limited. `characters`, `enhancementGroups` 신규 row 생성 apply만 제한적으로 열림. 생성 확인 문구는 `CREATE MASTER DATA ROW`. create rollback/delete는 아직 잠금. DB reset/seed 필요 없음.
+
+## v168 세부 완료
+
+- `create-apply`로 생성된 제한 도메인 row 삭제 되돌리기 preview/apply 추가.
+- 대상 도메인: `characters`, `enhancementGroups`.
+- 현재값이 생성 당시 값과 다르면 삭제 차단.
+- 연결 데이터 blocker가 있으면 삭제 차단.
+- 실제 삭제 적용은 관리자 쓰기 dev key와 `DELETE CREATED MASTER DATA ROW` 확인 문구 필요.
+- 삭제 성공 시 `admin_change_logs.action=create_delete` 기록.
+- DB reset / seed 필요 없음.
+
+## 다음 추천 단계
+
+- v169 create_delete 이력 기반 restore preview 설계, 또는 fieldZones처럼 relation 의존도가 낮은 도메인의 create apply 제한 확장.

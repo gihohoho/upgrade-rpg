@@ -1,6 +1,6 @@
 # Current Status
 
-현재 기준: **v165 admin create apply limited**
+현재 기준: **v168 admin create delete rollback**
 
 ## 상태
 
@@ -11,7 +11,7 @@
 - 관리자 페이지 `admin.html` 분리 유지.
 - 관리자 guarded edit apply, stale guard, high risk 확인, change log, rollback 유지.
 
-## v162 완료
+## v168 완료
 
 - 신규 row 생성 blueprint 기반 draft 입력 UI 추가.
 - 생성 초안 preview-only API 추가.
@@ -19,7 +19,10 @@
 - relation 대상 존재 검사 추가.
 - skillLevels / enhancementLevels / characterSkills combo guard 중복 검사 추가.
 - dropTables owner_type + owner_code 조합 검사 추가.
-- 실제 insert apply는 아직 잠금 상태로 유지.
+- `characters`, `enhancementGroups` 신규 row 실제 생성 apply 제한 오픈.
+- create 이력 기반 생성 row 삭제 되돌리기 preview/apply 제한 오픈.
+- 생성 row 삭제는 현재값이 생성 당시 값과 같고 연결 데이터가 없을 때만 가능.
+- 삭제 확인 문구 `DELETE CREATED MASTER DATA ROW` 추가.
 
 ## DB / seed
 

@@ -1,7 +1,8 @@
 (function () {
   "use strict";
 
-  const VERSION = "v165.admin-create-apply-limited";
+  const VERSION = "v168.admin-create-delete-rollback";
+  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -14,6 +15,7 @@
   const ADMIN_EDIT_HIGH_RISK_CONFIRM_TEXT = "HIGH RISK EDIT";
   const ADMIN_ROLLBACK_CONFIRM_TEXT = "ROLLBACK MASTER DATA EDIT";
   const ADMIN_CREATE_APPLY_CONFIRM_TEXT = "CREATE MASTER DATA ROW";
+  const ADMIN_CREATE_DELETE_CONFIRM_TEXT = "DELETE CREATED MASTER DATA ROW";
   const ADMIN_EDIT_APPLY_TIMEOUT_MS = 5000;
   const ADMIN_WRITE_DEV_KEY_EXAMPLE = "local-admin-dev-key";
   const ADMIN_EDIT_ALLOWED_FIELDS = {
@@ -3019,13 +3021,14 @@
     }
     const changes = Array.isArray(payload.changes) ? payload.changes : [];
     const rollback = payload.rollback || {};
+    const createDelete = payload.createDelete || {};
     const rows = changes.length ? changes.map((change) => `
       <tr><td>${escapeHtml(change.label || change.key)}${change.relation ? ` <span class="pill warn">relation</span>` : ""}</td><td>${renderAdminChangeValueCell(payload.rollback && payload.rollback.domain, change, "before", {})}</td><td>${renderAdminChangeValueCell(payload.rollback && payload.rollback.domain, change, "after", {})}</td></tr>
     `).join("") : `<tr><td colspan="3">변경 필드 없음</td></tr>`;
     const relationCount = payload.relationChangeCount || changes.filter((change) => change.relation).length;
     target.innerHTML = `
       <div class="detail-card" data-admin-change-log-detail-card data-admin-change-log-id="${escapeHtml(payload.id)}">
-        <div class="detail-title">변경 이력 #${escapeHtml(formatValue(payload.id))} <span class="pill ${rollback.available ? "good" : "blocked"}">rollback ${rollback.available ? "ready" : "blocked"}</span>${relationCount ? ` <span class="pill warn">relation ${escapeHtml(formatValue(relationCount))}</span>` : ""}</div>
+        <div class="detail-title">변경 이력 #${escapeHtml(formatValue(payload.id))} <span class="pill ${rollback.available ? "good" : "blocked"}">rollback ${rollback.available ? "ready" : "blocked"}</span> <span class="pill ${createDelete.available ? "warn" : "blocked"}">create delete ${createDelete.available ? "ready" : "blocked"}</span>${relationCount ? ` <span class="pill warn">relation ${escapeHtml(formatValue(relationCount))}</span>` : ""}</div>
         <div class="filter-help">대상: ${escapeHtml(formatValue(payload.targetType))} / 행 ${escapeHtml(formatValue(payload.targetId))} · action=${escapeHtml(formatValue(payload.action))} · applied=${escapeHtml(formatValue(payload.applied))}</div>
         <div class="filter-help">사유: ${escapeHtml(formatValue(payload.reason))} · 시각: ${escapeHtml(formatClock(payload.createdAt))}</div>
         <div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>이전 값</th><th>적용 값</th></tr></thead><tbody>${rows}</tbody></table></div>
@@ -3037,6 +3040,14 @@
           <span class="pill warn">DB rollback: dev-key guarded</span>
         </div>
         <div class="edit-draft-result" data-admin-rollback-result><div class="empty">먼저 <strong>되돌리기 미리보기</strong>를 눌러 현재 DB 값이 이 변경 이력의 적용 값과 일치하는지 확인하세요.</div></div>
+        <div class="edit-draft-actions">
+          <button class="btn mini primary" type="button" data-admin-action="preview-admin-create-delete" ${createDelete.available ? "" : "disabled"}>생성 row 삭제 미리보기</button>
+          <label class="apply-confirm-field"><span>생성 row 삭제 확인 문구</span><input type="text" data-admin-create-delete-confirm placeholder="${escapeHtml(ADMIN_CREATE_DELETE_CONFIRM_TEXT)}" autocomplete="off" /></label>
+          <label class="apply-confirm-field"><span>생성 row 삭제 사유</span><input type="text" data-admin-create-delete-reason placeholder="예: 테스트 생성 row 삭제" autocomplete="off" /></label>
+          <button class="btn mini danger" type="button" data-admin-action="apply-admin-create-delete" ${createDelete.available ? "" : "disabled"}>검사 후 생성 row 삭제</button>
+          <span class="pill ${createDelete.available ? "warn" : "blocked"}">${createDelete.available ? "create-delete guarded" : "create-delete locked"}</span>
+        </div>
+        <div class="edit-draft-result" data-admin-create-delete-result><div class="empty">create action으로 생성된 제한 도메인 row만 삭제 되돌리기를 미리보기할 수 있습니다.</div></div>
       </div>
     `;
   }
@@ -3144,6 +3155,101 @@
       });
     } else {
       setStatus(`되돌리기 실패/차단: ${formatValue(payload.status)}`, "error");
+    }
+    return response;
+  }
+
+
+  function readAdminCreateDeleteControls() {
+    const card = $(`[data-admin-change-log-detail-card]`);
+    const confirmEl = $(`[data-admin-create-delete-confirm]`);
+    const reasonEl = $(`[data-admin-create-delete-reason]`);
+    return {
+      changeLogId: card ? Number(card.getAttribute("data-admin-change-log-id") || 0) : 0,
+      confirmText: confirmEl ? confirmEl.value.trim() : "",
+      reason: reasonEl ? reasonEl.value.trim() : "",
+      confirmMatches: !!confirmEl && confirmEl.value.trim() === ADMIN_CREATE_DELETE_CONFIRM_TEXT,
+    };
+  }
+
+  function renderAdminCreateDeleteResult(payload) {
+    const target = $(`[data-admin-create-delete-result]`);
+    if (!target) return;
+    const result = payload || {};
+    const changes = Array.isArray(result.changes) ? result.changes : [];
+    const mismatches = Array.isArray(result.currentMismatches) ? result.currentMismatches : [];
+    const dependencyChecks = Array.isArray(result.dependencyChecks) ? result.dependencyChecks : [];
+    const warnings = Array.isArray(result.warnings) ? result.warnings : [];
+    const rows = changes.length ? changes.map((change) => `
+      <tr><td>${escapeHtml(change.label || change.key)}${change.relation ? ` <span class="pill warn">relation</span>` : ""}</td><td>${renderAdminChangeValueCell(result.domain, change, "after", {})}</td><td><span class="pill blocked">삭제 후 없음</span></td></tr>
+    `).join("") : `<tr><td colspan="3">삭제 대상 필드 없음</td></tr>`;
+    const mismatchRows = mismatches.length ? mismatches.map((item) => `
+      <tr><td>${escapeHtml(item.label || item.key)}</td><td>${escapeHtml(formatValue(item.current))}</td><td>${escapeHtml(formatValue(item.expectedAfter))}</td><td>${escapeHtml(formatValue(item.deleteEffect || "blocked"))}</td></tr>
+    `).join("") : `<tr><td colspan="4">현재 DB 값이 생성 당시 값과 일치</td></tr>`;
+    const dependencyRows = dependencyChecks.length ? dependencyChecks.map((item) => `
+      <tr><td>${escapeHtml(formatValue(item.label))}</td><td>${escapeHtml(formatValue(item.target))}</td><td>${escapeHtml(formatValue(item.count))}</td><td><span class="pill ${item.blocksDelete ? "blocked" : "good"}">${item.blocksDelete ? "차단" : "통과"}</span><div class="filter-help">${escapeHtml(formatValue(item.note))}</div></td></tr>
+    `).join("") : `<tr><td colspan="4">연결 검사 없음</td></tr>`;
+    target.innerHTML = `
+      <div class="draft-preview-summary">
+        <span class="pill ${result.createDeleteReady ? "good" : "blocked"}">createDeleteReady: ${escapeHtml(formatValue(result.createDeleteReady))}</span>
+        <span class="pill ${result.currentMatchesCreateValues ? "good" : "blocked"}">currentMatchesCreateValues: ${escapeHtml(formatValue(result.currentMatchesCreateValues))}</span>
+        <span class="pill ${Number(result.dependencyBlockerCount || 0) ? "blocked" : "good"}">dependency blockers: ${escapeHtml(formatValue(result.dependencyBlockerCount || 0))}</span>
+        <span class="pill ${result.dryRun ? "warn" : "good"}">dryRun: ${escapeHtml(formatValue(result.dryRun))}</span>
+        <span class="pill ${result.writeBlocked ? "blocked" : "good"}">writeBlocked: ${escapeHtml(formatValue(result.writeBlocked))}</span>
+        <span class="pill ${result.deleted ? "good" : "warn"}">deleted: ${escapeHtml(formatValue(result.deleted === true))}</span>
+        ${result.deleteChangeLogId ? `<span class="pill good">delete log #${escapeHtml(formatValue(result.deleteChangeLogId))}</span>` : ""}
+      </div>
+      ${warnings.length ? `<div class="filter-help">warnings: ${escapeHtml(warnings.join(", "))}</div>` : ""}
+      ${result.note ? `<div class="filter-help">${escapeHtml(result.note)}</div>` : ""}
+      <details class="json-detail" open><summary>삭제될 생성 값</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>생성 값</th><th>삭제 후</th></tr></thead><tbody>${rows}</tbody></table></div></details>
+      <details class="json-detail" ${mismatches.length ? "open" : ""}><summary>현재값 안전 검사</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>현재 DB 값</th><th>생성 당시 값</th><th>판정</th></tr></thead><tbody>${mismatchRows}</tbody></table></div></details>
+      <details class="json-detail" open><summary>연결 데이터 삭제 차단 검사</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>검사</th><th>대상</th><th>개수</th><th>판정</th></tr></thead><tbody>${dependencyRows}</tbody></table></div></details>
+    `;
+  }
+
+  async function previewAdminCreateDeleteRollback(options) {
+    ensureApi();
+    const controls = readAdminCreateDeleteControls();
+    if (!controls.changeLogId) throw new Error("생성 row 삭제를 검사할 변경 이력 상세를 먼저 열어주세요.");
+    const target = $(`[data-admin-create-delete-result]`);
+    if (target) target.innerHTML = `<div class="empty">생성 row 삭제 안전 검사 중...</div>`;
+    const timeoutMs = options && options.timeoutMs !== undefined ? options.timeoutMs : DEFAULT_TIMEOUT_MS;
+    const response = await window.RpgGameApi.previewAdminCreateDeleteRollback({ id: controls.changeLogId, reason: controls.reason || undefined, timeoutMs });
+    const payload = response && response.payload ? response.payload : {};
+    renderAdminCreateDeleteResult(payload);
+    setStatus(`생성 row 삭제 미리보기: ${formatValue(payload.status)} · ready ${formatValue(payload.createDeleteReady)}`, payload.createDeleteReady ? "ok" : "error");
+    return response;
+  }
+
+  async function applyAdminCreateDeleteRollback(options) {
+    ensureApi();
+    const controls = readAdminCreateDeleteControls();
+    if (!controls.changeLogId) throw new Error("생성 row 삭제를 적용할 변경 이력 상세를 먼저 열어주세요.");
+    requireAdminWriteDevKeyForUi("생성 row 삭제 적용");
+    if (!controls.confirmMatches) {
+      const error = new Error(`생성 row 삭제 확인 문구를 정확히 입력해야 합니다: ${ADMIN_CREATE_DELETE_CONFIRM_TEXT}`);
+      setStatus(error.message, "error");
+      const target = $(`[data-admin-create-delete-result]`);
+      if (target) target.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+      throw error;
+    }
+    const confirmed = window.confirm("정말 create 이력으로 생성된 row를 DB에서 삭제할까요? 현재값/연결 데이터 안전 검사를 통과해야 적용됩니다.");
+    if (!confirmed) {
+      setStatus("생성 row 삭제 적용을 취소했습니다.", "info");
+      return { ok: false, canceled: true };
+    }
+    const target = $(`[data-admin-create-delete-result]`);
+    if (target) target.innerHTML = `<div class="empty">백엔드에서 생성 row 삭제를 적용하는 중...</div>`;
+    const timeoutMs = options && options.timeoutMs !== undefined ? options.timeoutMs : ADMIN_EDIT_APPLY_TIMEOUT_MS;
+    const response = await window.RpgGameApi.applyAdminCreateDeleteRollback({ id: controls.changeLogId, confirmText: controls.confirmText, reason: controls.reason || undefined, timeoutMs });
+    const payload = response && response.payload ? response.payload : {};
+    renderAdminCreateDeleteResult(payload);
+    if (payload.deleted) {
+      await refreshAdminChangeLogs({ filters: readChangeLogFiltersFromDom() });
+      await refreshAdminMasterCatalog({ filters: readMasterCatalogFiltersFromDom() });
+      setStatus(`생성 row 삭제 완료: delete log #${formatValue(payload.deleteChangeLogId)}`, "ok");
+    } else {
+      setStatus(`생성 row 삭제 실패/차단: ${formatValue(payload.status)}`, "error");
     }
     return response;
   }
@@ -3412,6 +3518,20 @@
           if (!(error && (String(error.message || "").includes("확인 문구") || String(error.message || "").includes("dev key")))) renderError(error);
         }
       }
+      if (action === "preview-admin-create-delete") {
+        try {
+          await previewAdminCreateDeleteRollback();
+        } catch (error) {
+          renderError(error);
+        }
+      }
+      if (action === "apply-admin-create-delete") {
+        try {
+          await applyAdminCreateDeleteRollback();
+        } catch (error) {
+          if (!(error && (String(error.message || "").includes("확인 문구") || String(error.message || "").includes("dev key")))) renderError(error);
+        }
+      }
       if (action === "verify-master-api-target") {
         try {
           await verifySelectedMasterDataApi();
@@ -3480,7 +3600,7 @@
   }
 
   function checkAdminReadOnlyPageReady(options) {
-    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterCreateBlueprint === "function" && typeof window.RpgGameApi.previewAdminMasterDataCreate === "function" && typeof window.RpgGameApi.applyAdminMasterDataCreate === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function" && typeof window.RpgGameApi.previewAdminMasterDataEdit === "function" && typeof window.RpgGameApi.applyAdminMasterDataEdit === "function" && typeof window.RpgGameApi.listAdminChangeLogs === "function" && typeof window.RpgGameApi.fetchAdminChangeLogDetail === "function" && typeof window.RpgGameApi.previewAdminChangeLogRollback === "function" && typeof window.RpgGameApi.applyAdminChangeLogRollback === "function" && typeof window.RpgGameApi.setAdminWriteDevKey === "function" && typeof window.RpgGameApi.hasAdminWriteDevKey === "function");
+    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterCreateBlueprint === "function" && typeof window.RpgGameApi.previewAdminMasterDataCreate === "function" && typeof window.RpgGameApi.applyAdminMasterDataCreate === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function" && typeof window.RpgGameApi.previewAdminMasterDataEdit === "function" && typeof window.RpgGameApi.applyAdminMasterDataEdit === "function" && typeof window.RpgGameApi.listAdminChangeLogs === "function" && typeof window.RpgGameApi.fetchAdminChangeLogDetail === "function" && typeof window.RpgGameApi.previewAdminChangeLogRollback === "function" && typeof window.RpgGameApi.applyAdminChangeLogRollback === "function" && typeof window.RpgGameApi.previewAdminCreateDeleteRollback === "function" && typeof window.RpgGameApi.applyAdminCreateDeleteRollback === "function" && typeof window.RpgGameApi.setAdminWriteDevKey === "function" && typeof window.RpgGameApi.hasAdminWriteDevKey === "function");
     const domReady = !!document.querySelector("[data-admin-cards]");
     const locationHintReady = !!document.querySelector("[data-admin-current-url]");
     const snapshotFilterReady = !!document.querySelector("[data-admin-filter-slot-key]");
@@ -3501,7 +3621,8 @@
     const relationSearchReady = typeof applyAdminRelationOptionFilter === "function" && typeof filterAdminDraftSelectOptions === "function";
     const relationPreviewReady = typeof formatAdminChangeValueText === "function" && typeof getAdminRelationValueDisplay === "function" && typeof openAdminMasterDataDetailByCode === "function";
     const changeLogRelationReady = typeof getAdminChangeRelationInfo === "function" && typeof renderAdminRollbackMismatchValueCell === "function" && typeof getAdminRelationOpenTargetFromChange === "function";
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && masterApiVerifyReady && adminWriteGuardReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createDraftPreviewReady, createApplyReady, createBlueprint: getAdminCreateBlueprintReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const createDeleteRollbackReady = typeof previewAdminCreateDeleteRollback === "function" && typeof applyAdminCreateDeleteRollback === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRollback === "function");
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && masterApiVerifyReady && adminWriteGuardReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createBlueprint: getAdminCreateBlueprintReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -3569,6 +3690,10 @@
     applyAdminChangeLogRollback,
     readAdminRollbackControls,
     renderAdminRollbackResult,
+    previewAdminCreateDeleteRollback,
+    applyAdminCreateDeleteRollback,
+    readAdminCreateDeleteControls,
+    renderAdminCreateDeleteResult,
     syncAdminWriteDevKeyInput,
     saveAdminWriteDevKeyFromInput,
     clearAdminWriteDevKey,
@@ -3677,6 +3802,9 @@
   window.previewAdminChangeLogRollback = previewAdminChangeLogRollback;
   window.applyAdminChangeLogRollback = applyAdminChangeLogRollback;
   window.readAdminRollbackControls = readAdminRollbackControls;
+  window.previewAdminCreateDeleteRollback = previewAdminCreateDeleteRollback;
+  window.applyAdminCreateDeleteRollback = applyAdminCreateDeleteRollback;
+  window.readAdminCreateDeleteControls = readAdminCreateDeleteControls;
   window.verifySelectedMasterDataApi = verifySelectedMasterDataApi;
   window.runPostWriteMasterApiVerification = runPostWriteMasterApiVerification;
 

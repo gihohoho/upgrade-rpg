@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.response import ok_response
 from app.core.security import CurrentUser, get_current_user_placeholder, require_admin_write_dev_key
 from app.db.session import get_db_session
-from app.schemas.admin import AdminChangeLogRollbackApplyRequest, AdminChangeLogRollbackPreviewRequest, AdminChangePreviewRequest, AdminMasterDataCreateApplyRequest, AdminMasterDataCreatePreviewRequest, AdminMasterDataEditApplyRequest, AdminMasterDataEditPreviewRequest
+from app.schemas.admin import AdminChangeLogRollbackApplyRequest, AdminChangeLogRollbackPreviewRequest, AdminChangePreviewRequest, AdminCreateDeleteApplyRequest, AdminCreateDeletePreviewRequest, AdminMasterDataCreateApplyRequest, AdminMasterDataCreatePreviewRequest, AdminMasterDataEditApplyRequest, AdminMasterDataEditPreviewRequest
 from app.services.admin_service import AdminService
 
 router = APIRouter()
@@ -478,10 +478,85 @@ async def get_admin_change_log_detail(
             "id": detail.get("id"),
             "changedKeyCount": detail.get("changedKeyCount", 0),
             "rollbackAvailable": (detail.get("rollback") or {}).get("available", False),
+            "createDeleteAvailable": (detail.get("createDelete") or {}).get("available", False),
         },
         meta={
             "source": "postgresql",
             "note": "관리자 변경 이력 상세 조회입니다. before/after 전체 JSON 원본 대신 스칼라 변경 행만 내려줍니다.",
+        },
+    )
+
+
+@router.post("/change-logs/{change_log_id}/create-delete-preview")
+async def preview_admin_create_delete_rollback(
+    change_log_id: int,
+    payload: AdminCreateDeletePreviewRequest | None = Body(default=None),
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Preview safe deletion rollback for a row made by create-apply."""
+    preview = await service.preview_admin_create_delete_rollback(
+        session,
+        change_log_id=change_log_id,
+        reason=payload.reason if payload else None,
+    )
+    return ok_response(
+        type="admin.change_log.create_delete_preview",
+        payload=preview,
+        data={
+            "status": preview["status"],
+            "readOnly": preview.get("readOnly"),
+            "dryRun": preview.get("dryRun"),
+            "writeBlocked": preview.get("writeBlocked"),
+            "adminUserId": current_user.id,
+            "changeLogId": preview.get("changeLogId"),
+            "createDeleteReady": preview.get("createDeleteReady", False),
+            "wouldDelete": preview.get("wouldDelete", False),
+            "dependencyBlockerCount": preview.get("dependencyBlockerCount", 0),
+            "currentMatchesCreateValues": preview.get("currentMatchesCreateValues", False),
+            "diffCount": preview.get("diffCount", 0),
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 create 이력의 생성 row 삭제 되돌리기 미리보기입니다. 현재값과 연결 데이터 검사를 통과해야만 apply가 가능합니다.",
+        },
+    )
+
+
+@router.post("/change-logs/{change_log_id}/create-delete-apply")
+async def apply_admin_create_delete_rollback(
+    change_log_id: int,
+    payload: AdminCreateDeleteApplyRequest = Body(...),
+    _write_guard: bool = Depends(require_admin_write_dev_key),
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Apply a guarded deletion rollback for a row made by create-apply."""
+    result = await service.apply_admin_create_delete_rollback(
+        session,
+        change_log_id=change_log_id,
+        confirm_text=payload.confirm_text,
+        reason=payload.reason,
+        admin_user_id=current_user.id,
+    )
+    return ok_response(
+        type="admin.change_log.create_delete_apply",
+        payload=result,
+        data={
+            "status": result["status"],
+            "readOnly": result.get("readOnly"),
+            "dryRun": result.get("dryRun"),
+            "writeBlocked": result.get("writeBlocked"),
+            "deleted": result.get("deleted", False),
+            "adminUserId": current_user.id,
+            "changeLogId": result.get("changeLogId"),
+            "deleteChangeLogId": result.get("deleteChangeLogId"),
+            "dependencyBlockerCount": result.get("dependencyBlockerCount", 0),
+            "diffCount": result.get("diffCount", 0),
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 create 이력의 생성 row 삭제 적용 API입니다. X-Admin-Dev-Key, 확인 문구, 현재값/연결 데이터 검사를 통과한 경우에만 DB에서 삭제합니다.",
         },
     )
 

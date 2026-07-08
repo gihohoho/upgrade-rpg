@@ -73,3 +73,5 @@ docs/archive/stage-notes/
 
 - [ADMIN_CREATE_DRAFT_PREVIEW.md](ADMIN_CREATE_DRAFT_PREVIEW.md) - 신규 row 생성 초안 입력 UI와 preview-only 검증
 - `ADMIN_CREATE_APPLY_LIMITED.md` - 신규 row 제한 생성 apply 단계
+
+- [Admin Create Delete Rollback](ADMIN_CREATE_DELETE_ROLLBACK.md)

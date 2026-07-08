@@ -26,7 +26,7 @@ assertContains("backend/app/services/admin_service.py", [
   "create_domain_locked",
   "create_confirmation_required",
   "action=\"create\"",
-  "create_rollback_delete_not_enabled_yet",
+  "MASTER_CREATE_DELETE_CONFIRM_TEXT",
 ]);
 
 assertContains("backend/app/api/routes/admin.py", [
@@ -51,7 +51,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v165.admin-create-apply-limited",
+  "v168.admin-create-delete-rollback",
   "ADMIN_CREATE_APPLY_CONFIRM_TEXT",
   "CREATE MASTER DATA ROW",
   "applyAdminCreateDraft",
@@ -59,6 +59,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "data-admin-create-confirm",
   "createApplyUnlocked",
   "createApplyReady",
+  "createDeleteRollbackReady",
 ]);
 
 assertContains("docs/ADMIN_CREATE_APPLY_LIMITED.md", [

@@ -1,5 +1,16 @@
 # Changelog
 
+## v168 - Admin Create Delete Rollback
+
+- `create-apply`로 만든 제한 도메인 row 삭제 되돌리기 preview/apply API를 추가했습니다.
+- 대상은 `characters`, `enhancementGroups`의 `action=create` 이력으로 제한했습니다.
+- 삭제 preview에서 현재값이 생성 당시 값과 같은지 검사합니다.
+- 삭제 preview에서 연결 데이터 blocker 수를 `dependencyBlockerCount`로 표시합니다.
+- 연결 데이터가 하나라도 있으면 삭제를 차단합니다.
+- 실제 삭제는 dev key와 `DELETE CREATED MASTER DATA ROW` 확인 문구가 필요합니다.
+- 삭제 성공 시 `admin_change_logs`에 `action=create_delete`로 기록합니다.
+- DB reset / seed는 필요 없습니다.
+
 ## v162 - Admin Create Draft Preview
 
 - 신규 row 생성 준비 화면에 blueprint 기반 생성 초안 입력 UI를 추가했습니다.
@@ -384,6 +395,17 @@
 - 기존 게임 동작은 유지하고, FastAPI 응답 구조로 옮기기 위한 중간 계층만 추가했습니다.
 
 # Changelog
+
+## v168 - Admin Create Delete Rollback
+
+- `create-apply`로 만든 제한 도메인 row 삭제 되돌리기 preview/apply API를 추가했습니다.
+- 대상은 `characters`, `enhancementGroups`의 `action=create` 이력으로 제한했습니다.
+- 삭제 preview에서 현재값이 생성 당시 값과 같은지 검사합니다.
+- 삭제 preview에서 연결 데이터 blocker 수를 `dependencyBlockerCount`로 표시합니다.
+- 연결 데이터가 하나라도 있으면 삭제를 차단합니다.
+- 실제 삭제는 dev key와 `DELETE CREATED MASTER DATA ROW` 확인 문구가 필요합니다.
+- 삭제 성공 시 `admin_change_logs`에 `action=create_delete`로 기록합니다.
+- DB reset / seed는 필요 없습니다.
 
 ## v162 - Admin Create Draft Preview
 

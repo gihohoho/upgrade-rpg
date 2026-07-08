@@ -12,6 +12,8 @@ node tools/smoke_admin_guarded_edit_apply.js
 node tools/smoke_admin_change_log_rollback.js
 node tools/smoke_admin_create_blueprint_readonly.js
 node tools/smoke_admin_create_draft_preview.js
+node tools/smoke_admin_create_apply_limited.js
+node tools/smoke_admin_create_delete_rollback.js
 node tools/smoke_admin_post_edit_api_verify.js
 node tools/smoke_admin_master_api_verify.js
 node tools/smoke_runtime_stacked_enhance_space_guard.js
