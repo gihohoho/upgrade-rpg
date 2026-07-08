@@ -55,8 +55,8 @@ class AdminService:
     MASTER_CREATE_APPLY_CONFIRM_TEXT = "CREATE MASTER DATA ROW"
     MASTER_CREATE_DELETE_CONFIRM_TEXT = "DELETE CREATED MASTER DATA ROW"
     MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT = "RESTORE DELETED CREATED ROW"
-    MASTER_CREATE_APPLY_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses", "skills", "dropTables", "itemTemplates", "dropTableItems"}
-    MASTER_CREATE_DELETE_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses", "skills", "dropTables", "itemTemplates", "dropTableItems"}
+    MASTER_CREATE_APPLY_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses", "skills", "dropTables", "itemTemplates", "dropTableItems", "skillLevels", "enhancementLevels", "characterSkills"}
+    MASTER_CREATE_DELETE_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses", "skills", "dropTables", "itemTemplates", "dropTableItems", "skillLevels", "enhancementLevels", "characterSkills"}
 
     MASTER_EDIT_ALLOWED_FIELDS: dict[str, set[str]] = {
         "itemTemplates": {"name", "item_type", "description", "grade", "stackable", "equip_slot", "enhance_group_code", "admin_note"},
@@ -1490,6 +1490,36 @@ class AdminService:
                     "note": "dropTableItems는 하위 연결이 없는 leaf row라 현재값 일치 검사 후 id 기준으로 삭제할 수 있습니다.",
                 }
             ]
+        if domain == "skillLevels":
+            return [
+                {
+                    "label": "id 기반 스킬 레벨",
+                    "target": "skill_levels.id",
+                    "count": 0,
+                    "blocksDelete": False,
+                    "note": "skillLevels는 skills를 참조하는 leaf row라 현재값 일치 검사 후 id 기준으로 삭제할 수 있습니다.",
+                }
+            ]
+        if domain == "enhancementLevels":
+            return [
+                {
+                    "label": "id 기반 강화 단계",
+                    "target": "enhancement_levels.id",
+                    "count": 0,
+                    "blocksDelete": False,
+                    "note": "enhancementLevels는 enhancementGroups를 참조하는 leaf row라 현재값 일치 검사 후 id 기준으로 삭제할 수 있습니다.",
+                }
+            ]
+        if domain == "characterSkills":
+            return [
+                {
+                    "label": "id 기반 캐릭터 스킬 연결",
+                    "target": "character_skills.id",
+                    "count": 0,
+                    "blocksDelete": False,
+                    "note": "characterSkills는 캐릭터와 스킬을 연결하는 leaf row라 현재값 일치 검사 후 id 기준으로 삭제할 수 있습니다.",
+                }
+            ]
 
         if not code_text:
             return [{"label": "code", "count": 1, "blocksDelete": True, "note": "삭제 대상 code를 찾을 수 없어 삭제를 막았습니다."}]
@@ -2026,7 +2056,7 @@ class AdminService:
             "rawJsonReturned": False,
             "assetsReturned": False,
             "warnings": warnings,
-            "note": "신규 row 생성 초안을 검증했습니다. characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 초안을 검증했습니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
+            "note": "신규 row 생성 초안을 검증했습니다. characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems/skillLevels/enhancementLevels/characterSkills는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 초안을 검증했습니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
         }
 
     async def apply_master_data_create(
@@ -2066,7 +2096,7 @@ class AdminService:
                 "wouldBeValid": False,
                 "errorCount": int(preview.get("errorCount") or 0) + 1,
                 "warnings": [*(preview.get("warnings") or []), "create_apply_domain_locked"],
-                "note": "이 도메인의 실제 신규 row 생성은 아직 열지 않았습니다. 현재는 characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems만 제한적으로 생성 가능합니다.",
+                "note": "이 도메인의 실제 신규 row 생성은 아직 열지 않았습니다. 현재는 characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems/skillLevels/enhancementLevels/characterSkills만 제한적으로 생성 가능합니다.",
             })
             return preview
 
@@ -2281,6 +2311,9 @@ class AdminService:
         elif domain == "enhancementLevels":
             group_code = str(values.get("group_code") or "").strip()
             from_level = values.get("from_level")
+            to_level = values.get("to_level")
+            success_rate = values.get("success_rate")
+            gold_cost = values.get("gold_cost")
             if not group_code or not await self._exists_by_code(session, EnhancementGroup, group_code):
                 add("group_code", "relation_target_not_found_enhancement_group", group_code)
             if from_level is None or int(from_level) < 0:
@@ -2289,9 +2322,16 @@ class AdminService:
                 duplicate = await self._exists_duplicate_combo(session, EnhancementLevel, 0, EnhancementLevel.group_code == group_code, EnhancementLevel.from_level == int(from_level))
                 if duplicate:
                     add("from_level", "duplicate_enhancement_group_from_level", from_level)
+            if to_level is None or int(to_level) <= int(from_level or 0):
+                add("to_level", "invalid_enhancement_to_level", to_level)
+            if success_rate is not None and float(success_rate) < 0:
+                add("success_rate", "invalid_enhancement_success_rate", success_rate)
+            if gold_cost is not None and float(gold_cost) < 0:
+                add("gold_cost", "invalid_enhancement_gold_cost", gold_cost)
         elif domain == "characterSkills":
             character_code = str(values.get("character_code") or "").strip()
             skill_code = str(values.get("skill_code") or "").strip()
+            sort_order = values.get("sort_order")
             if not character_code or not await self._exists_by_code(session, Character, character_code):
                 add("character_code", "relation_target_not_found_character", character_code)
             if not skill_code or not await self._exists_by_code(session, Skill, skill_code):
@@ -2300,6 +2340,8 @@ class AdminService:
                 duplicate = await self._exists_duplicate_combo(session, CharacterSkill, 0, CharacterSkill.character_code == character_code, CharacterSkill.skill_code == skill_code)
                 if duplicate:
                     add("skill_code", "duplicate_character_skill_pair", skill_code)
+            if sort_order is not None and int(sort_order) < 0:
+                add("sort_order", "invalid_character_skill_sort_order", sort_order)
         return errors
 
     async def _describe_master_create_relation_value(self, session: AsyncSession, domain: str, key: str, value: Any, values: dict[str, Any]) -> dict[str, Any] | None:
@@ -2431,7 +2473,7 @@ class AdminService:
             "rawJsonReturned": False,
             "assetsReturned": False,
             "warnings": [],
-            "note": "신규 row 생성 설계 응답입니다. characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 설계 응답입니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
+            "note": "신규 row 생성 설계 응답입니다. characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems/skillLevels/enhancementLevels/characterSkills는 dev key와 확인 문구를 통과하면 실제 생성 적용이 가능합니다." if create_apply_unlocked else "신규 row 생성 설계 응답입니다. 이 도메인의 실제 insert는 아직 잠겨 있습니다.",
         }
 
     async def _build_master_create_relation_options(self, session: AsyncSession, domain: str) -> dict[str, Any]:

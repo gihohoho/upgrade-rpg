@@ -17,6 +17,7 @@ node tools/smoke_admin_create_apply_fieldzones.js
 node tools/smoke_admin_create_apply_bosses.js
 node tools/smoke_admin_create_apply_skills_droptables.js
 node tools/smoke_admin_create_apply_items_dropitems.js
+node tools/smoke_admin_create_apply_level_links.js
 node tools/smoke_admin_create_delete_rollback.js
 node tools/smoke_admin_create_delete_restore.js
 node tools/smoke_admin_layout_navigation_shell.js

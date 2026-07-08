@@ -33,15 +33,9 @@ function parseSet(text, name) {
 const service = read("backend/app/services/admin_service.py");
 const createAllowed = parseSet(service, "MASTER_CREATE_APPLY_ALLOWED_DOMAINS");
 const deleteAllowed = parseSet(service, "MASTER_CREATE_DELETE_ALLOWED_DOMAINS");
-const expectedAllowed = ["bosses", "characters", "dropTables", "dropTableItems", "enhancementGroups", "fieldZones", "itemTemplates", "skills"].sort();
-const lockedDomains = ["skillLevels", "enhancementLevels", "characterSkills"];
-
+const expectedAllowed = ["bosses", "characters", "characterSkills", "dropTables", "dropTableItems", "enhancementGroups", "enhancementLevels", "fieldZones", "itemTemplates", "skillLevels", "skills"].sort();
 assert(JSON.stringify(createAllowed) === JSON.stringify(expectedAllowed), `create allow-list mismatch: ${createAllowed.join(",")}`);
 assert(JSON.stringify(deleteAllowed) === JSON.stringify(expectedAllowed), `delete/restore allow-list mismatch: ${deleteAllowed.join(",")}`);
-lockedDomains.forEach((domain) => {
-  assert(!createAllowed.includes(domain), `${domain} must stay locked for create apply`);
-  assert(!deleteAllowed.includes(domain), `${domain} must stay locked for create delete/restore`);
-});
 
 assertContains("backend/app/services/admin_service.py", [
   "if domain == \"fieldZones\"",

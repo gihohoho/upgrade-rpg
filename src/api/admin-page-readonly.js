@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  const VERSION = "v178.admin-create-apply-items-dropitems";
-  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables";
+  const VERSION = "v179.admin-create-apply-level-links";
+  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -1154,7 +1154,7 @@
     return `
       <div class="detail-card edit-draft-card create-draft-card" data-admin-create-draft data-admin-create-draft-domain="${escapeHtml(payload.domain || DEFAULT_MASTER_DOMAIN)}">
         <div class="detail-title">신규 row 생성 초안 <span class="pill warn">preview first</span><span class="pill ${payload.createApplyUnlocked ? "warn" : "blocked"}">${payload.createApplyUnlocked ? "limited insert open" : "insert locked"}</span></div>
-        <div class="filter-help">아래 입력칸은 새 row를 만들 때 필요한 값을 미리 넣어보는 화면입니다. 먼저 <strong>생성 초안 검증</strong>으로 unique/relation/combo 검사를 통과해야 합니다. 실제 생성은 characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems만 dev key와 확인 문구로 제한 적용됩니다.</div>
+        <div class="filter-help">아래 입력칸은 새 row를 만들 때 필요한 값을 미리 넣어보는 화면입니다. 먼저 <strong>생성 초안 검증</strong>으로 unique/relation/combo 검사를 통과해야 합니다. 실제 생성은 characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems/skillLevels/enhancementLevels/characterSkills만 dev key와 확인 문구로 제한 적용됩니다.</div>
         <div class="edit-draft-grid">${rows}</div>
         <div class="edit-draft-actions">
           <button class="btn mini primary" type="button" data-admin-action="preview-admin-create-draft">생성 초안 검증</button>

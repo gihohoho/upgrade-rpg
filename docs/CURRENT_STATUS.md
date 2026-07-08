@@ -1,8 +1,8 @@
 # Current Status
 
-현재 기준: **v178 create apply itemTemplates/dropTableItems**
+현재 기준: **v179 create apply level/link tables**
 
-이 패키지 기준 ZIP: **rpg_v178_items_dropitems_create_apply_ready.zip**
+이 패키지 기준 ZIP: **rpg_v179_level_links_create_apply_ready.zip**
 
 ## 현재 상태
 
@@ -17,22 +17,29 @@
 - 신규 row create/delete/restore 제한 흐름 유지.
 - 관리자 페이지 레이아웃 shell, sidebar, sticky header, 접기/펼치기 유지.
 
-## v178 완료
+## v179 완료
 
-- 신규 row 실제 생성 apply 제한 도메인에 `itemTemplates` 추가.
-- 신규 row 실제 생성 apply 제한 도메인에 `dropTableItems` 추가.
-- `itemTemplates`, `dropTableItems` 생성 row 삭제/복원 allow-list 추가.
-- `itemTemplates` 생성 row 삭제 전 아래 dependency guard 추가.
-  - `dropTableItems.item_template_code`
-  - `itemInstances.template_code`
-- `dropTableItems`는 code 없는 leaf row라 id 기반 생성 row 삭제/복원 흐름을 제한 오픈.
-- `dropTableItems` 생성 preview/apply에 아래 값 검증 추가.
-  - `rate >= 0`
-  - `min_quantity >= 1`
-  - `max_quantity >= 1`
-  - `max_quantity >= min_quantity`
-- 관리자 생성 준비 UI 안내 문구를 `characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems` 기준으로 갱신.
-- `skillLevels`, `enhancementLevels`, `characterSkills` 생성 apply는 계속 잠금 유지.
+- 신규 row 실제 생성 apply 제한 도메인에 `skillLevels`, `enhancementLevels`, `characterSkills` 추가.
+- 위 3개 도메인 생성 row 삭제/복원 allow-list 추가.
+- `skillLevels`, `enhancementLevels`, `characterSkills`는 `code` 없는 row라 id 기반 생성 row 삭제/복원 흐름을 사용.
+- `skillLevels` 생성 검증 추가/유지:
+  - `skill_code`는 `skills.code`에 존재해야 함.
+  - `level >= 0`
+  - `skill_code + level` 중복 차단.
+- `enhancementLevels` 생성 검증 추가/유지:
+  - `group_code`는 `enhancementGroups.code`에 존재해야 함.
+  - `from_level >= 0`
+  - `to_level > from_level`
+  - `success_rate >= 0`
+  - `gold_cost >= 0`
+  - `group_code + from_level` 중복 차단.
+- `characterSkills` 생성 검증 추가/유지:
+  - `character_code`는 `characters.code`에 존재해야 함.
+  - `skill_code`는 `skills.code`에 존재해야 함.
+  - `character_code + skill_code` 중복 차단.
+  - `sort_order >= 0`
+- JSON 계열 필드는 생성 입력에서 계속 잠금.
+- 관리자 생성 준비 UI 안내 문구를 `characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems/skillLevels/enhancementLevels/characterSkills` 기준으로 갱신.
 - DB reset / seed 없이 진행 가능.
 
 ## 제한 생성/삭제/복원 상태
@@ -47,6 +54,9 @@
 - `dropTables`
 - `itemTemplates`
 - `dropTableItems`
+- `skillLevels`
+- `enhancementLevels`
+- `characterSkills`
 
 현재 생성 row delete/restore가 열린 도메인:
 
@@ -58,15 +68,13 @@
 - `dropTables`
 - `itemTemplates`
 - `dropTableItems`
-
-아직 생성 apply를 열지 않는 것이 좋은 도메인:
-
 - `skillLevels`
 - `enhancementLevels`
 - `characterSkills`
 
 ## 이전 완료
 
+- v178: `itemTemplates`, `dropTableItems` 신규 row 생성 apply 제한 오픈.
 - v177: `skills`, `dropTables` 신규 row 생성 apply 제한 오픈.
 - v176: `bosses` 신규 row 생성 apply 제한 오픈.
 - v175: `fieldZones` 신규 row 생성 apply 제한 오픈.

@@ -80,9 +80,9 @@ uvicorn app.main:app --reload
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v178: create apply itemTemplates/dropTableItems**
-- 새 채팅용 ZIP: **rpg_v178_items_dropitems_create_apply_ready.zip**
-- 이 ZIP은 `itemTemplates`, `dropTableItems` 신규 row 생성 apply 제한 오픈과 생성 row 삭제/복원 안전검사 확장을 포함합니다.
+- 최신 안정 버전: **v179: create apply level/link tables**
+- 새 채팅용 ZIP: **rpg_v179_level_links_create_apply_ready.zip**
+- 이 ZIP은 `skillLevels`, `enhancementLevels`, `characterSkills` 신규 row 생성 apply 제한 오픈과 id 기반 생성 row 삭제/복원 안전검사 확장을 포함합니다.
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -138,12 +138,25 @@ uvicorn app.main:app --reload
 42. `skills`, `dropTables` 생성 row 삭제/복원 allow-list 및 dependency guard 완료.
 43. `itemTemplates`, `dropTableItems` 신규 row create apply 제한 오픈 완료.
 44. `itemTemplates`, `dropTableItems` 생성 row 삭제/복원 allow-list 및 dependency guard 완료.
+45. `skillLevels`, `enhancementLevels`, `characterSkills` 신규 row create apply 제한 오픈 완료.
+46. `skillLevels`, `enhancementLevels`, `characterSkills` 생성 row 삭제/복원 allow-list 및 id 기반 guard 완료.
+
+## v179 create apply level/link tables
+
+- 신규 row 실제 생성 apply 제한 도메인에 `skillLevels`, `enhancementLevels`, `characterSkills`를 추가했습니다.
+- 현재 `characters`, `enhancementGroups`, `fieldZones`, `bosses`, `skills`, `dropTables`, `itemTemplates`, `dropTableItems`, `skillLevels`, `enhancementLevels`, `characterSkills` 생성 apply가 가능합니다.
+- `skillLevels`, `enhancementLevels`, `characterSkills` 생성 row 삭제/복원도 제한 allow-list에 추가했습니다.
+- 위 3개 도메인은 `code`가 없는 relation/level row라 id 기반 삭제/복원 흐름을 사용합니다.
+- `skillLevels`는 `skill_code + level` 중복을 차단합니다.
+- `enhancementLevels`는 `group_code + from_level` 중복을 차단하고 `to_level > from_level`, `success_rate >= 0`, `gold_cost >= 0`을 검사합니다.
+- `characterSkills`는 `character_code + skill_code` 중복을 차단하고 `sort_order >= 0`을 검사합니다.
+- JSON 계열 필드는 생성 입력에서 계속 잠금 상태입니다.
+- DB schema 변경 없음, DB reset / seed 필요 없음.
+- `.env`, `.gitignore` 변경 없음.
 
 ## v178 create apply itemTemplates/dropTableItems
 
 - 신규 row 실제 생성 apply 제한 도메인에 `itemTemplates`, `dropTableItems`를 추가했습니다.
-- `characters`, `enhancementGroups`, `fieldZones`, `bosses`, `skills`, `dropTables`, `itemTemplates`, `dropTableItems`만 생성 apply가 가능합니다.
-- `skillLevels`, `enhancementLevels`, `characterSkills`는 계속 생성 apply 잠금 상태입니다.
 - `itemTemplates`, `dropTableItems` 생성 row 삭제/복원도 제한 allow-list에 추가했습니다.
 - `itemTemplates` 삭제 preview에서 `dropTableItems.item_template_code`, `itemInstances.template_code` 연결 검사를 수행합니다.
 - `dropTableItems`는 code 없는 leaf row라 id 기반 삭제/복원 흐름을 제한 오픈했습니다.
@@ -196,7 +209,7 @@ uvicorn app.main:app --reload
 
 ## DB / seed
 
-- v178 기준 DB reset / seed 필요 없음.
+- v179 기준 DB reset / seed 필요 없음.
 - DB schema 변경 없음.
 - `.env`, `.gitignore` 변경 없음.
 
@@ -212,7 +225,7 @@ bash tools/run_smoke_core.sh
 bash tools/run_smoke_all.sh
 ```
 
-v178 작업 후 둘 다 통과했습니다.
+v179 작업 후 둘 다 통과했습니다.
 
 ## 브라우저 확인용
 
@@ -240,14 +253,17 @@ true
 
 ## 다음 추천 단계
 
-다음은 **itemTemplates/dropTableItems 생성/삭제/복원 브라우저 검증**이 좋습니다.
+다음은 **skillLevels/enhancementLevels/characterSkills 생성·삭제·복원 브라우저 검증**이 좋습니다.
 
 안전한 순서:
 
-1. 브라우저에서 `itemTemplates` 생성 preview/apply를 실제 확인.
-2. 생성된 `itemTemplates` 삭제 preview에서 `dropTableItems.item_template_code`, `itemInstances.template_code` blocker 표시 확인.
-3. 브라우저에서 `dropTableItems` 생성 preview/apply를 실제 확인.
-4. `dropTableItems`에서 `rate`, `min_quantity`, `max_quantity` 검증이 동작하는지 확인.
-5. 생성된 `dropTableItems`가 id 기반으로 삭제/복원되는지 확인.
-6. `skillLevels`, `enhancementLevels`, `characterSkills` 생성 apply는 아직 열지 않음.
-7. 다음 코드 단계는 세 단계 도메인 중 하나를 별도 오픈하거나, create/delete/restore UI의 dependency 표시 강화를 추천.
+1. 브라우저에서 `skillLevels` 생성 preview/apply를 실제 확인.
+2. `skill_code + level` 중복 검증 확인.
+3. 생성된 `skillLevels`가 id 기반으로 삭제/복원되는지 확인.
+4. 브라우저에서 `enhancementLevels` 생성 preview/apply를 실제 확인.
+5. `group_code + from_level`, `to_level > from_level`, 확률/비용 검증 확인.
+6. 생성된 `enhancementLevels`가 id 기반으로 삭제/복원되는지 확인.
+7. 브라우저에서 `characterSkills` 생성 preview/apply를 실제 확인.
+8. `character_code + skill_code` 중복 검증 확인.
+9. 생성된 `characterSkills`가 id 기반으로 삭제/복원되는지 확인.
+10. 이후 관리자 페이지 코드 분리 또는 create/delete/restore UI 표시 개선을 추천.

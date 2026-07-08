@@ -1,5 +1,15 @@
 # Changelog
 
+## v179 - Create Apply Level and Link Tables
+
+- `skillLevels`, `enhancementLevels`, `characterSkills` 신규 row 생성 apply 제한 오픈.
+- 위 3개 도메인 생성 row 삭제/복원 allow-list 추가.
+- code 없는 relation/level row라 id 기반 생성 row 삭제/복원 guard 추가.
+- `skillLevels`는 `skill_code + level` 중복을 차단합니다.
+- `enhancementLevels`는 `group_code + from_level`, `to_level`, 확률/비용 검증을 강화했습니다.
+- `characterSkills`는 `character_code + skill_code`, `sort_order` 검증을 강화했습니다.
+- DB schema 변경 없음, DB reset / seed 필요 없음.
+
 ## v178 - Create Apply ItemTemplates and DropTableItems
 
 - `itemTemplates`, `dropTableItems` 신규 row 생성 apply 제한 오픈.

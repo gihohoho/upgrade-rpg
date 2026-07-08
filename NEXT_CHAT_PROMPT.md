@@ -64,10 +64,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v178: create apply itemTemplates/dropTableItems
+v179: create apply level/link tables
 
 현재 인수인계 ZIP:
-rpg_v178_items_dropitems_create_apply_ready.zip
+rpg_v179_level_links_create_apply_ready.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -116,11 +116,14 @@ docs/PROJECT_STRUCTURE.md
 37. fieldZones / bosses / skills / dropTables 신규 row 실제 생성 apply 제한 오픈 완료.
 38. itemTemplates / dropTableItems 신규 row 실제 생성 apply 제한 오픈 완료.
 39. 생성 row 삭제/복원 guard에 itemTemplates 연결 검사와 dropTableItems id 기반 삭제/복원 지원 추가.
+40. skillLevels / enhancementLevels / characterSkills 신규 row 실제 생성 apply 제한 오픈 완료.
+41. skillLevels / enhancementLevels / characterSkills 생성 row 삭제/복원 id 기반 guard 추가.
 
-v178 현재 상태:
-관리자 신규 row 생성 apply는 characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems까지 제한적으로 열려 있어.
+v179 현재 상태:
+관리자 신규 row 생성 apply는 characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems/skillLevels/enhancementLevels/characterSkills까지 제한적으로 열려 있어.
 itemTemplates는 JSON/asset 필드를 잠근 상태로 scalar/relation 필드만 생성 가능하고, dropTableItems는 code 없는 leaf row라 id 기반 삭제/복원 흐름이 추가되어 있어.
-skillLevels/enhancementLevels/characterSkills는 아직 create apply 잠금 상태야.
+skillLevels/enhancementLevels/characterSkills도 code 없는 relation/level row라 id 기반 삭제/복원 흐름이 추가되어 있어.
+skillLevels는 skill_code + level 중복을 막고, enhancementLevels는 group_code + from_level 중복과 to_level > from_level 검증을 하고, characterSkills는 character_code + skill_code 중복을 막아.
 
 중요한 안전 원칙:
 기존 게임 동작을 깨면 안 됨.
@@ -140,17 +143,19 @@ bash tools/run_smoke_core.sh
 bash tools/run_smoke_all.sh
 
 다음 추천 단계:
-itemTemplates/dropTableItems 생성/삭제/복원 브라우저 확인부터 추천.
-그 다음 skillLevels/enhancementLevels/characterSkills 중 하나를 별도 단계로 열지 검토하거나, create/delete/restore UI dependency 표시 강화 추천.
+skillLevels/enhancementLevels/characterSkills 생성/삭제/복원 브라우저 확인부터 추천.
+그 다음 관리자 페이지 코드 분리 또는 create/delete/restore UI dependency 표시 강화 추천.
 
-v178에서 완료된 일:
-1. itemTemplates create apply allow-list 추가.
-2. dropTableItems create apply allow-list 추가.
-3. itemTemplates/dropTableItems 생성 preview/apply smoke 추가.
-4. itemTemplates 생성 row 삭제 dependency guard에 dropTableItems.item_template_code, itemInstances.template_code 검사 추가.
-5. dropTableItems는 id 기반 생성 row 삭제/복원 흐름 지원 추가.
-6. dropTableItems rate/min/max 수량 검증 추가.
-7. skillLevels, enhancementLevels, characterSkills 생성 apply는 아직 열지 않음.
+v179에서 완료된 일:
+1. skillLevels create apply allow-list 추가.
+2. enhancementLevels create apply allow-list 추가.
+3. characterSkills create apply allow-list 추가.
+4. 위 3개 도메인 생성 row 삭제/복원 allow-list 추가.
+5. skillLevels/enhancementLevels/characterSkills는 id 기반 생성 row 삭제/복원 흐름 지원.
+6. skillLevels skill_code + level 중복 검증 유지.
+7. enhancementLevels group_code + from_level 중복, to_level, success_rate, gold_cost 검증 강화.
+8. characterSkills character_code + skill_code 중복, sort_order 검증 강화.
+9. JSON 계열 필드는 계속 생성 입력에서 잠금.
 
 현재 인수인계 패키지 작업:
 - DB schema 변경 없음.

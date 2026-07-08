@@ -1265,6 +1265,9 @@
             <option value="enhancementGroups">강화 그룹</option>
             <option value="dropTables">드랍 테이블</option>
             <option value="dropTableItems">드랍 아이템</option>
+            <option value="skillLevels">스킬 레벨</option>
+            <option value="enhancementLevels">강화 단계</option>
+            <option value="characterSkills">캐릭터 스킬</option>
           </select>
         </div>
         <div class="filter-field">
@@ -1322,7 +1325,7 @@
 
     <section class="filter-panel" id="section-create-blueprint" data-admin-collapsible data-admin-section-key="create-blueprint" aria-label="신규 row 생성 준비">
       <div class="filter-title">신규 row 생성 준비 <span class="pill warn">limited apply</span></div>
-      <div class="filter-help">characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems만 실제 생성 적용을 제한적으로 열고, 나머지 도메인은 계속 preview-only로 유지합니다.</div>
+      <div class="filter-help">characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems/skillLevels/enhancementLevels/characterSkills만 실제 생성 적용을 제한적으로 열고, 나머지 도메인은 계속 preview-only로 유지합니다.</div>
       <div class="filter-grid" style="grid-template-columns: 180px auto auto; margin-top:10px;">
         <div class="filter-field">
           <label for="admin-create-domain">도메인</label>
@@ -1335,6 +1338,9 @@
             <option value="enhancementGroups">강화 그룹</option>
             <option value="dropTables">드랍 테이블</option>
             <option value="dropTableItems">드랍 아이템</option>
+            <option value="skillLevels">스킬 레벨</option>
+            <option value="enhancementLevels">강화 단계</option>
+            <option value="characterSkills">캐릭터 스킬</option>
           </select>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-self:end;">
@@ -1486,7 +1492,7 @@
     </div>
 
     <footer class="admin-footer" data-admin-footer>
-      <p class="footer-note"><strong>v178 admin create apply itemTemplates/dropTableItems</strong> · v177 admin create apply skills/dropTables · v176 admin create apply bosses · static HTML + JS · FastAPI guarded write/rollback APIs</p>
+      <p class="footer-note"><strong>v179 admin create apply level/link tables · v178 admin create apply itemTemplates/dropTableItems</strong> · v177 admin create apply skills/dropTables · v176 admin create apply bosses · static HTML + JS · FastAPI guarded write/rollback APIs</p>
       <p class="footer-note">legacy smoke marker: v165 admin create apply limited · v171 admin create delete restore · v174 admin collapsed panel style fix</p>
     </footer>
   </main>
