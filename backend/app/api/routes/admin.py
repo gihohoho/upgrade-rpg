@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.response import ok_response
 from app.core.security import CurrentUser, get_current_user_placeholder, require_admin_write_dev_key
 from app.db.session import get_db_session
-from app.schemas.admin import AdminChangeLogRollbackApplyRequest, AdminChangeLogRollbackPreviewRequest, AdminChangePreviewRequest, AdminMasterDataEditApplyRequest, AdminMasterDataEditPreviewRequest
+from app.schemas.admin import AdminChangeLogRollbackApplyRequest, AdminChangeLogRollbackPreviewRequest, AdminChangePreviewRequest, AdminMasterDataCreatePreviewRequest, AdminMasterDataEditApplyRequest, AdminMasterDataEditPreviewRequest
 from app.services.admin_service import AdminService
 
 router = APIRouter()
@@ -168,6 +168,42 @@ async def get_admin_master_create_blueprint(
         meta={
             "source": "postgresql",
             "note": "관리자 신규 row 생성 준비용 read-only blueprint입니다. DB를 수정하지 않습니다.",
+        },
+    )
+
+
+@router.post("/master-data/create-preview")
+async def preview_admin_master_data_create(
+    payload: AdminMasterDataCreatePreviewRequest = Body(...),
+    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Validate a new-row draft without inserting anything."""
+    preview = await service.preview_master_data_create(
+        session,
+        domain=payload.domain,
+        draft=payload.draft,
+        reason=payload.reason,
+        dry_run=payload.dry_run,
+    )
+    return ok_response(
+        type="admin.master_data.create_preview",
+        payload=preview,
+        data={
+            "status": preview["status"],
+            "readOnly": preview["readOnly"],
+            "dryRun": preview["dryRun"],
+            "writeBlocked": preview["writeBlocked"],
+            "adminUserId": current_user.id,
+            "domain": preview["domain"],
+            "fieldCount": preview.get("fieldCount", 0),
+            "errorCount": preview.get("errorCount", 0),
+            "wouldBeValid": preview.get("wouldBeValid", False),
+            "createApplyReady": preview.get("createApplyReady", False),
+        },
+        meta={
+            "source": "postgresql",
+            "note": "관리자 신규 row 생성 초안 검증 전용입니다. DB insert는 아직 잠겨 있고, 이 API는 DB를 수정하지 않습니다.",
         },
     )
 

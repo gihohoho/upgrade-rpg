@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v159.admin-create-blueprint-readonly",
+  "v162.admin-create-draft-preview",
   "ADMIN_DRAFT_BOOLEAN_FIELDS",
   "ADMIN_DRAFT_NUMBER_FIELDS",
   "ADMIN_DRAFT_TEXTAREA_FIELDS",
@@ -33,7 +33,7 @@ assertContains("src/api/admin-page-readonly.js", [
 ]);
 
 assertContains("admin.html", [
-  "v159 admin create blueprint readonly",
+  "v162 admin create draft preview",
   ".draft-field select",
   ".draft-field-heading",
   ".locked-field-panel",

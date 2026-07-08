@@ -13,6 +13,15 @@ class AdminChangePreviewRequest(BaseModel):
     reason: str | None = None
 
 
+class AdminMasterDataCreatePreviewRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, str_strip_whitespace=True)
+
+    domain: str = Field(min_length=1, max_length=80)
+    draft: dict[str, Any] = Field(default_factory=dict)
+    reason: str | None = Field(default=None, max_length=500)
+    dry_run: bool = Field(default=True, alias="dryRun")
+
+
 class AdminMasterDataEditPreviewRequest(BaseModel):
     """Dry-run request for the static admin edit draft form.
 
@@ -25,6 +34,7 @@ class AdminMasterDataEditPreviewRequest(BaseModel):
     domain: str = Field(min_length=1, max_length=80)
     id: int = Field(ge=1)
     draft: dict[str, Any] = Field(default_factory=dict)
+    base_values: dict[str, Any] | None = Field(default=None, alias="baseValues")
     reason: str | None = Field(default=None, max_length=500)
     dry_run: bool = Field(default=True, alias="dryRun")
 

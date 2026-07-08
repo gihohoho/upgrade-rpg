@@ -1,255 +1,213 @@
-# Upgrade RPG — Next Chat Handoff
-
-이 문서는 새 채팅에서 바로 이어가기 위한 인수인계 문서입니다.
+# NEXT CHAT HANDOFF
 
 ## 사용자/응답 방식
 
-- 이 프로젝트에서 질문하는 사람은 **기호**입니다.
+- 사용자는 이 게임 프로젝트의 기획/게임 제작자 이기호입니다.
+- 앞으로 사용자를 기호라고 부릅니다.
 - 기호는 코딩/터미널/경로에 익숙하지 않습니다.
-- 명령어를 줄 때는 항상 먼저 실행 위치를 적어야 합니다.
+- 명령어를 줄 때는 항상 먼저 실행 위치를 적습니다.
 
 예:
 
-```txt
+```bash
 위치: 프로젝트 루트
-위치: backend 폴더 + 가상환경 activate 상태
-위치: 브라우저 개발자도구 Console
-```
-
-## 프로젝트 기본 정보
-
-- 현재 프로젝트는 아직 Vue가 아니라 **index.html + JS + CSS 기반 RPG 게임**입니다.
-- 장기 목표는 **Vue 프론트엔드 + FastAPI 백엔드 + PostgreSQL + 관리자 페이지** 구조입니다.
-- 지금은 기존 게임이 완전히 정상 작동하는 상태를 유지하면서 단계적으로 백엔드를 붙이고 있습니다.
-
-GitHub repo:
-
-```txt
-https://github.com/gihohoho/upgrade-rpg.git
-```
-
-로컬 경로:
-
-```txt
-프로젝트 루트: ~/Desktop/Upgrade RPG
-backend 폴더: ~/Desktop/Upgrade RPG/backend
-```
-
-백엔드 실행:
-
-```bash
-# 위치: backend 폴더 + 가상환경 activate 상태
-source .venv/Scripts/activate
-uvicorn app.main:app --reload
-```
-
-PostgreSQL/Docker:
-
-```txt
-DB 컨테이너: upgrade_rpg_postgres
-Adminer 컨테이너: upgrade_rpg_adminer
-PostgreSQL host port: 55432
-Adminer: 8081
-DATABASE_URL:
-postgresql+asyncpg://rpg_user:rpg_password@127.0.0.1:55432/rpg_game
-```
-
-localStorage save key:
-
-```txt
-idleRpgSaveV22
-```
-
-관리자 쓰기 dev key:
-
-```txt
-local-admin-dev-key
-```
-
-## 현재 안정 버전
-
-- 최신 안정 버전: **v159: admin create blueprint readonly**
-- 최신 ZIP 이름: **rpg_v159_admin_create_blueprint_readonly.zip**
-
-v159는 v156의 change log/rollback relation label 기능 위에 신규 row 생성 준비용 read-only blueprint 화면과 API를 추가한 버전입니다. 실제 DB insert는 아직 잠금 상태이며, 도메인별 필수 필드/기본값/unique/combo guard/relation 후보만 안전하게 확인합니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
-DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
-DB reset/seed는 필요 없습니다.
-
-## 현재까지 완료된 핵심 기능
-
-### master-data 연결
-
-- PostgreSQL → FastAPI → 브라우저 master-data 연결 완료.
-- 기본 mode는 `auto`.
-- 백엔드 master-data 실패 시 기존 static JS 데이터로 fallback.
-- MASTER DATA dev badge 유지.
-
-### save-data 연결
-
-- 기존 localStorage 저장 유지.
-- 수동 저장 시 DB save snapshot에도 저장하는 dual write 완료.
-- SAVE DATA dev badge 유지.
-- DB 세이브/localStorage 비교 preview 완료.
-- DB 세이브 복구 안전장치 완료.
-- 복구 전 localStorage 자동 백업 완료.
-- 복구/백업 되돌리기 후 reload lock으로 beforeunload 자동저장 덮어쓰기 방지 완료.
-- DB save slot 목록 조회 완료.
-- save-data integrity verify 완료.
-
-### 관리자 페이지
-
-- `admin.html` 분리 완료.
-- 관리자 overview, 세이브 스냅샷 필터, 마스터 데이터 카탈로그, 상세, 관계 보기 완료.
-- 관리자 편집 초안 UI 완료.
-- 초안 검증 dry-run 완료.
-- 일부 allow-list 필드 실제 DB 적용 완료.
-- 관리자 변경 이력 저장 완료.
-- 변경 이력 상세 보기 및 rollback 완료.
-- 변경 이력 필터 완료.
-- write dev key guard 완료.
-- edit stale guard 완료.
-- master-data API 반영 확인 및 post-edit 자동 확인 완료.
-- v133에서 편집 초안 입력 UI 타입 개선 완료.
-  - boolean 필드: true/false select
-  - number 필드: number input
-  - description/admin_note: textarea
-  - 읽기 전용/잠금 필드 카드 표시
-- v134에서 admin safe selects + allow-list 확장 완료.
-- v135에서 마스터 데이터 카탈로그 페이지네이션 + 슬롯 이름 표시 완료.
-  - itemTemplates.item_type 실제 적용 가능
-  - itemTemplates.equip_slot 실제 적용 가능
-  - skills.slot_key 실제 적용 가능
-  - item_type/equip_slot/boss_type/slot_key preset select
-  - risk high/medium/low 배지
-- v138에서 관리자 적용 직전 비교 UI + high risk 추가 확인 완료.
-  - 변경된 필드만 before/after 표시
-  - 위험도 순 정렬
-  - high risk 변경 시 HIGH RISK EDIT 추가 입력 필요
-  - 카탈로그 현재 선택 행 강조
-- v141에서 관리자 관계 필드 안전 편집 완료.
-  - itemTemplates.enhance_group_code relation select
-  - dropTableItems.item_template_code relation select
-  - dropTables.owner_type boss/field select
-  - 백엔드 preview/apply 공통 관계 대상 존재 검증
-- v144에서 조합 관계 필드 안전 편집 완료.
-  - dropTableItems.drop_table_code relation select
-  - skillLevels.skill_code + level 중복 조합 검증
-  - enhancementLevels.group_code + from_level 중복 조합 검증
-  - characterSkills.character_code + skill_code 중복 조합 검증
-
-- v147에서 dropTables owner_code 안전 편집 완료.
-  - dropTables.owner_code relation select
-  - owner_type=boss이면 bosses 목록, owner_type=field이면 fieldZones 목록
-  - owner_type 변경 시 owner_code 후보 자동 전환
-  - preview/apply 공통으로 owner_type + owner_code 대상 존재 검증
-  - 초안 검증 결과에 relation target label 표시
-- v150에서 relation select 검색/필터 UI 완료.
-  - relation select 후보를 코드/이름으로 검색
-  - 검색 결과와 상관없이 현재 선택값 유지
-  - owner_type 변경 시 owner_code 후보와 검색 상태 안전 갱신
-  - 카탈로그 검색/페이지 입력 Enter 조회
-  - 카탈로그 조건 변경 시 페이지 1 자동 초기화
-
-- v153에서 relation preview 도구 완료.
-  - 변경 preview와 초안 before/after 표에 relation 대상 이름 label 표시
-  - relation 변경 행에 relation 배지 표시
-  - relation 대상 빠른 열기 버튼 추가
-  - 변경 요약 배너에 relation 변경 개수 표시
-- v156에서 change log / rollback relation 도구 완료.
-- v159에서 신규 row 생성 준비용 read-only blueprint/API/UI 완료.
-  - 변경 이력 목록/상세에 relation 변경 개수 표시
-  - 변경 이력 상세 before/after relation label 표시
-  - rollback preview와 현재값 안전 검사 표에 relation label 표시
-  - relation 값 대상 열기 버튼 유지
-
-### runtime 반영
-
-- 관리자에서 보스 hp 수정 후 게임 새로고침 시 인게임 보스 체력 반영 확인 완료.
-- `itemTemplates.stackable` 값이 신규 획득 아이템 겹치기에 연결 완료.
-- 겹친 stackable 장비 강화 시 1개 분리 처리.
-- 겹친 장비 강화 시 가방/보관함이 꽉 차 있으면 강화 차단 완료.
-
-## 중요한 안전 규칙
-
-- 기존 게임 동작을 깨면 안 됩니다.
-- localStorage 저장은 계속 유지해야 합니다.
-- DB 저장은 기존 localStorage 저장을 대체하지 않고 보조/동기화 구조로 유지합니다.
-- 기존 세이브에 이미 따로 들어간 stackable 아이템을 자동 병합하지 않습니다.
-- 관리자 쓰기 API는 dev key + 확인 문구 + stale guard를 유지해야 합니다.
-- 새 기능을 만들 때 DB reset/seed 필요 여부를 반드시 알려줘야 합니다.
-- `.env`, `.gitignore`는 변경될 때만 zip에 포함하면 됩니다.
-
-## 현재 관리자 쓰기 흐름
-
-실제 적용:
-
-```txt
-관리자 페이지 → 마스터 데이터 카탈로그 → 보기
-→ 관리자 편집 초안 수정
-→ 초안 검증
-→ dev key 저장 상태 확인
-→ 확인 문구 입력: APPLY MASTER DATA EDIT
-→ high risk 변경이 있으면 추가 확인 문구 입력: HIGH RISK EDIT
-→ 검증 후 실제 적용
-→ 변경 이력 저장
-→ master-data API 자동 반영 확인
-→ 게임 새로고침 후 인게임 반영
-```
-
-되돌리기:
-
-```txt
-관리자 변경 이력 → 보기
-→ 되돌리기 미리보기
-→ 확인 문구 입력: ROLLBACK MASTER DATA EDIT
-→ 검사 후 되돌리기
-→ 변경 이력 저장
-→ master-data API 자동 반영 확인
-→ 게임 새로고침 후 인게임 반영
-```
-
-## 현재 주요 확인 명령어
-
-```bash
-# 위치: 프로젝트 루트
 bash tools/run_smoke_core.sh
 ```
 
 ```bash
-# 위치: 프로젝트 루트
-bash tools/run_smoke_all.sh
+위치: backend 폴더 + 가상환경 activate 상태
+source .venv/Scripts/activate
+uvicorn app.main:app --reload
 ```
-
-```bash
-# 위치: backend 폴더 + 가상환경 activate 상태
-python scripts/check_admin_readonly_api.py
-```
-
-브라우저 확인:
 
 ```js
-// 위치: 브라우저 개발자도구 Console
+위치: 브라우저 개발자도구 Console
 checkAdminReadOnlyPageReady();
 ```
 
-```js
-// 위치: 브라우저 개발자도구 Console
-getAdminDraftFieldInputKind({ key: "stackable", value: true });
+## 프로젝트 기본 정보
+
+- 현재 프로젝트는 아직 Vue가 아니라 `index.html + JS + CSS` 기반 RPG 게임입니다.
+- 기존 게임이 정상 작동하는 상태를 유지하면서 FastAPI + PostgreSQL 백엔드 분리를 단계적으로 진행 중입니다.
+- 나중에는 Vue 프론트엔드 + FastAPI 백엔드 + PostgreSQL + 관리자 페이지 구조로 옮길 예정입니다.
+- 안정성이 최우선입니다.
+
+## GitHub / 로컬 경로
+
+- GitHub repo: `https://github.com/gihohoho/upgrade-rpg.git`
+- 프로젝트 루트: `~/Desktop/Upgrade RPG`
+- backend 폴더: `~/Desktop/Upgrade RPG/backend`
+
+## 백엔드 실행
+
+```bash
+위치: backend 폴더 + 가상환경 activate 상태
+source .venv/Scripts/activate
+uvicorn app.main:app --reload
 ```
 
-## 다음 단계 추천
+## PostgreSQL / Docker
 
-가장 안전한 다음 단계 후보:
+- DB 컨테이너: `upgrade_rpg_postgres`
+- Adminer 컨테이너: `upgrade_rpg_adminer`
+- PostgreSQL host port: `55432`
+- Adminer: `8081`
+- DATABASE_URL: `postgresql+asyncpg://rpg_user:rpg_password@127.0.0.1:55432/rpg_game`
 
-1. **v160 관리자 생성 draft 입력 UI 준비**
-   - v159 blueprint를 바탕으로 생성 초안 입력칸을 만들되 실제 insert는 계속 잠급니다.
-   - code unique, relation 존재 여부, combo guard 중복 검증은 preview-only로 먼저 붙입니다.
+## 저장 관련
 
-2. **JSON 편집기 미리보기 준비**
-   - 아직 JSON 원본 적용은 막고, 먼저 sanitized preview와 schema hint부터 준비합니다.
+- localStorage save key: `idleRpgSaveV22`
+- 현재 게임 실제 세이브 슬롯: `default`
+- 수동저장 시 localStorage `idleRpgSaveV22` 저장 + DB `default` 슬롯 갱신
 
-3. **마스터 데이터 빠른 이동/통합 검색**
-   - 도메인이 많아져도 코드/이름으로 빠르게 상세를 여는 관리자 편의 기능입니다.
+## 관리자 쓰기 dev key
 
-4. **정식 인증/권한 설계 준비**
-   - 현재 dev key는 로컬 개발용 안전장치일 뿐입니다.
+- 관리자 쓰기 dev key: `local-admin-dev-key`
+- 관리자 실제 적용 확인 문구: `APPLY MASTER DATA EDIT`
+- high risk 추가 확인 문구: `HIGH RISK EDIT`
+- 관리자 되돌리기 확인 문구: `ROLLBACK MASTER DATA EDIT`
+
+## .env / .gitignore 처리
+
+- 기호 로컬에는 `.env`, `.gitignore`가 이미 있습니다.
+- 둘이 바뀌지 않았으면 ZIP에 굳이 포함하지 않습니다.
+- 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고 변경 내용을 반드시 설명합니다.
+
+## 현재 안정 버전
+
+- 최신 안정 버전: **v162: admin create draft preview**
+- 최신 ZIP 이름: **rpg_v162_admin_create_draft_preview.zip**
+
+v162는 v159의 신규 row 생성 blueprint 위에 생성 draft 입력 UI와 preview-only 백엔드 검증 API를 추가한 버전입니다. 실제 DB insert는 아직 잠금 상태입니다.
+
+## 지금까지 완료된 핵심
+
+1. master-data PostgreSQL → FastAPI → 브라우저 연결 완료.
+2. master-data 기본 mode는 auto.
+3. 백엔드 실패 시 static JS 데이터 fallback 유지.
+4. localStorage 저장 유지.
+5. save snapshot API + dual write 완료.
+6. SAVE DATA dev badge 완료.
+7. DB 세이브 preview/restore/backup/rollback/reload lock 완료.
+8. save slot 목록, integrity verify 완료.
+9. admin.html 관리자 페이지 분리 완료.
+10. 관리자 overview, 세이브 스냅샷 필터, 마스터 데이터 목록/상세/relations 완료.
+11. 관리자 편집 초안, 백엔드 검증, field help, value hints, impact guide 완료.
+12. guarded edit apply 완료.
+13. change log 상세/rollback/filter 완료.
+14. admin write dev key guard 완료.
+15. stale guard 완료.
+16. master-data API 반영 확인 및 post-edit 자동 확인 완료.
+17. DB itemTemplates.stackable 값이 인게임 신규 획득 아이템 겹치기에 연결 완료.
+18. 겹친 장비 강화 시 가방이 꽉 차 있으면 강화 차단 완료.
+19. 관리자 편집 입력 UI 타입 개선 완료.
+20. 관리자 safe select / allow-list 확장 완료.
+21. 장비 슬롯 표시명을 인게임 이름으로 개선 완료.
+22. 마스터 데이터 카탈로그 페이지네이션 완료.
+23. 관리자 변경 전후 비교 UI + high risk 추가 확인 완료.
+24. relation select 기반 안전 편집 완료.
+25. 조합 관계 필드 중복 검증 완료.
+26. dropTables.owner_code owner_type 연동 select 완료.
+27. relation select 검색/필터 완료.
+28. 변경 preview relation label / 대상 열기 완료.
+29. change log / rollback preview relation label 완료.
+30. 신규 row 생성 blueprint read-only 완료.
+31. 신규 row 생성 draft 입력 UI + preview-only 검증 완료.
+
+## v162 세부 완료
+
+- 관리자 신규 row 생성 준비 섹션에 생성 초안 입력 UI 추가.
+- blueprint 필드 기반으로 input 자동 구성.
+- boolean 필드는 true/false select.
+- number 필드는 number input.
+- description/admin_note는 textarea.
+- preset 필드는 select.
+- relation 필드는 실제 후보 목록 기반 select.
+- relation 후보 검색/필터 지원.
+- dropTables의 owner_type 변경 시 owner_code 후보 목록 자동 전환.
+- `POST /api/v1/admin/master-data/create-preview` 추가.
+- create-preview는 preview-only입니다.
+- code unique 중복 검사 추가.
+- relation 대상 존재 검사 추가.
+- combo guard 중복 검사 추가.
+- 실제 DB insert / commit / change log / rollback은 아직 열지 않았습니다.
+
+## 유지된 안전장치
+
+- 기존 게임 동작 유지.
+- localStorage 저장 유지.
+- DB save snapshot dual write 유지.
+- dev key guard 유지.
+- `APPLY MASTER DATA EDIT` 확인 문구 유지.
+- high risk 변경 시 `HIGH RISK EDIT` 추가 확인 유지.
+- rollback 시 `ROLLBACK MASTER DATA EDIT` 확인 문구 유지.
+- stale guard 유지.
+- post-edit master-data API verify 유지.
+
+## DB / seed
+
+- v162는 DB reset / seed 필요 없음.
+- DB schema 변경 없음.
+- `.env`, `.gitignore` 변경 없음.
+
+## smoke 실행
+
+```bash
+위치: 프로젝트 루트
+bash tools/run_smoke_core.sh
+```
+
+```bash
+위치: 프로젝트 루트
+bash tools/run_smoke_all.sh
+```
+
+v162 작업 후 둘 다 통과했습니다.
+
+## 브라우저 확인용
+
+```js
+위치: 브라우저 개발자도구 Console
+checkAdminReadOnlyPageReady().createDraftPreviewReady
+```
+
+예상 결과:
+
+```txt
+true
+```
+
+```js
+위치: 브라우저 개발자도구 Console
+getAdminCreateBlueprintReadiness()
+```
+
+예상 결과에 들어있어야 하는 값:
+
+```txt
+previewReady: true
+createApplyReady: false
+```
+
+## 다음 추천 단계
+
+### v163 관리자 신규 row 생성 apply 준비
+
+바로 모든 도메인의 실제 생성 기능을 열기보다는, relation 의존도가 낮은 도메인부터 한 개씩 실제 insert apply를 여는 것이 안전합니다.
+
+추천 순서:
+
+1. `characters` 또는 `enhancementGroups`처럼 관계 의존도가 낮은 도메인부터 시작.
+2. 생성 확인 문구 추가.
+3. admin dev key guard 연결.
+4. create change log 기록.
+5. 생성 성공 후 새 row 상세 자동 열기.
+6. rollback은 삭제가 아니라 soft-disabled 또는 별도 안전 정책을 먼저 설계.
+
+## 다음 채팅에서 먼저 확인할 파일
+
+- `NEXT_CHAT_HANDOFF.md`
+- `NEXT_CHAT_PROMPT.md`
+- `docs/CURRENT_STATUS.md`
+- `docs/NEXT_STEPS.md`
+- `docs/ADMIN_CREATE_DRAFT_PREVIEW.md`

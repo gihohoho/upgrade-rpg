@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v159.admin-create-blueprint-readonly";
+  const VERSION = "v162.admin-create-draft-preview";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -967,6 +967,200 @@
     return `${escapeHtml(target)} <span class="pill warn">후보 ${escapeHtml(formatValue(count))}</span>${escapeHtml(depends + guard)}`;
   }
 
+  function getAdminCreateFieldDefinition(key) {
+    const payload = currentAdminCreateBlueprintPayload || {};
+    const fields = Array.isArray(payload.fields) ? payload.fields : [];
+    const normalized = normalizeAdminDraftFieldKey(key);
+    return fields.find((field) => normalizeAdminDraftFieldKey(field && field.key) === normalized) || null;
+  }
+
+  function getAdminCreateRelationDefinition(key) {
+    const field = getAdminCreateFieldDefinition(key);
+    return field && field.relation ? { ...field.relation, field: field.key, dependsOn: field.dependsOn || (field.relation && field.relation.dependsOn) } : null;
+  }
+
+  function getAdminCreateRelationOptionsForValues(definition, values) {
+    if (!definition) return null;
+    if (definition.optionGroups && definition.dependsOn) {
+      const dependencyKey = String(definition.dependsOn || "");
+      const groupKey = values && Object.prototype.hasOwnProperty.call(values, dependencyKey) ? String(values[dependencyKey] || "").trim() : "";
+      const grouped = definition.optionGroups[groupKey];
+      if (Array.isArray(grouped)) return grouped.slice();
+    }
+    return Array.isArray(definition.options) ? definition.options.slice() : null;
+  }
+
+  function getAdminCreateDraftCurrentValues() {
+    const draft = $(`[data-admin-create-draft]`);
+    const values = {};
+    if (!draft) return values;
+    Array.from(draft.querySelectorAll("[data-admin-create-draft-field]")).forEach((field) => {
+      const key = field.getAttribute("data-admin-create-draft-field");
+      if (!key) return;
+      const type = field.getAttribute("data-admin-create-draft-value-type") || "text";
+      values[key] = type === "boolean" ? field.value === "true" : field.value;
+    });
+    return values;
+  }
+
+  function getAdminCreateDraftSelectOptions(field, value, values) {
+    const key = field ? field.key : "";
+    const normalized = normalizeAdminDraftFieldKey(key);
+    const definition = getAdminCreateRelationDefinition(normalized);
+    const relationOptions = getAdminCreateRelationOptionsForValues(definition, values || getAdminCreateDraftCurrentValues());
+    const baseOptions = relationOptions ? relationOptions.slice() : (ADMIN_DRAFT_SELECT_FIELD_OPTIONS[normalized] || []).slice();
+    const valueText = value === null || value === undefined ? "" : String(value);
+    if (valueText && !baseOptions.some((option) => String(option.value) === valueText)) {
+      const currentLabel = normalized === "equip_slot" ? `${valueText} · ${getAdminEquipSlotDisplayName(valueText)} · 현재 초안 값` : `${valueText} · 현재 초안 값`;
+      baseOptions.unshift({ value: valueText, label: currentLabel, current: true });
+    }
+    return baseOptions;
+  }
+
+  function getAdminCreateRelationSelectMetaText(key, query) {
+    const definition = getAdminCreateRelationDefinition(key);
+    if (!definition) return "";
+    const allOptions = getAdminCreateRelationOptionsForValues(definition, getAdminCreateDraftCurrentValues()) || [];
+    const filtered = filterAdminDraftSelectOptions(allOptions, query, "");
+    const target = definition.targetLabel || definition.targetDomain || "관계 대상";
+    const queryText = normalizeAdminRelationSearchText(query);
+    return queryText ? `${target} ${filtered.length}/${allOptions.length}개 표시` : `${target} ${allOptions.length}개 중 선택`;
+  }
+
+  function updateAdminCreateRelationOptionMeta(meta, key, query) {
+    if (!meta) return;
+    const text = getAdminCreateRelationSelectMetaText(key, query);
+    meta.textContent = text;
+    meta.classList.toggle("warn", !!query && text.includes("0/"));
+  }
+
+  function renderAdminCreateDraftControl(field, values) {
+    const key = field ? field.key : "";
+    const kind = getAdminCreateBlueprintFieldInputKind(field);
+    const value = values && Object.prototype.hasOwnProperty.call(values, key) ? values[key] : field.defaultValue;
+    const valueText = value === null || value === undefined ? "" : String(value);
+    const original = makeDraftOriginalValue(value);
+    const commonAttrs = `data-admin-create-draft-field="${escapeHtml(key)}" data-admin-create-draft-original="${escapeHtml(original)}"`;
+    if (kind === "boolean-select") {
+      const normalized = value === true || String(value).toLowerCase() === "true" ? "true" : "false";
+      return `
+        <select ${commonAttrs} data-admin-create-draft-value-type="boolean" aria-label="${escapeHtml(field.label || key)} true false 선택">
+          <option value="true" ${normalized === "true" ? "selected" : ""}>true · 켜짐</option>
+          <option value="false" ${normalized === "false" ? "selected" : ""}>false · 꺼짐</option>
+        </select>
+      `;
+    }
+    if (kind === "preset-select") {
+      const options = getAdminCreateDraftSelectOptions(field, value, values);
+      return `
+        <select ${commonAttrs} data-admin-create-draft-value-type="text" aria-label="${escapeHtml(field.label || key)} 선택">
+          ${renderAdminDraftSelectOptionsHtml(options, valueText)}
+        </select>
+      `;
+    }
+    if (kind === "relation-select") {
+      const options = getAdminCreateDraftSelectOptions(field, value, values);
+      const definition = getAdminCreateRelationDefinition(key) || {};
+      const metaText = getAdminCreateRelationSelectMetaText(key, "");
+      return `
+        <div class="relation-select-tools" data-admin-create-relation-select-tools>
+          <input class="relation-option-filter" data-admin-create-relation-option-filter data-admin-create-relation-option-filter-for="${escapeHtml(key)}" type="text" placeholder="코드/이름으로 후보 검색" autocomplete="off" aria-label="${escapeHtml(field.label || key)} 후보 검색" />
+          <select ${commonAttrs} data-admin-create-draft-value-type="text" aria-label="${escapeHtml(field.label || key)} 선택">
+            ${renderAdminDraftSelectOptionsHtml(options, valueText)}
+          </select>
+          <div class="relation-option-meta" data-admin-create-relation-option-meta>${escapeHtml(metaText || (definition.targetLabel ? `${definition.targetLabel} 후보` : "관계 후보"))}</div>
+        </div>
+      `;
+    }
+    if (kind === "number") {
+      return `<input type="number" inputmode="decimal" step="any" value="${escapeHtml(valueText)}" ${commonAttrs} data-admin-create-draft-value-type="number" />`;
+    }
+    if (kind === "textarea") {
+      const rows = ADMIN_DRAFT_TEXTAREA_FIELDS.has(normalizeAdminDraftFieldKey(key)) ? 4 : 3;
+      return `<textarea rows="${rows}" ${commonAttrs} data-admin-create-draft-value-type="text">${escapeHtml(valueText)}</textarea>`;
+    }
+    return `<input type="text" value="${escapeHtml(valueText)}" ${commonAttrs} data-admin-create-draft-value-type="text" />`;
+  }
+
+  function applyAdminCreateRelationOptionFilter(input) {
+    if (!input) return false;
+    const draft = input.closest("[data-admin-create-draft]");
+    const wrapper = input.closest("[data-admin-create-relation-select-tools]");
+    if (!draft || !wrapper) return false;
+    const key = input.getAttribute("data-admin-create-relation-option-filter-for") || "";
+    const field = getAdminCreateFieldDefinition(key);
+    const select = wrapper.querySelector(`[data-admin-create-draft-field="${key}"]`);
+    if (!field || !select) return false;
+    const selectedValue = select.value;
+    const options = getAdminCreateDraftSelectOptions(field, selectedValue, getAdminCreateDraftCurrentValues());
+    const filtered = filterAdminDraftSelectOptions(options, input.value, selectedValue);
+    select.innerHTML = renderAdminDraftSelectOptionsHtml(filtered, selectedValue);
+    select.value = selectedValue;
+    updateAdminCreateRelationOptionMeta(wrapper.querySelector("[data-admin-create-relation-option-meta]"), key, input.value);
+    return true;
+  }
+
+  function refreshDependentAdminCreateRelationSelects(changedKey) {
+    const draft = document.querySelector("[data-admin-create-draft]");
+    if (!draft) return false;
+    const changed = normalizeAdminDraftFieldKey(changedKey);
+    let touched = false;
+    const fields = Array.isArray(currentAdminCreateBlueprintPayload && currentAdminCreateBlueprintPayload.fields) ? currentAdminCreateBlueprintPayload.fields : [];
+    fields.forEach((field) => {
+      const definition = field && field.relation ? { ...field.relation, field: field.key, dependsOn: field.dependsOn || field.relation.dependsOn } : null;
+      if (!definition || normalizeAdminDraftFieldKey(definition.dependsOn) !== changed) return;
+      const target = draft.querySelector(`[data-admin-create-draft-field="${field.key}"]`);
+      if (!target) return;
+      const previousValue = target.value;
+      const options = getAdminCreateRelationOptionsForValues(definition, getAdminCreateDraftCurrentValues()) || [];
+      let nextValue = "";
+      if (options.some((option) => String(option.value) === previousValue)) nextValue = previousValue;
+      else if (options.length) nextValue = String(options[0].value ?? "");
+      const wrapper = target.closest("[data-admin-create-relation-select-tools]");
+      const filter = wrapper ? wrapper.querySelector("[data-admin-create-relation-option-filter]") : null;
+      if (filter) filter.value = "";
+      target.innerHTML = renderAdminDraftSelectOptionsHtml(options, nextValue);
+      target.value = nextValue;
+      updateAdminCreateRelationOptionMeta(wrapper && wrapper.querySelector("[data-admin-create-relation-option-meta]"), field.key, "");
+      touched = true;
+    });
+    return touched;
+  }
+
+  function renderAdminCreateDraft(blueprintPayload) {
+    const payload = blueprintPayload || currentAdminCreateBlueprintPayload || {};
+    const fields = Array.isArray(payload.fields) ? payload.fields : [];
+    const defaultDraft = payload.defaultDraft && typeof payload.defaultDraft === "object" ? payload.defaultDraft : {};
+    const editableFields = fields.filter((field) => field && field.futureEditable !== false && getAdminCreateBlueprintFieldInputKind(field) !== "json-readonly");
+    if (!editableFields.length) return `<div class="empty">이 도메인은 아직 생성 초안 입력 필드가 없습니다.</div>`;
+    const rows = editableFields.map((field) => `
+      <label class="draft-field draft-field-${escapeHtml(getAdminCreateBlueprintFieldInputKind(field))}">
+        <span class="draft-field-heading">
+          <span>${escapeHtml(field.label || field.key)}${renderFieldHelpBadge(field.key)}</span>
+          <span class="draft-field-badges">${renderAdminDraftTypeBadge(getAdminCreateBlueprintFieldInputKind(field))}${field.required ? ` <span class="pill blocked">필수</span>` : ` <span class="pill good">선택</span>`}${field.unique ? ` <span class="pill warn">unique</span>` : ""}</span>
+        </span>
+        ${renderFieldHelpInline(field.key)}
+        ${renderFieldValueHintInline(field.key, field.defaultValue)}
+        ${renderAdminCreateDraftControl(field, defaultDraft)}
+      </label>
+    `).join("");
+    return `
+      <div class="detail-card edit-draft-card create-draft-card" data-admin-create-draft data-admin-create-draft-domain="${escapeHtml(payload.domain || DEFAULT_MASTER_DOMAIN)}">
+        <div class="detail-title">신규 row 생성 초안 <span class="pill warn">preview only</span><span class="pill blocked">insert locked</span></div>
+        <div class="filter-help">아래 입력칸은 새 row를 만들 때 필요한 값을 미리 넣어보는 화면입니다. <strong>생성 초안 검증</strong>은 백엔드에서 unique, relation 존재, combo 중복만 검사하고 DB를 수정하지 않습니다.</div>
+        <div class="edit-draft-grid">${rows}</div>
+        <div class="edit-draft-actions">
+          <button class="btn mini primary" type="button" data-admin-action="preview-admin-create-draft">생성 초안 검증</button>
+          <button class="btn mini" type="button" data-admin-action="reset-admin-create-draft">기본값으로 되돌리기</button>
+          <label class="apply-confirm-field"><span>생성 사유</span><input type="text" data-admin-create-reason placeholder="예: 신규 보스 드랍 테이블 준비" autocomplete="off" /></label>
+          <button class="btn mini danger" type="button" disabled>실제 생성 잠금</button>
+          <span class="pill blocked">DB insert 없음</span>
+        </div>
+        <div class="edit-draft-result" data-admin-create-draft-result><div class="empty">값을 입력한 뒤 <strong>생성 초안 검증</strong>을 누르세요. 이 단계는 preview-only입니다.</div></div>
+      </div>
+    `;
+  }
+
   function renderAdminCreateBlueprint(blueprintPayload) {
     currentAdminCreateBlueprintPayload = blueprintPayload && blueprintPayload.status === "loaded" ? blueprintPayload : null;
     const target = $("[data-admin-create-blueprint]");
@@ -995,7 +1189,7 @@
           <td><span class="pill">${escapeHtml(inputKind)}</span></td>
           <td>${formatValueWithFieldHint(field.key, field.defaultValue)}</td>
           <td>${relationText}</td>
-          <td><span class="create-blueprint-locked">잠금</span><div class="filter-help" style="margin-top:4px;">${escapeHtml(field.lockedReason || "read-only")}</div></td>
+          <td><span class="create-blueprint-locked">${field.futureEditable === false ? "잠금" : "초안 가능"}</span><div class="filter-help" style="margin-top:4px;">${escapeHtml(field.futureEditable === false ? (field.lockedReason || "read-only") : "preview-only 입력 UI에서 검증 가능")}</div></td>
         </tr>
       `;
     }).join("") : `<tr><td colspan="6">필드 설계가 없습니다.</td></tr>`;
@@ -1004,7 +1198,7 @@
         <div class="create-blueprint-card"><strong>${escapeHtml(payload.domainLabel || payload.domain)}</strong><span>${escapeHtml(payload.description || "설명 없음")}</span></div>
         <div class="create-blueprint-card"><strong>필수 필드</strong><span>${escapeHtml(requiredFields.join(", ") || "없음")}</span></div>
         <div class="create-blueprint-card"><strong>고유/중복 검사</strong><span>unique: ${escapeHtml(uniqueFields.join(", ") || "없음")}<br>combo: ${escapeHtml(comboGuards.map((guard) => guard.join(" + ")).join(", ") || "없음")}</span></div>
-        <div class="create-blueprint-card"><strong>적용 상태</strong><span><span class="pill blocked">insert API locked</span><br>DB 수정 없음 · read-only</span></div>
+        <div class="create-blueprint-card"><strong>적용 상태</strong><span><span class="pill blocked">insert API locked</span><br>preview-only 검증 가능 · DB 수정 없음</span></div>
       </div>
       <div class="table-wrap relation-table-wrap">
         <table>
@@ -1015,6 +1209,7 @@
       <div class="create-blueprint-default">
         <pre>${escapeHtml(JSON.stringify(defaultDraft, null, 2))}</pre>
       </div>
+      ${renderAdminCreateDraft(payload)}
       <div class="filter-help" style="padding:0 14px 12px;">relation 후보 반환=${escapeHtml(formatValue(payload.relationOptionsReturned))} · rawJsonReturned=${escapeHtml(formatValue(payload.rawJsonReturned))} · assetsReturned=${escapeHtml(formatValue(payload.assetsReturned))}</div>
     `;
   }
@@ -1025,21 +1220,132 @@
     const response = await window.RpgGameApi.fetchAdminMasterCreateBlueprint({ timeoutMs: DEFAULT_TIMEOUT_MS, ...filters });
     const payload = response && response.payload ? response.payload : {};
     renderAdminCreateBlueprint(payload);
-    setStatus(`신규 row 생성 설계 로드: ${formatValue(payload.domainLabel || payload.domain)} · ${formatValue(payload.fieldCount)} fields · read-only`, "ok");
+    setStatus(`신규 row 생성 설계 로드: ${formatValue(payload.domainLabel || payload.domain)} · ${formatValue(payload.fieldCount)} fields · preview-only`, "ok");
     return payload;
+  }
+
+  function readAdminCreateDraftValues() {
+    const draft = $(`[data-admin-create-draft]`);
+    if (!draft) return { ok: false, reason: "create_draft_missing", draft: {} };
+    const fields = Array.from(draft.querySelectorAll("[data-admin-create-draft-field]"));
+    const values = {};
+    fields.forEach((field) => {
+      const key = field.getAttribute("data-admin-create-draft-field");
+      if (!key) return;
+      const type = field.getAttribute("data-admin-create-draft-value-type") || "text";
+      values[key] = type === "boolean" ? field.value === "true" : field.value;
+    });
+    const reasonEl = $(`[data-admin-create-reason]`);
+    return {
+      ok: true,
+      domain: draft.getAttribute("data-admin-create-draft-domain") || (currentAdminCreateBlueprintPayload && currentAdminCreateBlueprintPayload.domain) || DEFAULT_MASTER_DOMAIN,
+      draft: values,
+      reason: reasonEl ? reasonEl.value.trim() : "",
+      fieldCount: fields.length,
+    };
+  }
+
+  function resetAdminCreateDraft() {
+    const draft = $(`[data-admin-create-draft]`);
+    if (!draft) return false;
+    Array.from(draft.querySelectorAll("[data-admin-create-draft-field]")).forEach((field) => {
+      const type = field.getAttribute("data-admin-create-draft-value-type") || "text";
+      const original = parseDraftOriginalValue(field.getAttribute("data-admin-create-draft-original"));
+      if (type === "boolean") field.value = original ? "true" : "false";
+      else field.value = original === null || original === undefined ? "" : String(original);
+    });
+    Array.from(draft.querySelectorAll("[data-admin-create-relation-option-filter]")).forEach((input) => { input.value = ""; applyAdminCreateRelationOptionFilter(input); });
+    const result = $(`[data-admin-create-draft-result]`);
+    if (result) result.innerHTML = `<div class="empty">기본값으로 되돌렸습니다. 값을 입력한 뒤 생성 초안 검증을 누르세요.</div>`;
+    setStatus("생성 초안을 기본값으로 되돌렸습니다.", "ok");
+    return true;
+  }
+
+  function renderAdminCreatePreviewValueCell(field) {
+    const rawValue = field ? field.after : undefined;
+    const relationText = formatAdminRelationInfoText(field && field.relation, rawValue);
+    const text = relationText !== null ? relationText : formatValue(rawValue);
+    const relation = field && field.relation ? field.relation : null;
+    const target = relation && relation.targetDomain && !String(relation.targetDomain).includes("/") && relation.targetCode ? { domain: String(relation.targetDomain), code: String(relation.targetCode) } : null;
+    return `<div class="relation-value-cell"><span>${escapeHtml(text)}</span>${renderAdminRelationOpenTargetButton(target)}</div>`;
+  }
+
+  function renderAdminCreatePreviewResult(preview) {
+    const target = $(`[data-admin-create-draft-result]`);
+    if (!target) return;
+    const payload = preview || {};
+    const accepted = Array.isArray(payload.acceptedFields) ? payload.acceptedFields : [];
+    const rejected = Array.isArray(payload.rejectedFields) ? payload.rejectedFields : [];
+    const acceptedRows = accepted.length ? accepted.map((field) => `
+      <tr><td>${escapeHtml(field.label || field.key)}${field.relation ? ` <span class="pill warn">relation</span>` : ""}</td><td>${renderAdminCreatePreviewValueCell(field)}</td><td>${escapeHtml(field.type || field.inputKind || "-")}</td><td>${field.required ? `<span class="pill blocked">필수</span>` : `<span class="pill good">선택</span>`}${field.unique ? ` <span class="pill warn">unique</span>` : ""}</td></tr>
+    `).join("") : `<tr><td colspan="4">검증 통과 필드 없음</td></tr>`;
+    const rejectedRows = rejected.length ? rejected.map((field) => `
+      <tr><td>${escapeHtml(field.label || field.key)}</td><td>${escapeHtml(formatValue(field.after))}</td><td>${escapeHtml(field.reason || "rejected")}</td></tr>
+    `).join("") : `<tr><td colspan="3">오류 없음</td></tr>`;
+    target.innerHTML = `
+      <div class="draft-preview-summary">
+        <span class="pill ${payload.wouldBeValid ? "good" : "blocked"}">valid: ${escapeHtml(formatValue(payload.wouldBeValid))}</span>
+        <span class="pill warn">dryRun: ${escapeHtml(formatValue(payload.dryRun))}</span>
+        <span class="pill blocked">writeBlocked: ${escapeHtml(formatValue(payload.writeBlocked))}</span>
+        <span class="pill blocked">createApplyReady: ${escapeHtml(formatValue(payload.createApplyReady))}</span>
+        <span class="pill">fields ${escapeHtml(formatValue(payload.fieldCount || accepted.length))}</span>
+        <span class="pill ${rejected.length ? "blocked" : "good"}">errors ${escapeHtml(formatValue(payload.errorCount || rejected.length))}</span>
+        <span class="pill ${payload.relationFieldCount ? "warn" : "good"}">relation ${escapeHtml(formatValue(payload.relationFieldCount || 0))}</span>
+        <span class="pill ${payload.comboGuardCount ? "warn" : "good"}">combo ${escapeHtml(formatValue(payload.comboGuardCount || 0))}</span>
+      </div>
+      ${payload.comboGuardLabels && payload.comboGuardLabels.length ? `<div class="filter-help">중복 조합 검사: ${escapeHtml(payload.comboGuardLabels.join(", "))}</div>` : ""}
+      ${payload.note ? `<div class="filter-help">${escapeHtml(payload.note)}</div>` : ""}
+      <details class="json-detail" open>
+        <summary>검증 통과 필드 <span class="pill good">${escapeHtml(formatValue(accepted.length))}</span></summary>
+        <div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>초안 값</th><th>타입</th><th>속성</th></tr></thead><tbody>${acceptedRows}</tbody></table></div>
+      </details>
+      <details class="json-detail" ${rejected.length ? "open" : ""}>
+        <summary>검증 오류 <span class="pill ${rejected.length ? "blocked" : "good"}">${escapeHtml(formatValue(rejected.length))}</span></summary>
+        <div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>초안 값</th><th>사유</th></tr></thead><tbody>${rejectedRows}</tbody></table></div>
+      </details>
+      <div class="filter-help">이 검증은 생성 준비용입니다. 실제 DB insert, change log, rollback은 아직 열지 않았습니다.</div>
+    `;
+  }
+
+  async function previewAdminCreateDraft(options) {
+    ensureApi();
+    const values = readAdminCreateDraftValues();
+    if (!values.ok) {
+      const error = new Error("검증할 생성 초안이 없습니다. 먼저 생성 설계를 불러와 주세요.");
+      setStatus(error.message, "error");
+      throw error;
+    }
+    const target = $(`[data-admin-create-draft-result]`);
+    if (target) target.innerHTML = `<div class="empty">백엔드에서 생성 초안을 검증하는 중...</div>`;
+    const timeoutMs = options && options.timeoutMs !== undefined ? options.timeoutMs : DEFAULT_TIMEOUT_MS;
+    const response = await window.RpgGameApi.previewAdminMasterDataCreate({
+      domain: values.domain,
+      draft: values.draft,
+      reason: values.reason || undefined,
+      dryRun: true,
+      timeoutMs,
+    });
+    const payload = response && response.payload ? response.payload : {};
+    renderAdminCreatePreviewResult(payload);
+    setStatus(`생성 초안 검증 완료: fields ${formatValue(payload.fieldCount)} · errors ${formatValue(payload.errorCount)} · DB 저장 없음`, payload.errorCount ? "error" : "ok");
+    return response;
   }
 
   function getAdminCreateBlueprintReadiness() {
     const target = $("[data-admin-create-blueprint]");
+    const draft = $(`[data-admin-create-draft]`);
     const filters = readAdminCreateBlueprintFiltersFromDom();
     const payload = currentAdminCreateBlueprintPayload || {};
+    const fields = draft ? Array.from(draft.querySelectorAll("[data-admin-create-draft-field]")) : [];
     return {
       ready: !!target,
       readOnly: true,
       createApplyReady: false,
+      previewReady: typeof previewAdminCreateDraft === "function" && !!window.RpgGameApi && typeof window.RpgGameApi.previewAdminMasterDataCreate === "function",
       domain: filters.domain,
       loadedDomain: payload.domain || null,
       fieldCount: Number(payload.fieldCount || 0),
+      draftFieldCount: fields.length,
       requiredFields: getAdminCreateBlueprintRequiredKeys(payload.domain, payload),
       defaultDraft: getAdminCreateBlueprintDefaultDraft(payload.domain, payload),
       relationOptionsReturned: !!payload.relationOptionsReturned,
@@ -2888,12 +3194,20 @@
 
   function bindEvents() {
     document.addEventListener("input", (event) => {
+      if (event.target && event.target.matches && event.target.matches("[data-admin-create-relation-option-filter]")) {
+        applyAdminCreateRelationOptionFilter(event.target);
+        return;
+      }
       if (event.target && event.target.matches && event.target.matches("[data-admin-relation-option-filter]")) {
         applyAdminRelationOptionFilter(event.target);
         return;
       }
       if (event.target && event.target.closest && event.target.closest("[data-admin-edit-draft]") && event.target.getAttribute && event.target.getAttribute("data-admin-edit-draft-field")) {
         refreshAdminEditImpactGuide();
+      }
+      if (event.target && event.target.closest && event.target.closest("[data-admin-create-draft]") && event.target.getAttribute && event.target.getAttribute("data-admin-create-draft-field")) {
+        const result = $(`[data-admin-create-draft-result]`);
+        if (result) result.innerHTML = `<div class="empty">초안 값이 바뀌었습니다. 다시 생성 초안 검증을 누르세요.</div>`;
       }
       if (event.target && event.target.matches && event.target.matches("[data-admin-master-query]")) {
         syncMasterCatalogPageInput(1);
@@ -2914,6 +3228,10 @@
         const changedKey = event.target.getAttribute("data-admin-edit-draft-field");
         if (changedKey) refreshDependentAdminRelationSelects(changedKey);
         refreshAdminEditImpactGuide();
+      }
+      if (event.target && event.target.closest && event.target.closest("[data-admin-create-draft]") && event.target.getAttribute && event.target.getAttribute("data-admin-create-draft-field")) {
+        const changedKey = event.target.getAttribute("data-admin-create-draft-field");
+        if (changedKey) refreshDependentAdminCreateRelationSelects(changedKey);
       }
     });
     document.addEventListener("click", async (event) => {
@@ -2937,6 +3255,16 @@
         } catch (error) {
           renderError(error);
         }
+      }
+      if (action === "preview-admin-create-draft") {
+        try {
+          await previewAdminCreateDraft();
+        } catch (error) {
+          renderError(error);
+        }
+      }
+      if (action === "reset-admin-create-draft") {
+        resetAdminCreateDraft();
       }
       if (action === "master-catalog-first-page") await refreshMasterCatalogWithPage(1);
       if (action === "master-catalog-prev-page") {
@@ -3090,12 +3418,13 @@
   }
 
   function checkAdminReadOnlyPageReady(options) {
-    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterCreateBlueprint === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function" && typeof window.RpgGameApi.previewAdminMasterDataEdit === "function" && typeof window.RpgGameApi.applyAdminMasterDataEdit === "function" && typeof window.RpgGameApi.listAdminChangeLogs === "function" && typeof window.RpgGameApi.fetchAdminChangeLogDetail === "function" && typeof window.RpgGameApi.previewAdminChangeLogRollback === "function" && typeof window.RpgGameApi.applyAdminChangeLogRollback === "function" && typeof window.RpgGameApi.setAdminWriteDevKey === "function" && typeof window.RpgGameApi.hasAdminWriteDevKey === "function");
+    const apiReady = !!(window.RpgGameApi && typeof window.RpgGameApi.fetchAdminOverview === "function" && typeof window.RpgGameApi.listAdminSaveSnapshots === "function" && typeof window.RpgGameApi.listAdminMasterCatalogRows === "function" && typeof window.RpgGameApi.fetchAdminMasterCreateBlueprint === "function" && typeof window.RpgGameApi.previewAdminMasterDataCreate === "function" && typeof window.RpgGameApi.fetchAdminMasterDataDetail === "function" && typeof window.RpgGameApi.fetchAdminMasterDataRelations === "function" && typeof window.RpgGameApi.previewAdminMasterDataEdit === "function" && typeof window.RpgGameApi.applyAdminMasterDataEdit === "function" && typeof window.RpgGameApi.listAdminChangeLogs === "function" && typeof window.RpgGameApi.fetchAdminChangeLogDetail === "function" && typeof window.RpgGameApi.previewAdminChangeLogRollback === "function" && typeof window.RpgGameApi.applyAdminChangeLogRollback === "function" && typeof window.RpgGameApi.setAdminWriteDevKey === "function" && typeof window.RpgGameApi.hasAdminWriteDevKey === "function");
     const domReady = !!document.querySelector("[data-admin-cards]");
     const locationHintReady = !!document.querySelector("[data-admin-current-url]");
     const snapshotFilterReady = !!document.querySelector("[data-admin-filter-slot-key]");
     const masterCatalogReady = !!document.querySelector("[data-admin-master-domain]");
     const createBlueprintReady = !!document.querySelector("[data-admin-create-blueprint]") && typeof renderAdminCreateBlueprint === "function" && typeof getAdminCreateBlueprintReadiness === "function";
+    const createDraftPreviewReady = typeof previewAdminCreateDraft === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminMasterDataCreate === "function");
     const masterDetailReady = !!document.querySelector("[data-admin-master-detail]");
     const masterRelationsReady = true;
     const editDraftReady = !!document.querySelector("[data-admin-edit-draft]");
@@ -3109,7 +3438,7 @@
     const relationSearchReady = typeof applyAdminRelationOptionFilter === "function" && typeof filterAdminDraftSelectOptions === "function";
     const relationPreviewReady = typeof formatAdminChangeValueText === "function" && typeof getAdminRelationValueDisplay === "function" && typeof openAdminMasterDataDetailByCode === "function";
     const changeLogRelationReady = typeof getAdminChangeRelationInfo === "function" && typeof renderAdminRollbackMismatchValueCell === "function" && typeof getAdminRelationOpenTargetFromChange === "function";
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && masterApiVerifyReady && adminWriteGuardReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createBlueprint: getAdminCreateBlueprintReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && masterApiVerifyReady && adminWriteGuardReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createDraftPreviewReady, createBlueprint: getAdminCreateBlueprintReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -3141,6 +3470,14 @@
     getAdminCreateBlueprintRequiredKeys,
     getAdminCreateBlueprintDefaultDraft,
     getAdminCreateBlueprintReadiness,
+    readAdminCreateDraftValues,
+    resetAdminCreateDraft,
+    previewAdminCreateDraft,
+    renderAdminCreatePreviewResult,
+    getAdminCreateFieldDefinition,
+    getAdminCreateRelationDefinition,
+    applyAdminCreateRelationOptionFilter,
+    refreshDependentAdminCreateRelationSelects,
     openAdminMasterDataDetail,
     openAdminMasterDataDetailByCode,
     openAdminMasterDataRelations,
@@ -3220,6 +3557,13 @@
   window.getAdminCreateBlueprintRequiredKeys = getAdminCreateBlueprintRequiredKeys;
   window.getAdminCreateBlueprintDefaultDraft = getAdminCreateBlueprintDefaultDraft;
   window.getAdminCreateBlueprintReadiness = getAdminCreateBlueprintReadiness;
+  window.readAdminCreateDraftValues = readAdminCreateDraftValues;
+  window.resetAdminCreateDraft = resetAdminCreateDraft;
+  window.previewAdminCreateDraft = previewAdminCreateDraft;
+  window.getAdminCreateFieldDefinition = getAdminCreateFieldDefinition;
+  window.getAdminCreateRelationDefinition = getAdminCreateRelationDefinition;
+  window.applyAdminCreateRelationOptionFilter = applyAdminCreateRelationOptionFilter;
+  window.refreshDependentAdminCreateRelationSelects = refreshDependentAdminCreateRelationSelects;
   window.refreshAdminChangeLogs = refreshAdminChangeLogs;
   window.openAdminMasterDataDetail = openAdminMasterDataDetail;
   window.openAdminMasterDataDetailByCode = openAdminMasterDataDetailByCode;

@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v159.admin-create-blueprint-readonly",
+  "v162.admin-create-draft-preview",
   "dropTables: [\"owner_type\", \"owner_code\", \"description\", \"is_enabled\"]",
   "getAdminDraftRelationOptionGroupKey",
   "getAdminDraftRelationOptions",
@@ -42,7 +42,7 @@ assertContains("backend/app/services/admin_service.py", [
 ]);
 
 assertContains("admin.html", [
-  "v159 admin create blueprint readonly",
+  "v162 admin create draft preview",
 ]);
 
 assertContains("docs/ADMIN_OWNER_CODE_RELATION_TOOLS.md", [

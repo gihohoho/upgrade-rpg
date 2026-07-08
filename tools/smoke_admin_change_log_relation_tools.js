@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v159.admin-create-blueprint-readonly",
+  "v162.admin-create-draft-preview",
   "getAdminChangeRelationInfo",
   "formatAdminRelationInfoText",
   "getAdminRelationOpenTargetFromChange",
@@ -36,7 +36,7 @@ assertContains("backend/app/services/admin_service.py", [
 ]);
 
 assertContains("admin.html", [
-  "v159 admin create blueprint readonly",
+  "v162 admin create draft preview",
   "relation-value-cell",
   "relation-jump-btn",
 ]);

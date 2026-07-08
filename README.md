@@ -21,9 +21,9 @@ docs/README.md
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v159: admin create blueprint readonly**
+- 최신 안정 버전: **v162: admin create draft preview**
 
-v159는 v156의 change log/rollback relation label 기능 위에 신규 row 생성 준비용 read-only blueprint 화면과 API를 추가한 버전입니다. 실제 DB insert는 아직 잠금 상태이며, 필수 필드/기본값/relation 후보만 안전하게 확인합니다.
+v162는 v159의 신규 row 생성 blueprint 위에 생성 draft 입력 UI와 preview-only 백엔드 검증을 추가한 버전입니다. 실제 DB insert는 아직 잠금 상태이며, unique/relation/combo guard 검증만 안전하게 확인합니다.
 
 DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 

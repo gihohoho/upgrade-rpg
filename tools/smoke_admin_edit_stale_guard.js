@@ -17,8 +17,8 @@ const servicePy = read("backend/app/services/admin_service.py");
 const checkPy = read("backend/scripts/check_admin_readonly_api.py");
 const adminHtml = read("admin.html");
 
-assert(adminJs.includes('v159.admin-create-blueprint-readonly'), 'admin page version is v134 safe selects');
-assert(adminHtml.includes('v159 admin create blueprint readonly'), 'admin footer is v134 safe selects');
+assert(adminJs.includes('v162.admin-create-draft-preview'), 'admin page version is v134 safe selects');
+assert(adminHtml.includes('v162 admin create draft preview'), 'admin footer is v134 safe selects');
 assert(adminJs.includes('baseValues: values.originals'), 'admin preview/apply sends original base values');
 assert(adminJs.includes('stale guard'), 'admin UI explains stale guard');
 assert(adminJs.includes('payload.staleGuardEnabled'), 'admin UI renders stale guard state');

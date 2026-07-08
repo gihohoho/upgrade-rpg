@@ -1,6 +1,6 @@
 # Current Status
 
-현재 기준: **v159 admin create blueprint readonly**
+현재 기준: **v162 admin create draft preview**
 
 ## 상태
 
@@ -11,13 +11,15 @@
 - 관리자 페이지 `admin.html` 분리 유지.
 - 관리자 guarded edit apply, stale guard, high risk 확인, change log, rollback 유지.
 
-## v159 완료
+## v162 완료
 
-- 신규 row 생성 준비용 read-only blueprint API 추가.
-- 관리자 페이지에 신규 row 생성 준비 섹션 추가.
-- 도메인별 필수 필드/기본값/unique/combo guard/relation 후보 표시.
-- 실제 insert API는 아직 잠금 상태로 유지.
-- v156 change log/rollback relation label 기능 유지.
+- 신규 row 생성 blueprint 기반 draft 입력 UI 추가.
+- 생성 초안 preview-only API 추가.
+- code unique 중복 검사 추가.
+- relation 대상 존재 검사 추가.
+- skillLevels / enhancementLevels / characterSkills combo guard 중복 검사 추가.
+- dropTables owner_type + owner_code 조합 검사 추가.
+- 실제 insert apply는 아직 잠금 상태로 유지.
 
 ## DB / seed
 

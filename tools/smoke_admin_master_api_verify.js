@@ -14,7 +14,7 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-assert(adminJs.includes('v159.admin-create-blueprint-readonly'), 'version should be v159 admin create blueprint readonly');
+assert(adminJs.includes('v162.admin-create-draft-preview'), 'version should be v162 admin create draft preview');
 assert(adminJs.includes('verifySelectedMasterDataApi'), 'verifySelectedMasterDataApi helper missing');
 assert(adminJs.includes('findMasterApiRow'), 'findMasterApiRow helper missing');
 assert(adminJs.includes('buildMasterApiVerifyComparisons'), 'buildMasterApiVerifyComparisons helper missing');
@@ -29,7 +29,7 @@ assert(adminJs.includes('postWriteApiVerifyReady'), 'post-write readiness flag m
 assert(adminJs.includes('autoAfterWrite'), 'autoAfterWrite result flag missing');
 
 assert(adminHtml.includes('Guarded Admin + API Verify'), 'admin page title copy not updated');
-assert(adminHtml.includes('v159 admin create blueprint readonly'), 'footer version not updated');
+assert(adminHtml.includes('v162 admin create draft preview'), 'footer version not updated');
 
 assert(docs.includes('/game/master-data'), 'docs should mention game master-data API');
 assert(docs.includes('await verifySelectedMasterDataApi()'), 'docs should mention console helper');

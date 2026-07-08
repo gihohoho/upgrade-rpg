@@ -1,5 +1,15 @@
 # Changelog
 
+## v162 - Admin Create Draft Preview
+
+- 신규 row 생성 준비 화면에 blueprint 기반 생성 초안 입력 UI를 추가했습니다.
+- 생성 초안은 boolean/select/number/textarea/relation select 타입으로 입력합니다.
+- relation select 후보 검색과 owner_type → owner_code 연동 갱신을 지원합니다.
+- `POST /api/v1/admin/master-data/create-preview` preview-only API를 추가했습니다.
+- code unique 중복, relation 대상 존재, combo guard 중복을 백엔드에서 검증합니다.
+- 실제 DB insert, commit, change log, rollback은 아직 잠금 상태입니다.
+- DB reset / seed는 필요 없습니다.
+
 ## v159 - Admin Create Blueprint Read-only
 
 - 관리자 신규 row 생성 준비용 read-only blueprint API를 추가했습니다.
@@ -374,6 +384,16 @@
 - 기존 게임 동작은 유지하고, FastAPI 응답 구조로 옮기기 위한 중간 계층만 추가했습니다.
 
 # Changelog
+
+## v162 - Admin Create Draft Preview
+
+- 신규 row 생성 준비 화면에 blueprint 기반 생성 초안 입력 UI를 추가했습니다.
+- 생성 초안은 boolean/select/number/textarea/relation select 타입으로 입력합니다.
+- relation select 후보 검색과 owner_type → owner_code 연동 갱신을 지원합니다.
+- `POST /api/v1/admin/master-data/create-preview` preview-only API를 추가했습니다.
+- code unique 중복, relation 대상 존재, combo guard 중복을 백엔드에서 검증합니다.
+- 실제 DB insert, commit, change log, rollback은 아직 잠금 상태입니다.
+- DB reset / seed는 필요 없습니다.
 
 ## v159 - Admin Create Blueprint Read-only
 

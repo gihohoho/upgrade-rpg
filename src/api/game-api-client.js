@@ -231,6 +231,22 @@
 	}
 
 
+	async function previewAdminMasterDataCreate(options) {
+		const opts = options || {};
+		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
+		return request("/admin/master-data/create-preview", {
+			method: "POST",
+			body: {
+				domain: opts.domain !== undefined ? String(opts.domain || "").trim() : "",
+				draft: opts.draft || {},
+				reason: opts.reason || undefined,
+				dryRun: true,
+			},
+			timeoutMs,
+		});
+	}
+
+
 	async function fetchAdminMasterDataDetail(options) {
 		const opts = options || {};
 		const timeoutMs = opts.timeoutMs !== undefined ? Number(opts.timeoutMs) : undefined;
@@ -396,6 +412,7 @@
 		listAdminMasterCatalogDomains,
 		listAdminMasterCatalogRows,
 		fetchAdminMasterCreateBlueprint,
+		previewAdminMasterDataCreate,
 		fetchAdminMasterDataDetail,
 		fetchAdminMasterDataRelations,
 		previewAdminMasterDataEdit,

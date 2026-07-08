@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("admin.html", [
-  "v159 admin create blueprint readonly",
+  "v162 admin create draft preview",
   "section-create-blueprint",
   "data-admin-create-domain",
   "data-admin-create-blueprint",
@@ -28,10 +28,12 @@ assertContains("admin.html", [
 assertContains("src/api/game-api-client.js", [
   "fetchAdminMasterCreateBlueprint",
   "/admin/master-data/create-blueprint",
+  "previewAdminMasterDataCreate",
+  "/admin/master-data/create-preview",
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v159.admin-create-blueprint-readonly",
+  "v162.admin-create-draft-preview",
   "readAdminCreateBlueprintFiltersFromDom",
   "renderAdminCreateBlueprint",
   "refreshAdminCreateBlueprint",
@@ -40,6 +42,12 @@ assertContains("src/api/admin-page-readonly.js", [
   "getAdminCreateBlueprintDefaultDraft",
   "createBlueprintReady",
   "window.getAdminCreateBlueprintReadiness",
+  "readAdminCreateDraftValues",
+  "previewAdminCreateDraft",
+  "renderAdminCreatePreviewResult",
+  "createDraftPreviewReady",
+  "preview-admin-create-draft",
+  "data-admin-create-draft",
 ]);
 
 assertContains("docs/ADMIN_CREATE_BLUEPRINT_READONLY.md", [
@@ -49,8 +57,8 @@ assertContains("docs/ADMIN_CREATE_BLUEPRINT_READONLY.md", [
 ]);
 
 assertContains("docs/CHANGELOG.md", [
-  "v159 - Admin Create Blueprint Read-only",
-  "신규 row 생성 준비",
+  "v162 - Admin Create Draft Preview",
+  "생성 초안",
 ]);
 
 console.log("admin create blueprint readonly smoke test passed");

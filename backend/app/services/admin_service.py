@@ -1341,6 +1341,262 @@ class AdminService:
 
 
 
+
+    async def preview_master_data_create(
+        self,
+        session: AsyncSession,
+        *,
+        domain: str,
+        draft: dict[str, Any],
+        reason: str | None = None,
+        dry_run: bool = True,
+    ) -> dict[str, Any]:
+        config = self.MASTER_CATALOG_DOMAINS.get(domain)
+        if not config:
+            return self._empty_create_preview(
+                status="invalid_domain",
+                domain=domain,
+                domain_label=domain,
+                warnings=["domain_invalid"],
+            )
+
+        model = config["model"]
+        column_map = self._master_create_column_map(model)
+        blueprint_defs = [field for field in self.MASTER_CREATE_BLUEPRINT_FIELDS.get(domain, []) if field.get("key")]
+        allowed_keys = {str(field["key"]) for field in blueprint_defs}
+        safe_draft = draft if isinstance(draft, dict) else {}
+        if len(safe_draft) > 100:
+            safe_draft = dict(list(safe_draft.items())[:100])
+
+        accepted_fields: list[dict[str, Any]] = []
+        rejected_fields: list[dict[str, Any]] = []
+        normalized_values: dict[str, Any] = {}
+        warnings: list[str] = []
+        field_defs = {str(field["key"]): field for field in blueprint_defs}
+
+        for key, field_def in field_defs.items():
+            column = column_map.get(key)
+            if column is None:
+                rejected_fields.append({"key": key, "label": self._humanize_field_name(key), "reason": "column_not_found"})
+                continue
+            if str(field_def.get("inputKind") or "") == "json-readonly" or key.endswith("_json") or self._is_asset_field(key):
+                continue
+            raw_value = safe_draft.get(key, field_def.get("defaultValue"))
+            normalized, issue = self._normalize_master_edit_value(column, raw_value)
+            if issue:
+                rejected_fields.append({"key": key, "label": self._humanize_field_name(key), "after": serialize_value(raw_value), "reason": issue})
+                continue
+            normalized_values[key] = normalized
+
+        for key, field_def in field_defs.items():
+            if str(field_def.get("inputKind") or "") == "json-readonly" or key.endswith("_json") or self._is_asset_field(key):
+                continue
+            value = normalized_values.get(key)
+            if field_def.get("required") and (value is None or (isinstance(value, str) and value.strip() == "")):
+                rejected_fields.append({"key": key, "label": self._humanize_field_name(key), "after": serialize_value(value), "reason": "required_field_missing"})
+            if field_def.get("unique") and value is not None and str(value).strip():
+                duplicate = await self._exists_duplicate_unique_value(session, model, key, value)
+                if duplicate:
+                    rejected_fields.append({"key": key, "label": self._humanize_field_name(key), "after": serialize_value(value), "reason": f"duplicate_unique_{key}"})
+
+        for raw_key in safe_draft.keys():
+            key = str(raw_key or "").strip()
+            if not key or key in allowed_keys:
+                continue
+            rejected_fields.append({"key": key or raw_key, "label": self._humanize_field_name(key), "after": serialize_value(safe_draft.get(raw_key)), "reason": "unknown_or_locked_create_field"})
+
+        relation_errors = await self._validate_master_create_relations(session, domain, normalized_values)
+        rejected_fields.extend(relation_errors)
+
+        rejected_key_reasons = {(str(item.get("key")), str(item.get("reason"))) for item in rejected_fields}
+        for key, value in normalized_values.items():
+            if any(item_key == key for item_key, _reason in rejected_key_reasons):
+                continue
+            field_def = field_defs.get(key) or {}
+            relation = await self._describe_master_create_relation_value(session, domain, key, value, normalized_values)
+            accepted_fields.append({
+                "key": key,
+                "label": self._humanize_field_name(key),
+                "after": serialize_value(value),
+                "type": self._master_edit_column_type(column_map[key]),
+                "required": bool(field_def.get("required")),
+                "unique": bool(field_def.get("unique")),
+                "relation": relation,
+                "inputKind": field_def.get("inputKind") or "text",
+            })
+
+        error_count = len(rejected_fields)
+        relation_count = sum(1 for field in accepted_fields if field.get("relation"))
+        combo_labels = self._create_combo_guard_labels(domain)
+        return {
+            "status": "previewed",
+            "readOnly": True,
+            "dryRun": True,
+            "writeBlocked": True,
+            "createApplyReady": False,
+            "wouldBeValid": error_count == 0,
+            "domain": domain,
+            "domainLabel": config["label"],
+            "reason": reason,
+            "fieldCount": len(accepted_fields),
+            "errorCount": error_count,
+            "acceptedFields": accepted_fields,
+            "rejectedFields": rejected_fields,
+            "normalizedDraft": {key: serialize_value(value) for key, value in normalized_values.items()},
+            "relationFieldCount": relation_count,
+            "relationLabelsReturned": relation_count > 0,
+            "comboGuardLabels": combo_labels,
+            "comboGuardCount": len(combo_labels),
+            "rawJsonReturned": False,
+            "assetsReturned": False,
+            "warnings": warnings,
+            "note": "신규 row 생성 초안을 검증했습니다. 이 단계는 preview-only라 DB insert, commit, change log 생성을 하지 않습니다.",
+        }
+
+    def _empty_create_preview(self, *, status: str, domain: str, domain_label: str, warnings: list[str]) -> dict[str, Any]:
+        return {
+            "status": status,
+            "readOnly": True,
+            "dryRun": True,
+            "writeBlocked": True,
+            "createApplyReady": False,
+            "wouldBeValid": False,
+            "domain": domain,
+            "domainLabel": domain_label,
+            "fieldCount": 0,
+            "errorCount": 1,
+            "acceptedFields": [],
+            "rejectedFields": [],
+            "normalizedDraft": {},
+            "relationFieldCount": 0,
+            "relationLabelsReturned": False,
+            "comboGuardLabels": [],
+            "comboGuardCount": 0,
+            "rawJsonReturned": False,
+            "assetsReturned": False,
+            "warnings": warnings,
+        }
+
+    @staticmethod
+    def _master_create_column_map(model: Any) -> dict[str, Any]:
+        mapper = sa_inspect(model)
+        return {column_attr.key: column_attr.columns[0] for column_attr in mapper.mapper.column_attrs}
+
+    async def _exists_duplicate_unique_value(self, session: AsyncSession, model: Any, key: str, value: Any) -> bool:
+        column = getattr(model, key, None)
+        if column is None:
+            return False
+        result = await session.execute(select(func.count()).select_from(model).where(column == value))
+        return int(result.scalar_one() or 0) > 0
+
+    def _create_combo_guard_labels(self, domain: str) -> list[str]:
+        labels: list[str] = []
+        for field_def in self.MASTER_CREATE_BLUEPRINT_FIELDS.get(domain, []) or []:
+            combo = field_def.get("comboGuard")
+            if isinstance(combo, list) and combo:
+                label = " + ".join(str(item) for item in combo)
+                if label not in labels:
+                    labels.append(label)
+        return labels
+
+    async def _validate_master_create_relations(self, session: AsyncSession, domain: str, values: dict[str, Any]) -> list[dict[str, Any]]:
+        errors: list[dict[str, Any]] = []
+
+        def add(key: str, reason: str, value: Any = None) -> None:
+            errors.append({"key": key, "label": self._humanize_field_name(key), "after": serialize_value(value if value is not None else values.get(key)), "reason": reason})
+
+        if domain == "itemTemplates":
+            code = str(values.get("enhance_group_code") or "").strip()
+            if code and not await self._exists_by_code(session, EnhancementGroup, code):
+                add("enhance_group_code", "relation_target_not_found_enhancement_group", code)
+        elif domain == "dropTables":
+            owner_type = str(values.get("owner_type") or "").strip()
+            owner_code = str(values.get("owner_code") or "").strip()
+            if owner_type not in {"boss", "field"}:
+                add("owner_type", "invalid_owner_type", owner_type)
+            if not owner_code:
+                add("owner_code", "owner_code_missing", owner_code)
+            elif owner_type in {"boss", "field"}:
+                model = Boss if owner_type == "boss" else FieldZone
+                if not await self._exists_by_code(session, model, owner_code):
+                    add("owner_code", "owner_code_not_found_for_owner_type", owner_code)
+        elif domain == "dropTableItems":
+            drop_table_code = str(values.get("drop_table_code") or "").strip()
+            item_template_code = str(values.get("item_template_code") or "").strip()
+            if not drop_table_code or not await self._exists_by_code(session, DropTable, drop_table_code):
+                add("drop_table_code", "relation_target_not_found_drop_table", drop_table_code)
+            if not item_template_code or not await self._exists_by_code(session, ItemTemplate, item_template_code):
+                add("item_template_code", "relation_target_not_found_item_template", item_template_code)
+        elif domain == "skillLevels":
+            skill_code = str(values.get("skill_code") or "").strip()
+            level = values.get("level")
+            if not skill_code or not await self._exists_by_code(session, Skill, skill_code):
+                add("skill_code", "relation_target_not_found_skill", skill_code)
+            if level is None or int(level) < 0:
+                add("level", "invalid_skill_level", level)
+            elif skill_code and await self._exists_by_code(session, Skill, skill_code):
+                duplicate = await self._exists_duplicate_combo(session, SkillLevel, 0, SkillLevel.skill_code == skill_code, SkillLevel.level == int(level))
+                if duplicate:
+                    add("level", "duplicate_skill_code_level", level)
+        elif domain == "enhancementLevels":
+            group_code = str(values.get("group_code") or "").strip()
+            from_level = values.get("from_level")
+            if not group_code or not await self._exists_by_code(session, EnhancementGroup, group_code):
+                add("group_code", "relation_target_not_found_enhancement_group", group_code)
+            if from_level is None or int(from_level) < 0:
+                add("from_level", "invalid_enhancement_from_level", from_level)
+            elif group_code and await self._exists_by_code(session, EnhancementGroup, group_code):
+                duplicate = await self._exists_duplicate_combo(session, EnhancementLevel, 0, EnhancementLevel.group_code == group_code, EnhancementLevel.from_level == int(from_level))
+                if duplicate:
+                    add("from_level", "duplicate_enhancement_group_from_level", from_level)
+        elif domain == "characterSkills":
+            character_code = str(values.get("character_code") or "").strip()
+            skill_code = str(values.get("skill_code") or "").strip()
+            if not character_code or not await self._exists_by_code(session, Character, character_code):
+                add("character_code", "relation_target_not_found_character", character_code)
+            if not skill_code or not await self._exists_by_code(session, Skill, skill_code):
+                add("skill_code", "relation_target_not_found_skill", skill_code)
+            if character_code and skill_code and await self._exists_by_code(session, Character, character_code) and await self._exists_by_code(session, Skill, skill_code):
+                duplicate = await self._exists_duplicate_combo(session, CharacterSkill, 0, CharacterSkill.character_code == character_code, CharacterSkill.skill_code == skill_code)
+                if duplicate:
+                    add("skill_code", "duplicate_character_skill_pair", skill_code)
+        return errors
+
+    async def _describe_master_create_relation_value(self, session: AsyncSession, domain: str, key: str, value: Any, values: dict[str, Any]) -> dict[str, Any] | None:
+        value_text = "" if value is None else str(value).strip()
+        if domain == "itemTemplates" and key == "enhance_group_code":
+            if not value_text:
+                return {"field": key, "targetDomain": "enhancementGroups", "targetCode": None, "targetLabel": "강화 그룹 없음", "displayText": "강화 그룹 없음"}
+            target = await self._fetch_code_name(session, EnhancementGroup, value_text)
+            label = target.get("name") if target else value_text
+            return {"field": key, "targetDomain": "enhancementGroups", "targetCode": value_text, "targetLabel": label, "displayText": f"{value_text} · {label}" if label != value_text else value_text}
+        if domain == "dropTables" and key == "owner_type":
+            label = "보스" if value_text == "boss" else "필드"
+            target_domain = "bosses" if value_text == "boss" else "fieldZones"
+            return {"field": key, "targetDomain": target_domain, "targetCode": value_text, "targetLabel": label, "displayText": f"{value_text} · {label}"}
+        if domain == "dropTables" and key == "owner_code":
+            owner_type = str(values.get("owner_type") or "boss").strip()
+            target_domain = "fieldZones" if owner_type == "field" else "bosses"
+            target_model = FieldZone if owner_type == "field" else Boss
+            target = await self._fetch_code_name(session, target_model, value_text)
+            label = target.get("name") if target else value_text
+            return {"field": key, "targetDomain": target_domain, "targetCode": value_text, "targetLabel": label, "displayText": f"{value_text} · {label}" if label != value_text else value_text}
+        relation_targets = {
+            ("dropTableItems", "drop_table_code"): (DropTable, "dropTables"),
+            ("dropTableItems", "item_template_code"): (ItemTemplate, "itemTemplates"),
+            ("skillLevels", "skill_code"): (Skill, "skills"),
+            ("enhancementLevels", "group_code"): (EnhancementGroup, "enhancementGroups"),
+            ("characterSkills", "character_code"): (Character, "characters"),
+            ("characterSkills", "skill_code"): (Skill, "skills"),
+        }
+        target_def = relation_targets.get((domain, key))
+        if target_def:
+            model, target_domain = target_def
+            target = await self._fetch_code_name(session, model, value_text)
+            label = target.get("name") if target else value_text
+            return {"field": key, "targetDomain": target_domain, "targetCode": value_text, "targetLabel": label, "displayText": f"{value_text} · {label}" if label != value_text else value_text}
+        return None
+
     async def get_master_create_blueprint(self, session: AsyncSession, *, domain: str = "itemTemplates") -> dict[str, Any]:
         """Return a read-only create blueprint for a master-data domain.
 
