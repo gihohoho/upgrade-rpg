@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v153.admin-relation-preview-tools",
+  "v156.admin-change-log-relation-tools",
   "getAdminEditImpactHint",
   "buildAdminEditImpactGuide",
   "renderAdminEditImpactGuide",
@@ -32,7 +32,7 @@ assertContains("src/api/admin-page-readonly.js", [
 ]);
 
 assertContains("admin.html", [
-  "v153 admin relation preview tools",
+  "v156 admin change log relation tools",
   "edit-draft-impact",
   "impact-summary",
   "impact-row",

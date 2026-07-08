@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v153.admin-relation-preview-tools",
+  "v156.admin-change-log-relation-tools",
   "ADMIN_DRAFT_SELECT_FIELD_OPTIONS",
   "preset-select",
   "getAdminDraftSelectOptions",
@@ -42,7 +42,7 @@ assertContains("backend/app/services/admin_service.py", [
 ]);
 
 assertContains("admin.html", [
-  "v153 admin relation preview tools",
+  "v156 admin change log relation tools",
   ".draft-field-badges",
 ]);
 

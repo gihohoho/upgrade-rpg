@@ -17,7 +17,7 @@ function assertContains(file, patterns) {
 }
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v153.admin-relation-preview-tools",
+  "v156.admin-change-log-relation-tools",
   "dropTables: [\"owner_type\", \"owner_code\", \"description\", \"is_enabled\"]",
   "getAdminDraftRelationOptionGroupKey",
   "getAdminDraftRelationOptions",
@@ -42,7 +42,7 @@ assertContains("backend/app/services/admin_service.py", [
 ]);
 
 assertContains("admin.html", [
-  "v153 admin relation preview tools",
+  "v156 admin change log relation tools",
 ]);
 
 assertContains("docs/ADMIN_OWNER_CODE_RELATION_TOOLS.md", [

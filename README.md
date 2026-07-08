@@ -21,9 +21,9 @@ docs/README.md
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v153: admin relation preview tools**
+- 최신 안정 버전: **v156: admin change log relation tools**
 
-v153은 v150의 relation select 검색/필터 UI 위에 변경 preview relation label, relation 대상 빠른 열기, relation 변경 개수 표시를 추가한 버전입니다. 관계 후보 검색과 preview 표시는 DB를 수정하지 않는 프론트 UI 편의 기능입니다.
+v156은 v153의 relation preview 도구 위에 변경 이력 상세와 rollback preview relation label/대상 열기 표시를 확장한 버전입니다. 관계 후보 검색, preview, change log 표시는 기존 DB 데이터를 더 알아보기 쉽게 보여주는 관리자 UI/응답 보강입니다.
 
 DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 

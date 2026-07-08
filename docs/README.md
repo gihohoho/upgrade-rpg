@@ -66,3 +66,5 @@ docs/archive/stage-notes/
 - [ADMIN_OWNER_CODE_RELATION_TOOLS.md](ADMIN_OWNER_CODE_RELATION_TOOLS.md) - dropTables.owner_code 안전 편집과 owner_type 연동 select
 
 - [ADMIN_RELATION_SEARCH_TOOLS.md](ADMIN_RELATION_SEARCH_TOOLS.md) - relation select 검색/필터 UI와 카탈로그 편의 기능
+
+- [ADMIN_CHANGE_LOG_RELATION_TOOLS.md](ADMIN_CHANGE_LOG_RELATION_TOOLS.md) - 변경 이력/rollback preview relation label 강화

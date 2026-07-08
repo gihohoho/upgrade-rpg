@@ -18,18 +18,21 @@ function assertContains(file, patterns) {
 
 assertContains("src/api/admin-page-readonly.js", [
   "v156.admin-change-log-relation-tools",
-  "getAdminDraftRelationOptionsForValues",
-  "getAdminRelationValueDisplay",
-  "formatAdminChangeValueText",
-  "renderAdminChangeValueCell",
-  "renderAdminRelationOpenButton",
-  "getAdminRelationOpenTarget",
-  "openAdminMasterDataDetailByCode",
-  "open-master-detail-by-code",
-  "relationPreviewReady",
-  "relationCount",
-  "window.formatAdminChangeValueText",
-  "window.getAdminRelationValueDisplay",
+  "getAdminChangeRelationInfo",
+  "formatAdminRelationInfoText",
+  "getAdminRelationOpenTargetFromChange",
+  "renderAdminRollbackMismatchValueCell",
+  "relationChangeCount",
+  "changeLogRelationReady",
+  "window.getAdminChangeRelationInfo",
+]);
+
+assertContains("backend/app/services/admin_service.py", [
+  "_build_change_log_changes_with_relations",
+  "_describe_change_log_relation_value",
+  "_enrich_rollback_mismatches_with_relations",
+  "relationChangeCount",
+  "relationLabelsReturned",
 ]);
 
 assertContains("admin.html", [
@@ -38,16 +41,17 @@ assertContains("admin.html", [
   "relation-jump-btn",
 ]);
 
-assertContains("docs/ADMIN_RELATION_PREVIEW_TOOLS.md", [
-  "Admin Relation Preview Tools",
+assertContains("docs/ADMIN_CHANGE_LOG_RELATION_TOOLS.md", [
+  "Admin Change Log Relation Tools",
+  "rollback preview",
   "relation label",
-  "대상 열기",
   "DB reset / seed",
 ]);
 
 assertContains("docs/CHANGELOG.md", [
-  "v153 - Admin Relation Preview Tools",
-  "relation 변경 개수",
+  "v156 - Admin Change Log Relation Tools",
+  "변경 이력 상세",
+  "rollback preview",
 ]);
 
-console.log("admin relation preview tools smoke test passed");
+console.log("admin change log relation tools smoke test passed");

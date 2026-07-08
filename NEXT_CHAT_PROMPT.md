@@ -1,6 +1,6 @@
 # 새 채팅 시작용 프롬프트
 
-아래 내용을 그대로 새 채팅의 첫 메시지로 붙여넣고, 함께 `rpg_v153_admin_relation_preview_tools.zip`을 업로드해서 이어서 진행해줘.
+아래 내용을 그대로 새 채팅의 첫 메시지로 붙여넣고, 함께 `rpg_v156_admin_change_log_relation_tools.zip`을 업로드해서 이어서 진행해줘.
 
 ---
 
@@ -51,10 +51,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v153: admin relation preview tools
+v156: admin change log relation tools
 
 최신 ZIP:
-rpg_v153_admin_relation_preview_tools.zip
+rpg_v156_admin_change_log_relation_tools.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -94,14 +94,16 @@ docs/NEXT_STEPS.md
 29. v151에서 변경 preview relation label 강화 완료.
 30. v152에서 relation 대상 빠른 열기 버튼 완료.
 31. v153에서 relation 변경 개수 표시 완료.
+32. v156에서 change log 상세/rollback preview relation label 강화 완료.
 
-v153 세부 완료:
+v156 세부 완료:
 - v147 관계 필드 안전 편집 유지.
 - v150 relation select 후보 검색/필터 유지.
-- 변경 preview와 초안 before/after 표에서 relation 값에 대상 이름 label 표시.
-- relation 변경 행에 relation 배지 표시.
+- v153 변경 preview relation label/대상 열기 유지.
+- 변경 이력 목록/상세에서 relation 변경 개수 표시.
+- 변경 이력 상세 before/after 값에 relation 대상 이름 label 표시.
+- rollback preview의 되돌릴 값과 현재값 안전 검사 표에 relation label 표시.
 - relation 대상이 열 수 있는 도메인이면 대상 열기 버튼 표시.
-- 변경 요약 배너에 relation 변경 개수 표시.
 
 현재 게임 실제 세이브 슬롯:
 default
@@ -142,7 +144,7 @@ bash tools/run_smoke_all.sh
 ```
 
 다음 추천 단계:
-v154 관리자 변경 이력 relation label 강화
+v157 관리자 신규 row 생성 준비용 read-only 설계
 
 구체적으로:
 이미 저장된 change log 상세와 rollback preview에서도 relation 값이 코드만 보이지 않도록 before/after에 대상 이름 label을 붙여줘.

@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v153.admin-relation-preview-tools";
+  const VERSION = "v156.admin-change-log-relation-tools";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -1424,14 +1424,43 @@
     return `<button class="btn mini relation-jump-btn" type="button" data-admin-action="open-master-detail-by-code" data-admin-detail-domain="${escapeHtml(target.domain)}" data-admin-detail-code="${escapeHtml(target.code)}">대상 열기</button>`;
   }
 
+  function getAdminChangeRelationInfo(change, side) {
+    const relation = change && change.relation ? change.relation : null;
+    if (!relation) return null;
+    if (side && relation[side]) return relation[side];
+    if (side === "after" && (relation.targetLabel || relation.targetDomain || relation.targetCode)) return relation;
+    return null;
+  }
+
+  function formatAdminRelationInfoText(info, rawValue) {
+    if (!info) return null;
+    if (info.displayText !== undefined && info.displayText !== null && String(info.displayText) !== "") return String(info.displayText);
+    const valueText = formatValue(rawValue);
+    const label = info.targetLabel !== undefined && info.targetLabel !== null ? String(info.targetLabel) : "";
+    if (!label || label === valueText) return valueText;
+    return `${valueText} · ${label}`;
+  }
+
+  function getAdminRelationOpenTargetFromChange(domain, key, rawValue, contextValues, change, side) {
+    if (domain === "dropTables" && key === "owner_type") return null;
+    const info = getAdminChangeRelationInfo(change, side);
+    if (info && info.targetDomain && !String(info.targetDomain).includes("/")) {
+      const code = info.targetCode !== undefined && info.targetCode !== null ? String(info.targetCode).trim() : String(rawValue || "").trim();
+      if (code) return { domain: String(info.targetDomain), code };
+    }
+    return isAdminRelationEditField(domain, key) ? getAdminRelationOpenTarget(domain, key, rawValue, contextValues) : null;
+  }
+
+  function renderAdminRelationOpenTargetButton(target) {
+    if (!target) return "";
+    return `<button class="btn mini relation-jump-btn" type="button" data-admin-action="open-master-detail-by-code" data-admin-detail-domain="${escapeHtml(target.domain)}" data-admin-detail-code="${escapeHtml(target.code)}">대상 열기</button>`;
+  }
+
   function formatAdminChangeValueText(domain, change, side, contextValues) {
     const key = change && change.key;
     const rawValue = side === "before" ? change && change.before : change && change.after;
-    const relation = side === "after" ? change && change.relation : null;
-    if (relation && relation.targetLabel) {
-      const text = formatValue(rawValue);
-      return `${text} · ${relation.targetLabel}`;
-    }
+    const relationText = formatAdminRelationInfoText(getAdminChangeRelationInfo(change, side), rawValue);
+    if (relationText !== null) return relationText;
     if (isAdminRelationEditField(domain, key)) return getAdminRelationValueDisplay(domain, key, rawValue, contextValues);
     return formatValue(rawValue);
   }
@@ -1440,8 +1469,18 @@
     const text = formatAdminChangeValueText(domain, change, side, contextValues);
     const key = change && change.key;
     const rawValue = side === "before" ? change && change.before : change && change.after;
-    const button = isAdminRelationEditField(domain, key) ? renderAdminRelationOpenButton(domain, key, rawValue, contextValues) : "";
+    const target = getAdminRelationOpenTargetFromChange(domain, key, rawValue, contextValues, change, side);
+    const button = renderAdminRelationOpenTargetButton(target);
     return `<div class="relation-value-cell"><span>${escapeHtml(text)}</span>${button}</div>`;
+  }
+
+  function renderAdminRollbackMismatchValueCell(domain, item, valueKey) {
+    const relation = item && item.relation ? item.relation : null;
+    const rawValue = item ? item[valueKey] : undefined;
+    const info = relation && relation[valueKey] ? relation[valueKey] : null;
+    const text = formatAdminRelationInfoText(info, rawValue) || formatValue(rawValue);
+    const target = info && info.targetDomain && !String(info.targetDomain).includes("/") && info.targetCode ? { domain: String(info.targetDomain), code: String(info.targetCode) } : null;
+    return `<div class="relation-value-cell"><span>${escapeHtml(text)}</span>${renderAdminRelationOpenTargetButton(target)}</div>`;
   }
 
   function formatAdminChangeAfterValue(change) {
@@ -2448,7 +2487,7 @@
               <td>${escapeHtml(formatValue(row.targetType))}</td>
               <td>${escapeHtml(formatValue(row.targetId))}</td>
               <td>${escapeHtml(formatValue(row.action))}</td>
-              <td>${escapeHtml((row.changedKeys || []).join(", ") || "-")}</td>
+              <td>${escapeHtml((row.changedKeys || []).join(", ") || "-")}${row.relationChangeCount ? ` <span class="pill warn">relation ${escapeHtml(formatValue(row.relationChangeCount))}</span>` : ""}</td>
               <td>${escapeHtml(formatValue(row.reason))}</td>
               <td><span class="pill ${row.applied ? "good" : "blocked"}">${escapeHtml(formatValue(row.applied))}</span></td>
               <td>${escapeHtml(formatClock(row.createdAt))}</td>
@@ -2472,11 +2511,12 @@
     const changes = Array.isArray(payload.changes) ? payload.changes : [];
     const rollback = payload.rollback || {};
     const rows = changes.length ? changes.map((change) => `
-      <tr><td>${escapeHtml(change.label || change.key)}</td><td>${escapeHtml(formatValue(change.before))}</td><td>${escapeHtml(formatValue(change.after))}</td></tr>
+      <tr><td>${escapeHtml(change.label || change.key)}${change.relation ? ` <span class="pill warn">relation</span>` : ""}</td><td>${renderAdminChangeValueCell(payload.rollback && payload.rollback.domain, change, "before", {})}</td><td>${renderAdminChangeValueCell(payload.rollback && payload.rollback.domain, change, "after", {})}</td></tr>
     `).join("") : `<tr><td colspan="3">변경 필드 없음</td></tr>`;
+    const relationCount = payload.relationChangeCount || changes.filter((change) => change.relation).length;
     target.innerHTML = `
       <div class="detail-card" data-admin-change-log-detail-card data-admin-change-log-id="${escapeHtml(payload.id)}">
-        <div class="detail-title">변경 이력 #${escapeHtml(formatValue(payload.id))} <span class="pill ${rollback.available ? "good" : "blocked"}">rollback ${rollback.available ? "ready" : "blocked"}</span></div>
+        <div class="detail-title">변경 이력 #${escapeHtml(formatValue(payload.id))} <span class="pill ${rollback.available ? "good" : "blocked"}">rollback ${rollback.available ? "ready" : "blocked"}</span>${relationCount ? ` <span class="pill warn">relation ${escapeHtml(formatValue(relationCount))}</span>` : ""}</div>
         <div class="filter-help">대상: ${escapeHtml(formatValue(payload.targetType))} / 행 ${escapeHtml(formatValue(payload.targetId))} · action=${escapeHtml(formatValue(payload.action))} · applied=${escapeHtml(formatValue(payload.applied))}</div>
         <div class="filter-help">사유: ${escapeHtml(formatValue(payload.reason))} · 시각: ${escapeHtml(formatClock(payload.createdAt))}</div>
         <div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>이전 값</th><th>적용 값</th></tr></thead><tbody>${rows}</tbody></table></div>
@@ -2512,10 +2552,11 @@
     const mismatches = Array.isArray(result.currentMismatches) ? result.currentMismatches : [];
     const warnings = Array.isArray(result.warnings) ? result.warnings : [];
     const rows = changes.length ? changes.map((change) => `
-      <tr><td>${escapeHtml(change.label || change.key)}</td><td>${escapeHtml(formatValue(change.before))}</td><td>${escapeHtml(formatValue(change.after))}</td></tr>
+      <tr><td>${escapeHtml(change.label || change.key)}${change.relation ? ` <span class="pill warn">relation</span>` : ""}</td><td>${renderAdminChangeValueCell(result.domain, change, "after", {})}</td><td>${renderAdminChangeValueCell(result.domain, change, "before", {})}</td></tr>
     `).join("") : `<tr><td colspan="3">되돌릴 변경 없음</td></tr>`;
+    const relationCount = result.relationChangeCount || changes.filter((change) => change.relation).length;
     const mismatchRows = mismatches.length ? mismatches.map((item) => `
-      <tr><td>${escapeHtml(item.label || item.key)}</td><td>${escapeHtml(formatValue(item.current))}</td><td>${escapeHtml(formatValue(item.expectedAfter))}</td><td>${escapeHtml(formatValue(item.rollbackTo))}</td></tr>
+      <tr><td>${escapeHtml(item.label || item.key)}${item.relation ? ` <span class="pill warn">relation</span>` : ""}</td><td>${renderAdminRollbackMismatchValueCell(result.domain, item, "current")}</td><td>${renderAdminRollbackMismatchValueCell(result.domain, item, "expectedAfter")}</td><td>${renderAdminRollbackMismatchValueCell(result.domain, item, "rollbackTo")}</td></tr>
     `).join("") : `<tr><td colspan="4">현재 DB 값 일치</td></tr>`;
     target.innerHTML = `
       <div class="draft-preview-summary">
@@ -2524,6 +2565,7 @@
         <span class="pill ${result.dryRun ? "warn" : "good"}">dryRun: ${escapeHtml(formatValue(result.dryRun))}</span>
         <span class="pill ${result.writeBlocked ? "blocked" : "good"}">writeBlocked: ${escapeHtml(formatValue(result.writeBlocked))}</span>
         <span class="pill ${result.rolledBack ? "good" : "warn"}">rolledBack: ${escapeHtml(formatValue(result.rolledBack === true))}</span>
+        <span class="pill ${relationCount ? "warn" : "good"}">relation ${escapeHtml(formatValue(relationCount || 0))}</span>
         ${result.rollbackChangeLogId ? `<span class="pill good">rollback log #${escapeHtml(formatValue(result.rollbackChangeLogId))}</span>` : ""}
       </div>
       ${warnings.length ? `<div class="filter-help">warnings: ${escapeHtml(warnings.join(", "))}</div>` : ""}
@@ -2898,7 +2940,8 @@
     const adminWriteGuardReady = !!document.querySelector("[data-admin-write-dev-key]") && !!document.querySelector("[data-admin-write-key-status]");
     const relationSearchReady = typeof applyAdminRelationOptionFilter === "function" && typeof filterAdminDraftSelectOptions === "function";
     const relationPreviewReady = typeof formatAdminChangeValueText === "function" && typeof getAdminRelationValueDisplay === "function" && typeof openAdminMasterDataDetailByCode === "function";
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && masterApiVerifyReady && adminWriteGuardReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const changeLogRelationReady = typeof getAdminChangeRelationInfo === "function" && typeof renderAdminRollbackMismatchValueCell === "function" && typeof getAdminRelationOpenTargetFromChange === "function";
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && masterApiVerifyReady && adminWriteGuardReady, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -2979,6 +3022,10 @@
     renderAdminRelationEditOptionsNote,
     getAdminEquipSlotDisplayName,
     getAdminDraftFieldRisk,
+    getAdminRelationOpenTarget,
+    getAdminChangeRelationInfo,
+    getAdminRelationOpenTargetFromChange,
+    renderAdminRollbackMismatchValueCell,
     getAdminDraftLockedReason,
     checkAdminReadOnlyPageReady,
   };
@@ -3029,6 +3076,9 @@
   window.formatAdminChangeValueText = formatAdminChangeValueText;
   window.getAdminRelationValueDisplay = getAdminRelationValueDisplay;
   window.getAdminRelationOpenTarget = getAdminRelationOpenTarget;
+  window.getAdminChangeRelationInfo = getAdminChangeRelationInfo;
+  window.getAdminRelationOpenTargetFromChange = getAdminRelationOpenTargetFromChange;
+  window.renderAdminRollbackMismatchValueCell = renderAdminRollbackMismatchValueCell;
   window.getCurrentAdminPageUrl = getCurrentAdminPageUrl;
   window.copyCurrentAdminPageUrl = copyCurrentAdminPageUrl;
   window.openAdminChangeLogDetail = openAdminChangeLogDetail;

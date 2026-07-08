@@ -68,10 +68,10 @@ local-admin-dev-key
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v153: admin relation preview tools**
-- 최신 ZIP 이름: **rpg_v153_admin_relation_preview_tools.zip**
+- 최신 안정 버전: **v156: admin change log relation tools**
+- 최신 ZIP 이름: **rpg_v156_admin_change_log_relation_tools.zip**
 
-v153은 v150의 relation select 검색/필터 UI 위에 변경 preview relation label, relation 대상 빠른 열기, relation 변경 개수 표시를 추가한 버전입니다. 관계 후보 검색과 preview 표시는 DB를 수정하지 않는 프론트 UI 편의 기능입니다. owner_type 변경 시 owner_code 후보와 검색 상태도 안전하게 갱신됩니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
+v156은 v153의 relation preview 도구 위에 변경 이력 상세와 rollback preview relation label/대상 열기 표시를 확장한 버전입니다. relation 표시는 DB를 수정하지 않는 관리자 UI/응답 보강입니다. owner_type 변경 시 owner_code 후보와 검색 상태도 안전하게 갱신됩니다. v135의 카탈로그 페이지네이션, 기본 20개 표시, ID순 정렬, 인게임 슬롯 이름 표시도 유지합니다.
 DB schema, seed 데이터, localStorage 저장 구조는 변경하지 않았습니다.
 DB reset/seed는 필요 없습니다.
 
@@ -155,6 +155,11 @@ DB reset/seed는 필요 없습니다.
   - relation 변경 행에 relation 배지 표시
   - relation 대상 빠른 열기 버튼 추가
   - 변경 요약 배너에 relation 변경 개수 표시
+- v156에서 change log / rollback relation 도구 완료.
+  - 변경 이력 목록/상세에 relation 변경 개수 표시
+  - 변경 이력 상세 before/after relation label 표시
+  - rollback preview와 현재값 안전 검사 표에 relation label 표시
+  - relation 값 대상 열기 버튼 유지
 
 ### runtime 반영
 

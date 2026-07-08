@@ -589,7 +589,7 @@ class AdminService:
         row = await self._get_admin_change_log(session, change_log_id)
         if row is None:
             return self._empty_change_log_detail(status="not_found", change_log_id=change_log_id, warnings=["change_log_not_found"])
-        detail = self._serialize_admin_change_log_detail(row)
+        detail = await self._serialize_admin_change_log_detail(session, row)
         domain, row_id = self._extract_master_change_target(row)
         rollback_available = bool(row.applied and row.action == "update" and domain and row_id and isinstance(serialize_value(row.rollback_json), dict))
         detail["rollback"] = {
@@ -670,7 +670,8 @@ class AdminService:
             if current == expected_before:
                 before_matches.append(key)
 
-        changes = self._build_change_log_changes(before_json, after_json)
+        changes = await self._build_change_log_changes_with_relations(session, domain, before_json, after_json)
+        after_mismatches = await self._enrich_rollback_mismatches_with_relations(session, domain, after_mismatches, current_values, after_json, before_json)
         base = {
             "status": "rollback_preview_ready",
             "readOnly": False,
@@ -690,6 +691,9 @@ class AdminService:
             "changes": changes,
             "changedKeys": [change["key"] for change in changes],
             "diffCount": len(changes),
+            "relationChangedKeys": [change["key"] for change in changes if change.get("relation")],
+            "relationChangeCount": sum(1 for change in changes if change.get("relation")),
+            "relationLabelsReturned": any(change.get("relation") for change in changes),
             "currentMatchesAfter": len(after_mismatches) == 0,
             "currentMismatches": after_mismatches[:30],
             "currentMismatchCount": len(after_mismatches),
@@ -847,6 +851,7 @@ class AdminService:
         session.add(rollback_log)
         await session.commit()
         await session.refresh(rollback_log)
+        applied_changes_with_relations = await self._build_change_log_changes_with_relations(session, str(domain), current_values, rollback_values)
 
         preview.update({
             "status": "rolled_back",
@@ -856,9 +861,12 @@ class AdminService:
             "rollbackReady": False,
             "wouldRollback": False,
             "rollbackChangeLogId": rollback_log.id,
-            "appliedChanges": applied_changes,
-            "acceptedChanges": applied_changes,
-            "diffCount": len(applied_changes),
+            "appliedChanges": applied_changes_with_relations,
+            "acceptedChanges": applied_changes_with_relations,
+            "relationChangedKeys": [change["key"] for change in applied_changes_with_relations if change.get("relation")],
+            "relationChangeCount": sum(1 for change in applied_changes_with_relations if change.get("relation")),
+            "relationLabelsReturned": any(change.get("relation") for change in applied_changes_with_relations),
+            "diffCount": len(applied_changes_with_relations),
             "warnings": [*(preview.get("warnings") or []), "game_runtime_requires_reload"],
             "note": "관리자 변경 이력을 기준으로 DB 값을 이전 값으로 되돌렸습니다. 게임 화면은 새로고침 후 최신 master-data를 다시 읽습니다.",
         })
@@ -1895,17 +1903,22 @@ class AdminService:
             "warnings": warnings,
         }
 
-    def _serialize_admin_change_log_detail(self, row: AdminChangeLog) -> dict[str, Any]:
+    async def _serialize_admin_change_log_detail(self, session: AsyncSession, row: AdminChangeLog) -> dict[str, Any]:
         base = self._serialize_admin_change_log(row)
         before_json = serialize_value(row.before_json) or {}
         after_json = serialize_value(row.after_json) or {}
-        changes = self._build_change_log_changes(before_json, after_json)
+        domain, _ = self._extract_master_change_target(row)
+        changes = await self._build_change_log_changes_with_relations(session, domain, before_json, after_json)
+        relation_count = sum(1 for change in changes if change.get("relation"))
         base.update({
             "status": "loaded",
             "readOnly": True,
             "changes": changes,
             "changedKeys": [change["key"] for change in changes],
             "changedKeyCount": len(changes),
+            "relationChangeCount": relation_count,
+            "relationChangedKeys": [change["key"] for change in changes if change.get("relation")],
+            "relationLabelsReturned": relation_count > 0,
             "rawBeforeAfterReturned": False,
             "scalarChangesReturned": True,
             "rollbackRawJsonReturned": False,
@@ -1926,6 +1939,96 @@ class AdminService:
             }
             for key in keys
         ]
+
+    async def _build_change_log_changes_with_relations(self, session: AsyncSession, domain: str | None, before_json: Any, after_json: Any) -> list[dict[str, Any]]:
+        changes = self._build_change_log_changes(before_json, after_json)
+        if not domain:
+            return changes
+        before_dict = before_json if isinstance(before_json, dict) else {}
+        after_dict = after_json if isinstance(after_json, dict) else {}
+        for change in changes:
+            key = str(change.get("key") or "")
+            if not self._master_relation_edit_field_is_open(domain, key):
+                continue
+            before_info = await self._describe_change_log_relation_value(session, domain, key, change.get("before"), before_dict)
+            after_info = await self._describe_change_log_relation_value(session, domain, key, change.get("after"), after_dict)
+            change["relation"] = {
+                "field": key,
+                "before": before_info,
+                "after": after_info,
+                "targetDomain": (after_info or before_info or {}).get("targetDomain"),
+                "targetCode": (after_info or before_info or {}).get("targetCode"),
+                "targetLabel": (after_info or before_info or {}).get("targetLabel"),
+            }
+        return changes
+
+    async def _enrich_rollback_mismatches_with_relations(
+        self,
+        session: AsyncSession,
+        domain: str | None,
+        mismatches: list[dict[str, Any]],
+        current_values: dict[str, Any],
+        after_json: Any,
+        before_json: Any,
+    ) -> list[dict[str, Any]]:
+        if not domain or not mismatches:
+            return mismatches
+        after_context = after_json if isinstance(after_json, dict) else {}
+        before_context = before_json if isinstance(before_json, dict) else {}
+        current_context = {**after_context, **current_values}
+        enriched: list[dict[str, Any]] = []
+        for item in mismatches:
+            key = str(item.get("key") or "")
+            if self._master_relation_edit_field_is_open(domain, key):
+                item = dict(item)
+                item["relation"] = {
+                    "field": key,
+                    "current": await self._describe_change_log_relation_value(session, domain, key, item.get("current"), current_context),
+                    "expectedAfter": await self._describe_change_log_relation_value(session, domain, key, item.get("expectedAfter"), after_context),
+                    "rollbackTo": await self._describe_change_log_relation_value(session, domain, key, item.get("rollbackTo"), before_context),
+                }
+            enriched.append(item)
+        return enriched
+
+    async def _describe_change_log_relation_value(self, session: AsyncSession, domain: str, key: str, value: Any, context: dict[str, Any]) -> dict[str, Any] | None:
+        if not self._master_relation_edit_field_is_open(domain, key):
+            return None
+        value_text = "" if value is None else str(value).strip()
+
+        async def build(target_domain: str, model: Any | None, label_when_empty: str | None = None) -> dict[str, Any]:
+            if not value_text:
+                label = label_when_empty or "값 없음"
+                return {"field": key, "targetDomain": target_domain, "targetCode": None, "targetLabel": label, "displayText": label}
+            target = await self._fetch_code_name(session, model, value_text) if model is not None else None
+            label = target.get("name") if target else None
+            display = f"{value_text} · {label}" if label and label != value_text else value_text
+            return {"field": key, "targetDomain": target_domain, "targetCode": value_text, "targetLabel": label or value_text, "displayText": display}
+
+        if domain == "itemTemplates" and key == "enhance_group_code":
+            return await build("enhancementGroups", EnhancementGroup, "강화 그룹 없음")
+        if domain == "dropTableItems" and key == "drop_table_code":
+            return await build("dropTables", DropTable)
+        if domain == "dropTableItems" and key == "item_template_code":
+            return await build("itemTemplates", ItemTemplate)
+        if domain == "dropTables" and key == "owner_type":
+            label = "보스" if value_text == "boss" else ("필드" if value_text == "field" else value_text or "값 없음")
+            target_domain = "bosses" if value_text == "boss" else ("fieldZones" if value_text == "field" else "bosses/fieldZones")
+            display = f"{value_text} · {label}" if value_text and label != value_text else label
+            return {"field": key, "targetDomain": target_domain, "targetCode": value_text or None, "targetLabel": label, "displayText": display}
+        if domain == "dropTables" and key == "owner_code":
+            owner_type = str((context or {}).get("owner_type") or "boss").strip()
+            if owner_type == "field":
+                return await build("fieldZones", FieldZone)
+            return await build("bosses", Boss)
+        if domain == "skillLevels" and key == "skill_code":
+            return await build("skills", Skill)
+        if domain == "enhancementLevels" and key == "group_code":
+            return await build("enhancementGroups", EnhancementGroup)
+        if domain == "characterSkills" and key == "character_code":
+            return await build("characters", Character)
+        if domain == "characterSkills" and key == "skill_code":
+            return await build("skills", Skill)
+        return None
 
     def _extract_master_change_target(self, row: AdminChangeLog) -> tuple[str | None, int | None]:
         target_type = str(getattr(row, "target_type", "") or "")
@@ -1965,6 +2068,8 @@ class AdminService:
         before_json = serialize_value(row.before_json) or {}
         after_json = serialize_value(row.after_json) or {}
         changed_keys = sorted(set(before_json.keys()) | set(after_json.keys())) if isinstance(before_json, dict) and isinstance(after_json, dict) else []
+        domain, _ = self._extract_master_change_target(row)
+        relation_changed_keys = [key for key in changed_keys if domain and self._master_relation_edit_field_is_open(domain, key)]
         return {
             "id": row.id,
             "adminUserId": row.admin_user_id,
@@ -1975,6 +2080,8 @@ class AdminService:
             "applied": row.applied,
             "changedKeys": changed_keys,
             "changedKeyCount": len(changed_keys),
+            "relationChangedKeys": relation_changed_keys,
+            "relationChangeCount": len(relation_changed_keys),
             "createdAt": serialize_value(row.created_at),
             "updatedAt": serialize_value(row.updated_at),
             "rawBeforeAfterReturned": False,

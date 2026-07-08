@@ -64,7 +64,7 @@ assertContains("src/api/game-api-client.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v153.admin-relation-preview-tools",
+  "v156.admin-change-log-relation-tools",
   "ADMIN_EDIT_APPLY_CONFIRM_TEXT",
   "ADMIN_EDIT_ALLOWED_FIELDS",
   "isAdminEditApplyAllowedField",
@@ -80,7 +80,7 @@ assertContains("admin.html", [
   "Guarded Admin + API Verify",
   "data-admin-change-log-table",
   "data-admin-action=\"refresh-admin-change-logs\"",
-  "v153 admin relation preview tools",
+  "v156 admin change log relation tools",
   "allow-list 필드",
 ]);
 
