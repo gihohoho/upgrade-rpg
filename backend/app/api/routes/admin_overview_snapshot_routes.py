@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.routes import admin_response_data_helpers as admin_data
 from app.api.routes.admin_response_helpers import admin_ok_response
 from app.api.routes.admin_response_meta_helpers import admin_route_meta
+from app.api.routes.admin_route_services import create_admin_service
 from app.api.routes.admin_route_params import (
     ADMIN_CURRENT_USER_DEP,
     ADMIN_DB_SESSION_DEP,
@@ -16,7 +17,6 @@ from app.api.routes.admin_route_params import (
 )
 from app.core.security import CurrentUser
 from app.schemas.admin import AdminChangePreviewRequest
-from app.api.routes.admin_route_services import create_admin_service
 
 router = APIRouter()
 service = create_admin_service()

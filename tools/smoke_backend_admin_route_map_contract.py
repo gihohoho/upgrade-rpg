@@ -1,4 +1,4 @@
-"""Static/runtime smoke test for v217/v218 backend admin route facade cleanup.
+"""Static/runtime smoke test for v223 backend admin strict route ownership contract.
 
 Run from the project root:
 
@@ -47,15 +47,21 @@ entry = read(ENTRY)
 run_smoke = read(RUN_SMOKE)
 readiness = get_admin_route_module_contract_readiness(root=ROOT)
 
-assert_true(ADMIN_ROUTE_MODULE_CONTRACT["version"] == "v218.backend-admin-route-map-contract", "route map contract version mismatch")
+assert_true(ADMIN_ROUTE_MODULE_CONTRACT["version"] == "v223.backend-admin-route-ownership-contract", "route map contract version mismatch")
+assert_true(ADMIN_ROUTE_MODULE_CONTRACT["status"] == "route-ownership-strict-v223", "route map contract status mismatch")
 assert_true(readiness["ok"], f"route map readiness failed: {readiness}")
 assert_true(readiness["moduleCount"] == 3, "route map should own three feature modules")
 assert_true(readiness["routeCount"] == 21, "route map should list all admin routes")
-assert_true(not readiness["duplicatePaths"], "route map should not contain duplicate paths")
+assert_true(readiness["actualRouteCount"] == 21, "actual route decorators should equal the route map")
+assert_true(not readiness["duplicateRouteKeys"], "route map should not contain duplicate method/path pairs")
+assert_true(not readiness["unexpectedRoutes"], "route modules should not contain routes outside the map")
 assert_true(not readiness["missingRoutes"], "route map should not miss route decorators/types")
+assert_true(not readiness["failedOwnershipChecks"], "each route should live only in its assigned module")
+assert_true(not readiness["failedTypeChecks"], "each response type marker should live only in its assigned module")
+assert_true(not readiness["failedModuleRouteCountChecks"], "each module route count should match the contract")
 assert_true(not readiness["failedFacadeChecks"], "admin.py facade checks should pass")
 
-assert_true(len(admin.splitlines()) <= 12, "admin.py should be a minimal include-router facade after v217 cleanup")
+assert_true(len(admin.splitlines()) <= 12, "admin.py should be a minimal include-router facade after cleanup")
 assert_true("Legacy static-smoke" not in admin, "admin.py should not keep legacy static-smoke marker comments")
 assert_true("# @router." not in admin, "admin.py should not keep commented route decorators")
 assert_true("@router.get(" not in admin and "@router.post(" not in admin, "admin.py should not own route bodies")
@@ -100,15 +106,13 @@ for smoke_path, target in legacy_smoke_files.items():
     assert_true(target in source, f"{smoke_path} should read {target}")
 
 assert_true('"backend/app/api/routes/admin_route_map_contract.py"' in contract, "backend split contract should list route map contract")
-assert_true('"splitStatus": "admin-service-facade-contract-v222"' in contract, "backend split contract should be v218")
-assert_true('"Legacy static smoke checks read actual route modules instead of admin.py comments"' in contract, "backend route contract should mention legacy smoke cleanup")
-assert_true('"Admin route ownership map lives in admin_route_map_contract.py"' in contract, "backend route contract should mention route map")
-assert_true('const VERSION = "v222.backend-admin-service-facade-contract"' in entry, "frontend readiness version should be v218")
-assert_true('splitStatus: "admin-service-facade-contract-v222"' in entry, "frontend splitStatus should be v218")
+assert_true('"splitStatus": "admin-route-module-import-contract-v224"' in contract, "backend split contract should be v224")
+assert_true('"Admin route ownership map verifies exact module-only ownership"' in contract, "backend route contract should mention strict ownership")
+assert_true('const VERSION = "v224.backend-admin-route-module-import-contract"' in entry, "frontend readiness version should be v224")
+assert_true('splitStatus: "admin-route-module-import-contract-v224"' in entry, "frontend splitStatus should be v224")
 assert_true("backendRouteMapContractReady" in entry, "frontend top-level route map readiness flag missing")
-assert_true("backendRouteLegacySmokeCleanupReady" in entry, "frontend top-level legacy cleanup readiness flag missing")
-assert_true("routeMapContractReady" in entry, "contract route map readiness flag missing")
-assert_true("routeLegacySmokeCleanupReady" in entry, "contract legacy cleanup readiness flag missing")
-assert_true("smoke_backend_admin_route_map_contract.py" in run_smoke, "core smoke should include v218 smoke")
+assert_true("backendRouteOwnershipStrictReady" in entry, "frontend top-level strict ownership readiness flag missing")
+assert_true("routeOwnershipStrictReady" in entry, "contract strict ownership readiness flag missing")
+assert_true("smoke_backend_admin_route_map_contract.py" in run_smoke, "core smoke should include v223 smoke")
 
-print("backend admin route map contract smoke test passed")
+print("backend admin strict route ownership contract smoke test passed")

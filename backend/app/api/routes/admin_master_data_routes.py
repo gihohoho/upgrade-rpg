@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.routes import admin_response_data_helpers as admin_data
 from app.api.routes.admin_response_helpers import admin_ok_response
 from app.api.routes.admin_response_meta_helpers import admin_route_meta
+from app.api.routes.admin_route_services import create_admin_service
 from app.api.routes.admin_route_params import (
     ADMIN_CURRENT_USER_DEP,
     ADMIN_DB_SESSION_DEP,
@@ -24,7 +25,6 @@ from app.schemas.admin import (
     AdminMasterDataEditApplyRequest,
     AdminMasterDataEditPreviewRequest,
 )
-from app.api.routes.admin_route_services import create_admin_service
 
 router = APIRouter()
 service = create_admin_service()
@@ -74,9 +74,6 @@ async def list_admin_master_catalog_rows(
         data=admin_data.build_master_catalog_data(catalog, current_user.id),
         meta=admin_route_meta("master_catalog"),
     )
-
-
-
 
 
 @router.get("/master-data/create-blueprint")
@@ -162,7 +159,6 @@ async def get_admin_master_catalog_detail(
     )
 
 
-
 @router.get("/master-data/relations")
 async def get_admin_master_catalog_relations(
     domain: str = MASTER_DOMAIN_QUERY,
@@ -213,7 +209,6 @@ async def preview_admin_master_data_edit(
         data=admin_data.build_master_edit_preview_data(preview, current_user.id),
         meta=admin_route_meta("master_edit_preview"),
     )
-
 
 
 @router.post("/master-data/edit-apply")
