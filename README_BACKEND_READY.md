@@ -1,6 +1,6 @@
-# Backend Ready Notes — v202
+# Backend Ready Notes — v203
 
-현재 안정 버전: **v202 backend admin change log service split**
+현재 안정 버전: **v203 backend admin edit draft service split**
 
 ## 현재 상태
 
@@ -9,15 +9,15 @@
 - v200: master catalog/detail/relations service 분리
 - v201: create lifecycle service 분리
 - v202: change logs/detail/rollback service 분리
+- v203: edit draft preview/apply service 분리
 
-## v202 변경
+## v203 변경
 
-- `backend/app/services/admin/admin_change_log_service.py` 추가
-- `AdminChangeLogService` mixin 추가
+- `backend/app/services/admin/admin_edit_draft_service.py` 추가
+- `AdminEditDraftService` mixin 추가
 - `AdminService` facade 유지
-- change logs 목록/상세/rollback 관련 메서드 이동
-- `/admin/change-logs` schema guard 유지
-- rollback apply 성공 경로 `return preview` 보강
+- 마스터 데이터 편집 초안 검증/적용 관련 메서드 이동
+- stale guard / relation edit / normalize helper 이동
 - `routes/admin.py` URL/path 변경 없음
 - schema/API 응답 구조 변경 없음
 
@@ -32,7 +32,7 @@ bash tools/run_smoke_core.sh
 실행 위치: 프로젝트 루트
 
 ```bash
-python tools/smoke_backend_admin_change_log_service_split.py
+python tools/smoke_backend_admin_edit_draft_service_split.py
 python tools/smoke_backend_admin_service_split_contract.py
 python -m compileall -q backend/app backend/scripts tools
 ```

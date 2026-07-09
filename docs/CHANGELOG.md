@@ -1,5 +1,13 @@
 # Changelog
 
+## v203 - Backend admin edit draft service split
+
+- `backend/app/services/admin/admin_edit_draft_service.py`를 추가했습니다.
+- `preview_master_data_edit`, `apply_master_data_edit` 및 편집 초안 helper를 `AdminService`에서 분리했습니다.
+- `AdminService` facade, route, schema, DB/env 계약은 유지했습니다.
+- `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `edit-draft-extracted-v203`으로 갱신했습니다.
+- `tools/smoke_backend_admin_edit_draft_service_split.py`를 추가하고 core smoke에 포함했습니다.
+
 ## v202 - Backend admin change log service split
 
 - `backend/app/services/admin/admin_change_log_service.py`를 추가했습니다.

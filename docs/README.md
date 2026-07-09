@@ -52,6 +52,7 @@
 - `BACKEND_ADMIN_MASTER_CATALOG_SPLIT.md` — v200 backend admin master catalog/detail service split
 - `BACKEND_ADMIN_CREATE_LIFECYCLE_SERVICE_SPLIT.md` — v201 backend admin create lifecycle service split
 - `BACKEND_ADMIN_CHANGE_LOG_SERVICE_SPLIT.md` — v202 backend admin change log service split
+- `BACKEND_ADMIN_EDIT_DRAFT_SERVICE_SPLIT.md` — v203 backend admin edit draft service split
 
 ## 3. 관리자 편집/관계 안전장치 문서
 
@@ -139,3 +140,4 @@ docs/archive/stage-notes/
 - BACKEND_ADMIN_MASTER_CATALOG_SPLIT.md — v200 backend admin master catalog/detail service split
 - BACKEND_ADMIN_CREATE_LIFECYCLE_SERVICE_SPLIT.md — v201 backend admin create lifecycle service split
 - BACKEND_ADMIN_CHANGE_LOG_SERVICE_SPLIT.md — v202 backend admin change log service split
+- BACKEND_ADMIN_EDIT_DRAFT_SERVICE_SPLIT.md — v203 backend admin edit draft service split

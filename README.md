@@ -1,55 +1,51 @@
-# Upgrade RPG v202 패키지
+# Upgrade RPG v203 패키지
 
-현재 안정 버전: **v202 backend admin change log service split**
+현재 안정 버전: **v203 backend admin edit draft service split**
 
-새 채팅 인수인계 ZIP: **rpg_v202_backend_admin_change_log_service_split_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v203_backend_admin_edit_draft_service_split_ready.zip**
 
-## 요약
+## 이번 v203에서 정리한 것
 
-v202에서는 백엔드 `AdminService` facade를 유지한 상태로, **change logs 목록/상세/rollback** 묶음을 `AdminChangeLogService` mixin으로 실제 분리했습니다.
+v203에서는 백엔드 `AdminService` facade를 유지한 상태로, **마스터 데이터 편집 초안 검증/적용** 묶음을 `AdminEditDraftService` mixin으로 실제 분리했습니다.
 
-`backend/app/api/routes/admin.py`의 URL/path와 `backend/app/schemas/admin.py`의 schema/API 응답 구조는 변경하지 않았습니다.
+- `backend/app/services/admin/admin_edit_draft_service.py` 추가
+- `preview_master_data_edit`, `apply_master_data_edit` 이동
+- edit draft / relation edit / stale guard / normalize helper 이동
+- `AdminService`는 route facade로 유지
+- `backend/app/api/routes/admin.py` 변경 없음
+- `backend/app/schemas/admin.py` 변경 없음
+- DB/env 변경 없음
+- v203 전용 smoke test 추가
 
-## v202에서 정리한 것
+## 주요 파일
 
-- `backend/app/services/admin/admin_change_log_service.py` 추가
-- `AdminChangeLogService` mixin 추가
-- `AdminService(AdminOverviewSnapshotsService, AdminMasterCatalogService, AdminChangeLogService, AdminCreateLifecycleService)` 구조로 변경
-- change logs 목록/상세/rollback 관련 public/helper 메서드 이동
-- `/admin/change-logs` schema guard 유지
-- `apply_admin_change_log_rollback()` 성공 경로 `return preview` 보강
-- `tools/smoke_backend_admin_change_log_service_split.py` 추가
-- `tools/run_smoke_core.sh`에 새 smoke 포함
-- 기존 static smoke를 분리 구조에 맞게 legacy marker로 유지
-
-## 현재 백엔드 admin service 상태
-
-- `backend/app/services/admin_service.py` — route가 계속 import하는 facade
-- `backend/app/services/admin/admin_overview_snapshots_service.py` — v199.1 분리 완료
-- `backend/app/services/admin/admin_master_catalog_service.py` — v200 분리 완료
-- `backend/app/services/admin/admin_create_lifecycle_service.py` — v201 분리 완료
-- `backend/app/services/admin/admin_change_log_service.py` — v202 분리 완료
-- 다음 후보:
-  - `admin_edit_draft_service.py`
-  - `admin_shared_utils.py`
+- `admin.html` — 정적 관리자 페이지
+- `src/api/admin-page-readonly.js` — 관리자 진입/readiness
+- `src/api/admin/admin-edit-draft.js` — 프론트 edit draft 모듈
+- `backend/app/services/admin_service.py` — backend facade
+- `backend/app/services/admin/admin_edit_draft_service.py` — v203 분리 완료
+- `backend/app/services/admin_service_split_contract.py` — backend split contract
+- `docs/BACKEND_ADMIN_EDIT_DRAFT_SERVICE_SPLIT.md` — v203 상세 문서
 
 ## 브라우저 확인
+
+관리자 페이지 콘솔에서 확인:
 
 ```js
 checkAdminReadOnlyPageReady().version
 ```
 
-예상값:
+예상:
 
 ```txt
-v202.backend-admin-change-log-service-split
+v203.backend-admin-edit-draft-service-split
 ```
 
 ```js
-checkAdminReadOnlyPageReady().backendChangeLogServiceSplitReady
+checkAdminReadOnlyPageReady().backendEditDraftServiceSplitReady
 ```
 
-예상값:
+예상:
 
 ```txt
 true
@@ -59,28 +55,40 @@ true
 getAdminBackendServiceSplitContractReadiness().splitStatus
 ```
 
-예상값:
+예상:
 
 ```txt
-change-logs-extracted-v202
+edit-draft-extracted-v203
 ```
 
-## 검증
+## 검증 명령
 
-- `bash tools/run_smoke_core.sh` 통과
-- `python tools/smoke_backend_admin_change_log_service_split.py` 통과
-- `python tools/smoke_backend_admin_create_lifecycle_service_split.py` 통과
-- `python tools/smoke_backend_admin_master_catalog_service_split.py` 통과
-- `python tools/smoke_backend_admin_overview_snapshots_service_split.py` 통과
-- `python tools/smoke_backend_admin_service_split_contract.py` 통과
-- `python tools/smoke_seed_import_long_asset_columns.py` 통과
-- `python tools/smoke_seed_import_structure.py` 통과
-- `node --check src/api/admin-page-readonly.js` 통과
-- `python -m compileall -q backend/app backend/scripts tools` 통과
+실행 위치: 프로젝트 루트
 
-## DB / env
+```bash
+bash tools/run_smoke_core.sh
+```
 
-- DB reset 필요 없음
-- seed 재실행 필요 없음
-- DB schema 변경 없음
-- `.env`, `.gitignore` 변경 없음
+실행 위치: 프로젝트 루트
+
+```bash
+python tools/smoke_backend_admin_edit_draft_service_split.py
+python tools/smoke_backend_admin_service_split_contract.py
+python tools/smoke_seed_import_long_asset_columns.py
+python tools/smoke_seed_import_structure.py
+python -m compileall -q backend/app backend/scripts tools
+```
+
+## 적용 후 실행
+
+실행 위치: `backend` 폴더
+
+```bash
+uvicorn app.main:app --reload
+```
+
+DB schema/env 변경이 없어서 DB reset/seed 재실행은 필요 없습니다.
+
+## 다음 추천 단계
+
+v204는 `backend/app/services/admin/admin_shared_utils.py`를 만들고, 여러 split service가 같이 쓰는 공유 helper를 분리하는 단계가 좋습니다.
