@@ -1,16 +1,15 @@
-# Backend Ready Notes — v224
+# Backend Ready Notes — v226
 
-현재 안정 버전: **v224 backend admin route module import contract**
+현재 안정 버전: **v226 backend admin runtime route contract**
 
 ## 변경 요약
 
-- `admin_route_map_contract.py`의 route ownership 검증 강화
-- route decorator가 contract에 없는 파일/위치에 생기면 smoke에서 잡히도록 보강
-- route response `type="..."` marker 중복/오배치 검증 추가
-- `admin_route_module_import_contract.py` 추가
-- route module의 `create_admin_service()` factory 사용 패턴 검증 추가
-- route module의 직접 `AdminService()` 생성 금지 검증 추가
+- `admin_runtime_route_contract.py` 추가
+- static route ownership map과 FastAPI runtime 등록 route 목록 비교
+- `/api/v1/admin/...` route 누락/예상 밖/중복 등록 검증
+- `/api/v1/admin` prefix 유지 검증
 - `admin_service_split_contract.py` splitStatus 갱신
+- 관리자 readiness 버전/flag 갱신
 - route path/schema/API 응답 구조 변경 없음
 - DB/env 변경 없음
 

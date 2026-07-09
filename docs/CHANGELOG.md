@@ -1,3 +1,12 @@
+# v226 - Backend admin runtime route contract
+
+- `backend/app/api/routes/admin_runtime_route_contract.py`를 추가했습니다.
+- FastAPI 앱에 실제 등록된 `/api/v1/admin/...` route 목록을 static route ownership map과 대조합니다.
+- 관리자 route 누락/예상 밖 등록/중복 method+path 등록을 smoke에서 잡도록 했습니다.
+- `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `admin-runtime-route-contract-v226`으로 갱신했습니다.
+- `checkAdminReadOnlyPageReady().version`을 `v226.backend-admin-runtime-route-contract`로 갱신했습니다.
+- route path/schema/API 응답 구조/DB/env 변경은 없습니다.
+
 # v218 - Backend admin route map contract
 
 - `backend/app/api/routes/admin.py`의 legacy static-smoke marker 주석을 제거했습니다.

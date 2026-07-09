@@ -7,7 +7,7 @@ from typing import Any
 ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
     "version": "v198.backend-admin-service-split-contract",
     "status": "contract-frozen-v198",
-    "splitStatus": "admin-route-module-import-contract-v224",
+    "splitStatus": "admin-runtime-route-contract-v226",
     "extractedFiles": [
         "backend/app/services/admin/admin_overview_snapshots_service.py",
         "backend/app/services/admin/admin_master_catalog_service.py",
@@ -27,6 +27,7 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "backend/app/api/routes/admin_overview_snapshot_routes.py",
         "backend/app/api/routes/admin_route_map_contract.py",
         "backend/app/api/routes/admin_route_module_import_contract.py",
+        "backend/app/api/routes/admin_runtime_route_contract.py",
         "backend/app/api/routes/admin_route_services.py",
         "backend/app/services/admin_service_legacy_markers.py",
         "backend/app/services/admin_service_facade_contract.py",
@@ -264,6 +265,13 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
             "helperMethods": [],
         },
         {
+            "key": "runtime-route-contract",
+            "label": "Admin FastAPI runtime route registration contract",
+            "candidateFile": "backend/app/api/routes/admin_runtime_route_contract.py",
+            "publicMethods": [],
+            "helperMethods": [],
+        },
+        {
             "key": "route-service-dependency",
             "label": "Admin route service factory dependency",
             "candidateFile": "backend/app/api/routes/admin_route_services.py",
@@ -301,8 +309,8 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT",
     ],
     "routeContract": [
-        "No route path changes in v224",
-        "No schema changes in v224",
+        "No route path changes in v226",
+        "No schema changes in v226",
         "Master-data routes live in admin_master_data_routes.py",
         "Change-log routes live in admin_change_log_routes.py",
         "Overview/save-snapshot routes live in admin_overview_snapshot_routes.py",
@@ -312,6 +320,8 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "Admin route ownership map verifies exact module-only ownership",
         "Admin route modules create service facade through admin_route_services.py",
         "Admin route module import/dependency style is tracked by admin_route_module_import_contract.py",
+        "FastAPI runtime route registration is checked against static ownership map",
+        "Runtime admin route contract lives in admin_runtime_route_contract.py",
         "Legacy service smoke markers live outside admin_service.py",
         "AdminService facade MRO/import order is tracked by admin_service_facade_contract.py",
         "Admin route responses go through admin_ok_response helper",

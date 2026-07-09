@@ -1,33 +1,40 @@
-이전 채팅에서 이어서 진행합니다.
+이전 채팅에서 이어서 진행한다.
+현재 안정 버전은 v226이다.
+업로드할 ZIP은 `rpg_v226_backend_admin_runtime_route_contract_ready.zip`이다.
 
-현재 안정 버전은 v224입니다.
-업로드할 ZIP은 `rpg_v224_backend_admin_route_ownership_import_contract_ready.zip`입니다.
+중요한 사용자 선호:
+- 사용자는 코딩을 잘 모르는 기호다.
+- 설명은 쉽게, 한국어로 한다.
+- 터미널 명령은 반드시 “실행 위치: 프로젝트 루트” 또는 “실행 위치: backend 폴더”처럼 위치를 먼저 적고, 그 아래에 복사 가능한 코드 블록으로 준다.
+- git add/commit/push는 한 번에 복사할 수 있도록 한 코드 블록으로 묶어서 준다.
+- 안전한 작업은 여러 단계 과감하게 묶어도 좋지만, route/schema/API/DB/env 변경처럼 위험한 작업은 천천히 한다.
 
-작업 조건:
-- API route path 변경 금지
-- schema 변경 금지
-- API 응답 구조 변경 금지
-- DB/env 변경 금지
-- 기능이 잘 되는 상태를 우선 유지
-- 위험 낮은 정리는 여러 단계 묶어도 됨
-- 안정성이 필요한 작업은 천천히 smoke를 추가하며 진행
-- 터미널 명령은 반드시 어느 폴더에서 실행하는지 먼저 알려주고, 복사 가능한 코드 블록으로 제공
-- git add/commit/push는 한 번에 복사 가능한 한 코드 블록으로 제공
+현재 구조 요약:
+- `backend/app/api/routes/admin.py`는 include-router facade다.
+- feature route module:
+  - `admin_overview_snapshot_routes.py`
+  - `admin_master_data_routes.py`
+  - `admin_change_log_routes.py`
+- route ownership contract:
+  - `admin_route_map_contract.py`
+- route module import contract:
+  - `admin_route_module_import_contract.py`
+- runtime route registration contract:
+  - `admin_runtime_route_contract.py`
+- AdminService facade:
+  - `backend/app/services/admin_service.py`
+- backend split contract:
+  - splitStatus: `admin-runtime-route-contract-v226`
 
-현재 상태:
-- `admin.py`는 router include facade로만 유지됨
-- master-data routes: `admin_master_data_routes.py`
-- change-log routes: `admin_change_log_routes.py`
-- overview/snapshot routes: `admin_overview_snapshot_routes.py`
-- strict route ownership contract: `admin_route_map_contract.py`
-- route module import/dependency contract: `admin_route_module_import_contract.py`
-- route service factory: `admin_route_services.py`
-- legacy service smoke marker: `admin_service_legacy_markers.py`
-- `admin_service.py`는 실제 AdminService facade만 유지
-- `admin_service_facade_contract.py`가 AdminService MRO/import 계약을 검증
-- splitStatus: `admin-route-module-import-contract-v224`
+v226에서 한 일:
+- FastAPI 앱에 실제 등록된 `/api/v1/admin/...` route 목록을 static route ownership map과 대조하는 contract 추가
+- route 누락/예상 밖/중복 method+path 검증 추가
+- `/api/v1/admin` prefix 유지 검증 추가
+- frontend readiness flag 추가:
+  - `backendRuntimeRouteContractReady`
+  - `backendRuntimeRouteRegistrationReady`
 
-다음 추천:
-- v225 backend admin runtime route registration smoke 강화
-- FastAPI 앱에 실제 등록된 admin route 목록과 route ownership contract 비교
-- route path/schema/API 응답 구조는 그대로 유지
+다음 추천 작업:
+- v227 backend admin route operation metadata contract
+- route별 endpoint name / operation identity / response type marker를 static/runtime contract로 더 강하게 고정
+- route path/schema/API 응답 구조는 바꾸지 말 것
