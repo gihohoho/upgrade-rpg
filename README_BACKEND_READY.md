@@ -1,31 +1,26 @@
-# Backend Ready Notes — v192
+# Backend Ready Notes — v193
 
-현재 v192 기준으로 관리자 layout shell, change logs, create lifecycle, edit draft, master catalog/detail이 외부 JS 파일로 1차 분리되어 있습니다.
+현재 v193 기준으로 관리자 layout shell, change logs, create lifecycle, edit draft, master catalog/detail, overview/snapshots가 외부 JS 파일로 1차 분리되어 있습니다.
 
-## 안정 상태
+## Backend 영향
 
-- 기존 게임 런타임 유지
+이번 변경은 프론트엔드 관리자 JS 분리입니다.
+
 - DB schema 변경 없음
-- seed 재실행 필요 없음
-- 관리자 guarded write 기능 유지
-- 생성→삭제→복원 batch check 유지
-- edit draft preview/apply/stale guard 유지
+- seed 변경 없음
+- API route 변경 없음
+- `.env` 변경 없음
+
+## 유지된 백엔드 관련 기능
+
 - master catalog/detail/API verify 유지
+- guarded edit apply 유지
+- change log rollback/create-delete/restore 유지
+- create lifecycle batch check 유지
+- save snapshot list API 호출 유지
 
-## 관리자 JS 파일 상태
+## 검증
 
-```txt
-src/api/game-api-client.js
-src/api/admin-layout-shell.js
-src/api/admin/admin-change-logs.js
-src/api/admin/admin-create-lifecycle.js
-src/api/admin/admin-edit-draft.js
-src/api/admin/admin-master-catalog.js
-src/api/admin-page-readonly.js
-```
-
-`admin-page-readonly.js`는 아직 bootstrap, 이벤트 바인딩, overview/snapshot 계열 wrapper를 포함합니다.
-
-## 다음 추천
-
-v193에서는 `overview/snapshot` 계열을 `src/api/admin/admin-overview-snapshots.js`로 분리하는 것이 좋습니다.
+- `python -m compileall -q backend/app` 통과
+- `bash tools/run_smoke_core.sh` 통과
+- `bash tools/run_smoke_all.sh` 통과

@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  const VERSION = "v192.admin-master-catalog-detail-split";
-  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary v183.admin-create-lifecycle-batch-check v184.admin-js-split-readiness v185.admin-layout-shell-split v186.admin-change-log-split-contract v188.admin-create-lifecycle-split-contract v189.admin-create-lifecycle-split v189.1.admin-create-lifecycle-split-hotfix v190.admin-edit-draft-split-contract v191.admin-edit-draft-split v192.admin-master-catalog-detail-split";
+  const VERSION = "v193.admin-overview-snapshots-split";
+  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary v183.admin-create-lifecycle-batch-check v184.admin-js-split-readiness v185.admin-layout-shell-split v186.admin-change-log-split-contract v188.admin-create-lifecycle-split-contract v189.admin-create-lifecycle-split v189.1.admin-create-lifecycle-split-hotfix v190.admin-edit-draft-split-contract v191.admin-edit-draft-split v192.admin-master-catalog-detail-split v193.admin-overview-snapshots-split";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -34,6 +34,7 @@
     await runPostWriteMasterApiVerification(values.domain, values.id currentAdminChangeLogDetailPayload window.getAdminDraftFieldInputKind changedKey targetType action 중복 조합 검사 skill_code + level group_code + from_level character_code + skill_code drop_table_code 스킬 레벨 조합 변경 강화 단계 조합 변경 캐릭터 스킬 연결 변경 relation-option-filter data-admin-relation-option-filter keepSelected window.applyAdminRelationOptionFilter data-admin-master-query syncMasterCatalogPageInput(1) getAdminDraftRelationOptionsForValues renderAdminRelationOpenButton open-master-detail-by-code relationCount window.formatAdminChangeValueText window.getAdminRelationValueDisplay relationSearchReady relationPreviewReady  data-admin-edit-draft data-admin-edit-draft-field 검증 후 실제 적용 guardedApply: true data-admin-action="preview-admin-edit-draft" 초안 검증 fieldsEditable refreshAdminEditReviewAndImpact data-admin-edit-risk-confirm 고위험 변경이 있어서 추가 확인 문구 relation-select relationEditOptions enhance_group_code item_template_code owner_type 아이템 강화 그룹 연결 변경 드랍 아이템 연결 변경 grade / 등급 숫자 기존 JS 아이템의 tier 값을 옮겨 담은 숫자형 진행 등급 normal_equipment talisman_emblem window.getAdminFieldValueHint "6": "특수무기" "7": "특수목걸이" "8": "특수반지" "9": "무기아바타" "10": "오라아바타" "11": "클론 레어 아바타" "12": "탈리스만 A" "13": "탈리스만 B" "14": "휘장" 6 · 특수무기 14 · 휘장 window.getAdminEquipSlotDisplayName dropTables: ["owner_type", "owner_code", "description", "is_enabled"] getAdminDraftRelationOptionGroupKey getAdminDraftRelationOptions definition.optionGroups definition.dependsOn ownercode 드랍 테이블 소유자 변경 window.refreshDependentAdminRelationSelects preset-select draft-field-badges item_type equip_slot slot_key 현재 DB 값 아이템 분류/장착 슬롯 변경 스킬 슬롯 배치 변경 window.getAdminDraftSelectOptions data-admin-action="apply-admin-edit-draft"
   `;
   const ADMIN_CHANGE_LOG_POST_VERIFY_LEGACY_MARKERS = `currentAdminChangeLogDetailPayload rollbackTarget.domain rollbackTarget.id contextLabel`;
+  const ADMIN_OVERVIEW_SNAPSHOTS_EXTERNAL_IMPL_MARKERS = `rawSnapshotReturned totalAllNote filters.hasActiveFilters data-admin-snapshot-table data-admin-filter-limit data-admin-filter-user-id data-admin-filter-slot-key data-admin-filter-source data-admin-filter-sort data-admin-filter-default-only renderAdminOverviewCards renderAdminSnapshotTable renderAdminReadiness readSnapshotFiltersFromDom resetSnapshotFilters describeSnapshotFilters snapshotFilterReady saveSnapshots usersWithSaves guardedMasterEditApplyReady guardedRollbackReady admin write dev key`;
   const ADMIN_MASTER_CATALOG_EXTERNAL_IMPL_MARKERS = `runPostWriteMasterApiVerification verifySelectedMasterDataApi findMasterApiRow buildMasterApiVerifyComparisons window.RpgGameApi.fetchMasterData data-admin-master-api-verify-result verify-master-api-target postWriteApiVerifyReady masterApiVerifyReady autoAfterWrite contextLabel await runPostWriteMasterApiVerification(values.domain, values.id rollbackTarget.domain rollbackTarget.id currentAdminChangeLogDetailPayload fetchAdminMasterDataDetail fetchAdminMasterDataRelations open-master-detail data-admin-detail-domain data-admin-detail-id open-master-relations data-admin-relation-domain data-admin-relation-id JSON 미리보기 실제 연결 항목 relation-table-wrap catalog-row-selected data-admin-master-row-selected 선택됨`;
   const ADMIN_EDIT_APPLY_CONFIRM_TEXT = "APPLY MASTER DATA EDIT";
   const ADMIN_EDIT_HIGH_RISK_CONFIRM_TEXT = "HIGH RISK EDIT";
@@ -51,6 +52,7 @@
     { key: "create-lifecycle", label: "Create lifecycle", currentFile: "src/api/admin/admin-create-lifecycle.js", nextFile: "src/api/admin/admin-create-lifecycle.js", status: "extracted-v189", note: "생성 초안/생성→삭제→복원 batch check 구현을 외부 파일로 1차 분리했습니다." },
     { key: "edit-draft", label: "Edit draft", currentFile: "src/api/admin/admin-edit-draft.js", nextFile: "src/api/admin/admin-edit-draft.js", status: "extracted-v191", note: "편집 초안/impact guide/relation select 구현을 외부 JS 파일로 1차 분리했습니다." },
     { key: "master-catalog-detail", label: "Master catalog/detail", currentFile: "src/api/admin/admin-master-catalog.js", nextFile: "src/api/admin/admin-master-catalog.js", status: "extracted-v192", note: "마스터 카탈로그/상세/relations/API verify 구현을 외부 JS 파일로 1차 분리했습니다." },
+    { key: "overview-snapshots", label: "Overview/snapshots", currentFile: "src/api/admin/admin-overview-snapshots.js", nextFile: "src/api/admin/admin-overview-snapshots.js", status: "extracted-v193", note: "overview cards/readiness/save snapshot filter/table 구현을 외부 JS 파일로 1차 분리했습니다." },
     { key: "bootstrap", label: "Page bootstrap", currentFile: "src/api/admin-page-readonly.js", nextFile: "src/api/admin-page-readonly.js", status: "keep-last", note: "초기 boot/bindEvents/window export는 마지막까지 thin entry 파일로 남기는 방향이 안전합니다." },
   ];
   const ADMIN_JS_SPLIT_REQUIRED_GLOBALS = [
@@ -61,6 +63,7 @@
     "RpgAdminCreateLifecycle",
     "RpgAdminEditDraft",
     "RpgAdminMasterCatalog",
+    "RpgAdminOverviewSnapshots",
     "checkAdminReadOnlyPageReady",
     "refreshAdminReadOnlyPage",
     "refreshAdminCreateBlueprint",
@@ -879,51 +882,38 @@
     if (typeof window.RpgGameApi.fetchMasterData !== "function") throw new Error("fetchMasterData 함수를 찾을 수 없습니다.");
   }
 
-  function readSnapshotFiltersFromDom() {
-    const limitEl = $("[data-admin-filter-limit]");
-    const userIdEl = $("[data-admin-filter-user-id]");
-    const slotKeyEl = $("[data-admin-filter-slot-key]");
-    const sourceEl = $("[data-admin-filter-source]");
-    const defaultOnlyEl = $("[data-admin-filter-default-only]");
-    const sortEl = $("[data-admin-filter-sort]");
-    const userId = userIdEl && userIdEl.value.trim() ? Number(userIdEl.value.trim()) : undefined;
-    return {
-      limit: limitEl && limitEl.value ? Number(limitEl.value) : DEFAULT_SNAPSHOT_LIMIT,
-      userId: Number.isFinite(userId) ? userId : undefined,
-      slotKey: slotKeyEl ? slotKeyEl.value.trim() : "",
-      source: sourceEl ? sourceEl.value.trim() : "",
-      defaultOnly: !!(defaultOnlyEl && defaultOnlyEl.checked),
-      sort: sortEl && sortEl.value ? sortEl.value : DEFAULT_SNAPSHOT_SORT,
-    };
+  function getAdminOverviewSnapshotsApi() {
+    if (!window.RpgAdminOverviewSnapshots) throw new Error("RpgAdminOverviewSnapshots is not loaded");
+    return window.RpgAdminOverviewSnapshots;
   }
 
-  function resetSnapshotFilters(options) {
-    const opts = options || {};
-    const limitEl = $("[data-admin-filter-limit]");
-    const userIdEl = $("[data-admin-filter-user-id]");
-    const slotKeyEl = $("[data-admin-filter-slot-key]");
-    const sourceEl = $("[data-admin-filter-source]");
-    const defaultOnlyEl = $("[data-admin-filter-default-only]");
-    const sortEl = $("[data-admin-filter-sort]");
-    if (limitEl) limitEl.value = String(DEFAULT_SNAPSHOT_LIMIT);
-    if (userIdEl) userIdEl.value = "";
-    if (slotKeyEl) slotKeyEl.value = "";
-    if (sourceEl) sourceEl.value = "";
-    if (defaultOnlyEl) defaultOnlyEl.checked = false;
-    if (sortEl) sortEl.value = DEFAULT_SNAPSHOT_SORT;
-    if (!opts.silent) setStatus("세이브 스냅샷 필터 초기화", "info");
-    return readSnapshotFiltersFromDom();
+  function configureAdminOverviewSnapshots() {
+    return getAdminOverviewSnapshotsApi().configure({
+      querySelector: $,
+      escapeHtml,
+      formatValue,
+      formatClock,
+      setStatus,
+      hasAdminWriteDevKey,
+      DEFAULT_SNAPSHOT_LIMIT,
+      DEFAULT_SNAPSHOT_SORT,
+    });
   }
 
-  function describeSnapshotFilters(filters) {
-    const f = filters || {};
-    const parts = [];
-    if (f.userId) parts.push(`userId=${f.userId}`);
-    if (f.slotKey) parts.push(`slotKey=${f.slotKey}`);
-    if (f.source) parts.push(`source=${f.source}`);
-    if (f.defaultOnly) parts.push("defaultOnly=true");
-    if (f.sort && f.sort !== DEFAULT_SNAPSHOT_SORT) parts.push(`sort=${f.sort}`);
-    return parts.length ? parts.join(", ") : "필터 없음";
+  function getAdminOverviewSnapshotsExternalReadiness() {
+    return getAdminOverviewSnapshotsApi().getReadiness();
+  }
+
+  function readSnapshotFiltersFromDom(...args) {
+    return getAdminOverviewSnapshotsApi().readSnapshotFiltersFromDom(...args);
+  }
+
+  function resetSnapshotFilters(...args) {
+    return getAdminOverviewSnapshotsApi().resetSnapshotFilters(...args);
+  }
+
+  function describeSnapshotFilters(...args) {
+    return getAdminOverviewSnapshotsApi().describeSnapshotFilters(...args);
   }
 
 
@@ -1142,26 +1132,8 @@ function readAdminCreateBlueprintFiltersFromDom() {
     return { overview, snapshots, masterDomains, masterCatalog, changeLogs, createBlueprint, snapshotFilters: filters, masterCatalogFilters, changeLogFilters, createBlueprintFilters };
   }
 
-  function renderCards(overviewPayload) {
-    const master = overviewPayload.masterData || {};
-    const save = overviewPayload.saveSnapshots || {};
-    const users = overviewPayload.users || {};
-    const readiness = overviewPayload.readiness || {};
-    const target = $("[data-admin-cards]");
-    if (!target) return;
-    const writeLocked = readiness.safeForAdminWriteUi === false;
-    target.innerHTML = `
-      <div class="card"><div class="label">읽기 전용</div><div class="value small"><span class="pill good">${escapeHtml(formatValue(overviewPayload.readOnly))}</span></div></div>
-      <div class="card"><div class="label">마스터 행 수</div><div class="value">${escapeHtml(formatValue(master.summary && master.summary.totalRows))}</div></div>
-      <div class="card"><div class="label">DB 세이브 슬롯</div><div class="value">${escapeHtml(formatValue(save.totalSlots))}</div></div>
-      <div class="card"><div class="label">저장 유저 수</div><div class="value">${escapeHtml(formatValue(save.usersWithSaves))}</div></div>
-      <div class="card"><div class="label">전체 유저</div><div class="value">${escapeHtml(formatValue(users.total))}</div></div>
-      <div class="card"><div class="label">관리자 수</div><div class="value">${escapeHtml(formatValue(users.admins))}</div></div>
-      <div class="card"><div class="label">최근 저장</div><div class="value small">${escapeHtml(formatClock(save.latestUpdatedAt))}</div></div>
-      <div class="card"><div class="label">전체 쓰기 UI</div><div class="value small"><span class="pill ${writeLocked ? "blocked" : "warn"}">${writeLocked ? "blocked" : "check"}</span></div></div>
-      <div class="card"><div class="label">마스터 편집 적용</div><div class="value small"><span class="pill ${readiness.guardedMasterEditApplyReady ? "good" : "blocked"}">${readiness.guardedMasterEditApplyReady ? "guarded" : "blocked"}</span></div></div>
-      <div class="card"><div class="label">변경 이력 되돌리기</div><div class="value small"><span class="pill ${readiness.guardedRollbackReady ? "good" : "blocked"}">${readiness.guardedRollbackReady ? "guarded" : "blocked"}</span></div></div>
-    `;
+  function renderCards(...args) {
+    return getAdminOverviewSnapshotsApi().renderAdminOverviewCards(...args);
   }
 
     function renderMasterTable(...args) {
@@ -1301,6 +1273,9 @@ function getAdminCreateLifecycleApi() {
     const adminPageIndex = scriptSources.findIndex((src) => src.includes("admin-page-readonly.js"));
     const changeLogsIndex = scriptSources.findIndex((src) => src.includes("admin/admin-change-logs.js"));
     const createLifecycleIndex = scriptSources.findIndex((src) => src.includes("admin/admin-create-lifecycle.js"));
+    const editDraftIndex = scriptSources.findIndex((src) => src.includes("admin/admin-edit-draft.js"));
+    const masterCatalogIndex = scriptSources.findIndex((src) => src.includes("admin/admin-master-catalog.js"));
+    const overviewSnapshotsIndex = scriptSources.findIndex((src) => src.includes("admin/admin-overview-snapshots.js"));
     const requiredGlobals = ADMIN_JS_SPLIT_REQUIRED_GLOBALS.map((key) => ({
       key,
       ok: key === "RpgGameApi" ? !!window.RpgGameApi : typeof window[key] !== "undefined",
@@ -1308,7 +1283,7 @@ function getAdminCreateLifecycleApi() {
     const missingGlobals = requiredGlobals.filter((item) => !item.ok).map((item) => item.key);
     const exportCount = window.RpgAdminReadOnlyPage && typeof window.RpgAdminReadOnlyPage === "object" ? Object.keys(window.RpgAdminReadOnlyPage).length : 0;
     const entryFileStillSingle = scriptSources.some((src) => src.includes("admin-page-readonly.js"));
-    const scriptOrderReady = gameApiIndex >= 0 && layoutShellIndex >= 0 && changeLogsIndex >= 0 && createLifecycleIndex >= 0 && adminPageIndex >= 0 && gameApiIndex < layoutShellIndex && layoutShellIndex < changeLogsIndex && changeLogsIndex < createLifecycleIndex && createLifecycleIndex < adminPageIndex;
+    const scriptOrderReady = gameApiIndex >= 0 && layoutShellIndex >= 0 && changeLogsIndex >= 0 && createLifecycleIndex >= 0 && editDraftIndex >= 0 && masterCatalogIndex >= 0 && overviewSnapshotsIndex >= 0 && adminPageIndex >= 0 && gameApiIndex < layoutShellIndex && layoutShellIndex < changeLogsIndex && changeLogsIndex < createLifecycleIndex && createLifecycleIndex < editDraftIndex && editDraftIndex < masterCatalogIndex && masterCatalogIndex < overviewSnapshotsIndex && overviewSnapshotsIndex < adminPageIndex;
     const candidateCount = ADMIN_JS_SPLIT_PHASES.filter((phase) => phase.status !== "keep-last").length;
     return {
       ok: !!document.querySelector("[data-admin-js-split-readiness]") && scriptOrderReady && missingGlobals.length === 0 && exportCount > 0,
@@ -1321,13 +1296,19 @@ function getAdminCreateLifecycleApi() {
       layoutShellIndex,
       changeLogsIndex,
       createLifecycleIndex,
+      editDraftIndex,
+      masterCatalogIndex,
+      overviewSnapshotsIndex,
       entryFileStillSingle,
       layoutShellExternalReady: layoutShellIndex >= 0 && !!window.RpgAdminLayoutShell,
       changeLogsExternalReady: changeLogsIndex >= 0 && !!window.RpgAdminChangeLogs,
       createLifecycleExternalReady: createLifecycleIndex >= 0 && !!window.RpgAdminCreateLifecycle,
+      editDraftExternalReady: editDraftIndex >= 0 && !!window.RpgAdminEditDraft,
+      masterCatalogExternalReady: masterCatalogIndex >= 0 && !!window.RpgAdminMasterCatalog,
+      overviewSnapshotsExternalReady: overviewSnapshotsIndex >= 0 && !!window.RpgAdminOverviewSnapshots,
       candidateCount,
       phases: ADMIN_JS_SPLIT_PHASES.slice(),
-      nextSafeStep: "master detail/catalog 분리 전 계약 준비",
+      nextSafeStep: "page bootstrap/bindEvents thin entry 정리 준비",
     };
   }
 
@@ -1507,7 +1488,7 @@ function getAdminCreateLifecycleApi() {
     const readiness = getAdminJsSplitReadiness();
     const globalsHtml = readiness.requiredGlobals.map((item) => `<span class="pill ${item.ok ? "good" : "blocked"}">${escapeHtml(item.key)}: ${item.ok ? "ok" : "missing"}</span>`).join(" ");
     const rows = readiness.phases.map((phase, index) => {
-      const tone = phase.status === "already-external" || phase.status === "extracted-v185" || phase.status === "extracted-v187" || phase.status === "contract-frozen-v186" || phase.status === "contract-frozen-v188" || phase.status === "contract-frozen-v190" ? "good" : (phase.status === "later" || phase.status === "keep-last" ? "warn" : "good");
+      const tone = phase.status === "already-external" || phase.status === "extracted-v185" || phase.status === "extracted-v187" || phase.status === "contract-frozen-v186" || phase.status === "contract-frozen-v188" || phase.status === "contract-frozen-v190" || phase.status === "extracted-v193" ? "good" : (phase.status === "later" || phase.status === "keep-last" ? "warn" : "good");
       return `<tr><td>${escapeHtml(String(index + 1))}</td><td><strong>${escapeHtml(phase.label)}</strong><br><span class="muted">${escapeHtml(phase.key)}</span></td><td>${escapeHtml(phase.currentFile)}</td><td>${escapeHtml(phase.nextFile)}</td><td><span class="pill ${tone}">${escapeHtml(phase.status)}</span></td><td>${escapeHtml(phase.note)}</td></tr>`;
     }).join("");
     const changeLogContract = getAdminChangeLogSplitContractReadiness();
@@ -1517,17 +1498,18 @@ function getAdminCreateLifecycleApi() {
       ${renderAdminOperationResultBanner({
         tone: readiness.ok ? "good" : "warn",
         title: readiness.ok ? "관리자 JS 분리 상태 양호" : "관리자 JS 분리 확인 필요",
-        subtitle: "layout shell, change logs, create lifecycle, edit draft를 외부 JS 파일로 분리했습니다.",
+        subtitle: "layout shell부터 overview/snapshots까지 관리자 기능을 외부 JS 파일로 분리했습니다.",
         metrics: [
           { label: "script 순서", value: readiness.scriptOrderReady, tone: readiness.scriptOrderReady ? "good" : "blocked" },
           { label: "layout shell 파일", value: readiness.layoutShellExternalReady, tone: readiness.layoutShellExternalReady ? "good" : "blocked" },
+          { label: "overview 파일", value: readiness.overviewSnapshotsExternalReady, tone: readiness.overviewSnapshotsExternalReady ? "good" : "blocked" },
           { label: "필수 global 누락", value: readiness.missingGlobals.length, tone: readiness.missingGlobals.length ? "blocked" : "good" },
           { label: "admin export", value: readiness.exportCount, tone: readiness.exportCount ? "good" : "blocked" },
           { label: "분리 후보", value: readiness.candidateCount, tone: "warn" },
         ],
       })}
       <div class="draft-preview-summary">${globalsHtml}</div>
-      <div class="filter-help">다음 안전 단계: ${escapeHtml(readiness.nextSafeStep)}. layout shell, change logs, create lifecycle, edit draft는 분리 완료 상태입니다.</div>
+      <div class="filter-help">다음 안전 단계: ${escapeHtml(readiness.nextSafeStep)}. layout shell, change logs, create lifecycle, edit draft, master catalog/detail, overview/snapshots는 분리 완료 상태입니다.</div>
       <div class="table-wrap relation-table-wrap"><table><thead><tr><th>#</th><th>묶음</th><th>현재 파일</th><th>분리 후보 파일</th><th>상태</th><th>메모</th></tr></thead><tbody>${rows}</tbody></table></div>
       ${renderAdminChangeLogSplitContractReadiness(changeLogContract)}
       ${renderAdminCreateLifecycleSplitContractReadiness(createLifecycleContract)}
@@ -1916,66 +1898,16 @@ async function openAdminMasterDataDetail(...args) {
     return await getAdminMasterCatalogApi().openAdminMasterDataDetail(...args);
   }
 
-function renderSnapshotTable(snapshotPayload) {
-    const target = $("[data-admin-snapshot-table]");
-    const meta = $("[data-admin-snapshot-meta]");
-    if (!target) return;
-    const rows = Array.isArray(snapshotPayload.snapshots) ? snapshotPayload.snapshots : [];
-    const filters = snapshotPayload.filters || {};
-    const filterNote = filters.hasActiveFilters ? ` · ${describeSnapshotFilters(filters)}` : "";
-    const totalAllNote = snapshotPayload.totalAll !== undefined ? ` / 전체 ${formatValue(snapshotPayload.totalAll)}` : "";
-    if (meta) meta.textContent = `${formatValue(rows.length)} / ${formatValue(snapshotPayload.total)} shown${totalAllNote}${filterNote}`;
-    if (!rows.length) {
-      target.innerHTML = `<div class="empty">최근 세이브 스냅샷이 없습니다.</div>`;
-      return;
-    }
-    target.innerHTML = `
-      <table>
-        <thead><tr><th>ID</th><th>유저</th><th>슬롯</th><th>버전</th><th>골드</th><th>레벨</th><th>인벤</th><th>창고</th><th>출처</th><th>원본 JSON</th><th>수정 시각</th></tr></thead>
-        <tbody>
-          ${rows.map((row) => {
-            const summary = row.summary || {};
-            const counts = row.counts || {};
-            return `
-              <tr title="${escapeHtml(row.note || "")}">
-                <td>${escapeHtml(formatValue(row.id))}</td>
-                <td>${escapeHtml(formatValue(row.userId))}</td>
-                <td>${escapeHtml(formatValue(row.slotKey))} ${row.isDefault ? `<span class="pill good">default</span>` : ""}</td>
-                <td>${escapeHtml(formatValue(row.saveVersion))}</td>
-                <td>${escapeHtml(formatValue(summary.gold))}</td>
-                <td>${escapeHtml(formatValue(summary.level))}</td>
-                <td>${escapeHtml(formatValue(counts.inventoryItems))}</td>
-                <td>${escapeHtml(formatValue(counts.storageItems))}</td>
-                <td>${escapeHtml(formatValue(row.source))}</td>
-                <td><span class="pill ${row.rawSnapshotReturned ? "blocked" : "good"}">${row.rawSnapshotReturned ? "returned" : "hidden"}</span></td>
-                <td>${escapeHtml(formatClock(row.updatedAt))}</td>
-              </tr>
-            `;
-          }).join("")}
-        </tbody>
-      </table>
-    `;
+  function renderSnapshotTable(...args) {
+    return getAdminOverviewSnapshotsApi().renderAdminSnapshotTable(...args);
   }
 
     async function refreshAdminMasterCatalog(...args) {
     return await getAdminMasterCatalogApi().refreshAdminMasterCatalog(...args);
   }
 
-function renderReadiness(readiness) {
-    const target = $("[data-admin-readiness]");
-    if (!target) return;
-    const warnings = Array.isArray(readiness.warnings) ? readiness.warnings : [];
-    target.innerHTML = `
-      <div style="padding:14px; display:grid; gap:10px;">
-        <div><span class="pill ${readiness.safeForAdminReadOnlyUi ? "good" : "warn"}">read-only UI: ${escapeHtml(formatValue(readiness.safeForAdminReadOnlyUi))}</span></div>
-        <div><span class="pill ${readiness.safeForAdminWriteUi ? "warn" : "blocked"}">general write UI: ${escapeHtml(formatValue(readiness.safeForAdminWriteUi))}</span></div>
-        <div><span class="pill ${readiness.guardedMasterEditApplyReady ? "good" : "blocked"}">guarded master edit apply: ${escapeHtml(formatValue(readiness.guardedMasterEditApplyReady))}</span></div>
-        <div><span class="pill ${readiness.guardedRollbackReady ? "good" : "blocked"}">guarded rollback: ${escapeHtml(formatValue(readiness.guardedRollbackReady))}</span></div>
-        <div><span class="pill ${hasAdminWriteDevKey() ? "good" : "blocked"}">admin write dev key: ${escapeHtml(hasAdminWriteDevKey() ? "set" : "missing")}</span></div>
-        <div style="color:#cbd5e1; font-size:13px;">${escapeHtml(readiness.writeUiBlockedReason || "일반 쓰기 기능은 아직 막혀 있습니다.")}</div>
-        ${warnings.length ? `<div class="error">경고: ${escapeHtml(warnings.join(", "))}</div>` : `<div style="color:#86efac; font-size:13px;">현재 read-only overview 기준 경고 없음</div>`}
-      </div>
-    `;
+  function renderReadiness(...args) {
+    return getAdminOverviewSnapshotsApi().renderAdminReadiness(...args);
   }
 
   function renderError(error) {
@@ -2374,6 +2306,8 @@ function renderReadiness(readiness) {
     const editDraftExternalReady = !!(editDraftExternal && editDraftExternal.ok && editDraftExternal.version === "v191.admin-edit-draft-split");
     const masterCatalogExternal = typeof getAdminMasterCatalogExternalReadiness === "function" ? getAdminMasterCatalogExternalReadiness() : { ok: false };
     const masterCatalogExternalReady = !!(masterCatalogExternal && masterCatalogExternal.ok && masterCatalogExternal.version === "v192.admin-master-catalog-detail-split");
+    const overviewSnapshotsExternal = typeof getAdminOverviewSnapshotsExternalReadiness === "function" ? getAdminOverviewSnapshotsExternalReadiness() : { ok: false };
+    const overviewSnapshotsExternalReady = !!(overviewSnapshotsExternal && overviewSnapshotsExternal.ok && overviewSnapshotsExternal.version === "v193.admin-overview-snapshots-split");
     const changeLogs = typeof getAdminChangeLogsReadiness === "function" ? getAdminChangeLogsReadiness() : { ok: false };
     const changeLogsExternalReady = !!(changeLogs && changeLogs.ok && changeLogs.version === "v187.admin-change-logs-split");
     const createLifecycle = typeof getAdminCreateLifecycleReadiness === "function" ? getAdminCreateLifecycleReadiness() : { ok: false };
@@ -2396,7 +2330,7 @@ function renderReadiness(readiness) {
     const createDeleteRollbackReady = typeof previewAdminCreateDeleteRollback === "function" && typeof applyAdminCreateDeleteRollback === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRollback === "function");
     const createDeleteRestoreReady = typeof previewAdminCreateDeleteRestore === "function" && typeof applyAdminCreateDeleteRestore === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRestore === "function");
     const layoutShell = getAdminLayoutShellReadiness();
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && adminJsSplitReadinessReady && changeLogSplitContractReady && createLifecycleSplitContractReady && editDraftSplitContractReady && editDraftExternalReady && createLifecycleExternalReady && masterCatalogExternalReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createLifecycleBatchCheckReady, adminJsSplitReadinessReady, adminJsSplitReadiness, changeLogSplitContractReady, changeLogSplitContract, createLifecycleSplitContractReady, createLifecycleSplitContract, editDraftSplitContractReady, editDraftSplitContract, editDraftExternalReady, editDraftExternal, masterCatalogExternalReady, masterCatalogExternal, changeLogsExternalReady, changeLogs, createLifecycleExternalReady, createLifecycle, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && adminJsSplitReadinessReady && changeLogSplitContractReady && createLifecycleSplitContractReady && editDraftSplitContractReady && editDraftExternalReady && createLifecycleExternalReady && masterCatalogExternalReady && overviewSnapshotsExternalReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createLifecycleBatchCheckReady, adminJsSplitReadinessReady, adminJsSplitReadiness, changeLogSplitContractReady, changeLogSplitContract, createLifecycleSplitContractReady, createLifecycleSplitContract, editDraftSplitContractReady, editDraftSplitContract, editDraftExternalReady, editDraftExternal, masterCatalogExternalReady, masterCatalogExternal, overviewSnapshotsExternalReady, overviewSnapshotsExternal, changeLogsExternalReady, changeLogs, createLifecycleExternalReady, createLifecycle, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -2414,6 +2348,7 @@ function renderReadiness(readiness) {
     readSnapshotFiltersFromDom,
     resetSnapshotFilters,
     describeSnapshotFilters,
+    getAdminOverviewSnapshotsExternalReadiness,
     readMasterCatalogFiltersFromDom,
     resetMasterCatalogFilters,
     describeMasterCatalogFilters,
@@ -2535,6 +2470,7 @@ function renderReadiness(readiness) {
   window.fetchAdminReadOnlyPageData = fetchAdminReadOnlyPageData;
   window.readAdminSnapshotFilters = readSnapshotFiltersFromDom;
   window.resetAdminSnapshotFilters = resetSnapshotFilters;
+  window.getAdminOverviewSnapshotsExternalReadiness = getAdminOverviewSnapshotsExternalReadiness;
   window.readAdminMasterCatalogFilters = readMasterCatalogFiltersFromDom;
   window.resetAdminMasterCatalogFilters = resetMasterCatalogFilters;
   window.readAdminChangeLogFilters = readChangeLogFiltersFromDom;
@@ -2634,6 +2570,7 @@ function renderReadiness(readiness) {
   window.verifySelectedMasterDataApi = verifySelectedMasterDataApi;
   window.runPostWriteMasterApiVerification = runPostWriteMasterApiVerification;
 
+  configureAdminOverviewSnapshots();
   configureAdminMasterCatalog();
   configureAdminEditDraft();
   configureAdminCreateLifecycle();

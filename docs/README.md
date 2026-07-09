@@ -96,3 +96,7 @@ docs/archive/stage-notes/
 ## v192
 
 - [ADMIN_MASTER_CATALOG_SPLIT.md](ADMIN_MASTER_CATALOG_SPLIT.md) — v192 admin master catalog/detail split
+
+## v193
+
+- [ADMIN_OVERVIEW_SNAPSHOTS_SPLIT.md](ADMIN_OVERVIEW_SNAPSHOTS_SPLIT.md) — v193 admin overview/snapshots split

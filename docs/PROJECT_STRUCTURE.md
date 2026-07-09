@@ -53,7 +53,7 @@ FastAPI 백엔드입니다.
 
 - master-data fetch / fallback
 - save-data bridge
-- admin page helper / 분리된 관리자 layout·change logs·create lifecycle·edit draft·master catalog/detail helper
+- admin page helper / 분리된 관리자 layout·change logs·create lifecycle·edit draft·master catalog/detail·overview/snapshots helper
 - smoke에서 확인하는 브라우저 helper 함수 제공
 
 중요 파일 예시:
