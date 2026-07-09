@@ -1,8 +1,8 @@
 # Current Status
 
-현재 기준: **v193 admin overview/snapshots split**
+현재 기준: **v194 admin bootstrap/bindEvents readiness**
 
-이 패키지 기준 ZIP: **rpg_v193_admin_overview_snapshots_split_ready.zip**
+이 패키지 기준 ZIP: **rpg_v194_admin_bootstrap_bindings_readiness_ready.zip**
 
 ## 완료된 관리자 JS 분리
 
@@ -12,32 +12,34 @@
 - v191: edit draft 분리
 - v192: master catalog/detail 분리
 - v193: overview/snapshots 분리
+- v194: bootstrap/bindEvents thin entry 계약 고정
 
-## v193 완료 내용
+## v194 완료 내용
 
-- `src/api/admin/admin-overview-snapshots.js` 추가
-- overview cards 렌더링 이동
-- save snapshot 필터 read/reset/describe 이동
-- save snapshot table 렌더링 이동
-- readiness 카드 렌더링 이동
-- `admin-page-readonly.js`에는 기존 함수명 wrapper 유지
-- `admin.html` script 순서 갱신
-- overview/snapshots split smoke 추가
+- `ADMIN_BOOTSTRAP_BINDING_CONTRACT` 추가
+- boot 순서 고정
+- delegated event action map 고정
+- window export 호환 목록 고정
+- 외부 모듈 configure 순서 진단
+- `getAdminBootstrapBindingReadiness()` 추가
+- `renderAdminBootstrapBindingReadiness()` 추가
+- `checkAdminReadOnlyPageReady().bootstrapBindingReady` 추가
+- `tools/smoke_admin_bootstrap_bindings_readiness.js` 추가
 
 ## 브라우저 확인
 
 ```js
 checkAdminReadOnlyPageReady().version
-checkAdminReadOnlyPageReady().overviewSnapshotsExternalReady
-window.RpgAdminOverviewSnapshots.VERSION
+checkAdminReadOnlyPageReady().bootstrapBindingReady
+getAdminBootstrapBindingReadiness().status
 ```
 
 예상:
 
 ```txt
-v193.admin-overview-snapshots-split
+v194.admin-bootstrap-bindings-readiness
 true
-v193.admin-overview-snapshots-split
+contract-frozen-v194
 ```
 
 ## DB / env

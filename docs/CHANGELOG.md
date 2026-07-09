@@ -1,3 +1,13 @@
+# v194 admin bootstrap/bindEvents readiness
+
+- `admin-page-readonly.js`를 바로 더 분리하지 않고 bootstrap/bindEvents/window export 계약을 고정했습니다.
+- `ADMIN_BOOTSTRAP_BINDING_CONTRACT`를 추가했습니다.
+- `getAdminBootstrapBindingReadiness()` / `renderAdminBootstrapBindingReadiness()`를 추가했습니다.
+- `checkAdminReadOnlyPageReady().bootstrapBindingReady`를 추가했습니다.
+- 새 smoke `tools/smoke_admin_bootstrap_bindings_readiness.js`를 추가하고 core smoke에 포함했습니다.
+- 새 쓰기 도메인 오픈 없음.
+- DB schema 변경 없음, DB reset / seed 필요 없음.
+
 ## v192 - admin master catalog/detail split
 
 - Added `src/api/admin/admin-master-catalog.js`.

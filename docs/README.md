@@ -41,6 +41,9 @@
 - `ADMIN_CREATE_LIFECYCLE_SPLIT.md` — v189 create lifecycle 실제 1차 분리
 - `ADMIN_EDIT_DRAFT_SPLIT_CONTRACT.md` — v190 edit draft 분리 전 계약 고정
 - `ADMIN_EDIT_DRAFT_SPLIT.md` — v191 edit draft 실제 분리
+- `ADMIN_MASTER_CATALOG_SPLIT.md` — v192 master catalog/detail 실제 분리
+- `ADMIN_OVERVIEW_SNAPSHOTS_SPLIT.md` — v193 overview/snapshots 실제 분리
+- `ADMIN_BOOTSTRAP_BINDINGS_READINESS.md` — v194 bootstrap/bindEvents thin entry 계약 고정
 
 ## 3. 관리자 편집/관계 안전장치 문서
 
@@ -100,3 +103,7 @@ docs/archive/stage-notes/
 ## v193
 
 - [ADMIN_OVERVIEW_SNAPSHOTS_SPLIT.md](ADMIN_OVERVIEW_SNAPSHOTS_SPLIT.md) — v193 admin overview/snapshots split
+
+## v194
+
+- [ADMIN_BOOTSTRAP_BINDINGS_READINESS.md](ADMIN_BOOTSTRAP_BINDINGS_READINESS.md) — v194 admin bootstrap/bindEvents readiness

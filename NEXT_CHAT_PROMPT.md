@@ -8,10 +8,10 @@
 - 커밋 명령어는 마지막에 add부터 push까지 한 번에 알려줍니다.
 
 현재 안정 버전:
-v193: admin overview/snapshots split
+v194: admin bootstrap/bindEvents readiness
 
 현재 인수인계 ZIP:
-rpg_v193_admin_overview_snapshots_split_ready.zip
+rpg_v194_admin_bootstrap_bindings_readiness_ready.zip
 
 먼저 확인할 파일:
 - NEXT_CHAT_HANDOFF.md
@@ -27,11 +27,11 @@ rpg_v193_admin_overview_snapshots_split_ready.zip
 - `src/api/admin/admin-edit-draft.js` — v191 분리 완료
 - `src/api/admin/admin-master-catalog.js` — v192 분리 완료
 - `src/api/admin/admin-overview-snapshots.js` — v193 분리 완료
-- `src/api/admin-page-readonly.js` — bootstrap/bindEvents/window wrapper 중심 entry 파일
+- `src/api/admin-page-readonly.js` — v194 기준 bootstrap/bindEvents/window wrapper 중심 thin entry 계약 고정
 
 다음 추천 단계:
-v194 admin bootstrap/bindEvents thin entry readiness 또는 정리 단계.
-바로 큰 분리보다 event action map/boot readiness smoke를 먼저 고정하는 방향을 추천.
+v195 admin thin entry cleanup.
+실제 기능을 크게 옮기기보다, `admin-page-readonly.js` 안의 wrapper/export/entry 흐름을 정리하고 smoke를 강화하는 방향 추천.
 
 검증 기준:
 - `bash tools/run_smoke_core.sh`
