@@ -1,10 +1,10 @@
 # Current Status
 
-현재 기준: **v194 admin bootstrap/bindEvents readiness**
+현재 기준: **v195 admin thin entry cleanup**
 
-이 패키지 기준 ZIP: **rpg_v194_admin_bootstrap_bindings_readiness_ready.zip**
+이 패키지 기준 ZIP: **rpg_v195_admin_thin_entry_cleanup_ready.zip**
 
-## 완료된 관리자 JS 분리
+## 완료된 관리자 JS 분리/정리
 
 - v185: layout shell 분리
 - v187: change logs 분리
@@ -13,33 +13,35 @@
 - v192: master catalog/detail 분리
 - v193: overview/snapshots 분리
 - v194: bootstrap/bindEvents thin entry 계약 고정
+- v195: thin entry cleanup
 
-## v194 완료 내용
+## v195 완료 내용
 
-- `ADMIN_BOOTSTRAP_BINDING_CONTRACT` 추가
-- boot 순서 고정
-- delegated event action map 고정
-- window export 호환 목록 고정
-- 외부 모듈 configure 순서 진단
-- `getAdminBootstrapBindingReadiness()` 추가
-- `renderAdminBootstrapBindingReadiness()` 추가
-- `checkAdminReadOnlyPageReady().bootstrapBindingReady` 추가
-- `tools/smoke_admin_bootstrap_bindings_readiness.js` 추가
+- click action 처리 중앙화
+- `getAdminClickActionHandlers()` 추가
+- `handleAdminClickAction()` 추가
+- window export 등록을 `registerAdminReadOnlyPageExports()`로 묶음
+- 외부 모듈 configure를 `configureAdminExternalModules()`로 묶음
+- `ADMIN_THIN_ENTRY_CLEANUP_CONTRACT` 추가
+- `getAdminThinEntryCleanupReadiness()` 추가
+- `renderAdminThinEntryCleanupReadiness()` 추가
+- `checkAdminReadOnlyPageReady().thinEntryCleanupReady` 추가
+- `tools/smoke_admin_thin_entry_cleanup.js` 추가
 
 ## 브라우저 확인
 
 ```js
 checkAdminReadOnlyPageReady().version
-checkAdminReadOnlyPageReady().bootstrapBindingReady
-getAdminBootstrapBindingReadiness().status
+checkAdminReadOnlyPageReady().thinEntryCleanupReady
+getAdminThinEntryCleanupReadiness().status
 ```
 
 예상:
 
 ```txt
-v194.admin-bootstrap-bindings-readiness
+v195.admin-thin-entry-cleanup
 true
-contract-frozen-v194
+cleaned-v195
 ```
 
 ## DB / env

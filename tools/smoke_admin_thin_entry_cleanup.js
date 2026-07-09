@@ -64,35 +64,31 @@ const expectedActions = [
 
 assertContains("src/api/admin-page-readonly.js", [
   "v195.admin-thin-entry-cleanup",
-  "ADMIN_BOOTSTRAP_BINDING_CONTRACT",
-  "contract-frozen-v194",
-  "getAdminBootstrapBindingReadiness",
-  "renderAdminBootstrapBindingReadiness",
-  "bootstrapBindingReady",
-  "bootstrap/bindEvents 계약 고정 완료",
-  "window.getAdminBootstrapBindingReadiness",
-  "window.renderAdminBootstrapBindingReadiness",
-]);
-
-assertContains("src/api/admin-page-readonly.js", expectedActions.map((action) => `action === "${action}"`));
-assertContains("src/api/admin-page-readonly.js", expectedActions.map((action) => `"${action}"`));
-assertContains("src/api/admin-page-readonly.js", [
-  "document.addEventListener(\"input\"",
-  "document.addEventListener(\"keydown\"",
-  "document.addEventListener(\"change\"",
-  "document.addEventListener(\"click\"",
-  "document.addEventListener(\"DOMContentLoaded\"",
-  "bindEvents();",
-  "initializeAdminLayoutShell();",
-  "renderAdminJsSplitReadiness();",
-  "refreshAdminReadOnlyPage();",
+  "ADMIN_THIN_ENTRY_CLEANUP_CONTRACT",
+  "cleaned-v195",
+  "centralized-map-v195",
+  "getAdminClickActionHandlers",
+  "handleAdminClickAction",
+  "registerAdminReadOnlyPageExports",
+  "configureAdminExternalModules",
+  "getAdminThinEntryCleanupReadiness",
+  "renderAdminThinEntryCleanupReadiness",
+  "thinEntryCleanupReady",
+  "window.getAdminThinEntryCleanupReadiness",
 ]);
 
 assertContains("tools/run_smoke_core.sh", [
-  "node tools/smoke_admin_bootstrap_bindings_readiness.js",
+  "node tools/smoke_admin_thin_entry_cleanup.js",
 ]);
 
-const adminPageText = read("src/api/admin-page-readonly.js");
+const text = read("src/api/admin-page-readonly.js");
+for (const action of expectedActions) {
+  assert(text.includes(`"${action}":`), `action handler map should include ${action}`);
+}
+assert(text.includes("ADMIN_CLICK_ACTION_LEGACY_SMOKE_MARKERS"), "legacy action smoke marker should remain");
+assert(text.includes("function registerAdminReadOnlyPageExports()"), "window export registration should be grouped");
+assert(text.includes("function configureAdminExternalModules()"), "external module configure calls should be grouped");
+
 const scripts = [
   "src/api/game-api-client.js",
   "src/api/admin-layout-shell.js",
@@ -113,7 +109,7 @@ const domSelectors = new Set([
   "[data-admin-write-dev-key]",
   "[data-admin-api-base-url]",
 ]);
-const staticActionElements = expectedActions.slice(0, 8).map((action) => ({
+const staticActionElements = expectedActions.map((action) => ({
   getAttribute(name) {
     return name === "data-admin-action" ? action : null;
   },
@@ -198,14 +194,19 @@ sandbox.RpgAdminMasterCatalog = makeModule("v192.admin-master-catalog-detail-spl
 sandbox.RpgAdminOverviewSnapshots = makeModule("v193.admin-overview-snapshots-split");
 
 vm.createContext(sandbox);
-vm.runInContext(adminPageText, sandbox, { filename: "src/api/admin-page-readonly.js" });
-assert(typeof sandbox.getAdminBootstrapBindingReadiness === "function", "global getAdminBootstrapBindingReadiness should be exported");
-const readiness = sandbox.getAdminBootstrapBindingReadiness();
-assert(readiness.ok, `bootstrap binding readiness should be ok: ${JSON.stringify(readiness)}`);
-assert(readiness.status === "contract-frozen-v194", "bootstrap binding status should be frozen for v194");
-assert(readiness.delegatedActionCount === expectedActions.length, "delegated action count should match expected action map");
-assert(readiness.staticActionCount === staticActionElements.length, "static action count should be collected from DOM");
-assert(readiness.unknownStaticActions.length === 0, "static HTML actions should all be represented in contract");
-assert(sandbox.RpgAdminReadOnlyPage.VERSION === "v195.admin-thin-entry-cleanup", "RpgAdminReadOnlyPage should expose v194 version");
+vm.runInContext(text, sandbox, { filename: "src/api/admin-page-readonly.js" });
+assert(sandbox.RpgAdminReadOnlyPage.VERSION === "v195.admin-thin-entry-cleanup", "RpgAdminReadOnlyPage should expose v195 version");
+assert(typeof sandbox.getAdminClickActionHandlers === "function", "getAdminClickActionHandlers should be exported");
+const handlers = sandbox.getAdminClickActionHandlers();
+for (const action of expectedActions) {
+  assert(typeof handlers[action] === "function", `runtime action handler missing ${action}`);
+}
+assert(Object.keys(handlers).length === expectedActions.length, "runtime action handler count should match contract action count");
+const readiness = sandbox.getAdminThinEntryCleanupReadiness();
+assert(readiness.ok, `thin entry cleanup readiness should be ok: ${JSON.stringify(readiness)}`);
+assert(readiness.status === "cleaned-v195", "thin entry cleanup status should be cleaned-v195");
+assert(readiness.actionHandlerMode === "centralized-map-v195", "action handler mode should be centralized-map-v195");
+assert(readiness.actionHandlerCount === readiness.delegatedActionCount, "action handler count should match delegated action count");
+assert(text.includes("thinEntryCleanupReady"), "page readiness should include thinEntryCleanupReady field");
 
-console.log("admin bootstrap/bindEvents readiness smoke test passed");
+console.log("admin thin entry cleanup smoke test passed");

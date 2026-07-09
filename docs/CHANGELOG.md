@@ -574,3 +574,11 @@
 - 필드 몬스터 처치 시 골드/공격속도/순수공격력 성장 보상을 `data.rewards`에 기록하도록 했습니다.
 - `applyActionResultUi()`에 `renderUI` 요청 처리를 추가했습니다.
 - 기존 게임 동작은 유지하고, FastAPI 응답 구조로 옮기기 위한 중간 계층만 추가했습니다.
+## v195 admin thin entry cleanup
+
+- `admin-page-readonly.js` click action handler map 중앙화.
+- window export 등록을 `registerAdminReadOnlyPageExports()`로 묶음.
+- 외부 모듈 configure 호출을 `configureAdminExternalModules()`로 묶음.
+- `getAdminThinEntryCleanupReadiness()` / `renderAdminThinEntryCleanupReadiness()` 추가.
+- `tools/smoke_admin_thin_entry_cleanup.js` 추가.
+

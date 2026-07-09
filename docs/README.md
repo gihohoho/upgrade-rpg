@@ -44,6 +44,7 @@
 - `ADMIN_MASTER_CATALOG_SPLIT.md` — v192 master catalog/detail 실제 분리
 - `ADMIN_OVERVIEW_SNAPSHOTS_SPLIT.md` — v193 overview/snapshots 실제 분리
 - `ADMIN_BOOTSTRAP_BINDINGS_READINESS.md` — v194 bootstrap/bindEvents thin entry 계약 고정
+- `ADMIN_THIN_ENTRY_CLEANUP.md` — v195 admin thin entry cleanup
 
 ## 3. 관리자 편집/관계 안전장치 문서
 
@@ -107,3 +108,7 @@ docs/archive/stage-notes/
 ## v194
 
 - [ADMIN_BOOTSTRAP_BINDINGS_READINESS.md](ADMIN_BOOTSTRAP_BINDINGS_READINESS.md) — v194 admin bootstrap/bindEvents readiness
+
+## v195
+
+- [ADMIN_THIN_ENTRY_CLEANUP.md](ADMIN_THIN_ENTRY_CLEANUP.md) — v195 admin thin entry cleanup

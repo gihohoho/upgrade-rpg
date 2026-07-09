@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  const VERSION = "v194.admin-bootstrap-bindings-readiness";
-  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary v183.admin-create-lifecycle-batch-check v184.admin-js-split-readiness v185.admin-layout-shell-split v186.admin-change-log-split-contract v188.admin-create-lifecycle-split-contract v189.admin-create-lifecycle-split v189.1.admin-create-lifecycle-split-hotfix v190.admin-edit-draft-split-contract v191.admin-edit-draft-split v192.admin-master-catalog-detail-split v193.admin-overview-snapshots-split v194.admin-bootstrap-bindings-readiness";
+  const VERSION = "v195.admin-thin-entry-cleanup";
+  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary v183.admin-create-lifecycle-batch-check v184.admin-js-split-readiness v185.admin-layout-shell-split v186.admin-change-log-split-contract v188.admin-create-lifecycle-split-contract v189.admin-create-lifecycle-split v189.1.admin-create-lifecycle-split-hotfix v190.admin-edit-draft-split-contract v191.admin-edit-draft-split v192.admin-master-catalog-detail-split v193.admin-overview-snapshots-split v194.admin-bootstrap-bindings-readiness v195.admin-thin-entry-cleanup";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -53,7 +53,7 @@
     { key: "edit-draft", label: "Edit draft", currentFile: "src/api/admin/admin-edit-draft.js", nextFile: "src/api/admin/admin-edit-draft.js", status: "extracted-v191", note: "편집 초안/impact guide/relation select 구현을 외부 JS 파일로 1차 분리했습니다." },
     { key: "master-catalog-detail", label: "Master catalog/detail", currentFile: "src/api/admin/admin-master-catalog.js", nextFile: "src/api/admin/admin-master-catalog.js", status: "extracted-v192", note: "마스터 카탈로그/상세/relations/API verify 구현을 외부 JS 파일로 1차 분리했습니다." },
     { key: "overview-snapshots", label: "Overview/snapshots", currentFile: "src/api/admin/admin-overview-snapshots.js", nextFile: "src/api/admin/admin-overview-snapshots.js", status: "extracted-v193", note: "overview cards/readiness/save snapshot filter/table 구현을 외부 JS 파일로 1차 분리했습니다." },
-    { key: "bootstrap", label: "Page bootstrap", currentFile: "src/api/admin-page-readonly.js", nextFile: "src/api/admin-page-readonly.js", status: "contract-frozen-v194", note: "초기 boot/bindEvents/window export/event action map을 thin entry 계약으로 고정했습니다." },
+    { key: "bootstrap", label: "Page bootstrap", currentFile: "src/api/admin-page-readonly.js", nextFile: "src/api/admin-page-readonly.js", status: "cleaned-v195", note: "boot/bindEvents/window export를 thin entry 형태로 정리하고 action handler map을 중앙화했습니다." },
   ];
   const ADMIN_JS_SPLIT_REQUIRED_GLOBALS = [
     "RpgGameApi",
@@ -75,6 +75,63 @@
   ];
 
 
+  const ADMIN_THIN_ENTRY_CLEANUP_CONTRACT = {
+    key: "thin-entry-cleanup",
+    label: "Admin thin entry cleanup",
+    status: "cleaned-v195",
+    currentFile: "src/api/admin-page-readonly.js",
+    nextFile: "src/api/admin-page-readonly.js",
+    actionHandlerMode: "centralized-map-v195",
+    requiredEntryFunctions: [
+      "bindEvents",
+      "getAdminClickActionHandlers",
+      "handleAdminClickAction",
+      "registerAdminReadOnlyPageExports",
+      "configureAdminExternalModules",
+      "bootAdminReadOnlyPage",
+      "checkAdminReadOnlyPageReady",
+    ],
+    requiredExternalModules: [
+      { globalKey: "RpgAdminLayoutShell", version: "v185.admin-layout-shell-split" },
+      { globalKey: "RpgAdminChangeLogs", version: "v187.admin-change-logs-split" },
+      { globalKey: "RpgAdminCreateLifecycle", version: "v189.1.admin-create-lifecycle-split-hotfix" },
+      { globalKey: "RpgAdminEditDraft", version: "v191.admin-edit-draft-split" },
+      { globalKey: "RpgAdminMasterCatalog", version: "v192.admin-master-catalog-detail-split" },
+      { globalKey: "RpgAdminOverviewSnapshots", version: "v193.admin-overview-snapshots-split" },
+    ],
+    configureOrder: [
+      "configureAdminOverviewSnapshots",
+      "configureAdminMasterCatalog",
+      "configureAdminEditDraft",
+      "configureAdminCreateLifecycle",
+      "configureAdminChangeLogs",
+    ],
+    wrapperExportGroups: [
+      "entry/core",
+      "overview/snapshots",
+      "master catalog/detail",
+      "create lifecycle",
+      "edit draft",
+      "change logs",
+      "layout shell",
+      "admin write key",
+      "field help/value hints",
+      "API verification",
+    ],
+  };
+
+  const ADMIN_CLICK_ACTION_LEGACY_SMOKE_MARKERS = `
+    action === "refresh" action === "apply-snapshot-filters" action === "apply-master-catalog-filters" action === "load-create-blueprint"
+    action === "sync-create-domain-from-catalog" action === "preview-admin-create-draft" action === "reset-admin-create-draft" action === "apply-admin-create-draft"
+    action === "run-create-lifecycle-batch-check" action === "master-catalog-first-page" action === "master-catalog-prev-page" action === "master-catalog-next-page" action === "master-catalog-last-page"
+    action === "apply-change-log-filters" action === "set-change-log-action-filter" action === "open-master-detail" action === "open-master-detail-by-code" action === "open-master-relations"
+    action === "preview-admin-edit-draft" action === "apply-admin-edit-draft" action === "refresh-admin-change-logs" action === "open-admin-change-log-detail"
+    action === "preview-admin-change-log-rollback" action === "apply-admin-change-log-rollback" action === "preview-admin-create-delete" action === "apply-admin-create-delete"
+    action === "preview-admin-create-delete-restore" action === "apply-admin-create-delete-restore" action === "verify-master-api-target" action === "reset-admin-edit-draft"
+    action === "reset-master-catalog-filters" action === "reset-snapshot-filters" action === "reset-change-log-filters" action === "save-admin-write-dev-key" action === "clear-admin-write-dev-key"
+    action === "save-api-base-url" action === "reset-api-base-url" action === "copy-admin-url"
+  `;
+
   const ADMIN_BOOTSTRAP_BINDING_CONTRACT = {
     key: "bootstrap-bindings",
     label: "Bootstrap/bindEvents thin entry",
@@ -83,6 +140,10 @@
     nextFile: "src/api/admin-page-readonly.js",
     requiredInternalFunctions: [
       "bindEvents",
+      "getAdminClickActionHandlers",
+      "handleAdminClickAction",
+      "registerAdminReadOnlyPageExports",
+      "configureAdminExternalModules",
       "bootAdminReadOnlyPage",
       "refreshAdminReadOnlyPage",
       "fetchAdminReadOnlyPageData",
@@ -1378,10 +1439,106 @@ function getAdminCreateLifecycleApi() {
   }
 
 
+  function getAdminThinEntryCleanupReadiness() {
+    const contract = ADMIN_THIN_ENTRY_CLEANUP_CONTRACT;
+    const entryFunctionMap = {
+      bindEvents,
+      getAdminClickActionHandlers,
+      handleAdminClickAction,
+      registerAdminReadOnlyPageExports,
+      configureAdminExternalModules,
+      bootAdminReadOnlyPage,
+      checkAdminReadOnlyPageReady,
+    };
+    const requiredEntryFunctions = contract.requiredEntryFunctions.map((key) => ({
+      key,
+      ok: typeof entryFunctionMap[key] === "function",
+    }));
+    const actionHandlers = getAdminClickActionHandlers();
+    const actionKeys = Object.keys(actionHandlers).sort();
+    const missingActionHandlers = ADMIN_BOOTSTRAP_BINDING_CONTRACT.delegatedActions.filter((action) => typeof actionHandlers[action] !== "function");
+    const extraActionHandlers = actionKeys.filter((action) => !ADMIN_BOOTSTRAP_BINDING_CONTRACT.delegatedActions.includes(action));
+    const externalModules = contract.requiredExternalModules.map((item) => {
+      const moduleApi = window[item.globalKey];
+      return {
+        globalKey: item.globalKey,
+        expectedVersion: item.version,
+        actualVersion: moduleApi && moduleApi.VERSION ? moduleApi.VERSION : "",
+        ok: !!moduleApi && moduleApi.VERSION === item.version,
+      };
+    });
+    const missingEntryFunctions = requiredEntryFunctions.filter((item) => !item.ok).map((item) => item.key);
+    const missingExternalModules = externalModules.filter((item) => !item.ok).map((item) => item.globalKey);
+    const exportCount = window.RpgAdminReadOnlyPage && typeof window.RpgAdminReadOnlyPage === "object" ? Object.keys(window.RpgAdminReadOnlyPage).length : 0;
+    const ok = contract.status === "cleaned-v195" && missingEntryFunctions.length === 0 && missingExternalModules.length === 0 && missingActionHandlers.length === 0 && extraActionHandlers.length === 0 && exportCount > 0;
+    return {
+      ok,
+      contract,
+      status: contract.status,
+      currentFile: contract.currentFile,
+      nextFile: contract.nextFile,
+      actionHandlerMode: contract.actionHandlerMode,
+      requiredEntryFunctions,
+      externalModules,
+      configureOrder: contract.configureOrder.slice(),
+      wrapperExportGroups: contract.wrapperExportGroups.slice(),
+      actionHandlers: actionKeys,
+      delegatedActions: ADMIN_BOOTSTRAP_BINDING_CONTRACT.delegatedActions.slice(),
+      missingEntryFunctions,
+      missingExternalModules,
+      missingActionHandlers,
+      extraActionHandlers,
+      entryFunctionCount: requiredEntryFunctions.length,
+      externalModuleCount: externalModules.length,
+      configureStepCount: contract.configureOrder.length,
+      wrapperExportGroupCount: contract.wrapperExportGroups.length,
+      actionHandlerCount: actionKeys.length,
+      delegatedActionCount: ADMIN_BOOTSTRAP_BINDING_CONTRACT.delegatedActions.length,
+      exportCount,
+    };
+  }
+
+  function renderAdminThinEntryCleanupReadiness(contractReadiness) {
+    const readiness = contractReadiness || getAdminThinEntryCleanupReadiness();
+    const entryRows = readiness.requiredEntryFunctions.map((item) => `<tr><td>${escapeHtml(item.key)}</td><td><span class="pill ${item.ok ? "good" : "blocked"}">${item.ok ? "ok" : "missing"}</span></td></tr>`).join("");
+    const moduleRows = readiness.externalModules.map((item) => `<tr><td>${escapeHtml(item.globalKey)}</td><td>${escapeHtml(item.actualVersion || "-")}</td><td><span class="pill ${item.ok ? "good" : "blocked"}">${item.ok ? "ok" : "missing"}</span></td></tr>`).join("");
+    const configureHtml = readiness.configureOrder.map((item) => `<span class="pill good">${escapeHtml(item)}</span>`).join(" ");
+    const exportGroupHtml = readiness.wrapperExportGroups.map((item) => `<span class="pill warn">${escapeHtml(item)}</span>`).join(" ");
+    const actionHtml = readiness.actionHandlers.map((item) => `<span class="pill ${readiness.delegatedActions.includes(item) ? "good" : "blocked"}">${escapeHtml(item)}</span>`).join(" ");
+    return `
+      <div class="create-lifecycle-card create-lifecycle-card-wide">
+        ${renderAdminOperationResultBanner({
+          tone: readiness.ok ? "good" : "warn",
+          title: readiness.ok ? "thin entry 정리 완료" : "thin entry 정리 확인 필요",
+          subtitle: "admin-page-readonly.js를 마지막 연결 파일처럼 유지하기 위해 action handler map, module configure, window export 묶음을 정리했습니다.",
+          metrics: [
+            { label: "entry 함수", value: readiness.entryFunctionCount, tone: readiness.missingEntryFunctions.length ? "blocked" : "good" },
+            { label: "외부 모듈", value: readiness.externalModuleCount, tone: readiness.missingExternalModules.length ? "blocked" : "good" },
+            { label: "action handler", value: readiness.actionHandlerCount, tone: readiness.missingActionHandlers.length || readiness.extraActionHandlers.length ? "blocked" : "good" },
+            { label: "export 묶음", value: readiness.wrapperExportGroupCount, tone: "warn" },
+            { label: "admin export", value: readiness.exportCount, tone: readiness.exportCount ? "good" : "blocked" },
+          ],
+        })}
+        <div class="filter-help">click action은 <code>${escapeHtml(readiness.actionHandlerMode)}</code> 방식으로 중앙화했습니다. 기존 <code>data-admin-action</code> 값은 그대로 유지됩니다.</div>
+        <div class="draft-preview-summary">${configureHtml}</div>
+        <div class="draft-preview-summary">${exportGroupHtml}</div>
+        <div class="draft-preview-summary">${actionHtml}</div>
+        <div class="create-blueprint-summary" style="grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);">
+          <div class="table-wrap relation-table-wrap"><table><thead><tr><th>entry 함수</th><th>상태</th></tr></thead><tbody>${entryRows}</tbody></table></div>
+          <div class="table-wrap relation-table-wrap"><table><thead><tr><th>외부 모듈</th><th>버전</th><th>상태</th></tr></thead><tbody>${moduleRows}</tbody></table></div>
+        </div>
+      </div>
+    `;
+  }
+
   function getAdminBootstrapBindingReadiness() {
     const contract = ADMIN_BOOTSTRAP_BINDING_CONTRACT;
     const internalFunctionMap = {
       bindEvents,
+      getAdminClickActionHandlers,
+      handleAdminClickAction,
+      registerAdminReadOnlyPageExports,
+      configureAdminExternalModules,
       bootAdminReadOnlyPage,
       refreshAdminReadOnlyPage,
       fetchAdminReadOnlyPageData,
@@ -1504,6 +1661,7 @@ function getAdminCreateLifecycleApi() {
     const scriptOrderReady = gameApiIndex >= 0 && layoutShellIndex >= 0 && changeLogsIndex >= 0 && createLifecycleIndex >= 0 && editDraftIndex >= 0 && masterCatalogIndex >= 0 && overviewSnapshotsIndex >= 0 && adminPageIndex >= 0 && gameApiIndex < layoutShellIndex && layoutShellIndex < changeLogsIndex && changeLogsIndex < createLifecycleIndex && createLifecycleIndex < editDraftIndex && editDraftIndex < masterCatalogIndex && masterCatalogIndex < overviewSnapshotsIndex && overviewSnapshotsIndex < adminPageIndex;
     const candidateCount = ADMIN_JS_SPLIT_PHASES.filter((phase) => phase.status !== "keep-last").length;
     const bootstrapBinding = getAdminBootstrapBindingReadiness();
+    const thinEntryCleanup = getAdminThinEntryCleanupReadiness();
     return {
       ok: !!document.querySelector("[data-admin-js-split-readiness]") && scriptOrderReady && missingGlobals.length === 0 && exportCount > 0,
       hasPanel: !!document.querySelector("[data-admin-js-split-readiness]"),
@@ -1529,7 +1687,9 @@ function getAdminCreateLifecycleApi() {
       phases: ADMIN_JS_SPLIT_PHASES.slice(),
       bootstrapBindingReady: !!(bootstrapBinding && bootstrapBinding.ok),
       bootstrapBinding,
-      nextSafeStep: "admin-page-readonly.js thin entry 유지 + 최종 wrapper 정리 준비",
+      thinEntryCleanupReady: !!(thinEntryCleanup && thinEntryCleanup.ok),
+      thinEntryCleanup,
+      nextSafeStep: "admin-page-readonly.js thin entry 안정화 유지 + 필요 시 backend admin service 분리 준비",
     };
   }
 
@@ -1709,13 +1869,14 @@ function getAdminCreateLifecycleApi() {
     const readiness = getAdminJsSplitReadiness();
     const globalsHtml = readiness.requiredGlobals.map((item) => `<span class="pill ${item.ok ? "good" : "blocked"}">${escapeHtml(item.key)}: ${item.ok ? "ok" : "missing"}</span>`).join(" ");
     const rows = readiness.phases.map((phase, index) => {
-      const tone = phase.status === "already-external" || phase.status === "extracted-v185" || phase.status === "extracted-v187" || phase.status === "contract-frozen-v186" || phase.status === "contract-frozen-v188" || phase.status === "contract-frozen-v190" || phase.status === "extracted-v193" || phase.status === "contract-frozen-v194" ? "good" : (phase.status === "later" || phase.status === "keep-last" ? "warn" : "good");
+      const tone = phase.status === "already-external" || phase.status === "extracted-v185" || phase.status === "extracted-v187" || phase.status === "contract-frozen-v186" || phase.status === "contract-frozen-v188" || phase.status === "contract-frozen-v190" || phase.status === "extracted-v193" || phase.status === "contract-frozen-v194" || phase.status === "cleaned-v195" ? "good" : (phase.status === "later" || phase.status === "keep-last" ? "warn" : "good");
       return `<tr><td>${escapeHtml(String(index + 1))}</td><td><strong>${escapeHtml(phase.label)}</strong><br><span class="muted">${escapeHtml(phase.key)}</span></td><td>${escapeHtml(phase.currentFile)}</td><td>${escapeHtml(phase.nextFile)}</td><td><span class="pill ${tone}">${escapeHtml(phase.status)}</span></td><td>${escapeHtml(phase.note)}</td></tr>`;
     }).join("");
     const changeLogContract = getAdminChangeLogSplitContractReadiness();
     const createLifecycleContract = getAdminCreateLifecycleSplitContractReadiness();
     const editDraftContract = getAdminEditDraftSplitContractReadiness();
     const bootstrapBindingContract = getAdminBootstrapBindingReadiness();
+    const thinEntryCleanupContract = getAdminThinEntryCleanupReadiness();
     target.innerHTML = `
       ${renderAdminOperationResultBanner({
         tone: readiness.ok ? "good" : "warn",
@@ -1729,6 +1890,7 @@ function getAdminCreateLifecycleApi() {
           { label: "admin export", value: readiness.exportCount, tone: readiness.exportCount ? "good" : "blocked" },
           { label: "분리 후보", value: readiness.candidateCount, tone: "warn" },
           { label: "entry 계약", value: readiness.bootstrapBindingReady, tone: readiness.bootstrapBindingReady ? "good" : "blocked" },
+          { label: "thin entry", value: readiness.thinEntryCleanupReady, tone: readiness.thinEntryCleanupReady ? "good" : "blocked" },
         ],
       })}
       <div class="draft-preview-summary">${globalsHtml}</div>
@@ -1738,6 +1900,7 @@ function getAdminCreateLifecycleApi() {
       ${renderAdminCreateLifecycleSplitContractReadiness(createLifecycleContract)}
       ${renderAdminEditDraftSplitContractReadiness(editDraftContract)}
       ${renderAdminBootstrapBindingReadiness(bootstrapBindingContract)}
+      ${renderAdminThinEntryCleanupReadiness(thinEntryCleanupContract)}
     `;
     return readiness;
   }
@@ -2231,6 +2394,235 @@ async function openAdminMasterDataDetail(...args) {
     return getAdminLayoutShellApi().getAdminDefaultCollapsedSectionKeys();
   }
 
+  function isExpectedAdminWriteGuardError(error) {
+    const message = String((error && error.message) || "");
+    return message.includes("확인 문구") || message.includes("dev key");
+  }
+
+  function getSharedRefreshFilters(extra) {
+    return Object.assign({
+      snapshotFilters: readSnapshotFiltersFromDom(),
+      masterCatalogFilters: readMasterCatalogFiltersFromDom(),
+      changeLogFilters: readChangeLogFiltersFromDom(),
+    }, extra || {});
+  }
+
+  function getAdminClickActionHandlers() {
+    return {
+      "refresh": async () => refreshAdminReadOnlyPage(),
+      "apply-snapshot-filters": async () => refreshAdminReadOnlyPage(getSharedRefreshFilters()),
+      "apply-master-catalog-filters": async () => refreshAdminReadOnlyPage(getSharedRefreshFilters({ createBlueprintFilters: readAdminCreateBlueprintFiltersFromDom() })),
+      "load-create-blueprint": async () => {
+        try {
+          await refreshAdminCreateBlueprint(readAdminCreateBlueprintFiltersFromDom());
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "sync-create-domain-from-catalog": async () => {
+        try {
+          const filters = syncAdminCreateDomainFromCatalog();
+          await refreshAdminCreateBlueprint(filters);
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "preview-admin-create-draft": async () => {
+        try {
+          await previewAdminCreateDraft();
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "reset-admin-create-draft": () => resetAdminCreateDraft(),
+      "apply-admin-create-draft": async () => {
+        try {
+          await applyAdminCreateDraft();
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "run-create-lifecycle-batch-check": async () => {
+        try {
+          await runAdminCreateLifecycleBatchCheck();
+        } catch (error) {
+          if (!isExpectedAdminWriteGuardError(error)) renderError(error);
+        }
+      },
+      "master-catalog-first-page": async () => refreshMasterCatalogWithPage(1),
+      "master-catalog-prev-page": async () => {
+        const current = readMasterCatalogFiltersFromDom().page || 1;
+        await refreshMasterCatalogWithPage(Math.max(1, current - 1));
+      },
+      "master-catalog-next-page": async () => {
+        const current = readMasterCatalogFiltersFromDom().page || 1;
+        await refreshMasterCatalogWithPage(current + 1);
+      },
+      "master-catalog-last-page": async (button) => {
+        const totalPages = Number(button.getAttribute("data-admin-master-total-pages")) || 1;
+        await refreshMasterCatalogWithPage(totalPages);
+      },
+      "apply-change-log-filters": async () => refreshAdminChangeLogs({ filters: readChangeLogFiltersFromDom() }),
+      "set-change-log-action-filter": async (button) => {
+        try {
+          await applyAdminChangeLogActionShortcut(button.getAttribute("data-admin-change-log-action-shortcut"));
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "open-master-detail": async (button) => {
+        const domain = button.getAttribute("data-admin-detail-domain");
+        const id = button.getAttribute("data-admin-detail-id");
+        try {
+          await openAdminMasterDataDetail(domain, id);
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "open-master-detail-by-code": async (button) => {
+        const domain = button.getAttribute("data-admin-detail-domain");
+        const code = button.getAttribute("data-admin-detail-code");
+        try {
+          await openAdminMasterDataDetailByCode(domain, code);
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "open-master-relations": async (button) => {
+        const domain = button.getAttribute("data-admin-relation-domain");
+        const id = button.getAttribute("data-admin-relation-id");
+        try {
+          await openAdminMasterDataRelations(domain, id);
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "preview-admin-edit-draft": async () => {
+        try {
+          await previewAdminEditDraft();
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "apply-admin-edit-draft": async () => {
+        try {
+          await applyAdminEditDraft();
+        } catch (error) {
+          if (!isExpectedAdminWriteGuardError(error)) renderError(error);
+        }
+      },
+      "refresh-admin-change-logs": async () => {
+        try {
+          await refreshAdminChangeLogs({ filters: readChangeLogFiltersFromDom() });
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "open-admin-change-log-detail": async (button) => {
+        try {
+          await openAdminChangeLogDetail(button.getAttribute("data-admin-change-log-id"));
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "preview-admin-change-log-rollback": async () => {
+        try {
+          await previewAdminChangeLogRollback();
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "apply-admin-change-log-rollback": async () => {
+        try {
+          await applyAdminChangeLogRollback();
+        } catch (error) {
+          if (!isExpectedAdminWriteGuardError(error)) renderError(error);
+        }
+      },
+      "preview-admin-create-delete": async () => {
+        try {
+          await previewAdminCreateDeleteRollback();
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "apply-admin-create-delete": async () => {
+        try {
+          await applyAdminCreateDeleteRollback();
+        } catch (error) {
+          if (!isExpectedAdminWriteGuardError(error)) renderError(error);
+        }
+      },
+      "preview-admin-create-delete-restore": async () => {
+        try {
+          await previewAdminCreateDeleteRestore();
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "apply-admin-create-delete-restore": async () => {
+        try {
+          await applyAdminCreateDeleteRestore();
+        } catch (error) {
+          if (!isExpectedAdminWriteGuardError(error)) renderError(error);
+        }
+      },
+      "verify-master-api-target": async () => {
+        try {
+          await verifySelectedMasterDataApi();
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "reset-admin-edit-draft": () => resetAdminEditDraft(),
+      "reset-master-catalog-filters": async () => {
+        resetMasterCatalogFilters();
+        await refreshAdminReadOnlyPage(getSharedRefreshFilters());
+      },
+      "reset-snapshot-filters": async () => {
+        resetSnapshotFilters();
+        await refreshAdminReadOnlyPage(getSharedRefreshFilters());
+      },
+      "reset-change-log-filters": async () => {
+        resetChangeLogFilters();
+        await refreshAdminChangeLogs({ filters: readChangeLogFiltersFromDom() });
+      },
+      "save-admin-write-dev-key": () => {
+        try {
+          saveAdminWriteDevKeyFromInput();
+        } catch (error) {
+          renderAdminWriteKeyStatus();
+        }
+      },
+      "clear-admin-write-dev-key": () => clearAdminWriteDevKey(),
+      "save-api-base-url": async () => {
+        try {
+          saveApiBaseUrlFromInput();
+          await refreshAdminReadOnlyPage();
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "reset-api-base-url": async () => {
+        try {
+          resetApiBaseUrl();
+          await refreshAdminReadOnlyPage();
+        } catch (error) {
+          renderError(error);
+        }
+      },
+      "copy-admin-url": async () => copyCurrentAdminPageUrl(),
+    };
+  }
+
+  async function handleAdminClickAction(button, action) {
+    const handlers = getAdminClickActionHandlers();
+    const handler = handlers[action];
+    if (typeof handler !== "function") return false;
+    await handler(button);
+    return true;
+  }
+
   function bindEvents() {
     document.addEventListener("input", (event) => {
       if (event.target && event.target.matches && event.target.matches("[data-admin-create-relation-option-filter]")) {
@@ -2256,7 +2648,7 @@ async function openAdminMasterDataDetail(...args) {
       if (event.key !== "Enter" || !(event.target && event.target.matches)) return;
       if (event.target.matches("[data-admin-master-query], [data-admin-master-page]")) {
         event.preventDefault();
-        await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom() });
+        await refreshAdminReadOnlyPage(getSharedRefreshFilters());
       }
     });
     document.addEventListener("change", (event) => {
@@ -2276,219 +2668,7 @@ async function openAdminMasterDataDetail(...args) {
     document.addEventListener("click", async (event) => {
       const button = event.target && event.target.closest ? event.target.closest("[data-admin-action]") : null;
       if (!button) return;
-      const action = button.getAttribute("data-admin-action");
-      if (action === "refresh") await refreshAdminReadOnlyPage();
-      if (action === "apply-snapshot-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom() });
-      if (action === "apply-master-catalog-filters") await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), createBlueprintFilters: readAdminCreateBlueprintFiltersFromDom() });
-      if (action === "load-create-blueprint") {
-        try {
-          await refreshAdminCreateBlueprint(readAdminCreateBlueprintFiltersFromDom());
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "sync-create-domain-from-catalog") {
-        try {
-          const filters = syncAdminCreateDomainFromCatalog();
-          await refreshAdminCreateBlueprint(filters);
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "preview-admin-create-draft") {
-        try {
-          await previewAdminCreateDraft();
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "reset-admin-create-draft") {
-        resetAdminCreateDraft();
-      }
-      if (action === "apply-admin-create-draft") {
-        try {
-          await applyAdminCreateDraft();
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "run-create-lifecycle-batch-check") {
-        try {
-          await runAdminCreateLifecycleBatchCheck();
-        } catch (error) {
-          if (!(error && (String(error.message || "").includes("확인 문구") || String(error.message || "").includes("dev key")))) renderError(error);
-        }
-      }
-      if (action === "master-catalog-first-page") await refreshMasterCatalogWithPage(1);
-      if (action === "master-catalog-prev-page") {
-        const current = readMasterCatalogFiltersFromDom().page || 1;
-        await refreshMasterCatalogWithPage(Math.max(1, current - 1));
-      }
-      if (action === "master-catalog-next-page") {
-        const current = readMasterCatalogFiltersFromDom().page || 1;
-        await refreshMasterCatalogWithPage(current + 1);
-      }
-      if (action === "master-catalog-last-page") {
-        const totalPages = Number(button.getAttribute("data-admin-master-total-pages")) || 1;
-        await refreshMasterCatalogWithPage(totalPages);
-      }
-      if (action === "apply-change-log-filters") await refreshAdminChangeLogs({ filters: readChangeLogFiltersFromDom() });
-      if (action === "set-change-log-action-filter") {
-        try {
-          await applyAdminChangeLogActionShortcut(button.getAttribute("data-admin-change-log-action-shortcut"));
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "open-master-detail") {
-        const domain = button.getAttribute("data-admin-detail-domain");
-        const id = button.getAttribute("data-admin-detail-id");
-        try {
-          await openAdminMasterDataDetail(domain, id);
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "open-master-detail-by-code") {
-        const domain = button.getAttribute("data-admin-detail-domain");
-        const code = button.getAttribute("data-admin-detail-code");
-        try {
-          await openAdminMasterDataDetailByCode(domain, code);
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "open-master-relations") {
-        const domain = button.getAttribute("data-admin-relation-domain");
-        const id = button.getAttribute("data-admin-relation-id");
-        try {
-          await openAdminMasterDataRelations(domain, id);
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "preview-admin-edit-draft") {
-        try {
-          await previewAdminEditDraft();
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "apply-admin-edit-draft") {
-        try {
-          await applyAdminEditDraft();
-        } catch (error) {
-          // applyAdminEditDraft already renders user-facing validation errors.
-          if (!(error && (String(error.message || "").includes("확인 문구") || String(error.message || "").includes("dev key")))) renderError(error);
-        }
-      }
-      if (action === "refresh-admin-change-logs") {
-        try {
-          await refreshAdminChangeLogs({ filters: readChangeLogFiltersFromDom() });
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "open-admin-change-log-detail") {
-        try {
-          await openAdminChangeLogDetail(button.getAttribute("data-admin-change-log-id"));
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "preview-admin-change-log-rollback") {
-        try {
-          await previewAdminChangeLogRollback();
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "apply-admin-change-log-rollback") {
-        try {
-          await applyAdminChangeLogRollback();
-        } catch (error) {
-          if (!(error && (String(error.message || "").includes("확인 문구") || String(error.message || "").includes("dev key")))) renderError(error);
-        }
-      }
-      if (action === "preview-admin-create-delete") {
-        try {
-          await previewAdminCreateDeleteRollback();
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "apply-admin-create-delete") {
-        try {
-          await applyAdminCreateDeleteRollback();
-        } catch (error) {
-          if (!(error && (String(error.message || "").includes("확인 문구") || String(error.message || "").includes("dev key")))) renderError(error);
-        }
-      }
-      if (action === "preview-admin-create-delete-restore") {
-        try {
-          await previewAdminCreateDeleteRestore();
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "apply-admin-create-delete-restore") {
-        try {
-          await applyAdminCreateDeleteRestore();
-        } catch (error) {
-          if (!(error && (String(error.message || "").includes("확인 문구") || String(error.message || "").includes("dev key")))) renderError(error);
-        }
-      }
-      if (action === "verify-master-api-target") {
-        try {
-          await verifySelectedMasterDataApi();
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "reset-admin-edit-draft") {
-        resetAdminEditDraft();
-      }
-      if (action === "reset-master-catalog-filters") {
-        resetMasterCatalogFilters();
-        await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom() });
-      }
-      if (action === "reset-snapshot-filters") {
-        resetSnapshotFilters();
-        await refreshAdminReadOnlyPage({ snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom() });
-      }
-      if (action === "reset-change-log-filters") {
-        resetChangeLogFilters();
-        await refreshAdminChangeLogs({ filters: readChangeLogFiltersFromDom() });
-      }
-      if (action === "save-admin-write-dev-key") {
-        try {
-          saveAdminWriteDevKeyFromInput();
-        } catch (error) {
-          renderAdminWriteKeyStatus();
-        }
-      }
-      if (action === "clear-admin-write-dev-key") {
-        clearAdminWriteDevKey();
-      }
-      if (action === "save-api-base-url") {
-        try {
-          saveApiBaseUrlFromInput();
-          await refreshAdminReadOnlyPage();
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "reset-api-base-url") {
-        try {
-          resetApiBaseUrl();
-          await refreshAdminReadOnlyPage();
-        } catch (error) {
-          renderError(error);
-        }
-      }
-      if (action === "copy-admin-url") {
-        await copyCurrentAdminPageUrl();
-      }
+      await handleAdminClickAction(button, button.getAttribute("data-admin-action"));
     });
   }
 
@@ -2534,6 +2714,8 @@ async function openAdminMasterDataDetail(...args) {
     const overviewSnapshotsExternalReady = !!(overviewSnapshotsExternal && overviewSnapshotsExternal.ok && overviewSnapshotsExternal.version === "v193.admin-overview-snapshots-split");
     const bootstrapBinding = typeof getAdminBootstrapBindingReadiness === "function" ? getAdminBootstrapBindingReadiness() : { ok: false };
     const bootstrapBindingReady = !!(bootstrapBinding && bootstrapBinding.ok && bootstrapBinding.status === "contract-frozen-v194" && typeof renderAdminBootstrapBindingReadiness === "function");
+    const thinEntryCleanup = typeof getAdminThinEntryCleanupReadiness === "function" ? getAdminThinEntryCleanupReadiness() : { ok: false };
+    const thinEntryCleanupReady = !!(thinEntryCleanup && thinEntryCleanup.ok && thinEntryCleanup.status === "cleaned-v195" && typeof renderAdminThinEntryCleanupReadiness === "function");
     const changeLogs = typeof getAdminChangeLogsReadiness === "function" ? getAdminChangeLogsReadiness() : { ok: false };
     const changeLogsExternalReady = !!(changeLogs && changeLogs.ok && changeLogs.version === "v187.admin-change-logs-split");
     const createLifecycle = typeof getAdminCreateLifecycleReadiness === "function" ? getAdminCreateLifecycleReadiness() : { ok: false };
@@ -2556,255 +2738,275 @@ async function openAdminMasterDataDetail(...args) {
     const createDeleteRollbackReady = typeof previewAdminCreateDeleteRollback === "function" && typeof applyAdminCreateDeleteRollback === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRollback === "function");
     const createDeleteRestoreReady = typeof previewAdminCreateDeleteRestore === "function" && typeof applyAdminCreateDeleteRestore === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRestore === "function");
     const layoutShell = getAdminLayoutShellReadiness();
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && adminJsSplitReadinessReady && changeLogSplitContractReady && createLifecycleSplitContractReady && editDraftSplitContractReady && editDraftExternalReady && createLifecycleExternalReady && masterCatalogExternalReady && overviewSnapshotsExternalReady && bootstrapBindingReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createLifecycleBatchCheckReady, adminJsSplitReadinessReady, adminJsSplitReadiness, changeLogSplitContractReady, changeLogSplitContract, createLifecycleSplitContractReady, createLifecycleSplitContract, editDraftSplitContractReady, editDraftSplitContract, editDraftExternalReady, editDraftExternal, masterCatalogExternalReady, masterCatalogExternal, overviewSnapshotsExternalReady, overviewSnapshotsExternal, bootstrapBindingReady, bootstrapBinding, changeLogsExternalReady, changeLogs, createLifecycleExternalReady, createLifecycle, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && adminJsSplitReadinessReady && changeLogSplitContractReady && createLifecycleSplitContractReady && editDraftSplitContractReady && editDraftExternalReady && createLifecycleExternalReady && masterCatalogExternalReady && overviewSnapshotsExternalReady && bootstrapBindingReady && thinEntryCleanupReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createLifecycleBatchCheckReady, adminJsSplitReadinessReady, adminJsSplitReadiness, changeLogSplitContractReady, changeLogSplitContract, createLifecycleSplitContractReady, createLifecycleSplitContract, editDraftSplitContractReady, editDraftSplitContract, editDraftExternalReady, editDraftExternal, masterCatalogExternalReady, masterCatalogExternal, overviewSnapshotsExternalReady, overviewSnapshotsExternal, bootstrapBindingReady, bootstrapBinding, thinEntryCleanupReady, thinEntryCleanup, changeLogsExternalReady, changeLogs, createLifecycleExternalReady, createLifecycle, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
 
-  window.RpgAdminReadOnlyPage = {
-    VERSION,
-    refreshAdminReadOnlyPage,
-    fetchAdminReadOnlyPageData,
-    saveApiBaseUrlFromInput,
-    resetApiBaseUrl,
-    getCurrentAdminPageUrl,
-    getGamePageUrl,
-    syncLocationHints,
-    copyCurrentAdminPageUrl,
-    readSnapshotFiltersFromDom,
-    resetSnapshotFilters,
-    describeSnapshotFilters,
-    getAdminOverviewSnapshotsExternalReadiness,
-    readMasterCatalogFiltersFromDom,
-    resetMasterCatalogFilters,
-    describeMasterCatalogFilters,
-    readChangeLogFiltersFromDom,
-    resetChangeLogFilters,
-    describeChangeLogFilters,
-    readAdminCreateBlueprintFiltersFromDom,
-    syncAdminCreateDomainFromCatalog,
-    refreshAdminCreateBlueprint,
-    renderAdminCreateBlueprint,
-    getAdminCreateBlueprintFieldInputKind,
-    getAdminCreateBlueprintRequiredKeys,
-    getAdminCreateBlueprintDefaultDraft,
-    getAdminCreateBlueprintReadiness,
-    renderAdminCreateLifecycleGuide,
-    renderAdminCreateLifecycleDependencyGuards,
-    renderAdminCreateLifecycleBatchResult,
-    runAdminCreateLifecycleBatchCheck,
-    applyAdminChangeLogActionShortcut,
-    getAdminCreateLifecycleGuideReadiness,
-    getAdminJsSplitReadiness,
-    renderAdminJsSplitReadiness,
-    getAdminChangeLogSplitContractReadiness,
-    renderAdminChangeLogSplitContractReadiness,
-    getAdminCreateLifecycleSplitContractReadiness,
-    renderAdminCreateLifecycleSplitContractReadiness,
-    getAdminEditDraftSplitContractReadiness,
-    renderAdminEditDraftSplitContractReadiness,
-    getAdminBootstrapBindingReadiness,
-    renderAdminBootstrapBindingReadiness,
-    getAdminChangeLogsReadiness,
-    getAdminCreateLifecycleReadiness,
-    getAdminEditDraftExternalReadiness,
-    getAdminMasterCatalogExternalReadiness,
-    readAdminCreateDraftValues,
-    resetAdminCreateDraft,
-    previewAdminCreateDraft,
-    applyAdminCreateDraft,
-    renderAdminCreatePreviewResult,
-    getAdminCreateFieldDefinition,
-    getAdminCreateRelationDefinition,
-    applyAdminCreateRelationOptionFilter,
-    refreshDependentAdminCreateRelationSelects,
-    openAdminMasterDataDetail,
-    openAdminMasterDataDetailByCode,
-    openAdminMasterDataRelations,
-    renderMasterDetail,
-    renderMasterRelations,
-    renderMasterEditDraft,
-    readAdminEditDraftValues,
-    resetAdminEditDraft,
-    previewAdminEditDraft,
-    applyAdminEditDraft,
-    renderAdminEditPreviewResult,
-    readAdminEditApplyControls,
-    buildAdminEditImpactGuide,
-    renderAdminEditDraftReview,
-    buildAdminEditDraftReview,
-    sortAdminChangesByRisk,
-    renderAdminEditImpactGuide,
-    refreshAdminEditImpactGuide,
-    getAdminEditDraftReadiness,
-    refreshAdminChangeLogs,
-    renderAdminChangeLogs,
-    openAdminChangeLogDetail,
-    renderAdminChangeLogDetail,
-    previewAdminChangeLogRollback,
-    applyAdminChangeLogRollback,
-    readAdminRollbackControls,
-    renderAdminRollbackResult,
-    previewAdminCreateDeleteRollback,
-    applyAdminCreateDeleteRollback,
-    readAdminCreateDeleteControls,
-    renderAdminCreateDeleteResult,
-    previewAdminCreateDeleteRestore,
-    applyAdminCreateDeleteRestore,
-    readAdminCreateDeleteRestoreControls,
-    renderAdminCreateDeleteRestoreResult,
-    syncAdminWriteDevKeyInput,
-    saveAdminWriteDevKeyFromInput,
-    clearAdminWriteDevKey,
-    hasAdminWriteDevKey,
-    verifySelectedMasterDataApi,
-    runPostWriteMasterApiVerification,
-    renderMasterApiVerifyResult,
-    findMasterApiRow,
-    buildMasterApiVerifyComparisons,
-    getAdminFieldHelp,
-    listAdminFieldHelp,
-    getAdminFieldValueHint,
-    renderFieldValueHintInline,
-    isAdminEditApplyAllowedField,
-    getAdminEditAllowedFields,
-    getAdminDraftFieldInputKind,
-    getAdminDraftSelectOptions,
-    getAdminRelationEditOptionDefinitions,
-    getAdminRelationEditOptionDefinition,
-    isAdminRelationEditField,
-    getAdminRelationComboGuardLabels,
-    refreshDependentAdminRelationSelects,
-    applyAdminRelationOptionFilter,
-    clearAdminRelationOptionFilter,
-    filterAdminDraftSelectOptions,
-    renderAdminDraftSelectOptionsHtml,
-    getAdminRelationSelectMetaText,
-    renderAdminRelationEditOptionsNote,
-    getAdminEquipSlotDisplayName,
-    getAdminDraftFieldRisk,
-    getAdminRelationOpenTarget,
-    getAdminChangeRelationInfo,
-    getAdminRelationOpenTargetFromChange,
-    renderAdminRollbackMismatchValueCell,
-    getAdminDraftLockedReason,
-    initializeAdminLayoutShell,
-    getAdminLayoutShellReadiness,
-    setAdminSectionCollapsed,
-    setAdminActiveSidebarLink,
-    checkAdminReadOnlyPageReady,
-  };
-  window.refreshAdminReadOnlyPage = refreshAdminReadOnlyPage;
-  window.fetchAdminReadOnlyPageData = fetchAdminReadOnlyPageData;
-  window.readAdminSnapshotFilters = readSnapshotFiltersFromDom;
-  window.resetAdminSnapshotFilters = resetSnapshotFilters;
-  window.getAdminOverviewSnapshotsExternalReadiness = getAdminOverviewSnapshotsExternalReadiness;
-  window.readAdminMasterCatalogFilters = readMasterCatalogFiltersFromDom;
-  window.resetAdminMasterCatalogFilters = resetMasterCatalogFilters;
-  window.readAdminChangeLogFilters = readChangeLogFiltersFromDom;
-  window.resetAdminChangeLogFilters = resetChangeLogFilters;
-  window.readAdminCreateBlueprintFilters = readAdminCreateBlueprintFiltersFromDom;
-  window.syncAdminCreateDomainFromCatalog = syncAdminCreateDomainFromCatalog;
-  window.refreshAdminCreateBlueprint = refreshAdminCreateBlueprint;
-  window.getAdminCreateBlueprintFieldInputKind = getAdminCreateBlueprintFieldInputKind;
-  window.getAdminCreateBlueprintRequiredKeys = getAdminCreateBlueprintRequiredKeys;
-  window.getAdminCreateBlueprintDefaultDraft = getAdminCreateBlueprintDefaultDraft;
-  window.getAdminCreateBlueprintReadiness = getAdminCreateBlueprintReadiness;
-  window.renderAdminCreateLifecycleGuide = renderAdminCreateLifecycleGuide;
-  window.renderAdminCreateLifecycleBatchResult = renderAdminCreateLifecycleBatchResult;
-  window.runAdminCreateLifecycleBatchCheck = runAdminCreateLifecycleBatchCheck;
-  window.getAdminCreateLifecycleGuideReadiness = getAdminCreateLifecycleGuideReadiness;
-  window.getAdminJsSplitReadiness = getAdminJsSplitReadiness;
-  window.renderAdminJsSplitReadiness = renderAdminJsSplitReadiness;
-  window.getAdminChangeLogSplitContractReadiness = getAdminChangeLogSplitContractReadiness;
-  window.renderAdminChangeLogSplitContractReadiness = renderAdminChangeLogSplitContractReadiness;
-  window.getAdminCreateLifecycleSplitContractReadiness = getAdminCreateLifecycleSplitContractReadiness;
-  window.renderAdminCreateLifecycleSplitContractReadiness = renderAdminCreateLifecycleSplitContractReadiness;
-  window.getAdminEditDraftSplitContractReadiness = getAdminEditDraftSplitContractReadiness;
-  window.renderAdminEditDraftSplitContractReadiness = renderAdminEditDraftSplitContractReadiness;
-  window.getAdminBootstrapBindingReadiness = getAdminBootstrapBindingReadiness;
-  window.renderAdminBootstrapBindingReadiness = renderAdminBootstrapBindingReadiness;
-  window.getAdminChangeLogsReadiness = getAdminChangeLogsReadiness;
-  window.getAdminCreateLifecycleReadiness = getAdminCreateLifecycleReadiness;
-  window.getAdminEditDraftExternalReadiness = getAdminEditDraftExternalReadiness;
-  window.getAdminMasterCatalogExternalReadiness = getAdminMasterCatalogExternalReadiness;
-  window.readAdminCreateDraftValues = readAdminCreateDraftValues;
-  window.resetAdminCreateDraft = resetAdminCreateDraft;
-  window.previewAdminCreateDraft = previewAdminCreateDraft;
-  window.applyAdminCreateDraft = applyAdminCreateDraft;
-  window.getAdminCreateFieldDefinition = getAdminCreateFieldDefinition;
-  window.getAdminCreateRelationDefinition = getAdminCreateRelationDefinition;
-  window.applyAdminCreateRelationOptionFilter = applyAdminCreateRelationOptionFilter;
-  window.refreshDependentAdminCreateRelationSelects = refreshDependentAdminCreateRelationSelects;
-  window.refreshAdminChangeLogs = refreshAdminChangeLogs;
-  window.openAdminMasterDataDetail = openAdminMasterDataDetail;
-  window.openAdminMasterDataDetailByCode = openAdminMasterDataDetailByCode;
-  window.openAdminMasterDataRelations = openAdminMasterDataRelations;
-  window.checkAdminReadOnlyPageReady = checkAdminReadOnlyPageReady;
-  window.initializeAdminLayoutShell = initializeAdminLayoutShell;
-  window.getAdminLayoutShellReadiness = getAdminLayoutShellReadiness;
-  window.getAdminDefaultCollapsedSectionKeys = getAdminDefaultCollapsedSectionKeys;
-  window.updateAdminStickyLayoutOffsets = updateAdminStickyLayoutOffsets;
-  window.setAdminSectionCollapsed = setAdminSectionCollapsed;
-  window.setAdminActiveSidebarLink = setAdminActiveSidebarLink;
-  window.getAdminEditDraftReadiness = getAdminEditDraftReadiness;
-  window.syncAdminWriteDevKeyInput = syncAdminWriteDevKeyInput;
-  window.saveAdminWriteDevKeyFromInput = saveAdminWriteDevKeyFromInput;
-  window.clearAdminWriteDevKey = clearAdminWriteDevKey;
-  window.hasAdminWriteDevKey = hasAdminWriteDevKey;
-  window.readAdminEditDraftValues = readAdminEditDraftValues;
-  window.resetAdminEditDraft = resetAdminEditDraft;
-  window.previewAdminEditDraft = previewAdminEditDraft;
-  window.buildAdminEditImpactGuide = buildAdminEditImpactGuide;
-  window.refreshAdminEditImpactGuide = refreshAdminEditImpactGuide;
-  window.getAdminFieldHelp = getAdminFieldHelp;
-  window.listAdminFieldHelp = listAdminFieldHelp;
-  window.getAdminFieldValueHint = getAdminFieldValueHint;
-  window.getAdminDraftFieldInputKind = getAdminDraftFieldInputKind;
-  window.getAdminDraftSelectOptions = getAdminDraftSelectOptions;
-  window.getAdminRelationEditOptionDefinitions = getAdminRelationEditOptionDefinitions;
-  window.getAdminRelationEditOptionDefinition = getAdminRelationEditOptionDefinition;
-  window.isAdminRelationEditField = isAdminRelationEditField;
-  window.getAdminEquipSlotDisplayName = getAdminEquipSlotDisplayName;
-  window.markSelectedMasterCatalogRow = markSelectedMasterCatalogRow;
-  window.getAdminDraftFieldRisk = getAdminDraftFieldRisk;
-  window.refreshDependentAdminRelationSelects = refreshDependentAdminRelationSelects;
-  window.applyAdminRelationOptionFilter = applyAdminRelationOptionFilter;
-  window.clearAdminRelationOptionFilter = clearAdminRelationOptionFilter;
-  window.filterAdminDraftSelectOptions = filterAdminDraftSelectOptions;
-  window.getAdminRelationSelectMetaText = getAdminRelationSelectMetaText;
-  window.getAdminRelationComboGuardLabels = getAdminRelationComboGuardLabels;
-  window.getAdminDraftLockedReason = getAdminDraftLockedReason;
-  window.buildAdminEditDraftReview = buildAdminEditDraftReview;
-  window.sortAdminChangesByRisk = sortAdminChangesByRisk;
-  window.formatAdminChangeAfterValue = formatAdminChangeAfterValue;
-  window.formatAdminChangeValueText = formatAdminChangeValueText;
-  window.getAdminRelationValueDisplay = getAdminRelationValueDisplay;
-  window.getAdminRelationOpenTarget = getAdminRelationOpenTarget;
-  window.getAdminChangeRelationInfo = getAdminChangeRelationInfo;
-  window.getAdminRelationOpenTargetFromChange = getAdminRelationOpenTargetFromChange;
-  window.renderAdminRollbackMismatchValueCell = renderAdminRollbackMismatchValueCell;
-  window.getCurrentAdminPageUrl = getCurrentAdminPageUrl;
-  window.copyCurrentAdminPageUrl = copyCurrentAdminPageUrl;
-  window.openAdminChangeLogDetail = openAdminChangeLogDetail;
-  window.previewAdminChangeLogRollback = previewAdminChangeLogRollback;
-  window.applyAdminChangeLogRollback = applyAdminChangeLogRollback;
-  window.readAdminRollbackControls = readAdminRollbackControls;
-  window.previewAdminCreateDeleteRollback = previewAdminCreateDeleteRollback;
-  window.applyAdminCreateDeleteRollback = applyAdminCreateDeleteRollback;
-  window.readAdminCreateDeleteControls = readAdminCreateDeleteControls;
-  window.previewAdminCreateDeleteRestore = previewAdminCreateDeleteRestore;
-  window.applyAdminCreateDeleteRestore = applyAdminCreateDeleteRestore;
-  window.readAdminCreateDeleteRestoreControls = readAdminCreateDeleteRestoreControls;
-  window.renderAdminCreateDeleteRestoreResult = renderAdminCreateDeleteRestoreResult;
-  window.verifySelectedMasterDataApi = verifySelectedMasterDataApi;
-  window.runPostWriteMasterApiVerification = runPostWriteMasterApiVerification;
+  function registerAdminReadOnlyPageExports() {
+    window.RpgAdminReadOnlyPage = {
+      VERSION,
+      refreshAdminReadOnlyPage,
+      fetchAdminReadOnlyPageData,
+      saveApiBaseUrlFromInput,
+      resetApiBaseUrl,
+      getCurrentAdminPageUrl,
+      getGamePageUrl,
+      syncLocationHints,
+      copyCurrentAdminPageUrl,
+      readSnapshotFiltersFromDom,
+      resetSnapshotFilters,
+      describeSnapshotFilters,
+      getAdminOverviewSnapshotsExternalReadiness,
+      readMasterCatalogFiltersFromDom,
+      resetMasterCatalogFilters,
+      describeMasterCatalogFilters,
+      readChangeLogFiltersFromDom,
+      resetChangeLogFilters,
+      describeChangeLogFilters,
+      readAdminCreateBlueprintFiltersFromDom,
+      syncAdminCreateDomainFromCatalog,
+      refreshAdminCreateBlueprint,
+      renderAdminCreateBlueprint,
+      getAdminCreateBlueprintFieldInputKind,
+      getAdminCreateBlueprintRequiredKeys,
+      getAdminCreateBlueprintDefaultDraft,
+      getAdminCreateBlueprintReadiness,
+      renderAdminCreateLifecycleGuide,
+      renderAdminCreateLifecycleDependencyGuards,
+      renderAdminCreateLifecycleBatchResult,
+      runAdminCreateLifecycleBatchCheck,
+      applyAdminChangeLogActionShortcut,
+      getAdminCreateLifecycleGuideReadiness,
+      getAdminJsSplitReadiness,
+      renderAdminJsSplitReadiness,
+      getAdminChangeLogSplitContractReadiness,
+      renderAdminChangeLogSplitContractReadiness,
+      getAdminCreateLifecycleSplitContractReadiness,
+      renderAdminCreateLifecycleSplitContractReadiness,
+      getAdminEditDraftSplitContractReadiness,
+      renderAdminEditDraftSplitContractReadiness,
+      getAdminBootstrapBindingReadiness,
+      renderAdminBootstrapBindingReadiness,
+      getAdminThinEntryCleanupReadiness,
+      renderAdminThinEntryCleanupReadiness,
+      getAdminClickActionHandlers,
+      handleAdminClickAction,
+      registerAdminReadOnlyPageExports,
+      configureAdminExternalModules,
+      getAdminChangeLogsReadiness,
+      getAdminCreateLifecycleReadiness,
+      getAdminEditDraftExternalReadiness,
+      getAdminMasterCatalogExternalReadiness,
+      readAdminCreateDraftValues,
+      resetAdminCreateDraft,
+      previewAdminCreateDraft,
+      applyAdminCreateDraft,
+      renderAdminCreatePreviewResult,
+      getAdminCreateFieldDefinition,
+      getAdminCreateRelationDefinition,
+      applyAdminCreateRelationOptionFilter,
+      refreshDependentAdminCreateRelationSelects,
+      openAdminMasterDataDetail,
+      openAdminMasterDataDetailByCode,
+      openAdminMasterDataRelations,
+      renderMasterDetail,
+      renderMasterRelations,
+      renderMasterEditDraft,
+      readAdminEditDraftValues,
+      resetAdminEditDraft,
+      previewAdminEditDraft,
+      applyAdminEditDraft,
+      renderAdminEditPreviewResult,
+      readAdminEditApplyControls,
+      buildAdminEditImpactGuide,
+      renderAdminEditDraftReview,
+      buildAdminEditDraftReview,
+      sortAdminChangesByRisk,
+      renderAdminEditImpactGuide,
+      refreshAdminEditImpactGuide,
+      getAdminEditDraftReadiness,
+      refreshAdminChangeLogs,
+      renderAdminChangeLogs,
+      openAdminChangeLogDetail,
+      renderAdminChangeLogDetail,
+      previewAdminChangeLogRollback,
+      applyAdminChangeLogRollback,
+      readAdminRollbackControls,
+      renderAdminRollbackResult,
+      previewAdminCreateDeleteRollback,
+      applyAdminCreateDeleteRollback,
+      readAdminCreateDeleteControls,
+      renderAdminCreateDeleteResult,
+      previewAdminCreateDeleteRestore,
+      applyAdminCreateDeleteRestore,
+      readAdminCreateDeleteRestoreControls,
+      renderAdminCreateDeleteRestoreResult,
+      syncAdminWriteDevKeyInput,
+      saveAdminWriteDevKeyFromInput,
+      clearAdminWriteDevKey,
+      hasAdminWriteDevKey,
+      verifySelectedMasterDataApi,
+      runPostWriteMasterApiVerification,
+      renderMasterApiVerifyResult,
+      findMasterApiRow,
+      buildMasterApiVerifyComparisons,
+      getAdminFieldHelp,
+      listAdminFieldHelp,
+      getAdminFieldValueHint,
+      renderFieldValueHintInline,
+      isAdminEditApplyAllowedField,
+      getAdminEditAllowedFields,
+      getAdminDraftFieldInputKind,
+      getAdminDraftSelectOptions,
+      getAdminRelationEditOptionDefinitions,
+      getAdminRelationEditOptionDefinition,
+      isAdminRelationEditField,
+      getAdminRelationComboGuardLabels,
+      refreshDependentAdminRelationSelects,
+      applyAdminRelationOptionFilter,
+      clearAdminRelationOptionFilter,
+      filterAdminDraftSelectOptions,
+      renderAdminDraftSelectOptionsHtml,
+      getAdminRelationSelectMetaText,
+      renderAdminRelationEditOptionsNote,
+      getAdminEquipSlotDisplayName,
+      getAdminDraftFieldRisk,
+      getAdminRelationOpenTarget,
+      getAdminChangeRelationInfo,
+      getAdminRelationOpenTargetFromChange,
+      renderAdminRollbackMismatchValueCell,
+      getAdminDraftLockedReason,
+      initializeAdminLayoutShell,
+      getAdminLayoutShellReadiness,
+      setAdminSectionCollapsed,
+      setAdminActiveSidebarLink,
+      checkAdminReadOnlyPageReady,
+    };
+    window.refreshAdminReadOnlyPage = refreshAdminReadOnlyPage;
+    window.fetchAdminReadOnlyPageData = fetchAdminReadOnlyPageData;
+    window.readAdminSnapshotFilters = readSnapshotFiltersFromDom;
+    window.resetAdminSnapshotFilters = resetSnapshotFilters;
+    window.getAdminOverviewSnapshotsExternalReadiness = getAdminOverviewSnapshotsExternalReadiness;
+    window.readAdminMasterCatalogFilters = readMasterCatalogFiltersFromDom;
+    window.resetAdminMasterCatalogFilters = resetMasterCatalogFilters;
+    window.readAdminChangeLogFilters = readChangeLogFiltersFromDom;
+    window.resetAdminChangeLogFilters = resetChangeLogFilters;
+    window.readAdminCreateBlueprintFilters = readAdminCreateBlueprintFiltersFromDom;
+    window.syncAdminCreateDomainFromCatalog = syncAdminCreateDomainFromCatalog;
+    window.refreshAdminCreateBlueprint = refreshAdminCreateBlueprint;
+    window.getAdminCreateBlueprintFieldInputKind = getAdminCreateBlueprintFieldInputKind;
+    window.getAdminCreateBlueprintRequiredKeys = getAdminCreateBlueprintRequiredKeys;
+    window.getAdminCreateBlueprintDefaultDraft = getAdminCreateBlueprintDefaultDraft;
+    window.getAdminCreateBlueprintReadiness = getAdminCreateBlueprintReadiness;
+    window.renderAdminCreateLifecycleGuide = renderAdminCreateLifecycleGuide;
+    window.renderAdminCreateLifecycleBatchResult = renderAdminCreateLifecycleBatchResult;
+    window.runAdminCreateLifecycleBatchCheck = runAdminCreateLifecycleBatchCheck;
+    window.getAdminCreateLifecycleGuideReadiness = getAdminCreateLifecycleGuideReadiness;
+    window.getAdminJsSplitReadiness = getAdminJsSplitReadiness;
+    window.renderAdminJsSplitReadiness = renderAdminJsSplitReadiness;
+    window.getAdminChangeLogSplitContractReadiness = getAdminChangeLogSplitContractReadiness;
+    window.renderAdminChangeLogSplitContractReadiness = renderAdminChangeLogSplitContractReadiness;
+    window.getAdminCreateLifecycleSplitContractReadiness = getAdminCreateLifecycleSplitContractReadiness;
+    window.renderAdminCreateLifecycleSplitContractReadiness = renderAdminCreateLifecycleSplitContractReadiness;
+    window.getAdminEditDraftSplitContractReadiness = getAdminEditDraftSplitContractReadiness;
+    window.renderAdminEditDraftSplitContractReadiness = renderAdminEditDraftSplitContractReadiness;
+    window.getAdminBootstrapBindingReadiness = getAdminBootstrapBindingReadiness;
+    window.renderAdminBootstrapBindingReadiness = renderAdminBootstrapBindingReadiness;
+    window.getAdminThinEntryCleanupReadiness = getAdminThinEntryCleanupReadiness;
+    window.renderAdminThinEntryCleanupReadiness = renderAdminThinEntryCleanupReadiness;
+    window.getAdminClickActionHandlers = getAdminClickActionHandlers;
+    window.handleAdminClickAction = handleAdminClickAction;
+    window.registerAdminReadOnlyPageExports = registerAdminReadOnlyPageExports;
+    window.configureAdminExternalModules = configureAdminExternalModules;
+    window.getAdminChangeLogsReadiness = getAdminChangeLogsReadiness;
+    window.getAdminCreateLifecycleReadiness = getAdminCreateLifecycleReadiness;
+    window.getAdminEditDraftExternalReadiness = getAdminEditDraftExternalReadiness;
+    window.getAdminMasterCatalogExternalReadiness = getAdminMasterCatalogExternalReadiness;
+    window.readAdminCreateDraftValues = readAdminCreateDraftValues;
+    window.resetAdminCreateDraft = resetAdminCreateDraft;
+    window.previewAdminCreateDraft = previewAdminCreateDraft;
+    window.applyAdminCreateDraft = applyAdminCreateDraft;
+    window.getAdminCreateFieldDefinition = getAdminCreateFieldDefinition;
+    window.getAdminCreateRelationDefinition = getAdminCreateRelationDefinition;
+    window.applyAdminCreateRelationOptionFilter = applyAdminCreateRelationOptionFilter;
+    window.refreshDependentAdminCreateRelationSelects = refreshDependentAdminCreateRelationSelects;
+    window.refreshAdminChangeLogs = refreshAdminChangeLogs;
+    window.openAdminMasterDataDetail = openAdminMasterDataDetail;
+    window.openAdminMasterDataDetailByCode = openAdminMasterDataDetailByCode;
+    window.openAdminMasterDataRelations = openAdminMasterDataRelations;
+    window.checkAdminReadOnlyPageReady = checkAdminReadOnlyPageReady;
+    window.initializeAdminLayoutShell = initializeAdminLayoutShell;
+    window.getAdminLayoutShellReadiness = getAdminLayoutShellReadiness;
+    window.getAdminDefaultCollapsedSectionKeys = getAdminDefaultCollapsedSectionKeys;
+    window.updateAdminStickyLayoutOffsets = updateAdminStickyLayoutOffsets;
+    window.setAdminSectionCollapsed = setAdminSectionCollapsed;
+    window.setAdminActiveSidebarLink = setAdminActiveSidebarLink;
+    window.getAdminEditDraftReadiness = getAdminEditDraftReadiness;
+    window.syncAdminWriteDevKeyInput = syncAdminWriteDevKeyInput;
+    window.saveAdminWriteDevKeyFromInput = saveAdminWriteDevKeyFromInput;
+    window.clearAdminWriteDevKey = clearAdminWriteDevKey;
+    window.hasAdminWriteDevKey = hasAdminWriteDevKey;
+    window.readAdminEditDraftValues = readAdminEditDraftValues;
+    window.resetAdminEditDraft = resetAdminEditDraft;
+    window.previewAdminEditDraft = previewAdminEditDraft;
+    window.buildAdminEditImpactGuide = buildAdminEditImpactGuide;
+    window.refreshAdminEditImpactGuide = refreshAdminEditImpactGuide;
+    window.getAdminFieldHelp = getAdminFieldHelp;
+    window.listAdminFieldHelp = listAdminFieldHelp;
+    window.getAdminFieldValueHint = getAdminFieldValueHint;
+    window.getAdminDraftFieldInputKind = getAdminDraftFieldInputKind;
+    window.getAdminDraftSelectOptions = getAdminDraftSelectOptions;
+    window.getAdminRelationEditOptionDefinitions = getAdminRelationEditOptionDefinitions;
+    window.getAdminRelationEditOptionDefinition = getAdminRelationEditOptionDefinition;
+    window.isAdminRelationEditField = isAdminRelationEditField;
+    window.getAdminEquipSlotDisplayName = getAdminEquipSlotDisplayName;
+    window.markSelectedMasterCatalogRow = markSelectedMasterCatalogRow;
+    window.getAdminDraftFieldRisk = getAdminDraftFieldRisk;
+    window.refreshDependentAdminRelationSelects = refreshDependentAdminRelationSelects;
+    window.applyAdminRelationOptionFilter = applyAdminRelationOptionFilter;
+    window.clearAdminRelationOptionFilter = clearAdminRelationOptionFilter;
+    window.filterAdminDraftSelectOptions = filterAdminDraftSelectOptions;
+    window.getAdminRelationSelectMetaText = getAdminRelationSelectMetaText;
+    window.getAdminRelationComboGuardLabels = getAdminRelationComboGuardLabels;
+    window.getAdminDraftLockedReason = getAdminDraftLockedReason;
+    window.buildAdminEditDraftReview = buildAdminEditDraftReview;
+    window.sortAdminChangesByRisk = sortAdminChangesByRisk;
+    window.formatAdminChangeAfterValue = formatAdminChangeAfterValue;
+    window.formatAdminChangeValueText = formatAdminChangeValueText;
+    window.getAdminRelationValueDisplay = getAdminRelationValueDisplay;
+    window.getAdminRelationOpenTarget = getAdminRelationOpenTarget;
+    window.getAdminChangeRelationInfo = getAdminChangeRelationInfo;
+    window.getAdminRelationOpenTargetFromChange = getAdminRelationOpenTargetFromChange;
+    window.renderAdminRollbackMismatchValueCell = renderAdminRollbackMismatchValueCell;
+    window.getCurrentAdminPageUrl = getCurrentAdminPageUrl;
+    window.copyCurrentAdminPageUrl = copyCurrentAdminPageUrl;
+    window.openAdminChangeLogDetail = openAdminChangeLogDetail;
+    window.previewAdminChangeLogRollback = previewAdminChangeLogRollback;
+    window.applyAdminChangeLogRollback = applyAdminChangeLogRollback;
+    window.readAdminRollbackControls = readAdminRollbackControls;
+    window.previewAdminCreateDeleteRollback = previewAdminCreateDeleteRollback;
+    window.applyAdminCreateDeleteRollback = applyAdminCreateDeleteRollback;
+    window.readAdminCreateDeleteControls = readAdminCreateDeleteControls;
+    window.previewAdminCreateDeleteRestore = previewAdminCreateDeleteRestore;
+    window.applyAdminCreateDeleteRestore = applyAdminCreateDeleteRestore;
+    window.readAdminCreateDeleteRestoreControls = readAdminCreateDeleteRestoreControls;
+    window.renderAdminCreateDeleteRestoreResult = renderAdminCreateDeleteRestoreResult;
+    window.verifySelectedMasterDataApi = verifySelectedMasterDataApi;
+    window.runPostWriteMasterApiVerification = runPostWriteMasterApiVerification;
 
-  configureAdminOverviewSnapshots();
-  configureAdminMasterCatalog();
-  configureAdminEditDraft();
-  configureAdminCreateLifecycle();
-  configureAdminChangeLogs();
+  }
+
+  function configureAdminExternalModules() {
+    configureAdminOverviewSnapshots();
+    configureAdminMasterCatalog();
+    configureAdminEditDraft();
+    configureAdminCreateLifecycle();
+    configureAdminChangeLogs();
+  }
+
+  registerAdminReadOnlyPageExports();
+  configureAdminExternalModules();
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", bootAdminReadOnlyPage, { once: true });

@@ -1,14 +1,20 @@
-# Upgrade RPG v194 패키지
+# Upgrade RPG v195 패키지
 
-현재 안정 버전: **v194 admin bootstrap/bindEvents readiness**
+현재 안정 버전: **v195 admin thin entry cleanup**
 
-새 채팅 인수인계 ZIP: **rpg_v194_admin_bootstrap_bindings_readiness_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v195_admin_thin_entry_cleanup_ready.zip**
 
 ## 요약
 
-v194에서는 `admin-page-readonly.js`를 바로 더 크게 분리하지 않고, 마지막 entry 파일에 남아 있는 **bootstrap / bindEvents / window export** 역할을 계약으로 고정했습니다.
+v195에서는 `admin-page-readonly.js`를 마지막 연결 파일처럼 유지하면서, 내부 흐름을 더 얇게 정리했습니다.
 
-새 파일 분리는 없습니다.
+새 기능 이동보다는 아래 안정화에 집중했습니다.
+
+- click action 처리 중앙화
+- window export 등록 묶음화
+- 외부 관리자 모듈 configure 순서 묶음화
+- thin entry readiness 추가
+- 기존 `data-admin-action` 값과 기존 window 함수명 유지
 
 ## 현재 관리자 JS 분리 상태
 
@@ -19,15 +25,18 @@ v194에서는 `admin-page-readonly.js`를 바로 더 크게 분리하지 않고,
 - `src/api/admin/admin-edit-draft.js` — v191 분리 완료
 - `src/api/admin/admin-master-catalog.js` — v192 분리 완료
 - `src/api/admin/admin-overview-snapshots.js` — v193 분리 완료
-- `src/api/admin-page-readonly.js` — v194 기준 bootstrap/bindEvents/window wrapper 중심 thin entry 계약 고정
+- `src/api/admin-page-readonly.js` — v195 기준 thin entry cleanup 완료
 
-## v194에서 고정한 것
+## v195에서 정리한 것
 
-- boot 순서
-- delegated event action map
-- window export 호환 목록
-- 외부 모듈 configure 순서
-- readiness aggregation 진단
+- `getAdminClickActionHandlers()` 추가
+- `handleAdminClickAction()` 추가
+- `registerAdminReadOnlyPageExports()` 추가
+- `configureAdminExternalModules()` 추가
+- `getAdminThinEntryCleanupReadiness()` 추가
+- `renderAdminThinEntryCleanupReadiness()` 추가
+- `checkAdminReadOnlyPageReady().thinEntryCleanupReady` 추가
+- `tools/smoke_admin_thin_entry_cleanup.js` 추가
 
 ## 브라우저 확인
 
@@ -38,11 +47,11 @@ checkAdminReadOnlyPageReady().version
 예상값:
 
 ```txt
-v194.admin-bootstrap-bindings-readiness
+v195.admin-thin-entry-cleanup
 ```
 
 ```js
-checkAdminReadOnlyPageReady().bootstrapBindingReady
+checkAdminReadOnlyPageReady().thinEntryCleanupReady
 ```
 
 예상값:
@@ -52,13 +61,13 @@ true
 ```
 
 ```js
-getAdminBootstrapBindingReadiness().status
+getAdminThinEntryCleanupReadiness().status
 ```
 
 예상값:
 
 ```txt
-contract-frozen-v194
+cleaned-v195
 ```
 
 ## 검증
