@@ -7,7 +7,7 @@ from typing import Any
 ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
     "version": "v198.backend-admin-service-split-contract",
     "status": "contract-frozen-v198",
-    "splitStatus": "admin-route-params-errors-v210",
+    "splitStatus": "admin-route-data-meta-helpers-v212",
     "extractedFiles": [
         "backend/app/services/admin/admin_overview_snapshots_service.py",
         "backend/app/services/admin/admin_master_catalog_service.py",
@@ -20,6 +20,8 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "backend/app/api/routes/admin_response_helpers.py",
         "backend/app/api/routes/admin_route_params.py",
         "backend/app/api/routes/admin_route_error_helpers.py",
+        "backend/app/api/routes/admin_response_data_helpers.py",
+        "backend/app/api/routes/admin_response_meta_helpers.py",
     ],
     "currentFile": "backend/app/services/admin_service.py",
     "facadeFile": "backend/app/services/admin_service.py",
@@ -204,6 +206,20 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
             "publicMethods": [],
             "helperMethods": [],
         },
+        {
+            "key": "route-response-data",
+            "label": "Admin route response data builders",
+            "candidateFile": "backend/app/api/routes/admin_response_data_helpers.py",
+            "publicMethods": [],
+            "helperMethods": [],
+        },
+        {
+            "key": "route-response-meta",
+            "label": "Admin route response metadata builders",
+            "candidateFile": "backend/app/api/routes/admin_response_meta_helpers.py",
+            "publicMethods": [],
+            "helperMethods": [],
+        },
     ],
     "facadeMustKeep": [
         "AdminService",
@@ -221,9 +237,11 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT",
     ],
     "routeContract": [
-        "No route path changes in v210",
-        "No schema changes in v210",
+        "No route path changes in v212",
+        "No schema changes in v212",
         "Admin route responses go through admin_ok_response helper",
+        "Admin route response data summaries go through admin_response_data_helpers.py",
+        "Admin route response metadata goes through admin_response_meta_helpers.py",
         "Admin route dependency/query defaults go through admin_route_params.py",
         "Admin route local fallback payloads go through admin_route_error_helpers.py",
         "AdminService remains the facade imported by backend/app/api/routes/admin.py",

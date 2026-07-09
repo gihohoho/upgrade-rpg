@@ -27,7 +27,23 @@ assert_contains(
         "AdminMasterDataCreatePreviewRequest",
         "admin.master_data.create_blueprint",
         "admin.master_data.create_preview",
+        "admin_data.build_master_create_blueprint_data",
+        "admin_data.build_master_create_preview_data",
+    ],
+)
+
+assert_contains(
+    "backend/app/api/routes/admin_response_data_helpers.py",
+    [
         "createApplyReady",
+        "build_master_create_blueprint_data",
+        "build_master_create_preview_data",
+    ],
+)
+
+assert_contains(
+    "backend/app/api/routes/admin_response_meta_helpers.py",
+    [
         "DB를 수정하지 않습니다",
     ],
 )

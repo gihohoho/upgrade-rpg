@@ -1,15 +1,17 @@
-# Next Steps — after v210
+# Next Steps — after v212
 
-다음 추천 단계는 **v211 admin route response data builder 준비**다.
+추천 다음 단계는 **v213 admin route module split preparation** 입니다.
 
-## 추천 순서
+## 추천 작업
 
-1. `backend/app/api/routes/admin_response_data_helpers.py` 생성
-2. `admin.py`의 반복 `data={...}` 요약 생성 중 위험 낮은 부분부터 helper로 이동
-3. route path/schema/API 응답 구조 그대로 유지
-4. static smoke로 route path와 응답 key 보존 확인
-5. 이후 기능별 sub-router 분리 검토
+1. `admin.py`에 남은 기능별 endpoint 묶음 확인
+2. `admin_master_data_routes.py` 분리 후보 준비
+3. `admin_change_log_routes.py` 분리 후보 준비
+4. 기존 API path/schema/envelope 유지 smoke 작성
+5. 첫 분리는 master-data read-only route부터 진행
 
-## 주의
-
-`admin.py`를 바로 여러 파일로 쪼개면 기존 static smoke 영향이 크다. route contract smoke를 먼저 더 강하게 만든 뒤 분리하는 것이 안전하다.
+주의:
+- route path는 유지
+- `AdminService` facade 유지
+- schema 변경 금지
+- DB/env 변경 금지

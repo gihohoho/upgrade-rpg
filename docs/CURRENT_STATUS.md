@@ -1,28 +1,27 @@
-# Current Status — v210
+# Current Status — v212
 
-현재 기준: **v210 backend admin route params/error helpers**
+현재 기준: **v212 backend admin route data/meta helpers**
 
-이 패키지 기준 ZIP: **rpg_v210_backend_admin_route_params_error_helpers_ready.zip**
+이 패키지 기준 ZIP: **rpg_v212_backend_admin_route_data_meta_helpers_ready.zip**
 
-## 관리자 페이지 확인값
+관리자 콘솔 확인값:
 
 ```js
 checkAdminReadOnlyPageReady().version
-// v210.backend-admin-route-params-error-helpers
-
-checkAdminReadOnlyPageReady().backendRouteParamsReady
-// true
-
-checkAdminReadOnlyPageReady().backendRouteErrorHelperReady
-// true
-
-getAdminBackendServiceSplitContractReadiness().splitStatus
-// admin-route-params-errors-v210
+// v212.backend-admin-route-data-meta-helpers
 ```
 
-## 유지 조건
+```js
+checkAdminReadOnlyPageReady().backendRouteResponseDataHelperReady
+// true
+```
 
-- route path 변경 없음
-- schema 변경 없음
-- API 응답 구조 변경 없음
-- DB/env 변경 없음
+```js
+checkAdminReadOnlyPageReady().backendRouteResponseMetaHelperReady
+// true
+```
+
+```js
+getAdminBackendServiceSplitContractReadiness().splitStatus
+// admin-route-data-meta-helpers-v212
+```

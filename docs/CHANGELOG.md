@@ -1,3 +1,12 @@
+## v212 - Backend admin route response data/meta helpers
+
+- `backend/app/api/routes/admin_response_data_helpers.py`를 추가했습니다.
+- `backend/app/api/routes/admin_response_meta_helpers.py`를 추가했습니다.
+- `admin.py`의 반복 `data={...}` / `meta={...}` 응답 생성 코드를 helper로 분리했습니다.
+- `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `admin-route-data-meta-helpers-v212`로 갱신했습니다.
+- `checkAdminReadOnlyPageReady().version`을 `v212.backend-admin-route-data-meta-helpers`로 갱신했습니다.
+- API path/schema/envelope/DB/env 변경은 없습니다.
+
 ## v210 - Backend admin route params/error helpers
 
 - `backend/app/api/routes/admin_route_params.py`를 추가해 관리자 route의 반복 dependency/query 기본값을 한 곳으로 모았습니다.

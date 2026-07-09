@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.routes import admin_response_data_helpers as admin_data
 from app.api.routes.admin_response_helpers import admin_ok_response
+from app.api.routes.admin_response_meta_helpers import admin_route_meta
 from app.api.routes.admin_route_error_helpers import build_admin_change_logs_unavailable_payload
 from app.api.routes.admin_route_params import (
     ADMIN_CURRENT_USER_DEP,
@@ -36,30 +38,18 @@ from app.services.admin_service import AdminService
 router = APIRouter()
 service = AdminService()
 
+# Guarded write-route metadata still documents X-Admin-Dev-Key through
+# backend/app/api/routes/admin_response_meta_helpers.py. Keep this marker here
+# for legacy static smoke tests while route response meta stays centralized.
+# Legacy smoke marker: X-Admin-Dev-Key, 확인 문구, allow-list
+
 
 @router.get("/requirements")
 async def get_admin_requirements(current_user: CurrentUser = ADMIN_CURRENT_USER_DEP):
     """Temporary endpoint documenting the admin scope used for DB/backend design."""
     return admin_ok_response(
         type="admin.requirements",
-        data={
-            "editableDomains": [
-                "characters",
-                "skills",
-                "items",
-                "bosses",
-                "drop_tables",
-                "field_zones",
-                "enhancement_rules",
-                "mailbox_rewards",
-                "events",
-                "users",
-            ],
-            "requiresChangeLog": True,
-            "requiresRollback": True,
-            "readOnlyOverviewReady": True,
-            "adminUserId": current_user.id,
-        },
+        data=admin_data.build_admin_requirements_data(current_user.id),
     )
 
 
@@ -81,16 +71,8 @@ async def get_admin_readonly_overview(
     return admin_ok_response(
         type="admin.overview",
         payload=overview,
-        data={
-            "status": overview["status"],
-            "readOnly": overview["readOnly"],
-            "adminUserId": current_user.id,
-            "readiness": overview.get("readiness"),
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 페이지 준비용 읽기 전용 overview API입니다. DB를 수정하지 않습니다.",
-        },
+        data=admin_data.build_admin_overview_data(overview, current_user.id),
+        meta=admin_route_meta("overview"),
     )
 
 
@@ -104,17 +86,8 @@ async def list_admin_master_catalog_domains(
     return admin_ok_response(
         type="admin.master_data.domains",
         payload=domains,
-        data={
-            "status": domains["status"],
-            "readOnly": domains["readOnly"],
-            "adminUserId": current_user.id,
-            "count": domains["count"],
-            "defaultDomain": domains["defaultDomain"],
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 마스터 데이터 카탈로그 도메인 목록입니다. DB를 수정하지 않습니다.",
-        },
+        data=admin_data.build_master_domains_data(domains, current_user.id),
+        meta=admin_route_meta("master_domains"),
     )
 
 
@@ -145,23 +118,8 @@ async def list_admin_master_catalog_rows(
     return admin_ok_response(
         type="admin.master_data.catalog",
         payload=catalog,
-        data={
-            "status": catalog["status"],
-            "readOnly": catalog["readOnly"],
-            "adminUserId": current_user.id,
-            "domain": catalog["domain"],
-            "count": catalog["count"],
-            "total": catalog["total"],
-            "page": catalog["page"],
-            "totalPages": catalog["totalPages"],
-            "filters": catalog["filters"],
-            "rawJsonReturned": catalog["rawJsonReturned"],
-            "assetsReturned": catalog["assetsReturned"],
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 마스터 데이터 카탈로그 조회 전용 목록입니다. 원본 JSON과 이미지 data URL은 내려주지 않습니다.",
-        },
+        data=admin_data.build_master_catalog_data(catalog, current_user.id),
+        meta=admin_route_meta("master_catalog"),
     )
 
 
@@ -179,25 +137,8 @@ async def get_admin_master_create_blueprint(
     return admin_ok_response(
         type="admin.master_data.create_blueprint",
         payload=blueprint,
-        data={
-            "status": blueprint["status"],
-            "readOnly": blueprint["readOnly"],
-            "createApplyReady": blueprint["createApplyReady"],
-            "createApplyUnlocked": blueprint.get("createApplyUnlocked", False),
-            "insertLocked": blueprint.get("insertLocked", True),
-            "confirmTextRequired": blueprint.get("confirmTextRequired"),
-            "adminUserId": current_user.id,
-            "domain": blueprint["domain"],
-            "fieldCount": blueprint.get("fieldCount", 0),
-            "requiredFields": blueprint.get("requiredFields", []),
-            "relationOptionsReturned": blueprint.get("relationOptionsReturned", False),
-            "rawJsonReturned": blueprint.get("rawJsonReturned", False),
-            "assetsReturned": blueprint.get("assetsReturned", False),
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 신규 row 생성 준비용 blueprint입니다. 일부 제한 도메인만 dev key와 확인 문구로 생성 적용 가능합니다.",
-        },
+        data=admin_data.build_master_create_blueprint_data(blueprint, current_user.id),
+        meta=admin_route_meta("master_create_blueprint"),
     )
 
 
@@ -218,25 +159,8 @@ async def preview_admin_master_data_create(
     return admin_ok_response(
         type="admin.master_data.create_preview",
         payload=preview,
-        data={
-            "status": preview["status"],
-            "readOnly": preview["readOnly"],
-            "dryRun": preview["dryRun"],
-            "writeBlocked": preview["writeBlocked"],
-            "adminUserId": current_user.id,
-            "domain": preview["domain"],
-            "fieldCount": preview.get("fieldCount", 0),
-            "errorCount": preview.get("errorCount", 0),
-            "wouldBeValid": preview.get("wouldBeValid", False),
-            "createApplyReady": preview.get("createApplyReady", False),
-            "createApplyUnlocked": preview.get("createApplyUnlocked", False),
-            "insertLocked": preview.get("insertLocked", True),
-            "confirmTextRequired": preview.get("confirmTextRequired"),
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 신규 row 생성 초안 검증 전용입니다. 이 API 자체는 DB를 수정하지 않고, 제한 도메인의 apply 가능 여부만 알려줍니다.",
-        },
+        data=admin_data.build_master_create_preview_data(preview, current_user.id),
+        meta=admin_route_meta("master_create_preview"),
     )
 
 
@@ -259,24 +183,8 @@ async def apply_admin_master_data_create(
     return admin_ok_response(
         type="admin.master_data.create_apply",
         payload=created,
-        data={
-            "status": created["status"],
-            "readOnly": created.get("readOnly"),
-            "dryRun": created.get("dryRun"),
-            "writeBlocked": created.get("writeBlocked"),
-            "created": created.get("created", False),
-            "adminUserId": current_user.id,
-            "domain": created.get("domain"),
-            "id": created.get("id"),
-            "code": created.get("code"),
-            "fieldCount": created.get("fieldCount", 0),
-            "errorCount": created.get("errorCount", 0),
-            "changeLogId": created.get("changeLogId"),
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 신규 row 생성 적용 API입니다. X-Admin-Dev-Key, 확인 문구, create allow-list를 통과한 제한 도메인만 DB에 insert합니다.",
-        },
+        data=admin_data.build_master_create_apply_data(created, current_user.id),
+        meta=admin_route_meta("master_create_apply"),
     )
 
 
@@ -296,21 +204,8 @@ async def get_admin_master_catalog_detail(
     return admin_ok_response(
         type="admin.master_data.detail",
         payload=detail,
-        data={
-            "status": detail["status"],
-            "readOnly": detail["readOnly"],
-            "adminUserId": current_user.id,
-            "domain": detail["domain"],
-            "id": detail["id"],
-            "rawJsonReturned": detail["rawJsonReturned"],
-            "sanitizedJsonReturned": detail["sanitizedJsonReturned"],
-            "assetsReturned": detail["assetsReturned"],
-            "safeForAdminWriteUi": detail["safeForAdminWriteUi"],
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 마스터 데이터 상세 조회 전용입니다. DB를 수정하지 않고, 이미지 data URL은 숨깁니다.",
-        },
+        data=admin_data.build_master_detail_data(detail, current_user.id),
+        meta=admin_route_meta("master_detail"),
     )
 
 
@@ -333,22 +228,8 @@ async def get_admin_master_catalog_relations(
     return admin_ok_response(
         type="admin.master_data.relations",
         payload=relations,
-        data={
-            "status": relations["status"],
-            "readOnly": relations["readOnly"],
-            "adminUserId": current_user.id,
-            "domain": relations["domain"],
-            "id": relations["id"],
-            "groupCount": relations["groupCount"],
-            "totalRelatedRows": relations["totalRelatedRows"],
-            "rawJsonReturned": relations["rawJsonReturned"],
-            "assetsReturned": relations["assetsReturned"],
-            "safeForAdminWriteUi": relations["safeForAdminWriteUi"],
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 마스터 데이터 연결 항목 조회 전용입니다. 관련 행도 축약된 목록만 내려줍니다.",
-        },
+        data=admin_data.build_master_relations_data(relations, current_user.id),
+        meta=admin_route_meta("master_relations"),
     )
 
 
@@ -376,21 +257,8 @@ async def preview_admin_master_data_edit(
     return admin_ok_response(
         type="admin.master_data.edit_preview",
         payload=preview,
-        data={
-            "status": preview["status"],
-            "readOnly": preview["readOnly"],
-            "dryRun": preview["dryRun"],
-            "adminUserId": current_user.id,
-            "domain": preview["domain"],
-            "id": preview["id"],
-            "diffCount": preview["diffCount"],
-            "errorCount": preview["errorCount"],
-            "wouldBeValid": preview["wouldBeValid"],
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 마스터 데이터 편집 초안 검증 전용입니다. DB를 수정하지 않습니다.",
-        },
+        data=admin_data.build_master_edit_preview_data(preview, current_user.id),
+        meta=admin_route_meta("master_edit_preview"),
     )
 
 
@@ -421,23 +289,8 @@ async def apply_admin_master_data_edit(
     return admin_ok_response(
         type="admin.master_data.edit_apply",
         payload=applied,
-        data={
-            "status": applied["status"],
-            "readOnly": applied.get("readOnly"),
-            "dryRun": applied.get("dryRun"),
-            "writeBlocked": applied.get("writeBlocked"),
-            "applied": applied.get("applied", False),
-            "adminUserId": current_user.id,
-            "domain": applied.get("domain"),
-            "id": applied.get("id"),
-            "diffCount": applied.get("diffCount", 0),
-            "errorCount": applied.get("errorCount", 0),
-            "changeLogId": applied.get("changeLogId"),
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 마스터 데이터 변경 적용 API입니다. X-Admin-Dev-Key, 확인 문구, allow-list를 통과한 스칼라 필드만 DB에 반영합니다.",
-        },
+        data=admin_data.build_master_edit_apply_data(applied, current_user.id),
+        meta=admin_route_meta("master_edit_apply"),
     )
 
 
@@ -483,20 +336,8 @@ async def list_admin_change_logs(
     return admin_ok_response(
         type="admin.change_logs",
         payload=logs,
-        data={
-            "status": logs["status"],
-            "readOnly": logs["readOnly"],
-            "adminUserId": current_user.id,
-            "count": logs["count"],
-            "total": logs["total"],
-            "limit": logs["limit"],
-            "filters": logs["filters"],
-            "warnings": logs.get("warnings", []),
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 변경 이력 읽기 전용 목록입니다. before/after JSON 원본은 내려주지 않습니다.",
-        },
+        data=admin_data.build_change_logs_data(logs, current_user.id),
+        meta=admin_route_meta("change_logs"),
     )
 
 
@@ -514,20 +355,8 @@ async def get_admin_change_log_detail(
     return admin_ok_response(
         type="admin.change_log.detail",
         payload=detail,
-        data={
-            "status": detail["status"],
-            "readOnly": detail["readOnly"],
-            "adminUserId": current_user.id,
-            "id": detail.get("id"),
-            "changedKeyCount": detail.get("changedKeyCount", 0),
-            "rollbackAvailable": (detail.get("rollback") or {}).get("available", False),
-            "createDeleteAvailable": (detail.get("createDelete") or {}).get("available", False),
-            "createDeleteRestoreAvailable": (detail.get("createDeleteRestore") or {}).get("available", False),
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 변경 이력 상세 조회입니다. before/after 전체 JSON 원본 대신 스칼라 변경 행만 내려줍니다.",
-        },
+        data=admin_data.build_change_log_detail_data(detail, current_user.id),
+        meta=admin_route_meta("change_log_detail"),
     )
 
 
@@ -547,23 +376,8 @@ async def preview_admin_create_delete_rollback(
     return admin_ok_response(
         type="admin.change_log.create_delete_preview",
         payload=preview,
-        data={
-            "status": preview["status"],
-            "readOnly": preview.get("readOnly"),
-            "dryRun": preview.get("dryRun"),
-            "writeBlocked": preview.get("writeBlocked"),
-            "adminUserId": current_user.id,
-            "changeLogId": preview.get("changeLogId"),
-            "createDeleteReady": preview.get("createDeleteReady", False),
-            "wouldDelete": preview.get("wouldDelete", False),
-            "dependencyBlockerCount": preview.get("dependencyBlockerCount", 0),
-            "currentMatchesCreateValues": preview.get("currentMatchesCreateValues", False),
-            "diffCount": preview.get("diffCount", 0),
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 create 이력의 생성 row 삭제 되돌리기 미리보기입니다. 현재값과 연결 데이터 검사를 통과해야만 apply가 가능합니다.",
-        },
+        data=admin_data.build_create_delete_preview_data(preview, current_user.id),
+        meta=admin_route_meta("create_delete_preview"),
     )
 
 
@@ -586,22 +400,8 @@ async def apply_admin_create_delete_rollback(
     return admin_ok_response(
         type="admin.change_log.create_delete_apply",
         payload=result,
-        data={
-            "status": result["status"],
-            "readOnly": result.get("readOnly"),
-            "dryRun": result.get("dryRun"),
-            "writeBlocked": result.get("writeBlocked"),
-            "deleted": result.get("deleted", False),
-            "adminUserId": current_user.id,
-            "changeLogId": result.get("changeLogId"),
-            "deleteChangeLogId": result.get("deleteChangeLogId"),
-            "dependencyBlockerCount": result.get("dependencyBlockerCount", 0),
-            "diffCount": result.get("diffCount", 0),
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 create 이력의 생성 row 삭제 적용 API입니다. X-Admin-Dev-Key, 확인 문구, 현재값/연결 데이터 검사를 통과한 경우에만 DB에서 삭제합니다.",
-        },
+        data=admin_data.build_create_delete_apply_data(result, current_user.id),
+        meta=admin_route_meta("create_delete_apply"),
     )
 
 
@@ -621,25 +421,8 @@ async def preview_admin_create_delete_restore(
     return admin_ok_response(
         type="admin.change_log.create_delete_restore_preview",
         payload=preview,
-        data={
-            "status": preview["status"],
-            "readOnly": preview.get("readOnly"),
-            "dryRun": preview.get("dryRun"),
-            "writeBlocked": preview.get("writeBlocked"),
-            "adminUserId": current_user.id,
-            "changeLogId": preview.get("changeLogId"),
-            "createDeleteRestoreReady": preview.get("createDeleteRestoreReady", False),
-            "wouldRestore": preview.get("wouldRestore", False),
-            "targetRowMissing": preview.get("targetRowMissing", False),
-            "idConflict": preview.get("idConflict", False),
-            "codeConflict": preview.get("codeConflict", False),
-            "validationErrorCount": preview.get("validationErrorCount", 0),
-            "diffCount": preview.get("diffCount", 0),
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 create_delete 이력의 삭제 row 복원 미리보기입니다. id/code 충돌과 생성 검증을 통과해야만 apply가 가능합니다.",
-        },
+        data=admin_data.build_create_delete_restore_preview_data(preview, current_user.id),
+        meta=admin_route_meta("create_delete_restore_preview"),
     )
 
 
@@ -662,22 +445,8 @@ async def apply_admin_create_delete_restore(
     return admin_ok_response(
         type="admin.change_log.create_delete_restore_apply",
         payload=result,
-        data={
-            "status": result["status"],
-            "readOnly": result.get("readOnly"),
-            "dryRun": result.get("dryRun"),
-            "writeBlocked": result.get("writeBlocked"),
-            "restored": result.get("restored", False),
-            "adminUserId": current_user.id,
-            "changeLogId": result.get("changeLogId"),
-            "restoreChangeLogId": result.get("restoreChangeLogId"),
-            "validationErrorCount": result.get("validationErrorCount", 0),
-            "diffCount": result.get("diffCount", 0),
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 create_delete 이력의 삭제 row 복원 적용 API입니다. X-Admin-Dev-Key, 확인 문구, id/code 충돌 검사를 통과한 경우에만 DB에 다시 생성합니다.",
-        },
+        data=admin_data.build_create_delete_restore_apply_data(result, current_user.id),
+        meta=admin_route_meta("create_delete_restore_apply"),
     )
 
 
@@ -697,22 +466,8 @@ async def preview_admin_change_log_rollback(
     return admin_ok_response(
         type="admin.change_log.rollback_preview",
         payload=preview,
-        data={
-            "status": preview["status"],
-            "readOnly": preview.get("readOnly"),
-            "dryRun": preview.get("dryRun"),
-            "writeBlocked": preview.get("writeBlocked"),
-            "adminUserId": current_user.id,
-            "changeLogId": preview.get("changeLogId"),
-            "rollbackReady": preview.get("rollbackReady", False),
-            "currentMatchesAfter": preview.get("currentMatchesAfter", False),
-            "diffCount": preview.get("diffCount", 0),
-            "errorCount": preview.get("errorCount", 0),
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 변경 이력 되돌리기 미리보기입니다. 현재 DB 값이 이력의 after 값과 일치할 때만 rollbackReady가 true가 됩니다.",
-        },
+        data=admin_data.build_rollback_preview_data(preview, current_user.id),
+        meta=admin_route_meta("rollback_preview"),
     )
 
 
@@ -735,21 +490,8 @@ async def apply_admin_change_log_rollback(
     return admin_ok_response(
         type="admin.change_log.rollback_apply",
         payload=result,
-        data={
-            "status": result["status"],
-            "readOnly": result.get("readOnly"),
-            "dryRun": result.get("dryRun"),
-            "writeBlocked": result.get("writeBlocked"),
-            "rolledBack": result.get("rolledBack", False),
-            "adminUserId": current_user.id,
-            "changeLogId": result.get("changeLogId"),
-            "rollbackChangeLogId": result.get("rollbackChangeLogId"),
-            "diffCount": result.get("diffCount", 0),
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 변경 이력 되돌리기 적용 API입니다. X-Admin-Dev-Key, 확인 문구, 현재값 검사를 통과한 경우에만 DB에 반영합니다.",
-        },
+        data=admin_data.build_rollback_apply_data(result, current_user.id),
+        meta=admin_route_meta("rollback_apply"),
     )
 
 
@@ -781,20 +523,8 @@ async def list_admin_save_snapshots(
     return admin_ok_response(
         type="admin.save_snapshots",
         payload=snapshots,
-        data={
-            "status": snapshots["status"],
-            "readOnly": snapshots["readOnly"],
-            "adminUserId": current_user.id,
-            "count": snapshots["count"],
-            "total": snapshots["total"],
-            "totalAll": snapshots["totalAll"],
-            "limit": snapshots["limit"],
-            "filters": snapshots["filters"],
-        },
-        meta={
-            "source": "postgresql",
-            "note": "관리자 페이지 준비용 세이브 스냅샷 읽기 전용 목록입니다. snapshot_json 원본은 내려주지 않습니다.",
-        },
+        data=admin_data.build_save_snapshots_data(snapshots, current_user.id),
+        meta=admin_route_meta("save_snapshots"),
     )
 
 
@@ -815,6 +545,6 @@ async def preview_admin_change(
     return admin_ok_response(
         type="admin.change.preview",
         payload=preview,
-        data={"status": "preview_only", "readOnly": True, "adminUserId": current_user.id},
-        meta={"note": "관리자 변경 미리보기 API 초안입니다. 아직 DB를 수정하지 않습니다."},
+        data=admin_data.build_change_preview_data(current_user.id),
+        meta=admin_route_meta("change_preview"),
     )

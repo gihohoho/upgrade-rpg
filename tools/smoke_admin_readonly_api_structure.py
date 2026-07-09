@@ -37,8 +37,17 @@ REQUIRED_PATTERNS = {
         'type="admin.change_log.detail"',
         'type="admin.change_log.rollback_preview"',
         'type="admin.change_log.rollback_apply"',
+    ],
+    "backend/app/api/routes/admin_response_data_helpers.py": [
         'readOnly',
+        'build_admin_overview_data',
+        'build_save_snapshots_data',
+        'build_change_logs_data',
+    ],
+    "backend/app/api/routes/admin_response_meta_helpers.py": [
         'snapshot_json 원본은 내려주지 않습니다',
+        '관리자 페이지 준비용 읽기 전용 overview API입니다',
+        '관리자 변경 이력 읽기 전용 목록입니다',
     ],
     "backend/app/services/admin_service.py": [
         "AdminOverviewSnapshotsService",
