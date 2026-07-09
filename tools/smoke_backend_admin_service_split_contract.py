@@ -32,7 +32,7 @@ def main() -> int:
     assert_true(readiness["ok"], f"backend admin service split readiness failed: {readiness}")
     assert_true(readiness["version"] == "v198.backend-admin-service-split-contract", "unexpected contract version")
     assert_true(readiness["status"] == "contract-frozen-v198", "unexpected contract status")
-    assert_true(readiness["splitStatus"] == "admin-service-legacy-marker-cleanup-v220", "unexpected split status")
+    assert_true(readiness["splitStatus"] == "admin-service-facade-contract-v222", "unexpected split status")
     assert_true("backend/app/services/admin/admin_master_catalog_service.py" in readiness["extractedFiles"], "missing extracted master catalog file")
     assert_true("backend/app/services/admin/admin_create_lifecycle_service.py" in readiness["extractedFiles"], "missing extracted create lifecycle file")
     assert_true("backend/app/services/admin/admin_change_log_service.py" in readiness["extractedFiles"], "missing extracted change log file")

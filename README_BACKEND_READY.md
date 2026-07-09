@@ -1,15 +1,14 @@
-# Backend Ready Notes — v220
+# Backend Ready Notes — v222
 
-현재 안정 버전: **v220 backend admin route service dependency + legacy marker cleanup**
+현재 안정 버전: **v222 backend admin service facade MRO contract**
 
 ## 변경 요약
 
-- `admin_route_services.py` 추가
-- 관리자 route module 3개가 `create_admin_service()` helper를 통해 `AdminService` facade 생성
-- route module에서 `AdminService()` 직접 생성 제거
-- `admin_service_legacy_markers.py` 추가
-- `admin_service.py`의 긴 legacy marker 문자열 제거
-- `admin_service.py`는 실제 facade만 유지
+- `admin_service.py`의 `AdminService` 상속 목록을 다중 줄로 정리
+- `admin_service.py`에 `__all__ = ["AdminService"]` 명시
+- `admin_service_facade_contract.py` 추가
+- AdminService facade class / MRO 순서 / line limit / legacy marker 제거 상태 검증 추가
+- `admin_service_split_contract.py` splitStatus 갱신
 - route path/schema/API 응답 구조 변경 없음
 - DB/env 변경 없음
 

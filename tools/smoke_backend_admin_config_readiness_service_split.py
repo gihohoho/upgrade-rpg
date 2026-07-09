@@ -77,7 +77,7 @@ def main() -> int:
 
     assert_true("from app.services.admin.admin_config import AdminConfigService" in service_source, "facade must import AdminConfigService")
     assert_true("from app.services.admin.admin_readiness_service import AdminReadinessService" in service_source, "facade must import AdminReadinessService")
-    assert_true("class AdminService(AdminConfigService, AdminSharedUtilsService, AdminReadinessService," in service_source, "facade MRO should keep config/shared/readiness order")
+    assert_true("class AdminService(\n    AdminConfigService,\n    AdminSharedUtilsService,\n    AdminReadinessService," in service_source, "facade MRO should keep config/shared/readiness order")
     assert_true("class AdminConfigService" in config_source, "config file must define AdminConfigService")
     assert_true("class AdminReadinessService" in readiness_source, "readiness file must define AdminReadinessService")
     assert_true("Boss," in config_source and "ItemTemplate," in config_source and "SkillLevel," in config_source, "config file must own model imports")
@@ -102,7 +102,7 @@ def main() -> int:
 
     contract = get_admin_service_split_contract_readiness(AdminService, root=ROOT)
     assert_true(contract["ok"], f"split contract readiness failed: {contract}")
-    assert_true(contract["splitStatus"] == "admin-service-legacy-marker-cleanup-v220", "split status should be v216 route module split")
+    assert_true(contract["splitStatus"] == "admin-service-facade-contract-v222", "split status should be v216 route module split")
     assert_true("backend/app/services/admin/admin_config.py" in contract["extractedFiles"], "contract must include config file")
     assert_true("backend/app/services/admin/admin_readiness_service.py" in contract["extractedFiles"], "contract must include readiness file")
 

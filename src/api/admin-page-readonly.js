@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  const VERSION = "v220.backend-admin-route-service-legacy-cleanup";
-  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary v183.admin-create-lifecycle-batch-check v184.admin-js-split-readiness v185.admin-layout-shell-split v186.admin-change-log-split-contract v188.admin-create-lifecycle-split-contract v189.admin-create-lifecycle-split v189.1.admin-create-lifecycle-split-hotfix v190.admin-edit-draft-split-contract v191.admin-edit-draft-split v192.admin-master-catalog-detail-split v193.admin-overview-snapshots-split v194.admin-bootstrap-bindings-readiness v195.admin-thin-entry-cleanup v196.admin-field-help-split v197.admin-settings-helpers-split v198.backend-admin-service-split-contract v199.backend-admin-overview-snapshots-service-split v199.1.backend-admin-overview-snapshots-service-hotfix v200.backend-admin-master-catalog-service-split v201.backend-admin-create-lifecycle-service-split v202.backend-admin-change-log-service-split v203.backend-admin-edit-draft-service-split v204.backend-admin-shared-utils-service-split v205.backend-admin-config-service-split v206.backend-admin-config-readiness-service-split v207.backend-admin-route-response-helper v208.backend-admin-route-response-helper v209.backend-admin-route-params v210.backend-admin-route-params-error-helpers v211.backend-admin-route-response-data-helper v212.backend-admin-route-data-meta-helpers v213.backend-admin-master-data-route-module v214.backend-admin-change-log-route-module v215.backend-admin-overview-snapshot-route-module v216.backend-admin-route-overview-facade-split v217.backend-admin-route-legacy-smoke-cleanup v218.backend-admin-route-map-contract v219.backend-admin-route-service-dependency v220.backend-admin-service-legacy-marker-cleanup";
+  const VERSION = "v222.backend-admin-service-facade-contract";
+  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary v183.admin-create-lifecycle-batch-check v184.admin-js-split-readiness v185.admin-layout-shell-split v186.admin-change-log-split-contract v188.admin-create-lifecycle-split-contract v189.admin-create-lifecycle-split v189.1.admin-create-lifecycle-split-hotfix v190.admin-edit-draft-split-contract v191.admin-edit-draft-split v192.admin-master-catalog-detail-split v193.admin-overview-snapshots-split v194.admin-bootstrap-bindings-readiness v195.admin-thin-entry-cleanup v196.admin-field-help-split v197.admin-settings-helpers-split v198.backend-admin-service-split-contract v199.backend-admin-overview-snapshots-service-split v199.1.backend-admin-overview-snapshots-service-hotfix v200.backend-admin-master-catalog-service-split v201.backend-admin-create-lifecycle-service-split v202.backend-admin-change-log-service-split v203.backend-admin-edit-draft-service-split v204.backend-admin-shared-utils-service-split v205.backend-admin-config-service-split v206.backend-admin-config-readiness-service-split v207.backend-admin-route-response-helper v208.backend-admin-route-response-helper v209.backend-admin-route-params v210.backend-admin-route-params-error-helpers v211.backend-admin-route-response-data-helper v212.backend-admin-route-data-meta-helpers v213.backend-admin-master-data-route-module v214.backend-admin-change-log-route-module v215.backend-admin-overview-snapshot-route-module v216.backend-admin-route-overview-facade-split v217.backend-admin-route-legacy-smoke-cleanup v218.backend-admin-route-map-contract v219.backend-admin-route-service-dependency v220.backend-admin-service-legacy-marker-cleanup v221.backend-admin-service-facade-mro-tidy v222.backend-admin-service-facade-contract";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -83,7 +83,7 @@
     key: "backend-admin-service-split",
     label: "Backend AdminService split contract",
     status: "contract-frozen-v198",
-    splitStatus: "admin-service-legacy-marker-cleanup-v220",
+    splitStatus: "admin-service-facade-contract-v222",
     currentFile: "backend/app/services/admin_service.py",
     facadeFile: "backend/app/services/admin_service.py",
     routeFile: "backend/app/api/routes/admin.py",
@@ -108,6 +108,7 @@
       "backend/app/api/routes/admin_route_map_contract.py",
       "backend/app/api/routes/admin_route_services.py",
       "backend/app/services/admin_service_legacy_markers.py",
+      "backend/app/services/admin_service_facade_contract.py",
     ],
     nextFiles: [],
     splitGroups: [
@@ -128,6 +129,9 @@
       { key: "route-change-log-module", publicMethodCount: 8, note: "change-log admin routes" },
       { key: "route-overview-snapshot-module", publicMethodCount: 4, note: "overview/save-snapshot admin routes" },
       { key: "route-map-contract", publicMethodCount: 0, note: "admin route ownership map" },
+      { key: "route-service-dependency", publicMethodCount: 0, note: "admin route service factory dependency" },
+      { key: "service-legacy-markers", publicMethodCount: 0, note: "legacy static smoke markers outside AdminService facade" },
+      { key: "service-facade-contract", publicMethodCount: 0, note: "AdminService facade MRO/import contract" },
     ],
     routeContract: [
       "No route path changes in v218",
@@ -138,6 +142,9 @@
       "admin.py stays as a thin include-router facade",
       "Legacy static smoke checks read actual route modules instead of admin.py comments",
       "Admin route ownership map lives in admin_route_map_contract.py",
+      "Admin route modules create service facade through admin_route_services.py",
+      "Legacy service smoke markers live outside admin_service.py",
+      "AdminService facade MRO/import order is tracked by admin_service_facade_contract.py",
       "Admin route responses go through admin_ok_response helper",
       "Admin route response data summaries go through admin_response_data_helpers.py",
       "Admin route response metadata goes through admin_response_meta_helpers.py",
@@ -146,7 +153,7 @@
       "AdminService remains the route facade",
       "Actual file moves must keep existing public method names",
     ],
-    smoke: "tools/smoke_backend_admin_route_map_contract.py",
+    smoke: "tools/smoke_backend_admin_service_facade_contract.py",
   };
 
   const ADMIN_THIN_ENTRY_CLEANUP_CONTRACT = {
@@ -1584,11 +1591,12 @@ function getAdminCreateLifecycleApi() {
     const routeMapContractReady = extractedFiles.some((item) => item.path === "backend/app/api/routes/admin_route_map_contract.py");
     const routeServiceDependencyReady = extractedFiles.some((item) => item.path === "backend/app/api/routes/admin_route_services.py");
     const serviceLegacyMarkersReady = extractedFiles.some((item) => item.path === "backend/app/services/admin_service_legacy_markers.py");
+    const serviceFacadeContractReady = extractedFiles.some((item) => item.path === "backend/app/services/admin_service_facade_contract.py");
     const routeLegacySmokeCleanupReady = routeContract.some((item) => item.value.includes("Legacy static smoke checks read actual route modules"));
     const routeModuleSplitReady = routeMasterDataModuleReady && routeChangeLogModuleReady && routeOverviewSnapshotModuleReady;
     const routeFacadeReady = routeModuleSplitReady && contract.routeFile === "backend/app/api/routes/admin.py";
     const ok = contract.status === "contract-frozen-v198"
-      && contract.splitStatus === "admin-service-legacy-marker-cleanup-v220"
+      && contract.splitStatus === "admin-service-facade-contract-v222"
       && overviewSnapshotsExtractedReady
       && masterCatalogExtractedReady
       && createLifecycleExtractedReady
@@ -1608,6 +1616,7 @@ function getAdminCreateLifecycleApi() {
       && routeMapContractReady
       && routeServiceDependencyReady
       && serviceLegacyMarkersReady
+      && serviceFacadeContractReady
       && routeLegacySmokeCleanupReady
       && routeFacadeReady
       && nextFiles.length === 0
@@ -1644,6 +1653,7 @@ function getAdminCreateLifecycleApi() {
       routeMapContractReady,
       routeServiceDependencyReady,
       serviceLegacyMarkersReady,
+      serviceFacadeContractReady,
       routeLegacySmokeCleanupReady,
       routeModuleSplitReady,
       routeFacadeReady,
@@ -1668,8 +1678,8 @@ function getAdminCreateLifecycleApi() {
       <div class="create-lifecycle-card create-lifecycle-card-wide">
         ${renderAdminOperationResultBanner({
           tone: readiness.ok ? "good" : "warn",
-          title: readiness.ok ? "백엔드 admin route helper 정리 완료" : "백엔드 admin route helper 확인 필요",
-          subtitle: `${readiness.routeFile}의 응답/파라미터/예외 fallback helper를 분리했습니다.`,
+          title: readiness.ok ? "백엔드 admin service facade 계약 완료" : "백엔드 admin service facade 확인 필요",
+          subtitle: `${readiness.facadeFile}의 MRO/import 순서를 contract로 고정했습니다.`,
           metrics: [
             { label: "분리 묶음", value: readiness.splitGroupCount, tone: readiness.splitGroupCount ? "good" : "blocked" },
             { label: "분리 완료 파일", value: readiness.extractedFileCount, tone: readiness.overviewSnapshotsExtractedReady ? "good" : "blocked" },
@@ -1679,7 +1689,7 @@ function getAdminCreateLifecycleApi() {
           ],
         })}
         <div class="draft-preview-summary">${routeHtml}</div>
-        <div class="filter-help">검증 smoke: <code>${escapeHtml(readiness.smoke)}</code> + <code>tools/run_smoke_core.sh</code>. v216은 route/schema/path를 그대로 두고 overview/snapshot route까지 분리해 admin.py를 include facade로 유지합니다.</div>
+        <div class="filter-help">검증 smoke: <code>${escapeHtml(readiness.smoke)}</code> + <code>tools/run_smoke_core.sh</code>. v222는 route/schema/path를 그대로 두고 AdminService facade의 MRO/import 순서를 contract로 고정합니다.</div>
         <div class="create-blueprint-summary" style="grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);">
           <div class="table-wrap relation-table-wrap"><table><thead><tr><th>#</th><th>분리/후보 파일</th><th>상태</th></tr></thead><tbody>${extractedRows}${fileRows}</tbody></table></div>
           <div class="table-wrap relation-table-wrap"><table><thead><tr><th>묶음</th><th>역할</th><th>public method</th></tr></thead><tbody>${groupRows}</tbody></table></div>
@@ -2783,6 +2793,7 @@ async function openAdminMasterDataDetail(...args) {
     const backendRouteMapContractReady = !!(backendServiceSplitContractReady && backendServiceSplitContract.routeMapContractReady);
     const backendRouteServiceDependencyReady = !!(backendServiceSplitContractReady && backendServiceSplitContract.routeServiceDependencyReady);
     const backendServiceLegacyMarkersReady = !!(backendServiceSplitContractReady && backendServiceSplitContract.serviceLegacyMarkersReady);
+    const backendServiceFacadeContractReady = !!(backendServiceSplitContractReady && backendServiceSplitContract.serviceFacadeContractReady);
     const backendRouteLegacySmokeCleanupReady = !!(backendServiceSplitContractReady && backendServiceSplitContract.routeLegacySmokeCleanupReady);
     const backendRouteFacadeReady = !!(backendServiceSplitContractReady && backendServiceSplitContract.routeFacadeReady);
     const backendRouteModuleSplitReady = !!(backendServiceSplitContractReady && backendServiceSplitContract.routeModuleSplitReady);
@@ -2808,7 +2819,7 @@ async function openAdminMasterDataDetail(...args) {
     const createDeleteRollbackReady = typeof previewAdminCreateDeleteRollback === "function" && typeof applyAdminCreateDeleteRollback === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRollback === "function");
     const createDeleteRestoreReady = typeof previewAdminCreateDeleteRestore === "function" && typeof applyAdminCreateDeleteRestore === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRestore === "function");
     const layoutShell = getAdminLayoutShellReadiness();
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && adminJsSplitReadinessReady && changeLogSplitContractReady && createLifecycleSplitContractReady && editDraftSplitContractReady && editDraftExternalReady && createLifecycleExternalReady && masterCatalogExternalReady && overviewSnapshotsExternalReady && fieldHelpExternalReady && settingsHelpersExternalReady && bootstrapBindingReady && thinEntryCleanupReady && backendServiceSplitContractReady && backendOverviewSnapshotsServiceSplitReady && backendMasterCatalogServiceSplitReady && backendCreateLifecycleServiceSplitReady && backendChangeLogServiceSplitReady && backendEditDraftServiceSplitReady && backendSharedUtilsServiceSplitReady && backendConfigServiceSplitReady && backendReadinessServiceSplitReady && backendRouteResponseHelperReady && backendRouteParamsReady && backendRouteErrorHelperReady && backendRouteResponseDataHelperReady && backendRouteResponseMetaHelperReady && backendRouteModuleSplitReady && backendRouteOverviewSnapshotModuleReady && backendRouteMapContractReady && backendRouteServiceDependencyReady && backendServiceLegacyMarkersReady && backendRouteLegacySmokeCleanupReady && backendRouteFacadeReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, fieldHelpExternalReady, fieldHelpExternal, settingsHelpersExternalReady, settingsHelpersExternal, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createLifecycleBatchCheckReady, adminJsSplitReadinessReady, adminJsSplitReadiness, changeLogSplitContractReady, changeLogSplitContract, createLifecycleSplitContractReady, createLifecycleSplitContract, editDraftSplitContractReady, editDraftSplitContract, editDraftExternalReady, editDraftExternal, masterCatalogExternalReady, masterCatalogExternal, overviewSnapshotsExternalReady, overviewSnapshotsExternal, bootstrapBindingReady, bootstrapBinding, thinEntryCleanupReady, thinEntryCleanup, backendServiceSplitContractReady, backendOverviewSnapshotsServiceSplitReady, backendMasterCatalogServiceSplitReady, backendCreateLifecycleServiceSplitReady, backendChangeLogServiceSplitReady, backendEditDraftServiceSplitReady, backendSharedUtilsServiceSplitReady, backendConfigServiceSplitReady, backendReadinessServiceSplitReady, backendRouteResponseHelperReady, backendRouteParamsReady, backendRouteErrorHelperReady, backendRouteResponseDataHelperReady, backendRouteResponseMetaHelperReady, backendRouteMasterDataModuleReady, backendRouteChangeLogModuleReady, backendRouteOverviewSnapshotModuleReady, backendRouteMapContractReady, backendRouteServiceDependencyReady, backendServiceLegacyMarkersReady, backendRouteLegacySmokeCleanupReady, backendRouteFacadeReady, backendRouteModuleSplitReady, backendServiceSplitContract, changeLogsExternalReady, changeLogs, createLifecycleExternalReady, createLifecycle, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && adminJsSplitReadinessReady && changeLogSplitContractReady && createLifecycleSplitContractReady && editDraftSplitContractReady && editDraftExternalReady && createLifecycleExternalReady && masterCatalogExternalReady && overviewSnapshotsExternalReady && fieldHelpExternalReady && settingsHelpersExternalReady && bootstrapBindingReady && thinEntryCleanupReady && backendServiceSplitContractReady && backendOverviewSnapshotsServiceSplitReady && backendMasterCatalogServiceSplitReady && backendCreateLifecycleServiceSplitReady && backendChangeLogServiceSplitReady && backendEditDraftServiceSplitReady && backendSharedUtilsServiceSplitReady && backendConfigServiceSplitReady && backendReadinessServiceSplitReady && backendRouteResponseHelperReady && backendRouteParamsReady && backendRouteErrorHelperReady && backendRouteResponseDataHelperReady && backendRouteResponseMetaHelperReady && backendRouteModuleSplitReady && backendRouteOverviewSnapshotModuleReady && backendRouteMapContractReady && backendRouteServiceDependencyReady && backendServiceLegacyMarkersReady && backendServiceFacadeContractReady && backendRouteLegacySmokeCleanupReady && backendRouteFacadeReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, fieldHelpExternalReady, fieldHelpExternal, settingsHelpersExternalReady, settingsHelpersExternal, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createLifecycleBatchCheckReady, adminJsSplitReadinessReady, adminJsSplitReadiness, changeLogSplitContractReady, changeLogSplitContract, createLifecycleSplitContractReady, createLifecycleSplitContract, editDraftSplitContractReady, editDraftSplitContract, editDraftExternalReady, editDraftExternal, masterCatalogExternalReady, masterCatalogExternal, overviewSnapshotsExternalReady, overviewSnapshotsExternal, bootstrapBindingReady, bootstrapBinding, thinEntryCleanupReady, thinEntryCleanup, backendServiceSplitContractReady, backendOverviewSnapshotsServiceSplitReady, backendMasterCatalogServiceSplitReady, backendCreateLifecycleServiceSplitReady, backendChangeLogServiceSplitReady, backendEditDraftServiceSplitReady, backendSharedUtilsServiceSplitReady, backendConfigServiceSplitReady, backendReadinessServiceSplitReady, backendRouteResponseHelperReady, backendRouteParamsReady, backendRouteErrorHelperReady, backendRouteResponseDataHelperReady, backendRouteResponseMetaHelperReady, backendRouteMasterDataModuleReady, backendRouteChangeLogModuleReady, backendRouteOverviewSnapshotModuleReady, backendRouteMapContractReady, backendRouteServiceDependencyReady, backendServiceLegacyMarkersReady, backendServiceFacadeContractReady, backendRouteLegacySmokeCleanupReady, backendRouteFacadeReady, backendRouteModuleSplitReady, backendServiceSplitContract, changeLogsExternalReady, changeLogs, createLifecycleExternalReady, createLifecycle, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }

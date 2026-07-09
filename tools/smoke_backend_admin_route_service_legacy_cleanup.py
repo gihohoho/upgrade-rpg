@@ -62,7 +62,7 @@ for route_file in [OVERVIEW, MASTER, CHANGE]:
     assert_true("from app.services.admin_service import AdminService" not in source, f"{route_file} should not directly import AdminService")
     assert_true("service = AdminService()" not in source, f"{route_file} should not instantiate AdminService directly")
 
-assert_true(len(admin_service_source.splitlines()) <= 25, "admin_service.py should be a tiny facade after legacy marker cleanup")
+assert_true(len(admin_service_source.splitlines()) <= 40, "admin_service.py should remain a tiny readable facade after MRO tidy")
 assert_true("LEGACY_SMOKE_MARKERS" not in admin_service_source, "admin_service.py should not keep legacy marker constants")
 assert_true("preview_master_data_create" not in admin_service_source, "admin_service.py should not keep create lifecycle markers")
 assert_true("list_admin_change_logs" not in admin_service_source, "admin_service.py should not keep change-log markers")
@@ -76,11 +76,11 @@ assert_true("BACKEND_ADMIN_CHANGE_LOG_SERVICE_SPLIT_LEGACY_SMOKE_MARKERS" in leg
 assert_true("MASTER_CREATE_APPLY_ALLOWED_DOMAINS: set[str]" in legacy_source, "legacy marker file should preserve legacy set markers")
 
 assert_true(split_readiness["ok"], f"backend service split contract readiness failed: {split_readiness}")
-assert_true(split_readiness["splitStatus"] == "admin-service-legacy-marker-cleanup-v220", "splitStatus should be v220")
+assert_true(split_readiness["splitStatus"] == "admin-service-facade-contract-v222", "splitStatus should be v222")
 assert_true("backend/app/api/routes/admin_route_services.py" in split_readiness["extractedFiles"], "split contract should include route service helper")
 assert_true("backend/app/services/admin_service_legacy_markers.py" in split_readiness["extractedFiles"], "split contract should include legacy marker file")
-assert_true('const VERSION = "v220.backend-admin-route-service-legacy-cleanup"' in entry_source, "frontend readiness version should be v220")
-assert_true('splitStatus: "admin-service-legacy-marker-cleanup-v220"' in entry_source, "frontend splitStatus should be v220")
+assert_true('const VERSION = "v222.backend-admin-service-facade-contract"' in entry_source, "frontend readiness version should be v222")
+assert_true('splitStatus: "admin-service-facade-contract-v222"' in entry_source, "frontend splitStatus should be v222")
 assert_true("backendRouteServiceDependencyReady" in entry_source, "frontend should expose route service dependency readiness")
 assert_true("backendServiceLegacyMarkersReady" in entry_source, "frontend should expose service legacy marker readiness")
 assert_true("smoke_backend_admin_route_service_legacy_cleanup.py" in run_smoke_source, "core smoke should include v220 smoke")
