@@ -1,8 +1,8 @@
 # Current Status
 
-현재 기준: **v199 backend admin overview/snapshots service split**
+현재 기준: **v199.1 backend admin overview/snapshots service hotfix**
 
-이 패키지 기준 ZIP: **rpg_v199_backend_admin_overview_snapshots_service_split_ready.zip**
+이 패키지 기준 ZIP: **rpg_v199_1_backend_admin_overview_snapshots_service_hotfix_ready.zip**
 
 ## 완료된 관리자 JS 분리/정리
 
@@ -32,6 +32,12 @@
 - `tools/smoke_backend_admin_overview_snapshots_service_split.py` 추가
 - core smoke에 새 smoke 포함
 
+## v199.1 hotfix 내용
+
+- `/api/v1/admin/save-snapshots` 500 오류 수정
+- `_count_filled_items` staticmethod 누락 복구
+- snapshot summary runtime smoke 추가
+
 ## 브라우저 확인
 
 ```js
@@ -43,9 +49,9 @@ getAdminBackendServiceSplitContractReadiness().splitStatus
 예상:
 
 ```txt
-v199.backend-admin-overview-snapshots-service-split
+v199.1.backend-admin-overview-snapshots-service-hotfix
 true
-overview-snapshots-extracted-v199
+overview-snapshots-extracted-v199.1
 ```
 
 ## DB / env

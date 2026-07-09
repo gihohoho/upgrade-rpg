@@ -1,6 +1,6 @@
 # Backend Admin Overview/Snapshots Service Split
 
-버전: **v199 backend admin overview/snapshots service split**
+버전: **v199.1 backend admin overview/snapshots service hotfix**
 
 ## 목적
 
@@ -33,6 +33,12 @@
 - `AdminService` facade 유지
 - API route public method 이름 유지
 - DB schema/env 변경 없음
+
+## v199.1 hotfix 내용
+
+- `/api/v1/admin/save-snapshots` 500 오류 수정
+- `_count_filled_items` staticmethod 누락 복구
+- snapshot summary runtime smoke 추가
 
 ## 검증
 

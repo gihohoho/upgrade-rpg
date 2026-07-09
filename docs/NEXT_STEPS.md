@@ -1,6 +1,6 @@
 # Next Steps
 
-## 현재 완료: v199 backend admin overview/snapshots service split
+## 현재 완료: v199.1 backend admin overview/snapshots service hotfix
 
 백엔드 `AdminService` facade는 유지한 채, 첫 실제 분리 대상으로 overview/save snapshots 묶음을 `AdminOverviewSnapshotsService`로 이동했습니다.
 

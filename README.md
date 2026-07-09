@@ -1,8 +1,8 @@
-# Upgrade RPG v199 패키지
+# Upgrade RPG v199.1 패키지
 
-현재 안정 버전: **v199 backend admin overview/snapshots service split**
+현재 안정 버전: **v199.1 backend admin overview/snapshots service hotfix**
 
-새 채팅 인수인계 ZIP: **rpg_v199_backend_admin_overview_snapshots_service_split_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v199_1_backend_admin_overview_snapshots_service_hotfix_ready.zip**
 
 ## 요약
 
@@ -34,6 +34,12 @@ v199에서는 v198에서 고정한 백엔드 admin service 분리 계약을 기�
   - `admin_edit_draft_service.py`
   - `admin_shared_utils.py`
 
+## v199.1 hotfix 내용
+
+- `/api/v1/admin/save-snapshots` 500 오류 수정
+- `_count_filled_items` staticmethod 누락 복구
+- snapshot summary runtime smoke 추가
+
 ## 브라우저 확인
 
 ```js
@@ -43,7 +49,7 @@ checkAdminReadOnlyPageReady().version
 예상값:
 
 ```txt
-v199.backend-admin-overview-snapshots-service-split
+v199.1.backend-admin-overview-snapshots-service-hotfix
 ```
 
 ```js
@@ -63,7 +69,7 @@ getAdminBackendServiceSplitContractReadiness().splitStatus
 예상값:
 
 ```txt
-overview-snapshots-extracted-v199
+overview-snapshots-extracted-v199.1
 ```
 
 ## 검증

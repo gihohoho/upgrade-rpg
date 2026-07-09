@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import inspect
 import sys
+from types import SimpleNamespace
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -67,6 +68,35 @@ def main() -> int:
     assert_true(len(split_source.splitlines()) >= 200, "split service should contain the overview/snapshot implementation")
     assert_true(inspect.iscoroutinefunction(AdminService.get_readonly_overview), "get_readonly_overview should remain async")
     assert_true(inspect.iscoroutinefunction(AdminService.list_save_snapshot_summaries), "list_save_snapshot_summaries should remain async")
+    assert_true(
+        isinstance(AdminOverviewSnapshotsService.__dict__.get("_count_filled_items"), staticmethod),
+        "_count_filled_items must remain staticmethod after the split",
+    )
+
+    fake_snapshot = SimpleNamespace(
+        id=1,
+        user_id=1,
+        slot_key="default",
+        client_save_key="rpg_save",
+        save_version="smoke",
+        summary_json={},
+        snapshot_json={
+            "player": {
+                "inventory": [{"id": 1}, None, {}],
+                "storage": [None, {"id": 2}],
+                "trash": [],
+                "mailbox": [{"id": 3}],
+            }
+        },
+        source="smoke",
+        note=None,
+        created_at=None,
+        updated_at=None,
+    )
+    serialized = AdminService()._serialize_save_snapshot_summary(fake_snapshot)
+    assert_true(serialized["counts"]["inventoryItems"] == 1, "snapshot inventory count should be serialized without bound-method errors")
+    assert_true(serialized["counts"]["storageItems"] == 1, "snapshot storage count should be serialized without bound-method errors")
+    assert_true(serialized["rawSnapshotReturned"] is False, "snapshot serialization must stay read-only")
 
     print("backend admin overview/snapshots service split smoke test passed")
     return 0

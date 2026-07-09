@@ -223,6 +223,7 @@ class AdminOverviewSnapshotsService:
             "rawSnapshotReturned": False,
         }
 
+    @staticmethod
     def _count_filled_items(value: Any) -> int:
         if not isinstance(value, list):
             return 0

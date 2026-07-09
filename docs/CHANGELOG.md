@@ -1,13 +1,12 @@
 # Changelog
 
-## v199 backend admin overview/snapshots service split
+## v199.1 backend admin overview/snapshots service hotfix
 
-- `backend/app/services/admin/admin_overview_snapshots_service.py` 추가
-- `AdminService` facade 유지 + `AdminOverviewSnapshotsService` mixin 상속 구조 적용
-- overview/save snapshots public/helper 메서드 외부 서비스로 이동
+- v199 분리 후 `/api/v1/admin/save-snapshots`에서 500이 날 수 있던 bound-method 오류 수정
+- 원인: `_count_filled_items`가 분리 파일로 이동하면서 `@staticmethod`가 누락됨
+- 수정: `AdminOverviewSnapshotsService._count_filled_items`에 `@staticmethod` 복원
+- 재발 방지: `tools/smoke_backend_admin_overview_snapshots_service_split.py`가 실제 `_serialize_save_snapshot_summary()` 호출까지 검사
 - route/schema/DB/env 변경 없음
-- `tools/smoke_backend_admin_overview_snapshots_service_split.py` 추가
-- core smoke에 새 백엔드 split smoke 포함
 
 
 ## v198 — backend admin service split contract

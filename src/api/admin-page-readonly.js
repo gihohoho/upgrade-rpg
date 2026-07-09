@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v199.backend-admin-overview-snapshots-service-split";
+  const VERSION = "v199.1.backend-admin-overview-snapshots-service-hotfix";
   const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary v183.admin-create-lifecycle-batch-check v184.admin-js-split-readiness v185.admin-layout-shell-split v186.admin-change-log-split-contract v188.admin-create-lifecycle-split-contract v189.admin-create-lifecycle-split v189.1.admin-create-lifecycle-split-hotfix v190.admin-edit-draft-split-contract v191.admin-edit-draft-split v192.admin-master-catalog-detail-split v193.admin-overview-snapshots-split v194.admin-bootstrap-bindings-readiness v195.admin-thin-entry-cleanup v196.admin-field-help-split v197.admin-settings-helpers-split v198.backend-admin-service-split-contract";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
@@ -83,7 +83,7 @@
     key: "backend-admin-service-split",
     label: "Backend AdminService split contract",
     status: "contract-frozen-v198",
-    splitStatus: "overview-snapshots-extracted-v199",
+    splitStatus: "overview-snapshots-extracted-v199.1",
     currentFile: "backend/app/services/admin_service.py",
     facadeFile: "backend/app/services/admin_service.py",
     routeFile: "backend/app/api/routes/admin.py",
@@ -1533,7 +1533,7 @@ function getAdminCreateLifecycleApi() {
     const routeContract = contract.routeContract.map((item) => ({ value: item, ok: !!item }));
     const overviewSnapshotsExtractedReady = extractedFiles.some((item) => item.path === "backend/app/services/admin/admin_overview_snapshots_service.py");
     const ok = contract.status === "contract-frozen-v198"
-      && contract.splitStatus === "overview-snapshots-extracted-v199"
+      && contract.splitStatus === "overview-snapshots-extracted-v199.1"
       && overviewSnapshotsExtractedReady
       && nextFiles.length >= 5
       && splitGroups.length >= 6

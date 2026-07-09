@@ -13,10 +13,10 @@
 나중에는 Vue 프론트엔드 + FastAPI 백엔드 + PostgreSQL + 관리자 페이지 구조로 옮길 예정이지만, 지금은 안정성이 최우선이야.
 
 현재 안정 버전:
-v199 backend admin overview/snapshots service split
+v199.1 backend admin overview/snapshots service hotfix
 
 현재 인수인계 ZIP:
-rpg_v199_backend_admin_overview_snapshots_service_split_ready.zip
+rpg_v199_1_backend_admin_overview_snapshots_service_hotfix_ready.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
