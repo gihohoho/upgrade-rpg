@@ -194,8 +194,13 @@
     if (!target) return;
     const payload = logsPayload || {};
     const rows = Array.isArray(payload.rows) ? payload.rows : [];
-    if (meta) meta.textContent = `${formatValue(rows.length)} / ${formatValue(payload.total)} logs · ${describeChangeLogFilters(payload.filters || {})} · before/after raw JSON hidden`;
+    const warnings = Array.isArray(payload.warnings) ? payload.warnings : (Array.isArray((payload.filters || {}).warnings) ? payload.filters.warnings : []);
+    if (meta) meta.textContent = `${formatValue(rows.length)} / ${formatValue(payload.total)} logs · ${describeChangeLogFilters(payload.filters || {})} · before/after raw JSON hidden${warnings.length ? ` · warnings=${warnings.join(",")}` : ""}`;
     if (!rows.length) {
+      if (payload.status === "schema_unavailable") {
+        target.innerHTML = `<div class="empty warn">admin_change_logs 테이블을 아직 읽을 수 없습니다. backend 폴더에서 <code>python scripts/setup_dev_db.py --create-schema --verify</code>를 한 번 실행하면 기존 데이터 삭제 없이 누락 테이블을 만들 수 있습니다.</div>`;
+        return;
+      }
       target.innerHTML = `<div class="empty">아직 관리자 변경 이력이 없습니다.</div>`;
       return;
     }

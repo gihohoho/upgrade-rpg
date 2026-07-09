@@ -494,7 +494,11 @@ def verify_counts(session: Session) -> dict[str, int]:
         "drop_table_items": DropTableItem,
         "enhancement_groups": EnhancementGroup,
         "enhancement_levels": EnhancementLevel,
+        "users": User,
+        "user_save_snapshots": UserSaveSnapshot,
         "admin_roles": AdminRole,
+        "admin_user_roles": AdminUserRole,
+        "admin_change_logs": AdminChangeLog,
     }
     counts: dict[str, int] = {}
     for name, model in tables.items():

@@ -1,3 +1,32 @@
+# Changelog
+
+## v202 - Backend admin change log service split
+
+- `backend/app/services/admin/admin_change_log_service.py`를 추가했습니다.
+- change logs 목록/상세/rollback 관련 public/helper 메서드를 `AdminChangeLogService` mixin으로 이동했습니다.
+- `AdminService` facade, route path, schema/API 응답 구조는 유지했습니다.
+- `/admin/change-logs` schema guard와 route exception guard는 분리 파일에서도 유지됩니다.
+- `apply_admin_change_log_rollback()` 성공 경로에서 `return preview`가 누락될 수 있던 부분을 보강했습니다.
+- `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `change-logs-extracted-v202`로 갱신했습니다.
+- `tools/smoke_backend_admin_change_log_service_split.py`를 추가하고 core smoke에 포함했습니다.
+- DB schema/env 변경, DB reset, seed 재실행은 필요 없습니다.
+
+## v201.1 - Admin change logs schema guard hotfix
+
+- `/api/v1/admin/change-logs` 목록 조회가 로컬 개발 DB의 누락된 `admin_change_logs` 테이블/스키마 때문에 500으로 죽지 않도록 방어했습니다.
+- SQLAlchemy 쿼리 실패 시 `session.rollback()` 후 `schema_unavailable` 빈 목록 payload를 반환합니다.
+- 관리자 UI에 `python scripts/setup_dev_db.py --create-schema --verify` 복구 명령을 표시합니다.
+- `setup_dev_db.py --verify`가 `admin_change_logs`, `admin_user_roles`, `user_save_snapshots`, `users` 카운트도 확인하도록 확장했습니다.
+- `tools/smoke_admin_change_logs_schema_guard.py`를 추가하고 core smoke에 포함했습니다.
+
+## v201 backend admin create lifecycle service split
+
+- `backend/app/services/admin/admin_create_lifecycle_service.py` 추가
+- `AdminCreateLifecycleService` mixin 추가
+- create blueprint / create preview/apply / create-delete / restore 관련 메서드 이동
+- `AdminService` facade, route/schema/API 응답 구조 유지
+- `tools/smoke_backend_admin_create_lifecycle_service_split.py` 추가
+
 ## v200 backend admin master catalog/detail service split
 
 - `backend/app/services/admin/admin_master_catalog_service.py` 추가
@@ -6,7 +35,6 @@
 - route/schema/API 응답 구조 변경 없음
 - `tools/smoke_backend_admin_master_catalog_service_split.py` 추가
 
-# Changelog
 
 ## v199.1 backend admin overview/snapshots service hotfix
 
@@ -88,7 +116,6 @@
 - 실제 파일 분리는 아직 하지 않았습니다.
 - DB schema 변경, DB reset, seed 재실행은 필요 없습니다.
 
-# Changelog
 
 ## v187
 

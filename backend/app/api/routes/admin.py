@@ -428,16 +428,48 @@ async def list_admin_change_logs(
     session: AsyncSession = Depends(get_db_session),
 ):
     """List compact admin change logs without returning full before/after JSON."""
-    logs = await service.list_admin_change_logs(
-        session,
-        limit=limit,
-        target_type=target_type,
-        target_id=target_id,
-        action=action,
-        changed_key=changed_key,
-        applied=applied,
-        sort=sort,
-    )
+    try:
+        logs = await service.list_admin_change_logs(
+            session,
+            limit=limit,
+            target_type=target_type,
+            target_id=target_id,
+            action=action,
+            changed_key=changed_key,
+            applied=applied,
+            sort=sort,
+        )
+    except Exception as exc:  # pragma: no cover - local admin guard against unexpected dev DB/code drift
+        try:
+            await session.rollback()
+        except Exception:
+            pass
+        safe_limit = max(1, min(int(limit or 20), 100))
+        warnings = ["admin_change_logs_route_exception_guarded"]
+        logs = {
+            "status": "unavailable",
+            "readOnly": True,
+            "count": 0,
+            "total": 0,
+            "limit": safe_limit,
+            "filters": {
+                "targetType": target_type,
+                "targetId": target_id,
+                "action": action,
+                "changedKey": changed_key,
+                "applied": applied,
+                "sort": sort or "created_desc",
+                "warnings": warnings,
+            },
+            "rows": [],
+            "rawBeforeAfterReturned": False,
+            "warnings": warnings,
+            "debug": {
+                "errorClass": exc.__class__.__name__,
+                "errorMessage": str(exc)[:500],
+                "hint": "backend/app/services/admin/admin_change_log_service.py의 change-logs 조회 경로 또는 로컬 DB 스키마를 확인하세요.",
+            },
+        }
     return ok_response(
         type="admin.change_logs",
         payload=logs,
@@ -449,6 +481,7 @@ async def list_admin_change_logs(
             "total": logs["total"],
             "limit": logs["limit"],
             "filters": logs["filters"],
+            "warnings": logs.get("warnings", []),
         },
         meta={
             "source": "postgresql",
