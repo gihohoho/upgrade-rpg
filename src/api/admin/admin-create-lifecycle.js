@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  const VERSION = "v189.admin-create-lifecycle-split";
-  const LEGACY_SMOKE_VERSION_MARKERS = "v188.admin-create-lifecycle-split-contract v187.admin-change-logs-split v183.admin-create-lifecycle-batch-check";
+  const VERSION = "v189.1.admin-create-lifecycle-split-hotfix";
+  const LEGACY_SMOKE_VERSION_MARKERS = "v189.admin-create-lifecycle-split v188.admin-create-lifecycle-split-contract v187.admin-change-logs-split v183.admin-create-lifecycle-batch-check";
 
   let configured = false;
   let currentAdminCreateBlueprintPayload = null;
@@ -148,6 +148,21 @@
   let readMasterCatalogFiltersFromDom = () => ({});
   let runPostWriteMasterApiVerification = async () => ({ ok: true });
 
+  function readAdminCreateBlueprintFiltersFromDom() {
+    const domainEl = $("[data-admin-create-domain]");
+    const masterDomainEl = $("[data-admin-master-domain]");
+    return {
+      domain: domainEl && domainEl.value ? domainEl.value : (masterDomainEl && masterDomainEl.value ? masterDomainEl.value : DEFAULT_MASTER_DOMAIN),
+    };
+  }
+
+  function syncAdminCreateDomainFromCatalog() {
+    const createDomainEl = $("[data-admin-create-domain]");
+    const masterDomainEl = $("[data-admin-master-domain]");
+    if (createDomainEl && masterDomainEl && masterDomainEl.value) createDomainEl.value = masterDomainEl.value;
+    return readAdminCreateBlueprintFiltersFromDom();
+  }
+
   function configure(deps) {
     const d = deps || {};
     if (typeof d.querySelector === "function") $ = d.querySelector;
@@ -210,6 +225,8 @@
     const apiMethods = ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.requiredApiMethods.slice();
     const missingApiMethods = apiMethods.filter((key) => !(window.RpgGameApi && typeof window.RpgGameApi[key] === "function"));
     const exportedFunctions = [
+      "readAdminCreateBlueprintFiltersFromDom",
+      "syncAdminCreateDomainFromCatalog",
       "getAdminCreateBlueprintFieldInputKind",
       "getAdminCreateBlueprintRequiredKeys",
       "getAdminCreateBlueprintDefaultDraft",
@@ -1092,6 +1109,8 @@
     LEGACY_SMOKE_VERSION_MARKERS,
     configure,
     getReadiness,
+    readAdminCreateBlueprintFiltersFromDom,
+    syncAdminCreateDomainFromCatalog,
     getAdminCreateBlueprintFieldInputKind,
     getAdminCreateBlueprintRequiredKeys,
     getAdminCreateBlueprintDefaultDraft,

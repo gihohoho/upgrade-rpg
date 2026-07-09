@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  const VERSION = "v189.admin-create-lifecycle-split";
-  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary v183.admin-create-lifecycle-batch-check v184.admin-js-split-readiness v185.admin-layout-shell-split v186.admin-change-log-split-contract v188.admin-create-lifecycle-split-contract v189.admin-create-lifecycle-split";
+  const VERSION = "v189.1.admin-create-lifecycle-split-hotfix";
+  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary v183.admin-create-lifecycle-batch-check v184.admin-js-split-readiness v185.admin-layout-shell-split v186.admin-change-log-split-contract v188.admin-create-lifecycle-split-contract v189.admin-create-lifecycle-split v189.1.admin-create-lifecycle-split-hotfix";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -3466,7 +3466,7 @@
     const changeLogs = typeof getAdminChangeLogsReadiness === "function" ? getAdminChangeLogsReadiness() : { ok: false };
     const changeLogsExternalReady = !!(changeLogs && changeLogs.ok && changeLogs.version === "v187.admin-change-logs-split");
     const createLifecycle = typeof getAdminCreateLifecycleReadiness === "function" ? getAdminCreateLifecycleReadiness() : { ok: false };
-    const createLifecycleExternalReady = !!(createLifecycle && createLifecycle.ok && createLifecycle.version === "v189.admin-create-lifecycle-split");
+    const createLifecycleExternalReady = !!(createLifecycle && createLifecycle.ok && createLifecycle.version === "v189.1.admin-create-lifecycle-split-hotfix");
     const createDraftPreviewReady = typeof previewAdminCreateDraft === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminMasterDataCreate === "function");
     const createApplyReady = typeof applyAdminCreateDraft === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.applyAdminMasterDataCreate === "function");
     const masterDetailReady = !!document.querySelector("[data-admin-master-detail]");

@@ -54,10 +54,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v189: admin create lifecycle split
+v189.1: admin create lifecycle split hotfix
 
 현재 인수인계 ZIP:
-rpg_v189_admin_create_lifecycle_split_ready.zip
+rpg_v189_1_admin_create_lifecycle_split_hotfix_ready.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md

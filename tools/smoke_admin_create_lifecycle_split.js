@@ -17,12 +17,14 @@ function assertContains(file, patterns) {
 }
 
 assertContains("src/api/admin/admin-create-lifecycle.js", [
-  "v189.admin-create-lifecycle-split",
+  "v189.1.admin-create-lifecycle-split-hotfix",
   "RpgAdminCreateLifecycle",
   "configure",
   "getReadiness",
   "ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT",
   "extracted-v189",
+  "readAdminCreateBlueprintFiltersFromDom",
+  "syncAdminCreateDomainFromCatalog",
   "renderAdminCreateBlueprint",
   "refreshAdminCreateBlueprint",
   "readAdminCreateDraftValues",
@@ -41,13 +43,14 @@ assertContains("src/api/admin/admin-create-lifecycle.js", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v189.admin-create-lifecycle-split",
+  "v189.1.admin-create-lifecycle-split-hotfix",
   "getAdminCreateLifecycleApi",
   "configureAdminCreateLifecycle",
   "getAdminCreateLifecycleReadiness",
   "createLifecycleExternalReady",
   "window.getAdminCreateLifecycleReadiness",
   "RpgAdminCreateLifecycle",
+  "createLifecycle.version === \"v189.1.admin-create-lifecycle-split-hotfix\"",
   "admin/admin-create-lifecycle.js",
 ]);
 
@@ -73,5 +76,52 @@ for (let i = 1; i < order.length; i += 1) {
 assertContains("tools/run_smoke_core.sh", [
   "node tools/smoke_admin_create_lifecycle_split.js",
 ]);
+
+
+const vm = require("vm");
+const createLifecycleText = read("src/api/admin/admin-create-lifecycle.js");
+const fakeElements = new Map([
+  ["[data-admin-create-domain]", { value: "skillLevels" }],
+  ["[data-admin-master-domain]", { value: "itemTemplates" }],
+  ["[data-admin-create-blueprint]", { innerHTML: "" }],
+  ["[data-admin-create-draft]", { querySelectorAll: () => [] }],
+]);
+const sandbox = {
+  window: {},
+  document: {
+    querySelector(selector) {
+      return fakeElements.get(selector) || null;
+    },
+    querySelectorAll() {
+      return [];
+    },
+  },
+  console,
+  setTimeout,
+  clearTimeout,
+};
+sandbox.window = sandbox;
+sandbox.RpgGameApi = {
+  fetchAdminMasterCreateBlueprint() {},
+  previewAdminMasterDataCreate() {},
+  applyAdminMasterDataCreate() {},
+  previewAdminCreateDeleteRollback() {},
+  applyAdminCreateDeleteRollback() {},
+  previewAdminCreateDeleteRestore() {},
+  applyAdminCreateDeleteRestore() {},
+};
+vm.createContext(sandbox);
+vm.runInContext(createLifecycleText, sandbox, { filename: "src/api/admin/admin-create-lifecycle.js" });
+if (!sandbox.RpgAdminCreateLifecycle) throw new Error("RpgAdminCreateLifecycle was not registered on window");
+sandbox.RpgAdminCreateLifecycle.configure({
+  querySelector: sandbox.document.querySelector.bind(sandbox.document),
+  DEFAULT_MASTER_DOMAIN: "itemTemplates",
+});
+const filters = sandbox.RpgAdminCreateLifecycle.readAdminCreateBlueprintFiltersFromDom();
+if (!filters || filters.domain !== "skillLevels") throw new Error("create lifecycle split: blueprint filter reader did not work after extraction");
+const readiness = sandbox.RpgAdminCreateLifecycle.getAdminCreateBlueprintReadiness();
+if (!readiness || readiness.domain !== "skillLevels") throw new Error("create lifecycle split: blueprint readiness should not throw and should return selected domain");
+const syncFilters = sandbox.RpgAdminCreateLifecycle.syncAdminCreateDomainFromCatalog();
+if (!syncFilters || syncFilters.domain !== "itemTemplates") throw new Error("create lifecycle split: catalog domain sync did not return synced domain");
 
 console.log("admin create lifecycle split smoke test passed");

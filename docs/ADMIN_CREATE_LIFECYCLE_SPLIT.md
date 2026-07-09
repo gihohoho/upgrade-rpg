@@ -2,7 +2,7 @@
 
 ## 버전
 
-v189 admin create lifecycle split
+v189.1 admin create lifecycle split hotfix
 
 ## 목적
 
@@ -57,7 +57,7 @@ checkAdminReadOnlyPageReady().version
 예상값:
 
 ```txt
-v189.admin-create-lifecycle-split
+v189.1.admin-create-lifecycle-split-hotfix
 ```
 
 ```js
@@ -77,7 +77,7 @@ window.RpgAdminCreateLifecycle.VERSION
 예상값:
 
 ```txt
-v189.admin-create-lifecycle-split
+v189.1.admin-create-lifecycle-split-hotfix
 ```
 
 ## DB / env

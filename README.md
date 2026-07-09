@@ -1,8 +1,8 @@
 # Upgrade RPG
 
-현재 안정 버전: **v189 admin create lifecycle split**
+현재 안정 버전: **v189.1 admin create lifecycle split hotfix**
 
-새 채팅 인수인계 ZIP: **rpg_v189_admin_create_lifecycle_split_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v189_1_admin_create_lifecycle_split_hotfix_ready.zip**
 
 현재 프로젝트는 아직 Vue가 아니라 `index.html + JS + CSS` 기반 RPG 게임입니다. 기존 게임 동작을 유지하면서 FastAPI + PostgreSQL + 관리자 페이지 구조로 단계적으로 분리 중입니다.
 
@@ -60,6 +60,14 @@ bash tools/run_smoke_all.sh
 - `.env`, `.gitignore` 변경 없음.
 - 이 ZIP에는 `.env`, `.gitignore`를 포함하지 않았습니다.
 
+
+## v189.1 hotfix 완료
+
+- `admin-create-lifecycle.js`가 분리 후 `readAdminCreateBlueprintFiltersFromDom` helper를 찾지 못하던 런타임 오류를 수정했습니다.
+- `readAdminCreateBlueprintFiltersFromDom`, `syncAdminCreateDomainFromCatalog`를 create lifecycle 외부 모듈 안에도 추가하고 export했습니다.
+- `checkAdminReadOnlyPageReady().version` 호출이 다시 정상 동작합니다.
+- 새 runtime smoke로 같은 누락을 재발 방지합니다.
+- DB reset / seed 필요 없음.
 
 ## v189 완료
 

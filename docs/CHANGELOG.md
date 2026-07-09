@@ -1,4 +1,4 @@
-# v189 admin create lifecycle split
+# v189.1 admin create lifecycle split hotfix
 
 - `src/api/admin/admin-create-lifecycle.js` 신규 추가.
 - 생성 설계/초안/preview/apply/lifecycle guide/batch check 구현을 외부 JS 파일로 1차 분리했습니다.

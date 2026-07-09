@@ -57,8 +57,8 @@ uvicorn app.main:app --reload
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v189 admin create lifecycle split**
-- 새 채팅용 ZIP: **rpg_v189_admin_create_lifecycle_split_ready.zip**
+- 최신 안정 버전: **v189.1 admin create lifecycle split hotfix**
+- 새 채팅용 ZIP: **rpg_v189_1_admin_create_lifecycle_split_hotfix_ready.zip**
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -97,6 +97,13 @@ uvicorn app.main:app --reload
 - `characterSkills`
 
 위 도메인들은 생성 row delete/restore도 제한적으로 열려 있습니다.
+
+## v189.1 hotfix 완료
+
+- v189 분리 후 `checkAdminReadOnlyPageReady().version` 호출 시 `readAdminCreateBlueprintFiltersFromDom is not defined` 오류가 나던 문제를 수정했습니다.
+- `src/api/admin/admin-create-lifecycle.js` 안에 blueprint filter reader와 catalog sync helper를 추가하고 export했습니다.
+- `tools/smoke_admin_create_lifecycle_split.js`에 VM 기반 runtime 검사를 추가해 `getAdminCreateBlueprintReadiness()`가 실제로 throw 하지 않는지 확인합니다.
+- DB reset / seed 필요 없음.
 
 ## v189 완료
 
@@ -143,7 +150,7 @@ checkAdminReadOnlyPageReady().version
 예상 결과:
 
 ```txt
-v189.admin-create-lifecycle-split
+v189.1.admin-create-lifecycle-split-hotfix
 ```
 
 추가 확인:
@@ -169,7 +176,7 @@ window.RpgAdminCreateLifecycle.VERSION
 예상 결과:
 
 ```txt
-v189.admin-create-lifecycle-split
+v189.1.admin-create-lifecycle-split-hotfix
 ```
 
 ## 다음 추천 단계

@@ -1,6 +1,6 @@
 # Next Steps
 
-## 현재 완료: v189 admin create lifecycle split
+## 현재 완료: v189.1 admin create lifecycle split hotfix
 
 `create lifecycle` 구현을 외부 JS 파일로 1차 분리했습니다.
 

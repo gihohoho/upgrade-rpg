@@ -1,8 +1,8 @@
 # Current Status
 
-현재 기준: **v189 admin create lifecycle split**
+현재 기준: **v189.1 admin create lifecycle split hotfix**
 
-이 패키지 기준 ZIP: **rpg_v189_admin_create_lifecycle_split_ready.zip**
+이 패키지 기준 ZIP: **rpg_v189_1_admin_create_lifecycle_split_hotfix_ready.zip**
 
 ## 현재 상태
 
