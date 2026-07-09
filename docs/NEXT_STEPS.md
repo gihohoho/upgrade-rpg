@@ -1,17 +1,11 @@
-# Next Steps — after v214
+# Next Steps — after v216
 
-추천 다음 단계는 **v215 admin overview/snapshot route module split** 입니다.
+다음 추천 단계는 **v217 admin route legacy smoke marker cleanup**입니다.
 
-## 추천 작업
+1. `admin.py` 하단의 legacy static-smoke marker 주석을 더 짧게 정리
+2. 오래된 smoke가 실제 route module 파일을 보도록 조금씩 조정
+3. `admin.py`를 최종적으로 include facade + 최소 주석만 남기기
+4. route path/schema/API 응답 구조는 그대로 유지
+5. v217 전용 smoke 추가
 
-1. `backend/app/api/routes/admin_overview_snapshot_routes.py` 생성
-2. `requirements`, `overview`, `save-snapshots`, `change-preview` route 이동
-3. 기존 `admin.py`는 route include facade만 남기기
-4. 기존 API path/schema/envelope 유지 smoke 작성
-5. core smoke/seed smoke/compileall 검증
-
-주의:
-- route path는 유지
-- `AdminService` facade 유지
-- schema 변경 금지
-- DB/env 변경 금지
+그 다음 후보는 admin route module별 README 또는 route registry 문서화입니다.

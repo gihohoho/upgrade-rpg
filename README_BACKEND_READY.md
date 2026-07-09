@@ -1,36 +1,21 @@
-# Backend Ready Notes — v214
+# Backend Ready Notes — v216
 
-현재 안정 버전: **v214 backend admin route module split**
+현재 안정 버전: **v216 backend admin route overview facade split**
 
-## 안정화 흐름
+## 변경 요약
 
-- v198: AdminService split contract 고정
-- v199~v206: AdminService 내부 서비스 분리
-- v207~v210: admin route response/params/error helper 분리
-- v211~v212: admin route response data/meta helper 분리
-- v213~v214: admin.py 기능별 route module 분리
+- `admin_overview_snapshot_routes.py` 추가
+- `/requirements`, `/overview`, `/save-snapshots`, `/change-preview` route 이동
+- `admin.py`는 master-data/change-log/overview-snapshot router include facade로 축소
+- route path/schema/API 응답 구조 변경 없음
+- DB/env 변경 없음
 
-## v214 변경
-
-- `backend/app/api/routes/admin_master_data_routes.py` 추가
-- `backend/app/api/routes/admin_change_log_routes.py` 추가
-- `admin.py`는 router include facade로 축소
-- master-data API 경로는 그대로 유지
-- change-log/rollback/create-delete API 경로는 그대로 유지
-- API path/schema/envelope/DB/env 변경 없음
-
-## 실행/검증
-
-실행 위치: 프로젝트 루트
-
-```bash
-bash tools/run_smoke_core.sh
-python tools/smoke_backend_admin_route_module_split.py
-python -m compileall -q backend/app backend/scripts tools
-```
+## 서버 재실행
 
 실행 위치: backend 폴더
 
 ```bash
 uvicorn app.main:app --reload
 ```
+
+DB reset/seed 재실행은 필요 없습니다.

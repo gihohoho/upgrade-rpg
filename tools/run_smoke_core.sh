@@ -61,8 +61,16 @@ python tools/smoke_backend_admin_route_response_helper.py
 python tools/smoke_backend_admin_route_params_error_helpers.py
 python tools/smoke_backend_admin_route_response_data_meta_helpers.py
 python tools/smoke_backend_admin_route_module_split.py
+python tools/smoke_backend_admin_overview_route_module_split.py
 python tools/smoke_admin_create_blueprint_api_structure.py
 python tools/smoke_save_snapshot_integrity_api_structure.py
 python tools/smoke_save_snapshot_api_structure.py
 
+# Some legacy smoke scripts may leave short-lived background jobs/timers open in
+# non-interactive shells. Clean them up so CI/container runs can return promptly.
+if jobs -pr >/dev/null 2>&1; then
+  jobs -pr | xargs -r kill >/dev/null 2>&1 || true
+fi
+
 echo "[core smoke] passed"
+exit 0

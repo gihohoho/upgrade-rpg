@@ -11,6 +11,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ROUTE = ROOT / "backend/app/api/routes/admin.py"
+OVERVIEW = ROOT / "backend/app/api/routes/admin_overview_snapshot_routes.py"
+MASTER = ROOT / "backend/app/api/routes/admin_master_data_routes.py"
+CHANGE = ROOT / "backend/app/api/routes/admin_change_log_routes.py"
 HELPER = ROOT / "backend/app/api/routes/admin_response_helpers.py"
 CONTRACT = ROOT / "backend/app/services/admin_service_split_contract.py"
 ENTRY = ROOT / "src/api/admin-page-readonly.js"
@@ -26,6 +29,7 @@ def assert_true(condition: bool, message: str) -> None:
 
 
 route = read(ROUTE)
+route_modules = route + read(OVERVIEW) + read(MASTER) + read(CHANGE)
 helper = read(HELPER)
 contract = read(CONTRACT)
 entry = read(ENTRY)
@@ -55,17 +59,17 @@ required_routes = [
 ]
 
 for pattern in required_routes:
-    assert_true(pattern in route, f"route missing after helper cleanup: {pattern}")
+    assert_true(pattern in route_modules, f"route missing after helper cleanup: {pattern}")
 
-assert_true("from app.api.routes.admin_response_helpers import admin_ok_response" in route, "admin route helper import missing")
-assert_true("from app.core.response import ok_response" not in route, "admin route should not import core ok_response directly")
-assert_true(route.count("return admin_ok_response(") >= 20, "admin route responses should go through admin_ok_response")
+assert_true("from app.api.routes.admin_response_helpers import admin_ok_response" in route_modules, "admin route helper import missing")
+assert_true("from app.core.response import ok_response" not in route_modules, "admin route should not import core ok_response directly")
+assert_true(route_modules.count("return admin_ok_response(") >= 20, "admin route responses should go through admin_ok_response")
 assert_true("def admin_ok_response(type: str" in helper, "admin_ok_response helper signature missing")
 assert_true("return ok_response(type=type, **kwargs)" in helper, "helper must preserve ok_response envelope")
-assert_true('"splitStatus": "admin-route-module-split-v214"' in contract, "backend contract splitStatus should be v214")
+assert_true('"splitStatus": "admin-route-overview-facade-split-v216"' in contract, "backend contract splitStatus should be v216")
 assert_true('"backend/app/api/routes/admin_response_helpers.py"' in contract, "helper should be listed in backend split contract")
-assert_true('const VERSION = "v214.backend-admin-route-module-split"' in entry, "frontend readiness version should be v214")
-assert_true('splitStatus: "admin-route-module-split-v214"' in entry, "frontend splitStatus should be v214")
+assert_true('const VERSION = "v216.backend-admin-route-overview-facade-split"' in entry, "frontend readiness version should be v216")
+assert_true('splitStatus: "admin-route-overview-facade-split-v216"' in entry, "frontend splitStatus should be v216")
 assert_true("routeResponseHelperReady" in entry, "frontend route response helper readiness flag missing")
 assert_true("routeParamsReady" in entry, "frontend route params readiness flag missing")
 assert_true("routeErrorHelperReady" in entry, "frontend route error helper readiness flag missing")

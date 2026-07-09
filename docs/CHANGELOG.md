@@ -1,3 +1,11 @@
+# v216 - Backend admin overview route facade split
+
+- `backend/app/api/routes/admin_overview_snapshot_routes.py`를 추가했습니다.
+- `/requirements`, `/overview`, `/save-snapshots`, `/change-preview` route를 `admin.py`에서 분리했습니다.
+- `admin.py`는 include-router facade로 축소했습니다.
+- `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `admin-route-overview-facade-split-v216`으로 갱신했습니다.
+- route path/schema/API 응답 구조/DB/env 변경은 없습니다.
+
 ## v212 - Backend admin route response data/meta helpers
 
 - `backend/app/api/routes/admin_response_data_helpers.py`를 추가했습니다.

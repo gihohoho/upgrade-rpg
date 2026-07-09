@@ -11,6 +11,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ROUTE = ROOT / "backend/app/api/routes/admin.py"
+OVERVIEW = ROOT / "backend/app/api/routes/admin_overview_snapshot_routes.py"
+MASTER = ROOT / "backend/app/api/routes/admin_master_data_routes.py"
+CHANGE = ROOT / "backend/app/api/routes/admin_change_log_routes.py"
 DATA_HELPERS = ROOT / "backend/app/api/routes/admin_response_data_helpers.py"
 META_HELPERS = ROOT / "backend/app/api/routes/admin_response_meta_helpers.py"
 CONTRACT = ROOT / "backend/app/services/admin_service_split_contract.py"
@@ -28,6 +31,7 @@ def assert_true(condition: bool, message: str) -> None:
 
 
 route = read(ROUTE)
+route_modules = route + read(OVERVIEW) + read(MASTER) + read(CHANGE)
 data_helpers = read(DATA_HELPERS)
 meta_helpers = read(META_HELPERS)
 contract = read(CONTRACT)
@@ -36,15 +40,15 @@ run_smoke = read(RUN_SMOKE)
 
 assert_true(DATA_HELPERS.exists(), "admin response data helper file missing")
 assert_true(META_HELPERS.exists(), "admin response meta helper file missing")
-assert_true("from app.api.routes import admin_response_data_helpers as admin_data" in route, "route should import response data helper module")
-assert_true("from app.api.routes.admin_response_meta_helpers import admin_route_meta" in route, "route should import response meta helper")
+assert_true("from app.api.routes import admin_response_data_helpers as admin_data" in route_modules, "route should import response data helper module")
+assert_true("from app.api.routes.admin_response_meta_helpers import admin_route_meta" in route_modules, "route should import response meta helper")
 assert_true("data={" not in route, "admin.py should not build large inline response data dicts")
 assert_true("meta={" not in route, "admin.py should not build inline route metadata dicts")
-assert_true("admin_data.build_master_catalog_data" in route, "master catalog route should use response data helper")
-assert_true("admin_data.build_change_logs_data" in route, "change logs route should use response data helper")
-assert_true("admin_data.build_save_snapshots_data" in route, "save snapshots route should use response data helper")
-assert_true("meta=admin_route_meta(\"master_catalog\")" in route, "master catalog route should use meta helper")
-assert_true("meta=admin_route_meta(\"change_logs\")" in route, "change logs route should use meta helper")
+assert_true("admin_data.build_master_catalog_data" in route_modules, "master catalog route should use response data helper")
+assert_true("admin_data.build_change_logs_data" in route_modules, "change logs route should use response data helper")
+assert_true("admin_data.build_save_snapshots_data" in route_modules, "save snapshots route should use response data helper")
+assert_true("meta=admin_route_meta(\"master_catalog\")" in route_modules, "master catalog route should use meta helper")
+assert_true("meta=admin_route_meta(\"change_logs\")" in route_modules, "change logs route should use meta helper")
 assert_true("def build_admin_requirements_data" in data_helpers, "requirements data builder missing")
 assert_true("def build_admin_overview_data" in data_helpers, "overview data builder missing")
 assert_true("def build_master_create_apply_data" in data_helpers, "create apply data builder missing")
@@ -56,10 +60,10 @@ assert_true("관리자 마스터 데이터 카탈로그 조회 전용 목록" in
 assert_true("관리자 변경 이력 읽기 전용 목록" in meta_helpers, "change logs meta note missing")
 assert_true('"backend/app/api/routes/admin_response_data_helpers.py"' in contract, "data helper should be listed in backend contract")
 assert_true('"backend/app/api/routes/admin_response_meta_helpers.py"' in contract, "meta helper should be listed in backend contract")
-assert_true('"splitStatus": "admin-route-module-split-v214"' in contract, "contract splitStatus should be v214")
-assert_true('"No route path changes in v214"' in contract, "route path contract should mention v214")
-assert_true('const VERSION = "v214.backend-admin-route-module-split"' in entry, "frontend readiness version should be v214")
-assert_true('splitStatus: "admin-route-module-split-v214"' in entry, "frontend splitStatus should be v214")
+assert_true('"splitStatus": "admin-route-overview-facade-split-v216"' in contract, "contract splitStatus should be v216")
+assert_true('"No route path changes in v216"' in contract, "route path contract should mention v214")
+assert_true('const VERSION = "v216.backend-admin-route-overview-facade-split"' in entry, "frontend readiness version should be v216")
+assert_true('splitStatus: "admin-route-overview-facade-split-v216"' in entry, "frontend splitStatus should be v216")
 assert_true("backendRouteResponseDataHelperReady" in entry, "top-level response data readiness flag missing")
 assert_true("backendRouteResponseMetaHelperReady" in entry, "top-level response meta readiness flag missing")
 assert_true("routeResponseDataHelperReady" in entry, "contract response data readiness flag missing")
@@ -77,6 +81,6 @@ for route_path in (
     '@router.post("/change-logs/{change_log_id}/rollback-apply")',
     '@router.get("/save-snapshots")',
 ):
-    assert_true(route_path in route, f"route path missing after helper extraction: {route_path}")
+    assert_true(route_path in route_modules, f"route path missing after helper extraction: {route_path}")
 
 print("backend admin route response data/meta helpers smoke test passed")

@@ -1,32 +1,27 @@
-# Current Status — v214
+# Current Status — v216
 
-현재 기준: **v214 backend admin route module split**
+현재 기준: **v216 backend admin route overview facade split**
 
-이 패키지 기준 ZIP: **rpg_v214_backend_admin_route_module_split_ready.zip**
+이 패키지 기준 ZIP: **rpg_v216_backend_admin_overview_route_facade_split_ready.zip**
 
-관리자 콘솔 확인값:
+## 관리자 콘솔 확인
 
 ```js
 checkAdminReadOnlyPageReady().version
-// v214.backend-admin-route-module-split
+// v216.backend-admin-route-overview-facade-split
 ```
 
 ```js
-checkAdminReadOnlyPageReady().backendRouteModuleSplitReady
+checkAdminReadOnlyPageReady().backendRouteOverviewSnapshotModuleReady
 // true
 ```
 
 ```js
-checkAdminReadOnlyPageReady().backendRouteMasterDataModuleReady
-// true
-```
-
-```js
-checkAdminReadOnlyPageReady().backendRouteChangeLogModuleReady
+checkAdminReadOnlyPageReady().backendRouteFacadeReady
 // true
 ```
 
 ```js
 getAdminBackendServiceSplitContractReadiness().splitStatus
-// admin-route-module-split-v214
+// admin-route-overview-facade-split-v216
 ```
