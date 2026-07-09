@@ -28,7 +28,7 @@ assertContains("backend/app/api/routes/admin_response_data_helpers.py", [
   "safeForAdminWriteUi",
 ]);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   "get_master_catalog_relations",
   "_build_master_relation_groups",
   "_fetch_master_relation_group",

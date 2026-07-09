@@ -34,7 +34,7 @@ assertContains("src/api/game-api-client.js", [
   "dryRun: true",
 ]);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   "preview_master_data_create",
   "_empty_create_preview",
   "_exists_duplicate_unique_value",

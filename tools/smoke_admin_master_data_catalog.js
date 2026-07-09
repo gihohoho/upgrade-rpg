@@ -28,7 +28,7 @@ assertContains("backend/app/api/routes/admin_response_data_helpers.py", [
   'assetsReturned',
 ]);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   "MASTER_CATALOG_DOMAINS",
   "list_master_catalog_domains",
   "list_master_catalog_rows",

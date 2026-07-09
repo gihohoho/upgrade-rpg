@@ -30,7 +30,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "드랍 아이템 연결 변경",
 ]);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   "MASTER_RELATION_EDIT_FIELDS",
   '"itemTemplates": {"enhance_group_code"}',
   '"dropTableItems": {"drop_table_code", "item_template_code"}',

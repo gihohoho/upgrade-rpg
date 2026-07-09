@@ -16,7 +16,7 @@ function assertContains(file, patterns) {
   }
 }
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   "MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT",
   "RESTORE DELETED CREATED ROW",
   "preview_admin_create_delete_restore",

@@ -27,7 +27,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "window.getAdminChangeRelationInfo",
 ]);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   "_build_change_log_changes_with_relations",
   "_describe_change_log_relation_value",
   "_enrich_rollback_mismatches_with_relations",

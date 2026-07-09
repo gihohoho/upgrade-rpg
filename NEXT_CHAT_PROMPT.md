@@ -1,7 +1,7 @@
 이전 채팅에서 이어서 진행합니다.
 
-현재 안정 버전은 v218입니다.
-업로드할 ZIP은 `rpg_v218_backend_admin_route_map_contract_ready.zip`입니다.
+현재 안정 버전은 v220입니다.
+업로드할 ZIP은 `rpg_v220_backend_admin_route_service_legacy_cleanup_ready.zip`입니다.
 
 작업 조건:
 - API route path 변경 금지
@@ -20,9 +20,13 @@
 - change-log routes: `admin_change_log_routes.py`
 - overview/snapshot routes: `admin_overview_snapshot_routes.py`
 - route ownership contract: `admin_route_map_contract.py`
-- splitStatus: `admin-route-map-contract-v218`
+- route service factory: `admin_route_services.py`
+- legacy service smoke marker: `admin_service_legacy_markers.py`
+- `admin_service.py`는 실제 AdminService facade만 유지
+- splitStatus: `admin-service-legacy-marker-cleanup-v220`
 
 다음 추천:
-- v219 backend admin route import/dependency tidy
-- route module 내부 import/service 생성 패턴 정리
-- 이후 필요하면 service legacy marker cleanup으로 진행
+- v221 backend admin service facade MRO/import tidy
+- `admin_service.py` 상속 줄 가독성 정리
+- service split contract/smoke에서 facade 구조를 더 명확히 검증
+- 이후 가능하면 route module import order tidy 또는 service contract reporting 개선

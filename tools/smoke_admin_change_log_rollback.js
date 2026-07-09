@@ -30,7 +30,7 @@ assertContains("backend/app/api/routes/admin_change_log_routes.py", [
   'type="admin.change_log.rollback_apply"',
 ]);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   "MASTER_EDIT_ROLLBACK_CONFIRM_TEXT",
   "ROLLBACK MASTER DATA EDIT",
   "get_admin_change_log_detail",

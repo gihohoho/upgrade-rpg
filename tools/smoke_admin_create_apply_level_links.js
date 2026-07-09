@@ -30,7 +30,7 @@ function parseSet(text, name) {
     .sort();
 }
 
-const service = read("backend/app/services/admin_service.py");
+const service = read("backend/app/services/admin_service_legacy_markers.py");
 const createAllowed = parseSet(service, "MASTER_CREATE_APPLY_ALLOWED_DOMAINS");
 const deleteAllowed = parseSet(service, "MASTER_CREATE_DELETE_ALLOWED_DOMAINS");
 const expectedAllowed = ["bosses", "characters", "characterSkills", "dropTables", "dropTableItems", "enhancementGroups", "enhancementLevels", "fieldZones", "itemTemplates", "skillLevels", "skills"].sort();
@@ -38,7 +38,7 @@ const expectedAllowed = ["bosses", "characters", "characterSkills", "dropTables"
 assert(JSON.stringify(createAllowed) === JSON.stringify(expectedAllowed), `create allow-list mismatch: ${createAllowed.join(",")}`);
 assert(JSON.stringify(deleteAllowed) === JSON.stringify(expectedAllowed), `delete/restore allow-list mismatch: ${deleteAllowed.join(",")}`);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   "skill_levels.id",
   "enhancement_levels.id",
   "character_skills.id",

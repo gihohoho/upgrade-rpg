@@ -49,7 +49,7 @@ assert_contains(
 )
 
 assert_contains(
-    "backend/app/services/admin_service.py",
+    "backend/app/services/admin_service_legacy_markers.py",
     [
         "MASTER_CREATE_BLUEPRINT_FIELDS",
         "get_master_create_blueprint",

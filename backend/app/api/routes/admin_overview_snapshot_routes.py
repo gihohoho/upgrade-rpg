@@ -16,10 +16,10 @@ from app.api.routes.admin_route_params import (
 )
 from app.core.security import CurrentUser
 from app.schemas.admin import AdminChangePreviewRequest
-from app.services.admin_service import AdminService
+from app.api.routes.admin_route_services import create_admin_service
 
 router = APIRouter()
-service = AdminService()
+service = create_admin_service()
 
 
 @router.get("/requirements")

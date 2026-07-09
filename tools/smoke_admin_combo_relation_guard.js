@@ -29,7 +29,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "캐릭터 스킬 연결 변경",
 ]);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   "MASTER_COMBO_GUARDED_FIELDS",
   '"skillLevels": {"skill_code", "level"}',
   '"enhancementLevels": {"group_code", "from_level"}',

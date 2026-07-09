@@ -26,10 +26,10 @@ from app.schemas.admin import (
     AdminCreateDeleteRestoreApplyRequest,
     AdminCreateDeleteRestorePreviewRequest,
 )
-from app.services.admin_service import AdminService
+from app.api.routes.admin_route_services import create_admin_service
 
 router = APIRouter()
-service = AdminService()
+service = create_admin_service()
 
 @router.get("/change-logs")
 async def list_admin_change_logs(

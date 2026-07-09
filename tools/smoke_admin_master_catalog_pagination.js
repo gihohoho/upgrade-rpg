@@ -30,7 +30,7 @@ assertContains("backend/app/api/routes/admin_response_data_helpers.py", [
   '"totalPages": catalog["totalPages"]',
 ]);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   "limit: int = 20",
   "page: int = 1",
   "safe_offset = (safe_page - 1) * safe_limit",

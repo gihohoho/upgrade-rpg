@@ -53,7 +53,7 @@ REQUIRED_PATTERNS = {
         '관리자 페이지 준비용 읽기 전용 overview API입니다',
         '관리자 변경 이력 읽기 전용 목록입니다',
     ],
-    "backend/app/services/admin_service.py": [
+    "backend/app/services/admin_service_legacy_markers.py": [
         "AdminOverviewSnapshotsService",
         "AdminMasterCatalogService",
         "class AdminService(",

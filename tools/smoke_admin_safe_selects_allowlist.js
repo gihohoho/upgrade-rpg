@@ -35,7 +35,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "window.getAdminDraftFieldRisk",
 ]);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   '"itemTemplates": {"name", "item_type", "description", "grade", "stackable", "equip_slot", "enhance_group_code", "admin_note"}',
   '"skills": {"slot_key", "name", "description", "proc_rate", "cooldown_seconds"}',
   "MASTER_EDIT_ALLOWED_FIELDS",

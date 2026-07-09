@@ -7,7 +7,7 @@ from typing import Any
 ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
     "version": "v198.backend-admin-service-split-contract",
     "status": "contract-frozen-v198",
-    "splitStatus": "admin-route-map-contract-v218",
+    "splitStatus": "admin-service-legacy-marker-cleanup-v220",
     "extractedFiles": [
         "backend/app/services/admin/admin_overview_snapshots_service.py",
         "backend/app/services/admin/admin_master_catalog_service.py",
@@ -26,6 +26,8 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "backend/app/api/routes/admin_change_log_routes.py",
         "backend/app/api/routes/admin_overview_snapshot_routes.py",
         "backend/app/api/routes/admin_route_map_contract.py",
+        "backend/app/api/routes/admin_route_services.py",
+        "backend/app/services/admin_service_legacy_markers.py",
     ],
     "currentFile": "backend/app/services/admin_service.py",
     "facadeFile": "backend/app/services/admin_service.py",
@@ -252,6 +254,20 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
             "publicMethods": [],
             "helperMethods": [],
         },
+        {
+            "key": "route-service-dependency",
+            "label": "Admin route service factory dependency",
+            "candidateFile": "backend/app/api/routes/admin_route_services.py",
+            "publicMethods": [],
+            "helperMethods": [],
+        },
+        {
+            "key": "service-legacy-markers",
+            "label": "Legacy static smoke markers outside AdminService facade",
+            "candidateFile": "backend/app/services/admin_service_legacy_markers.py",
+            "publicMethods": [],
+            "helperMethods": [],
+        },
     ],
     "facadeMustKeep": [
         "AdminService",
@@ -277,6 +293,8 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "admin.py stays as a thin include-router facade",
         "Legacy static smoke checks read actual route modules instead of admin.py comments",
         "Admin route ownership map lives in admin_route_map_contract.py",
+        "Admin route modules create service facade through admin_route_services.py",
+        "Legacy service smoke markers live outside admin_service.py",
         "Admin route responses go through admin_ok_response helper",
         "Admin route response data summaries go through admin_response_data_helpers.py",
         "Admin route response metadata goes through admin_response_meta_helpers.py",

@@ -30,7 +30,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "window.refreshDependentAdminRelationSelects",
 ]);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   '"dropTables": {"owner_type", "owner_code", "description", "is_enabled"}',
   '"dropTables": {"owner_type", "owner_code"}',
   'key in {"owner_type", "owner_code"}',

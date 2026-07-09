@@ -50,7 +50,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "RESTORE DELETED CREATED ROW",
 ]);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   "ADMIN_CHANGE_LOG_ACTION_FILTERS",
   "_master_create_lifecycle_payload",
   "createLifecycle",

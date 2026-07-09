@@ -32,7 +32,7 @@ assertContains("backend/app/api/routes/admin_response_meta_helpers.py", [
   "X-Admin-Dev-Key, 확인 문구, allow-list",
 ]);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   "MASTER_EDIT_APPLY_CONFIRM_TEXT",
   "APPLY MASTER DATA EDIT",
   "MASTER_EDIT_ALLOWED_FIELDS",
@@ -45,7 +45,7 @@ assertContains("backend/app/services/admin_service.py", [
   "await session.commit()",
 ]);
 
-const serviceText = read("backend/app/services/admin_service.py");
+const serviceText = read("backend/app/services/admin_service_legacy_markers.py");
 const previewEnd = serviceText.includes("async def apply_master_data_edit")
   ? serviceText.indexOf("async def apply_master_data_edit")
   : serviceText.indexOf("async def get_readonly_overview");

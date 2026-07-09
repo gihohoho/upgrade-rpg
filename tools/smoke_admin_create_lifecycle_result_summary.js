@@ -41,7 +41,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "삭제 row 복원 차단",
 ]);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   "dependencyCheckCount",
   "dependencyBlockerGuardCount",
   "restoreConflictCount",

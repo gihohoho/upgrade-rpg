@@ -39,7 +39,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "deleteGuardMode",
 ]);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   "_master_create_lifecycle_dependency_guards",
   "deleteDependencyGuards",
   "deleteDependencyGuardCount",

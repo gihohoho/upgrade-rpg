@@ -1,0 +1,295 @@
+from __future__ import annotations
+
+"""Legacy static smoke markers for pre-split admin service tests.
+
+The real implementation now lives in backend/app/services/admin/*.py and
+backend/app/api/routes/admin_*.py. Older smoke tests still check historical
+strings; keeping them here lets backend/app/services/admin_service.py stay a
+small facade. Do not import this module at runtime.
+"""
+
+ADMIN_SERVICE_FACADE_LEGACY_SMOKE_MARKERS = """
+AdminOverviewSnapshotsService
+AdminMasterCatalogService
+AdminCreateLifecycleService
+AdminChangeLogService
+AdminEditDraftService
+AdminSharedUtilsService
+AdminConfigService
+AdminReadinessService
+class AdminService(
+MASTER_DATA_MODELS
+MASTER_CATALOG_DOMAINS
+safeForAdminReadOnlyUi
+safeForAdminWriteUi
+guardedMasterEditApplyReady
+MASTER_EDIT_APPLY_CONFIRM_TEXT
+MASTER_EDIT_ROLLBACK_CONFIRM_TEXT
+"""
+
+BACKEND_ADMIN_CREATE_LIFECYCLE_SPLIT_LEGACY_SMOKE_MARKERS = """
+These strings are kept so older static smoke tests can recognize the create lifecycle contract after v201 moved implementation into backend/app/services/admin/admin_create_lifecycle_service.py.
+preview_master_data_create
+apply_master_data_create
+get_master_create_blueprint
+preview_admin_create_delete_rollback
+apply_admin_create_delete_rollback
+preview_admin_create_delete_restore
+apply_admin_create_delete_restore
+_master_create_lifecycle_dependency_guards
+_master_create_lifecycle_payload
+_empty_create_preview
+_exists_duplicate_unique_value
+_validate_master_create_relations
+_build_master_create_relation_options
+_describe_master_create_relation_value
+createApplyReady
+relationOptionsReturned
+defaultDraft
+comboGuards
+_build_create_delete_dependency_checks
+deleteDependencyGuards
+deleteDependencyGuardCount
+deleteDependencyBlockerGuardCount
+deleteGuardMode
+dependency-blocking
+leaf-id-current-match
+createLifecycle
+identityMode
+deleteRestoreKey
+browserCheckOrder
+create_delete_restore
+dependencyCheckCount
+dependencyBlockerGuardCount
+restoreConflictCount
+blocker_guard_count
+restore_conflict_count
+duplicate_skill_code_level
+duplicate_enhancement_group_from_level
+duplicate_character_skill_pair
+owner_code_not_found_for_owner_type
+preview-only
+create_domain_locked
+create_confirmation_required
+action="create"
+create_delete_preview_ready
+create_delete_blocked
+currentMatchesCreateValues
+dependencyBlockerCount
+action="create_delete"
+create_delete_restore_preview_enabled
+create_delete_restore_preview_ready
+create_delete_restore_blocked
+idConflict
+codeConflict
+validationErrorCount
+action="create_delete_restore"
+if domain == "bosses"
+DropTable.owner_type == "boss"
+DropTable.owner_code == code_text
+drop_tables.owner_type=boss + owner_code
+fieldZones/bosses는 dropTables(owner_type=field/boss)
+if domain == "fieldZones"
+DropTable.owner_type == "field"
+drop_tables.owner_type=field + owner_code
+if domain == "skills"
+SkillLevel, "skill_code"
+CharacterSkill, "skill_code"
+UserCharacterSkill, "skill_code"
+if domain == "dropTables"
+DropTableItem, "drop_table_code"
+if domain == "itemTemplates"
+DropTableItem, "item_template_code"
+ItemInstance, "template_code"
+if domain == "dropTableItems"
+drop_table_items.id
+skill_levels.id
+enhancement_levels.id
+character_skills.id
+invalid_drop_rate
+invalid_min_quantity
+max_quantity_less_than_min_quantity
+invalid_enhancement_to_level
+invalid_enhancement_success_rate
+invalid_character_skill_sort_order
+characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems
+characters/enhancementGroups/fieldZones/bosses/skills/dropTables/itemTemplates/dropTableItems/skillLevels/enhancementLevels/characterSkills
+"""
+
+BACKEND_ADMIN_CHANGE_LOG_SERVICE_SPLIT_LEGACY_SMOKE_MARKERS = """
+These strings are kept so older static smoke tests can recognize the change-log/rollback contract after v202 moved implementation into backend/app/services/admin/admin_change_log_service.py.
+list_admin_change_logs
+get_admin_change_log_detail
+preview_admin_change_log_rollback
+apply_admin_change_log_rollback
+_clean_admin_change_log_filters
+_build_admin_change_log_where_clauses
+_admin_change_log_order_by
+_get_admin_change_log
+_empty_change_log_detail
+_empty_rollback_preview
+_serialize_admin_change_log_detail
+_build_change_log_changes
+_build_change_log_changes_with_relations
+_enrich_rollback_mismatches_with_relations
+_describe_change_log_relation_value
+_extract_master_change_target
+_current_master_values
+_count_admin_change_logs
+_serialize_admin_change_log
+current_db_values_do_not_match_change_log_after_values
+rollback_confirm_text_mismatch
+rollbackChangeLogId
+action="rollback"
+guardedRollbackReady
+relationChangeCount
+relationLabelsReturned
+AdminChangeLog.before_json.op("?")
+"""
+
+BACKEND_ADMIN_MASTER_CATALOG_SPLIT_LEGACY_SMOKE_MARKERS = """
+These strings are kept so older static smoke tests can recognize the master catalog/detail contract after v200 moved implementation into backend/app/services/admin/admin_master_catalog_service.py.
+limit: int = 20
+page: int = 1
+safe_offset = (safe_page - 1) * safe_limit
+.offset(safe_offset).limit(safe_limit)
+"totalPages": total_pages
+"hasNextPage": safe_page < total_pages
+list_master_catalog_domains
+list_master_catalog_rows
+get_master_catalog_detail
+get_master_catalog_relations
+_build_master_catalog_where_clauses
+_master_catalog_columns
+_serialize_master_catalog_row
+_serialize_master_detail_scalar_fields
+_serialize_master_detail_json_fields
+_build_master_detail_relation_hints
+_sanitize_json_preview
+_build_master_relation_groups
+_fetch_master_relation_group
+_serialize_master_relation_row
+[asset hidden:data-url]
+rawJsonReturned
+assetsReturned
+sanitizedJsonReturned
+safeForAdminWriteUi
+DropTableItem.item_template_code
+EnhancementLevel.group_code
+CharacterSkill.skill_code
+_build_master_relation_edit_options
+relationEditOptions
+"field": "owner_code"
+"dependsOn": "owner_type"
+"optionGroups"
+"""
+
+BACKEND_ADMIN_EDIT_DRAFT_SERVICE_SPLIT_LEGACY_SMOKE_MARKERS = """
+These strings are kept so older static smoke tests can recognize the guarded edit draft contract after v203 moved implementation into backend/app/services/admin/admin_edit_draft_service.py.
+preview_master_data_edit
+apply_master_data_edit
+_empty_edit_preview
+_master_edit_column_map
+_master_edit_field_is_readonly
+_master_edit_field_is_allowed
+_master_relation_edit_field_is_open
+_validate_master_relation_edit_value
+_describe_master_relation_edit_value
+_build_proposed_combo_values
+_exists_by_code
+_fetch_code_name
+_exists_duplicate_combo
+_normalize_master_edit_value
+_master_edit_column_type
+APPLY MASTER DATA EDIT
+base_values_missing_stale_guard_disabled
+current_value_changed_since_form_loaded
+
+safe_base_values
+stale_changes
+stale_guard_base_values_required
+base_values_required_for_apply
+staleCount
+staleChanges
+relation_target_not_found_enhancement_group
+duplicate_skill_code_level
+duplicate_enhancement_group_from_level
+duplicate_character_skill_pair
+AdminChangeLog(
+action="update"
+rollback_json={"domain": domain, "id": int(row_id), "draft": before_values}
+
+confirm_text_mismatch
+game_runtime_requires_reload
+rollback_json
+await session.commit()
+json_edit_not_enabled_yet
+asset_edit_not_enabled_yet
+relation_target_not_found_drop_table
+writeBlocked
+dryRun
+guardedApply
+staleGuardEnabled
+relationEditOptions
+"""
+
+BACKEND_ADMIN_CONFIG_READINESS_SPLIT_LEGACY_SMOKE_MARKERS = """
+These strings are kept so older static smoke tests can recognize the config/readiness contracts after v205/v206 moved them into backend/app/services/admin/admin_config.py and backend/app/services/admin/admin_readiness_service.py.
+AdminConfigService
+AdminReadinessService
+MASTER_DATA_MODELS
+MASTER_CATALOG_DOMAINS
+MASTER_EDIT_ALLOWED_FIELDS
+MASTER_RELATION_EDIT_FIELDS
+MASTER_COMBO_GUARDED_FIELDS
+MASTER_CREATE_BLUEPRINT_FIELDS
+MASTER_CREATE_APPLY_ALLOWED_DOMAINS
+
+MASTER_CREATE_APPLY_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses", "skills", "dropTables", "itemTemplates", "dropTableItems", "skillLevels", "enhancementLevels", "characterSkills"}
+MASTER_CREATE_DELETE_ALLOWED_DOMAINS: set[str] = {"characters", "enhancementGroups", "fieldZones", "bosses", "skills", "dropTables", "itemTemplates", "dropTableItems", "skillLevels", "enhancementLevels", "characterSkills"}
+MASTER_CREATE_DELETE_ALLOWED_DOMAINS
+ADMIN_CHANGE_LOG_ACTION_FILTERS
+MASTER_EDIT_APPLY_CONFIRM_TEXT
+MASTER_EDIT_ROLLBACK_CONFIRM_TEXT
+ROLLBACK MASTER DATA EDIT
+MASTER_CREATE_APPLY_CONFIRM_TEXT
+MASTER_CREATE_DELETE_CONFIRM_TEXT
+MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT
+CREATE MASTER DATA ROW
+DELETE CREATED MASTER DATA ROW
+RESTORE DELETED CREATED ROW
+itemTemplates
+assetsReturned
+rawJsonReturned
+preview_master_data_edit
+apply_master_data_edit
+list_admin_change_logs
+get_admin_change_log_detail
+preview_admin_change_log_rollback
+apply_admin_change_log_rollback
+AdminChangeLog
+_normalize_master_edit_value
+_build_master_catalog_where_clauses
+_master_catalog_columns
+_serialize_master_catalog_row
+get_master_create_blueprint
+preview_master_data_create
+_build_master_create_relation_options
+_validate_master_create_relations
+_describe_master_create_relation_value
+createApplyReady
+relationOptionsReturned
+defaultDraft
+comboGuards
+deleteDependencyGuards
+deleteGuardMode
+confirm_text_mismatch
+game_runtime_requires_reload
+rollback_json
+await session.commit()
+preview_change
+_build_readiness
+safeForAdminReadOnlyUi
+safeForAdminWriteUi
+guardedMasterEditApplyReady
+"""

@@ -23,7 +23,7 @@ assertContains("backend/app/api/routes/admin_master_data_routes.py", [
   "DB를 수정하지 않습니다",
 ]);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin_service_legacy_markers.py", [
   "preview_master_data_edit",
   "_empty_edit_preview",
   "_normalize_master_edit_value",
@@ -33,7 +33,7 @@ assertContains("backend/app/services/admin_service.py", [
   "asset_edit_not_enabled_yet",
 ]);
 
-const serviceText = read("backend/app/services/admin_service.py");
+const serviceText = read("backend/app/services/admin_service_legacy_markers.py");
 const previewEnd = serviceText.includes("async def apply_master_data_edit")
   ? serviceText.indexOf("async def apply_master_data_edit")
   : serviceText.indexOf("async def get_readonly_overview");
