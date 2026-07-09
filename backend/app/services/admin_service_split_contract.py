@@ -7,13 +7,14 @@ from typing import Any
 ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
     "version": "v198.backend-admin-service-split-contract",
     "status": "contract-frozen-v198",
-    "splitStatus": "edit-draft-extracted-v203",
+    "splitStatus": "shared-utils-extracted-v204",
     "extractedFiles": [
         "backend/app/services/admin/admin_overview_snapshots_service.py",
         "backend/app/services/admin/admin_master_catalog_service.py",
         "backend/app/services/admin/admin_create_lifecycle_service.py",
         "backend/app/services/admin/admin_change_log_service.py",
         "backend/app/services/admin/admin_edit_draft_service.py",
+        "backend/app/services/admin/admin_shared_utils.py",
     ],
     "currentFile": "backend/app/services/admin_service.py",
     "facadeFile": "backend/app/services/admin_service.py",
@@ -180,8 +181,8 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT",
     ],
     "routeContract": [
-        "No route path changes in v203",
-        "No schema changes in v203",
+        "No route path changes in v204",
+        "No schema changes in v204",
         "AdminService remains the facade imported by backend/app/api/routes/admin.py",
         "Actual service file moves must keep every existing public method name",
     ],

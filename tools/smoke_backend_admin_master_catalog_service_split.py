@@ -18,6 +18,7 @@ if str(BACKEND) not in sys.path:
     sys.path.insert(0, str(BACKEND))
 
 from app.services.admin.admin_master_catalog_service import AdminMasterCatalogService
+from app.services.admin.admin_shared_utils import AdminSharedUtilsService
 from app.services.admin_service import AdminService
 
 
@@ -44,18 +45,20 @@ def main() -> int:
         "_build_master_relation_groups",
         "_fetch_master_relation_group",
         "_serialize_master_relation_row",
-        "_clean_filter_text",
-        "_is_safe_slot_key",
         "_build_master_catalog_where_clauses",
         "_master_catalog_order_by",
         "_count_master_catalog_rows",
         "_master_catalog_columns",
         "_serialize_master_catalog_row",
-        "_join_json_keys",
         "_serialize_master_detail_scalar_fields",
         "_serialize_master_detail_json_fields",
         "_build_master_detail_relation_hints",
         "_build_master_relation_edit_options",
+    }
+    shared_methods = {
+        "_clean_filter_text",
+        "_is_safe_slot_key",
+        "_join_json_keys",
         "_fetch_relation_code_options",
         "_serialize_relation_option",
         "_count_where",
@@ -69,11 +72,19 @@ def main() -> int:
     for name in split_methods:
         assert_true(hasattr(AdminMasterCatalogService, name), f"split service missing {name}")
         assert_true(hasattr(AdminService, name), f"AdminService facade missing inherited {name}")
+    for name in shared_methods:
+        assert_true(hasattr(AdminSharedUtilsService, name), f"shared utils missing {name}")
+        assert_true(hasattr(AdminService, name), f"AdminService facade missing inherited shared helper {name}")
 
     admin_direct = set(AdminService.__dict__.keys())
     split_direct = set(AdminMasterCatalogService.__dict__.keys())
+    shared_direct = set(AdminSharedUtilsService.__dict__.keys())
     for name in split_methods:
         assert_true(name in split_direct, f"{name} should live directly on the split service")
+        assert_true(name not in admin_direct, f"{name} should not be duplicated directly on AdminService")
+    for name in shared_methods:
+        assert_true(name in shared_direct, f"{name} should live directly on shared utils")
+        assert_true(name not in split_direct, f"{name} should not be duplicated directly on master catalog service after v204")
         assert_true(name not in admin_direct, f"{name} should not be duplicated directly on AdminService")
 
     source = service_file.read_text(encoding="utf-8")
@@ -83,7 +94,7 @@ def main() -> int:
     assert_true("class AdminMasterCatalogService" in split_source, "split file must define AdminMasterCatalogService")
 
     assert_true(len(source.splitlines()) < 3200, "admin_service.py should be smaller after the master catalog split")
-    assert_true(len(split_source.splitlines()) >= 800, "split service should contain the master catalog/detail implementation")
+    assert_true(len(split_source.splitlines()) >= 700, "split service should contain the master catalog/detail implementation")
     assert_true(inspect.iscoroutinefunction(AdminService.list_master_catalog_rows), "list_master_catalog_rows should remain async")
     assert_true(inspect.iscoroutinefunction(AdminService.get_master_catalog_detail), "get_master_catalog_detail should remain async")
     assert_true(inspect.iscoroutinefunction(AdminService.get_master_catalog_relations), "get_master_catalog_relations should remain async")

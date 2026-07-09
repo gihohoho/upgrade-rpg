@@ -1,35 +1,35 @@
-# Upgrade RPG v203 패키지
+# Upgrade RPG v204 패키지
 
-현재 안정 버전: **v203 backend admin edit draft service split**
+현재 안정 버전: **v204 backend admin shared utils service split**
 
-새 채팅 인수인계 ZIP: **rpg_v203_backend_admin_edit_draft_service_split_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v204_backend_admin_shared_utils_service_split_ready.zip**
 
-## 이번 v203에서 정리한 것
+## 이번 v204에서 정리한 것
 
-v203에서는 백엔드 `AdminService` facade를 유지한 상태로, **마스터 데이터 편집 초안 검증/적용** 묶음을 `AdminEditDraftService` mixin으로 실제 분리했습니다.
+v204에서는 백엔드 `AdminService` facade를 유지한 상태로, 여러 admin split service가 같이 쓰는 공용 helper를 `AdminSharedUtilsService`로 실제 분리했습니다.
 
-- `backend/app/services/admin/admin_edit_draft_service.py` 추가
-- `preview_master_data_edit`, `apply_master_data_edit` 이동
-- edit draft / relation edit / stale guard / normalize helper 이동
-- `AdminService`는 route facade로 유지
-- `backend/app/api/routes/admin.py` 변경 없음
-- `backend/app/schemas/admin.py` 변경 없음
+## 핵심 변경
+
+- `backend/app/services/admin/admin_shared_utils.py` 추가
+- `AdminService` inheritance에 `AdminSharedUtilsService` 추가
+- `_get_master_row`, `_count`, `_count_where` 등 공용 DB helper 이동
+- relation option, safe key, asset hiding, JSON preview sanitizer helper 이동
+- 기존 route/schema/API 응답 구조 변경 없음
 - DB/env 변경 없음
-- v203 전용 smoke test 추가
+- v204 전용 smoke test 추가
 
 ## 주요 파일
 
-- `admin.html` — 정적 관리자 페이지
-- `src/api/admin-page-readonly.js` — 관리자 진입/readiness
-- `src/api/admin/admin-edit-draft.js` — 프론트 edit draft 모듈
-- `backend/app/services/admin_service.py` — backend facade
-- `backend/app/services/admin/admin_edit_draft_service.py` — v203 분리 완료
-- `backend/app/services/admin_service_split_contract.py` — backend split contract
-- `docs/BACKEND_ADMIN_EDIT_DRAFT_SERVICE_SPLIT.md` — v203 상세 문서
+- `backend/app/services/admin_service.py` — route facade 유지
+- `backend/app/services/admin/admin_shared_utils.py` — v204 신규 shared utils service
+- `backend/app/services/admin_service_split_contract.py` — splitStatus 갱신
+- `src/api/admin-page-readonly.js` — 브라우저 readiness 버전 갱신
+- `docs/BACKEND_ADMIN_SHARED_UTILS_SERVICE_SPLIT.md` — v204 상세 문서
+- `tools/smoke_backend_admin_shared_utils_service_split.py` — v204 전용 smoke
 
-## 브라우저 확인
+## 적용 후 확인
 
-관리자 페이지 콘솔에서 확인:
+관리자 페이지 콘솔:
 
 ```js
 checkAdminReadOnlyPageReady().version
@@ -38,11 +38,11 @@ checkAdminReadOnlyPageReady().version
 예상:
 
 ```txt
-v203.backend-admin-edit-draft-service-split
+v204.backend-admin-shared-utils-service-split
 ```
 
 ```js
-checkAdminReadOnlyPageReady().backendEditDraftServiceSplitReady
+checkAdminReadOnlyPageReady().backendSharedUtilsServiceSplitReady
 ```
 
 예상:
@@ -58,7 +58,7 @@ getAdminBackendServiceSplitContractReadiness().splitStatus
 예상:
 
 ```txt
-edit-draft-extracted-v203
+shared-utils-extracted-v204
 ```
 
 ## 검증 명령
@@ -67,28 +67,18 @@ edit-draft-extracted-v203
 
 ```bash
 bash tools/run_smoke_core.sh
+python tools/smoke_backend_admin_shared_utils_service_split.py
+python -m compileall -q backend/app backend/scripts tools
 ```
+
+## git push 명령
 
 실행 위치: 프로젝트 루트
 
 ```bash
-python tools/smoke_backend_admin_edit_draft_service_split.py
-python tools/smoke_backend_admin_service_split_contract.py
-python tools/smoke_seed_import_long_asset_columns.py
-python tools/smoke_seed_import_structure.py
-python -m compileall -q backend/app backend/scripts tools
+git status && git add . && git commit -m "Split backend admin shared utils service" && git push
 ```
 
-## 적용 후 실행
+## 다음 추천
 
-실행 위치: `backend` 폴더
-
-```bash
-uvicorn app.main:app --reload
-```
-
-DB schema/env 변경이 없어서 DB reset/seed 재실행은 필요 없습니다.
-
-## 다음 추천 단계
-
-v204는 `backend/app/services/admin/admin_shared_utils.py`를 만들고, 여러 split service가 같이 쓰는 공유 helper를 분리하는 단계가 좋습니다.
+v205는 `backend/app/services/admin_service.py`에 남은 대형 상수/설정 묶음을 `backend/app/services/admin/admin_config.py` 같은 파일로 분리하는 단계가 좋습니다.

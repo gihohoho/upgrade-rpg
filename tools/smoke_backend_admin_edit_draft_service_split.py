@@ -17,6 +17,7 @@ if str(BACKEND) not in sys.path:
     sys.path.insert(0, str(BACKEND))
 
 from app.services.admin.admin_edit_draft_service import AdminEditDraftService
+from app.services.admin.admin_shared_utils import AdminSharedUtilsService
 from app.services.admin_service import AdminService
 
 
@@ -45,20 +46,26 @@ def main() -> int:
         "_validate_master_relation_edit_value",
         "_describe_master_relation_edit_value",
         "_build_proposed_combo_values",
-        "_exists_by_code",
-        "_fetch_code_name",
-        "_exists_duplicate_combo",
         "_normalize_master_edit_value",
         "_master_edit_column_type",
     }
+    shared_methods = {"_exists_by_code", "_fetch_code_name", "_exists_duplicate_combo"}
     for name in split_methods:
         assert_true(hasattr(AdminEditDraftService, name), f"split service missing {name}")
         assert_true(hasattr(AdminService, name), f"AdminService facade missing inherited {name}")
+    for name in shared_methods:
+        assert_true(hasattr(AdminSharedUtilsService, name), f"shared utils missing {name}")
+        assert_true(hasattr(AdminService, name), f"AdminService facade missing inherited shared helper {name}")
 
     admin_direct = set(AdminService.__dict__.keys())
     split_direct = set(AdminEditDraftService.__dict__.keys())
+    shared_direct = set(AdminSharedUtilsService.__dict__.keys())
     for name in split_methods:
         assert_true(name in split_direct, f"{name} should live directly on the edit draft split service")
+        assert_true(name not in admin_direct, f"{name} should not be duplicated directly on AdminService")
+    for name in shared_methods:
+        assert_true(name in shared_direct, f"{name} should live directly on shared utils")
+        assert_true(name not in split_direct, f"{name} should not be duplicated directly on edit draft service after v204")
         assert_true(name not in admin_direct, f"{name} should not be duplicated directly on AdminService")
 
     source = service_file.read_text(encoding="utf-8")
@@ -73,7 +80,7 @@ def main() -> int:
     assert_true("relation_target_not_found_enhancement_group" in split_source, "relation validation guard must be preserved")
     assert_true("_normalize_master_edit_value" in split_source, "normalizer must move with edit draft service")
     assert_true(len(source.splitlines()) < 800, "admin_service.py should be smaller after the edit draft split")
-    assert_true(len(split_source.splitlines()) >= 600, "split service should contain the edit draft implementation")
+    assert_true(len(split_source.splitlines()) >= 560, "split service should contain the edit draft implementation")
     assert_true(inspect.iscoroutinefunction(AdminService.preview_master_data_edit), "preview_master_data_edit should remain async")
     assert_true(inspect.iscoroutinefunction(AdminService.apply_master_data_edit), "apply_master_data_edit should remain async")
 

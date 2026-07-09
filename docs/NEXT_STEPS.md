@@ -1,38 +1,46 @@
 # Next Steps
 
-## 현재 완료: v203 backend admin edit draft service split
+## 현재 완료: v204 backend admin shared utils service split
 
-v203까지 backend admin service 분리 작업은 아래 순서까지 완료되었습니다.
+v204까지 backend admin service 분리 작업은 아래 순서까지 완료되었습니다.
 
-- overview/save snapshots
-- master catalog/detail/relations
-- create lifecycle
-- change logs/detail/rollback
-- edit draft preview/apply
+1. overview/save snapshots service 분리
+2. master catalog/detail/relations service 분리
+3. create lifecycle service 분리
+4. change logs/detail/rollback service 분리
+5. edit draft preview/apply service 분리
+6. shared utils service 분리
 
-## 다음 추천: v204 backend admin shared utils split
+## 다음 추천: v205 backend admin config split
 
-`AdminService` facade에 아직 남은 공용 helper들을 `backend/app/services/admin/admin_shared_utils.py`로 이동하는 단계가 좋습니다.
+`AdminService` facade에는 이제 public API 구현보다는 상수/설정 데이터가 많이 남아 있습니다. 다음에는 route/schema/API/DB를 건드리지 않고 아래 설정 묶음을 별도 파일로 빼는 것이 좋습니다.
 
-후보 helper:
+후보 파일:
 
-- `_get_master_row`
-- `_build_readiness`
-- `_count`
-- `_count_where`
-- `_clean_filter_text`
-- `_is_asset_field`
-- `_serialize_asset_field`
-- `_safe_detail_scalar_value`
-- `_sanitize_json_preview`
-- `_sanitize_json_value`
-- `_humanize_field_name`
-- `_join_json_keys`
-- `_count_filled_items`
+- `backend/app/services/admin/admin_config.py`
 
-## 제약
+후보 내용:
 
-- route/schema/API 응답 구조 변경하지 않기
-- DB/env 변경하지 않기
-- `AdminService` facade 유지
-- 전용 backend smoke 추가
+- `MASTER_DATA_MODELS`
+- `MASTER_EDIT_ALLOWED_FIELDS`
+- `MASTER_RELATION_EDIT_FIELDS`
+- `MASTER_COMBO_GUARDED_FIELDS`
+- `MASTER_CATALOG_DOMAINS`
+- `MASTER_CREATE_BLUEPRINT_FIELDS`
+- confirm text 상수
+- create/delete allowed domain set
+- change log action filters
+
+유지할 것:
+
+- `AdminService` facade는 그대로 유지
+- `backend/app/api/routes/admin.py` 변경 없음
+- `backend/app/schemas/admin.py` 변경 없음
+- API 응답 구조 변경 없음
+- DB/env 변경 없음
+
+검증 목표:
+
+- `checkAdminReadOnlyPageReady().version` → v205 계열
+- `getAdminBackendServiceSplitContractReadiness().splitStatus` → config-extracted-v205
+- core smoke 통과

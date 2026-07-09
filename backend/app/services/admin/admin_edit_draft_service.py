@@ -598,28 +598,6 @@ class AdminEditDraftService:
                 proposed[key] = getattr(row, key, None)
         return proposed
 
-    async def _exists_by_code(self, session: AsyncSession, model: Any, code: str) -> bool:
-        if not code:
-            return False
-        result = await session.execute(select(func.count()).select_from(model).where(model.code == code))
-        return int(result.scalar_one() or 0) > 0
-
-    async def _fetch_code_name(self, session: AsyncSession, model: Any, code: str) -> dict[str, Any] | None:
-        if not code:
-            return None
-        result = await session.execute(select(model).where(model.code == code))
-        row = result.scalar_one_or_none()
-        if row is None:
-            return None
-        return {"code": getattr(row, "code", None), "name": getattr(row, "name", None) or getattr(row, "description", None)}
-
-    async def _exists_duplicate_combo(self, session: AsyncSession, model: Any, current_id: int, *where_clauses: Any) -> bool:
-        stmt = select(func.count()).select_from(model).where(*where_clauses)
-        if current_id > 0:
-            stmt = stmt.where(model.id != current_id)
-        result = await session.execute(stmt)
-        return int(result.scalar_one() or 0) > 0
-
     def _normalize_master_edit_value(self, column: Any, raw_value: Any) -> tuple[Any, str | None]:
         column_type = column.type
         nullable = bool(getattr(column, "nullable", False))

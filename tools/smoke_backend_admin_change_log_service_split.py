@@ -17,6 +17,7 @@ if str(BACKEND) not in sys.path:
     sys.path.insert(0, str(BACKEND))
 
 from app.services.admin.admin_change_log_service import AdminChangeLogService
+from app.services.admin.admin_shared_utils import AdminSharedUtilsService
 from app.services.admin_service import AdminService
 
 
@@ -42,7 +43,6 @@ def main() -> int:
         "_clean_admin_change_log_filters",
         "_build_admin_change_log_where_clauses",
         "_admin_change_log_order_by",
-        "_is_safe_admin_change_key",
         "_get_admin_change_log",
         "_empty_change_log_detail",
         "_empty_rollback_preview",
@@ -56,14 +56,23 @@ def main() -> int:
         "_count_admin_change_logs",
         "_serialize_admin_change_log",
     }
+    shared_methods = {"_is_safe_admin_change_key"}
     for name in split_methods:
         assert_true(hasattr(AdminChangeLogService, name), f"split service missing {name}")
         assert_true(hasattr(AdminService, name), f"AdminService facade missing inherited {name}")
+    for name in shared_methods:
+        assert_true(hasattr(AdminSharedUtilsService, name), f"shared utils missing {name}")
+        assert_true(hasattr(AdminService, name), f"AdminService facade missing inherited shared helper {name}")
 
     admin_direct = set(AdminService.__dict__.keys())
     split_direct = set(AdminChangeLogService.__dict__.keys())
+    shared_direct = set(AdminSharedUtilsService.__dict__.keys())
     for name in split_methods:
         assert_true(name in split_direct, f"{name} should live directly on the change log split service")
+        assert_true(name not in admin_direct, f"{name} should not be duplicated directly on AdminService")
+    for name in shared_methods:
+        assert_true(name in shared_direct, f"{name} should live directly on shared utils")
+        assert_true(name not in split_direct, f"{name} should not be duplicated directly on change log service after v204")
         assert_true(name not in admin_direct, f"{name} should not be duplicated directly on AdminService")
 
     source = service_file.read_text(encoding="utf-8")

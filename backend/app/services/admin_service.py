@@ -2,9 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import Boolean, Integer, Numeric, String, Text, func, inspect as sa_inspect, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.models import (
     AdminChangeLog,
     Boss,
@@ -31,6 +28,7 @@ from app.services.admin.admin_master_catalog_service import AdminMasterCatalogSe
 from app.services.admin.admin_create_lifecycle_service import AdminCreateLifecycleService
 from app.services.admin.admin_change_log_service import AdminChangeLogService
 from app.services.admin.admin_edit_draft_service import AdminEditDraftService
+from app.services.admin.admin_shared_utils import AdminSharedUtilsService
 
 
 BACKEND_ADMIN_CREATE_LIFECYCLE_SPLIT_LEGACY_SMOKE_MARKERS = """
@@ -240,7 +238,7 @@ relationEditOptions
 """
 
 
-class AdminService(AdminOverviewSnapshotsService, AdminMasterCatalogService, AdminEditDraftService, AdminChangeLogService, AdminCreateLifecycleService):
+class AdminService(AdminSharedUtilsService, AdminOverviewSnapshotsService, AdminMasterCatalogService, AdminEditDraftService, AdminChangeLogService, AdminCreateLifecycleService):
     """Read-only admin preparation helpers.
 
     The real admin page will eventually edit DB values, but this stage deliberately
@@ -497,14 +495,6 @@ class AdminService(AdminOverviewSnapshotsService, AdminMasterCatalogService, Adm
         }
 
 
-    async def _get_master_row(self, session: AsyncSession, domain: str, row_id: int) -> Any | None:
-        config = self.MASTER_CATALOG_DOMAINS.get(str(domain or ""))
-        safe_row_id = int(row_id or 0)
-        if not config or safe_row_id <= 0:
-            return None
-        result = await session.execute(select(config["model"]).where(config["model"].id == safe_row_id))
-        return result.scalar_one_or_none()
-
     def _build_readiness(self, master_counts: dict[str, Any], save_snapshot_summary: dict[str, Any]) -> dict[str, Any]:
         warnings: list[str] = []
         if int(master_counts.get("itemTemplates", {}).get("total") or 0) <= 0:
@@ -523,9 +513,3 @@ class AdminService(AdminOverviewSnapshotsService, AdminMasterCatalogService, Adm
             "writeUiBlockedReason": "일반 지급/삭제/관계 변경은 계속 막혀 있습니다. 단, allow-list 마스터 데이터 필드는 확인 문구와 변경 이력을 거쳐 guarded apply/rollback이 가능합니다.",
         }
 
-    async def _count(self, session: AsyncSession, model: Any, *, where_clause: Any | None = None) -> int:
-        stmt = select(func.count()).select_from(model)
-        if where_clause is not None:
-            stmt = stmt.where(where_clause)
-        result = await session.execute(stmt)
-        return int(result.scalar_one() or 0)

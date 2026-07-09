@@ -1,5 +1,14 @@
 # Changelog
 
+## v204 - Backend admin shared utils service split
+
+- `backend/app/services/admin/admin_shared_utils.py`를 추가했습니다.
+- `AdminService` facade와 split service들에 흩어진 공용 helper를 shared utils로 이동했습니다.
+- `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `shared-utils-extracted-v204`로 갱신했습니다.
+- `checkAdminReadOnlyPageReady().version`을 `v204.backend-admin-shared-utils-service-split`으로 갱신했습니다.
+- route/schema/API/DB/env 변경은 없습니다.
+- `tools/smoke_backend_admin_shared_utils_service_split.py`를 추가하고 core smoke에 포함했습니다.
+
 ## v203 - Backend admin edit draft service split
 
 - `backend/app/services/admin/admin_edit_draft_service.py`를 추가했습니다.
@@ -661,4 +670,3 @@
 - 외부 모듈 configure 호출을 `configureAdminExternalModules()`로 묶음.
 - `getAdminThinEntryCleanupReadiness()` / `renderAdminThinEntryCleanupReadiness()` 추가.
 - `tools/smoke_admin_thin_entry_cleanup.js` 추가.
-

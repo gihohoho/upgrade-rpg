@@ -497,11 +497,6 @@ class AdminChangeLogService:
             return (AdminChangeLog.action.asc(), AdminChangeLog.created_at.desc(), AdminChangeLog.id.desc())
         return (AdminChangeLog.created_at.desc(), AdminChangeLog.id.desc())
 
-    @staticmethod
-    def _is_safe_admin_change_key(value: str) -> bool:
-        allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-"
-        return bool(value) and all(ch in allowed for ch in value)
-
     async def _get_admin_change_log(self, session: AsyncSession, change_log_id: int) -> AdminChangeLog | None:
         safe_id = int(change_log_id or 0)
         if safe_id <= 0:

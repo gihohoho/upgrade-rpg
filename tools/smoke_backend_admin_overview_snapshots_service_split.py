@@ -18,6 +18,7 @@ if str(BACKEND) not in sys.path:
     sys.path.insert(0, str(BACKEND))
 
 from app.services.admin.admin_overview_snapshots_service import AdminOverviewSnapshotsService
+from app.services.admin.admin_shared_utils import AdminSharedUtilsService
 from app.services.admin_service import AdminService
 
 
@@ -46,16 +47,24 @@ def main() -> int:
         "_snapshot_order_by",
         "_count_save_snapshots",
         "_serialize_save_snapshot_summary",
-        "_count_filled_items",
     }
+    shared_methods = {"_count_filled_items"}
     for name in split_methods:
         assert_true(hasattr(AdminOverviewSnapshotsService, name), f"split service missing {name}")
         assert_true(hasattr(AdminService, name), f"AdminService facade missing inherited {name}")
+    for name in shared_methods:
+        assert_true(hasattr(AdminSharedUtilsService, name), f"shared utils missing {name}")
+        assert_true(hasattr(AdminService, name), f"AdminService facade missing inherited shared helper {name}")
 
     admin_direct = set(AdminService.__dict__.keys())
     split_direct = set(AdminOverviewSnapshotsService.__dict__.keys())
+    shared_direct = set(AdminSharedUtilsService.__dict__.keys())
     for name in split_methods:
         assert_true(name in split_direct, f"{name} should live directly on the split service")
+        assert_true(name not in admin_direct, f"{name} should not be duplicated directly on AdminService")
+    for name in shared_methods:
+        assert_true(name in shared_direct, f"{name} should live directly on shared utils")
+        assert_true(name not in split_direct, f"{name} should not be duplicated directly on overview service after v204")
         assert_true(name not in admin_direct, f"{name} should not be duplicated directly on AdminService")
 
     source = service_file.read_text(encoding="utf-8")
@@ -69,8 +78,8 @@ def main() -> int:
     assert_true(inspect.iscoroutinefunction(AdminService.get_readonly_overview), "get_readonly_overview should remain async")
     assert_true(inspect.iscoroutinefunction(AdminService.list_save_snapshot_summaries), "list_save_snapshot_summaries should remain async")
     assert_true(
-        isinstance(AdminOverviewSnapshotsService.__dict__.get("_count_filled_items"), staticmethod),
-        "_count_filled_items must remain staticmethod after the split",
+        isinstance(AdminSharedUtilsService.__dict__.get("_count_filled_items"), staticmethod),
+        "_count_filled_items must remain staticmethod after the shared utils split",
     )
 
     fake_snapshot = SimpleNamespace(
