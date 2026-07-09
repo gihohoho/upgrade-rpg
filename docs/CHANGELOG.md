@@ -1,3 +1,12 @@
+# v230 - Backend admin OpenAPI route contract
+
+- `backend/app/api/routes/admin_openapi_route_contract.py`를 추가했습니다.
+- FastAPI OpenAPI schema에 노출되는 `/api/v1/admin/...` route 21개를 static operation contract와 대조합니다.
+- OpenAPI `operationId`, `admin` tag, 200 response metadata가 의도치 않게 바뀌면 smoke에서 잡도록 했습니다.
+- `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `admin-openapi-route-contract-v230`로 갱신했습니다.
+- `checkAdminReadOnlyPageReady().version`을 `v230.backend-admin-openapi-route-contract`로 갱신했습니다.
+- route path/schema/API 응답 구조/DB/env 변경은 없습니다.
+
 # v228 - Backend admin route operation contract
 
 - `backend/app/api/routes/admin_route_operation_contract.py`를 추가했습니다.

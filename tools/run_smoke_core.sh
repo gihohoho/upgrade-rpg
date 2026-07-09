@@ -66,6 +66,7 @@ python tools/smoke_backend_admin_route_map_contract.py
 python tools/smoke_backend_admin_route_module_import_contract.py
 python tools/smoke_backend_admin_runtime_route_contract.py
 python tools/smoke_backend_admin_route_operation_contract.py
+python tools/smoke_backend_admin_openapi_route_contract.py
 python tools/smoke_backend_admin_route_service_legacy_cleanup.py
 python tools/smoke_backend_admin_service_facade_contract.py
 python tools/smoke_admin_create_blueprint_api_structure.py
