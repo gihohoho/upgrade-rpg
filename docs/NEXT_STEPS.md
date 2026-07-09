@@ -1,29 +1,29 @@
 # Next Steps
 
-## 현재 완료: v189.1 admin create lifecycle split hotfix
+## 현재 완료: v190 admin edit draft split contract
 
-`create lifecycle` 구현을 외부 JS 파일로 1차 분리했습니다.
+`edit draft` 실제 분리 전에 필요한 계약을 먼저 고정했습니다.
 
 완료된 항목:
 
-- `src/api/admin/admin-create-lifecycle.js` 신규 추가
-- 생성 설계/초안/preview/apply/lifecycle guide/batch check 구현 1차 분리
-- `admin-page-readonly.js`에는 호환 wrapper 유지
-- `admin.html` script 순서에 create lifecycle 파일 추가
-- 새 smoke `tools/smoke_admin_create_lifecycle_split.js` 추가
+- 다음 후보 파일명 `src/api/admin/admin-edit-draft.js` 고정
+- 편집 초안 render/read/reset/preview/apply 함수 목록 고정
+- relation select / value hint / impact guide 함수 목록 고정
+- `APPLY MASTER DATA EDIT`, `HIGH RISK EDIT` 확인 문구 계약 고정
+- DOM target / delegated action 계약 고정
+- 새 smoke `tools/smoke_admin_edit_draft_split_contract.js` 추가
 
-## 다음 추천: v190 edit draft split contract
+## 다음 추천: v191 edit draft 실제 분리 1단계
 
-다음 단계에서는 `edit draft`를 바로 실제 분리하지 않고, 먼저 분리 전 계약을 고정하는 것이 좋습니다.
+다음 단계에서는 `src/api/admin/admin-edit-draft.js` 파일을 만들고 edit draft 구현을 외부 파일로 1차 분리하는 것이 좋습니다.
 
-권장 고정 항목:
+안전한 방향:
 
-1. 다음 후보 파일명 `src/api/admin/admin-edit-draft.js` 고정.
-2. 편집 초안 입력/preview/apply 함수 목록 고정.
-3. impact guide / relation select / value hint 함수 목록 고정.
-4. window export 목록 고정.
-5. DOM target / delegated action 목록 고정.
-6. contract smoke를 추가해 다음 실제 분리 전 기준을 만듭니다.
+1. `src/api/admin/admin-edit-draft.js` 파일 생성.
+2. edit draft 렌더/read/reset/review/impact/preview/apply 함수 이동.
+3. `admin-page-readonly.js`에는 기존 window export 호환 wrapper 유지.
+4. `admin.html` script 순서에 edit draft 파일 추가.
+5. v190 contract smoke가 계속 통과하는지 확인.
 
 ## 계속 가능한 브라우저 일괄 점검
 
@@ -35,15 +35,6 @@
 2. `enhancementLevels`
 3. `characterSkills`
 4. `dropTableItems`
-
-부모 도메인인 `skills`, `itemTemplates`, `dropTables`는 연결 데이터가 있을 때 삭제 preview가 차단되는지만 확인하는 편이 안전합니다.
-
-## 그 다음 후보
-
-1. edit draft 기능 분리 전 계약 고정.
-2. edit draft 실제 분리 1단계.
-3. FastAPI 관리자 라우터/서비스 파일 분리.
-4. Vue 전환 전 관리자 기능 목록 정리.
 
 ## 아직 미루는 것이 좋은 작업
 

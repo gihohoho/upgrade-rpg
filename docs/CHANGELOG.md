@@ -1,3 +1,13 @@
+# v190 admin edit draft split contract
+
+- `edit draft` 실제 분리 전에 API/window/DOM/확인 문구 계약을 먼저 고정.
+- 다음 후보 파일명 `src/api/admin/admin-edit-draft.js` 확정.
+- `getAdminEditDraftSplitContractReadiness()` / `renderAdminEditDraftSplitContractReadiness()` 추가.
+- `checkAdminReadOnlyPageReady().editDraftSplitContractReady` 추가.
+- 새 smoke `tools/smoke_admin_edit_draft_split_contract.js` 추가 및 core smoke 포함.
+- 새 쓰기 도메인 오픈 없음.
+- DB schema 변경 없음, DB reset / seed 필요 없음.
+
 # v189.1 admin create lifecycle split hotfix
 
 - `src/api/admin/admin-create-lifecycle.js` 신규 추가.

@@ -1,8 +1,8 @@
 # Current Status
 
-현재 기준: **v189.1 admin create lifecycle split hotfix**
+현재 기준: **v190 admin edit draft split contract**
 
-이 패키지 기준 ZIP: **rpg_v189_1_admin_create_lifecycle_split_hotfix_ready.zip**
+이 패키지 기준 ZIP: **rpg_v190_admin_edit_draft_split_contract_ready.zip**
 
 ## 현재 상태
 
@@ -17,6 +17,19 @@
 - 신규 row create/delete/restore 제한 흐름 유지.
 - 관리자 페이지 레이아웃 shell, sidebar, sticky header, 접기/펼치기 유지.
 
+
+## v190 완료
+
+- `edit draft` 실제 분리 전에 API/window/DOM/확인 문구 계약을 먼저 고정.
+- 다음 후보 파일: `src/api/admin/admin-edit-draft.js`.
+- 계약 상태: `contract-frozen-v190`.
+- 새 함수 추가:
+  - `getAdminEditDraftSplitContractReadiness()`
+  - `renderAdminEditDraftSplitContractReadiness()`
+- `checkAdminReadOnlyPageReady().editDraftSplitContractReady` 추가.
+- 새 smoke `tools/smoke_admin_edit_draft_split_contract.js` 추가 및 core smoke 포함.
+- 실제 파일 분리는 아직 하지 않음.
+- 새 쓰기 도메인 오픈 없음, DB reset / seed 필요 없음.
 
 ## v189 완료
 
@@ -132,6 +145,7 @@
 
 ## 이전 완료
 
+- v190: 관리자 edit draft 분리 전 계약 고정.
 - v188: 관리자 create lifecycle 분리 전 계약 고정.
 - v187: 관리자 change logs 실제 1차 분리.
 - v186: 관리자 change logs 분리 전 계약 고정.

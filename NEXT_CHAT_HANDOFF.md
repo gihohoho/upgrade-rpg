@@ -57,8 +57,8 @@ uvicorn app.main:app --reload
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v189.1 admin create lifecycle split hotfix**
-- 새 채팅용 ZIP: **rpg_v189_1_admin_create_lifecycle_split_hotfix_ready.zip**
+- 최신 안정 버전: **v190 admin edit draft split contract**
+- 새 채팅용 ZIP: **rpg_v190_admin_edit_draft_split_contract_ready.zip**
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -80,6 +80,7 @@ uvicorn app.main:app --reload
 - 관리자 layout shell은 `src/api/admin-layout-shell.js`로 실제 분리 완료.
 - change logs는 `src/api/admin/admin-change-logs.js`로 실제 1차 분리 완료.
 - create lifecycle은 `src/api/admin/admin-create-lifecycle.js`로 실제 1차 분리 완료했습니다.
+- edit draft는 실제 분리 전 계약을 `contract-frozen-v190` 상태로 고정했습니다.
 - `admin-page-readonly.js`에는 호환 wrapper가 남아 있습니다.
 
 ## 현재 create apply 열린 도메인
@@ -98,6 +99,20 @@ uvicorn app.main:app --reload
 
 위 도메인들은 생성 row delete/restore도 제한적으로 열려 있습니다.
 
+## v190 완료
+
+- `edit draft` 실제 분리 전에 API/window/DOM/확인 문구 계약을 먼저 고정했습니다.
+- 계약 상태: `contract-frozen-v190`.
+- 다음 후보 파일: `src/api/admin/admin-edit-draft.js`.
+- 새 함수:
+  - `getAdminEditDraftSplitContractReadiness()`
+  - `renderAdminEditDraftSplitContractReadiness()`
+- `checkAdminReadOnlyPageReady().editDraftSplitContractReady`가 true면 정상입니다.
+- 새 smoke: `tools/smoke_admin_edit_draft_split_contract.js`.
+- 실제 JS 파일 분리는 아직 하지 않았습니다.
+- 새 쓰기 도메인 오픈 없음, DB schema 변경 없음, DB reset / seed 필요 없음.
+- `.env`, `.gitignore` 변경 없음.
+
 ## v189.1 hotfix 완료
 
 - v189 분리 후 `checkAdminReadOnlyPageReady().version` 호출 시 `readAdminCreateBlueprintFiltersFromDom is not defined` 오류가 나던 문제를 수정했습니다.
@@ -112,7 +127,7 @@ uvicorn app.main:app --reload
 - `admin-page-readonly.js`에는 기존 window export 호환 wrapper 유지.
 - `admin.html` script 순서: game api → layout shell → change logs → create lifecycle → admin page.
 - 새 함수: `getAdminCreateLifecycleReadiness()`.
-- `checkAdminReadOnlyPageReady().createLifecycleExternalReady`가 true면 정상입니다.
+- `checkAdminReadOnlyPageReady().editDraftSplitContractReady`가 true면 정상입니다.
 - 새 smoke: `tools/smoke_admin_create_lifecycle_split.js`.
 - 새 쓰기 도메인 오픈 없음, DB schema 변경 없음, DB reset / seed 필요 없음.
 - `.env`, `.gitignore` 변경 없음.
@@ -150,14 +165,14 @@ checkAdminReadOnlyPageReady().version
 예상 결과:
 
 ```txt
-v189.1.admin-create-lifecycle-split-hotfix
+v190.admin-edit-draft-split-contract
 ```
 
 추가 확인:
 
 ```js
 위치: 브라우저 개발자도구 Console
-checkAdminReadOnlyPageReady().createLifecycleExternalReady
+checkAdminReadOnlyPageReady().editDraftSplitContractReady
 ```
 
 예상 결과:
@@ -170,17 +185,17 @@ true
 
 ```js
 위치: 브라우저 개발자도구 Console
-window.RpgAdminCreateLifecycle.VERSION
+getAdminEditDraftSplitContractReadiness().status
 ```
 
 예상 결과:
 
 ```txt
-v189.1.admin-create-lifecycle-split-hotfix
+contract-frozen-v190
 ```
 
 ## 다음 추천 단계
 
-**v190 edit draft split contract**를 추천합니다.
+**v191 edit draft 실제 분리 1단계**를 추천합니다.
 
-create lifecycle까지 실제 분리했으므로 다음에는 edit draft를 바로 분리하지 말고, 편집 초안/impact guide/relation select/window export/DOM target 계약을 먼저 고정하는 흐름이 안전합니다.
+v190에서 edit draft 계약을 먼저 고정했으므로, 다음에는 `src/api/admin/admin-edit-draft.js`를 만들고 기존 window 함수명은 유지한 채 실제 분리 1단계로 가는 흐름이 안전합니다.

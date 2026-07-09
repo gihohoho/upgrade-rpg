@@ -54,10 +54,10 @@ local-admin-dev-key
 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
 
 현재 안정 버전:
-v189.1: admin create lifecycle split hotfix
+v190: admin edit draft split contract
 
 현재 인수인계 ZIP:
-rpg_v189_1_admin_create_lifecycle_split_hotfix_ready.zip
+rpg_v190_admin_edit_draft_split_contract_ready.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -92,11 +92,11 @@ v189 완료:
 - .env, .gitignore 변경 없음.
 
 다음 추천 단계:
-v190 edit draft split contract.
+v191 edit draft 실제 분리 1단계.
 
 권장 방향:
-1. edit draft 실제 분리 전 계약을 먼저 고정.
-2. 편집 초안/preview/apply/impact guide/relation select 함수 목록 고정.
-3. window export/DOM target/delegated action 목록 고정.
-4. 다음 후보 파일명 src/api/admin/admin-edit-draft.js 고정.
-5. contract smoke를 추가한 뒤, 그 다음 단계에서 실제 파일 분리.
+1. src/api/admin/admin-edit-draft.js 파일 생성.
+2. 편집 초안/preview/apply/impact guide/relation select 함수 1차 이동.
+3. admin-page-readonly.js에는 기존 window 함수명 호환 wrapper 유지.
+4. admin.html script 순서에 edit draft 파일 추가.
+5. v190 contract smoke가 계속 통과하는지 확인.

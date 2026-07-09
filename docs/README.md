@@ -39,6 +39,7 @@
 - `ADMIN_CHANGE_LOGS_SPLIT.md` — v187 change logs 실제 1차 분리
 - `ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md` — v188 create lifecycle 분리 전 계약 고정
 - `ADMIN_CREATE_LIFECYCLE_SPLIT.md` — v189 create lifecycle 실제 1차 분리
+- `ADMIN_EDIT_DRAFT_SPLIT_CONTRACT.md` — v190 edit draft 분리 전 계약 고정
 
 ## 3. 관리자 편집/관계 안전장치 문서
 

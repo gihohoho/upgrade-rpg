@@ -7,7 +7,7 @@
 
 이 ZIP은 기존 게임 기능을 유지하면서, 백엔드/관리자 분리를 쉽게 하기 위해 파일 위치와 역할을 단계적으로 정리한 버전입니다.
 
-현재 v189 기준으로는 관리자 layout shell, change logs, create lifecycle이 외부 JS 파일로 1차 분리되어 있습니다.
+현재 v190 기준으로는 관리자 layout shell, change logs, create lifecycle이 외부 JS 파일로 1차 분리되어 있고, edit draft 실제 분리 전 계약이 고정되어 있습니다.
 
 ## 먼저 읽을 문서
 

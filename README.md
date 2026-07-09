@@ -1,8 +1,8 @@
 # Upgrade RPG
 
-현재 안정 버전: **v189.1 admin create lifecycle split hotfix**
+현재 안정 버전: **v190 admin edit draft split contract**
 
-새 채팅 인수인계 ZIP: **rpg_v189_1_admin_create_lifecycle_split_hotfix_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v190_admin_edit_draft_split_contract_ready.zip**
 
 현재 프로젝트는 아직 Vue가 아니라 `index.html + JS + CSS` 기반 RPG 게임입니다. 기존 게임 동작을 유지하면서 FastAPI + PostgreSQL + 관리자 페이지 구조로 단계적으로 분리 중입니다.
 
@@ -27,6 +27,7 @@
 - 관리자 JS 분리 전 readiness 진단 UI 추가 완료
 - 관리자 change logs 구현 1차 외부 파일 분리 완료
 - 관리자 create lifecycle 구현 1차 외부 파일 분리 완료
+- 관리자 edit draft 분리 전 계약 고정 완료
 
 ## 새 채팅에서 먼저 볼 파일
 
@@ -51,7 +52,7 @@ bash tools/run_smoke_all.sh
 
 ## 다음 추천 단계
 
-다음은 `edit draft` 분리 전 계약 고정이 좋습니다. create lifecycle까지 외부 파일로 분리했으므로, 바로 큰 분리를 하기보다 edit draft 함수/window/DOM 계약을 먼저 고정하는 방향이 안전합니다.
+다음은 `edit draft` 실제 분리 1단계가 좋습니다. v190에서 함수/window/DOM 계약을 먼저 고정했으므로, 다음에는 `src/api/admin/admin-edit-draft.js`를 만들고 호환 wrapper를 유지한 채로 옮기는 방향이 안전합니다.
 
 ## DB / env
 
@@ -60,6 +61,16 @@ bash tools/run_smoke_all.sh
 - `.env`, `.gitignore` 변경 없음.
 - 이 ZIP에는 `.env`, `.gitignore`를 포함하지 않았습니다.
 
+
+## v190 완료
+
+- `edit draft` 실제 분리 전 계약을 `contract-frozen-v190` 상태로 고정
+- 다음 후보 파일 `src/api/admin/admin-edit-draft.js` 고정
+- 편집 초안/preview/apply/impact guide/relation select 함수 목록 고정
+- 확인 문구/DOM target/delegated action 목록 고정
+- 새 smoke `tools/smoke_admin_edit_draft_split_contract.js` 추가
+- 실제 JS 파일 분리는 아직 하지 않음
+- DB reset / seed 필요 없음
 
 ## v189.1 hotfix 완료
 
