@@ -1,40 +1,38 @@
-# Upgrade RPG v198 패키지
+# Upgrade RPG v199 패키지
 
-현재 안정 버전: **v198 backend admin service split contract**
+현재 안정 버전: **v199 backend admin overview/snapshots service split**
 
-새 채팅 인수인계 ZIP: **rpg_v198_backend_admin_service_split_contract_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v199_backend_admin_overview_snapshots_service_split_ready.zip**
 
 ## 요약
 
-v198에서는 프론트 관리자 JS 분리 이후 다음 단계로, 백엔드 `AdminService`를 실제로 쪼개기 전에 **분리 계약과 smoke**를 먼저 추가했습니다.
+v199에서는 v198에서 고정한 백엔드 admin service 분리 계약을 기준으로, 가장 안전한 첫 묶음인 **overview/save snapshots 서비스**를 실제로 1차 분리했습니다.
 
-추가 파일:
+`backend/app/api/routes/admin.py`와 schema는 변경하지 않았고, 기존 `AdminService` facade도 그대로 유지했습니다.
 
-- `backend/app/services/admin_service_split_contract.py`
-- `tools/smoke_backend_admin_service_split_contract.py`
-- `docs/BACKEND_ADMIN_SERVICE_SPLIT_CONTRACT.md`
+## v199에서 정리한 것
 
-## v198에서 정리한 것
+- `backend/app/services/admin/` 폴더 추가
+- `backend/app/services/admin/__init__.py` 추가
+- `backend/app/services/admin/admin_overview_snapshots_service.py` 추가
+- `AdminOverviewSnapshotsService` mixin 추가
+- `AdminService(AdminOverviewSnapshotsService)` 구조로 변경
+- overview/save snapshots 관련 public/helper 메서드를 외부 서비스로 이동
+- 기존 route/schema/API 응답 구조 유지
+- `tools/smoke_backend_admin_overview_snapshots_service_split.py` 추가
+- `tools/run_smoke_core.sh`에 새 smoke 포함
+- 기존 `tools/smoke_admin_readonly_api_structure.py`를 분리 구조에 맞게 갱신
 
-- `admin_service.py`의 기능 묶음 분리 후보 고정
-- route/schema 유지 계약 고정
-- `AdminService` facade 유지 정책 고정
-- 브라우저 관리자 JS 분리 준비 카드에 backend service 계약 표시 추가
-- `checkAdminReadOnlyPageReady().backendServiceSplitContractReady` 추가
-- core smoke에 백엔드 service split contract smoke 추가
+## 현재 백엔드 admin service 상태
 
-## 현재 관리자 JS 분리 상태
-
-- `src/api/game-api-client.js` — 기존 외부 API client
-- `src/api/admin-layout-shell.js` — v185 분리 완료
-- `src/api/admin/admin-field-help.js` — v196 분리 완료
-- `src/api/admin/admin-settings-helpers.js` — v197 분리 완료
-- `src/api/admin/admin-change-logs.js` — v187 분리 완료
-- `src/api/admin/admin-create-lifecycle.js` — v189.1 hotfix 포함 분리 완료
-- `src/api/admin/admin-edit-draft.js` — v191 분리 완료
-- `src/api/admin/admin-master-catalog.js` — v192 분리 완료
-- `src/api/admin/admin-overview-snapshots.js` — v193 분리 완료
-- `src/api/admin-page-readonly.js` — thin entry 유지
+- `backend/app/services/admin_service.py` — route가 계속 import하는 facade
+- `backend/app/services/admin/admin_overview_snapshots_service.py` — v199 분리 완료
+- 다음 후보:
+  - `admin_master_catalog_service.py`
+  - `admin_create_lifecycle_service.py`
+  - `admin_change_log_service.py`
+  - `admin_edit_draft_service.py`
+  - `admin_shared_utils.py`
 
 ## 브라우저 확인
 
@@ -45,11 +43,11 @@ checkAdminReadOnlyPageReady().version
 예상값:
 
 ```txt
-v198.backend-admin-service-split-contract
+v199.backend-admin-overview-snapshots-service-split
 ```
 
 ```js
-checkAdminReadOnlyPageReady().backendServiceSplitContractReady
+checkAdminReadOnlyPageReady().backendOverviewSnapshotsServiceSplitReady
 ```
 
 예상값:
@@ -59,18 +57,20 @@ true
 ```
 
 ```js
-getAdminBackendServiceSplitContractReadiness().status
+getAdminBackendServiceSplitContractReadiness().splitStatus
 ```
 
 예상값:
 
 ```txt
-contract-frozen-v198
+overview-snapshots-extracted-v199
 ```
 
 ## 검증
 
 - `bash tools/run_smoke_core.sh` 통과
+- `bash tools/run_smoke_all.sh` 통과
+- `python tools/smoke_backend_admin_overview_snapshots_service_split.py` 통과
 - `python tools/smoke_backend_admin_service_split_contract.py` 통과
 - `node --check src/api/admin-page-readonly.js` 통과
 - `python -m compileall -q backend/app` 통과

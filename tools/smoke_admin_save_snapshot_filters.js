@@ -58,7 +58,7 @@ assertContains("backend/app/api/routes/admin.py", [
   "filters\": snapshots[\"filters\"]",
 ]);
 
-assertContains("backend/app/services/admin_service.py", [
+assertContains("backend/app/services/admin/admin_overview_snapshots_service.py", [
   "_build_snapshot_filters",
   "_build_snapshot_where_clauses",
   "_snapshot_order_by",

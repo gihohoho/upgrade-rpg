@@ -1,35 +1,34 @@
 # Next Steps
 
-## 현재 완료: v198 backend admin service split contract
+## 현재 완료: v199 backend admin overview/snapshots service split
 
-백엔드 `admin_service.py`를 바로 쪼개지 않고, 먼저 service split 계약과 smoke를 추가했습니다.
+백엔드 `AdminService` facade는 유지한 채, 첫 실제 분리 대상으로 overview/save snapshots 묶음을 `AdminOverviewSnapshotsService`로 이동했습니다.
 
-## 다음 추천: v199 backend admin overview/snapshots service split
+## 다음 추천: v200 backend admin master catalog service split
 
-가장 안전한 첫 실제 분리 대상은 **overview/save snapshots** 묶음입니다.
+다음 실제 분리 후보는 **master catalog/detail/relations** 묶음입니다.
 
 추천 방향:
 
-1. `backend/app/services/admin/` 폴더 생성
-2. `backend/app/services/admin/admin_overview_snapshots_service.py` 생성
-3. 아래 기능을 먼저 이동
-   - `get_readonly_overview`
-   - `list_save_snapshot_summaries`
-   - snapshot filter/order/count helper
-   - overview readiness helper
-4. `backend/app/services/admin_service.py`는 facade로 유지
-5. `backend/app/api/routes/admin.py`는 변경하지 않기
-6. route/schema/DB/env 변경 없이 smoke 추가
+1. `backend/app/services/admin/admin_master_catalog_service.py` 생성
+2. 아래 기능을 이동
+   - `list_master_catalog_domains`
+   - `list_master_catalog_rows`
+   - `get_master_catalog_detail`
+   - `get_master_catalog_relations`
+   - master catalog/detail/relation helper
+3. `AdminService`는 facade로 계속 유지
+4. `backend/app/api/routes/admin.py`는 변경하지 않기
+5. schema/DB/env 변경 없이 smoke 추가
 
 ## 그 다음 후보
 
-v199가 안정적이면 다음 순서가 좋습니다.
+v200이 안정적이면 다음 순서가 좋습니다.
 
-1. master catalog/detail service 분리
-2. create lifecycle service 분리
-3. change logs service 분리
-4. edit draft service 분리
-5. shared utils 분리
+1. create lifecycle service 분리
+2. change logs service 분리
+3. edit draft service 분리
+4. shared utils 분리
 
 ## 주의
 

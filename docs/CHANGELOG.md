@@ -1,3 +1,14 @@
+# Changelog
+
+## v199 backend admin overview/snapshots service split
+
+- `backend/app/services/admin/admin_overview_snapshots_service.py` 추가
+- `AdminService` facade 유지 + `AdminOverviewSnapshotsService` mixin 상속 구조 적용
+- overview/save snapshots public/helper 메서드 외부 서비스로 이동
+- route/schema/DB/env 변경 없음
+- `tools/smoke_backend_admin_overview_snapshots_service_split.py` 추가
+- core smoke에 새 백엔드 split smoke 포함
+
 
 ## v198 — backend admin service split contract
 

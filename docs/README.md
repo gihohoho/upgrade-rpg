@@ -48,6 +48,7 @@
 - `ADMIN_FIELD_HELP_SPLIT.md` — v196 field help/value hints 실제 분리
 - `ADMIN_SETTINGS_HELPERS_SPLIT.md` — v197 settings helpers/API URL/write key 실제 분리
 - `BACKEND_ADMIN_SERVICE_SPLIT_CONTRACT.md` — v198 backend admin service split contract
+- `BACKEND_ADMIN_OVERVIEW_SNAPSHOTS_SPLIT.md` — v199 backend overview/save snapshots service 실제 분리
 
 ## 3. 관리자 편집/관계 안전장치 문서
 
@@ -127,3 +128,7 @@ docs/archive/stage-notes/
 ## v198
 
 - [BACKEND_ADMIN_SERVICE_SPLIT_CONTRACT.md](BACKEND_ADMIN_SERVICE_SPLIT_CONTRACT.md) — v198 backend admin service split contract
+
+## v199
+
+- [BACKEND_ADMIN_OVERVIEW_SNAPSHOTS_SPLIT.md](BACKEND_ADMIN_OVERVIEW_SNAPSHOTS_SPLIT.md) — v199 backend overview/save snapshots service split

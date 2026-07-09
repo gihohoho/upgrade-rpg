@@ -48,6 +48,7 @@ node tools/smoke_save_data_restore_reload_lock.js
 node tools/smoke_save_data_restore_guard.js
 python tools/smoke_admin_readonly_api_structure.py
 python tools/smoke_backend_admin_service_split_contract.py
+python tools/smoke_backend_admin_overview_snapshots_service_split.py
 python tools/smoke_admin_create_blueprint_api_structure.py
 python tools/smoke_save_snapshot_integrity_api_structure.py
 python tools/smoke_save_snapshot_api_structure.py

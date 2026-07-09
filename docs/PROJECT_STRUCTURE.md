@@ -42,8 +42,9 @@ FastAPI 백엔드입니다.
 
 - `backend/app/main.py`
 - `backend/app/api/routes/admin.py`
-- `backend/app/services/admin_service.py`
+- `backend/app/services/admin_service.py` — route가 계속 import하는 AdminService facade
 - `backend/app/services/admin_service_split_contract.py` — v198 backend admin service 분리 계약
+- `backend/app/services/admin/admin_overview_snapshots_service.py` — v199 overview/save snapshots service 분리
 - `backend/app/schemas/admin.py`
 
 ## src
@@ -68,7 +69,7 @@ FastAPI 백엔드입니다.
 - `src/api/admin/admin-edit-draft.js`
 - `src/api/admin/admin-master-catalog.js`
 - `src/api/admin/admin-overview-snapshots.js`
-- `src/api/admin-page-readonly.js` — v198 기준 bootstrap/bindEvents/window wrapper 중심 thin entry
+- `src/api/admin-page-readonly.js` — v199 기준 bootstrap/bindEvents/window wrapper 중심 thin entry
 
 ## docs
 

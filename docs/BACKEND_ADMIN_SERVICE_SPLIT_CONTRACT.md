@@ -69,3 +69,11 @@ v199에서는 계약을 기준으로 백엔드 서비스 실제 분리 1단계�
 - overview/save snapshots
 
 이 묶음은 관리자 쓰기 기능과 직접 연결되지 않아 상대적으로 안전합니다.
+
+## v199 진행 상태
+
+v199에서 첫 실제 분리로 `overview-snapshots` 묶음을 `backend/app/services/admin/admin_overview_snapshots_service.py`로 이동했습니다.
+
+- route/schema 변경 없음
+- `AdminService` facade 유지
+- `tools/smoke_backend_admin_overview_snapshots_service_split.py`로 분리 상태 검증
