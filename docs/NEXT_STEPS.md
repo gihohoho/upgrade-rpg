@@ -1,14 +1,14 @@
-# Next Steps — after v212
+# Next Steps — after v214
 
-추천 다음 단계는 **v213 admin route module split preparation** 입니다.
+추천 다음 단계는 **v215 admin overview/snapshot route module split** 입니다.
 
 ## 추천 작업
 
-1. `admin.py`에 남은 기능별 endpoint 묶음 확인
-2. `admin_master_data_routes.py` 분리 후보 준비
-3. `admin_change_log_routes.py` 분리 후보 준비
+1. `backend/app/api/routes/admin_overview_snapshot_routes.py` 생성
+2. `requirements`, `overview`, `save-snapshots`, `change-preview` route 이동
+3. 기존 `admin.py`는 route include facade만 남기기
 4. 기존 API path/schema/envelope 유지 smoke 작성
-5. 첫 분리는 master-data read-only route부터 진행
+5. core smoke/seed smoke/compileall 검증
 
 주의:
 - route path는 유지

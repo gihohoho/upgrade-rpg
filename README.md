@@ -1,24 +1,28 @@
-# Upgrade RPG v212 패키지
+# Upgrade RPG v214 패키지
 
-현재 안정 버전: **v212 backend admin route data/meta helpers**
+현재 안정 버전: **v214 backend admin route module split**
 
-새 채팅 인수인계 ZIP: **rpg_v212_backend_admin_route_data_meta_helpers_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v214_backend_admin_route_module_split_ready.zip**
 
-## 이번 v211~v212에서 정리한 것
+## 이번 v213~v214에서 정리한 것
 
-v211~v212에서는 관리자 백엔드 라우터 `backend/app/api/routes/admin.py` 안에 반복되던 응답 `data={...}` 요약 생성과 `meta={...}` 안내 문구 생성을 별도 helper로 분리했습니다.
+v213~v214에서는 관리자 백엔드 라우터 `backend/app/api/routes/admin.py`를 기능별 route module로 분리했습니다.
+
+- v213: master-data 관련 route를 `admin_master_data_routes.py`로 분리
+- v214: change-log/rollback/create-delete 관련 route를 `admin_change_log_routes.py`로 분리
+- 기존 `admin.py`는 overview/save-snapshots/change-preview와 include facade 역할로 축소
 
 기존 API 경로, request/response schema, 응답 envelope, DB/env는 바꾸지 않았습니다.
 
 ## 주요 변경 파일
 
-- `backend/app/api/routes/admin_response_data_helpers.py` 추가
-- `backend/app/api/routes/admin_response_meta_helpers.py` 추가
-- `backend/app/api/routes/admin.py`에서 response data/meta helper 사용
-- `backend/app/services/admin_service_split_contract.py`의 `splitStatus`를 `admin-route-data-meta-helpers-v212`로 갱신
-- `src/api/admin-page-readonly.js`의 readiness 버전을 v212로 갱신
-- `tools/smoke_backend_admin_route_response_data_meta_helpers.py` 추가
-- 기존 smoke test 일부를 v212 구조에 맞게 조정
+- `backend/app/api/routes/admin_master_data_routes.py` 추가
+- `backend/app/api/routes/admin_change_log_routes.py` 추가
+- `backend/app/api/routes/admin.py`를 router include facade로 축소
+- `backend/app/services/admin_service_split_contract.py`의 `splitStatus`를 `admin-route-module-split-v214`로 갱신
+- `src/api/admin-page-readonly.js`의 readiness 버전을 v214로 갱신
+- `tools/smoke_backend_admin_route_module_split.py` 추가
+- 기존 smoke test 일부를 v214 구조에 맞게 조정
 
 ## 확인값
 
@@ -31,11 +35,11 @@ checkAdminReadOnlyPageReady().version
 예상:
 
 ```txt
-v212.backend-admin-route-data-meta-helpers
+v214.backend-admin-route-module-split
 ```
 
 ```js
-checkAdminReadOnlyPageReady().backendRouteResponseDataHelperReady
+checkAdminReadOnlyPageReady().backendRouteModuleSplitReady
 ```
 
 예상:
@@ -45,7 +49,17 @@ true
 ```
 
 ```js
-checkAdminReadOnlyPageReady().backendRouteResponseMetaHelperReady
+checkAdminReadOnlyPageReady().backendRouteMasterDataModuleReady
+```
+
+예상:
+
+```txt
+true
+```
+
+```js
+checkAdminReadOnlyPageReady().backendRouteChangeLogModuleReady
 ```
 
 예상:
@@ -61,7 +75,7 @@ getAdminBackendServiceSplitContractReadiness().splitStatus
 예상:
 
 ```txt
-admin-route-data-meta-helpers-v212
+admin-route-module-split-v214
 ```
 
 ## 검증 명령
@@ -70,7 +84,7 @@ admin-route-data-meta-helpers-v212
 
 ```bash
 bash tools/run_smoke_core.sh
-python tools/smoke_backend_admin_route_response_data_meta_helpers.py
+python tools/smoke_backend_admin_route_module_split.py
 python tools/smoke_seed_import_long_asset_columns.py
 python tools/smoke_seed_import_structure.py
 python -m compileall -q backend/app backend/scripts tools

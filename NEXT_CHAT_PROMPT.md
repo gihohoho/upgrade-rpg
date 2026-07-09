@@ -1,4 +1,4 @@
-이전 채팅에서 이어서 할게. 첨부한 zip은 v212 `backend admin route data/meta helpers` 완료본이야.
+이전 채팅에서 이어서 할게. 첨부한 zip은 v214 `backend admin route module split` 완료본이야.
 
 나는 코딩을 모르는 기호고, Vue/FastAPI 게임 프로젝트를 관리자페이지 중심으로 정리 중이야. 설명은 한국어로 쉽게 해줘.
 
@@ -7,33 +7,38 @@
 - git 명령은 `git status && git add . && git commit ... && git push` 형태로 한 번에 복사 가능하게 줘.
 - 한 번에 여러 단계 과감하게 해도 되지만, 안정성이 중요한 작업은 천천히 해줘.
 
-v212 확인값:
+v214 확인값:
 
 ```js
 checkAdminReadOnlyPageReady().version
-// v212.backend-admin-route-data-meta-helpers
+// v214.backend-admin-route-module-split
 ```
 
 ```js
-checkAdminReadOnlyPageReady().backendRouteResponseDataHelperReady
+checkAdminReadOnlyPageReady().backendRouteModuleSplitReady
 // true
 ```
 
 ```js
-checkAdminReadOnlyPageReady().backendRouteResponseMetaHelperReady
+checkAdminReadOnlyPageReady().backendRouteMasterDataModuleReady
+// true
+```
+
+```js
+checkAdminReadOnlyPageReady().backendRouteChangeLogModuleReady
 // true
 ```
 
 ```js
 getAdminBackendServiceSplitContractReadiness().splitStatus
-// admin-route-data-meta-helpers-v212
+// admin-route-module-split-v214
 ```
 
-v212 변경 핵심:
-- `backend/app/api/routes/admin_response_data_helpers.py` 추가
-- `backend/app/api/routes/admin_response_meta_helpers.py` 추가
-- `admin.py`의 반복 response data/meta 생성 분리
+v214 변경 핵심:
+- `backend/app/api/routes/admin_master_data_routes.py` 추가
+- `backend/app/api/routes/admin_change_log_routes.py` 추가
+- `admin.py`를 router include facade로 축소
 - API path/schema/envelope/DB/env 변경 없음
-- core smoke, v212 smoke, seed smoke, compileall 통과
+- route module split smoke, seed smoke, compileall 통과
 
-다음 단계는 v213으로, `admin.py` 기능별 router 파일 분리 준비 또는 첫 기능별 route 분리를 추천해줘.
+다음 단계는 v215로, 남은 overview/save-snapshots/change-preview route를 별도 module로 분리해서 `admin.py`를 include facade만 남기는 작업을 추천해줘.

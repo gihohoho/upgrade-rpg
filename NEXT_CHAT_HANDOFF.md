@@ -1,24 +1,25 @@
-# NEXT CHAT HANDOFF — v212
+# NEXT CHAT HANDOFF — v214
 
 ## 현재 안정 버전
 
-**v212 backend admin route data/meta helpers**
+**v214 backend admin route module split**
 
 ## 사용할 ZIP
 
-**rpg_v212_backend_admin_route_data_meta_helpers_ready.zip**
+**rpg_v214_backend_admin_route_module_split_ready.zip**
 
 ## 이번에 완료한 일
 
-v211~v212에서는 관리자 백엔드 라우터의 반복 응답 생성 코드를 helper로 분리했다.
+v213~v214에서는 관리자 백엔드 라우터 `backend/app/api/routes/admin.py`를 기능별 route module로 분리했다.
 
-- `backend/app/api/routes/admin_response_data_helpers.py` 추가
-- `backend/app/api/routes/admin_response_meta_helpers.py` 추가
-- `backend/app/api/routes/admin.py`가 `admin_data.build_*_data(...)`, `admin_route_meta(...)`를 사용하도록 변경
-- `admin.py` line count를 820줄대에서 약 550줄대로 축소
+- `backend/app/api/routes/admin_master_data_routes.py` 추가
+- `backend/app/api/routes/admin_change_log_routes.py` 추가
+- `backend/app/api/routes/admin.py`는 router include facade로 축소
+- master-data route 9개 이동
+- change-log/rollback/create-delete route 8개 이동
 - `backend/app/services/admin_service_split_contract.py` 갱신
 - `src/api/admin-page-readonly.js` readiness 갱신
-- v212 smoke 추가 및 core smoke 통과
+- `tools/smoke_backend_admin_route_module_split.py` 추가
 
 ## 유지한 것
 
@@ -32,22 +33,27 @@ v211~v212에서는 관리자 백엔드 라우터의 반복 응답 생성 코드�
 
 ```js
 checkAdminReadOnlyPageReady().version
-// v212.backend-admin-route-data-meta-helpers
+// v214.backend-admin-route-module-split
 ```
 
 ```js
-checkAdminReadOnlyPageReady().backendRouteResponseDataHelperReady
+checkAdminReadOnlyPageReady().backendRouteModuleSplitReady
 // true
 ```
 
 ```js
-checkAdminReadOnlyPageReady().backendRouteResponseMetaHelperReady
+checkAdminReadOnlyPageReady().backendRouteMasterDataModuleReady
+// true
+```
+
+```js
+checkAdminReadOnlyPageReady().backendRouteChangeLogModuleReady
 // true
 ```
 
 ```js
 getAdminBackendServiceSplitContractReadiness().splitStatus
-// admin-route-data-meta-helpers-v212
+// admin-route-module-split-v214
 ```
 
 ## 검증 완료
@@ -56,19 +62,21 @@ getAdminBackendServiceSplitContractReadiness().splitStatus
 
 ```bash
 bash tools/run_smoke_core.sh
-python tools/smoke_backend_admin_route_response_data_meta_helpers.py
+python tools/smoke_backend_admin_route_module_split.py
 python tools/smoke_seed_import_long_asset_columns.py
 python tools/smoke_seed_import_structure.py
 python -m compileall -q backend/app backend/scripts tools
 ```
 
+참고: 긴 core smoke는 실행 시간이 길 수 있다. 개별 seed/import/compileall 검증도 완료했다.
+
 ## 다음 추천 작업
 
-v213에서는 `backend/app/api/routes/admin.py`를 기능별 router 파일로 나누기 전, 먼저 `admin_route_service_call_helpers.py` 또는 기능별 route 파일 분리 계획을 잡는 것을 추천한다.
+v215에서는 남은 route를 한 번 더 분리하는 것을 추천한다.
 
 추천 순서:
 
-1. `backend/app/api/routes/admin_master_data_routes.py` 후보 분리
-2. `backend/app/api/routes/admin_change_log_routes.py` 후보 분리
-3. 기존 `admin.py`는 router include facade로 축소
+1. `admin_overview_snapshot_routes.py` 분리
+2. `requirements`, `overview`, `save-snapshots`, `change-preview` 이동
+3. 기존 `admin.py`는 include facade만 남기기
 4. route path/schema/envelope 유지 smoke 추가

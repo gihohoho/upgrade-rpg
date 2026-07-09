@@ -1,4 +1,4 @@
-"""Static smoke test for v211/v212 backend admin route response data/meta helpers.
+"""Static smoke test for v211/v214 backend admin route response data/meta helpers.
 
 Run from the project root:
 
@@ -56,15 +56,15 @@ assert_true("관리자 마스터 데이터 카탈로그 조회 전용 목록" in
 assert_true("관리자 변경 이력 읽기 전용 목록" in meta_helpers, "change logs meta note missing")
 assert_true('"backend/app/api/routes/admin_response_data_helpers.py"' in contract, "data helper should be listed in backend contract")
 assert_true('"backend/app/api/routes/admin_response_meta_helpers.py"' in contract, "meta helper should be listed in backend contract")
-assert_true('"splitStatus": "admin-route-data-meta-helpers-v212"' in contract, "contract splitStatus should be v212")
-assert_true('"No route path changes in v212"' in contract, "route path contract should mention v212")
-assert_true('const VERSION = "v212.backend-admin-route-data-meta-helpers"' in entry, "frontend readiness version should be v212")
-assert_true('splitStatus: "admin-route-data-meta-helpers-v212"' in entry, "frontend splitStatus should be v212")
+assert_true('"splitStatus": "admin-route-module-split-v214"' in contract, "contract splitStatus should be v214")
+assert_true('"No route path changes in v214"' in contract, "route path contract should mention v214")
+assert_true('const VERSION = "v214.backend-admin-route-module-split"' in entry, "frontend readiness version should be v214")
+assert_true('splitStatus: "admin-route-module-split-v214"' in entry, "frontend splitStatus should be v214")
 assert_true("backendRouteResponseDataHelperReady" in entry, "top-level response data readiness flag missing")
 assert_true("backendRouteResponseMetaHelperReady" in entry, "top-level response meta readiness flag missing")
 assert_true("routeResponseDataHelperReady" in entry, "contract response data readiness flag missing")
 assert_true("routeResponseMetaHelperReady" in entry, "contract response meta readiness flag missing")
-assert_true("smoke_backend_admin_route_response_data_meta_helpers.py" in run_smoke, "core smoke should include v212 smoke")
+assert_true("smoke_backend_admin_route_response_data_meta_helpers.py" in run_smoke, "core smoke should include v214 smoke")
 assert_true(len(route.splitlines()) <= 620, "admin.py should be slimmer after data/meta extraction")
 
 # Route paths must remain visible in admin.py for existing static route/path tests.

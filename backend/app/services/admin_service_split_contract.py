@@ -7,7 +7,7 @@ from typing import Any
 ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
     "version": "v198.backend-admin-service-split-contract",
     "status": "contract-frozen-v198",
-    "splitStatus": "admin-route-data-meta-helpers-v212",
+    "splitStatus": "admin-route-module-split-v214",
     "extractedFiles": [
         "backend/app/services/admin/admin_overview_snapshots_service.py",
         "backend/app/services/admin/admin_master_catalog_service.py",
@@ -22,6 +22,8 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "backend/app/api/routes/admin_route_error_helpers.py",
         "backend/app/api/routes/admin_response_data_helpers.py",
         "backend/app/api/routes/admin_response_meta_helpers.py",
+        "backend/app/api/routes/admin_master_data_routes.py",
+        "backend/app/api/routes/admin_change_log_routes.py",
     ],
     "currentFile": "backend/app/services/admin_service.py",
     "facadeFile": "backend/app/services/admin_service.py",
@@ -220,6 +222,20 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
             "publicMethods": [],
             "helperMethods": [],
         },
+        {
+            "key": "route-master-data-module",
+            "label": "Admin master-data route module",
+            "candidateFile": "backend/app/api/routes/admin_master_data_routes.py",
+            "publicMethods": [],
+            "helperMethods": [],
+        },
+        {
+            "key": "route-change-log-module",
+            "label": "Admin change-log route module",
+            "candidateFile": "backend/app/api/routes/admin_change_log_routes.py",
+            "publicMethods": [],
+            "helperMethods": [],
+        },
     ],
     "facadeMustKeep": [
         "AdminService",
@@ -237,14 +253,16 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT",
     ],
     "routeContract": [
-        "No route path changes in v212",
-        "No schema changes in v212",
+        "No route path changes in v214",
+        "No schema changes in v214",
+        "Master-data routes live in admin_master_data_routes.py",
+        "Change-log routes live in admin_change_log_routes.py",
         "Admin route responses go through admin_ok_response helper",
         "Admin route response data summaries go through admin_response_data_helpers.py",
         "Admin route response metadata goes through admin_response_meta_helpers.py",
         "Admin route dependency/query defaults go through admin_route_params.py",
         "Admin route local fallback payloads go through admin_route_error_helpers.py",
-        "AdminService remains the facade imported by backend/app/api/routes/admin.py",
+        "AdminService remains the facade imported by route modules",
         "Actual service file moves must keep every existing public method name",
     ],
 }

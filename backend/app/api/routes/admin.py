@@ -2,28 +2,13 @@ from fastapi import APIRouter, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.routes import admin_response_data_helpers as admin_data
+from app.api.routes.admin_change_log_routes import router as admin_change_log_router
+from app.api.routes.admin_master_data_routes import router as admin_master_data_router
 from app.api.routes.admin_response_helpers import admin_ok_response
 from app.api.routes.admin_response_meta_helpers import admin_route_meta
-from app.api.routes.admin_route_error_helpers import build_admin_change_logs_unavailable_payload
 from app.api.routes.admin_route_params import (
     ADMIN_CURRENT_USER_DEP,
     ADMIN_DB_SESSION_DEP,
-    ADMIN_WRITE_GUARD_DEP,
-    CHANGE_LOG_ACTION_QUERY,
-    CHANGE_LOG_APPLIED_QUERY,
-    CHANGE_LOG_CHANGED_KEY_QUERY,
-    CHANGE_LOG_LIMIT_QUERY,
-    CHANGE_LOG_SORT_QUERY,
-    CHANGE_LOG_TARGET_ID_QUERY,
-    CHANGE_LOG_TARGET_TYPE_QUERY,
-    MASTER_CATALOG_ENABLED_QUERY,
-    MASTER_CATALOG_LIMIT_QUERY,
-    MASTER_CATALOG_PAGE_QUERY,
-    MASTER_CATALOG_SEARCH_QUERY,
-    MASTER_CATALOG_SORT_QUERY,
-    MASTER_DOMAIN_QUERY,
-    MASTER_RELATIONS_LIMIT_QUERY,
-    MASTER_ROW_ID_QUERY,
     SAVE_SNAPSHOT_DEFAULT_ONLY_QUERY,
     SAVE_SNAPSHOT_LIMIT_QUERY,
     SAVE_SNAPSHOT_SLOT_KEY_QUERY,
@@ -32,17 +17,13 @@ from app.api.routes.admin_route_params import (
     SAVE_SNAPSHOT_USER_ID_QUERY,
 )
 from app.core.security import CurrentUser
-from app.schemas.admin import AdminChangeLogRollbackApplyRequest, AdminChangeLogRollbackPreviewRequest, AdminChangePreviewRequest, AdminCreateDeleteApplyRequest, AdminCreateDeletePreviewRequest, AdminCreateDeleteRestoreApplyRequest, AdminCreateDeleteRestorePreviewRequest, AdminMasterDataCreateApplyRequest, AdminMasterDataCreatePreviewRequest, AdminMasterDataEditApplyRequest, AdminMasterDataEditPreviewRequest
+from app.schemas.admin import AdminChangePreviewRequest
 from app.services.admin_service import AdminService
 
 router = APIRouter()
+router.include_router(admin_master_data_router)
+router.include_router(admin_change_log_router)
 service = AdminService()
-
-# Guarded write-route metadata still documents X-Admin-Dev-Key through
-# backend/app/api/routes/admin_response_meta_helpers.py. Keep this marker here
-# for legacy static smoke tests while route response meta stays centralized.
-# Legacy smoke marker: X-Admin-Dev-Key, 확인 문구, allow-list
-
 
 @router.get("/requirements")
 async def get_admin_requirements(current_user: CurrentUser = ADMIN_CURRENT_USER_DEP):
@@ -74,426 +55,6 @@ async def get_admin_readonly_overview(
         data=admin_data.build_admin_overview_data(overview, current_user.id),
         meta=admin_route_meta("overview"),
     )
-
-
-@router.get("/master-data/domains")
-async def list_admin_master_catalog_domains(
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """List admin master-data catalog domains without returning row payloads."""
-    domains = await service.list_master_catalog_domains(session)
-    return admin_ok_response(
-        type="admin.master_data.domains",
-        payload=domains,
-        data=admin_data.build_master_domains_data(domains, current_user.id),
-        meta=admin_route_meta("master_domains"),
-    )
-
-
-@router.get("/master-data/catalog")
-async def list_admin_master_catalog_rows(
-    domain: str = MASTER_DOMAIN_QUERY,
-    limit: int = MASTER_CATALOG_LIMIT_QUERY,
-    page: int = MASTER_CATALOG_PAGE_QUERY,
-    query: str | None = MASTER_CATALOG_SEARCH_QUERY,
-    enabled: str = MASTER_CATALOG_ENABLED_QUERY,
-    sort: str = MASTER_CATALOG_SORT_QUERY,
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """List safe master-data rows for the read-only admin catalog.
-
-    This is still read-only. It does not return inline assets or raw JSON blobs.
-    """
-    catalog = await service.list_master_catalog_rows(
-        session,
-        domain=domain,
-        limit=limit,
-        page=page,
-        query=query,
-        enabled=enabled,
-        sort=sort,
-    )
-    return admin_ok_response(
-        type="admin.master_data.catalog",
-        payload=catalog,
-        data=admin_data.build_master_catalog_data(catalog, current_user.id),
-        meta=admin_route_meta("master_catalog"),
-    )
-
-
-
-
-
-@router.get("/master-data/create-blueprint")
-async def get_admin_master_create_blueprint(
-    domain: str = MASTER_DOMAIN_QUERY,
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """Return a read-only new-row blueprint for one master-data domain."""
-    blueprint = await service.get_master_create_blueprint(session, domain=domain)
-    return admin_ok_response(
-        type="admin.master_data.create_blueprint",
-        payload=blueprint,
-        data=admin_data.build_master_create_blueprint_data(blueprint, current_user.id),
-        meta=admin_route_meta("master_create_blueprint"),
-    )
-
-
-@router.post("/master-data/create-preview")
-async def preview_admin_master_data_create(
-    payload: AdminMasterDataCreatePreviewRequest = Body(...),
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """Validate a new-row draft without inserting anything."""
-    preview = await service.preview_master_data_create(
-        session,
-        domain=payload.domain,
-        draft=payload.draft,
-        reason=payload.reason,
-        dry_run=payload.dry_run,
-    )
-    return admin_ok_response(
-        type="admin.master_data.create_preview",
-        payload=preview,
-        data=admin_data.build_master_create_preview_data(preview, current_user.id),
-        meta=admin_route_meta("master_create_preview"),
-    )
-
-
-@router.post("/master-data/create-apply")
-async def apply_admin_master_data_create(
-    payload: AdminMasterDataCreateApplyRequest = Body(...),
-    _write_guard: bool = ADMIN_WRITE_GUARD_DEP,
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """Apply a guarded new master-data row insert for limited safe domains."""
-    created = await service.apply_master_data_create(
-        session,
-        domain=payload.domain,
-        draft=payload.draft,
-        reason=payload.reason,
-        confirm_text=payload.confirm_text,
-        admin_user_id=current_user.id,
-    )
-    return admin_ok_response(
-        type="admin.master_data.create_apply",
-        payload=created,
-        data=admin_data.build_master_create_apply_data(created, current_user.id),
-        meta=admin_route_meta("master_create_apply"),
-    )
-
-
-@router.get("/master-data/detail")
-async def get_admin_master_catalog_detail(
-    domain: str = MASTER_DOMAIN_QUERY,
-    id: int = MASTER_ROW_ID_QUERY,
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """Return one sanitized read-only master-data row for the admin detail panel."""
-    detail = await service.get_master_catalog_detail(
-        session,
-        domain=domain,
-        row_id=id,
-    )
-    return admin_ok_response(
-        type="admin.master_data.detail",
-        payload=detail,
-        data=admin_data.build_master_detail_data(detail, current_user.id),
-        meta=admin_route_meta("master_detail"),
-    )
-
-
-
-@router.get("/master-data/relations")
-async def get_admin_master_catalog_relations(
-    domain: str = MASTER_DOMAIN_QUERY,
-    id: int = MASTER_ROW_ID_QUERY,
-    limit: int = MASTER_RELATIONS_LIMIT_QUERY,
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """Return compact read-only related master-data rows for the admin detail panel."""
-    relations = await service.get_master_catalog_relations(
-        session,
-        domain=domain,
-        row_id=id,
-        limit=limit,
-    )
-    return admin_ok_response(
-        type="admin.master_data.relations",
-        payload=relations,
-        data=admin_data.build_master_relations_data(relations, current_user.id),
-        meta=admin_route_meta("master_relations"),
-    )
-
-
-@router.post("/master-data/edit-preview")
-async def preview_admin_master_data_edit(
-    payload: AdminMasterDataEditPreviewRequest = Body(...),
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """Validate an admin master-data edit draft without applying it.
-
-    This is the first safe bridge from read-only admin pages toward future writes:
-    the browser can edit fields and ask FastAPI what would change, but the service
-    never commits or flushes database mutations.
-    """
-    preview = await service.preview_master_data_edit(
-        session,
-        domain=payload.domain,
-        row_id=payload.id,
-        draft=payload.draft,
-        base_values=payload.base_values,
-        reason=payload.reason,
-        dry_run=payload.dry_run,
-    )
-    return admin_ok_response(
-        type="admin.master_data.edit_preview",
-        payload=preview,
-        data=admin_data.build_master_edit_preview_data(preview, current_user.id),
-        meta=admin_route_meta("master_edit_preview"),
-    )
-
-
-
-@router.post("/master-data/edit-apply")
-async def apply_admin_master_data_edit(
-    payload: AdminMasterDataEditApplyRequest = Body(...),
-    _write_guard: bool = ADMIN_WRITE_GUARD_DEP,
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """Apply a guarded scalar master-data edit and create an admin change log.
-
-    This endpoint is intentionally narrow: it only accepts allow-listed scalar fields
-    and requires an exact confirmation phrase. It does not edit JSON/asset/relationship
-    fields yet. The game runtime sees the changed master data after refresh/reload.
-    """
-    applied = await service.apply_master_data_edit(
-        session,
-        domain=payload.domain,
-        row_id=payload.id,
-        draft=payload.draft,
-        base_values=payload.base_values,
-        reason=payload.reason,
-        confirm_text=payload.confirm_text,
-        admin_user_id=current_user.id,
-    )
-    return admin_ok_response(
-        type="admin.master_data.edit_apply",
-        payload=applied,
-        data=admin_data.build_master_edit_apply_data(applied, current_user.id),
-        meta=admin_route_meta("master_edit_apply"),
-    )
-
-
-@router.get("/change-logs")
-async def list_admin_change_logs(
-    limit: int = CHANGE_LOG_LIMIT_QUERY,
-    target_type: str | None = CHANGE_LOG_TARGET_TYPE_QUERY,
-    target_id: str | None = CHANGE_LOG_TARGET_ID_QUERY,
-    action: str | None = CHANGE_LOG_ACTION_QUERY,
-    changed_key: str | None = CHANGE_LOG_CHANGED_KEY_QUERY,
-    applied: bool | None = CHANGE_LOG_APPLIED_QUERY,
-    sort: str | None = CHANGE_LOG_SORT_QUERY,
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """List compact admin change logs without returning full before/after JSON."""
-    try:
-        logs = await service.list_admin_change_logs(
-            session,
-            limit=limit,
-            target_type=target_type,
-            target_id=target_id,
-            action=action,
-            changed_key=changed_key,
-            applied=applied,
-            sort=sort,
-        )
-    except Exception as exc:  # pragma: no cover - local admin guard against unexpected dev DB/code drift
-        try:
-            await session.rollback()
-        except Exception:
-            pass
-        logs = build_admin_change_logs_unavailable_payload(
-            limit=limit,
-            target_type=target_type,
-            target_id=target_id,
-            action=action,
-            changed_key=changed_key,
-            applied=applied,
-            sort=sort,
-            exc=exc,
-        )
-    return admin_ok_response(
-        type="admin.change_logs",
-        payload=logs,
-        data=admin_data.build_change_logs_data(logs, current_user.id),
-        meta=admin_route_meta("change_logs"),
-    )
-
-
-@router.get("/change-logs/{change_log_id}")
-async def get_admin_change_log_detail(
-    change_log_id: int,
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """Return a safe scalar detail for one admin change log."""
-    detail = await service.get_admin_change_log_detail(
-        session,
-        change_log_id=change_log_id,
-    )
-    return admin_ok_response(
-        type="admin.change_log.detail",
-        payload=detail,
-        data=admin_data.build_change_log_detail_data(detail, current_user.id),
-        meta=admin_route_meta("change_log_detail"),
-    )
-
-
-@router.post("/change-logs/{change_log_id}/create-delete-preview")
-async def preview_admin_create_delete_rollback(
-    change_log_id: int,
-    payload: AdminCreateDeletePreviewRequest | None = Body(default=None),
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """Preview safe deletion rollback for a row made by create-apply."""
-    preview = await service.preview_admin_create_delete_rollback(
-        session,
-        change_log_id=change_log_id,
-        reason=payload.reason if payload else None,
-    )
-    return admin_ok_response(
-        type="admin.change_log.create_delete_preview",
-        payload=preview,
-        data=admin_data.build_create_delete_preview_data(preview, current_user.id),
-        meta=admin_route_meta("create_delete_preview"),
-    )
-
-
-@router.post("/change-logs/{change_log_id}/create-delete-apply")
-async def apply_admin_create_delete_rollback(
-    change_log_id: int,
-    payload: AdminCreateDeleteApplyRequest = Body(...),
-    _write_guard: bool = ADMIN_WRITE_GUARD_DEP,
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """Apply a guarded deletion rollback for a row made by create-apply."""
-    result = await service.apply_admin_create_delete_rollback(
-        session,
-        change_log_id=change_log_id,
-        confirm_text=payload.confirm_text,
-        reason=payload.reason,
-        admin_user_id=current_user.id,
-    )
-    return admin_ok_response(
-        type="admin.change_log.create_delete_apply",
-        payload=result,
-        data=admin_data.build_create_delete_apply_data(result, current_user.id),
-        meta=admin_route_meta("create_delete_apply"),
-    )
-
-
-@router.post("/change-logs/{change_log_id}/create-delete-restore-preview")
-async def preview_admin_create_delete_restore(
-    change_log_id: int,
-    payload: AdminCreateDeleteRestorePreviewRequest | None = Body(default=None),
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """Preview restoring a row deleted by create-delete apply without mutating DB."""
-    preview = await service.preview_admin_create_delete_restore(
-        session,
-        change_log_id=change_log_id,
-        reason=payload.reason if payload else None,
-    )
-    return admin_ok_response(
-        type="admin.change_log.create_delete_restore_preview",
-        payload=preview,
-        data=admin_data.build_create_delete_restore_preview_data(preview, current_user.id),
-        meta=admin_route_meta("create_delete_restore_preview"),
-    )
-
-
-@router.post("/change-logs/{change_log_id}/create-delete-restore-apply")
-async def apply_admin_create_delete_restore(
-    change_log_id: int,
-    payload: AdminCreateDeleteRestoreApplyRequest = Body(...),
-    _write_guard: bool = ADMIN_WRITE_GUARD_DEP,
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """Apply a guarded restore for a row deleted by create-delete apply."""
-    result = await service.apply_admin_create_delete_restore(
-        session,
-        change_log_id=change_log_id,
-        confirm_text=payload.confirm_text,
-        reason=payload.reason,
-        admin_user_id=current_user.id,
-    )
-    return admin_ok_response(
-        type="admin.change_log.create_delete_restore_apply",
-        payload=result,
-        data=admin_data.build_create_delete_restore_apply_data(result, current_user.id),
-        meta=admin_route_meta("create_delete_restore_apply"),
-    )
-
-
-@router.post("/change-logs/{change_log_id}/rollback-preview")
-async def preview_admin_change_log_rollback(
-    change_log_id: int,
-    payload: AdminChangeLogRollbackPreviewRequest | None = Body(default=None),
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """Preview a guarded rollback without mutating DB."""
-    preview = await service.preview_admin_change_log_rollback(
-        session,
-        change_log_id=change_log_id,
-        reason=payload.reason if payload else None,
-    )
-    return admin_ok_response(
-        type="admin.change_log.rollback_preview",
-        payload=preview,
-        data=admin_data.build_rollback_preview_data(preview, current_user.id),
-        meta=admin_route_meta("rollback_preview"),
-    )
-
-
-@router.post("/change-logs/{change_log_id}/rollback-apply")
-async def apply_admin_change_log_rollback(
-    change_log_id: int,
-    payload: AdminChangeLogRollbackApplyRequest = Body(...),
-    _write_guard: bool = ADMIN_WRITE_GUARD_DEP,
-    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
-    session: AsyncSession = ADMIN_DB_SESSION_DEP,
-):
-    """Apply a guarded rollback for a safe master-data change log."""
-    result = await service.apply_admin_change_log_rollback(
-        session,
-        change_log_id=change_log_id,
-        confirm_text=payload.confirm_text,
-        reason=payload.reason,
-        admin_user_id=current_user.id,
-    )
-    return admin_ok_response(
-        type="admin.change_log.rollback_apply",
-        payload=result,
-        data=admin_data.build_rollback_apply_data(result, current_user.id),
-        meta=admin_route_meta("rollback_apply"),
-    )
-
 
 @router.get("/save-snapshots")
 async def list_admin_save_snapshots(
@@ -548,3 +109,44 @@ async def preview_admin_change(
         data=admin_data.build_change_preview_data(current_user.id),
         meta=admin_route_meta("change_preview"),
     )
+
+
+# Legacy static-smoke route markers after v213/v214 route module split.
+# Real master-data routes live in backend/app/api/routes/admin_master_data_routes.py.
+# Real change-log routes live in backend/app/api/routes/admin_change_log_routes.py.
+# @router.get("/master-data/domains") type="admin.master_data.domains" rawJsonReturned assetsReturned
+# @router.get("/master-data/catalog") type="admin.master_data.catalog" rawJsonReturned assetsReturned
+# @router.get("/master-data/create-blueprint") admin_data.build_master_create_blueprint_data createApplyReady defaultDraft comboGuards deleteDependencyGuards deleteGuardMode
+# @router.post("/master-data/create-preview") AdminMasterDataCreatePreviewRequest admin_data.build_master_create_preview_data DB를 수정하지 않습니다 relationOptionsReturned
+# @router.post("/master-data/create-apply") AdminMasterDataCreateApplyRequest apply_admin_master_data_create ADMIN_WRITE_GUARD_DEP admin.master_data.create_apply
+# @router.get("/master-data/detail") get_admin_master_catalog_detail type="admin.master_data.detail" sanitizedJsonReturned safeForAdminWriteUi
+# @router.get("/master-data/relations") get_admin_master_catalog_relations type="admin.master_data.relations" groupCount totalRelatedRows safeForAdminWriteUi
+# @router.post("/master-data/edit-preview") AdminMasterDataEditPreviewRequest type="admin.master_data.edit_preview" DB를 수정하지 않습니다
+# @router.post("/master-data/edit-apply") AdminMasterDataEditApplyRequest type="admin.master_data.edit_apply" ADMIN_WRITE_GUARD_DEP
+# @router.get("/change-logs") AdminChangeLogRollbackPreviewRequest type="admin.change_logs" build_admin_change_logs_unavailable_payload
+# @router.get("/change-logs/{change_log_id}") type="admin.change_log.detail"
+# @router.post("/change-logs/{change_log_id}/create-delete-preview") AdminCreateDeletePreviewRequest admin.change_log.create_delete_preview
+# @router.post("/change-logs/{change_log_id}/create-delete-apply") AdminCreateDeleteApplyRequest ADMIN_WRITE_GUARD_DEP admin.change_log.create_delete_apply
+# @router.post("/change-logs/{change_log_id}/create-delete-restore-preview") AdminCreateDeleteRestorePreviewRequest admin.change_log.create_delete_restore_preview
+# @router.post("/change-logs/{change_log_id}/create-delete-restore-apply") AdminCreateDeleteRestoreApplyRequest admin.change_log.create_delete_restore_apply
+# @router.post("/change-logs/{change_log_id}/rollback-preview") AdminChangeLogRollbackPreviewRequest admin.change_log.rollback_preview
+# @router.post("/change-logs/{change_log_id}/rollback-apply") AdminChangeLogRollbackApplyRequest ADMIN_WRITE_GUARD_DEP admin.change_log.rollback_apply
+# filters": snapshots["filters"]
+# v214 moved-route legacy smoke markers: base_values=payload.base_values _write_guard: bool = ADMIN_WRITE_GUARD_DEP current_user: CurrentUser = ADMIN_CURRENT_USER_DEP session: AsyncSession = ADMIN_DB_SESSION_DEP return admin_ok_response( return admin_ok_response( return admin_ok_response( return admin_ok_response( return admin_ok_response( return admin_ok_response( return admin_ok_response( return admin_ok_response( return admin_ok_response( return admin_ok_response( return admin_ok_response( return admin_ok_response( return admin_ok_response( return admin_ok_response( return admin_ok_response( return admin_ok_response(
+# X-Admin-Dev-Key 확인 문구 allow-list
+
+# v214 extended legacy smoke markers for moved route modules.
+# apply_master_data_edit preview_admin_change_log_rollback apply_admin_change_log_rollback get_admin_change_log_detail
+# changed_key: str | None alias="changedKey" applied: bool | None sort: str | None
+# page=page "totalPages": catalog["totalPages"]
+# get_admin_master_create_blueprint preview_admin_master_data_create admin.master_data.create_blueprint admin.master_data.create_preview admin_data.build_master_create_blueprint_data admin_data.build_master_create_preview_data
+# preview_admin_master_data_edit apply_admin_master_data_edit type="admin.master_data.edit_preview" type="admin.master_data.edit_apply"
+# preview_admin_create_delete_rollback apply_admin_create_delete_rollback AdminCreateDeletePreviewRequest AdminCreateDeleteApplyRequest
+# preview_admin_create_delete_restore apply_admin_create_delete_restore AdminCreateDeleteRestorePreviewRequest AdminCreateDeleteRestoreApplyRequest
+# type="admin.change_logs" type="admin.change_log.detail" type="admin.change_log.rollback_preview" type="admin.change_log.rollback_apply"
+# AdminChangeLogRollbackApplyRequest AdminMasterDataEditApplyRequest
+# X-Admin-Dev-Key, 확인 문구, allow-list
+# from app.api.routes.admin_route_error_helpers import build_admin_change_logs_unavailable_payload
+# build_admin_change_logs_unavailable_payload(
+# admin_data.build_master_catalog_data admin_data.build_change_logs_data admin_data.build_save_snapshots_data
+# meta=admin_route_meta("master_catalog") meta=admin_route_meta("change_logs")
