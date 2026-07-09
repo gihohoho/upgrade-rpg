@@ -8,7 +8,7 @@
 
 ```js
 checkAdminReadOnlyPageReady().version
-// v216.backend-admin-route-overview-facade-split
+// v218.backend-admin-route-map-contract
 ```
 
 ```js
@@ -23,5 +23,5 @@ checkAdminReadOnlyPageReady().backendRouteFacadeReady
 
 ```js
 getAdminBackendServiceSplitContractReadiness().splitStatus
-// admin-route-overview-facade-split-v216
+// admin-route-map-contract-v218
 ```

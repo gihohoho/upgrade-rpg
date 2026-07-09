@@ -1,12 +1,14 @@
-# Backend Ready Notes — v216
+# Backend Ready Notes — v218
 
-현재 안정 버전: **v216 backend admin route overview facade split**
+현재 안정 버전: **v218 backend admin route map contract**
 
 ## 변경 요약
 
-- `admin_overview_snapshot_routes.py` 추가
-- `/requirements`, `/overview`, `/save-snapshots`, `/change-preview` route 이동
-- `admin.py`는 master-data/change-log/overview-snapshot router include facade로 축소
+- `admin.py`의 legacy static-smoke marker 주석 제거
+- 오래된 smoke가 실제 route module/helper 파일을 보도록 정리
+- `admin_route_map_contract.py` 추가
+- route ownership map/readiness 추가
+- `admin.py`는 master-data/change-log/overview-snapshot router include facade 유지
 - route path/schema/API 응답 구조 변경 없음
 - DB/env 변경 없음
 

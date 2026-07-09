@@ -16,10 +16,13 @@ function assertContains(file, patterns) {
   }
 }
 
-assertContains("backend/app/api/routes/admin.py", [
+assertContains("backend/app/api/routes/admin_master_data_routes.py", [
   '@router.get("/master-data/detail")',
   "get_admin_master_catalog_detail",
   'type="admin.master_data.detail"',
+]);
+
+assertContains("backend/app/api/routes/admin_response_data_helpers.py", [
   "sanitizedJsonReturned",
   "safeForAdminWriteUi",
 ]);

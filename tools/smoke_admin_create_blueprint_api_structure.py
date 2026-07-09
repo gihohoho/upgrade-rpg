@@ -18,7 +18,7 @@ def assert_contains(path: str, patterns: list[str]) -> None:
 
 
 assert_contains(
-    "backend/app/api/routes/admin.py",
+    "backend/app/api/routes/admin_master_data_routes.py",
     [
         '@router.get("/master-data/create-blueprint")',
         '@router.post("/master-data/create-preview")',

@@ -16,7 +16,7 @@ function assertContains(file, patterns) {
   }
 }
 
-assertContains("backend/app/api/routes/admin.py", [
+assertContains("backend/app/api/routes/admin_master_data_routes.py", [
   '@router.post("/master-data/edit-preview")',
   "AdminMasterDataEditPreviewRequest",
   'type="admin.master_data.edit_preview"',

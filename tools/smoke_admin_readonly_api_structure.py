@@ -12,27 +12,31 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED_PATTERNS = {
-    "backend/app/api/routes/admin.py": [
+    "backend/app/api/routes/admin_overview_snapshot_routes.py": [
         '@router.get("/overview")',
         '@router.get("/save-snapshots")',
+        'type="admin.overview"',
+        'type="admin.save_snapshots"',
+    ],
+    "backend/app/api/routes/admin_master_data_routes.py": [
         '@router.get("/master-data/domains")',
         '@router.get("/master-data/catalog")',
         '@router.get("/master-data/detail")',
         '@router.get("/master-data/relations")',
         '@router.post("/master-data/edit-preview")',
         '@router.post("/master-data/edit-apply")',
-        '@router.get("/change-logs")',
-        '@router.get("/change-logs/{change_log_id}")',
-        '@router.post("/change-logs/{change_log_id}/rollback-preview")',
-        '@router.post("/change-logs/{change_log_id}/rollback-apply")',
-        'type="admin.overview"',
-        'type="admin.save_snapshots"',
         'type="admin.master_data.domains"',
         'type="admin.master_data.catalog"',
         'type="admin.master_data.detail"',
         'type="admin.master_data.relations"',
         'type="admin.master_data.edit_preview"',
         'type="admin.master_data.edit_apply"',
+    ],
+    "backend/app/api/routes/admin_change_log_routes.py": [
+        '@router.get("/change-logs")',
+        '@router.get("/change-logs/{change_log_id}")',
+        '@router.post("/change-logs/{change_log_id}/rollback-preview")',
+        '@router.post("/change-logs/{change_log_id}/rollback-apply")',
         'type="admin.change_logs"',
         'type="admin.change_log.detail"',
         'type="admin.change_log.rollback_preview"',

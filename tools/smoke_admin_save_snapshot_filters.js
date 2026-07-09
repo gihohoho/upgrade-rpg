@@ -57,7 +57,7 @@ assertContains("backend/app/api/routes/admin_route_params.py", [
   "SAVE_SNAPSHOT_SORT_QUERY = Query(default=\"updated_desc\", max_length=30)",
 ]);
 
-assertContains("backend/app/api/routes/admin.py", [
+assertContains("backend/app/api/routes/admin_response_data_helpers.py", [
   "filters\": snapshots[\"filters\"]",
 ]);
 

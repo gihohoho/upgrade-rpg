@@ -7,7 +7,7 @@ from typing import Any
 ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
     "version": "v198.backend-admin-service-split-contract",
     "status": "contract-frozen-v198",
-    "splitStatus": "admin-route-overview-facade-split-v216",
+    "splitStatus": "admin-route-map-contract-v218",
     "extractedFiles": [
         "backend/app/services/admin/admin_overview_snapshots_service.py",
         "backend/app/services/admin/admin_master_catalog_service.py",
@@ -25,6 +25,7 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "backend/app/api/routes/admin_master_data_routes.py",
         "backend/app/api/routes/admin_change_log_routes.py",
         "backend/app/api/routes/admin_overview_snapshot_routes.py",
+        "backend/app/api/routes/admin_route_map_contract.py",
     ],
     "currentFile": "backend/app/services/admin_service.py",
     "facadeFile": "backend/app/services/admin_service.py",
@@ -244,6 +245,13 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
             "publicMethods": [],
             "helperMethods": [],
         },
+        {
+            "key": "route-map-contract",
+            "label": "Admin route ownership map contract",
+            "candidateFile": "backend/app/api/routes/admin_route_map_contract.py",
+            "publicMethods": [],
+            "helperMethods": [],
+        },
     ],
     "facadeMustKeep": [
         "AdminService",
@@ -261,12 +269,14 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT",
     ],
     "routeContract": [
-        "No route path changes in v216",
-        "No schema changes in v216",
+        "No route path changes in v218",
+        "No schema changes in v218",
         "Master-data routes live in admin_master_data_routes.py",
         "Change-log routes live in admin_change_log_routes.py",
         "Overview/save-snapshot routes live in admin_overview_snapshot_routes.py",
         "admin.py stays as a thin include-router facade",
+        "Legacy static smoke checks read actual route modules instead of admin.py comments",
+        "Admin route ownership map lives in admin_route_map_contract.py",
         "Admin route responses go through admin_ok_response helper",
         "Admin route response data summaries go through admin_response_data_helpers.py",
         "Admin route response metadata goes through admin_response_meta_helpers.py",

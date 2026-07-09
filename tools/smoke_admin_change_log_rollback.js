@@ -16,7 +16,7 @@ function assertContains(file, patterns) {
   }
 }
 
-assertContains("backend/app/api/routes/admin.py", [
+assertContains("backend/app/api/routes/admin_change_log_routes.py", [
   '@router.get("/change-logs/{change_log_id}")',
   '@router.post("/change-logs/{change_log_id}/rollback-preview")',
   '@router.post("/change-logs/{change_log_id}/rollback-apply")',

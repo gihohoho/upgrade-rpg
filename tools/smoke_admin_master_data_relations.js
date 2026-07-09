@@ -16,10 +16,13 @@ function assertContains(file, patterns) {
   }
 }
 
-assertContains("backend/app/api/routes/admin.py", [
+assertContains("backend/app/api/routes/admin_master_data_routes.py", [
   '@router.get("/master-data/relations")',
   "get_admin_master_catalog_relations",
   'type="admin.master_data.relations"',
+]);
+
+assertContains("backend/app/api/routes/admin_response_data_helpers.py", [
   "groupCount",
   "totalRelatedRows",
   "safeForAdminWriteUi",

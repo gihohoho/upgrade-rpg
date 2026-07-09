@@ -30,7 +30,7 @@ assertContains("backend/app/services/admin_service.py", [
   "MASTER_CREATE_DELETE_CONFIRM_TEXT",
 ]);
 
-assertContains("backend/app/api/routes/admin.py", [
+assertContains("backend/app/api/routes/admin_master_data_routes.py", [
   "AdminMasterDataCreateApplyRequest",
   "@router.post(\"/master-data/create-apply\")",
   "apply_admin_master_data_create",

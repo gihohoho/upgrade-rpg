@@ -15,7 +15,7 @@ function assert(condition, message) {
 const adminHtml = read('admin.html');
 const adminJs = read('src/api/admin-page-readonly.js');
 const clientJs = read('src/api/game-api-client.js');
-const routePy = read('backend/app/api/routes/admin.py');
+const routePy = read('backend/app/api/routes/admin_change_log_routes.py') + read('backend/app/api/routes/admin_route_params.py');
 const servicePy = read('backend/app/services/admin/admin_change_log_service.py');
 
 assert(adminHtml.includes('data-admin-change-log-filter-target-type'), 'admin.html has change log target type filter');

@@ -2,7 +2,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 service = (ROOT / "backend/app/services/admin/admin_change_log_service.py").read_text(encoding="utf-8")
-route = (ROOT / "backend/app/api/routes/admin.py").read_text(encoding="utf-8")
+route = (ROOT / "backend/app/api/routes/admin_change_log_routes.py").read_text(encoding="utf-8")
 route_error_helpers = (ROOT / "backend/app/api/routes/admin_route_error_helpers.py").read_text(encoding="utf-8")
 route_data_helpers = (ROOT / "backend/app/api/routes/admin_response_data_helpers.py").read_text(encoding="utf-8")
 client = (ROOT / "src/api/admin/admin-change-logs.js").read_text(encoding="utf-8")

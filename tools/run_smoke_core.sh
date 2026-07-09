@@ -62,6 +62,7 @@ python tools/smoke_backend_admin_route_params_error_helpers.py
 python tools/smoke_backend_admin_route_response_data_meta_helpers.py
 python tools/smoke_backend_admin_route_module_split.py
 python tools/smoke_backend_admin_overview_route_module_split.py
+python tools/smoke_backend_admin_route_map_contract.py
 python tools/smoke_admin_create_blueprint_api_structure.py
 python tools/smoke_save_snapshot_integrity_api_structure.py
 python tools/smoke_save_snapshot_api_structure.py

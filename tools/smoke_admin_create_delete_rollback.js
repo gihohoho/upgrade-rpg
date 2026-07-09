@@ -33,7 +33,7 @@ assertContains("backend/app/services/admin_service.py", [
   "DropTable.owner_code == code_text",
 ]);
 
-assertContains("backend/app/api/routes/admin.py", [
+assertContains("backend/app/api/routes/admin_change_log_routes.py", [
   "AdminCreateDeletePreviewRequest",
   "AdminCreateDeleteApplyRequest",
   "@router.post(\"/change-logs/{change_log_id}/create-delete-preview\")",

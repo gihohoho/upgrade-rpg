@@ -22,8 +22,11 @@ assertContains("backend/app/api/routes/admin_route_params.py", [
   "MASTER_CATALOG_SORT_QUERY = Query(default=\"id_asc\"",
 ]);
 
-assertContains("backend/app/api/routes/admin.py", [
+assertContains("backend/app/api/routes/admin_master_data_routes.py", [
   "page=page",
+]);
+
+assertContains("backend/app/api/routes/admin_response_data_helpers.py", [
   '"totalPages": catalog["totalPages"]',
 ]);
 

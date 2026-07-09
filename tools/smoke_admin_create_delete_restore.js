@@ -30,7 +30,7 @@ assertContains("backend/app/services/admin_service.py", [
   "action=\"create_delete_restore\"",
 ]);
 
-assertContains("backend/app/api/routes/admin.py", [
+assertContains("backend/app/api/routes/admin_change_log_routes.py", [
   "AdminCreateDeleteRestorePreviewRequest",
   "AdminCreateDeleteRestoreApplyRequest",
   "@router.post(\"/change-logs/{change_log_id}/create-delete-restore-preview\")",

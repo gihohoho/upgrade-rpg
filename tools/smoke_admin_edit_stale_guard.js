@@ -11,7 +11,7 @@ function assert(condition, message) {
 
 const adminJs = read("src/api/admin-page-readonly.js");
 const clientJs = read("src/api/game-api-client.js");
-const routePy = read("backend/app/api/routes/admin.py");
+const routePy = read("backend/app/api/routes/admin_master_data_routes.py");
 const schemaPy = read("backend/app/schemas/admin.py");
 const servicePy = read("backend/app/services/admin_service.py");
 const checkPy = read("backend/scripts/check_admin_readonly_api.py");

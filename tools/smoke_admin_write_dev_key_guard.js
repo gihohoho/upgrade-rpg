@@ -15,7 +15,8 @@ function assert(condition, message) {
 const adminHtml = read('admin.html');
 const adminJs = read('src/api/admin-page-readonly.js');
 const clientJs = read('src/api/game-api-client.js');
-const routePy = read('backend/app/api/routes/admin.py');
+const routePy = read('backend/app/api/routes/admin_master_data_routes.py') + read('backend/app/api/routes/admin_change_log_routes.py');
+const routeMetaPy = read('backend/app/api/routes/admin_response_meta_helpers.py');
 const routeParamsPy = read('backend/app/api/routes/admin_route_params.py');
 const securityPy = read('backend/app/core/security.py');
 const configPy = read('backend/app/core/config.py');
@@ -45,7 +46,7 @@ assert(envExample.includes('ADMIN_WRITE_DEV_KEY'), '.env.example documents admin
 assert(securityPy.includes('require_admin_write_dev_key'), 'security dependency exists');
 assert(securityPy.includes('X-Admin-Dev-Key'), 'security dependency reads X-Admin-Dev-Key');
 assert(routePy.includes('ADMIN_WRITE_GUARD_DEP') && routeParamsPy.includes('Depends(require_admin_write_dev_key)'), 'write routes require dev key dependency');
-assert(routePy.includes('X-Admin-Dev-Key'), 'write route metadata mentions dev key');
+assert(routeMetaPy.includes('X-Admin-Dev-Key'), 'write route metadata mentions dev key');
 assert(checkScript.includes('master_edit_apply_missing_key_blocked'), 'live check verifies missing key is blocked');
 
 console.log('[PASS] smoke_admin_write_dev_key_guard');

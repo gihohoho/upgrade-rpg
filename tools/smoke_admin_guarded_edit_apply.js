@@ -16,13 +16,19 @@ function assertContains(file, patterns) {
   }
 }
 
-assertContains("backend/app/api/routes/admin.py", [
+assertContains("backend/app/api/routes/admin_master_data_routes.py", [
   '@router.post("/master-data/edit-apply")',
-  '@router.get("/change-logs")',
   "AdminMasterDataEditApplyRequest",
   "apply_master_data_edit",
   'type="admin.master_data.edit_apply"',
+]);
+
+assertContains("backend/app/api/routes/admin_change_log_routes.py", [
+  '@router.get("/change-logs")',
   'type="admin.change_logs"',
+]);
+
+assertContains("backend/app/api/routes/admin_response_meta_helpers.py", [
   "X-Admin-Dev-Key, 확인 문구, allow-list",
 ]);
 
