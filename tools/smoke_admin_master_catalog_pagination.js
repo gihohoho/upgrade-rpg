@@ -16,10 +16,13 @@ function assertContains(file, patterns) {
   }
 }
 
+assertContains("backend/app/api/routes/admin_route_params.py", [
+  "MASTER_CATALOG_LIMIT_QUERY = Query(default=20",
+  "MASTER_CATALOG_PAGE_QUERY = Query(default=1",
+  "MASTER_CATALOG_SORT_QUERY = Query(default=\"id_asc\"",
+]);
+
 assertContains("backend/app/api/routes/admin.py", [
-  "limit: int = Query(default=20",
-  "page: int = Query(default=1",
-  "sort: str = Query(default=\"id_asc\"",
   "page=page",
   '"totalPages": catalog["totalPages"]',
 ]);

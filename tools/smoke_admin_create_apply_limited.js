@@ -34,8 +34,12 @@ assertContains("backend/app/api/routes/admin.py", [
   "AdminMasterDataCreateApplyRequest",
   "@router.post(\"/master-data/create-apply\")",
   "apply_admin_master_data_create",
-  "require_admin_write_dev_key",
+  "ADMIN_WRITE_GUARD_DEP",
   "admin.master_data.create_apply",
+]);
+
+assertContains("backend/app/api/routes/admin_route_params.py", [
+  "require_admin_write_dev_key",
 ]);
 
 assertContains("backend/app/schemas/admin.py", [

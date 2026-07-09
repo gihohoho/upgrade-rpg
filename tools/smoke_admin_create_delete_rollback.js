@@ -38,9 +38,13 @@ assertContains("backend/app/api/routes/admin.py", [
   "AdminCreateDeleteApplyRequest",
   "@router.post(\"/change-logs/{change_log_id}/create-delete-preview\")",
   "@router.post(\"/change-logs/{change_log_id}/create-delete-apply\")",
-  "require_admin_write_dev_key",
+  "ADMIN_WRITE_GUARD_DEP",
   "admin.change_log.create_delete_preview",
   "admin.change_log.create_delete_apply",
+]);
+
+assertContains("backend/app/api/routes/admin_route_params.py", [
+  "require_admin_write_dev_key",
 ]);
 
 assertContains("backend/app/schemas/admin.py", [

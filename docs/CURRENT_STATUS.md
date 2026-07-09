@@ -1,24 +1,28 @@
-# Current Status — v208
+# Current Status — v210
 
-현재 기준: **v208 backend admin route response helper**
+현재 기준: **v210 backend admin route params/error helpers**
 
-이 패키지 기준 ZIP: **rpg_v208_backend_admin_route_response_helper_ready.zip**
+이 패키지 기준 ZIP: **rpg_v210_backend_admin_route_params_error_helpers_ready.zip**
 
-## 완료
-
-- AdminService 내부 기능별 service split 완료
-- admin route 응답 helper 도입 완료
-- route/schema/API/DB/env 변경 없음
-
-## 확인값
+## 관리자 페이지 확인값
 
 ```js
 checkAdminReadOnlyPageReady().version
-// v208.backend-admin-route-response-helper
+// v210.backend-admin-route-params-error-helpers
 
-checkAdminReadOnlyPageReady().backendRouteResponseHelperReady
+checkAdminReadOnlyPageReady().backendRouteParamsReady
+// true
+
+checkAdminReadOnlyPageReady().backendRouteErrorHelperReady
 // true
 
 getAdminBackendServiceSplitContractReadiness().splitStatus
-// route-response-helper-v208
+// admin-route-params-errors-v210
 ```
+
+## 유지 조건
+
+- route path 변경 없음
+- schema 변경 없음
+- API 응답 구조 변경 없음
+- DB/env 변경 없음

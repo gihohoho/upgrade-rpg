@@ -16,6 +16,7 @@ const adminHtml = read('admin.html');
 const adminJs = read('src/api/admin-page-readonly.js');
 const clientJs = read('src/api/game-api-client.js');
 const routePy = read('backend/app/api/routes/admin.py');
+const routeParamsPy = read('backend/app/api/routes/admin_route_params.py');
 const securityPy = read('backend/app/core/security.py');
 const configPy = read('backend/app/core/config.py');
 const envExample = read('backend/.env.example');
@@ -43,7 +44,7 @@ assert(configPy.includes('admin_write_dev_key'), 'backend settings include admin
 assert(envExample.includes('ADMIN_WRITE_DEV_KEY'), '.env.example documents admin write dev key');
 assert(securityPy.includes('require_admin_write_dev_key'), 'security dependency exists');
 assert(securityPy.includes('X-Admin-Dev-Key'), 'security dependency reads X-Admin-Dev-Key');
-assert(routePy.includes('Depends(require_admin_write_dev_key)'), 'write routes require dev key dependency');
+assert(routePy.includes('ADMIN_WRITE_GUARD_DEP') && routeParamsPy.includes('Depends(require_admin_write_dev_key)'), 'write routes require dev key dependency');
 assert(routePy.includes('X-Admin-Dev-Key'), 'write route metadata mentions dev key');
 assert(checkScript.includes('master_edit_apply_missing_key_blocked'), 'live check verifies missing key is blocked');
 

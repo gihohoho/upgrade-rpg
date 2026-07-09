@@ -50,11 +50,14 @@ assertContains("src/api/game-api-client.js", [
   "request(\"/admin/save-snapshots\"",
 ]);
 
+assertContains("backend/app/api/routes/admin_route_params.py", [
+  "SAVE_SNAPSHOT_USER_ID_QUERY = Query(default=None, alias=\"userId\", ge=1)",
+  "SAVE_SNAPSHOT_SLOT_KEY_QUERY = Query(default=None, alias=\"slotKey\", max_length=80)",
+  "SAVE_SNAPSHOT_DEFAULT_ONLY_QUERY = Query(default=False, alias=\"defaultOnly\")",
+  "SAVE_SNAPSHOT_SORT_QUERY = Query(default=\"updated_desc\", max_length=30)",
+]);
+
 assertContains("backend/app/api/routes/admin.py", [
-  "user_id: int | None = Query(default=None, alias=\"userId\", ge=1)",
-  "slot_key: str | None = Query(default=None, alias=\"slotKey\", max_length=80)",
-  "default_only: bool = Query(default=False, alias=\"defaultOnly\")",
-  "sort: str = Query(default=\"updated_desc\", max_length=30)",
   "filters\": snapshots[\"filters\"]",
 ]);
 

@@ -102,7 +102,7 @@ def main() -> int:
 
     contract = get_admin_service_split_contract_readiness(AdminService, root=ROOT)
     assert_true(contract["ok"], f"split contract readiness failed: {contract}")
-    assert_true(contract["splitStatus"] == "route-response-helper-v208", "split status should be v208 route response helper")
+    assert_true(contract["splitStatus"] == "admin-route-params-errors-v210", "split status should be v210 route params/error helpers")
     assert_true("backend/app/services/admin/admin_config.py" in contract["extractedFiles"], "contract must include config file")
     assert_true("backend/app/services/admin/admin_readiness_service.py" in contract["extractedFiles"], "contract must include readiness file")
 

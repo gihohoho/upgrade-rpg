@@ -7,7 +7,7 @@ from typing import Any
 ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
     "version": "v198.backend-admin-service-split-contract",
     "status": "contract-frozen-v198",
-    "splitStatus": "route-response-helper-v208",
+    "splitStatus": "admin-route-params-errors-v210",
     "extractedFiles": [
         "backend/app/services/admin/admin_overview_snapshots_service.py",
         "backend/app/services/admin/admin_master_catalog_service.py",
@@ -18,6 +18,8 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "backend/app/services/admin/admin_config.py",
         "backend/app/services/admin/admin_readiness_service.py",
         "backend/app/api/routes/admin_response_helpers.py",
+        "backend/app/api/routes/admin_route_params.py",
+        "backend/app/api/routes/admin_route_error_helpers.py",
     ],
     "currentFile": "backend/app/services/admin_service.py",
     "facadeFile": "backend/app/services/admin_service.py",
@@ -188,6 +190,20 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
             "publicMethods": [],
             "helperMethods": [],
         },
+        {
+            "key": "route-params",
+            "label": "Admin route dependency/query defaults",
+            "candidateFile": "backend/app/api/routes/admin_route_params.py",
+            "publicMethods": [],
+            "helperMethods": [],
+        },
+        {
+            "key": "route-error-helpers",
+            "label": "Admin route local fallback payload helpers",
+            "candidateFile": "backend/app/api/routes/admin_route_error_helpers.py",
+            "publicMethods": [],
+            "helperMethods": [],
+        },
     ],
     "facadeMustKeep": [
         "AdminService",
@@ -205,9 +221,11 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT",
     ],
     "routeContract": [
-        "No route path changes in v208",
-        "No schema changes in v208",
+        "No route path changes in v210",
+        "No schema changes in v210",
         "Admin route responses go through admin_ok_response helper",
+        "Admin route dependency/query defaults go through admin_route_params.py",
+        "Admin route local fallback payloads go through admin_route_error_helpers.py",
         "AdminService remains the facade imported by backend/app/api/routes/admin.py",
         "Actual service file moves must keep every existing public method name",
     ],

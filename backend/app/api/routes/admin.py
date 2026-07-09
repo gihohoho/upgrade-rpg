@@ -1,9 +1,35 @@
-from fastapi import APIRouter, Body, Depends, Query
+from fastapi import APIRouter, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.routes.admin_response_helpers import admin_ok_response
-from app.core.security import CurrentUser, get_current_user_placeholder, require_admin_write_dev_key
-from app.db.session import get_db_session
+from app.api.routes.admin_route_error_helpers import build_admin_change_logs_unavailable_payload
+from app.api.routes.admin_route_params import (
+    ADMIN_CURRENT_USER_DEP,
+    ADMIN_DB_SESSION_DEP,
+    ADMIN_WRITE_GUARD_DEP,
+    CHANGE_LOG_ACTION_QUERY,
+    CHANGE_LOG_APPLIED_QUERY,
+    CHANGE_LOG_CHANGED_KEY_QUERY,
+    CHANGE_LOG_LIMIT_QUERY,
+    CHANGE_LOG_SORT_QUERY,
+    CHANGE_LOG_TARGET_ID_QUERY,
+    CHANGE_LOG_TARGET_TYPE_QUERY,
+    MASTER_CATALOG_ENABLED_QUERY,
+    MASTER_CATALOG_LIMIT_QUERY,
+    MASTER_CATALOG_PAGE_QUERY,
+    MASTER_CATALOG_SEARCH_QUERY,
+    MASTER_CATALOG_SORT_QUERY,
+    MASTER_DOMAIN_QUERY,
+    MASTER_RELATIONS_LIMIT_QUERY,
+    MASTER_ROW_ID_QUERY,
+    SAVE_SNAPSHOT_DEFAULT_ONLY_QUERY,
+    SAVE_SNAPSHOT_LIMIT_QUERY,
+    SAVE_SNAPSHOT_SLOT_KEY_QUERY,
+    SAVE_SNAPSHOT_SORT_QUERY,
+    SAVE_SNAPSHOT_SOURCE_QUERY,
+    SAVE_SNAPSHOT_USER_ID_QUERY,
+)
+from app.core.security import CurrentUser
 from app.schemas.admin import AdminChangeLogRollbackApplyRequest, AdminChangeLogRollbackPreviewRequest, AdminChangePreviewRequest, AdminCreateDeleteApplyRequest, AdminCreateDeletePreviewRequest, AdminCreateDeleteRestoreApplyRequest, AdminCreateDeleteRestorePreviewRequest, AdminMasterDataCreateApplyRequest, AdminMasterDataCreatePreviewRequest, AdminMasterDataEditApplyRequest, AdminMasterDataEditPreviewRequest
 from app.services.admin_service import AdminService
 
@@ -12,7 +38,7 @@ service = AdminService()
 
 
 @router.get("/requirements")
-async def get_admin_requirements(current_user: CurrentUser = Depends(get_current_user_placeholder)):
+async def get_admin_requirements(current_user: CurrentUser = ADMIN_CURRENT_USER_DEP):
     """Temporary endpoint documenting the admin scope used for DB/backend design."""
     return admin_ok_response(
         type="admin.requirements",
@@ -39,8 +65,8 @@ async def get_admin_requirements(current_user: CurrentUser = Depends(get_current
 
 @router.get("/overview")
 async def get_admin_readonly_overview(
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """Read-only admin dashboard preparation endpoint.
 
@@ -70,8 +96,8 @@ async def get_admin_readonly_overview(
 
 @router.get("/master-data/domains")
 async def list_admin_master_catalog_domains(
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """List admin master-data catalog domains without returning row payloads."""
     domains = await service.list_master_catalog_domains(session)
@@ -94,14 +120,14 @@ async def list_admin_master_catalog_domains(
 
 @router.get("/master-data/catalog")
 async def list_admin_master_catalog_rows(
-    domain: str = Query(default="itemTemplates", max_length=80),
-    limit: int = Query(default=20, ge=1, le=200),
-    page: int = Query(default=1, ge=1, le=100000),
-    query: str | None = Query(default=None, max_length=120),
-    enabled: str = Query(default="all", max_length=20),
-    sort: str = Query(default="id_asc", max_length=30),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    domain: str = MASTER_DOMAIN_QUERY,
+    limit: int = MASTER_CATALOG_LIMIT_QUERY,
+    page: int = MASTER_CATALOG_PAGE_QUERY,
+    query: str | None = MASTER_CATALOG_SEARCH_QUERY,
+    enabled: str = MASTER_CATALOG_ENABLED_QUERY,
+    sort: str = MASTER_CATALOG_SORT_QUERY,
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """List safe master-data rows for the read-only admin catalog.
 
@@ -144,9 +170,9 @@ async def list_admin_master_catalog_rows(
 
 @router.get("/master-data/create-blueprint")
 async def get_admin_master_create_blueprint(
-    domain: str = Query(default="itemTemplates", max_length=80),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    domain: str = MASTER_DOMAIN_QUERY,
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """Return a read-only new-row blueprint for one master-data domain."""
     blueprint = await service.get_master_create_blueprint(session, domain=domain)
@@ -178,8 +204,8 @@ async def get_admin_master_create_blueprint(
 @router.post("/master-data/create-preview")
 async def preview_admin_master_data_create(
     payload: AdminMasterDataCreatePreviewRequest = Body(...),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """Validate a new-row draft without inserting anything."""
     preview = await service.preview_master_data_create(
@@ -217,9 +243,9 @@ async def preview_admin_master_data_create(
 @router.post("/master-data/create-apply")
 async def apply_admin_master_data_create(
     payload: AdminMasterDataCreateApplyRequest = Body(...),
-    _write_guard: bool = Depends(require_admin_write_dev_key),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    _write_guard: bool = ADMIN_WRITE_GUARD_DEP,
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """Apply a guarded new master-data row insert for limited safe domains."""
     created = await service.apply_master_data_create(
@@ -256,10 +282,10 @@ async def apply_admin_master_data_create(
 
 @router.get("/master-data/detail")
 async def get_admin_master_catalog_detail(
-    domain: str = Query(default="itemTemplates", max_length=80),
-    id: int = Query(..., ge=1),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    domain: str = MASTER_DOMAIN_QUERY,
+    id: int = MASTER_ROW_ID_QUERY,
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """Return one sanitized read-only master-data row for the admin detail panel."""
     detail = await service.get_master_catalog_detail(
@@ -291,11 +317,11 @@ async def get_admin_master_catalog_detail(
 
 @router.get("/master-data/relations")
 async def get_admin_master_catalog_relations(
-    domain: str = Query(default="itemTemplates", max_length=80),
-    id: int = Query(..., ge=1),
-    limit: int = Query(default=20, ge=1, le=80),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    domain: str = MASTER_DOMAIN_QUERY,
+    id: int = MASTER_ROW_ID_QUERY,
+    limit: int = MASTER_RELATIONS_LIMIT_QUERY,
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """Return compact read-only related master-data rows for the admin detail panel."""
     relations = await service.get_master_catalog_relations(
@@ -329,8 +355,8 @@ async def get_admin_master_catalog_relations(
 @router.post("/master-data/edit-preview")
 async def preview_admin_master_data_edit(
     payload: AdminMasterDataEditPreviewRequest = Body(...),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """Validate an admin master-data edit draft without applying it.
 
@@ -372,9 +398,9 @@ async def preview_admin_master_data_edit(
 @router.post("/master-data/edit-apply")
 async def apply_admin_master_data_edit(
     payload: AdminMasterDataEditApplyRequest = Body(...),
-    _write_guard: bool = Depends(require_admin_write_dev_key),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    _write_guard: bool = ADMIN_WRITE_GUARD_DEP,
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """Apply a guarded scalar master-data edit and create an admin change log.
 
@@ -417,15 +443,15 @@ async def apply_admin_master_data_edit(
 
 @router.get("/change-logs")
 async def list_admin_change_logs(
-    limit: int = Query(default=20, ge=1, le=100),
-    target_type: str | None = Query(default=None, alias="targetType", max_length=120),
-    target_id: str | None = Query(default=None, alias="targetId", max_length=160),
-    action: str | None = Query(default=None, max_length=80),
-    changed_key: str | None = Query(default=None, alias="changedKey", max_length=120),
-    applied: bool | None = Query(default=None),
-    sort: str | None = Query(default="created_desc", max_length=40),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    limit: int = CHANGE_LOG_LIMIT_QUERY,
+    target_type: str | None = CHANGE_LOG_TARGET_TYPE_QUERY,
+    target_id: str | None = CHANGE_LOG_TARGET_ID_QUERY,
+    action: str | None = CHANGE_LOG_ACTION_QUERY,
+    changed_key: str | None = CHANGE_LOG_CHANGED_KEY_QUERY,
+    applied: bool | None = CHANGE_LOG_APPLIED_QUERY,
+    sort: str | None = CHANGE_LOG_SORT_QUERY,
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """List compact admin change logs without returning full before/after JSON."""
     try:
@@ -444,32 +470,16 @@ async def list_admin_change_logs(
             await session.rollback()
         except Exception:
             pass
-        safe_limit = max(1, min(int(limit or 20), 100))
-        warnings = ["admin_change_logs_route_exception_guarded"]
-        logs = {
-            "status": "unavailable",
-            "readOnly": True,
-            "count": 0,
-            "total": 0,
-            "limit": safe_limit,
-            "filters": {
-                "targetType": target_type,
-                "targetId": target_id,
-                "action": action,
-                "changedKey": changed_key,
-                "applied": applied,
-                "sort": sort or "created_desc",
-                "warnings": warnings,
-            },
-            "rows": [],
-            "rawBeforeAfterReturned": False,
-            "warnings": warnings,
-            "debug": {
-                "errorClass": exc.__class__.__name__,
-                "errorMessage": str(exc)[:500],
-                "hint": "backend/app/services/admin/admin_change_log_service.py의 change-logs 조회 경로 또는 로컬 DB 스키마를 확인하세요.",
-            },
-        }
+        logs = build_admin_change_logs_unavailable_payload(
+            limit=limit,
+            target_type=target_type,
+            target_id=target_id,
+            action=action,
+            changed_key=changed_key,
+            applied=applied,
+            sort=sort,
+            exc=exc,
+        )
     return admin_ok_response(
         type="admin.change_logs",
         payload=logs,
@@ -493,8 +503,8 @@ async def list_admin_change_logs(
 @router.get("/change-logs/{change_log_id}")
 async def get_admin_change_log_detail(
     change_log_id: int,
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """Return a safe scalar detail for one admin change log."""
     detail = await service.get_admin_change_log_detail(
@@ -525,8 +535,8 @@ async def get_admin_change_log_detail(
 async def preview_admin_create_delete_rollback(
     change_log_id: int,
     payload: AdminCreateDeletePreviewRequest | None = Body(default=None),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """Preview safe deletion rollback for a row made by create-apply."""
     preview = await service.preview_admin_create_delete_rollback(
@@ -561,9 +571,9 @@ async def preview_admin_create_delete_rollback(
 async def apply_admin_create_delete_rollback(
     change_log_id: int,
     payload: AdminCreateDeleteApplyRequest = Body(...),
-    _write_guard: bool = Depends(require_admin_write_dev_key),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    _write_guard: bool = ADMIN_WRITE_GUARD_DEP,
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """Apply a guarded deletion rollback for a row made by create-apply."""
     result = await service.apply_admin_create_delete_rollback(
@@ -599,8 +609,8 @@ async def apply_admin_create_delete_rollback(
 async def preview_admin_create_delete_restore(
     change_log_id: int,
     payload: AdminCreateDeleteRestorePreviewRequest | None = Body(default=None),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """Preview restoring a row deleted by create-delete apply without mutating DB."""
     preview = await service.preview_admin_create_delete_restore(
@@ -637,9 +647,9 @@ async def preview_admin_create_delete_restore(
 async def apply_admin_create_delete_restore(
     change_log_id: int,
     payload: AdminCreateDeleteRestoreApplyRequest = Body(...),
-    _write_guard: bool = Depends(require_admin_write_dev_key),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    _write_guard: bool = ADMIN_WRITE_GUARD_DEP,
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """Apply a guarded restore for a row deleted by create-delete apply."""
     result = await service.apply_admin_create_delete_restore(
@@ -675,8 +685,8 @@ async def apply_admin_create_delete_restore(
 async def preview_admin_change_log_rollback(
     change_log_id: int,
     payload: AdminChangeLogRollbackPreviewRequest | None = Body(default=None),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """Preview a guarded rollback without mutating DB."""
     preview = await service.preview_admin_change_log_rollback(
@@ -710,9 +720,9 @@ async def preview_admin_change_log_rollback(
 async def apply_admin_change_log_rollback(
     change_log_id: int,
     payload: AdminChangeLogRollbackApplyRequest = Body(...),
-    _write_guard: bool = Depends(require_admin_write_dev_key),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    _write_guard: bool = ADMIN_WRITE_GUARD_DEP,
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """Apply a guarded rollback for a safe master-data change log."""
     result = await service.apply_admin_change_log_rollback(
@@ -745,14 +755,14 @@ async def apply_admin_change_log_rollback(
 
 @router.get("/save-snapshots")
 async def list_admin_save_snapshots(
-    limit: int = Query(default=20, ge=1, le=100),
-    user_id: int | None = Query(default=None, alias="userId", ge=1),
-    slot_key: str | None = Query(default=None, alias="slotKey", max_length=80),
-    source: str | None = Query(default=None, max_length=80),
-    default_only: bool = Query(default=False, alias="defaultOnly"),
-    sort: str = Query(default="updated_desc", max_length=30),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
-    session: AsyncSession = Depends(get_db_session),
+    limit: int = SAVE_SNAPSHOT_LIMIT_QUERY,
+    user_id: int | None = SAVE_SNAPSHOT_USER_ID_QUERY,
+    slot_key: str | None = SAVE_SNAPSHOT_SLOT_KEY_QUERY,
+    source: str | None = SAVE_SNAPSHOT_SOURCE_QUERY,
+    default_only: bool = SAVE_SNAPSHOT_DEFAULT_ONLY_QUERY,
+    sort: str = SAVE_SNAPSHOT_SORT_QUERY,
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
+    session: AsyncSession = ADMIN_DB_SESSION_DEP,
 ):
     """List recent user save snapshots for admin diagnostics without raw snapshot JSON.
 
@@ -791,7 +801,7 @@ async def list_admin_save_snapshots(
 @router.post("/change-preview")
 async def preview_admin_change(
     payload: AdminChangePreviewRequest | None = Body(default=None),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    current_user: CurrentUser = ADMIN_CURRENT_USER_DEP,
 ):
     """Future endpoint: validate an admin edit before applying it.
 

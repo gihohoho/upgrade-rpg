@@ -1,18 +1,15 @@
-# Next Steps — after v208
+# Next Steps — after v210
 
-## 추천 v209
+다음 추천 단계는 **v211 admin route response data builder 준비**다.
 
-**admin route query dependency cleanup**
+## 추천 순서
 
-- `backend/app/api/routes/admin.py`의 반복 Query 기본값/limit/sort 부분을 안전하게 정리
-- route path/schema/API 응답 구조 유지
-- 기존 static smoke가 보는 문자열을 보존
-- v209 전용 smoke test 추가
+1. `backend/app/api/routes/admin_response_data_helpers.py` 생성
+2. `admin.py`의 반복 `data={...}` 요약 생성 중 위험 낮은 부분부터 helper로 이동
+3. route path/schema/API 응답 구조 그대로 유지
+4. static smoke로 route path와 응답 key 보존 확인
+5. 이후 기능별 sub-router 분리 검토
 
-## 이후 후보
+## 주의
 
-**admin router submodule split 준비**
-
-- 바로 파일을 쪼개기 전에 route contract smoke를 강화
-- `admin.py`를 facade router로 만들지 검토
-- 기존 smoke가 `admin.py`를 직접 grep하는 부분이 많으므로 급하게 진행하지 말 것
+`admin.py`를 바로 여러 파일로 쪼개면 기존 static smoke 영향이 크다. route contract smoke를 먼저 더 강하게 만든 뒤 분리하는 것이 안전하다.

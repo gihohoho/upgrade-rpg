@@ -1,3 +1,11 @@
+## v210 - Backend admin route params/error helpers
+
+- `backend/app/api/routes/admin_route_params.py`를 추가해 관리자 route의 반복 dependency/query 기본값을 한 곳으로 모았습니다.
+- `backend/app/api/routes/admin_route_error_helpers.py`를 추가해 `/admin/change-logs` route-level fallback payload 생성을 분리했습니다.
+- `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `admin-route-params-errors-v210`로 갱신했습니다.
+- `checkAdminReadOnlyPageReady().version`을 `v210.backend-admin-route-params-error-helpers`로 갱신했습니다.
+- route/schema/API/DB/env 변경은 없습니다.
+
 # Changelog
 
 ## v208 - Backend admin route response helper
