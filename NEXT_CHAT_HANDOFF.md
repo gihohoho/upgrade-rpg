@@ -1,28 +1,27 @@
-# NEXT CHAT HANDOFF — v197
+# NEXT CHAT HANDOFF — v198
 
 기호는 코딩/터미널/경로에 익숙하지 않으므로, 명령어는 항상 실행 위치를 먼저 적습니다.
 
 ## 현재 안정 버전
 
-**v197 admin settings/helpers split**
+**v198 backend admin service split contract**
 
 ## 현재 ZIP
 
-**rpg_v197_admin_settings_helpers_split_ready.zip**
+**rpg_v198_backend_admin_service_split_contract_ready.zip**
 
-## v197 완료
+## v198 완료
 
-- `src/api/admin/admin-settings-helpers.js` 추가
-- API base URL helper 분리
-- admin write dev key helper 분리
-- 현재 관리자 페이지 URL / 게임 URL / 주소 복사 helper 분리
-- 기존 window 함수명 유지
-- `admin.html` script 순서 갱신
-- `checkAdminReadOnlyPageReady().settingsHelpersExternalReady` 추가
-- `window.RpgAdminSettingsHelpers.VERSION` 추가
-- `tools/smoke_admin_settings_helpers_split.js` 추가
-- 기존 URL helper smoke도 새 분리 구조에 맞게 갱신
-- core/all smoke 통과
+- `backend/app/services/admin_service_split_contract.py` 추가
+- `tools/smoke_backend_admin_service_split_contract.py` 추가
+- `docs/BACKEND_ADMIN_SERVICE_SPLIT_CONTRACT.md` 추가
+- 백엔드 admin service 분리 후보 고정
+- route/schema 유지 계약 고정
+- `AdminService` facade 유지 정책 고정
+- 관리자 JS 분리 준비 카드에 backend service 계약 표시 추가
+- `checkAdminReadOnlyPageReady().backendServiceSplitContractReady` 추가
+- `getAdminBackendServiceSplitContractReadiness()` 추가
+- core smoke에 새 백엔드 contract smoke 포함
 
 ## 브라우저 확인
 
@@ -33,11 +32,11 @@ checkAdminReadOnlyPageReady().version
 예상:
 
 ```txt
-v197.admin-settings-helpers-split
+v198.backend-admin-service-split-contract
 ```
 
 ```js
-checkAdminReadOnlyPageReady().settingsHelpersExternalReady
+checkAdminReadOnlyPageReady().backendServiceSplitContractReady
 ```
 
 예상:
@@ -47,27 +46,28 @@ true
 ```
 
 ```js
-window.RpgAdminSettingsHelpers.VERSION
+getAdminBackendServiceSplitContractReadiness().status
 ```
 
 예상:
 
 ```txt
-v197.admin-settings-helpers-split
+contract-frozen-v198
 ```
 
 ## 다음 추천 단계
 
-v198은 **admin entry final cleanup / backend admin service split 준비**가 좋습니다.
+v199는 **backend admin overview/snapshots service 실제 분리 1단계**가 좋습니다.
 
 추천 방향:
 
-- `admin-page-readonly.js`에 남은 entry 역할 확인
-- 불필요한 legacy marker/중복 export 정리 가능 범위 점검
-- 또는 백엔드 `admin_service.py`가 커졌다면 service split contract부터 진행
-- 기존 window 함수명은 유지
+- `backend/app/services/admin/` 폴더 생성
+- `backend/app/services/admin/admin_overview_snapshots_service.py` 생성
+- overview/save snapshot 관련 helper부터 이동
+- `AdminService`는 facade로 유지
+- route/schema 변경 없음
 - 전용 smoke 추가
 
 ## 주의
 
-v197은 DB schema/env 변경이 없습니다. DB reset/seed 재실행도 필요 없습니다.
+v198은 DB schema/env 변경이 없습니다. DB reset/seed 재실행도 필요 없습니다.

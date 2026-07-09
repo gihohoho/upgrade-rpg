@@ -8,10 +8,10 @@
 - 커밋 명령어는 마지막에 add부터 push까지 한 번에 알려줍니다.
 
 현재 안정 버전:
-v197: admin settings/helpers split
+v198: backend admin service split contract
 
 현재 인수인계 ZIP:
-rpg_v197_admin_settings_helpers_split_ready.zip
+rpg_v198_backend_admin_service_split_contract_ready.zip
 
 먼저 확인할 파일:
 - NEXT_CHAT_HANDOFF.md
@@ -19,24 +19,20 @@ rpg_v197_admin_settings_helpers_split_ready.zip
 - docs/NEXT_STEPS.md
 - docs/README.md
 - docs/PROJECT_STRUCTURE.md
+- docs/BACKEND_ADMIN_SERVICE_SPLIT_CONTRACT.md
 
-현재 관리자 JS 분리 상태:
-- `src/api/admin-layout-shell.js` — v185 분리 완료
-- `src/api/admin/admin-field-help.js` — v196 분리 완료
-- `src/api/admin/admin-settings-helpers.js` — v197 분리 완료
-- `src/api/admin/admin-change-logs.js` — v187 분리 완료
-- `src/api/admin/admin-create-lifecycle.js` — v189.1 hotfix 포함 분리 완료
-- `src/api/admin/admin-edit-draft.js` — v191 분리 완료
-- `src/api/admin/admin-master-catalog.js` — v192 분리 완료
-- `src/api/admin/admin-overview-snapshots.js` — v193 분리 완료
-- `src/api/admin-page-readonly.js` — thin entry 유지
+v198 완료:
+- `backend/app/services/admin_service_split_contract.py` 추가
+- `tools/smoke_backend_admin_service_split_contract.py` 추가
+- backend admin service 분리 계약 고정
+- route/schema 유지 계약 고정
+- 브라우저 readiness에 `backendServiceSplitContractReady` 추가
 
 다음 추천 단계:
-v198 admin entry final cleanup 또는 backend admin service split 준비.
-프론트 관리자 entry를 더 정리할지, 백엔드 admin service 분리 계약을 먼저 잡을지 코드 상태를 보고 판단.
+v199 backend admin overview/snapshots service 실제 분리 1단계.
 
 검증 기준:
 - `bash tools/run_smoke_core.sh`
 - `bash tools/run_smoke_all.sh`
-- `node --check` 주요 관리자 JS
+- `python tools/smoke_backend_admin_service_split_contract.py`
 - `python -m compileall -q backend/app`

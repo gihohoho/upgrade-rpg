@@ -1,22 +1,35 @@
 # Next Steps
 
-## 현재 완료: v197 admin settings/helpers split
+## 현재 완료: v198 backend admin service split contract
 
-`API base URL`, `admin write dev key`, `현재 관리자 URL`, `게임 URL`, `주소 복사` helper를 `src/api/admin/admin-settings-helpers.js`로 분리했습니다.
+백엔드 `admin_service.py`를 바로 쪼개지 않고, 먼저 service split 계약과 smoke를 추가했습니다.
 
-## 다음 추천: v198 admin entry final cleanup 또는 backend admin service split 준비
+## 다음 추천: v199 backend admin overview/snapshots service split
 
-관리자 프론트의 큰 JS 분리는 대부분 끝났습니다. 다음은 코드 상태를 보고 아래 둘 중 하나를 선택하면 좋습니다.
+가장 안전한 첫 실제 분리 대상은 **overview/save snapshots** 묶음입니다.
 
-1. 프론트 entry 최종 정리
-   - `admin-page-readonly.js`에 남은 legacy marker / wrapper / readiness aggregation 정리
-   - 기존 window 함수명 유지
-   - 전용 smoke 추가
+추천 방향:
 
-2. 백엔드 admin service split 준비
-   - `backend/app/services/admin_service.py` 또는 관련 admin 파일이 커졌는지 확인
-   - 바로 분리하지 않고 service split contract 문서/smoke를 먼저 추가
-   - API route/schema 변경 없이 내부 구조만 준비
+1. `backend/app/services/admin/` 폴더 생성
+2. `backend/app/services/admin/admin_overview_snapshots_service.py` 생성
+3. 아래 기능을 먼저 이동
+   - `get_readonly_overview`
+   - `list_save_snapshot_summaries`
+   - snapshot filter/order/count helper
+   - overview readiness helper
+4. `backend/app/services/admin_service.py`는 facade로 유지
+5. `backend/app/api/routes/admin.py`는 변경하지 않기
+6. route/schema/DB/env 변경 없이 smoke 추가
+
+## 그 다음 후보
+
+v199가 안정적이면 다음 순서가 좋습니다.
+
+1. master catalog/detail service 분리
+2. create lifecycle service 분리
+3. change logs service 분리
+4. edit draft service 분리
+5. shared utils 분리
 
 ## 주의
 

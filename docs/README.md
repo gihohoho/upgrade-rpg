@@ -47,6 +47,7 @@
 - `ADMIN_THIN_ENTRY_CLEANUP.md` — v195 admin thin entry cleanup
 - `ADMIN_FIELD_HELP_SPLIT.md` — v196 field help/value hints 실제 분리
 - `ADMIN_SETTINGS_HELPERS_SPLIT.md` — v197 settings helpers/API URL/write key 실제 분리
+- `BACKEND_ADMIN_SERVICE_SPLIT_CONTRACT.md` — v198 backend admin service split contract
 
 ## 3. 관리자 편집/관계 안전장치 문서
 
@@ -122,3 +123,7 @@ docs/archive/stage-notes/
 ## v197
 
 - [ADMIN_SETTINGS_HELPERS_SPLIT.md](ADMIN_SETTINGS_HELPERS_SPLIT.md) — v197 admin settings/helpers split
+
+## v198
+
+- [BACKEND_ADMIN_SERVICE_SPLIT_CONTRACT.md](BACKEND_ADMIN_SERVICE_SPLIT_CONTRACT.md) — v198 backend admin service split contract

@@ -1,3 +1,11 @@
+
+## v198 — backend admin service split contract
+
+- `backend/app/services/admin_service_split_contract.py` 추가
+- `tools/smoke_backend_admin_service_split_contract.py` 추가
+- 백엔드 AdminService 실제 분리 전 route/schema 유지 계약 고정
+- 관리자 readiness에 `backendServiceSplitContractReady` 추가
+
 # v197 admin settings/helpers split
 
 - `src/api/admin/admin-settings-helpers.js`를 추가했습니다.
