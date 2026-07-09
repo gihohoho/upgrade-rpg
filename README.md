@@ -1,131 +1,95 @@
-# Upgrade RPG
+# Upgrade RPG v191 패키지
 
-현재 안정 버전: **v190 admin edit draft split contract**
+현재 안정 버전: **v191 admin edit draft split**
 
-새 채팅 인수인계 ZIP: **rpg_v190_admin_edit_draft_split_contract_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v191_admin_edit_draft_split_ready.zip**
 
-현재 프로젝트는 아직 Vue가 아니라 `index.html + JS + CSS` 기반 RPG 게임입니다. 기존 게임 동작을 유지하면서 FastAPI + PostgreSQL + 관리자 페이지 구조로 단계적으로 분리 중입니다.
+## 요약
 
-## 현재 핵심 상태
+v191에서는 관리자 `edit draft` 구현을 실제 외부 JS 파일로 1차 분리했습니다.
 
-- 게임 localStorage 저장 유지: `idleRpgSaveV22`
-- DB save snapshot dual write 유지
-- master-data PostgreSQL → FastAPI → 브라우저 연결 유지
-- 백엔드 실패 시 static JS fallback 유지
-- 관리자 페이지 `admin.html` 분리 유지
-- 관리자 edit/create/delete/restore 제한 기능 유지
-- 관리자 sidebar / sticky header / 접기·펼치기 shell 유지
-- 접힌 탭 공통 CSS 보정 완료
-- `fieldZones` 신규 row create apply 제한 오픈 완료
-- `bosses` 신규 row create apply 제한 오픈 완료
-- `skills`, `dropTables` 신규 row create apply 제한 오픈 완료
-- `itemTemplates`, `dropTableItems` 신규 row create apply 제한 오픈 완료
-- `skillLevels`, `enhancementLevels`, `characterSkills` 신규 row create apply 제한 오픈 완료
-- 관리자 신규 row 생성·삭제·복원 점검 가이드 추가 완료
-- 삭제 preview 차단 기준 표시와 변경 이력 action 바로가기 추가 완료
-- 생성→삭제→복원 일괄 점검 버튼 추가 완료
-- 관리자 JS 분리 전 readiness 진단 UI 추가 완료
-- 관리자 change logs 구현 1차 외부 파일 분리 완료
-- 관리자 create lifecycle 구현 1차 외부 파일 분리 완료
-- 관리자 edit draft 분리 전 계약 고정 완료
+새 파일:
 
-## 새 채팅에서 먼저 볼 파일
+- `src/api/admin/admin-edit-draft.js`
 
-- `NEXT_CHAT_HANDOFF.md`
-- `NEXT_CHAT_PROMPT.md`
-- `docs/CURRENT_STATUS.md`
-- `docs/NEXT_STEPS.md`
-- `docs/PROJECT_STRUCTURE.md`
-- `docs/README.md`
+기존 호환 wrapper는 `src/api/admin-page-readonly.js`에 유지했습니다.
 
-## smoke 실행
+## 현재 관리자 JS 분리 상태
 
-```bash
-위치: 프로젝트 루트
-bash tools/run_smoke_core.sh
+- `src/api/game-api-client.js` — 기존 외부 API client
+- `src/api/admin-layout-shell.js` — v185 분리 완료
+- `src/api/admin/admin-change-logs.js` — v187 분리 완료
+- `src/api/admin/admin-create-lifecycle.js` — v189.1 hotfix 포함 분리 완료
+- `src/api/admin/admin-edit-draft.js` — v191 분리 완료
+- `src/api/admin-page-readonly.js` — bootstrap/bindEvents/window wrapper 중심 entry 파일
+
+## v191에서 분리한 edit draft 기능
+
+- 편집 초안 렌더링
+- 편집 초안 값 읽기/초기화
+- relation select 검색/연동
+- impact guide
+- draft review
+- preview/apply 호출
+- stale guard 결과 렌더링
+- relation value display/open target helper
+
+## 브라우저 확인
+
+```js
+checkAdminReadOnlyPageReady().version
 ```
 
-```bash
-위치: 프로젝트 루트
-bash tools/run_smoke_all.sh
+예상값:
+
+```txt
+v191.admin-edit-draft-split
 ```
 
-## 다음 추천 단계
+```js
+checkAdminReadOnlyPageReady().editDraftExternalReady
+```
 
-다음은 `edit draft` 실제 분리 1단계가 좋습니다. v190에서 함수/window/DOM 계약을 먼저 고정했으므로, 다음에는 `src/api/admin/admin-edit-draft.js`를 만들고 호환 wrapper를 유지한 채로 옮기는 방향이 안전합니다.
+예상값:
+
+```txt
+true
+```
+
+```js
+window.RpgAdminEditDraft.VERSION
+```
+
+예상값:
+
+```txt
+v191.admin-edit-draft-split
+```
+
+## 검증
+
+- `bash tools/run_smoke_core.sh` 통과
+- `bash tools/run_smoke_all.sh` 통과
+- `node --check` 주요 관리자 JS 통과
+- `python -m compileall -q backend/app` 통과
 
 ## DB / env
 
-- DB reset / seed 필요 없음.
-- DB schema 변경 없음.
-- `.env`, `.gitignore` 변경 없음.
-- 이 ZIP에는 `.env`, `.gitignore`를 포함하지 않았습니다.
+- DB reset 필요 없음
+- seed 재실행 필요 없음
+- DB schema 변경 없음
+- `.env`, `.gitignore` 변경 없음
 
+## 다음 추천 단계
 
-## v190 완료
+다음 v192는 **master detail/catalog 분리 전 계약 고정**이 좋습니다.
 
-- `edit draft` 실제 분리 전 계약을 `contract-frozen-v190` 상태로 고정
-- 다음 후보 파일 `src/api/admin/admin-edit-draft.js` 고정
-- 편집 초안/preview/apply/impact guide/relation select 함수 목록 고정
-- 확인 문구/DOM target/delegated action 목록 고정
-- 새 smoke `tools/smoke_admin_edit_draft_split_contract.js` 추가
-- 실제 JS 파일 분리는 아직 하지 않음
-- DB reset / seed 필요 없음
+바로 큰 분리를 하기보다 아래 계약을 먼저 고정하는 방식이 안전합니다.
 
-## v189.1 hotfix 완료
-
-- `admin-create-lifecycle.js`가 분리 후 `readAdminCreateBlueprintFiltersFromDom` helper를 찾지 못하던 런타임 오류를 수정했습니다.
-- `readAdminCreateBlueprintFiltersFromDom`, `syncAdminCreateDomainFromCatalog`를 create lifecycle 외부 모듈 안에도 추가하고 export했습니다.
-- `checkAdminReadOnlyPageReady().version` 호출이 다시 정상 동작합니다.
-- 새 runtime smoke로 같은 누락을 재발 방지합니다.
-- DB reset / seed 필요 없음.
-
-## v189 완료
-
-- `src/api/admin/admin-create-lifecycle.js` 신규 추가
-- 생성 설계/초안/preview/apply/lifecycle guide/batch check 구현 1차 분리
-- `admin-page-readonly.js`에는 기존 window export 호환 wrapper 유지
-- `admin.html` script 순서: game api → layout shell → change logs → create lifecycle → admin page
-- 새 smoke `tools/smoke_admin_create_lifecycle_split.js` 추가
-- DB reset / seed 필요 없음
-
-
-## v185 완료
-
-- `src/api/admin-layout-shell.js` 신규 추가
-- 관리자 layout shell 기능을 `admin-page-readonly.js` 밖으로 1차 분리
-- `admin-page-readonly.js`에는 기존 window export 호환 wrapper 유지
-- `admin.html` script 순서: game api → layout shell → admin page
-- DB reset / seed 필요 없음
-
-
-## v186 완료
-
-- `change logs` 분리 전 계약을 `contract-frozen-v186` 상태로 고정
-- 변경 이력 API/window export/DOM target 진단 추가
-- `getAdminChangeLogSplitContractReadiness()` 추가
-- `renderAdminChangeLogSplitContractReadiness()` 추가
-- 새 smoke `tools/smoke_admin_change_log_split_contract.js` 추가
-- 실제 JS 파일 분리는 아직 하지 않음
-- DB reset / seed 필요 없음
-
-
-## v187 완료
-
-- `src/api/admin/admin-change-logs.js` 신규 추가
-- 변경 이력 필터/목록/상세/rollback/create-delete/restore 구현 1차 분리
-- `admin-page-readonly.js`에는 호환 wrapper 유지
-- `admin.html` script 순서: game api → layout shell → change logs → admin page
-- 새 smoke `tools/smoke_admin_change_logs_split.js` 추가
-- DB reset / seed 필요 없음
-
-
-## v188 완료
-
-- `create lifecycle` 실제 분리 전 계약을 `contract-frozen-v188` 상태로 고정
-- 다음 후보 파일 `src/api/admin/admin-create-lifecycle.js` 고정
-- 생성 초안/생성 apply/생성→삭제→복원 batch check 함수 목록 고정
-- 확인 문구/DOM target/delegated action 목록 고정
-- 새 smoke `tools/smoke_admin_create_lifecycle_split_contract.js` 추가
-- 실제 JS 파일 분리는 아직 하지 않음
-- DB reset / seed 필요 없음
+- master catalog table/render/pagination 함수 목록
+- master detail open/render 함수 목록
+- master relation render 함수 목록
+- API verify helper 목록
+- window export 목록
+- DOM target 목록
+- 다음 후보 파일명: `src/api/admin/admin-master-detail.js` 또는 `src/api/admin/admin-master-catalog.js`

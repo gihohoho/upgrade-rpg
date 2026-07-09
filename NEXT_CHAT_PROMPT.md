@@ -7,96 +7,34 @@
 명령어를 줄 때는 항상 먼저 어디에서 실행해야 하는지 적어줘.
 주석 기호가 들어간 설명은 코드블록 안에 넣지 말고 코드블록 밖에서 설명해줘.
 커밋 명령어는 마지막에 add부터 push까지 한 번에 알려줘.
-앞으로 다음 단계로 넘어갈 때는 무엇을 할지 먼저 설명해줘.
 
 현재 프로젝트는 아직 Vue가 아니라 index.html + JS + CSS 기반 RPG 게임이야.
 기존 게임이 완전히 정상 작동하는 상태를 유지하면서 단계적으로 백엔드 분리 중이야.
 나중에는 Vue 프론트엔드 + FastAPI 백엔드 + PostgreSQL + 관리자 페이지 구조로 옮길 예정이지만, 지금은 안정성이 최우선이야.
 
-GitHub repo:
-https://github.com/gihohoho/upgrade-rpg.git
-
-로컬 경로:
-프로젝트 루트: ~/Desktop/Upgrade RPG
-backend 폴더: ~/Desktop/Upgrade RPG/backend
-
-백엔드 실행:
-위치: backend 폴더 + 가상환경 activate 상태
-source .venv/Scripts/activate
-uvicorn app.main:app --reload
-
-PostgreSQL/Docker 정보:
-DB 컨테이너: upgrade_rpg_postgres
-Adminer 컨테이너: upgrade_rpg_adminer
-PostgreSQL host port: 55432
-Adminer: 8081
-DATABASE_URL:
-postgresql+asyncpg://rpg_user:rpg_password@127.0.0.1:55432/rpg_game
-
-localStorage save key:
-idleRpgSaveV22
-
-관리자 쓰기 dev key:
-local-admin-dev-key
-
-관리자 확인 문구:
-관리자 실제 적용 확인 문구: APPLY MASTER DATA EDIT
-관리자 high risk 추가 확인 문구: HIGH RISK EDIT
-관리자 되돌리기 확인 문구: ROLLBACK MASTER DATA EDIT
-신규 row 생성 확인 문구: CREATE MASTER DATA ROW
-생성 row 삭제 확인 문구: DELETE CREATED MASTER DATA ROW
-삭제 row 복원 확인 문구: RESTORE DELETED CREATED ROW
-생성→삭제→복원 일괄 점검 확인 문구: RUN CREATE DELETE RESTORE CHECK
-
-.env / .gitignore 처리:
-내 로컬에는 .env, .gitignore가 이미 있어.
-둘이 바뀌지 않았으면 ZIP에 굳이 포함하지 않아도 돼.
-둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고, 무엇이 바뀌었는지 반드시 알려줘.
-
 현재 안정 버전:
-v190: admin edit draft split contract
+v191: admin edit draft split
 
 현재 인수인계 ZIP:
-rpg_v190_admin_edit_draft_split_contract_ready.zip
+rpg_v191_admin_edit_draft_split_ready.zip
 
-새 채팅에서 먼저 확인할 파일:
+먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
 docs/CURRENT_STATUS.md
 docs/NEXT_STEPS.md
 docs/README.md
 docs/PROJECT_STRUCTURE.md
 
-현재 핵심 상태:
-1. 기존 게임 정상 동작 유지.
-2. master-data PostgreSQL → FastAPI → 브라우저 연결 유지.
-3. 백엔드 실패 시 static JS fallback 유지.
-4. save snapshot dual write 유지.
-5. 관리자 guarded edit apply / rollback / create / delete / restore 제한 흐름 유지.
-6. 생성→삭제→복원 일괄 점검 UI 유지.
-7. 관리자 JS 분리 전 readiness UI 유지.
-8. 관리자 layout shell은 src/api/admin-layout-shell.js로 실제 분리 완료.
-9. change logs는 src/api/admin/admin-change-logs.js로 실제 1차 분리 완료.
-10. create lifecycle은 src/api/admin/admin-create-lifecycle.js로 실제 1차 분리 완료.
-
-현재 create apply 열린 도메인:
-characters, enhancementGroups, fieldZones, bosses, skills, dropTables, itemTemplates, dropTableItems, skillLevels, enhancementLevels, characterSkills
-
-v189 완료:
-- src/api/admin/admin-create-lifecycle.js 신규 추가.
-- 생성 설계/초안/preview/apply/lifecycle guide/batch check 구현을 외부 파일로 1차 분리.
-- admin-page-readonly.js에는 기존 window export 호환 wrapper 유지.
-- admin.html script 순서를 game-api-client.js → admin-layout-shell.js → admin/admin-change-logs.js → admin/admin-create-lifecycle.js → admin-page-readonly.js 로 변경.
-- checkAdminReadOnlyPageReady().createLifecycleExternalReady 가 true면 정상.
-- 새 smoke tools/smoke_admin_create_lifecycle_split.js 추가 및 core smoke 포함.
-- DB reset / seed 필요 없음.
-- .env, .gitignore 변경 없음.
+현재 완료:
+- layout shell 분리 완료
+- change logs 분리 완료
+- create lifecycle 분리 완료(v189.1 hotfix 포함)
+- edit draft 분리 완료(v191)
 
 다음 추천 단계:
-v191 edit draft 실제 분리 1단계.
+v192 master detail/catalog split contract.
 
-권장 방향:
-1. src/api/admin/admin-edit-draft.js 파일 생성.
-2. 편집 초안/preview/apply/impact guide/relation select 함수 1차 이동.
-3. admin-page-readonly.js에는 기존 window 함수명 호환 wrapper 유지.
-4. admin.html script 순서에 edit draft 파일 추가.
-5. v190 contract smoke가 계속 통과하는지 확인.
+바로 실제 분리하지 말고, master catalog/detail/relations/API verify 관련 함수/window/DOM 계약을 먼저 고정하는 방향을 추천.
+후보 파일명:
+- src/api/admin/admin-master-catalog.js
+- src/api/admin/admin-master-detail.js

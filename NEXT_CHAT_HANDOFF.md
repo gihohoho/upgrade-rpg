@@ -1,201 +1,78 @@
-# NEXT CHAT HANDOFF
+# NEXT CHAT HANDOFF — v191
 
-## 사용자/응답 방식
-
-- 사용자는 이 게임 프로젝트의 기획/게임 제작자 이기호입니다.
-- 앞으로 사용자를 **기호**라고 부릅니다.
-- 기호는 코딩/터미널/경로에 익숙하지 않습니다.
-- 명령어를 줄 때는 항상 먼저 실행 위치를 적습니다.
-- 코드블록 안에 설명용 주석 기호를 넣지 않습니다. 설명은 코드블록 밖에서 합니다.
-- 커밋 명령어는 마지막에 `git add`부터 `git push`까지 한 번에 제공합니다.
-- 기호가 “다음 단계”라고 하면, 앞으로 무엇을 할지 먼저 설명하고 진행합니다.
-
-## 프로젝트 기본 정보
-
-- 현재 프로젝트는 아직 Vue가 아니라 `index.html + JS + CSS` 기반 RPG 게임입니다.
-- 기존 게임이 정상 작동하는 상태를 유지하면서 FastAPI + PostgreSQL 백엔드 분리를 단계적으로 진행 중입니다.
-- 나중에는 Vue 프론트엔드 + FastAPI 백엔드 + PostgreSQL + 관리자 페이지 구조로 옮길 예정입니다.
-- 안정성이 최우선입니다.
-
-## 로컬 정보
-
-- GitHub repo: `https://github.com/gihohoho/upgrade-rpg.git`
-- 프로젝트 루트: `~/Desktop/Upgrade RPG`
-- backend 폴더: `~/Desktop/Upgrade RPG/backend`
-- DB 컨테이너: `upgrade_rpg_postgres`
-- Adminer 컨테이너: `upgrade_rpg_adminer`
-- PostgreSQL host port: `55432`
-- Adminer: `8081`
-- DATABASE_URL: `postgresql+asyncpg://rpg_user:rpg_password@127.0.0.1:55432/rpg_game`
-
-## 백엔드 실행
-
-```bash
-위치: backend 폴더 + 가상환경 activate 상태
-source .venv/Scripts/activate
-uvicorn app.main:app --reload
-```
-
-## 저장 / 관리자 확인 문구
-
-- localStorage save key: `idleRpgSaveV22`
-- 현재 게임 실제 세이브 슬롯: `default`
-- 관리자 쓰기 dev key: `local-admin-dev-key`
-- 관리자 실제 적용 확인 문구: `APPLY MASTER DATA EDIT`
-- high risk 추가 확인 문구: `HIGH RISK EDIT`
-- 관리자 되돌리기 확인 문구: `ROLLBACK MASTER DATA EDIT`
-- 신규 row 생성 확인 문구: `CREATE MASTER DATA ROW`
-- 생성 row 삭제 확인 문구: `DELETE CREATED MASTER DATA ROW`
-- 삭제 row 복원 확인 문구: `RESTORE DELETED CREATED ROW`
-- 생성→삭제→복원 일괄 점검 확인 문구: `RUN CREATE DELETE RESTORE CHECK`
-
-## .env / .gitignore 처리
-
-- 기호 로컬에는 `.env`, `.gitignore`가 이미 있습니다.
-- 둘이 바뀌지 않았으면 ZIP에 포함하지 않습니다.
-- 둘 중 하나라도 수정이 필요한 단계라면 ZIP에 포함하고 변경 내용을 반드시 설명합니다.
+기호는 코딩/터미널/경로에 익숙하지 않으므로, 명령어는 항상 실행 위치를 먼저 적습니다.
 
 ## 현재 안정 버전
 
-- 최신 안정 버전: **v190 admin edit draft split contract**
-- 새 채팅용 ZIP: **rpg_v190_admin_edit_draft_split_contract_ready.zip**
+**v191 admin edit draft split**
 
-## 새 채팅에서 먼저 볼 파일
+## 현재 ZIP
 
-1. `NEXT_CHAT_HANDOFF.md`
-2. `docs/CURRENT_STATUS.md`
-3. `docs/NEXT_STEPS.md`
-4. `docs/README.md`
-5. `docs/PROJECT_STRUCTURE.md`
+**rpg_v191_admin_edit_draft_split_ready.zip**
 
-## 현재 핵심 상태
+## v191 완료
 
-- 기존 게임 정상 동작 유지.
-- master-data PostgreSQL → FastAPI → 브라우저 연결 유지.
-- 백엔드 실패 시 static JS fallback 유지.
-- save snapshot dual write 유지.
-- 관리자 guarded edit apply / rollback / create / delete / restore 제한 흐름 유지.
-- 생성→삭제→복원 일괄 점검 UI 유지.
-- 관리자 JS 분리 전 readiness UI 유지.
-- 관리자 layout shell은 `src/api/admin-layout-shell.js`로 실제 분리 완료.
-- change logs는 `src/api/admin/admin-change-logs.js`로 실제 1차 분리 완료.
-- create lifecycle은 `src/api/admin/admin-create-lifecycle.js`로 실제 1차 분리 완료했습니다.
-- edit draft는 실제 분리 전 계약을 `contract-frozen-v190` 상태로 고정했습니다.
-- `admin-page-readonly.js`에는 호환 wrapper가 남아 있습니다.
-
-## 현재 create apply 열린 도메인
-
-- `characters`
-- `enhancementGroups`
-- `fieldZones`
-- `bosses`
-- `skills`
-- `dropTables`
-- `itemTemplates`
-- `dropTableItems`
-- `skillLevels`
-- `enhancementLevels`
-- `characterSkills`
-
-위 도메인들은 생성 row delete/restore도 제한적으로 열려 있습니다.
-
-## v190 완료
-
-- `edit draft` 실제 분리 전에 API/window/DOM/확인 문구 계약을 먼저 고정했습니다.
-- 계약 상태: `contract-frozen-v190`.
-- 다음 후보 파일: `src/api/admin/admin-edit-draft.js`.
-- 새 함수:
-  - `getAdminEditDraftSplitContractReadiness()`
-  - `renderAdminEditDraftSplitContractReadiness()`
-- `checkAdminReadOnlyPageReady().editDraftSplitContractReady`가 true면 정상입니다.
-- 새 smoke: `tools/smoke_admin_edit_draft_split_contract.js`.
-- 실제 JS 파일 분리는 아직 하지 않았습니다.
-- 새 쓰기 도메인 오픈 없음, DB schema 변경 없음, DB reset / seed 필요 없음.
-- `.env`, `.gitignore` 변경 없음.
-
-## v189.1 hotfix 완료
-
-- v189 분리 후 `checkAdminReadOnlyPageReady().version` 호출 시 `readAdminCreateBlueprintFiltersFromDom is not defined` 오류가 나던 문제를 수정했습니다.
-- `src/api/admin/admin-create-lifecycle.js` 안에 blueprint filter reader와 catalog sync helper를 추가하고 export했습니다.
-- `tools/smoke_admin_create_lifecycle_split.js`에 VM 기반 runtime 검사를 추가해 `getAdminCreateBlueprintReadiness()`가 실제로 throw 하지 않는지 확인합니다.
-- DB reset / seed 필요 없음.
-
-## v189 완료
-
-- `src/api/admin/admin-create-lifecycle.js` 신규 추가.
-- 생성 설계/초안/preview/apply/lifecycle guide/batch check 구현을 외부 파일로 1차 분리.
-- `admin-page-readonly.js`에는 기존 window export 호환 wrapper 유지.
-- `admin.html` script 순서: game api → layout shell → change logs → create lifecycle → admin page.
-- 새 함수: `getAdminCreateLifecycleReadiness()`.
-- `checkAdminReadOnlyPageReady().editDraftSplitContractReady`가 true면 정상입니다.
-- 새 smoke: `tools/smoke_admin_create_lifecycle_split.js`.
-- 새 쓰기 도메인 오픈 없음, DB schema 변경 없음, DB reset / seed 필요 없음.
-- `.env`, `.gitignore` 변경 없음.
-
-## v188 완료
-
-- `create lifecycle` 실제 분리 전에 API/window/DOM/확인 문구 계약 고정.
-- 계약 상태: `contract-frozen-v188`.
-- 다음 후보 파일: `src/api/admin/admin-create-lifecycle.js`.
-- 새 smoke: `tools/smoke_admin_create_lifecycle_split_contract.js`.
-- 실제 파일 분리는 v189에서 완료.
-- DB reset / seed 필요 없음.
-
-## v187 완료
-
-- `src/api/admin/` 폴더 생성.
-- `src/api/admin/admin-change-logs.js` 신규 추가.
-- 변경 이력 필터/목록/상세/rollback/create-delete/restore 구현을 외부 파일로 1차 분리.
-- `admin-page-readonly.js`에는 기존 window export 호환 wrapper 유지.
-- `admin.html` script 순서 변경: game api → layout shell → change logs → admin page.
-- 새 함수: `getAdminChangeLogsReadiness()`.
-- `checkAdminReadOnlyPageReady().changeLogsExternalReady`가 true면 정상입니다.
-- 새 smoke: `tools/smoke_admin_change_logs_split.js`.
-- core smoke에 위 smoke를 포함했습니다.
-- 새 쓰기 도메인 오픈 없음, DB schema 변경 없음, DB reset / seed 필요 없음.
-- `.env`, `.gitignore` 변경 없음.
+- `src/api/admin/admin-edit-draft.js` 추가
+- edit draft 실제 분리 1단계 완료
+- 편집 초안/preview/apply/impact/review/relation select/stale guard 렌더링을 외부 파일로 이동
+- 기존 window 함수명은 `admin-page-readonly.js` wrapper로 유지
+- `admin.html` script 순서에 edit draft 파일 추가
+- `tools/smoke_admin_edit_draft_split.js` 추가
+- core/all smoke 통과
 
 ## 브라우저 확인
 
 ```js
-위치: 브라우저 개발자도구 Console
 checkAdminReadOnlyPageReady().version
 ```
 
-예상 결과:
+예상:
 
 ```txt
-v190.admin-edit-draft-split-contract
+v191.admin-edit-draft-split
 ```
-
-추가 확인:
 
 ```js
-위치: 브라우저 개발자도구 Console
-checkAdminReadOnlyPageReady().editDraftSplitContractReady
+checkAdminReadOnlyPageReady().editDraftExternalReady
 ```
 
-예상 결과:
+예상:
 
 ```txt
 true
 ```
 
-그리고:
-
 ```js
-위치: 브라우저 개발자도구 Console
-getAdminEditDraftSplitContractReadiness().status
+window.RpgAdminEditDraft.VERSION
 ```
 
-예상 결과:
+예상:
 
 ```txt
-contract-frozen-v190
+v191.admin-edit-draft-split
 ```
 
 ## 다음 추천 단계
 
-**v191 edit draft 실제 분리 1단계**를 추천합니다.
+v192는 **master detail/catalog split contract**를 추천합니다.
 
-v190에서 edit draft 계약을 먼저 고정했으므로, 다음에는 `src/api/admin/admin-edit-draft.js`를 만들고 기존 window 함수명은 유지한 채 실제 분리 1단계로 가는 흐름이 안전합니다.
+실제 분리 전에 아래 계약을 먼저 고정하세요.
+
+- master catalog render/pagination 함수
+- master detail open/render 함수
+- master relations render 함수
+- API verify helper
+- window export
+- DOM target
+- 다음 후보 파일명
+
+후보:
+
+```txt
+src/api/admin/admin-master-catalog.js
+src/api/admin/admin-master-detail.js
+```
+
+## 주의
+
+v189에서 helper 누락 버그가 있었으므로, 앞으로 실제 분리 전에는 contract smoke 또는 runtime smoke를 같이 추가하는 것이 좋습니다.
