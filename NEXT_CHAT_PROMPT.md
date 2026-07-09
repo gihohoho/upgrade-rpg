@@ -13,10 +13,10 @@
 나중에는 Vue 프론트엔드 + FastAPI 백엔드 + PostgreSQL + 관리자 페이지 구조로 옮길 예정이지만, 지금은 안정성이 최우선이야.
 
 현재 안정 버전:
-v199.1 backend admin overview/snapshots service hotfix
+v200 backend admin master catalog/detail service split
 
 현재 인수인계 ZIP:
-rpg_v199_1_backend_admin_overview_snapshots_service_hotfix_ready.zip
+rpg_v200_backend_admin_master_catalog_service_split_ready.zip
 
 새 채팅에서 먼저 확인할 파일:
 NEXT_CHAT_HANDOFF.md
@@ -24,22 +24,10 @@ docs/CURRENT_STATUS.md
 docs/NEXT_STEPS.md
 docs/README.md
 docs/PROJECT_STRUCTURE.md
-
-v199 완료 요약:
-- backend/app/services/admin/admin_overview_snapshots_service.py 추가
-- AdminService facade 유지 + AdminOverviewSnapshotsService mixin 상속
-- overview/save snapshots 관련 메서드 외부 서비스로 이동
-- route/schema/API 응답 구조 변경 없음
-- tools/smoke_backend_admin_overview_snapshots_service_split.py 추가
-- core/all smoke 통과
+docs/BACKEND_ADMIN_SERVICE_SPLIT_CONTRACT.md
+docs/BACKEND_ADMIN_MASTER_CATALOG_SPLIT.md
 
 다음 추천 단계:
-v200 backend admin master catalog/detail service split
+v201 backend admin create lifecycle service split
 
-추천 방향:
-- backend/app/services/admin/admin_master_catalog_service.py 생성
-- list_master_catalog_domains/list_master_catalog_rows/get_master_catalog_detail/get_master_catalog_relations 이동
-- 관련 master catalog/detail/relation helper 이동
-- AdminService facade 유지
-- routes/admin.py 변경하지 않기
-- DB schema/env 변경 없이 전용 smoke 추가
+create blueprint / create preview/apply / create-delete / restore 관련 메서드를 `backend/app/services/admin/admin_create_lifecycle_service.py`로 분리하되, `AdminService` facade와 routes/admin.py는 유지하는 방향으로 진행해줘.

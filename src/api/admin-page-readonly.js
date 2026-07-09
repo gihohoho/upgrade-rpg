@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "v199.1.backend-admin-overview-snapshots-service-hotfix";
+  const VERSION = "v200.backend-admin-master-catalog-service-split";
   const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary v183.admin-create-lifecycle-batch-check v184.admin-js-split-readiness v185.admin-layout-shell-split v186.admin-change-log-split-contract v188.admin-create-lifecycle-split-contract v189.admin-create-lifecycle-split v189.1.admin-create-lifecycle-split-hotfix v190.admin-edit-draft-split-contract v191.admin-edit-draft-split v192.admin-master-catalog-detail-split v193.admin-overview-snapshots-split v194.admin-bootstrap-bindings-readiness v195.admin-thin-entry-cleanup v196.admin-field-help-split v197.admin-settings-helpers-split v198.backend-admin-service-split-contract";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
@@ -83,16 +83,16 @@
     key: "backend-admin-service-split",
     label: "Backend AdminService split contract",
     status: "contract-frozen-v198",
-    splitStatus: "overview-snapshots-extracted-v199.1",
+    splitStatus: "master-catalog-extracted-v200",
     currentFile: "backend/app/services/admin_service.py",
     facadeFile: "backend/app/services/admin_service.py",
     routeFile: "backend/app/api/routes/admin.py",
     schemaFile: "backend/app/schemas/admin.py",
     extractedFiles: [
       "backend/app/services/admin/admin_overview_snapshots_service.py",
+      "backend/app/services/admin/admin_master_catalog_service.py",
     ],
     nextFiles: [
-      "backend/app/services/admin/admin_master_catalog_service.py",
       "backend/app/services/admin/admin_edit_draft_service.py",
       "backend/app/services/admin/admin_create_lifecycle_service.py",
       "backend/app/services/admin/admin_change_log_service.py",
@@ -107,8 +107,8 @@
       { key: "shared-utils", publicMethodCount: 0, note: "relation/count/serialization helpers" },
     ],
     routeContract: [
-      "No route path changes in v199",
-      "No schema changes in v199",
+      "No route path changes in v200",
+      "No schema changes in v200",
       "AdminService remains the route facade",
       "Actual file moves must keep existing public method names",
     ],
@@ -1532,10 +1532,12 @@ function getAdminCreateLifecycleApi() {
     const splitGroups = contract.splitGroups.map((group) => ({ ...group, ok: !!group.key }));
     const routeContract = contract.routeContract.map((item) => ({ value: item, ok: !!item }));
     const overviewSnapshotsExtractedReady = extractedFiles.some((item) => item.path === "backend/app/services/admin/admin_overview_snapshots_service.py");
+    const masterCatalogExtractedReady = extractedFiles.some((item) => item.path === "backend/app/services/admin/admin_master_catalog_service.py");
     const ok = contract.status === "contract-frozen-v198"
-      && contract.splitStatus === "overview-snapshots-extracted-v199.1"
+      && contract.splitStatus === "master-catalog-extracted-v200"
       && overviewSnapshotsExtractedReady
-      && nextFiles.length >= 5
+      && masterCatalogExtractedReady
+      && nextFiles.length >= 4
       && splitGroups.length >= 6
       && routeContract.every((item) => item.ok)
       && !!contract.smoke;
@@ -1551,6 +1553,7 @@ function getAdminCreateLifecycleApi() {
       extractedFiles,
       nextFiles,
       overviewSnapshotsExtractedReady,
+      masterCatalogExtractedReady,
       splitGroups,
       routeContract,
       smoke: contract.smoke,
@@ -1564,7 +1567,7 @@ function getAdminCreateLifecycleApi() {
 
   function renderAdminBackendServiceSplitContractReadiness(contractReadiness) {
     const readiness = contractReadiness || getAdminBackendServiceSplitContractReadiness();
-    const extractedRows = readiness.extractedFiles.map((item, index) => `<tr><td>${escapeHtml(String(index + 1))}</td><td><code>${escapeHtml(item.path)}</code></td><td><span class="pill good">extracted-v199</span></td></tr>`).join("");
+    const extractedRows = readiness.extractedFiles.map((item, index) => `<tr><td>${escapeHtml(String(index + 1))}</td><td><code>${escapeHtml(item.path)}</code></td><td><span class="pill good">extracted</span></td></tr>`).join("");
     const fileRows = readiness.nextFiles.map((item, index) => `<tr><td>${escapeHtml(String(index + 1))}</td><td><code>${escapeHtml(item.path)}</code></td><td><span class="pill warn">planned</span></td></tr>`).join("");
     const groupRows = readiness.splitGroups.map((group) => `<tr><td>${escapeHtml(group.key)}</td><td>${escapeHtml(group.note)}</td><td>${escapeHtml(String(group.publicMethodCount))}</td></tr>`).join("");
     const routeHtml = readiness.routeContract.map((item) => `<span class="pill ${item.ok ? "good" : "blocked"}">${escapeHtml(item.value)}</span>`).join(" ");
@@ -1583,7 +1586,7 @@ function getAdminCreateLifecycleApi() {
           ],
         })}
         <div class="draft-preview-summary">${routeHtml}</div>
-        <div class="filter-help">검증 smoke: <code>${escapeHtml(readiness.smoke)}</code> + <code>tools/smoke_backend_admin_overview_snapshots_service_split.py</code>. v199는 route/schema를 그대로 두고 overview/save snapshots 서비스만 1차 분리합니다.</div>
+        <div class="filter-help">검증 smoke: <code>${escapeHtml(readiness.smoke)}</code> + <code>tools/smoke_backend_admin_overview_snapshots_service_split.py</code>. v200은 route/schema를 그대로 두고 overview/save snapshots와 master catalog/detail 서비스를 분리합니다.</div>
         <div class="create-blueprint-summary" style="grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);">
           <div class="table-wrap relation-table-wrap"><table><thead><tr><th>#</th><th>분리/후보 파일</th><th>상태</th></tr></thead><tbody>${extractedRows}${fileRows}</tbody></table></div>
           <div class="table-wrap relation-table-wrap"><table><thead><tr><th>묶음</th><th>역할</th><th>public method</th></tr></thead><tbody>${groupRows}</tbody></table></div>
@@ -2669,6 +2672,7 @@ async function openAdminMasterDataDetail(...args) {
     const backendServiceSplitContract = typeof getAdminBackendServiceSplitContractReadiness === "function" ? getAdminBackendServiceSplitContractReadiness() : { ok: false };
     const backendServiceSplitContractReady = !!(backendServiceSplitContract && backendServiceSplitContract.ok && backendServiceSplitContract.status === "contract-frozen-v198" && typeof renderAdminBackendServiceSplitContractReadiness === "function");
     const backendOverviewSnapshotsServiceSplitReady = !!(backendServiceSplitContractReady && backendServiceSplitContract.overviewSnapshotsExtractedReady);
+    const backendMasterCatalogServiceSplitReady = !!(backendServiceSplitContractReady && backendServiceSplitContract.masterCatalogExtractedReady);
     const changeLogs = typeof getAdminChangeLogsReadiness === "function" ? getAdminChangeLogsReadiness() : { ok: false };
     const changeLogsExternalReady = !!(changeLogs && changeLogs.ok && changeLogs.version === "v187.admin-change-logs-split");
     const createLifecycle = typeof getAdminCreateLifecycleReadiness === "function" ? getAdminCreateLifecycleReadiness() : { ok: false };
@@ -2691,7 +2695,7 @@ async function openAdminMasterDataDetail(...args) {
     const createDeleteRollbackReady = typeof previewAdminCreateDeleteRollback === "function" && typeof applyAdminCreateDeleteRollback === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRollback === "function");
     const createDeleteRestoreReady = typeof previewAdminCreateDeleteRestore === "function" && typeof applyAdminCreateDeleteRestore === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRestore === "function");
     const layoutShell = getAdminLayoutShellReadiness();
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && adminJsSplitReadinessReady && changeLogSplitContractReady && createLifecycleSplitContractReady && editDraftSplitContractReady && editDraftExternalReady && createLifecycleExternalReady && masterCatalogExternalReady && overviewSnapshotsExternalReady && fieldHelpExternalReady && settingsHelpersExternalReady && bootstrapBindingReady && thinEntryCleanupReady && backendServiceSplitContractReady && backendOverviewSnapshotsServiceSplitReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, fieldHelpExternalReady, fieldHelpExternal, settingsHelpersExternalReady, settingsHelpersExternal, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createLifecycleBatchCheckReady, adminJsSplitReadinessReady, adminJsSplitReadiness, changeLogSplitContractReady, changeLogSplitContract, createLifecycleSplitContractReady, createLifecycleSplitContract, editDraftSplitContractReady, editDraftSplitContract, editDraftExternalReady, editDraftExternal, masterCatalogExternalReady, masterCatalogExternal, overviewSnapshotsExternalReady, overviewSnapshotsExternal, bootstrapBindingReady, bootstrapBinding, thinEntryCleanupReady, thinEntryCleanup, backendServiceSplitContractReady, backendOverviewSnapshotsServiceSplitReady, backendServiceSplitContract, changeLogsExternalReady, changeLogs, createLifecycleExternalReady, createLifecycle, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && adminJsSplitReadinessReady && changeLogSplitContractReady && createLifecycleSplitContractReady && editDraftSplitContractReady && editDraftExternalReady && createLifecycleExternalReady && masterCatalogExternalReady && overviewSnapshotsExternalReady && fieldHelpExternalReady && settingsHelpersExternalReady && bootstrapBindingReady && thinEntryCleanupReady && backendServiceSplitContractReady && backendOverviewSnapshotsServiceSplitReady && backendMasterCatalogServiceSplitReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, fieldHelpExternalReady, fieldHelpExternal, settingsHelpersExternalReady, settingsHelpersExternal, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createLifecycleBatchCheckReady, adminJsSplitReadinessReady, adminJsSplitReadiness, changeLogSplitContractReady, changeLogSplitContract, createLifecycleSplitContractReady, createLifecycleSplitContract, editDraftSplitContractReady, editDraftSplitContract, editDraftExternalReady, editDraftExternal, masterCatalogExternalReady, masterCatalogExternal, overviewSnapshotsExternalReady, overviewSnapshotsExternal, bootstrapBindingReady, bootstrapBinding, thinEntryCleanupReady, thinEntryCleanup, backendServiceSplitContractReady, backendOverviewSnapshotsServiceSplitReady, backendMasterCatalogServiceSplitReady, backendServiceSplitContract, changeLogsExternalReady, changeLogs, createLifecycleExternalReady, createLifecycle, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }

@@ -1,44 +1,36 @@
-# Upgrade RPG v199.1 패키지
+# Upgrade RPG v200 패키지
 
-현재 안정 버전: **v199.1 backend admin overview/snapshots service hotfix**
+현재 안정 버전: **v200 backend admin master catalog/detail service split**
 
-새 채팅 인수인계 ZIP: **rpg_v199_1_backend_admin_overview_snapshots_service_hotfix_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v200_backend_admin_master_catalog_service_split_ready.zip**
 
 ## 요약
 
-v199에서는 v198에서 고정한 백엔드 admin service 분리 계약을 기준으로, 가장 안전한 첫 묶음인 **overview/save snapshots 서비스**를 실제로 1차 분리했습니다.
+v200에서는 백엔드 `AdminService` facade를 유지한 상태로, **master catalog/detail/relations** 묶음을 `AdminMasterCatalogService` mixin으로 실제 분리했습니다.
 
-`backend/app/api/routes/admin.py`와 schema는 변경하지 않았고, 기존 `AdminService` facade도 그대로 유지했습니다.
+`backend/app/api/routes/admin.py`와 schema/API 응답 구조는 변경하지 않았습니다.
 
-## v199에서 정리한 것
+## v200에서 정리한 것
 
-- `backend/app/services/admin/` 폴더 추가
-- `backend/app/services/admin/__init__.py` 추가
-- `backend/app/services/admin/admin_overview_snapshots_service.py` 추가
-- `AdminOverviewSnapshotsService` mixin 추가
-- `AdminService(AdminOverviewSnapshotsService)` 구조로 변경
-- overview/save snapshots 관련 public/helper 메서드를 외부 서비스로 이동
-- 기존 route/schema/API 응답 구조 유지
-- `tools/smoke_backend_admin_overview_snapshots_service_split.py` 추가
+- `backend/app/services/admin/admin_master_catalog_service.py` 추가
+- `AdminMasterCatalogService` mixin 추가
+- `AdminService(AdminOverviewSnapshotsService, AdminMasterCatalogService)` 구조로 변경
+- master catalog/detail/relations 관련 public/helper 메서드 이동
+- shared read-only serializer/helper 일부 이동
+- `tools/smoke_backend_admin_master_catalog_service_split.py` 추가
 - `tools/run_smoke_core.sh`에 새 smoke 포함
-- 기존 `tools/smoke_admin_readonly_api_structure.py`를 분리 구조에 맞게 갱신
+- 기존 static smoke를 분리 구조에 맞게 갱신
 
 ## 현재 백엔드 admin service 상태
 
 - `backend/app/services/admin_service.py` — route가 계속 import하는 facade
-- `backend/app/services/admin/admin_overview_snapshots_service.py` — v199 분리 완료
+- `backend/app/services/admin/admin_overview_snapshots_service.py` — v199.1 분리 완료
+- `backend/app/services/admin/admin_master_catalog_service.py` — v200 분리 완료
 - 다음 후보:
-  - `admin_master_catalog_service.py`
   - `admin_create_lifecycle_service.py`
   - `admin_change_log_service.py`
   - `admin_edit_draft_service.py`
   - `admin_shared_utils.py`
-
-## v199.1 hotfix 내용
-
-- `/api/v1/admin/save-snapshots` 500 오류 수정
-- `_count_filled_items` staticmethod 누락 복구
-- snapshot summary runtime smoke 추가
 
 ## 브라우저 확인
 
@@ -49,11 +41,11 @@ checkAdminReadOnlyPageReady().version
 예상값:
 
 ```txt
-v199.1.backend-admin-overview-snapshots-service-hotfix
+v200.backend-admin-master-catalog-service-split
 ```
 
 ```js
-checkAdminReadOnlyPageReady().backendOverviewSnapshotsServiceSplitReady
+checkAdminReadOnlyPageReady().backendMasterCatalogServiceSplitReady
 ```
 
 예상값:
@@ -69,13 +61,14 @@ getAdminBackendServiceSplitContractReadiness().splitStatus
 예상값:
 
 ```txt
-overview-snapshots-extracted-v199.1
+master-catalog-extracted-v200
 ```
 
 ## 검증
 
 - `bash tools/run_smoke_core.sh` 통과
-- `bash tools/run_smoke_all.sh` 통과
+- `bash tools/run_smoke_all.sh` 대부분 통과 후 시간 제한, 남은 python smoke 개별 통과
+- `python tools/smoke_backend_admin_master_catalog_service_split.py` 통과
 - `python tools/smoke_backend_admin_overview_snapshots_service_split.py` 통과
 - `python tools/smoke_backend_admin_service_split_contract.py` 통과
 - `node --check src/api/admin-page-readonly.js` 통과

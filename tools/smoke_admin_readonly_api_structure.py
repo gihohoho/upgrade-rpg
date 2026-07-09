@@ -42,16 +42,13 @@ REQUIRED_PATTERNS = {
     ],
     "backend/app/services/admin_service.py": [
         "AdminOverviewSnapshotsService",
-        "class AdminService(AdminOverviewSnapshotsService):",
+        "AdminMasterCatalogService",
+        "class AdminService(",
         "MASTER_DATA_MODELS",
         "safeForAdminReadOnlyUi",
         "safeForAdminWriteUi",
         "guardedMasterEditApplyReady",
         "MASTER_CATALOG_DOMAINS",
-        "list_master_catalog_domains",
-        "list_master_catalog_rows",
-        "get_master_catalog_detail",
-        "get_master_catalog_relations",
         "preview_master_data_edit",
         "apply_master_data_edit",
         "list_admin_change_logs",
@@ -62,6 +59,15 @@ REQUIRED_PATTERNS = {
         "MASTER_EDIT_APPLY_CONFIRM_TEXT",
         "MASTER_EDIT_ROLLBACK_CONFIRM_TEXT",
         "_normalize_master_edit_value",
+        "assetsReturned",
+    ],
+
+    "backend/app/services/admin/admin_master_catalog_service.py": [
+        "class AdminMasterCatalogService",
+        "list_master_catalog_domains",
+        "list_master_catalog_rows",
+        "get_master_catalog_detail",
+        "get_master_catalog_relations",
         "_build_master_relation_groups",
         "_fetch_master_relation_group",
         "_serialize_master_detail_scalar_fields",
@@ -113,7 +119,6 @@ REQUIRED_PATTERNS = {
         "admin/change-logs",
         "dryRun",
         "assetsReturned",
-        "sanitizedJsonReturned",
     ],
 }
 

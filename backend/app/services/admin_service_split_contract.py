@@ -7,6 +7,11 @@ from typing import Any
 ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
     "version": "v198.backend-admin-service-split-contract",
     "status": "contract-frozen-v198",
+    "splitStatus": "master-catalog-extracted-v200",
+    "extractedFiles": [
+        "backend/app/services/admin/admin_overview_snapshots_service.py",
+        "backend/app/services/admin/admin_master_catalog_service.py",
+    ],
     "currentFile": "backend/app/services/admin_service.py",
     "facadeFile": "backend/app/services/admin_service.py",
     "routeFile": "backend/app/api/routes/admin.py",
@@ -172,8 +177,8 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT",
     ],
     "routeContract": [
-        "No route path changes in v198",
-        "No schema changes in v198",
+        "No route path changes in v200",
+        "No schema changes in v200",
         "AdminService remains the facade imported by backend/app/api/routes/admin.py",
         "Actual service file moves must keep every existing public method name",
     ],
@@ -219,6 +224,8 @@ def get_admin_service_split_contract_readiness(
         for key in ("currentFile", "routeFile", "schemaFile"):
             relative = contract[key]
             file_checks.append({"key": key, "path": relative, "ok": (root_path / relative).exists()})
+        for relative in contract.get("extractedFiles", []):
+            file_checks.append({"key": "extractedFile", "path": relative, "ok": (root_path / relative).exists()})
 
     group_keys = [group["key"] for group in contract["splitGroups"]]
     candidate_files = [group["candidateFile"] for group in contract["splitGroups"]]
@@ -248,6 +255,8 @@ def get_admin_service_split_contract_readiness(
         "ok": ok,
         "version": contract["version"],
         "status": contract["status"],
+        "splitStatus": contract.get("splitStatus"),
+        "extractedFiles": contract.get("extractedFiles", []),
         "contract": contract,
         "groupCount": len(contract["splitGroups"]),
         "candidateFileCount": len(candidate_files),

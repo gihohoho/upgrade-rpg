@@ -61,7 +61,7 @@ def main() -> int:
     source = service_file.read_text(encoding="utf-8")
     split_source = split_file.read_text(encoding="utf-8")
     assert_true("from app.services.admin.admin_overview_snapshots_service import AdminOverviewSnapshotsService" in source, "AdminService must import the split service")
-    assert_true("class AdminService(AdminOverviewSnapshotsService):" in source, "AdminService must inherit the split service")
+    assert_true("AdminOverviewSnapshotsService" in source and "class AdminService(" in source, "AdminService must inherit the split service")
     assert_true("class AdminOverviewSnapshotsService" in split_source, "split file must define AdminOverviewSnapshotsService")
 
     assert_true(len(source.splitlines()) < 3900, "admin_service.py should be smaller after the split")

@@ -132,3 +132,5 @@ docs/archive/stage-notes/
 ## v199
 
 - [BACKEND_ADMIN_OVERVIEW_SNAPSHOTS_SPLIT.md](BACKEND_ADMIN_OVERVIEW_SNAPSHOTS_SPLIT.md) — v199 backend overview/save snapshots service split
+
+- BACKEND_ADMIN_MASTER_CATALOG_SPLIT.md — v200 backend admin master catalog/detail service split

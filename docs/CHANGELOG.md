@@ -1,3 +1,11 @@
+## v200 backend admin master catalog/detail service split
+
+- `backend/app/services/admin/admin_master_catalog_service.py` 추가
+- master catalog/detail/relations 관련 백엔드 메서드 분리
+- `AdminService` facade 유지
+- route/schema/API 응답 구조 변경 없음
+- `tools/smoke_backend_admin_master_catalog_service_split.py` 추가
+
 # Changelog
 
 ## v199.1 backend admin overview/snapshots service hotfix

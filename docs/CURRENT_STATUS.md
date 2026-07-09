@@ -1,8 +1,8 @@
 # Current Status
 
-현재 기준: **v199.1 backend admin overview/snapshots service hotfix**
+현재 기준: **v200 backend admin master catalog/detail service split**
 
-이 패키지 기준 ZIP: **rpg_v199_1_backend_admin_overview_snapshots_service_hotfix_ready.zip**
+이 패키지 기준 ZIP: **rpg_v200_backend_admin_master_catalog_service_split_ready.zip**
 
 ## 완료된 관리자 JS 분리/정리
 
@@ -20,38 +20,32 @@
 ## 백엔드 admin service 분리 상태
 
 - v198: backend admin service split contract 고정
-- v199: overview/save snapshots service 실제 1차 분리
+- v199.1: overview/save snapshots service 분리 + hotfix
+- v200: master catalog/detail/relations service 분리
 
-## v199 완료 내용
+## v200 완료 내용
 
-- `backend/app/services/admin/` 폴더 추가
-- `backend/app/services/admin/admin_overview_snapshots_service.py` 추가
-- `AdminOverviewSnapshotsService` 추가
-- `AdminService` facade는 유지하면서 overview/save snapshots 메서드만 mixin으로 이동
+- `backend/app/services/admin/admin_master_catalog_service.py` 추가
+- `AdminMasterCatalogService` 추가
+- `AdminService` facade는 유지하면서 master catalog/detail/relations 메서드를 mixin으로 이동
 - route/schema/API 응답 구조 변경 없음
-- `tools/smoke_backend_admin_overview_snapshots_service_split.py` 추가
+- `tools/smoke_backend_admin_master_catalog_service_split.py` 추가
 - core smoke에 새 smoke 포함
-
-## v199.1 hotfix 내용
-
-- `/api/v1/admin/save-snapshots` 500 오류 수정
-- `_count_filled_items` staticmethod 누락 복구
-- snapshot summary runtime smoke 추가
 
 ## 브라우저 확인
 
 ```js
 checkAdminReadOnlyPageReady().version
-checkAdminReadOnlyPageReady().backendOverviewSnapshotsServiceSplitReady
+checkAdminReadOnlyPageReady().backendMasterCatalogServiceSplitReady
 getAdminBackendServiceSplitContractReadiness().splitStatus
 ```
 
 예상:
 
 ```txt
-v199.1.backend-admin-overview-snapshots-service-hotfix
+v200.backend-admin-master-catalog-service-split
 true
-overview-snapshots-extracted-v199.1
+master-catalog-extracted-v200
 ```
 
 ## DB / env
