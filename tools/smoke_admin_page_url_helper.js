@@ -35,14 +35,25 @@ assertContains("admin.html", [
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v165.admin-create-apply-limited",
+  "v197.admin-settings-helpers-split",
+  "getAdminSettingsHelpersApi",
+  "function buildSiblingPageUrl(...args)",
+  "function getCurrentAdminPageUrl(...args)",
+  "function getGamePageUrl(...args)",
+  "function syncLocationHints(...args)",
+  "function copyCurrentAdminPageUrl(...args)",
+  "window.getCurrentAdminPageUrl",
+  "window.copyCurrentAdminPageUrl",
+]);
+
+assertContains("src/api/admin/admin-settings-helpers.js", [
+  "v197.admin-settings-helpers-split",
   "function buildSiblingPageUrl(fileName)",
   "function getCurrentAdminPageUrl()",
   "function getGamePageUrl()",
   "function syncLocationHints()",
   "function copyCurrentAdminPageUrl()",
-  "window.getCurrentAdminPageUrl",
-  "window.copyCurrentAdminPageUrl",
+  "RpgAdminSettingsHelpers",
 ]);
 
 console.log("admin page URL helper smoke test passed");

@@ -53,19 +53,21 @@ FastAPI 백엔드입니다.
 
 - master-data fetch / fallback
 - save-data bridge
-- admin page helper / 분리된 관리자 layout·change logs·create lifecycle·edit draft·master catalog/detail·overview/snapshots helper / bootstrap thin entry
+- admin page helper / 분리된 관리자 layout·field help·change logs·create lifecycle·edit draft·master catalog/detail·overview/snapshots helper / bootstrap thin entry
 - smoke에서 확인하는 브라우저 helper 함수 제공
 
 중요 파일 예시:
 
 - `src/api/game-api-client.js`
 - `src/api/admin-layout-shell.js`
+- `src/api/admin/admin-field-help.js`
+- `src/api/admin/admin-settings-helpers.js`
 - `src/api/admin/admin-change-logs.js`
 - `src/api/admin/admin-create-lifecycle.js`
 - `src/api/admin/admin-edit-draft.js`
 - `src/api/admin/admin-master-catalog.js`
 - `src/api/admin/admin-overview-snapshots.js`
-- `src/api/admin-page-readonly.js` — v194 기준 bootstrap/bindEvents/window wrapper 중심 thin entry
+- `src/api/admin-page-readonly.js` — v197 기준 bootstrap/bindEvents/window wrapper 중심 thin entry
 
 ## docs
 

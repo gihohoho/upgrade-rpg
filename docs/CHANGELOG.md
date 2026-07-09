@@ -1,3 +1,22 @@
+# v197 admin settings/helpers split
+
+- `src/api/admin/admin-settings-helpers.js`를 추가했습니다.
+- API base URL / admin write dev key / 현재 관리자 URL / 게임 URL / 주소 복사 helper를 `admin-page-readonly.js` 밖으로 분리했습니다.
+- 기존 window 함수명 wrapper는 유지했습니다.
+- `checkAdminReadOnlyPageReady().settingsHelpersExternalReady`를 추가했습니다.
+- 새 smoke `tools/smoke_admin_settings_helpers_split.js`를 추가하고 core smoke에 포함했습니다.
+- 기존 URL helper smoke를 새 분리 구조에 맞게 갱신했습니다.
+- DB schema 변경 없음, DB reset / seed 필요 없음.
+
+# v196 admin field help/value hints split
+
+- `src/api/admin/admin-field-help.js`를 추가했습니다.
+- field help / value hints / equip slot label helper를 `admin-page-readonly.js` 밖으로 분리했습니다.
+- 기존 window 함수명 wrapper는 유지했습니다.
+- `checkAdminReadOnlyPageReady().fieldHelpExternalReady`를 추가했습니다.
+- 새 smoke `tools/smoke_admin_field_help_split.js`를 추가하고 core smoke에 포함했습니다.
+- DB schema 변경 없음, DB reset / seed 필요 없음.
+
 # v194 admin bootstrap/bindEvents readiness
 
 - `admin-page-readonly.js`를 바로 더 분리하지 않고 bootstrap/bindEvents/window export 계약을 고정했습니다.

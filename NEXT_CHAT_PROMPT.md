@@ -8,10 +8,10 @@
 - 커밋 명령어는 마지막에 add부터 push까지 한 번에 알려줍니다.
 
 현재 안정 버전:
-v195: admin thin entry cleanup
+v197: admin settings/helpers split
 
 현재 인수인계 ZIP:
-rpg_v195_admin_thin_entry_cleanup_ready.zip
+rpg_v197_admin_settings_helpers_split_ready.zip
 
 먼저 확인할 파일:
 - NEXT_CHAT_HANDOFF.md
@@ -22,16 +22,18 @@ rpg_v195_admin_thin_entry_cleanup_ready.zip
 
 현재 관리자 JS 분리 상태:
 - `src/api/admin-layout-shell.js` — v185 분리 완료
+- `src/api/admin/admin-field-help.js` — v196 분리 완료
+- `src/api/admin/admin-settings-helpers.js` — v197 분리 완료
 - `src/api/admin/admin-change-logs.js` — v187 분리 완료
 - `src/api/admin/admin-create-lifecycle.js` — v189.1 hotfix 포함 분리 완료
 - `src/api/admin/admin-edit-draft.js` — v191 분리 완료
 - `src/api/admin/admin-master-catalog.js` — v192 분리 완료
 - `src/api/admin/admin-overview-snapshots.js` — v193 분리 완료
-- `src/api/admin-page-readonly.js` — v195 기준 thin entry cleanup 완료
+- `src/api/admin-page-readonly.js` — thin entry 유지
 
 다음 추천 단계:
-v196 admin field help/value hints split.
-`src/api/admin/admin-field-help.js`를 만들고 field help / value hint / equip slot label helper를 분리하는 방향 추천.
+v198 admin entry final cleanup 또는 backend admin service split 준비.
+프론트 관리자 entry를 더 정리할지, 백엔드 admin service 분리 계약을 먼저 잡을지 코드 상태를 보고 판단.
 
 검증 기준:
 - `bash tools/run_smoke_core.sh`

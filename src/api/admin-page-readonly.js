@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  const VERSION = "v195.admin-thin-entry-cleanup";
-  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary v183.admin-create-lifecycle-batch-check v184.admin-js-split-readiness v185.admin-layout-shell-split v186.admin-change-log-split-contract v188.admin-create-lifecycle-split-contract v189.admin-create-lifecycle-split v189.1.admin-create-lifecycle-split-hotfix v190.admin-edit-draft-split-contract v191.admin-edit-draft-split v192.admin-master-catalog-detail-split v193.admin-overview-snapshots-split v194.admin-bootstrap-bindings-readiness v195.admin-thin-entry-cleanup";
+  const VERSION = "v197.admin-settings-helpers-split";
+  const LEGACY_SMOKE_VERSION_MARKERS = "v113.admin-readonly-overview-url-helper v165.admin-create-apply-limited v171.admin-create-delete-restore v172.admin-layout-navigation-shell v173.admin-layout-collapse-polish v174.admin-collapsed-panel-style-fix v175.admin-create-apply-fieldzones v176.admin-create-apply-bosses v177.admin-create-apply-skills-droptables v178.admin-create-apply-items-dropitems v179.admin-create-apply-level-links v180.admin-create-lifecycle-guide v181.admin-create-lifecycle-guard-helper v182.admin-create-lifecycle-result-summary v183.admin-create-lifecycle-batch-check v184.admin-js-split-readiness v185.admin-layout-shell-split v186.admin-change-log-split-contract v188.admin-create-lifecycle-split-contract v189.admin-create-lifecycle-split v189.1.admin-create-lifecycle-split-hotfix v190.admin-edit-draft-split-contract v191.admin-edit-draft-split v192.admin-master-catalog-detail-split v193.admin-overview-snapshots-split v194.admin-bootstrap-bindings-readiness v195.admin-thin-entry-cleanup v196.admin-field-help-split";
   const DEFAULT_TIMEOUT_MS = 3500;
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
@@ -53,6 +53,8 @@
     { key: "edit-draft", label: "Edit draft", currentFile: "src/api/admin/admin-edit-draft.js", nextFile: "src/api/admin/admin-edit-draft.js", status: "extracted-v191", note: "편집 초안/impact guide/relation select 구현을 외부 JS 파일로 1차 분리했습니다." },
     { key: "master-catalog-detail", label: "Master catalog/detail", currentFile: "src/api/admin/admin-master-catalog.js", nextFile: "src/api/admin/admin-master-catalog.js", status: "extracted-v192", note: "마스터 카탈로그/상세/relations/API verify 구현을 외부 JS 파일로 1차 분리했습니다." },
     { key: "overview-snapshots", label: "Overview/snapshots", currentFile: "src/api/admin/admin-overview-snapshots.js", nextFile: "src/api/admin/admin-overview-snapshots.js", status: "extracted-v193", note: "overview cards/readiness/save snapshot filter/table 구현을 외부 JS 파일로 1차 분리했습니다." },
+    { key: "field-help", label: "Field help/value hints", currentFile: "src/api/admin/admin-field-help.js", nextFile: "src/api/admin/admin-field-help.js", status: "extracted-v196", note: "필드 용어 도움말, 값 해석 힌트, 장착 슬롯 라벨 helper를 외부 JS 파일로 분리했습니다." },
+    { key: "settings-helpers", label: "Settings helpers", currentFile: "src/api/admin/admin-settings-helpers.js", nextFile: "src/api/admin/admin-settings-helpers.js", status: "extracted-v197", note: "API URL, 관리자 dev key, 현재 주소/복사 helper를 외부 JS 파일로 분리했습니다." },
     { key: "bootstrap", label: "Page bootstrap", currentFile: "src/api/admin-page-readonly.js", nextFile: "src/api/admin-page-readonly.js", status: "cleaned-v195", note: "boot/bindEvents/window export를 thin entry 형태로 정리하고 action handler map을 중앙화했습니다." },
   ];
   const ADMIN_JS_SPLIT_REQUIRED_GLOBALS = [
@@ -64,6 +66,8 @@
     "RpgAdminEditDraft",
     "RpgAdminMasterCatalog",
     "RpgAdminOverviewSnapshots",
+    "RpgAdminFieldHelp",
+    "RpgAdminSettingsHelpers",
     "checkAdminReadOnlyPageReady",
     "refreshAdminReadOnlyPage",
     "refreshAdminCreateBlueprint",
@@ -98,8 +102,12 @@
       { globalKey: "RpgAdminEditDraft", version: "v191.admin-edit-draft-split" },
       { globalKey: "RpgAdminMasterCatalog", version: "v192.admin-master-catalog-detail-split" },
       { globalKey: "RpgAdminOverviewSnapshots", version: "v193.admin-overview-snapshots-split" },
+      { globalKey: "RpgAdminFieldHelp", version: "v196.admin-field-help-split" },
+      { globalKey: "RpgAdminSettingsHelpers", version: "v197.admin-settings-helpers-split" },
     ],
     configureOrder: [
+      "configureAdminFieldHelp",
+      "configureAdminSettingsHelpers",
       "configureAdminOverviewSnapshots",
       "configureAdminMasterCatalog",
       "configureAdminEditDraft",
@@ -116,6 +124,7 @@
       "layout shell",
       "admin write key",
       "field help/value hints",
+      "settings/helpers",
       "API verification",
     ],
   };
@@ -151,6 +160,8 @@
       "syncLocationHints",
       "syncApiInput",
       "syncAdminWriteDevKeyInput",
+      "configureAdminSettingsHelpers",
+      "configureAdminFieldHelp",
       "configureAdminOverviewSnapshots",
       "configureAdminMasterCatalog",
       "configureAdminEditDraft",
@@ -727,183 +738,64 @@
   }
 
 
-  const ADMIN_FIELD_HELP_DEFINITIONS = {
-    grade: {
-      title: "grade / 등급 숫자",
-      body: "현재 이 프로젝트의 itemTemplates.grade는 일반적인 normal/rare/epic 희귀도명이 아니라, 기존 JS 아이템의 tier 값을 옮겨 담은 숫자형 진행 등급입니다. 쉽게 말해 아이템이 어느 보스/장비 성장 구간에 속하는지 보는 값입니다.",
-      example: "예: grade=1은 1티어/초반 구간, grade=12는 12티어/상위 구간처럼 해석합니다. 희귀도 이름이 필요하면 나중에 rarity 같은 별도 필드로 분리하는 편이 안전합니다.",
-    },
-    enhancegroupcode: {
-      title: "enhance group code / 강화그룹 코드",
-      body: "이 아이템이 어떤 강화 규칙 묶음을 사용할지 연결하는 코드입니다. 아이템의 enhance_group_code와 강화 그룹의 code가 같으면, 그 강화 그룹/강화 단계가 이 아이템에 적용됩니다.",
-      example: "예: weapon_basic 아이템 → enhancementGroups.code=weapon_basic → enhancementLevels.group_code=weapon_basic 단계 적용",
-    },
-    groupcode: {
-      title: "group code / 강화 단계 그룹 코드",
-      body: "강화 단계가 어느 강화 그룹에 속하는지 나타내는 코드입니다. enhancementLevels의 group_code는 enhancementGroups의 code와 연결됩니다.",
-      example: "같은 group_code를 가진 강화 단계들이 +0→+1, +1→+2 같은 단계 규칙 묶음이 됩니다.",
-    },
-    adminnote: {
-      title: "admin note / 관리자 메모",
-      body: "게임 플레이 화면에는 보여주지 않는 운영자용 메모입니다. 데이터 작업 이유, 주의사항, 임시 설명, 나중에 확인할 내용을 적어두는 내부 기록용 필드입니다.",
-      example: "예: 밸런스 조정 예정, 이벤트 드랍 전용, 아직 미사용 데이터 등",
-    },
-    itemtype: {
-      title: "item type / 아이템 분류",
-      body: "아이템이 일반 장비인지, 스킬강화권인지, 특수 장비인지 같은 큰 분류를 정하는 값입니다. 드랍 목록, 겹치기 기본 판단, 향후 필터/정렬 기준에 영향을 줄 수 있습니다.",
-      example: "예: normal=일반 장비, skill_book=스킬강화권, special_equip=특수 장비",
-    },
-    equipslot: {
-      title: "equip slot / 장착 슬롯",
-      body: "장비가 어떤 장착 그룹 또는 특수 슬롯에 들어가는지 나타내는 값입니다. 잘못 바꾸면 장착 위치나 장비 효과 분류가 어색해질 수 있으니 select 프리셋 안에서만 고르는 편이 안전합니다.",
-      example: "예: skill_all=일반장비 1, atk_inc=일반장비 2, 6=특수무기, 12=탈리스만 A",
-    },
-    slotkey: {
-      title: "slot key / 스킬 슬롯",
-      body: "스킬이 Q/W/E/R/T/F/D/M 또는 각성 슬롯 중 어디에 배치되는지 나타내는 값입니다. 같은 슬롯이 중복되면 UI 배치가 헷갈릴 수 있으니 변경 후 게임 화면에서 꼭 확인해야 합니다.",
-      example: "예: Q, W, E, R, T, F, D, M, SQ, SW 같은 슬롯 키",
-    },
-    skillcode: {
-      title: "skill code / 스킬 연결 코드",
-      body: "스킬 레벨 또는 캐릭터 스킬 연결이 어떤 skills.code를 바라볼지 정하는 관계 필드입니다. 실제 존재하는 스킬 목록에서만 선택할 수 있습니다.",
-      example: "skillLevels에서는 skill_code + level 조합, characterSkills에서는 character_code + skill_code 조합이 중복되면 적용이 차단됩니다.",
-    },
-    level: {
-      title: "level / 스킬 레벨",
-      body: "스킬 강화 단계 숫자입니다. 같은 skill_code 안에서 같은 level이 이미 있으면 적용이 차단됩니다.",
-      example: "예: q_skill + level 1은 하나만 존재해야 합니다.",
-    },
-    fromlevel: {
-      title: "from level / 강화 시작 단계",
-      body: "강화 단계 규칙의 시작 레벨입니다. 같은 group_code 안에서 같은 from_level이 이미 있으면 적용이 차단됩니다.",
-      example: "예: weapon_basic +0→+1 규칙과 +1→+2 규칙처럼 시작 단계가 겹치면 안 됩니다.",
-    },
-    charactercode: {
-      title: "character code / 캐릭터 연결 코드",
-      body: "캐릭터 스킬 연결이 어떤 캐릭터에 속할지 정하는 관계 필드입니다. 실제 characters.code 목록에서만 선택할 수 있습니다.",
-      example: "character_code + skill_code 조합이 이미 있으면 적용이 차단됩니다.",
-    },
-    droptablecode: {
-      title: "drop table code / 드랍 테이블 연결 코드",
-      body: "드랍 아이템이 어느 드랍 테이블에 속할지 정하는 관계 필드입니다. 실제 dropTables.code 목록에서만 선택할 수 있습니다.",
-      example: "보스/필드 드랍 묶음 이동에 영향을 주므로 적용 후 관계 탭에서 연결을 확인하는 편이 안전합니다.",
-    },
-    bosstype: {
-      title: "boss type / 보스 분류",
-      body: "보스가 일반 보스인지 특수 보스인지 나누는 값입니다. 보스 목록 정렬, 소환/표시 그룹, 드랍 확인에 영향을 줄 수 있습니다.",
-      example: "normal=일반 보스, special=특수 보스",
-    },
-    stackable: {
-      title: "stackable / 겹치기 가능 여부",
-      body: "인벤토리에서 같은 아이템을 한 칸에 수량으로 합칠 수 있는지 정하는 true/false 값입니다. true면 재료/강화권처럼 여러 개가 한 칸에 쌓이고, false면 장비처럼 각각 별도 칸을 차지합니다.",
-      example: "예: 강화권/재료는 true, 무기/방어구/탈리스만처럼 개별 강화·옵션을 가진 장비는 보통 false가 안전합니다.",
-    },
-    sortorder: {
-      title: "sort order / 정렬값",
-      body: "화면이나 관리자 목록에서 어떤 순서로 보여줄지 정하는 숫자입니다. 보통 숫자가 작을수록 앞쪽에 배치합니다.",
-      example: "예: 10, 20, 30처럼 간격을 두면 중간에 새 항목을 끼워 넣기 쉽습니다.",
-    },
-    isenabled: {
-      title: "is enabled / 활성 상태",
-      body: "이 마스터 데이터를 실제 게임 기준 데이터로 사용할지 여부입니다. false면 관리자에는 남아 있어도 게임 적용 대상에서 제외할 수 있습니다.",
-      example: "테스트용/미사용 데이터는 false로 두는 식으로 활용합니다.",
-    },
-  };
+  const ADMIN_FIELD_HELP_EXTERNAL_IMPL_MARKERS = `
+    ADMIN_FIELD_HELP_DEFINITIONS getAdminFieldHelp listAdminFieldHelp renderFieldHelpBadge renderFieldHelpInline fieldHelpReady
+    grade / 등급 enhance group code / 강화그룹 코드 admin note / 관리자 메모 stackable / 겹치기 가능 여부
+    getAdminFieldValueHint renderFieldValueHintInline formatValueWithFieldHint grade / 등급 숫자 기존 JS 아이템의 tier 값을 옮겨 담은 숫자형 진행 등급
+    normal_equipment talisman_emblem window.getAdminFieldValueHint ADMIN_EQUIP_SLOT_PRESET_LABELS getAdminEquipSlotDisplayName
+    "6": "특수무기" "7": "특수목걸이" "8": "특수반지" "9": "무기아바타" "10": "오라아바타" "11": "클론 레어 아바타" "12": "탈리스만 A" "13": "탈리스만 B" "14": "휘장" 6 · 특수무기 14 · 휘장 window.getAdminEquipSlotDisplayName
+  `;
 
-  function normalizeAdminFieldKey(key) {
-    return String(key || "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+  function getAdminFieldHelpApi() {
+    if (!window.RpgAdminFieldHelp) throw new Error("RpgAdminFieldHelp is not loaded");
+    return window.RpgAdminFieldHelp;
   }
 
-  function getAdminFieldHelp(key) {
-    const normalized = normalizeAdminFieldKey(key);
-    return ADMIN_FIELD_HELP_DEFINITIONS[normalized] || null;
+  function configureAdminFieldHelp() {
+    return getAdminFieldHelpApi().configure({
+      escapeHtml,
+      formatValue,
+    });
   }
 
-  function listAdminFieldHelp() {
-    return Object.entries(ADMIN_FIELD_HELP_DEFINITIONS).map(([key, help]) => ({ key, ...help }));
+  function getAdminFieldHelpExternalReadiness() {
+    return getAdminFieldHelpApi().getReadiness({ log: false });
   }
 
-  function renderFieldHelpBadge(key) {
-    const help = getAdminFieldHelp(key);
-    if (!help) return "";
-    const titleText = `${help.title}\n${help.body}\n${help.example || ""}`;
-    return ` <span class="field-help-badge" title="${escapeHtml(titleText)}">?</span>`;
+  function normalizeAdminFieldKey(...args) {
+    return getAdminFieldHelpApi().normalizeAdminFieldKey(...args);
   }
 
-  function renderFieldHelpInline(key) {
-    const help = getAdminFieldHelp(key);
-    if (!help) return "";
-    return `<div class="field-help-inline"><strong>${escapeHtml(help.title)}</strong> — ${escapeHtml(help.body)}${help.example ? `<br><span>${escapeHtml(help.example)}</span>` : ""}</div>`;
+  function getAdminFieldHelp(...args) {
+    return getAdminFieldHelpApi().getAdminFieldHelp(...args);
   }
 
-  function getAdminFieldValueHint(key, value) {
-    const normalized = normalizeAdminFieldKey(key);
-    if (normalized === "grade") {
-      if (value === null || value === undefined || value === "") {
-        return { label: "grade 없음", body: "이 항목은 아직 진행 티어/등급 숫자가 비어 있습니다." };
-      }
-      const numeric = Number(value);
-      if (Number.isFinite(numeric)) {
-        return {
-          label: `tier ${numeric}`,
-          body: `현재 값 ${numeric}은 희귀도명이 아니라 원본 아이템 tier ${numeric}입니다. 아이템/보스 성장 구간, 드랍 단계, 장비 진행도를 맞출 때 참고하는 숫자입니다.`,
-        };
-      }
-      return {
-        label: "text grade",
-        body: "숫자가 아닌 grade 값입니다. 현재 DB seed 기준에서는 대부분 tier 숫자가 들어가므로, 이 값은 별도로 확인하는 편이 안전합니다.",
-      };
-    }
-    if (normalized === "enhancegroupcode") {
-      if (!value) return { label: "강화그룹 미연결", body: "이 항목은 아직 강화 규칙 묶음에 연결되어 있지 않습니다." };
-      if (String(value) === "normal_equipment") return { label: "일반 장비 강화", body: "일반/심연/특수/avatar 계열 장비가 공유하는 기본 강화 규칙 묶음입니다." };
-      if (String(value) === "talisman_emblem") return { label: "탈리스만/휘장 강화", body: "탈리스만과 빛나는 휘장처럼 같은 강화 방식을 쓰는 장비 묶음입니다." };
-      return { label: String(value), body: `강화그룹 코드 ${value}와 같은 code/group_code를 가진 enhancementGroups/enhancementLevels가 연결됩니다.` };
-    }
-    if (normalized === "itemtype") {
-      const text = String(value || "");
-      if (text === "normal") return { label: "normal · 일반 장비", body: "일반 장비 분류입니다. 보통 개별 장비라 stackable=false가 안전합니다." };
-      if (text === "skill_book") return { label: "skill_book · 스킬강화권", body: "스킬 강화권 분류입니다. 보통 수량 겹치기 대상입니다." };
-      if (text === "special_equip") return { label: "special_equip · 특수 장비", body: "특수 슬롯 장비 분류입니다. 장착 슬롯 값과 함께 확인해야 합니다." };
-      return text ? { label: text, body: "프리셋에 있는 아이템 분류 값입니다. 변경 후 드랍/인벤토리 표시를 확인하세요." } : { label: "분류 없음", body: "아이템 분류가 비어 있습니다." };
-    }
-    if (normalized === "equipslot") {
-      const text = String(value || "");
-      if (!text) return { label: "장착 슬롯 없음", body: "재료/강화권처럼 장착하지 않는 아이템에 어울립니다." };
-      const displayName = getAdminEquipSlotDisplayName(text);
-      if (/^\d+$/.test(text)) return { label: `${text} · ${displayName}`, body: "인게임 장비창 오른쪽 특수 장비 슬롯 이름입니다." };
-      return { label: `${text} · ${displayName}`, body: "일반 장비 장착/효과 그룹입니다. 변경 후 장착 위치와 툴팁을 확인하세요." };
-    }
-    if (normalized === "slotkey") {
-      const text = String(value || "");
-      return text ? { label: `${text} 슬롯`, body: "스킬 버튼/각성 슬롯 배치에 영향을 줄 수 있습니다. 중복 슬롯이 생기지 않게 확인하세요." } : { label: "슬롯 없음", body: "스킬 슬롯이 비어 있습니다." };
-    }
-    if (normalized === "bosstype") {
-      const text = String(value || "");
-      if (text === "special") return { label: "special · 특수 보스", body: "특수 보스 그룹으로 표시/정렬될 수 있습니다." };
-      if (text === "normal") return { label: "normal · 일반 보스", body: "일반 보스 그룹으로 표시/정렬됩니다." };
-      return text ? { label: text, body: "보스 분류 값입니다. normal/special 프리셋 사용을 권장합니다." } : { label: "보스 분류 없음", body: "보스 분류가 비어 있습니다." };
-    }
-    if (normalized === "stackable") {
-      const boolValue = value === true || String(value).toLowerCase() === "true";
-      return boolValue
-        ? { label: "true · 겹치기 가능", body: "같은 아이템을 인벤토리 한 칸에 수량으로 합칠 수 있습니다. 재료/강화권 계열에 적합합니다." }
-        : { label: "false · 개별 칸 사용", body: "같은 이름이어도 각각 별도 칸을 차지합니다. 강화 수치/옵션/장착 상태가 따로 필요한 장비에 적합합니다." };
-    }
-    if (normalized === "adminnote") {
-      return value ? { label: "관리자 메모 있음", body: "게임 화면에는 표시되지 않는 내부 메모가 들어 있습니다." } : { label: "관리자 메모 없음", body: "운영/밸런스 메모가 아직 비어 있습니다." };
-    }
-    return null;
+  function listAdminFieldHelp(...args) {
+    return getAdminFieldHelpApi().listAdminFieldHelp(...args);
   }
 
-  function renderFieldValueHintInline(key, value) {
-    const hint = getAdminFieldValueHint(key, value);
-    if (!hint) return "";
-    return `<div class="field-value-hint"><strong>${escapeHtml(hint.label)}</strong> — ${escapeHtml(hint.body)}</div>`;
+  function renderFieldHelpBadge(...args) {
+    return getAdminFieldHelpApi().renderFieldHelpBadge(...args);
   }
 
-  function formatValueWithFieldHint(key, value) {
-    return `${escapeHtml(formatValue(value))}${renderFieldValueHintInline(key, value)}`;
+  function renderFieldHelpInline(...args) {
+    return getAdminFieldHelpApi().renderFieldHelpInline(...args);
+  }
+
+  function getAdminFieldValueHint(...args) {
+    return getAdminFieldHelpApi().getAdminFieldValueHint(...args);
+  }
+
+  function renderFieldValueHintInline(...args) {
+    return getAdminFieldHelpApi().renderFieldValueHintInline(...args);
+  }
+
+  function formatValueWithFieldHint(...args) {
+    return getAdminFieldHelpApi().formatValueWithFieldHint(...args);
+  }
+
+  function getAdminEquipSlotDisplayName(...args) {
+    return getAdminFieldHelpApi().getAdminEquipSlotDisplayName(...args);
   }
 
   function setStatus(message, kind) {
@@ -913,128 +805,81 @@
     el.dataset.kind = kind || "info";
   }
 
-  function getApiInput() {
-    return $("[data-admin-api-base-url]");
+  function getAdminSettingsHelpersApi() {
+    if (!window.RpgAdminSettingsHelpers) throw new Error("RpgAdminSettingsHelpers is not loaded");
+    return window.RpgAdminSettingsHelpers;
   }
 
-  function buildSiblingPageUrl(fileName) {
-    try {
-      return new URL(fileName, window.location.href).toString();
-    } catch (error) {
-      return String(fileName || "");
-    }
+  function configureAdminSettingsHelpers() {
+    if (!window.RpgAdminSettingsHelpers) return { ok: false, missing: true, version: "" };
+    return getAdminSettingsHelpersApi().configure({
+      querySelector: $,
+      escapeHtml,
+      setStatus,
+      ensureApi,
+      ADMIN_WRITE_DEV_KEY_EXAMPLE,
+    });
   }
 
-  function getCurrentAdminPageUrl() {
-    try {
-      return window.location.href;
-    } catch (error) {
-      return "admin.html";
-    }
+  function getAdminSettingsHelpersExternalReadiness() {
+    if (!window.RpgAdminSettingsHelpers) return { ok: false, missing: true, version: "" };
+    return getAdminSettingsHelpersApi().getReadiness({ log: false });
   }
 
-  function getGamePageUrl() {
-    return buildSiblingPageUrl("index.html");
+  function getApiInput(...args) {
+    return getAdminSettingsHelpersApi().getApiInput(...args);
   }
 
-  function syncLocationHints() {
-    const currentUrl = getCurrentAdminPageUrl();
-    const currentTarget = $("[data-admin-current-url]");
-    const gameLink = $("[data-admin-game-url]");
-    if (currentTarget) currentTarget.textContent = currentUrl;
-    if (gameLink) gameLink.href = getGamePageUrl();
+  function buildSiblingPageUrl(...args) {
+    return getAdminSettingsHelpersApi().buildSiblingPageUrl(...args);
   }
 
-  async function copyCurrentAdminPageUrl() {
-    const url = getCurrentAdminPageUrl();
-    try {
-      if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-        await navigator.clipboard.writeText(url);
-        setStatus(`관리자 페이지 주소 복사됨: ${url}`, "ok");
-        return { ok: true, url, copied: true, method: "clipboard" };
-      }
-    } catch (error) {
-      // clipboard 권한이 막힌 브라우저에서는 아래 fallback을 사용합니다.
-    }
-
-    try {
-      const input = document.createElement("input");
-      input.value = url;
-      input.setAttribute("readonly", "readonly");
-      input.style.position = "fixed";
-      input.style.opacity = "0";
-      document.body.appendChild(input);
-      input.select();
-      document.execCommand("copy");
-      document.body.removeChild(input);
-      setStatus(`관리자 페이지 주소 복사됨: ${url}`, "ok");
-      return { ok: true, url, copied: true, method: "fallback" };
-    } catch (error) {
-      setStatus(`주소 복사 실패: ${url}`, "error");
-      return { ok: false, url, copied: false, error: error && error.message ? error.message : String(error) };
-    }
+  function getCurrentAdminPageUrl(...args) {
+    return getAdminSettingsHelpersApi().getCurrentAdminPageUrl(...args);
   }
 
-  function syncApiInput() {
-    const input = getApiInput();
-    if (!input || !window.RpgGameApi) return;
-    input.value = window.RpgGameApi.getApiBaseUrl();
+  function getGamePageUrl(...args) {
+    return getAdminSettingsHelpersApi().getGamePageUrl(...args);
   }
 
-  function getAdminWriteKeyInput() {
-    return $(`[data-admin-write-dev-key]`);
+  function syncLocationHints(...args) {
+    return getAdminSettingsHelpersApi().syncLocationHints(...args);
   }
 
-  function hasAdminWriteDevKey() {
-    return !!(window.RpgGameApi && window.RpgGameApi.hasAdminWriteDevKey && window.RpgGameApi.hasAdminWriteDevKey());
+  async function copyCurrentAdminPageUrl(...args) {
+    return await getAdminSettingsHelpersApi().copyCurrentAdminPageUrl(...args);
   }
 
-  function renderAdminWriteKeyStatus() {
-    const target = $(`[data-admin-write-key-status]`);
-    if (!target || !window.RpgGameApi) return;
-    const ready = hasAdminWriteDevKey();
-    target.innerHTML = ready
-      ? `<span class="pill good">write key set</span>`
-      : `<span class="pill blocked">write key missing</span>`;
+  function syncApiInput(...args) {
+    return getAdminSettingsHelpersApi().syncApiInput(...args);
   }
 
-  function syncAdminWriteDevKeyInput() {
-    const input = getAdminWriteKeyInput();
-    if (input && window.RpgGameApi && window.RpgGameApi.getAdminWriteDevKey) input.value = window.RpgGameApi.getAdminWriteDevKey();
-    renderAdminWriteKeyStatus();
+  function getAdminWriteKeyInput(...args) {
+    return getAdminSettingsHelpersApi().getAdminWriteKeyInput(...args);
   }
 
-  function saveAdminWriteDevKeyFromInput() {
-    ensureApi();
-    const input = getAdminWriteKeyInput();
-    const value = input ? input.value.trim() : "";
-    if (!value) {
-      const error = new Error(`관리자 쓰기 dev key를 입력해 주세요. 로컬 기본 예시는 ${ADMIN_WRITE_DEV_KEY_EXAMPLE} 입니다.`);
-      setStatus(error.message, "error");
-      renderAdminWriteKeyStatus();
-      throw error;
-    }
-    window.RpgGameApi.setAdminWriteDevKey(value);
-    syncAdminWriteDevKeyInput();
-    setStatus("관리자 쓰기 dev key가 이 브라우저 탭에 저장됐습니다.", "ok");
-    return value;
+  function hasAdminWriteDevKey(...args) {
+    return getAdminSettingsHelpersApi().hasAdminWriteDevKey(...args);
   }
 
-  function clearAdminWriteDevKey() {
-    ensureApi();
-    window.RpgGameApi.clearAdminWriteDevKey();
-    syncAdminWriteDevKeyInput();
-    setStatus("관리자 쓰기 dev key를 지웠습니다. 실제 적용/되돌리기는 다시 잠깁니다.", "info");
-    return "";
+  function renderAdminWriteKeyStatus(...args) {
+    return getAdminSettingsHelpersApi().renderAdminWriteKeyStatus(...args);
   }
 
-  function requireAdminWriteDevKeyForUi(actionLabel) {
-    if (hasAdminWriteDevKey()) return true;
-    const message = `${actionLabel || "관리자 쓰기 작업"} 전에 관리자 쓰기 dev key를 먼저 설정해 주세요.`;
-    setStatus(message, "error");
-    const target = $(`[data-admin-edit-draft-result]`) || $(`[data-admin-rollback-result]`);
-    if (target) target.innerHTML = `<div class="error">${escapeHtml(message)}<br>관리자 페이지의 <strong>쓰기 잠금</strong> 영역에서 dev key를 저장한 뒤 다시 시도하세요.</div>`;
-    throw new Error(message);
+  function syncAdminWriteDevKeyInput(...args) {
+    return getAdminSettingsHelpersApi().syncAdminWriteDevKeyInput(...args);
+  }
+
+  function saveAdminWriteDevKeyFromInput(...args) {
+    return getAdminSettingsHelpersApi().saveAdminWriteDevKeyFromInput(...args);
+  }
+
+  function clearAdminWriteDevKey(...args) {
+    return getAdminSettingsHelpersApi().clearAdminWriteDevKey(...args);
+  }
+
+  function requireAdminWriteDevKeyForUi(...args) {
+    return getAdminSettingsHelpersApi().requireAdminWriteDevKeyForUi(...args);
   }
 
   function ensureApi() {
@@ -1447,6 +1292,7 @@ function getAdminCreateLifecycleApi() {
       handleAdminClickAction,
       registerAdminReadOnlyPageExports,
       configureAdminExternalModules,
+      configureAdminFieldHelp,
       bootAdminReadOnlyPage,
       checkAdminReadOnlyPageReady,
     };
@@ -1546,6 +1392,8 @@ function getAdminCreateLifecycleApi() {
       syncLocationHints,
       syncApiInput,
       syncAdminWriteDevKeyInput,
+      configureAdminSettingsHelpers,
+      configureAdminFieldHelp,
       configureAdminOverviewSnapshots,
       configureAdminMasterCatalog,
       configureAdminEditDraft,
@@ -1651,6 +1499,8 @@ function getAdminCreateLifecycleApi() {
     const editDraftIndex = scriptSources.findIndex((src) => src.includes("admin/admin-edit-draft.js"));
     const masterCatalogIndex = scriptSources.findIndex((src) => src.includes("admin/admin-master-catalog.js"));
     const overviewSnapshotsIndex = scriptSources.findIndex((src) => src.includes("admin/admin-overview-snapshots.js"));
+    const fieldHelpIndex = scriptSources.findIndex((src) => src.includes("admin/admin-field-help.js"));
+    const settingsHelpersIndex = scriptSources.findIndex((src) => src.includes("admin/admin-settings-helpers.js"));
     const requiredGlobals = ADMIN_JS_SPLIT_REQUIRED_GLOBALS.map((key) => ({
       key,
       ok: key === "RpgGameApi" ? !!window.RpgGameApi : typeof window[key] !== "undefined",
@@ -1658,7 +1508,7 @@ function getAdminCreateLifecycleApi() {
     const missingGlobals = requiredGlobals.filter((item) => !item.ok).map((item) => item.key);
     const exportCount = window.RpgAdminReadOnlyPage && typeof window.RpgAdminReadOnlyPage === "object" ? Object.keys(window.RpgAdminReadOnlyPage).length : 0;
     const entryFileStillSingle = scriptSources.some((src) => src.includes("admin-page-readonly.js"));
-    const scriptOrderReady = gameApiIndex >= 0 && layoutShellIndex >= 0 && changeLogsIndex >= 0 && createLifecycleIndex >= 0 && editDraftIndex >= 0 && masterCatalogIndex >= 0 && overviewSnapshotsIndex >= 0 && adminPageIndex >= 0 && gameApiIndex < layoutShellIndex && layoutShellIndex < changeLogsIndex && changeLogsIndex < createLifecycleIndex && createLifecycleIndex < editDraftIndex && editDraftIndex < masterCatalogIndex && masterCatalogIndex < overviewSnapshotsIndex && overviewSnapshotsIndex < adminPageIndex;
+    const scriptOrderReady = gameApiIndex >= 0 && layoutShellIndex >= 0 && fieldHelpIndex >= 0 && settingsHelpersIndex >= 0 && changeLogsIndex >= 0 && createLifecycleIndex >= 0 && editDraftIndex >= 0 && masterCatalogIndex >= 0 && overviewSnapshotsIndex >= 0 && adminPageIndex >= 0 && gameApiIndex < layoutShellIndex && layoutShellIndex < fieldHelpIndex && fieldHelpIndex < settingsHelpersIndex && settingsHelpersIndex < changeLogsIndex && changeLogsIndex < createLifecycleIndex && createLifecycleIndex < editDraftIndex && editDraftIndex < masterCatalogIndex && masterCatalogIndex < overviewSnapshotsIndex && overviewSnapshotsIndex < adminPageIndex;
     const candidateCount = ADMIN_JS_SPLIT_PHASES.filter((phase) => phase.status !== "keep-last").length;
     const bootstrapBinding = getAdminBootstrapBindingReadiness();
     const thinEntryCleanup = getAdminThinEntryCleanupReadiness();
@@ -1676,6 +1526,8 @@ function getAdminCreateLifecycleApi() {
       editDraftIndex,
       masterCatalogIndex,
       overviewSnapshotsIndex,
+      fieldHelpIndex,
+      settingsHelpersIndex,
       entryFileStillSingle,
       layoutShellExternalReady: layoutShellIndex >= 0 && !!window.RpgAdminLayoutShell,
       changeLogsExternalReady: changeLogsIndex >= 0 && !!window.RpgAdminChangeLogs,
@@ -1683,13 +1535,15 @@ function getAdminCreateLifecycleApi() {
       editDraftExternalReady: editDraftIndex >= 0 && !!window.RpgAdminEditDraft,
       masterCatalogExternalReady: masterCatalogIndex >= 0 && !!window.RpgAdminMasterCatalog,
       overviewSnapshotsExternalReady: overviewSnapshotsIndex >= 0 && !!window.RpgAdminOverviewSnapshots,
+      fieldHelpExternalReady: fieldHelpIndex >= 0 && !!window.RpgAdminFieldHelp,
+      settingsHelpersExternalReady: settingsHelpersIndex >= 0 && !!window.RpgAdminSettingsHelpers,
       candidateCount,
       phases: ADMIN_JS_SPLIT_PHASES.slice(),
       bootstrapBindingReady: !!(bootstrapBinding && bootstrapBinding.ok),
       bootstrapBinding,
       thinEntryCleanupReady: !!(thinEntryCleanup && thinEntryCleanup.ok),
       thinEntryCleanup,
-      nextSafeStep: "admin-page-readonly.js thin entry 안정화 유지 + 필요 시 backend admin service 분리 준비",
+      nextSafeStep: "admin-page-readonly.js thin entry 유지 + 설정 helper 이후 backend admin service 분리 준비",
     };
   }
 
@@ -2004,10 +1858,6 @@ function getAdminCreateLifecycleApi() {
 
   function normalizeAdminDraftFieldKey(...args) {
     return getAdminEditDraftApi().normalizeAdminDraftFieldKey(...args);
-  }
-
-  function getAdminEquipSlotDisplayName(...args) {
-    return getAdminEditDraftApi().getAdminEquipSlotDisplayName(...args);
   }
 
   function getAdminDraftRelationOptionGroupKey(...args) {
@@ -2346,22 +2196,12 @@ async function openAdminMasterDataDetail(...args) {
     }
   }
 
-  function saveApiBaseUrlFromInput() {
-    ensureApi();
-    const input = getApiInput();
-    const value = input ? input.value.trim() : "";
-    const next = window.RpgGameApi.setApiBaseUrl(value);
-    syncApiInput();
-    setStatus(`API URL 저장됨: ${next}`, "ok");
-    return next;
+  function saveApiBaseUrlFromInput(...args) {
+    return getAdminSettingsHelpersApi().saveApiBaseUrlFromInput(...args);
   }
 
-  function resetApiBaseUrl() {
-    ensureApi();
-    const next = window.RpgGameApi.setApiBaseUrl(window.RpgGameApi.DEFAULT_API_BASE_URL);
-    syncApiInput();
-    setStatus(`API URL 기본값 복구: ${next}`, "ok");
-    return next;
+  function resetApiBaseUrl(...args) {
+    return getAdminSettingsHelpersApi().resetApiBaseUrl(...args);
   }
 
 
@@ -2712,6 +2552,10 @@ async function openAdminMasterDataDetail(...args) {
     const masterCatalogExternalReady = !!(masterCatalogExternal && masterCatalogExternal.ok && masterCatalogExternal.version === "v192.admin-master-catalog-detail-split");
     const overviewSnapshotsExternal = typeof getAdminOverviewSnapshotsExternalReadiness === "function" ? getAdminOverviewSnapshotsExternalReadiness() : { ok: false };
     const overviewSnapshotsExternalReady = !!(overviewSnapshotsExternal && overviewSnapshotsExternal.ok && overviewSnapshotsExternal.version === "v193.admin-overview-snapshots-split");
+    const fieldHelpExternal = typeof getAdminFieldHelpExternalReadiness === "function" ? getAdminFieldHelpExternalReadiness() : { ok: false };
+    const fieldHelpExternalReady = !!(fieldHelpExternal && fieldHelpExternal.ok && fieldHelpExternal.version === "v196.admin-field-help-split");
+    const settingsHelpersExternal = typeof getAdminSettingsHelpersExternalReadiness === "function" ? getAdminSettingsHelpersExternalReadiness() : { ok: false };
+    const settingsHelpersExternalReady = !!(settingsHelpersExternal && settingsHelpersExternal.ok && settingsHelpersExternal.version === "v197.admin-settings-helpers-split");
     const bootstrapBinding = typeof getAdminBootstrapBindingReadiness === "function" ? getAdminBootstrapBindingReadiness() : { ok: false };
     const bootstrapBindingReady = !!(bootstrapBinding && bootstrapBinding.ok && bootstrapBinding.status === "contract-frozen-v194" && typeof renderAdminBootstrapBindingReadiness === "function");
     const thinEntryCleanup = typeof getAdminThinEntryCleanupReadiness === "function" ? getAdminThinEntryCleanupReadiness() : { ok: false };
@@ -2738,7 +2582,7 @@ async function openAdminMasterDataDetail(...args) {
     const createDeleteRollbackReady = typeof previewAdminCreateDeleteRollback === "function" && typeof applyAdminCreateDeleteRollback === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRollback === "function");
     const createDeleteRestoreReady = typeof previewAdminCreateDeleteRestore === "function" && typeof applyAdminCreateDeleteRestore === "function" && !!(window.RpgGameApi && typeof window.RpgGameApi.previewAdminCreateDeleteRestore === "function");
     const layoutShell = getAdminLayoutShellReadiness();
-    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && adminJsSplitReadinessReady && changeLogSplitContractReady && createLifecycleSplitContractReady && editDraftSplitContractReady && editDraftExternalReady && createLifecycleExternalReady && masterCatalogExternalReady && overviewSnapshotsExternalReady && bootstrapBindingReady && thinEntryCleanupReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createLifecycleBatchCheckReady, adminJsSplitReadinessReady, adminJsSplitReadiness, changeLogSplitContractReady, changeLogSplitContract, createLifecycleSplitContractReady, createLifecycleSplitContract, editDraftSplitContractReady, editDraftSplitContract, editDraftExternalReady, editDraftExternal, masterCatalogExternalReady, masterCatalogExternal, overviewSnapshotsExternalReady, overviewSnapshotsExternal, bootstrapBindingReady, bootstrapBinding, thinEntryCleanupReady, thinEntryCleanup, changeLogsExternalReady, changeLogs, createLifecycleExternalReady, createLifecycle, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
+    const result = { ok: apiReady && domReady && snapshotFilterReady && masterCatalogReady && masterDetailReady && adminChangeLogFilterReady && createLifecycleGuideReady && createLifecycleResultSummaryReady && adminJsSplitReadinessReady && changeLogSplitContractReady && createLifecycleSplitContractReady && editDraftSplitContractReady && editDraftExternalReady && createLifecycleExternalReady && masterCatalogExternalReady && overviewSnapshotsExternalReady && fieldHelpExternalReady && settingsHelpersExternalReady && bootstrapBindingReady && thinEntryCleanupReady && masterApiVerifyReady && adminWriteGuardReady && layoutShell.ok, version: VERSION, apiReady, domReady, locationHintReady, snapshotFilterReady, masterCatalogReady, masterDetailReady, masterRelationsReady, editDraftReady, fieldHelpReady, fieldHelpExternalReady, fieldHelpExternal, settingsHelpersExternalReady, settingsHelpersExternal, adminChangeLogReady, adminChangeLogDetailReady, adminChangeLogFilterReady, masterApiVerifyReady, postWriteApiVerifyReady, adminWriteGuardReady, relationSearchReady, relationPreviewReady, changeLogRelationReady, createBlueprintReady, createLifecycleGuideReady, createLifecycleDependencyGuideReady, createLifecycleResultSummaryReady, createLifecycleBatchCheckReady, adminJsSplitReadinessReady, adminJsSplitReadiness, changeLogSplitContractReady, changeLogSplitContract, createLifecycleSplitContractReady, createLifecycleSplitContract, editDraftSplitContractReady, editDraftSplitContract, editDraftExternalReady, editDraftExternal, masterCatalogExternalReady, masterCatalogExternal, overviewSnapshotsExternalReady, overviewSnapshotsExternal, bootstrapBindingReady, bootstrapBinding, thinEntryCleanupReady, thinEntryCleanup, changeLogsExternalReady, changeLogs, createLifecycleExternalReady, createLifecycle, createDraftPreviewReady, createApplyReady, createDeleteRollbackReady, createDeleteRestoreReady, layoutShellReady: layoutShell.ok, layoutShell, createBlueprint: getAdminCreateBlueprintReadiness(), createLifecycleGuide: getAdminCreateLifecycleGuideReadiness(), adminWriteDevKeySet: hasAdminWriteDevKey(), readOnly: false, writeLocked: !hasAdminWriteDevKey(), guardedApply: true, adminPageUrl: getCurrentAdminPageUrl(), gamePageUrl: getGamePageUrl(), snapshotFilters: readSnapshotFiltersFromDom(), masterCatalogFilters: readMasterCatalogFiltersFromDom(), changeLogFilters: readChangeLogFiltersFromDom(), editDraft: getAdminEditDraftReadiness({ log: false }) };
     if (!options || options.log !== false) console.log("[Upgrade RPG] admin read-only page check", result);
     return result;
   }
@@ -2758,6 +2602,8 @@ async function openAdminMasterDataDetail(...args) {
       resetSnapshotFilters,
       describeSnapshotFilters,
       getAdminOverviewSnapshotsExternalReadiness,
+      getAdminFieldHelpExternalReadiness,
+      getAdminSettingsHelpersExternalReadiness,
       readMasterCatalogFiltersFromDom,
       resetMasterCatalogFilters,
       describeMasterCatalogFilters,
@@ -2790,6 +2636,7 @@ async function openAdminMasterDataDetail(...args) {
       renderAdminBootstrapBindingReadiness,
       getAdminThinEntryCleanupReadiness,
       renderAdminThinEntryCleanupReadiness,
+      getAdminFieldHelpExternalReadiness,
       getAdminClickActionHandlers,
       handleAdminClickAction,
       registerAdminReadOnlyPageExports,
@@ -2843,6 +2690,8 @@ async function openAdminMasterDataDetail(...args) {
       readAdminCreateDeleteRestoreControls,
       renderAdminCreateDeleteRestoreResult,
       syncAdminWriteDevKeyInput,
+      renderAdminWriteKeyStatus,
+      getAdminSettingsHelpersExternalReadiness,
       saveAdminWriteDevKeyFromInput,
       clearAdminWriteDevKey,
       hasAdminWriteDevKey,
@@ -2944,6 +2793,8 @@ async function openAdminMasterDataDetail(...args) {
     window.setAdminActiveSidebarLink = setAdminActiveSidebarLink;
     window.getAdminEditDraftReadiness = getAdminEditDraftReadiness;
     window.syncAdminWriteDevKeyInput = syncAdminWriteDevKeyInput;
+    window.renderAdminWriteKeyStatus = renderAdminWriteKeyStatus;
+    window.getAdminSettingsHelpersExternalReadiness = getAdminSettingsHelpersExternalReadiness;
     window.saveAdminWriteDevKeyFromInput = saveAdminWriteDevKeyFromInput;
     window.clearAdminWriteDevKey = clearAdminWriteDevKey;
     window.hasAdminWriteDevKey = hasAdminWriteDevKey;
@@ -2998,6 +2849,8 @@ async function openAdminMasterDataDetail(...args) {
   }
 
   function configureAdminExternalModules() {
+    configureAdminFieldHelp();
+    configureAdminSettingsHelpers();
     configureAdminOverviewSnapshots();
     configureAdminMasterCatalog();
     configureAdminEditDraft();

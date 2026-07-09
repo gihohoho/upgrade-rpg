@@ -32,6 +32,8 @@ node tools/smoke_admin_edit_draft_split_contract.js
 node tools/smoke_admin_edit_draft_split.js
 node tools/smoke_admin_master_catalog_split.js
 node tools/smoke_admin_overview_snapshots_split.js
+node tools/smoke_admin_field_help_split.js
+node tools/smoke_admin_settings_helpers_split.js
 node tools/smoke_admin_bootstrap_bindings_readiness.js
 node tools/smoke_admin_thin_entry_cleanup.js
 node tools/smoke_admin_create_delete_rollback.js

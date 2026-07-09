@@ -1,27 +1,23 @@
 # Next Steps
 
-## 현재 완료: v195 admin thin entry cleanup
+## 현재 완료: v197 admin settings/helpers split
 
-`admin-page-readonly.js`를 마지막 연결 파일처럼 유지하면서 click action 처리, window export 등록, 외부 모듈 configure 순서를 정리했습니다.
+`API base URL`, `admin write dev key`, `현재 관리자 URL`, `게임 URL`, `주소 복사` helper를 `src/api/admin/admin-settings-helpers.js`로 분리했습니다.
 
-## 다음 추천: v196 admin field help/value hints split
+## 다음 추천: v198 admin entry final cleanup 또는 backend admin service split 준비
 
-다음은 비교적 안전한 읽기 전용 helper 묶음인 **field help / value hints**를 외부 파일로 분리하는 단계가 좋습니다.
+관리자 프론트의 큰 JS 분리는 대부분 끝났습니다. 다음은 코드 상태를 보고 아래 둘 중 하나를 선택하면 좋습니다.
 
-추천 방향:
+1. 프론트 entry 최종 정리
+   - `admin-page-readonly.js`에 남은 legacy marker / wrapper / readiness aggregation 정리
+   - 기존 window 함수명 유지
+   - 전용 smoke 추가
 
-1. 후보 파일 생성: `src/api/admin/admin-field-help.js`
-2. field help / value hint / equip slot label helper 이동
-3. 기존 window 함수명은 wrapper로 유지
-4. `admin-page-readonly.js`는 연결 파일 역할 유지
-5. 전용 smoke 추가
+2. 백엔드 admin service split 준비
+   - `backend/app/services/admin_service.py` 또는 관련 admin 파일이 커졌는지 확인
+   - 바로 분리하지 않고 service split contract 문서/smoke를 먼저 추가
+   - API route/schema 변경 없이 내부 구조만 준비
 
-## 그다음 후보
+## 주의
 
-v196이 안정적이면 v197 이후 아래 중 하나로 갈 수 있습니다.
-
-- admin common formatter/helper 분리 계약 고정
-- write dev key/API base URL helper 분리
-- backend admin service 파일 분리 준비
-
-현재 관리자 프론트의 큰 JS 분리는 대부분 끝났으므로, 다음부터는 작은 helper 묶음 위주로 진행하는 게 안전합니다.
+다음 단계에서도 DB schema/env 변경은 최대한 피하고, 기존 게임 정상 작동 상태를 유지합니다.

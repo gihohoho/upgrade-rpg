@@ -1,8 +1,8 @@
 # Current Status
 
-현재 기준: **v195 admin thin entry cleanup**
+현재 기준: **v197 admin settings/helpers split**
 
-이 패키지 기준 ZIP: **rpg_v195_admin_thin_entry_cleanup_ready.zip**
+이 패키지 기준 ZIP: **rpg_v197_admin_settings_helpers_split_ready.zip**
 
 ## 완료된 관리자 JS 분리/정리
 
@@ -14,34 +14,33 @@
 - v193: overview/snapshots 분리
 - v194: bootstrap/bindEvents thin entry 계약 고정
 - v195: thin entry cleanup
+- v196: field help/value hints/equip slot label 분리
+- v197: settings helpers/API URL/write key/page URL helper 분리
 
-## v195 완료 내용
+## v197 완료 내용
 
-- click action 처리 중앙화
-- `getAdminClickActionHandlers()` 추가
-- `handleAdminClickAction()` 추가
-- window export 등록을 `registerAdminReadOnlyPageExports()`로 묶음
-- 외부 모듈 configure를 `configureAdminExternalModules()`로 묶음
-- `ADMIN_THIN_ENTRY_CLEANUP_CONTRACT` 추가
-- `getAdminThinEntryCleanupReadiness()` 추가
-- `renderAdminThinEntryCleanupReadiness()` 추가
-- `checkAdminReadOnlyPageReady().thinEntryCleanupReady` 추가
-- `tools/smoke_admin_thin_entry_cleanup.js` 추가
+- `src/api/admin/admin-settings-helpers.js` 추가
+- API base URL helper 외부 파일 이동
+- admin write dev key helper 외부 파일 이동
+- 현재 관리자 URL / 게임 URL / 주소 복사 helper 외부 파일 이동
+- 기존 window 함수명 wrapper 유지
+- `checkAdminReadOnlyPageReady().settingsHelpersExternalReady` 추가
+- `tools/smoke_admin_settings_helpers_split.js` 추가
 
 ## 브라우저 확인
 
 ```js
 checkAdminReadOnlyPageReady().version
-checkAdminReadOnlyPageReady().thinEntryCleanupReady
-getAdminThinEntryCleanupReadiness().status
+checkAdminReadOnlyPageReady().settingsHelpersExternalReady
+window.RpgAdminSettingsHelpers.VERSION
 ```
 
 예상:
 
 ```txt
-v195.admin-thin-entry-cleanup
+v197.admin-settings-helpers-split
 true
-cleaned-v195
+v197.admin-settings-helpers-split
 ```
 
 ## DB / env

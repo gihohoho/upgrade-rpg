@@ -63,7 +63,7 @@ const expectedActions = [
 ];
 
 assertContains("src/api/admin-page-readonly.js", [
-  "v195.admin-thin-entry-cleanup",
+  "v197.admin-settings-helpers-split",
   "ADMIN_BOOTSTRAP_BINDING_CONTRACT",
   "contract-frozen-v194",
   "getAdminBootstrapBindingReadiness",
@@ -96,6 +96,7 @@ const adminPageText = read("src/api/admin-page-readonly.js");
 const scripts = [
   "src/api/game-api-client.js",
   "src/api/admin-layout-shell.js",
+  "src/api/admin/admin-field-help.js",
   "src/api/admin/admin-change-logs.js",
   "src/api/admin/admin-create-lifecycle.js",
   "src/api/admin/admin-edit-draft.js",
@@ -188,6 +189,16 @@ sandbox.RpgAdminLayoutShell = {
   setAdminSectionCollapsed() {},
   setAdminActiveSidebarLink() {},
 };
+sandbox.RpgAdminFieldHelp = Object.assign(makeModule("v196.admin-field-help-split"), {
+  getAdminFieldHelp() { return null; },
+  listAdminFieldHelp() { return []; },
+  renderFieldHelpBadge() { return ""; },
+  renderFieldHelpInline() { return ""; },
+  getAdminFieldValueHint() { return null; },
+  renderFieldValueHintInline() { return ""; },
+  formatValueWithFieldHint(_key, value) { return String(value ?? ""); },
+  getAdminEquipSlotDisplayName(value) { return String(value || ""); },
+});
 sandbox.RpgAdminChangeLogs = makeModule("v187.admin-change-logs-split");
 sandbox.RpgAdminCreateLifecycle = Object.assign(makeModule("v189.1.admin-create-lifecycle-split-hotfix"), {
   getAdminCreateLifecycleSplitContractReadiness() { return { ok: true, status: "contract-frozen-v188", requiredApiMethods: [], requiredWindowExports: [], domTargets: [], dynamicDomTargets: [], confirmTexts: [], delegatedActions: [], splitBoundary: [], missingApiMethods: [], missingWindowExports: [], missingDomTargets: [], missingConfirmTexts: [], apiMethodCount: 0, windowExportCount: 0, domTargetCount: 0, dynamicDomTargetCount: 0, confirmTextCount: 0, delegatedActionCount: 0, currentFile: "", nextFile: "" }; },
@@ -196,6 +207,24 @@ sandbox.RpgAdminCreateLifecycle = Object.assign(makeModule("v189.1.admin-create-
 sandbox.RpgAdminEditDraft = makeModule("v191.admin-edit-draft-split");
 sandbox.RpgAdminMasterCatalog = makeModule("v192.admin-master-catalog-detail-split");
 sandbox.RpgAdminOverviewSnapshots = makeModule("v193.admin-overview-snapshots-split");
+sandbox.RpgAdminSettingsHelpers = Object.assign(makeModule("v197.admin-settings-helpers-split"), {
+  getApiInput() { return fakeDocument.querySelector("[data-admin-api-base-url]"); },
+  buildSiblingPageUrl(fileName) { return `http://localhost/${fileName}`; },
+  getCurrentAdminPageUrl() { return "http://localhost/admin.html"; },
+  getGamePageUrl() { return "http://localhost/index.html"; },
+  syncLocationHints() {},
+  copyCurrentAdminPageUrl() { return { ok: true, copied: true }; },
+  syncApiInput() {},
+  getAdminWriteKeyInput() { return fakeDocument.querySelector("[data-admin-write-dev-key]"); },
+  hasAdminWriteDevKey() { return false; },
+  renderAdminWriteKeyStatus() {},
+  syncAdminWriteDevKeyInput() {},
+  saveAdminWriteDevKeyFromInput() { return "local-admin-dev-key"; },
+  clearAdminWriteDevKey() { return ""; },
+  requireAdminWriteDevKeyForUi() { return true; },
+  saveApiBaseUrlFromInput() { return "http://localhost:8000"; },
+  resetApiBaseUrl() { return "http://localhost:8000"; },
+});
 
 vm.createContext(sandbox);
 vm.runInContext(adminPageText, sandbox, { filename: "src/api/admin-page-readonly.js" });
@@ -206,6 +235,6 @@ assert(readiness.status === "contract-frozen-v194", "bootstrap binding status sh
 assert(readiness.delegatedActionCount === expectedActions.length, "delegated action count should match expected action map");
 assert(readiness.staticActionCount === staticActionElements.length, "static action count should be collected from DOM");
 assert(readiness.unknownStaticActions.length === 0, "static HTML actions should all be represented in contract");
-assert(sandbox.RpgAdminReadOnlyPage.VERSION === "v195.admin-thin-entry-cleanup", "RpgAdminReadOnlyPage should expose v194 version");
+assert(sandbox.RpgAdminReadOnlyPage.VERSION === "v197.admin-settings-helpers-split", "RpgAdminReadOnlyPage should expose v197 version");
 
 console.log("admin bootstrap/bindEvents readiness smoke test passed");
