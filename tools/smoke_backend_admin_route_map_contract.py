@@ -106,10 +106,10 @@ for smoke_path, target in legacy_smoke_files.items():
     assert_true(target in source, f"{smoke_path} should read {target}")
 
 assert_true('"backend/app/api/routes/admin_route_map_contract.py"' in contract, "backend split contract should list route map contract")
-assert_true('"splitStatus": "admin-runtime-route-contract-v226"' in contract, "backend split contract should be v224")
+assert_true('"splitStatus": "admin-route-operation-contract-v228"' in contract, "backend split contract should be v224")
 assert_true('"Admin route ownership map verifies exact module-only ownership"' in contract, "backend route contract should mention strict ownership")
-assert_true('const VERSION = "v226.backend-admin-runtime-route-contract"' in entry, "frontend readiness version should be v224")
-assert_true('splitStatus: "admin-runtime-route-contract-v226"' in entry, "frontend splitStatus should be v224")
+assert_true('const VERSION = "v228.backend-admin-route-operation-contract"' in entry, "frontend readiness version should be v224")
+assert_true('splitStatus: "admin-route-operation-contract-v228"' in entry, "frontend splitStatus should be v224")
 assert_true("backendRouteMapContractReady" in entry, "frontend top-level route map readiness flag missing")
 assert_true("backendRouteOwnershipStrictReady" in entry, "frontend top-level strict ownership readiness flag missing")
 assert_true("routeOwnershipStrictReady" in entry, "contract strict ownership readiness flag missing")

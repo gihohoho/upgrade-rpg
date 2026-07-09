@@ -54,10 +54,10 @@ assert_true(facade_readiness["oneLineMroRemoved"], "AdminService MRO should be m
 assert_true('__all__ = ["AdminService"]' in admin_service_source, "admin_service.py should explicitly export AdminService")
 assert_true("class AdminService(\n" in admin_service_source, "AdminService class should use multi-line base declaration")
 assert_true("backend/app/services/admin_service_facade_contract.py" in split_readiness["extractedFiles"], "split contract should include facade contract file")
-assert_true(split_readiness["splitStatus"] == "admin-runtime-route-contract-v226", "splitStatus should be v222")
+assert_true(split_readiness["splitStatus"] == "admin-route-operation-contract-v228", "splitStatus should be v222")
 assert_true('"key": "service-facade-contract"' in split_contract_source, "split contract should include service-facade-contract group")
-assert_true('const VERSION = "v226.backend-admin-runtime-route-contract"' in entry_source, "frontend readiness version should be v222")
-assert_true('splitStatus: "admin-runtime-route-contract-v226"' in entry_source, "frontend splitStatus should be v222")
+assert_true('const VERSION = "v228.backend-admin-route-operation-contract"' in entry_source, "frontend readiness version should be v222")
+assert_true('splitStatus: "admin-route-operation-contract-v228"' in entry_source, "frontend splitStatus should be v222")
 assert_true("backendServiceFacadeContractReady" in entry_source, "frontend should expose service facade contract readiness")
 assert_true("smoke_backend_admin_service_facade_contract.py" in run_smoke_source, "core smoke should include v222 smoke")
 
