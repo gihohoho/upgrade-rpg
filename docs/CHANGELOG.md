@@ -1,5 +1,20 @@
 # Changelog
 
+## v206 - Backend admin config/readiness service split
+
+- `backend/app/services/admin/admin_config.py`를 추가했습니다.
+- `backend/app/services/admin/admin_readiness_service.py`를 추가했습니다.
+- `AdminService` facade에 남아 있던 큰 설정/상수 묶음과 작은 readiness helper를 분리했습니다.
+- `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `readiness-extracted-v206`으로 갱신했습니다.
+- `checkAdminReadOnlyPageReady().version`을 `v206.backend-admin-config-readiness-service-split`으로 갱신했습니다.
+- route/schema/API/DB/env 변경은 없습니다.
+- `tools/smoke_backend_admin_config_readiness_service_split.py`를 추가하고 core smoke에 포함했습니다.
+
+## v205 - Backend admin config service split
+
+- `MASTER_DATA_MODELS`, `MASTER_CATALOG_DOMAINS`, `MASTER_EDIT_ALLOWED_FIELDS`, `MASTER_CREATE_BLUEPRINT_FIELDS` 등 admin 설정 묶음을 `AdminConfigService`로 이동했습니다.
+- 기존 public method와 route facade 계약은 유지했습니다.
+
 ## v204 - Backend admin shared utils service split
 
 - `backend/app/services/admin/admin_shared_utils.py`를 추가했습니다.

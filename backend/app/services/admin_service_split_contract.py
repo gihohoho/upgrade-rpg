@@ -7,7 +7,7 @@ from typing import Any
 ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
     "version": "v198.backend-admin-service-split-contract",
     "status": "contract-frozen-v198",
-    "splitStatus": "shared-utils-extracted-v204",
+    "splitStatus": "readiness-extracted-v206",
     "extractedFiles": [
         "backend/app/services/admin/admin_overview_snapshots_service.py",
         "backend/app/services/admin/admin_master_catalog_service.py",
@@ -15,6 +15,8 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "backend/app/services/admin/admin_change_log_service.py",
         "backend/app/services/admin/admin_edit_draft_service.py",
         "backend/app/services/admin/admin_shared_utils.py",
+        "backend/app/services/admin/admin_config.py",
+        "backend/app/services/admin/admin_readiness_service.py",
     ],
     "currentFile": "backend/app/services/admin_service.py",
     "facadeFile": "backend/app/services/admin_service.py",
@@ -164,6 +166,20 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
                 "_count_filled_items",
             ],
         },
+        {
+            "key": "config",
+            "label": "Static admin domain/config definitions",
+            "candidateFile": "backend/app/services/admin/admin_config.py",
+            "publicMethods": [],
+            "helperMethods": [],
+        },
+        {
+            "key": "readiness",
+            "label": "Admin readiness/preview helpers",
+            "candidateFile": "backend/app/services/admin/admin_readiness_service.py",
+            "publicMethods": ["preview_change"],
+            "helperMethods": ["_build_readiness"],
+        },
     ],
     "facadeMustKeep": [
         "AdminService",
@@ -181,8 +197,8 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT",
     ],
     "routeContract": [
-        "No route path changes in v204",
-        "No schema changes in v204",
+        "No route path changes in v206",
+        "No schema changes in v206",
         "AdminService remains the facade imported by backend/app/api/routes/admin.py",
         "Actual service file moves must keep every existing public method name",
     ],

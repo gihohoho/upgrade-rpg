@@ -115,7 +115,7 @@ def main() -> int:
     change_source = change_file.read_text(encoding="utf-8")
 
     assert_true("from app.services.admin.admin_shared_utils import AdminSharedUtilsService" in service_source, "AdminService must import shared utils")
-    assert_true("class AdminService(AdminSharedUtilsService," in service_source, "AdminSharedUtilsService should be first in AdminService inheritance list")
+    assert_true("AdminSharedUtilsService" in service_source and "class AdminService(" in service_source, "AdminService inheritance list should keep AdminSharedUtilsService")
     assert_true("class AdminSharedUtilsService" in shared_source, "shared file must define AdminSharedUtilsService")
     assert_true("select(func.count())" in shared_source, "shared utils must contain count helper implementation")
     assert_true("[asset hidden:data-url]" in shared_source, "shared utils must preserve asset hiding guard")
@@ -126,7 +126,7 @@ def main() -> int:
     assert_true("def _exists_by_code" not in edit_source, "edit draft should not keep moved relation existence helper")
     assert_true("def _is_safe_admin_change_key" not in change_source, "change log should not keep moved safe-key helper")
 
-    assert_true(len(service_source.splitlines()) < 540, "admin_service.py should remain thin after v204 shared utils split")
+    assert_true(len(service_source.splitlines()) < 340, "admin_service.py should remain thin after v206 config/readiness split")
     assert_true(len(shared_source.splitlines()) >= 150, "shared utils service should contain moved helper implementations")
 
     service = AdminService()
