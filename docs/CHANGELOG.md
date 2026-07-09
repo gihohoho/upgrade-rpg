@@ -1,3 +1,10 @@
+## v192 - admin master catalog/detail split
+
+- Added `src/api/admin/admin-master-catalog.js`.
+- Split master catalog/detail/relations/API verify logic out of `admin-page-readonly.js`.
+- Kept existing window wrappers for browser compatibility.
+- Added `tools/smoke_admin_master_catalog_split.js`.
+
 # v190 admin edit draft split contract
 
 - `edit draft` 실제 분리 전에 API/window/DOM/확인 문구 계약을 먼저 고정.

@@ -92,3 +92,7 @@ docs/archive/stage-notes/
 - `ADMIN_CREATE_LIFECYCLE_SPLIT.md`: v189 create lifecycle 실제 1차 분리 문서.
 
 - [Admin Edit Draft Split](ADMIN_EDIT_DRAFT_SPLIT.md)
+
+## v192
+
+- [ADMIN_MASTER_CATALOG_SPLIT.md](ADMIN_MASTER_CATALOG_SPLIT.md) — v192 admin master catalog/detail split
