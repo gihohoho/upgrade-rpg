@@ -7,7 +7,7 @@ from typing import Any
 ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
     "version": "v198.backend-admin-service-split-contract",
     "status": "contract-frozen-v198",
-    "splitStatus": "readiness-extracted-v206",
+    "splitStatus": "route-response-helper-v208",
     "extractedFiles": [
         "backend/app/services/admin/admin_overview_snapshots_service.py",
         "backend/app/services/admin/admin_master_catalog_service.py",
@@ -17,6 +17,7 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "backend/app/services/admin/admin_shared_utils.py",
         "backend/app/services/admin/admin_config.py",
         "backend/app/services/admin/admin_readiness_service.py",
+        "backend/app/api/routes/admin_response_helpers.py",
     ],
     "currentFile": "backend/app/services/admin_service.py",
     "facadeFile": "backend/app/services/admin_service.py",
@@ -180,6 +181,13 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
             "publicMethods": ["preview_change"],
             "helperMethods": ["_build_readiness"],
         },
+        {
+            "key": "route-response-helper",
+            "label": "Admin route response wrapper",
+            "candidateFile": "backend/app/api/routes/admin_response_helpers.py",
+            "publicMethods": [],
+            "helperMethods": [],
+        },
     ],
     "facadeMustKeep": [
         "AdminService",
@@ -197,8 +205,9 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "MASTER_CREATE_DELETE_RESTORE_CONFIRM_TEXT",
     ],
     "routeContract": [
-        "No route path changes in v206",
-        "No schema changes in v206",
+        "No route path changes in v208",
+        "No schema changes in v208",
+        "Admin route responses go through admin_ok_response helper",
         "AdminService remains the facade imported by backend/app/api/routes/admin.py",
         "Actual service file moves must keep every existing public method name",
     ],

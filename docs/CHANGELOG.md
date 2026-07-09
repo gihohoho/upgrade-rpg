@@ -1,5 +1,13 @@
 # Changelog
 
+## v208 - Backend admin route response helper
+
+- `backend/app/api/routes/admin_response_helpers.py`를 추가했습니다.
+- `backend/app/api/routes/admin.py`가 `ok_response()`를 직접 호출하지 않고 `admin_ok_response()` helper를 사용하도록 정리했습니다.
+- route/schema/API/DB/env 변경 없이 응답 생성 지점만 중앙화했습니다.
+- `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `route-response-helper-v208`로 갱신했습니다.
+- `checkAdminReadOnlyPageReady().version`을 `v208.backend-admin-route-response-helper`로 갱신했습니다.
+
 ## v206 - Backend admin config/readiness service split
 
 - `backend/app/services/admin/admin_config.py`를 추가했습니다.

@@ -1,37 +1,23 @@
-# Upgrade RPG v206 패키지
+# Upgrade RPG v208 패키지
 
-현재 안정 버전: **v206 backend admin config/readiness service split**
+현재 안정 버전: **v208 backend admin route response helper**
 
-새 채팅 인수인계 ZIP: **rpg_v206_backend_admin_config_readiness_service_split_ready.zip**
+새 채팅 인수인계 ZIP: **rpg_v208_backend_admin_route_response_helper_ready.zip**
 
-## 이번 v205~v206에서 정리한 것
+## 이번 v207~v208에서 정리한 것
 
-v205~v206에서는 백엔드 `AdminService` facade를 더 얇게 만들었습니다. route/schema/API 응답 구조는 그대로 유지하고, facade에 남아 있던 큰 설정값과 마지막 준비 helper만 별도 service로 분리했습니다.
+v207~v208에서는 관리자 백엔드 라우터의 응답 생성 지점을 `admin_ok_response()` helper로 모았습니다. 기존 API 경로, schema, 응답 데이터 구조, DB/env는 바꾸지 않았습니다.
 
 ## 핵심 변경
 
-- `backend/app/services/admin/admin_config.py` 추가
-- `backend/app/services/admin/admin_readiness_service.py` 추가
-- `AdminService`는 route facade로 유지
-- master domain/config/allow-list/confirm text/blueprint 설정을 `AdminConfigService`로 이동
-- `preview_change`, `_build_readiness`를 `AdminReadinessService`로 이동
-- `backend/app/services/admin/__init__.py` export 정리
-- 기존 route/schema/API 응답 구조 변경 없음
-- DB/env 변경 없음
-- v206 전용 smoke test 추가
+- `backend/app/api/routes/admin_response_helpers.py` 추가
+- `backend/app/api/routes/admin.py`의 `ok_response()` 직접 호출 제거
+- 기존 모든 관리자 route는 동일한 payload/data/meta 구조 유지
+- `backend/app/services/admin_service_split_contract.py`의 `splitStatus`를 `route-response-helper-v208`로 갱신
+- `src/api/admin-page-readonly.js`의 readiness 버전을 v208로 갱신
+- v208 전용 smoke test 추가
 
-## 주요 파일
-
-- `backend/app/services/admin_service.py` — route facade 유지
-- `backend/app/services/admin/admin_config.py` — v205 신규 config service
-- `backend/app/services/admin/admin_readiness_service.py` — v206 신규 readiness service
-- `backend/app/services/admin_service_split_contract.py` — splitStatus 갱신
-- `src/api/admin-page-readonly.js` — 브라우저 readiness 버전 갱신
-- `docs/BACKEND_ADMIN_CONFIG_SERVICE_SPLIT.md` — v205 상세 문서
-- `docs/BACKEND_ADMIN_READINESS_SERVICE_SPLIT.md` — v206 상세 문서
-- `tools/smoke_backend_admin_config_readiness_service_split.py` — v206 전용 smoke
-
-## 적용 후 확인
+## 확인값
 
 관리자 페이지 콘솔:
 
@@ -42,21 +28,11 @@ checkAdminReadOnlyPageReady().version
 예상:
 
 ```txt
-v206.backend-admin-config-readiness-service-split
+v208.backend-admin-route-response-helper
 ```
 
 ```js
-checkAdminReadOnlyPageReady().backendConfigServiceSplitReady
-```
-
-예상:
-
-```txt
-true
-```
-
-```js
-checkAdminReadOnlyPageReady().backendReadinessServiceSplitReady
+checkAdminReadOnlyPageReady().backendRouteResponseHelperReady
 ```
 
 예상:
@@ -72,7 +48,7 @@ getAdminBackendServiceSplitContractReadiness().splitStatus
 예상:
 
 ```txt
-readiness-extracted-v206
+route-response-helper-v208
 ```
 
 ## 검증 명령
@@ -81,20 +57,18 @@ readiness-extracted-v206
 
 ```bash
 bash tools/run_smoke_core.sh
-python tools/smoke_backend_admin_config_readiness_service_split.py
+python tools/smoke_backend_admin_route_response_helper.py
 python tools/smoke_seed_import_long_asset_columns.py
 python tools/smoke_seed_import_structure.py
 python -m compileall -q backend/app backend/scripts tools
 ```
 
-## git push 명령
+## 서버 실행
 
-실행 위치: 프로젝트 루트
+실행 위치: backend 폴더
 
 ```bash
-git status && git add . && git commit -m "Split backend admin config and readiness services" && git push
+uvicorn app.main:app --reload
 ```
 
-## 다음 추천
-
-v207은 `AdminService` facade의 legacy smoke marker 문자열을 별도 문서/테스트 기준으로 정리하거나, 백엔드 admin route 파일의 중복 응답 wrapper를 helper로 정리하는 단계가 좋습니다.
+DB reset/seed 재실행은 필요 없습니다.

@@ -1,118 +1,74 @@
-# NEXT CHAT HANDOFF — v206
-
-기호는 코딩/터미널/경로에 익숙하지 않으므로, 명령어는 항상 실행 위치를 먼저 적습니다. git 명령은 가능하면 한 번에 복사 가능한 한 코드 블록으로 묶습니다.
+# NEXT CHAT HANDOFF — v208
 
 ## 현재 안정 버전
 
-**v206 backend admin config/readiness service split**
+**v208 backend admin route response helper**
 
-## 현재 ZIP
+## 기준 ZIP
 
-**rpg_v206_backend_admin_config_readiness_service_split_ready.zip**
+**rpg_v208_backend_admin_route_response_helper_ready.zip**
 
-## v205~v206 완료
+## 완료 내용
 
-- `backend/app/services/admin/admin_config.py` 추가
-- `backend/app/services/admin/admin_readiness_service.py` 추가
-- `AdminConfigService` mixin 추가
-- `AdminReadinessService` mixin 추가
-- `AdminService(AdminConfigService, AdminSharedUtilsService, AdminReadinessService, AdminOverviewSnapshotsService, AdminMasterCatalogService, AdminEditDraftService, AdminChangeLogService, AdminCreateLifecycleService)` 구조로 변경
-- `AdminService` facade에 남아 있던 큰 설정/상수 묶음 이동
-  - `MASTER_DATA_MODELS`
-  - `MASTER_CATALOG_DOMAINS`
-  - `MASTER_EDIT_ALLOWED_FIELDS`
-  - `MASTER_RELATION_EDIT_FIELDS`
-  - `MASTER_COMBO_GUARDED_FIELDS`
-  - `MASTER_CREATE_BLUEPRINT_FIELDS`
-  - confirm text 상수들
-  - create/delete allowed domain set
-  - change log action filters
-- `preview_change`, `_build_readiness` 이동
-- `backend/app/services/admin/__init__.py` export 정리
-- route/schema/API 응답 구조 변경 없음
+v207~v208에서는 관리자 백엔드 라우터의 응답 생성 지점을 helper로 모았다.
+
+### 변경 파일
+
+- `backend/app/api/routes/admin_response_helpers.py` 신규
+- `backend/app/api/routes/admin.py` 수정
+- `backend/app/services/admin_service_split_contract.py` 수정
+- `src/api/admin-page-readonly.js` 수정
+- `tools/smoke_backend_admin_route_response_helper.py` 신규
+- `tools/run_smoke_core.sh` 수정
+- `docs/BACKEND_ADMIN_ROUTE_RESPONSE_HELPER.md` 신규
+- README / NEXT_CHAT 문서 갱신
+
+## 중요 유지 조건
+
+- route path 변경 없음
+- schemas/admin.py 변경 없음
+- API 응답 구조 변경 없음
 - DB/env 변경 없음
-- `tools/smoke_backend_admin_config_readiness_service_split.py` 추가
-- core smoke에 새 백엔드 split smoke 포함
-- 기존 static smoke는 v206 구조에 맞게 조정
+- AdminService facade 유지
 
-## 브라우저 확인
+## 관리자 페이지 확인값
 
 ```js
 checkAdminReadOnlyPageReady().version
-```
+// v208.backend-admin-route-response-helper
 
-예상:
+checkAdminReadOnlyPageReady().backendRouteResponseHelperReady
+// true
 
-```txt
-v206.backend-admin-config-readiness-service-split
-```
-
-```js
-checkAdminReadOnlyPageReady().backendConfigServiceSplitReady
-```
-
-예상:
-
-```txt
-true
-```
-
-```js
-checkAdminReadOnlyPageReady().backendReadinessServiceSplitReady
-```
-
-예상:
-
-```txt
-true
-```
-
-```js
 getAdminBackendServiceSplitContractReadiness().splitStatus
+// route-response-helper-v208
 ```
 
-예상:
-
-```txt
-readiness-extracted-v206
-```
-
-## 검증 명령
+## 검증 완료
 
 실행 위치: 프로젝트 루트
 
 ```bash
 bash tools/run_smoke_core.sh
-python tools/smoke_backend_admin_config_readiness_service_split.py
+python tools/smoke_backend_admin_route_response_helper.py
 python tools/smoke_seed_import_long_asset_columns.py
 python tools/smoke_seed_import_structure.py
 python -m compileall -q backend/app backend/scripts tools
 ```
 
-## git push 명령
-
-실행 위치: 프로젝트 루트
-
-```bash
-git status && git add . && git commit -m "Split backend admin config and readiness services" && git push
-```
-
 ## 다음 추천 단계
 
-v207은 **backend admin route response helper cleanup** 또는 **legacy smoke marker cleanup**이 좋습니다.
+다음은 **v209 admin route query dependency cleanup** 또는 **v209 admin router submodule split 준비**를 추천한다.
 
-추천 방향 A — route response helper cleanup:
+안전한 순서:
 
-- `backend/app/api/routes/admin.py`의 반복되는 `ApiResponse(...)` wrapper 생성 helper화
-- route path/schema/API 응답 구조는 그대로 유지
-- v207 전용 smoke 추가
+1. `admin.py`의 반복 Query 기본값/limit/sort 관련 작은 helper 정리
+2. route path/schema/API 유지
+3. static smoke로 route path 전체 보존 확인
+4. 그 다음에만 기능별 sub-router 분리 검토
 
-추천 방향 B — legacy smoke marker cleanup:
+주의: `admin.py`를 바로 여러 파일로 쪼개면 기존 static smoke가 많이 깨질 수 있다. 먼저 route contract smoke를 더 강하게 만든 뒤 분리하는 것이 안전하다.
 
-- `AdminService` facade에 남아 있는 legacy marker 문자열을 테스트/문서 기준으로 줄이기
-- static smoke들이 split file을 직접 보도록 조정
-- route/schema/API/DB/env 변경 없이 진행
+## git push 명령 안내 방식
 
-## 주의
-
-v206은 DB schema/env 변경이 없습니다. DB reset/seed 재실행도 필요 없습니다.
+사용자가 요청했다. 앞으로 git 명령은 반드시 실행 위치를 먼저 말하고, `git status && git add . && git commit ... && git push`를 한 코드 블록으로 제공한다.

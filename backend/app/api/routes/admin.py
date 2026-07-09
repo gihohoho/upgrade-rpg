@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Body, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.response import ok_response
+from app.api.routes.admin_response_helpers import admin_ok_response
 from app.core.security import CurrentUser, get_current_user_placeholder, require_admin_write_dev_key
 from app.db.session import get_db_session
 from app.schemas.admin import AdminChangeLogRollbackApplyRequest, AdminChangeLogRollbackPreviewRequest, AdminChangePreviewRequest, AdminCreateDeleteApplyRequest, AdminCreateDeletePreviewRequest, AdminCreateDeleteRestoreApplyRequest, AdminCreateDeleteRestorePreviewRequest, AdminMasterDataCreateApplyRequest, AdminMasterDataCreatePreviewRequest, AdminMasterDataEditApplyRequest, AdminMasterDataEditPreviewRequest
@@ -14,7 +14,7 @@ service = AdminService()
 @router.get("/requirements")
 async def get_admin_requirements(current_user: CurrentUser = Depends(get_current_user_placeholder)):
     """Temporary endpoint documenting the admin scope used for DB/backend design."""
-    return ok_response(
+    return admin_ok_response(
         type="admin.requirements",
         data={
             "editableDomains": [
@@ -52,7 +52,7 @@ async def get_admin_readonly_overview(
         admin_user_id=current_user.id,
         admin_username=current_user.username,
     )
-    return ok_response(
+    return admin_ok_response(
         type="admin.overview",
         payload=overview,
         data={
@@ -75,7 +75,7 @@ async def list_admin_master_catalog_domains(
 ):
     """List admin master-data catalog domains without returning row payloads."""
     domains = await service.list_master_catalog_domains(session)
-    return ok_response(
+    return admin_ok_response(
         type="admin.master_data.domains",
         payload=domains,
         data={
@@ -116,7 +116,7 @@ async def list_admin_master_catalog_rows(
         enabled=enabled,
         sort=sort,
     )
-    return ok_response(
+    return admin_ok_response(
         type="admin.master_data.catalog",
         payload=catalog,
         data={
@@ -150,7 +150,7 @@ async def get_admin_master_create_blueprint(
 ):
     """Return a read-only new-row blueprint for one master-data domain."""
     blueprint = await service.get_master_create_blueprint(session, domain=domain)
-    return ok_response(
+    return admin_ok_response(
         type="admin.master_data.create_blueprint",
         payload=blueprint,
         data={
@@ -189,7 +189,7 @@ async def preview_admin_master_data_create(
         reason=payload.reason,
         dry_run=payload.dry_run,
     )
-    return ok_response(
+    return admin_ok_response(
         type="admin.master_data.create_preview",
         payload=preview,
         data={
@@ -230,7 +230,7 @@ async def apply_admin_master_data_create(
         confirm_text=payload.confirm_text,
         admin_user_id=current_user.id,
     )
-    return ok_response(
+    return admin_ok_response(
         type="admin.master_data.create_apply",
         payload=created,
         data={
@@ -267,7 +267,7 @@ async def get_admin_master_catalog_detail(
         domain=domain,
         row_id=id,
     )
-    return ok_response(
+    return admin_ok_response(
         type="admin.master_data.detail",
         payload=detail,
         data={
@@ -304,7 +304,7 @@ async def get_admin_master_catalog_relations(
         row_id=id,
         limit=limit,
     )
-    return ok_response(
+    return admin_ok_response(
         type="admin.master_data.relations",
         payload=relations,
         data={
@@ -347,7 +347,7 @@ async def preview_admin_master_data_edit(
         reason=payload.reason,
         dry_run=payload.dry_run,
     )
-    return ok_response(
+    return admin_ok_response(
         type="admin.master_data.edit_preview",
         payload=preview,
         data={
@@ -392,7 +392,7 @@ async def apply_admin_master_data_edit(
         confirm_text=payload.confirm_text,
         admin_user_id=current_user.id,
     )
-    return ok_response(
+    return admin_ok_response(
         type="admin.master_data.edit_apply",
         payload=applied,
         data={
@@ -470,7 +470,7 @@ async def list_admin_change_logs(
                 "hint": "backend/app/services/admin/admin_change_log_service.py의 change-logs 조회 경로 또는 로컬 DB 스키마를 확인하세요.",
             },
         }
-    return ok_response(
+    return admin_ok_response(
         type="admin.change_logs",
         payload=logs,
         data={
@@ -501,7 +501,7 @@ async def get_admin_change_log_detail(
         session,
         change_log_id=change_log_id,
     )
-    return ok_response(
+    return admin_ok_response(
         type="admin.change_log.detail",
         payload=detail,
         data={
@@ -534,7 +534,7 @@ async def preview_admin_create_delete_rollback(
         change_log_id=change_log_id,
         reason=payload.reason if payload else None,
     )
-    return ok_response(
+    return admin_ok_response(
         type="admin.change_log.create_delete_preview",
         payload=preview,
         data={
@@ -573,7 +573,7 @@ async def apply_admin_create_delete_rollback(
         reason=payload.reason,
         admin_user_id=current_user.id,
     )
-    return ok_response(
+    return admin_ok_response(
         type="admin.change_log.create_delete_apply",
         payload=result,
         data={
@@ -608,7 +608,7 @@ async def preview_admin_create_delete_restore(
         change_log_id=change_log_id,
         reason=payload.reason if payload else None,
     )
-    return ok_response(
+    return admin_ok_response(
         type="admin.change_log.create_delete_restore_preview",
         payload=preview,
         data={
@@ -649,7 +649,7 @@ async def apply_admin_create_delete_restore(
         reason=payload.reason,
         admin_user_id=current_user.id,
     )
-    return ok_response(
+    return admin_ok_response(
         type="admin.change_log.create_delete_restore_apply",
         payload=result,
         data={
@@ -684,7 +684,7 @@ async def preview_admin_change_log_rollback(
         change_log_id=change_log_id,
         reason=payload.reason if payload else None,
     )
-    return ok_response(
+    return admin_ok_response(
         type="admin.change_log.rollback_preview",
         payload=preview,
         data={
@@ -722,7 +722,7 @@ async def apply_admin_change_log_rollback(
         reason=payload.reason,
         admin_user_id=current_user.id,
     )
-    return ok_response(
+    return admin_ok_response(
         type="admin.change_log.rollback_apply",
         payload=result,
         data={
@@ -768,7 +768,7 @@ async def list_admin_save_snapshots(
         default_only=default_only,
         sort=sort,
     )
-    return ok_response(
+    return admin_ok_response(
         type="admin.save_snapshots",
         payload=snapshots,
         data={
@@ -802,7 +802,7 @@ async def preview_admin_change(
     before = payload.before if payload else {}
     after = payload.after if payload else {}
     preview = await service.preview_change(target_type, before, after)
-    return ok_response(
+    return admin_ok_response(
         type="admin.change.preview",
         payload=preview,
         data={"status": "preview_only", "readOnly": True, "adminUserId": current_user.id},
