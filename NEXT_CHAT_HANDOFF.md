@@ -2,7 +2,7 @@
 
 ## Current stable state
 
-- Admin readiness version: `v246.backend-admin-write-replay-safety-contract`
+- Admin readiness version: `v250.backend-admin-rollback-snapshot`
 - Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - ZIP: `rpg_v246_backend_admin_write_replay_safety_contract.zip`
 - DB/env/seed changes: none
@@ -36,7 +36,7 @@ python tools/smoke_backend_admin_write_replay_safety_contract.py && python tools
 })
 ```
 
-Expected: version `v246.backend-admin-write-replay-safety-contract`, `pageReady: true`, `failedChecks: []`, `writeReplaySafetyReady: true`.
+Expected: version `v250.backend-admin-rollback-snapshot`, `pageReady: true`, `failedChecks: []`, `writeReplaySafetyReady: true`.
 
 ## Recommended next work
 

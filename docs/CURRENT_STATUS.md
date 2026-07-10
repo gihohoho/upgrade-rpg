@@ -1,6 +1,6 @@
 # Current Status — v246
 
-현재 기준: **v246.backend-admin-write-replay-safety-contract**
+현재 기준: **v250.backend-admin-rollback-snapshot**
 
 Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 
@@ -39,7 +39,7 @@ Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 
 ```js
 {
-  version: "v246.backend-admin-write-replay-safety-contract",
+  version: "v250.backend-admin-rollback-snapshot",
   pageReady: true,
   failedChecks: [],
   writeReplaySafetyReady: true

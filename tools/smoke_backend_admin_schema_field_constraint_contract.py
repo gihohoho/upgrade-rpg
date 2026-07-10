@@ -64,7 +64,7 @@ assert_true(not readiness["failedRuntimeBehaviorChecks"], "runtime validation be
 assert_true("backend/app/api/routes/admin_schema_field_constraint_contract.py" in contract_text, "split contract should list field constraint contract")
 assert_true("Admin request field constraints, defaults, required fields, and Pydantic normalization behavior are checked for drift" in contract_text, "split contract should mention field constraint drift guard")
 assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry_text, "frontend splitStatus should be v238")
-assert_true('const VERSION = "v246.backend-admin-write-replay-safety-contract"' in entry_text, "frontend readiness version should be v238.1")
+assert_true('const VERSION = "v250.backend-admin-rollback-snapshot"' in entry_text, "frontend readiness version should be v238.1")
 assert_true('Admin request field constraints, defaults, required fields, and Pydantic normalization behavior are checked for drift' in entry_text, "frontend split contract should include the matching readiness marker")
 assert_true("backendSchemaFieldConstraintContractReady" in entry_text, "frontend should expose field constraint readiness")
 assert_true("smoke_backend_admin_schema_field_constraint_contract.py" in run_smoke_text, "core smoke should run field constraint smoke")

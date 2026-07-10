@@ -63,6 +63,10 @@ assertContains("src/api/admin-page-readonly.js", [
   "readMasterCatalogFiltersFromDom",
   "backendWriteReplaySafetyContractReady",
   "admin_write_replay_safety_contract.py",
+  "backendPreviewSideEffectContractReady",
+  "backendServiceMutationBoundaryContractReady",
+  "backendAdminDiffEngineContractReady",
+  "backendAdminRollbackSnapshotContractReady",
 ]);
 
 assertContains("src/api/admin-readonly-overview.js", [

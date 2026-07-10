@@ -1,6 +1,6 @@
 기호의 게임 프로젝트 이전 채팅에서 이어서 진행합니다.
 
-현재 안정 버전은 `v246.backend-admin-write-replay-safety-contract`이며 backend splitStatus는 `admin-schema-field-constraint-contract-v238`입니다. 기준 ZIP은 `rpg_v246_backend_admin_write_replay_safety_contract.zip`입니다.
+현재 안정 버전은 `v250.backend-admin-rollback-snapshot`이며 backend splitStatus는 `admin-schema-field-constraint-contract-v238`입니다. 기준 ZIP은 `rpg_v246_backend_admin_write_replay_safety_contract.zip`입니다.
 
 현재까지 관리자 request payload/422, malformed JSON, Content-Type/Accept, media/size, header encoding, transport header 관찰, preview replay parsing, apply write guard 계약이 완료되었습니다.
 

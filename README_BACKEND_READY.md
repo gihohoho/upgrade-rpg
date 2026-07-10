@@ -1,6 +1,6 @@
 # Backend Ready — v246
 
-현재 안정 버전: `v246.backend-admin-write-replay-safety-contract`
+현재 안정 버전: `v250.backend-admin-rollback-snapshot`
 
 Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 

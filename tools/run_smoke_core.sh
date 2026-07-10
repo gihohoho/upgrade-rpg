@@ -95,3 +95,8 @@ echo "[core smoke] passed"
 exit 0
 
 python tools/smoke_backend_packaging_contract.py
+
+python tools/smoke_backend_admin_preview_side_effect_contract.py
+python tools/smoke_backend_admin_service_mutation_boundary_contract.py
+python tools/smoke_backend_admin_diff_engine_contract.py
+python tools/smoke_backend_admin_rollback_snapshot_contract.py

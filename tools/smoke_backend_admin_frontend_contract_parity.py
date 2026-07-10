@@ -59,12 +59,49 @@ required_readiness_links = [
     ("admin_request_header_encoding_contract.py", "requestHeaderEncodingContractReady", "backendRequestHeaderEncodingContractReady"),
     ("admin_request_transport_header_observation_contract.py", "requestTransportHeaderObservationContractReady", "backendRequestTransportHeaderObservationContractReady"),
     ("admin_write_replay_safety_contract.py", "writeReplaySafetyContractReady", "backendWriteReplaySafetyContractReady"),
+    ("admin_preview_side_effect_contract.py", "previewSideEffectContractReady", "backendPreviewSideEffectContractReady"),
+    ("admin_service_mutation_boundary_contract.py", "serviceMutationBoundaryContractReady", "backendServiceMutationBoundaryContractReady"),
+    ("admin_diff_engine.py", "adminDiffEngineContractReady", "backendAdminDiffEngineContractReady"),
+    ("admin_rollback_snapshot.py", "adminRollbackSnapshotContractReady", "backendAdminRollbackSnapshotContractReady"),
 ]
-missing_readiness_links = [
-    {"file": file_name, "internal": internal, "public": public}
-    for file_name, internal, public in required_readiness_links
-    if file_name not in frontend_source or internal not in frontend_source or public not in frontend_source
-]
+split_readiness_return_match = re.search(
+    r"function getAdminBackendServiceSplitContractReadiness\(\) \{.*?return \{(?P<body>.*?)\n    \};",
+    frontend_source,
+    re.S,
+)
+if not split_readiness_return_match:
+    raise AssertionError("frontend split readiness return object not found")
+split_readiness_return_body = split_readiness_return_match.group("body")
+
+page_readiness_result_match = re.search(
+    r"const result = \{(?P<body>.*?)\n    \};",
+    frontend_source,
+    re.S,
+)
+if not page_readiness_result_match:
+    raise AssertionError("frontend page readiness result object not found")
+page_readiness_result_body = page_readiness_result_match.group("body")
+
+missing_readiness_links = []
+for file_name, internal, public in required_readiness_links:
+    missing_parts = []
+    if file_name not in frontend_source:
+        missing_parts.append("file")
+    if internal not in frontend_source:
+        missing_parts.append("internal-calculation")
+    if not re.search(rf"\b{re.escape(internal)}\b", split_readiness_return_body):
+        missing_parts.append("internal-return")
+    if public not in frontend_source:
+        missing_parts.append("public-calculation")
+    if not re.search(rf"\b{re.escape(public)}\b", page_readiness_result_body):
+        missing_parts.append("public-return")
+    if missing_parts:
+        missing_readiness_links.append({
+            "file": file_name,
+            "internal": internal,
+            "public": public,
+            "missing": missing_parts,
+        })
 assert not missing_readiness_links, {"missingFrontendReadinessLinks": missing_readiness_links}
 
 print("backend/frontend admin contract parity smoke test passed")

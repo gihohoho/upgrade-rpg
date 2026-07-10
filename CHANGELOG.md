@@ -1,3 +1,9 @@
+## v250.1 - frontend readiness return hotfix
+
+- Fixed four v247-v250 readiness values that were calculated internally but omitted from `getAdminBackendServiceSplitContractReadiness()` return object.
+- Strengthened backend/frontend parity smoke to verify internal calculation, internal return, public calculation, and final public return for every registered contract readiness value.
+- No DB, env, seed, route, schema, response body, authentication, or write-guard changes.
+
 ## v246.2 - Backend editable-install packaging hotfix
 
 - Added an explicit setuptools build backend and package discovery rule.
@@ -122,3 +128,9 @@
 - Added malformed JSON, empty body, and unsupported content-type FastAPI 422 compatibility contract.
 - Stable contract fields: type, loc, msg. Excluded version-sensitive input and ctx.
 - No DB/env/seed/route/response-body changes.
+
+## v247-v250 admin preview/mutation/diff/rollback safety
+- Added static preview side-effect and apply mutation-boundary contracts.
+- Added deterministic pure admin diff engine.
+- Added detached, fingerprinted rollback snapshot helpers.
+- Kept DB, env, seed, routes, schemas, response bodies, auth, and write guards unchanged.
