@@ -2,7 +2,7 @@
 
 ## Current stable version
 
-- Admin readiness version: `v240.backend-admin-request-payload-validation-contract`
+- Admin readiness version: `v241.backend-admin-validation-error-compatibility-contract`
 - Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - No route path, API response body, DB, env, seed, auth, or write-guard changes.
 
@@ -45,7 +45,7 @@ Expected:
 
 ```js
 {
-  version: "v240.backend-admin-request-payload-validation-contract",
+  version: "v241.backend-admin-validation-error-compatibility-contract",
   pageReady: true,
   failedChecks: [],
   payloadValidationReady: true,
@@ -62,3 +62,9 @@ Suggested scope:
 2. Freeze only stable 422 fields (`type`, `loc`, `msg`) and explicitly ignore unstable context/input fields.
 3. Verify malformed JSON and wrong content-type behavior without reaching services or DB.
 4. Preserve routes, response bodies, write guards, DB, env, and seed data.
+
+
+## v241
+- Added malformed JSON, empty body, and unsupported content-type FastAPI 422 compatibility contract.
+- Stable contract fields: type, loc, msg. Excluded version-sensitive input and ctx.
+- No DB/env/seed/route/response-body changes.

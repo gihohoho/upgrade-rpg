@@ -55,7 +55,7 @@ assert_true(split_readiness["splitStatus"] == "admin-schema-field-constraint-con
 assert_true("backend/app/api/routes/admin_route_module_import_contract.py" in split_readiness["extractedFiles"], "split contract should include route module import contract file")
 assert_true('"key": "route-module-import-contract"' in split_contract_source, "split contract should include route-module-import-contract group")
 assert_true('"Admin route module import/dependency style is tracked by admin_route_module_import_contract.py"' in split_contract_source, "split contract should mention route module import contract")
-assert_true('const VERSION = "v240.backend-admin-request-payload-validation-contract"' in entry_source, "frontend readiness version should be v224")
+assert_true('const VERSION = "v241.backend-admin-validation-error-compatibility-contract"' in entry_source, "frontend readiness version should be v224")
 assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry_source, "frontend splitStatus should be v224")
 assert_true("backendRouteModuleImportContractReady" in entry_source, "frontend top-level route module import readiness flag missing")
 assert_true("routeModuleImportContractReady" in entry_source, "contract route module import readiness flag missing")

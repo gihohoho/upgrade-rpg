@@ -1,6 +1,6 @@
 기호의 게임 프로젝트 이전 채팅에서 이어서 진행합니다.
 
-현재 안정 버전은 `v240.backend-admin-request-payload-validation-contract`이며 backend splitStatus는 `admin-schema-field-constraint-contract-v238`입니다.
+현재 안정 버전은 `v241.backend-admin-validation-error-compatibility-contract`이며 backend splitStatus는 `admin-schema-field-constraint-contract-v238`입니다.
 
 v240에서 관리자 요청 body 모델 10개의 정상 alias 직렬화(`dryRun`, `confirmText`, `baseValues`)와 대표 잘못된 payload의 FastAPI 422 `detail[].type/loc/msg` 계약을 추가했습니다. 검증은 격리된 FastAPI parsing app에서 수행되어 service 호출과 DB 쓰기가 없습니다. route path, API response body, DB, env, seed, auth, apply write guard는 변경하지 않았습니다.
 

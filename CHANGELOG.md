@@ -35,10 +35,22 @@
 - Runtime, operation, OpenAPI, response metadata, request metadata, and compile smokes pass.
 - API paths, response bodies, DB schema, and environment files remain unchanged.
 
-## v240.backend-admin-request-payload-validation-contract
+## v240 frontend readiness contract hotfix
+
+- Fixed the admin page static backend split contract so the v240 payload validation file and 422 rule are included.
+- Prevented `backendServiceSplitContractReady` from cascading all backend readiness checks to false.
+- Added smoke assertions that keep the frontend and backend contract lists synchronized.
+
+## v241.backend-admin-validation-error-compatibility-contract
 
 - Added `admin_request_payload_validation_contract.py` to freeze normal admin request alias serialization.
 - Added representative FastAPI 422 `detail` checks for all 10 admin body request schemas.
 - Validation runs in an isolated FastAPI app and stops before service or database execution.
 - Preserved all admin route paths, response body shapes, write guards, DB settings, env settings, and seed data.
 - Added the v240 smoke to `tools/run_smoke_core.sh` and updated admin readiness version.
+
+
+## v241
+- Added malformed JSON, empty body, and unsupported content-type FastAPI 422 compatibility contract.
+- Stable contract fields: type, loc, msg. Excluded version-sensitive input and ctx.
+- No DB/env/seed/route/response-body changes.

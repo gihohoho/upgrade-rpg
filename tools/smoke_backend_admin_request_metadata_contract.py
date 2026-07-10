@@ -135,7 +135,7 @@ for key in (
     assert_true(key in contract, f"split contract should mention {key}")
 
 assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry, "admin page splitStatus should be v234")
-assert_true('const VERSION = "v240.backend-admin-request-payload-validation-contract"' in entry, "admin page version should be v234")
+assert_true('const VERSION = "v241.backend-admin-validation-error-compatibility-contract"' in entry, "admin page version should be v234")
 assert_true('backendRequestMetadataContractReady' in entry, "admin page should expose request metadata contract readiness flag")
 assert_true('backendRuntimeRequestMetadataReady' in entry, "admin page should expose runtime request metadata readiness flag")
 assert_true('backendOpenApiRequestMetadataReady' in entry, "admin page should expose OpenAPI request metadata readiness flag")

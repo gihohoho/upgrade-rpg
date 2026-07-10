@@ -77,7 +77,7 @@ assert_true("admin_route_meta(" in master and "admin_route_meta(" in change, "ro
 assert_true('"backend/app/api/routes/admin_master_data_routes.py"' in contract, "contract should list master route module")
 assert_true('"backend/app/api/routes/admin_change_log_routes.py"' in contract, "contract should list change-log route module")
 assert_true('"splitStatus": "admin-schema-field-constraint-contract-v238"' in contract, "contract splitStatus should be v216")
-assert_true('const VERSION = "v240.backend-admin-request-payload-validation-contract"' in entry, "frontend readiness version should be v216")
+assert_true('const VERSION = "v241.backend-admin-validation-error-compatibility-contract"' in entry, "frontend readiness version should be v216")
 assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry, "frontend splitStatus should be v216")
 assert_true("backendRouteModuleSplitReady" in entry, "top-level route module readiness flag missing")
 assert_true("routeMasterDataModuleReady" in entry, "contract master-data route module flag missing")
