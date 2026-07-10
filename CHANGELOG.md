@@ -1,4 +1,13 @@
-## v244.backend-admin-request-header-encoding-compatibility-contract
+## v245.backend-admin-transport-header-observation-contract
+
+- Added `admin_request_transport_header_observation_contract.py` and its smoke test.
+- Observes duplicate `Content-Type`/`Accept`, declared `Content-Length`, and `Transfer-Encoding` at the ASGI/TestClient boundary without claiming wire-level enforcement.
+- Keeps service and DB execution counts at zero.
+- Added `backendRequestTransportHeaderObservationContractReady` to admin readiness.
+- Strengthened backend/frontend parity smoke to compare the complete ordered `extractedFiles` and `routeContract` lists and all v240-v245 readiness links.
+- No route, response body, DB, env, seed, authentication, or write-guard changes.
+
+## v245.backend-admin-transport-header-observation-contract
 
 - Added isolated FastAPI contract coverage for UTF-8 Korean/symbol payloads.
 - Added Content-Type parameter and header-name case normalization checks.
@@ -7,7 +16,7 @@
 
 # Changelog
 
-## v244.backend-admin-request-header-encoding-compatibility-contract
+## v245.backend-admin-transport-header-observation-contract
 
 - Added `admin_request_media_size_boundary_contract.py` and its smoke test.
 - Frozen octet-stream, URL-encoded form, multipart form, empty binary, and arbitrary binary request parsing boundaries without calling admin services or the DB.

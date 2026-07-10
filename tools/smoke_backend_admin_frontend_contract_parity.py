@@ -42,15 +42,28 @@ assert backend_files == frontend_files, {
 frontend_route_match = re.search(r"routeContract:\s*\[(?P<body>.*?)\n\s*\],", frontend_block, re.S)
 if not frontend_route_match:
     raise AssertionError("frontend routeContract not found")
-frontend_route_text = frontend_route_match.group("body")
-required_markers = [
-    "Normal request payload aliases and representative FastAPI 422 validation detail",
-    "Malformed JSON, empty body, and unsupported JSON content type",
-    "JSON charset, absent Content-Type",
-    "Non-JSON media types and request size ownership",
-    "UTF-8 JSON text, Content-Type parameter normalization",
+backend_route_contract = list(contract.get("routeContract", []))
+frontend_route_contract = re.findall(r'"([^"]+)"', frontend_route_match.group("body"))
+assert backend_route_contract == frontend_route_contract, {
+    "missingFrontendRouteContractItems": [item for item in backend_route_contract if item not in frontend_route_contract],
+    "extraFrontendRouteContractItems": [item for item in frontend_route_contract if item not in backend_route_contract],
+    "backendRouteContractCount": len(backend_route_contract),
+    "frontendRouteContractCount": len(frontend_route_contract),
+}
+
+required_readiness_links = [
+    ("admin_request_payload_validation_contract.py", "requestPayloadValidationContractReady", "backendRequestPayloadValidationContractReady"),
+    ("admin_validation_error_compatibility_contract.py", "validationErrorCompatibilityContractReady", "backendValidationErrorCompatibilityContractReady"),
+    ("admin_request_content_negotiation_contract.py", "requestContentNegotiationContractReady", "backendRequestContentNegotiationContractReady"),
+    ("admin_request_media_size_boundary_contract.py", "requestMediaSizeBoundaryContractReady", "backendRequestMediaSizeBoundaryContractReady"),
+    ("admin_request_header_encoding_contract.py", "requestHeaderEncodingContractReady", "backendRequestHeaderEncodingContractReady"),
+    ("admin_request_transport_header_observation_contract.py", "requestTransportHeaderObservationContractReady", "backendRequestTransportHeaderObservationContractReady"),
 ]
-missing_markers = [marker for marker in required_markers if marker not in frontend_route_text]
-assert not missing_markers, {"missingFrontendRouteContractMarkers": missing_markers}
+missing_readiness_links = [
+    {"file": file_name, "internal": internal, "public": public}
+    for file_name, internal, public in required_readiness_links
+    if file_name not in frontend_source or internal not in frontend_source or public not in frontend_source
+]
+assert not missing_readiness_links, {"missingFrontendReadinessLinks": missing_readiness_links}
 
 print("backend/frontend admin contract parity smoke test passed")

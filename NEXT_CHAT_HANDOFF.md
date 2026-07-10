@@ -2,7 +2,7 @@
 
 ## Current stable state
 
-- Admin readiness version: `v244.backend-admin-request-header-encoding-compatibility-contract`
+- Admin readiness version: `v245.backend-admin-transport-header-observation-contract`
 - Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - ZIP: `rpg_v243_backend_admin_request_media_size_boundary_contract.zip`
 - DB/env/seed changes: none
@@ -39,7 +39,7 @@ python tools/smoke_backend_admin_request_media_size_boundary_contract.py && pyth
 })
 ```
 
-Expected version: `v244.backend-admin-request-header-encoding-compatibility-contract`, `pageReady: true`, `failedChecks: []`, `mediaSizeBoundaryReady: true`, `headerEncodingReady: true`.
+Expected version: `v245.backend-admin-transport-header-observation-contract`, `pageReady: true`, `failedChecks: []`, `headerEncodingReady: true`, `transportHeaderObservationReady: true`.
 
 ## Recommended next work
 
@@ -52,3 +52,11 @@ Safely verify duplicate/odd Content-Type parameters, UTF-8 non-ASCII JSON, inval
 - Added `admin_request_header_encoding_contract.py`.
 - UTF-8 Korean/symbol JSON, Content-Type parameter normalization, header-name case insensitivity, and malformed byte parsing are verified without service or DB execution.
 - Environment-sensitive malformed/ambiguous encoding outcomes use explicit allowed outcomes with detailed validation.
+
+
+## v245 transport header observation
+
+- Duplicate Content-Type and Accept headers are observed as ordered raw ASGI header values; `Headers.get()` selects the first value in the current test boundary.
+- Declared Content-Length mismatch and Transfer-Encoding are observation-only in TestClient; enforcement remains the deployment proxy/ASGI server responsibility.
+- `tools/smoke_backend_admin_frontend_contract_parity.py` now requires complete ordered parity for backend/frontend extractedFiles and routeContract arrays plus all v240-v245 readiness links.
+- No DB/env/seed/auth/write route changes.
