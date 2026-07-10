@@ -21,7 +21,7 @@ page can browse selected master-data domains from PostgreSQL.
   - `readAdminMasterCatalogFilters()`
   - `resetAdminMasterCatalogFilters()`
 - Added static smoke test:
-  - `tools/smoke_admin_master_data_catalog.js`
+  - `tools/smoke/frontend/smoke_admin_master_data_catalog.js`
 
 ## Safety rules
 
@@ -50,5 +50,5 @@ python scripts/check_admin_readonly_api.py
 
 ```bash
 # Location: project root
-node tools/smoke_admin_master_data_catalog.js
+node tools/smoke/frontend/smoke_admin_master_data_catalog.js
 ```

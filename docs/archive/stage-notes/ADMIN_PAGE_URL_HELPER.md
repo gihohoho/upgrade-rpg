@@ -44,9 +44,9 @@ checkAdminReadOnlyPageReady();
 - `src/api/admin-readonly-overview.js`
 - `src/api/admin-page-readonly.js`
 - `admin.html`
-- `tools/smoke_admin_page_url_helper.js`
-- `tools/smoke_admin_readonly_page.js`
-- `tools/smoke_admin_readonly_overview.js`
+- `tools/smoke/frontend/smoke_admin_page_url_helper.js`
+- `tools/smoke/frontend/smoke_admin_readonly_page.js`
+- `tools/smoke/frontend/smoke_admin_readonly_overview.js`
 
 ## DB reset / seed
 

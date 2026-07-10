@@ -8,7 +8,7 @@
 
 - Added an explicit setuptools build backend and package discovery rule.
 - Editable installs now include only `backend/app*` and exclude `alembic`, `seeds`, `sql`, and tests from package discovery.
-- Added `tools/smoke_backend_packaging_contract.py` to prevent the flat-layout discovery error from returning.
+- Added `tools/smoke/backend/smoke_backend_packaging_contract.py` to prevent the flat-layout discovery error from returning.
 - No DB, API route, response body, authentication, seed, or write-guard changes.
 
 # Changelog
@@ -134,3 +134,12 @@
 - Added deterministic pure admin diff engine.
 - Added detached, fingerprinted rollback snapshot helpers.
 - Kept DB, env, seed, routes, schemas, response bodies, auth, and write guards unchanged.
+
+## v250.2 project organization and preview integration
+
+- docs를 current/contracts/handoff/archive 역할로 정리
+- smoke 파일을 frontend/contracts/backend/game으로 분류하고 모든 참조 경로 갱신
+- backend 계약을 기준으로 frontend extractedFiles/routeContract를 동기화하는 도구 추가
+- preview 응답에 optional unifiedDiff/rollbackSnapshot 필드 추가
+- 생성/수정/rollback/create-delete/restore 관리자 UI에 공통 Diff 표시
+- 기존 API 필드, DB, env, seed, 인증, write guard 변경 없음

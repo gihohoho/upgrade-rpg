@@ -10,7 +10,7 @@
 - `backend/app/services/admin_service.py` inheritance에 `AdminSharedUtilsService` 추가
 - `backend/app/services/admin_service_split_contract.py`의 `splitStatus`를 `shared-utils-extracted-v204`로 갱신
 - `src/api/admin-page-readonly.js` readiness 버전을 `v204.backend-admin-shared-utils-service-split`으로 갱신
-- `tools/smoke_backend_admin_shared_utils_service_split.py` 추가
+- `tools/smoke/contracts/smoke_backend_admin_shared_utils_service_split.py` 추가
 - `tools/run_smoke_core.sh`에 v204 smoke 추가
 
 ## 이동한 helper
@@ -68,6 +68,6 @@ getAdminBackendServiceSplitContractReadiness().splitStatus
 
 ```bash
 bash tools/run_smoke_core.sh
-python tools/smoke_backend_admin_shared_utils_service_split.py
+python tools/smoke/contracts/smoke_backend_admin_shared_utils_service_split.py
 python -m compileall -q backend/app backend/scripts tools
 ```

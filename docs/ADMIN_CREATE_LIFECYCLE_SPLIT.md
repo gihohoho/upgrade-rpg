@@ -13,7 +13,7 @@ v188에서 고정한 `create lifecycle` 계약을 유지한 채, 생성 설계/�
 - `src/api/admin/admin-create-lifecycle.js` 신규 추가
 - `admin.html` script 순서 갱신
 - `src/api/admin-page-readonly.js`는 기존 window export 호환 wrapper 유지
-- `tools/smoke_admin_create_lifecycle_split.js` 신규 추가
+- `tools/smoke/frontend/smoke_admin_create_lifecycle_split.js` 신규 추가
 - `tools/run_smoke_core.sh`에 신규 smoke 포함
 
 ## script 순서

@@ -15,7 +15,7 @@
 위치: **프로젝트 루트**
 
 ```bash
-node tools/smoke_master_data_browser_checklist.js
+node tools/smoke/game/smoke_master_data_browser_checklist.js
 ```
 
 정상 출력:

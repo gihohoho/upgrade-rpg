@@ -5,7 +5,7 @@ v198에서는 `backend/app/services/admin_service.py`를 바로 쪼개지 않고
 ## 추가 파일
 
 - `backend/app/services/admin_service_split_contract.py`
-- `tools/smoke_backend_admin_service_split_contract.py`
+- `tools/smoke/contracts/smoke_backend_admin_service_split_contract.py`
 
 ## 계약 상태
 
@@ -52,7 +52,7 @@ contract-frozen-v198
 
 ```bash
 위치: 프로젝트 루트
-python tools/smoke_backend_admin_service_split_contract.py
+python tools/smoke/contracts/smoke_backend_admin_service_split_contract.py
 ```
 
 ```bash
@@ -76,4 +76,4 @@ v199에서 첫 실제 분리로 `overview-snapshots` 묶음을 `backend/app/serv
 
 - route/schema 변경 없음
 - `AdminService` facade 유지
-- `tools/smoke_backend_admin_overview_snapshots_service_split.py`로 분리 상태 검증
+- `tools/smoke/contracts/smoke_backend_admin_overview_snapshots_service_split.py`로 분리 상태 검증

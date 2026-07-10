@@ -18,7 +18,7 @@ src/data/*.js
 
 ```txt
 backend/scripts/check_master_data_parity.py
-tools/smoke_master_data_parity_checker.py
+tools/smoke/game/smoke_master_data_parity_checker.py
 docs/MASTER_DATA_PARITY_CHECKER.md
 ```
 
@@ -134,7 +134,7 @@ parity checker 파일이 존재하고 기본 구조가 있는지 확인하려면
 위치: 프로젝트 루트
 
 ```bash
-python tools/smoke_master_data_parity_checker.py
+python tools/smoke/game/smoke_master_data_parity_checker.py
 ```
 
 정상이라면 다음 문구가 나온다.

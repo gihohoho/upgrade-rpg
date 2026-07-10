@@ -18,7 +18,7 @@ Version: `v114: admin save snapshot filters`
 
 - `admin.html`
 - `src/api/admin-page-readonly.js`
-- `tools/smoke_admin_readonly_page.js`
+- `tools/smoke/frontend/smoke_admin_readonly_page.js`
 
 ## 확인 방법
 

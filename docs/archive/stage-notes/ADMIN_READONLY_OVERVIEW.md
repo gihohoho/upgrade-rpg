@@ -84,8 +84,8 @@ python scripts/check_admin_readonly_api.py
 
 ```bash
 # 위치: 프로젝트 루트
-node tools/smoke_admin_readonly_overview.js
-python tools/smoke_admin_readonly_api_structure.py
+node tools/smoke/frontend/smoke_admin_readonly_overview.js
+python tools/smoke/frontend/smoke_admin_readonly_api_structure.py
 ```
 
 ## 다음 단계 후보

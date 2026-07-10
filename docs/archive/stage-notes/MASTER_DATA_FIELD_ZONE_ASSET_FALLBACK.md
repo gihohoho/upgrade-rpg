@@ -20,8 +20,8 @@
 위치: 프로젝트 루트
 
 ```bash
-node tools/smoke_field_zone_asset_fallback.js
-node tools/smoke_master_data_runtime_switch.js
+node tools/smoke/game/smoke_field_zone_asset_fallback.js
+node tools/smoke/game/smoke_master_data_runtime_switch.js
 ```
 
 브라우저 Console:

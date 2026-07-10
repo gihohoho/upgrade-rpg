@@ -9,7 +9,7 @@
 ## 추가/변경 파일
 
 - `backend/app/services/admin/admin_master_catalog_service.py`
-- `tools/smoke_backend_admin_master_catalog_service_split.py`
+- `tools/smoke/contracts/smoke_backend_admin_master_catalog_service_split.py`
 - `backend/app/services/admin_service.py`
 - `backend/app/services/admin_service_split_contract.py`
 - `tools/run_smoke_core.sh`

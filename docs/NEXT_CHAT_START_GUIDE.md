@@ -56,7 +56,7 @@ create-lifecycle-extracted-v201
 
 ```txt
 backend/app/services/admin/admin_change_log_service.py
-tools/smoke_backend_admin_change_log_service_split.py
+tools/smoke/contracts/smoke_backend_admin_change_log_service_split.py
 docs/BACKEND_ADMIN_CHANGE_LOG_SERVICE_SPLIT.md
 ```
 

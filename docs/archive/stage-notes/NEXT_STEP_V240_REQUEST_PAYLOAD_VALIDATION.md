@@ -20,7 +20,7 @@
 
 ## smoke 후보
 
-- `tools/smoke_backend_admin_request_payload_validation_contract.py`
+- `tools/smoke/contracts/smoke_backend_admin_request_payload_validation_contract.py`
 
 ## 버전 후보
 

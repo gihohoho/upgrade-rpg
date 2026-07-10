@@ -11,7 +11,7 @@
 - `backend/app/services/admin_service.py`에서 edit draft 메서드 제거 후 `AdminEditDraftService` 상속 추가
 - `backend/app/services/admin_service_split_contract.py`의 `splitStatus`를 `edit-draft-extracted-v203`으로 갱신
 - `src/api/admin-page-readonly.js` 브라우저 readiness 버전을 `v203.backend-admin-edit-draft-service-split`으로 갱신
-- `tools/smoke_backend_admin_edit_draft_service_split.py` 추가
+- `tools/smoke/contracts/smoke_backend_admin_edit_draft_service_split.py` 추가
 - `tools/run_smoke_core.sh`에 v203 smoke 추가
 
 ## 이동된 public 메서드
@@ -71,8 +71,8 @@ bash tools/run_smoke_core.sh
 실행 위치: 프로젝트 루트
 
 ```bash
-python tools/smoke_backend_admin_edit_draft_service_split.py
-python tools/smoke_backend_admin_service_split_contract.py
+python tools/smoke/contracts/smoke_backend_admin_edit_draft_service_split.py
+python tools/smoke/contracts/smoke_backend_admin_service_split_contract.py
 python -m compileall -q backend/app backend/scripts tools
 ```
 

@@ -126,7 +126,7 @@
 - 스킬강화권 사용 응답 형태 정리
 - 관리자 변경 응답 형태 정리
 - 실패 응답과 공통 에러 코드 정리
-- `tools/smoke_api_response_contract.js` 추가
+- `tools/smoke/frontend/smoke_api_response_contract.js` 추가
 
 완료 기준:
 

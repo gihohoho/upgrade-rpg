@@ -292,6 +292,14 @@
     return Array.isArray(relation.options) ? relation.options.length : 0;
   }
 
+
+  function renderUnifiedPreviewDiff(payload) {
+    const diff = payload && Array.isArray(payload.unifiedDiff) ? payload.unifiedDiff : [];
+    const snapshot = payload && payload.rollbackSnapshot ? payload.rollbackSnapshot : null;
+    if (!diff.length && !snapshot) return "";
+    const rows = diff.length ? diff.map((item) => `<tr><td>${escapeHtml(item.path || "$")}</td><td>${escapeHtml(item.op || "replace")}</td><td>${escapeHtml(formatValue(item.before))}</td><td>${escapeHtml(formatValue(item.after))}</td></tr>`).join("") : `<tr><td colspan="4">변경 없음</td></tr>`;
+    return `<details class="json-detail" open><summary>공통 Diff <span class="pill good">${escapeHtml(formatValue(diff.length))}</span></summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>경로</th><th>작업</th><th>이전</th><th>이후</th></tr></thead><tbody>${rows}</tbody></table></div>${snapshot ? `<div class="filter-help">rollback snapshot: schema v${escapeHtml(formatValue(snapshot.schemaVersion))} · fingerprint ${escapeHtml(String(snapshot.fingerprint || "").slice(0, 12))}…</div>` : ""}</details>`;
+  }
   function renderAdminCreateBlueprintRelationCell(field) {
     const relation = field && field.relation ? field.relation : null;
     if (!relation) return "-";
@@ -1000,6 +1008,7 @@
       </div>
       ${payload.comboGuardLabels && payload.comboGuardLabels.length ? `<div class="filter-help">중복 조합 검사: ${escapeHtml(payload.comboGuardLabels.join(", "))}</div>` : ""}
       ${payload.note ? `<div class="filter-help">${escapeHtml(payload.note)}</div>` : ""}
+      ${renderUnifiedPreviewDiff(payload)}
       <details class="json-detail" open>
         <summary>검증 통과 필드 <span class="pill good">${escapeHtml(formatValue(accepted.length))}</span></summary>
         <div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>초안 값</th><th>타입</th><th>속성</th></tr></thead><tbody>${acceptedRows}</tbody></table></div>

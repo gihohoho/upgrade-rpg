@@ -209,7 +209,7 @@
       "AdminService remains the facade imported by route modules",
       "Actual service file moves must keep every existing public method name",
     ],
-    smoke: "tools/smoke_backend_admin_request_metadata_contract.py",
+    smoke: "tools/smoke/contracts/smoke_backend_admin_request_metadata_contract.py",
   };
 
   const ADMIN_THIN_ENTRY_CLEANUP_CONTRACT = {

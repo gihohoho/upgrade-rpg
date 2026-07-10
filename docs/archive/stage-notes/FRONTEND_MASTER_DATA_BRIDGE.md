@@ -11,7 +11,7 @@
 ```txt
 src/api/game-api-client.js
 src/api/master-data-bridge.js
-tools/smoke_frontend_master_data_bridge.js
+tools/smoke/game/smoke_frontend_master_data_bridge.js
 ```
 
 ## 브라우저 전역 객체
@@ -71,7 +71,7 @@ await checkBackendMasterData({ includeAssets: true });
 위치: 프로젝트 루트
 
 ```bash
-node tools/smoke_frontend_master_data_bridge.js
+node tools/smoke/game/smoke_frontend_master_data_bridge.js
 ```
 
 정상이라면 다음 문구가 나온다.

@@ -70,7 +70,7 @@ python scripts/check_save_snapshot_api.py
 위치: 프로젝트 루트
 
 ```bash
-node tools/smoke_save_data_slot_list.js
+node tools/smoke/game/smoke_save_data_slot_list.js
 ```
 
 ## DB reset / seed

@@ -5,6 +5,7 @@ from app.api.routes import admin_response_data_helpers as admin_data
 from app.api.routes.admin_response_helpers import admin_ok_response
 from app.api.routes.admin_response_meta_helpers import admin_route_meta
 from app.api.routes.admin_route_services import create_admin_service
+from app.services.admin.admin_preview_enrichment import enrich_admin_preview
 from app.api.routes.admin_route_params import (
     ADMIN_CURRENT_USER_DEP,
     ADMIN_DB_SESSION_DEP,
@@ -106,6 +107,7 @@ async def preview_admin_master_data_create(
         reason=payload.reason,
         dry_run=payload.dry_run,
     )
+    preview = enrich_admin_preview(preview, mode="create")
     return admin_ok_response(
         type="admin.master_data.create_preview",
         payload=preview,
@@ -203,6 +205,7 @@ async def preview_admin_master_data_edit(
         reason=payload.reason,
         dry_run=payload.dry_run,
     )
+    preview = enrich_admin_preview(preview, mode="edit", target_id=payload.id)
     return admin_ok_response(
         type="admin.master_data.edit_preview",
         payload=preview,

@@ -45,7 +45,7 @@ contract-frozen-v194
 실행 위치: 프로젝트 루트
 
 ```bash
-node tools/smoke_admin_bootstrap_bindings_readiness.js
+node tools/smoke/frontend/smoke_admin_bootstrap_bindings_readiness.js
 ```
 
 core smoke에도 포함했습니다.

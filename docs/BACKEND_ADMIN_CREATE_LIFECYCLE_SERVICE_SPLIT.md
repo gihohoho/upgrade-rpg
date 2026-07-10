@@ -9,7 +9,7 @@
 ## 추가 파일
 
 - `backend/app/services/admin/admin_create_lifecycle_service.py`
-- `tools/smoke_backend_admin_create_lifecycle_service_split.py`
+- `tools/smoke/contracts/smoke_backend_admin_create_lifecycle_service_split.py`
 
 ## 유지한 것
 

@@ -42,6 +42,6 @@ getAdminBackendServiceSplitContractReadiness().splitStatus
 
 ```bash
 bash tools/run_smoke_core.sh
-python tools/smoke_backend_admin_route_params_error_helpers.py
+python tools/smoke/contracts/smoke_backend_admin_route_params_error_helpers.py
 python -m compileall -q backend/app backend/scripts tools
 ```

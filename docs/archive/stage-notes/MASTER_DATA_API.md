@@ -18,7 +18,7 @@
 
 ```bash
 node tools/extract_seed_data.js
-node tools/smoke_seed_extraction.js
+node tools/smoke/game/smoke_seed_extraction.js
 ```
 
 위치: **backend 폴더 + 가상환경 activate 상태**

@@ -186,7 +186,7 @@ v077부터는 `backend/pyproject.toml` 의존성에 `asyncpg`가 포함되어 �
 
 ```bash
 node tools/extract_seed_data.js
-node tools/smoke_seed_extraction.js
+node tools/smoke/game/smoke_seed_extraction.js
 ```
 
 출력 위치:

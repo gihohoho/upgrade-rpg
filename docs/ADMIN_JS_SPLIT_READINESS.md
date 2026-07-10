@@ -80,7 +80,7 @@ getAdminJsSplitReadiness()
 새 smoke를 추가했습니다.
 
 ```txt
-tools/smoke_admin_js_split_readiness.js
+tools/smoke/frontend/smoke_admin_js_split_readiness.js
 ```
 
 `run_smoke_core.sh`에도 포함했습니다.

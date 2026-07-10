@@ -72,8 +72,8 @@ await loadBackendSaveSnapshot();
 위치: 프로젝트 루트
 
 ```bash
-python tools/smoke_save_snapshot_api_structure.py
-node tools/smoke_save_data_bridge.js
+python tools/smoke/game/smoke_save_snapshot_api_structure.py
+node tools/smoke/game/smoke_save_data_bridge.js
 ```
 
 ### 실제 API 검사

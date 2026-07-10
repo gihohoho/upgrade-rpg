@@ -22,7 +22,7 @@
 
 ```txt
 src/api/master-data-runtime-validator.js
-tools/smoke_master_data_runtime_validator.js
+tools/smoke/game/smoke_master_data_runtime_validator.js
 docs/MASTER_DATA_RUNTIME_VALIDATOR.md
 ```
 
@@ -31,7 +31,7 @@ docs/MASTER_DATA_RUNTIME_VALIDATOR.md
 위치: **프로젝트 루트**
 
 ```bash
-node tools/smoke_master_data_runtime_validator.js
+node tools/smoke/game/smoke_master_data_runtime_validator.js
 ```
 
 정상 결과:

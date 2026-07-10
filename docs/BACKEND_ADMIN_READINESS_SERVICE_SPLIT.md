@@ -10,7 +10,7 @@
 - `backend/app/services/admin_service.py` inheritance에 `AdminReadinessService` 추가
 - `backend/app/services/admin_service_split_contract.py`의 `splitStatus`를 `readiness-extracted-v206`으로 갱신
 - `src/api/admin-page-readonly.js` readiness 버전을 `v206.backend-admin-config-readiness-service-split`으로 갱신
-- `tools/smoke_backend_admin_config_readiness_service_split.py` 추가
+- `tools/smoke/contracts/smoke_backend_admin_config_readiness_service_split.py` 추가
 - `tools/run_smoke_core.sh`에 v206 smoke 추가
 
 ## 이동한 helper
@@ -48,6 +48,6 @@ getAdminBackendServiceSplitContractReadiness().splitStatus
 
 ```bash
 bash tools/run_smoke_core.sh
-python tools/smoke_backend_admin_config_readiness_service_split.py
+python tools/smoke/contracts/smoke_backend_admin_config_readiness_service_split.py
 python -m compileall -q backend/app backend/scripts tools
 ```

@@ -10,7 +10,7 @@
 
 - `backend/app/services/admin/__init__.py`
 - `backend/app/services/admin/admin_overview_snapshots_service.py`
-- `tools/smoke_backend_admin_overview_snapshots_service_split.py`
+- `tools/smoke/contracts/smoke_backend_admin_overview_snapshots_service_split.py`
 
 ## 분리한 기능
 
@@ -45,7 +45,7 @@
 실행 위치: 프로젝트 루트
 
 ```bash
-python tools/smoke_backend_admin_overview_snapshots_service_split.py
+python tools/smoke/contracts/smoke_backend_admin_overview_snapshots_service_split.py
 ```
 
 실행 위치: 프로젝트 루트

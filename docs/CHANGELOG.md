@@ -16,7 +16,7 @@
 
 ## v238.2 - Backend admin runtime route contract environment hotfix
 
-- `tools/smoke_backend_admin_runtime_route_contract.py`가 개발자 PC의 셸 환경변수나 프로젝트 루트 `.env`에 설정된 `API_PREFIX` 값에 영향을 받지 않도록, 앱 import 전에 계약 기준값 `/api/v1`을 명시적으로 고정했습니다.
+- `tools/smoke/contracts/smoke_backend_admin_runtime_route_contract.py`가 개발자 PC의 셸 환경변수나 프로젝트 루트 `.env`에 설정된 `API_PREFIX` 값에 영향을 받지 않도록, 앱 import 전에 계약 기준값 `/api/v1`을 명시적으로 고정했습니다.
 - runtime route smoke가 실제 등록 경로를 하나도 찾지 못할 경우 전체 `registered paths`를 오류 메시지에 포함하도록 진단을 강화했습니다.
 - Windows Git Bash, macOS/Linux, CI에서 동일한 21개 Admin route 계약을 검사하도록 smoke 실행을 결정적으로 만들었습니다.
 - API route, 응답 body, DB, backend `.env` 구조는 변경하지 않았습니다.
@@ -137,7 +137,7 @@
 - `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `readiness-extracted-v206`으로 갱신했습니다.
 - `checkAdminReadOnlyPageReady().version`을 `v206.backend-admin-config-readiness-service-split`으로 갱신했습니다.
 - route/schema/API/DB/env 변경은 없습니다.
-- `tools/smoke_backend_admin_config_readiness_service_split.py`를 추가하고 core smoke에 포함했습니다.
+- `tools/smoke/contracts/smoke_backend_admin_config_readiness_service_split.py`를 추가하고 core smoke에 포함했습니다.
 
 ## v205 - Backend admin config service split
 
@@ -151,7 +151,7 @@
 - `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `shared-utils-extracted-v204`로 갱신했습니다.
 - `checkAdminReadOnlyPageReady().version`을 `v204.backend-admin-shared-utils-service-split`으로 갱신했습니다.
 - route/schema/API/DB/env 변경은 없습니다.
-- `tools/smoke_backend_admin_shared_utils_service_split.py`를 추가하고 core smoke에 포함했습니다.
+- `tools/smoke/contracts/smoke_backend_admin_shared_utils_service_split.py`를 추가하고 core smoke에 포함했습니다.
 
 ## v203 - Backend admin edit draft service split
 
@@ -159,7 +159,7 @@
 - `preview_master_data_edit`, `apply_master_data_edit` 및 편집 초안 helper를 `AdminService`에서 분리했습니다.
 - `AdminService` facade, route, schema, DB/env 계약은 유지했습니다.
 - `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `edit-draft-extracted-v203`으로 갱신했습니다.
-- `tools/smoke_backend_admin_edit_draft_service_split.py`를 추가하고 core smoke에 포함했습니다.
+- `tools/smoke/contracts/smoke_backend_admin_edit_draft_service_split.py`를 추가하고 core smoke에 포함했습니다.
 
 ## v202 - Backend admin change log service split
 
@@ -169,7 +169,7 @@
 - `/admin/change-logs` schema guard와 route exception guard는 분리 파일에서도 유지됩니다.
 - `apply_admin_change_log_rollback()` 성공 경로에서 `return preview`가 누락될 수 있던 부분을 보강했습니다.
 - `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `change-logs-extracted-v202`로 갱신했습니다.
-- `tools/smoke_backend_admin_change_log_service_split.py`를 추가하고 core smoke에 포함했습니다.
+- `tools/smoke/contracts/smoke_backend_admin_change_log_service_split.py`를 추가하고 core smoke에 포함했습니다.
 - DB schema/env 변경, DB reset, seed 재실행은 필요 없습니다.
 
 ## v201.1 - Admin change logs schema guard hotfix
@@ -178,7 +178,7 @@
 - SQLAlchemy 쿼리 실패 시 `session.rollback()` 후 `schema_unavailable` 빈 목록 payload를 반환합니다.
 - 관리자 UI에 `python scripts/setup_dev_db.py --create-schema --verify` 복구 명령을 표시합니다.
 - `setup_dev_db.py --verify`가 `admin_change_logs`, `admin_user_roles`, `user_save_snapshots`, `users` 카운트도 확인하도록 확장했습니다.
-- `tools/smoke_admin_change_logs_schema_guard.py`를 추가하고 core smoke에 포함했습니다.
+- `tools/smoke/frontend/smoke_admin_change_logs_schema_guard.py`를 추가하고 core smoke에 포함했습니다.
 
 ## v201 backend admin create lifecycle service split
 
@@ -186,7 +186,7 @@
 - `AdminCreateLifecycleService` mixin 추가
 - create blueprint / create preview/apply / create-delete / restore 관련 메서드 이동
 - `AdminService` facade, route/schema/API 응답 구조 유지
-- `tools/smoke_backend_admin_create_lifecycle_service_split.py` 추가
+- `tools/smoke/contracts/smoke_backend_admin_create_lifecycle_service_split.py` 추가
 
 ## v200 backend admin master catalog/detail service split
 
@@ -194,7 +194,7 @@
 - master catalog/detail/relations 관련 백엔드 메서드 분리
 - `AdminService` facade 유지
 - route/schema/API 응답 구조 변경 없음
-- `tools/smoke_backend_admin_master_catalog_service_split.py` 추가
+- `tools/smoke/contracts/smoke_backend_admin_master_catalog_service_split.py` 추가
 
 
 ## v199.1 backend admin overview/snapshots service hotfix
@@ -202,14 +202,14 @@
 - v199 분리 후 `/api/v1/admin/save-snapshots`에서 500이 날 수 있던 bound-method 오류 수정
 - 원인: `_count_filled_items`가 분리 파일로 이동하면서 `@staticmethod`가 누락됨
 - 수정: `AdminOverviewSnapshotsService._count_filled_items`에 `@staticmethod` 복원
-- 재발 방지: `tools/smoke_backend_admin_overview_snapshots_service_split.py`가 실제 `_serialize_save_snapshot_summary()` 호출까지 검사
+- 재발 방지: `tools/smoke/contracts/smoke_backend_admin_overview_snapshots_service_split.py`가 실제 `_serialize_save_snapshot_summary()` 호출까지 검사
 - route/schema/DB/env 변경 없음
 
 
 ## v198 — backend admin service split contract
 
 - `backend/app/services/admin_service_split_contract.py` 추가
-- `tools/smoke_backend_admin_service_split_contract.py` 추가
+- `tools/smoke/contracts/smoke_backend_admin_service_split_contract.py` 추가
 - 백엔드 AdminService 실제 분리 전 route/schema 유지 계약 고정
 - 관리자 readiness에 `backendServiceSplitContractReady` 추가
 
@@ -219,7 +219,7 @@
 - API base URL / admin write dev key / 현재 관리자 URL / 게임 URL / 주소 복사 helper를 `admin-page-readonly.js` 밖으로 분리했습니다.
 - 기존 window 함수명 wrapper는 유지했습니다.
 - `checkAdminReadOnlyPageReady().settingsHelpersExternalReady`를 추가했습니다.
-- 새 smoke `tools/smoke_admin_settings_helpers_split.js`를 추가하고 core smoke에 포함했습니다.
+- 새 smoke `tools/smoke/frontend/smoke_admin_settings_helpers_split.js`를 추가하고 core smoke에 포함했습니다.
 - 기존 URL helper smoke를 새 분리 구조에 맞게 갱신했습니다.
 - DB schema 변경 없음, DB reset / seed 필요 없음.
 
@@ -229,7 +229,7 @@
 - field help / value hints / equip slot label helper를 `admin-page-readonly.js` 밖으로 분리했습니다.
 - 기존 window 함수명 wrapper는 유지했습니다.
 - `checkAdminReadOnlyPageReady().fieldHelpExternalReady`를 추가했습니다.
-- 새 smoke `tools/smoke_admin_field_help_split.js`를 추가하고 core smoke에 포함했습니다.
+- 새 smoke `tools/smoke/frontend/smoke_admin_field_help_split.js`를 추가하고 core smoke에 포함했습니다.
 - DB schema 변경 없음, DB reset / seed 필요 없음.
 
 # v194 admin bootstrap/bindEvents readiness
@@ -238,7 +238,7 @@
 - `ADMIN_BOOTSTRAP_BINDING_CONTRACT`를 추가했습니다.
 - `getAdminBootstrapBindingReadiness()` / `renderAdminBootstrapBindingReadiness()`를 추가했습니다.
 - `checkAdminReadOnlyPageReady().bootstrapBindingReady`를 추가했습니다.
-- 새 smoke `tools/smoke_admin_bootstrap_bindings_readiness.js`를 추가하고 core smoke에 포함했습니다.
+- 새 smoke `tools/smoke/frontend/smoke_admin_bootstrap_bindings_readiness.js`를 추가하고 core smoke에 포함했습니다.
 - 새 쓰기 도메인 오픈 없음.
 - DB schema 변경 없음, DB reset / seed 필요 없음.
 
@@ -247,7 +247,7 @@
 - Added `src/api/admin/admin-master-catalog.js`.
 - Split master catalog/detail/relations/API verify logic out of `admin-page-readonly.js`.
 - Kept existing window wrappers for browser compatibility.
-- Added `tools/smoke_admin_master_catalog_split.js`.
+- Added `tools/smoke/frontend/smoke_admin_master_catalog_split.js`.
 
 # v190 admin edit draft split contract
 
@@ -255,7 +255,7 @@
 - 다음 후보 파일명 `src/api/admin/admin-edit-draft.js` 확정.
 - `getAdminEditDraftSplitContractReadiness()` / `renderAdminEditDraftSplitContractReadiness()` 추가.
 - `checkAdminReadOnlyPageReady().editDraftSplitContractReady` 추가.
-- 새 smoke `tools/smoke_admin_edit_draft_split_contract.js` 추가 및 core smoke 포함.
+- 새 smoke `tools/smoke/frontend/smoke_admin_edit_draft_split_contract.js` 추가 및 core smoke 포함.
 - 새 쓰기 도메인 오픈 없음.
 - DB schema 변경 없음, DB reset / seed 필요 없음.
 
@@ -265,7 +265,7 @@
 - 생성 설계/초안/preview/apply/lifecycle guide/batch check 구현을 외부 JS 파일로 1차 분리했습니다.
 - `admin-page-readonly.js`에는 기존 window export 호환 wrapper를 유지했습니다.
 - `admin.html` script 순서를 game api → layout shell → change logs → create lifecycle → admin page로 변경했습니다.
-- 새 smoke `tools/smoke_admin_create_lifecycle_split.js`를 추가하고 core smoke에 포함했습니다.
+- 새 smoke `tools/smoke/frontend/smoke_admin_create_lifecycle_split.js`를 추가하고 core smoke에 포함했습니다.
 - DB schema 변경, DB reset, seed 재실행은 필요 없습니다.
 
 # v188 admin create lifecycle split contract
@@ -273,7 +273,7 @@
 - create lifecycle 실제 분리 전 계약을 `contract-frozen-v188` 상태로 고정했습니다.
 - 다음 후보 파일명을 `src/api/admin/admin-create-lifecycle.js`로 고정했습니다.
 - 생성 초안, 생성 preview/apply, lifecycle guide, batch check 관련 API/window/DOM 계약 진단을 추가했습니다.
-- 새 smoke `tools/smoke_admin_create_lifecycle_split_contract.js`를 추가하고 core smoke에 포함했습니다.
+- 새 smoke `tools/smoke/frontend/smoke_admin_create_lifecycle_split_contract.js`를 추가하고 core smoke에 포함했습니다.
 - 실제 파일 분리는 아직 하지 않았습니다.
 - DB schema 변경, DB reset, seed 재실행은 필요 없습니다.
 
@@ -284,7 +284,7 @@
 - 관리자 change logs 구현을 외부 JS 파일로 1차 분리.
 - `admin-page-readonly.js`에는 기존 window export 호환 wrapper 유지.
 - `admin.html` script 순서를 game api → layout shell → change logs → admin page로 변경.
-- 새 smoke `tools/smoke_admin_change_logs_split.js` 추가.
+- 새 smoke `tools/smoke/frontend/smoke_admin_change_logs_split.js` 추가.
 - DB schema 변경 없음, DB reset / seed 필요 없음.
 
 
@@ -295,7 +295,7 @@
 - `getAdminJsSplitReadiness()`와 `renderAdminJsSplitReadiness()`를 추가했습니다.
 - `checkAdminReadOnlyPageReady()`에 `adminJsSplitReadinessReady`와 `adminJsSplitReadiness`를 추가했습니다.
 - 첫 실제 분리 후보를 DB 쓰기와 무관한 `layout shell`로 잡았습니다.
-- 새 smoke `tools/smoke_admin_js_split_readiness.js`를 추가하고 core smoke에 포함했습니다.
+- 새 smoke `tools/smoke/frontend/smoke_admin_js_split_readiness.js`를 추가하고 core smoke에 포함했습니다.
 - 새 쓰기 도메인은 열지 않았고 DB schema 변경 없음, DB reset / seed 필요 없음.
 
 ## v183 - Admin Create Lifecycle Batch Check
@@ -685,7 +685,7 @@
 - `change logs` 실제 분리 전에 API/window/DOM 계약을 먼저 고정했습니다.
 - `getAdminChangeLogSplitContractReadiness()`와 `renderAdminChangeLogSplitContractReadiness()`를 추가했습니다.
 - 관리자 JS 분리 준비 카드에서 change logs 계약 상태를 같이 볼 수 있게 했습니다.
-- `tools/smoke_admin_change_log_split_contract.js`를 추가하고 core smoke에 포함했습니다.
+- `tools/smoke/frontend/smoke_admin_change_log_split_contract.js`를 추가하고 core smoke에 포함했습니다.
 - 실제 JS 파일 분리는 아직 하지 않았고, DB schema/reset/seed 변경은 없습니다.
 
 
@@ -734,20 +734,20 @@
 - 현재 JS 마스터 데이터에서 생성된 `backend/seeds/generated/*.json`과 FastAPI `/api/v1/game/master-data` 응답을 비교할 수 있습니다.
 - 기본 경량 응답과 `--include-assets` 이미지 포함 응답을 모두 검사할 수 있습니다.
 - characters, skills, itemTemplates, bosses, fieldZones, dropTables, dropTableItems, enhancementRules의 개수와 주요 필드를 비교합니다.
-- `tools/smoke_master_data_parity_checker.py`와 `docs/MASTER_DATA_PARITY_CHECKER.md`를 추가했습니다.
+- `tools/smoke/game/smoke_master_data_parity_checker.py`와 `docs/MASTER_DATA_PARITY_CHECKER.md`를 추가했습니다.
 
 ## v085 - Frontend Master Data Bridge
 
 - `src/api/game-api-client.js`와 `src/api/master-data-bridge.js`를 추가했습니다.
 - 기존 게임 동작은 유지하면서 브라우저 콘솔에서 FastAPI master-data API를 읽어올 수 있게 했습니다.
 - `checkBackendMasterData()`, `loadBackendMasterData()`, `getCachedBackendMasterData()` 전역 함수를 추가했습니다.
-- `tools/smoke_frontend_master_data_bridge.js`와 `docs/FRONTEND_MASTER_DATA_BRIDGE.md`를 추가했습니다.
+- `tools/smoke/game/smoke_frontend_master_data_bridge.js`와 `docs/FRONTEND_MASTER_DATA_BRIDGE.md`를 추가했습니다.
 
 ## v084 - Master Data Nested Asset Cleanup
 
 - 기본 master-data 응답에서 최상위 asset 필드뿐 아니라 중첩 JSON 내부의 긴 `data:image/...` 문자열도 제거하도록 정리했습니다.
 - `?includeAssets=true` 요청에서는 기존처럼 asset 문자열을 포함합니다.
-- `tools/smoke_master_data_nested_asset_cleanup.py`와 관련 문서를 추가했습니다.
+- `tools/smoke/game/smoke_master_data_nested_asset_cleanup.py`와 관련 문서를 추가했습니다.
 
 ## v082 - Seed Import Long Asset URL Fix
 
@@ -755,7 +755,7 @@
 - `characters.image_url`, `skills.icon_url`, `item_templates.icon_url`, `bosses.image_url` 컬럼을 `Text` 타입으로 변경했습니다.
 - `backend/sql/schema_draft.sql`의 이미지/아이콘 URL 컬럼도 `TEXT`로 맞췄습니다.
 - `backend/scripts/setup_dev_db.py`의 SQL 로그 출력을 기본 비활성화했습니다. 긴 seed 데이터가 터미널을 가득 채우는 것을 막고, 필요할 때만 `--verbose-sql`로 볼 수 있습니다.
-- `tools/smoke_seed_import_long_asset_columns.py`를 추가했습니다.
+- `tools/smoke/game/smoke_seed_import_long_asset_columns.py`를 추가했습니다.
 
 ## v078 - Seed Import Structure
 
@@ -763,7 +763,7 @@
   - 로컬 DB reset/schema 생성/seed import/verify 지원
   - `--dry-run`으로 DB 접속 없이 seed JSON 개수 확인 가능
 - `docs/SEED_IMPORT.md` 추가
-- `tools/smoke_seed_import_structure.py` 추가
+- `tools/smoke/game/smoke_seed_import_structure.py` 추가
 - 매우 큰 HP/골드/강화비용을 고려해 DB 초안/모델의 관련 컬럼을 `NUMERIC(40,0)` 계열로 보정
 - `user_mailbox_messages` 테이블을 SQL 초안에 보강
 
@@ -774,7 +774,7 @@
 - `backend/.env.example`의 `CORS_ORIGINS` 예시를 안전한 JSON 리스트 형식으로 수정했습니다.
 - `backend/pyproject.toml` 버전을 `0.1.1`로 올리고 `asyncpg` 의존성을 명시했습니다.
 - `tools/extract_seed_data.js`를 추가해 현재 JS 마스터 데이터를 `backend/seeds/generated/*.json`으로 추출할 수 있게 했습니다.
-- `tools/smoke_seed_extraction.js`를 추가해 생성된 seed JSON 기본 검증을 할 수 있게 했습니다.
+- `tools/smoke/game/smoke_seed_extraction.js`를 추가해 생성된 seed JSON 기본 검증을 할 수 있게 했습니다.
 - `backend/seeds/README.md`, `docs/SEED_EXTRACTION.md`를 추가했습니다.
 - Docker/FastAPI 로컬 실행 중 실제로 발생한 `CORS_ORIGINS` 파싱 오류와 `asyncpg` 누락 오류 해결법을 문서에 반영했습니다.
 - 기존 프론트 게임 동작은 변경하지 않았습니다.
@@ -786,7 +786,7 @@
 - `src/api/API_PLAN.md`를 확정 응답 형태 기준으로 갱신했습니다.
 - 저장/불러오기, 마스터 데이터, 전투, 처치/드랍, 장착/해제/강화, 스킬강화권, 보스 소환, 관리자 변경 응답 예시를 정리했습니다.
 - 실패 응답 형태와 공통 에러 코드를 정리했습니다.
-- `tools/smoke_api_response_contract.js`를 추가해 응답 계약 헬퍼와 예시 응답을 자동 검증할 수 있게 했습니다.
+- `tools/smoke/frontend/smoke_api_response_contract.js`를 추가해 응답 계약 헬퍼와 예시 응답을 자동 검증할 수 있게 했습니다.
 - 현재 게임 동작에 영향을 주는 파일은 변경하지 않았습니다. 따라서 브라우저 확인 항목은 없습니다.
 
 ## v073 - 4순위 3차: 장착/해제/스킬강화권/보스소환 결과 객체화
@@ -797,7 +797,7 @@
 - `applyActionResultUi()`가 보스 패널 닫기, 특수보스 패널 닫기, 자동공격 시작 요청을 처리할 수 있게 확장했습니다.
 - 장착/해제/스킬강화권/보스소환 성공·실패 사유를 `data.reason` 또는 상세 데이터로 남기도록 정리했습니다.
 - 기존 UI 동작은 유지하면서 FastAPI 응답 구조로 옮기기 쉬운 중간 계층을 확장했습니다.
-- `tools/smoke_action_results.js`를 추가해 주요 결과 객체 생성 여부를 자동 확인할 수 있게 했습니다.
+- `tools/smoke/frontend/smoke_action_results.js`를 추가해 주요 결과 객체 생성 여부를 자동 확인할 수 있게 했습니다.
 
 ## v072 - 4순위 2차: 처치/드랍/보상 결과 객체화
 
@@ -813,7 +813,7 @@
 - window export 등록을 `registerAdminReadOnlyPageExports()`로 묶음.
 - 외부 모듈 configure 호출을 `configureAdminExternalModules()`로 묶음.
 - `getAdminThinEntryCleanupReadiness()` / `renderAdminThinEntryCleanupReadiness()` 추가.
-- `tools/smoke_admin_thin_entry_cleanup.js` 추가.
+- `tools/smoke/frontend/smoke_admin_thin_entry_cleanup.js` 추가.
 
 ## v238 — Backend admin schema field constraint contract
 

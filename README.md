@@ -29,7 +29,7 @@ Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 실행 위치: 프로젝트 루트
 
 ```bash
-python tools/smoke_backend_admin_write_replay_safety_contract.py && python tools/smoke_backend_admin_frontend_contract_parity.py && node tools/smoke_admin_readonly_page.js && python tools/smoke_backend_admin_runtime_route_contract.py && python tools/smoke_backend_admin_request_metadata_contract.py && python tools/smoke_backend_admin_schema_model_contract.py && python tools/smoke_backend_admin_schema_field_constraint_contract.py && python -m compileall -q backend/app backend/scripts tools
+python tools/smoke/contracts/smoke_backend_admin_write_replay_safety_contract.py && python tools/smoke/contracts/smoke_backend_admin_frontend_contract_parity.py && node tools/smoke/frontend/smoke_admin_readonly_page.js && python tools/smoke/contracts/smoke_backend_admin_runtime_route_contract.py && python tools/smoke/contracts/smoke_backend_admin_request_metadata_contract.py && python tools/smoke/contracts/smoke_backend_admin_schema_model_contract.py && python tools/smoke/contracts/smoke_backend_admin_schema_field_constraint_contract.py && python -m compileall -q backend/app backend/scripts tools
 ```
 
 ## 서버 실행

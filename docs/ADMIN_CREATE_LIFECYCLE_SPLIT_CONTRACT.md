@@ -79,7 +79,7 @@ getAdminCreateLifecycleSplitContractReadiness()
 실행 위치: 프로젝트 루트
 
 ```bash
-node tools/smoke_admin_create_lifecycle_split_contract.js
+node tools/smoke/frontend/smoke_admin_create_lifecycle_split_contract.js
 ```
 
 core smoke에도 포함했습니다.

@@ -70,7 +70,7 @@ backend DB 저장 실패
 위치: **프로젝트 루트**
 
 ```bash
-node tools/smoke_save_data_dual_write.js
+node tools/smoke/game/smoke_save_data_dual_write.js
 ```
 
 위치: **backend 폴더 + 가상환경 activate 상태**

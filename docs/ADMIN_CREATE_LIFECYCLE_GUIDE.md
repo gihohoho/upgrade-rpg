@@ -81,7 +81,7 @@ v180부터 관리자 변경 이력 필터의 action 선택지는 실제 저장�
 
 ```bash
 위치: 프로젝트 루트
-node tools/smoke_admin_create_lifecycle_guide.js
+node tools/smoke/frontend/smoke_admin_create_lifecycle_guide.js
 ```
 
 ```bash

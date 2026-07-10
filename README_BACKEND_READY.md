@@ -29,5 +29,5 @@ python -m pip install -e ".[dev]"
 실행 위치: 프로젝트 루트
 
 ```bash
-python tools/smoke_backend_admin_write_replay_safety_contract.py && python tools/smoke_backend_admin_frontend_contract_parity.py && node tools/smoke_admin_readonly_page.js && python -m compileall -q backend/app backend/scripts tools
+python tools/smoke/contracts/smoke_backend_admin_write_replay_safety_contract.py && python tools/smoke/contracts/smoke_backend_admin_frontend_contract_parity.py && node tools/smoke/frontend/smoke_admin_readonly_page.js && python -m compileall -q backend/app backend/scripts tools
 ```

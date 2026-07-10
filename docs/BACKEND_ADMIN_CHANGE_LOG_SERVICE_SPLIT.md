@@ -10,7 +10,7 @@
 - 수정: `backend/app/services/admin_service.py`
 - 수정: `backend/app/services/admin_service_split_contract.py`
 - 수정: `src/api/admin-page-readonly.js`
-- 추가: `tools/smoke_backend_admin_change_log_service_split.py`
+- 추가: `tools/smoke/contracts/smoke_backend_admin_change_log_service_split.py`
 
 ## 분리된 기능
 
@@ -91,7 +91,7 @@ true
 
 ```bash
 bash tools/run_smoke_core.sh
-python tools/smoke_backend_admin_change_log_service_split.py
+python tools/smoke/contracts/smoke_backend_admin_change_log_service_split.py
 python -m compileall -q backend/app backend/scripts tools
 ```
 

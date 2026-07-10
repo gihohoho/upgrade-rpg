@@ -14,7 +14,7 @@ v208에서는 `backend/app/api/routes/admin.py`가 직접 `app.core.response.ok_
 - `backend/app/api/routes/admin.py`의 `ok_response()` 호출을 `admin_ok_response()`로 교체
 - `backend/app/services/admin_service_split_contract.py` splitStatus 갱신
 - `src/api/admin-page-readonly.js` readiness 버전/계약 갱신
-- `tools/smoke_backend_admin_route_response_helper.py` 추가
+- `tools/smoke/contracts/smoke_backend_admin_route_response_helper.py` 추가
 - `tools/run_smoke_core.sh`에 v208 smoke 추가
 
 ## 유지 조건
@@ -46,8 +46,8 @@ getAdminBackendServiceSplitContractReadiness().splitStatus
 
 ```bash
 bash tools/run_smoke_core.sh
-python tools/smoke_backend_admin_route_response_helper.py
-python tools/smoke_seed_import_long_asset_columns.py
-python tools/smoke_seed_import_structure.py
+python tools/smoke/contracts/smoke_backend_admin_route_response_helper.py
+python tools/smoke/game/smoke_seed_import_long_asset_columns.py
+python tools/smoke/game/smoke_seed_import_structure.py
 python -m compileall -q backend/app backend/scripts tools
 ```

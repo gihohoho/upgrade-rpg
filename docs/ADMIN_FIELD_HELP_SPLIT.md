@@ -39,7 +39,7 @@ v196.admin-field-help-split
 
 ## 검증
 
-- `tools/smoke_admin_field_help_split.js`
+- `tools/smoke/frontend/smoke_admin_field_help_split.js`
 - `bash tools/run_smoke_core.sh`
 - `bash tools/run_smoke_all.sh`
 

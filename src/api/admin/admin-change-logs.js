@@ -188,6 +188,14 @@
 
 
 
+
+  function renderUnifiedPreviewDiff(payload) {
+    const diff = payload && Array.isArray(payload.unifiedDiff) ? payload.unifiedDiff : [];
+    const snapshot = payload && payload.rollbackSnapshot ? payload.rollbackSnapshot : null;
+    if (!diff.length && !snapshot) return "";
+    const rows = diff.length ? diff.map((item) => `<tr><td>${escapeHtml(item.path || "$")}</td><td>${escapeHtml(item.op || "replace")}</td><td>${escapeHtml(formatValue(item.before))}</td><td>${escapeHtml(formatValue(item.after))}</td></tr>`).join("") : `<tr><td colspan="4">변경 없음</td></tr>`;
+    return `<details class="json-detail" open><summary>공통 Diff <span class="pill good">${escapeHtml(formatValue(diff.length))}</span></summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>경로</th><th>작업</th><th>이전</th><th>이후</th></tr></thead><tbody>${rows}</tbody></table></div>${snapshot ? `<div class="filter-help">rollback snapshot: schema v${escapeHtml(formatValue(snapshot.schemaVersion))} · fingerprint ${escapeHtml(String(snapshot.fingerprint || "").slice(0, 12))}…</div>` : ""}</details>`;
+  }
   function renderAdminChangeLogs(logsPayload) {
     const target = $(`[data-admin-change-log-table]`);
     const meta = $(`[data-admin-change-log-meta]`);
@@ -316,6 +324,7 @@
       </div>
       ${warnings.length ? `<div class="filter-help">warnings: ${escapeHtml(warnings.join(", "))}</div>` : ""}
       ${result.note ? `<div class="filter-help">${escapeHtml(result.note)}</div>` : ""}
+      ${renderUnifiedPreviewDiff(result)}
       <details class="json-detail" open><summary>되돌릴 값</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>현재/적용 값</th><th>되돌릴 값</th></tr></thead><tbody>${rows}</tbody></table></div></details>
       <details class="json-detail" ${mismatches.length ? "open" : ""}><summary>현재값 안전 검사</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>현재 DB 값</th><th>이력의 적용 값</th><th>되돌릴 값</th></tr></thead><tbody>${mismatchRows}</tbody></table></div></details>
     `;
@@ -444,6 +453,7 @@
       ${renderAdminCreateDeleteBlockerSummary(dependencyChecks)}
       ${warnings.length ? `<div class="filter-help">warnings: ${escapeHtml(warnings.join(", "))}</div>` : ""}
       ${result.note ? `<div class="filter-help">${escapeHtml(result.note)}</div>` : ""}
+      ${renderUnifiedPreviewDiff(result)}
       <details class="json-detail" open><summary>삭제될 생성 값</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>생성 값</th><th>삭제 후</th></tr></thead><tbody>${rows}</tbody></table></div></details>
       <details class="json-detail" ${mismatches.length ? "open" : ""}><summary>현재값 안전 검사</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>현재 DB 값</th><th>생성 당시 값</th><th>판정</th></tr></thead><tbody>${mismatchRows}</tbody></table></div></details>
       <details class="json-detail" open><summary>연결 데이터 삭제 차단 검사</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>검사</th><th>대상</th><th>개수</th><th>판정</th></tr></thead><tbody>${dependencyRows}</tbody></table></div></details>
@@ -552,6 +562,7 @@
       </div>
       ${warnings.length ? `<div class="filter-help">warnings: ${escapeHtml(warnings.join(", "))}</div>` : ""}
       ${result.note ? `<div class="filter-help">${escapeHtml(result.note)}</div>` : ""}
+      ${renderUnifiedPreviewDiff(result)}
       <details class="json-detail" open><summary>복원될 값</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>복원 전</th><th>복원 후</th></tr></thead><tbody>${rows}</tbody></table></div></details>
       <details class="json-detail" ${validationErrors.length ? "open" : ""}><summary>복원 검증 오류</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>값</th><th>사유</th></tr></thead><tbody>${errorRows}</tbody></table></div></details>
     `;

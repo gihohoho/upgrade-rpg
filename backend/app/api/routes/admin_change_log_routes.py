@@ -5,6 +5,7 @@ from app.api.routes import admin_response_data_helpers as admin_data
 from app.api.routes.admin_response_helpers import admin_ok_response
 from app.api.routes.admin_response_meta_helpers import admin_route_meta
 from app.api.routes.admin_route_services import create_admin_service
+from app.services.admin.admin_preview_enrichment import enrich_admin_preview
 from app.api.routes.admin_route_error_helpers import build_admin_change_logs_unavailable_payload
 from app.api.routes.admin_route_params import (
     ADMIN_CURRENT_USER_DEP,
@@ -110,6 +111,7 @@ async def preview_admin_create_delete_rollback(
         change_log_id=change_log_id,
         reason=payload.reason if payload else None,
     )
+    preview = enrich_admin_preview(preview, mode="delete", target_id=change_log_id)
     return admin_ok_response(
         type="admin.change_log.create_delete_preview",
         payload=preview,
@@ -155,6 +157,7 @@ async def preview_admin_create_delete_restore(
         change_log_id=change_log_id,
         reason=payload.reason if payload else None,
     )
+    preview = enrich_admin_preview(preview, mode="restore", target_id=change_log_id)
     return admin_ok_response(
         type="admin.change_log.create_delete_restore_preview",
         payload=preview,
@@ -200,6 +203,7 @@ async def preview_admin_change_log_rollback(
         change_log_id=change_log_id,
         reason=payload.reason if payload else None,
     )
+    preview = enrich_admin_preview(preview, mode="rollback", target_id=change_log_id)
     return admin_ok_response(
         type="admin.change_log.rollback_preview",
         payload=preview,

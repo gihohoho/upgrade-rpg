@@ -22,7 +22,7 @@
 실행 위치: 프로젝트 루트
 
 ```bash
-python tools/smoke_backend_admin_schema_model_contract.py
+python tools/smoke/contracts/smoke_backend_admin_schema_model_contract.py
 bash tools/run_smoke_core.sh
 python -m compileall -q backend/app backend/scripts tools
 ```

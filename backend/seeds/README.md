@@ -8,7 +8,7 @@
 
 ```bash
 node tools/extract_seed_data.js
-node tools/smoke_seed_extraction.js
+node tools/smoke/game/smoke_seed_extraction.js
 ```
 
 ## 생성 위치

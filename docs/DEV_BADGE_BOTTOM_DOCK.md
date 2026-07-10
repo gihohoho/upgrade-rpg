@@ -37,8 +37,8 @@
 ```txt
 src/api/master-data-dev-badge.js
 src/api/save-data-dev-badge.js
-tools/smoke_master_data_dev_badge.js
-tools/smoke_save_data_dev_badge.js
+tools/smoke/game/smoke_master_data_dev_badge.js
+tools/smoke/game/smoke_save_data_dev_badge.js
 ```
 
 ## 영향 범위

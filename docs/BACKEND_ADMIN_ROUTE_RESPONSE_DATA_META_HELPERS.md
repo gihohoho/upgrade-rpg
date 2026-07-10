@@ -22,6 +22,6 @@ v212에서는 `backend/app/api/routes/admin.py`의 반복 응답 생성 코드�
 
 ```bash
 bash tools/run_smoke_core.sh
-python tools/smoke_backend_admin_route_response_data_meta_helpers.py
+python tools/smoke/contracts/smoke_backend_admin_route_response_data_meta_helpers.py
 python -m compileall -q backend/app backend/scripts tools
 ```

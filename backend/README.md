@@ -120,7 +120,7 @@ seed 추출은 프로젝트 루트에서 실행합니다.
 
 ```bash
 node tools/extract_seed_data.js
-node tools/smoke_seed_extraction.js
+node tools/smoke/game/smoke_seed_extraction.js
 ```
 
 

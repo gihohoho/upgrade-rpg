@@ -17,7 +17,7 @@ GET /api/v1/admin/change-logs?limit=20&sort=created_desc
 - `AdminService._ensure_admin_change_log_schema()` 추가
 - 변경 이력 목록/상세/되돌리기 미리보기 진입 전에 `admin_change_logs` 테이블과 핵심 컬럼을 보정
 - create/edit/rollback apply에서 change log를 쓰기 전에 같은 schema guard를 먼저 실행
-- `tools/smoke_backend_admin_change_log_schema_guard.py` 추가
+- `tools/smoke/contracts/smoke_backend_admin_change_log_schema_guard.py` 추가
 - `tools/run_smoke_core.sh`에 새 smoke 포함
 
 ## 의도

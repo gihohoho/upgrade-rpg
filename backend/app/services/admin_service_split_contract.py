@@ -376,13 +376,13 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
             "key": "admin-diff-engine",
             "label": "Admin deterministic diff engine",
             "candidateFile": "backend/app/services/admin/admin_diff_engine.py",
-            "publicMethods": ["build_admin_diff"], "helperMethods": [],
+            "publicMethods": [], "helperMethods": [], "moduleFunctions": ["build_admin_diff"],
         },
         {
             "key": "admin-rollback-snapshot",
             "label": "Admin detached rollback snapshot",
             "candidateFile": "backend/app/services/admin/admin_rollback_snapshot.py",
-            "publicMethods": ["build_rollback_snapshot", "build_rollback_restore_payload"], "helperMethods": [],
+            "publicMethods": [], "helperMethods": [], "moduleFunctions": ["build_rollback_snapshot", "build_rollback_restore_payload"],
         },
         {
             "key": "route-service-dependency",

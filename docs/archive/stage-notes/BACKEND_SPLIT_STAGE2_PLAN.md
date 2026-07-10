@@ -188,7 +188,7 @@ FastAPI 구현 전에 프론트와 백엔드가 맞춰야 할 응답 형태를 �
 ```txt
 docs/API_RESPONSE_CONTRACT.md
 src/api/api-response-contract.js
-tools/smoke_api_response_contract.js
+tools/smoke/frontend/smoke_api_response_contract.js
 ```
 
 확정한 기준:

@@ -546,7 +546,7 @@ docs/CSS_AUDIT.md
 | `src/api/API_PLAN.md` | FastAPI로 만들 API 목록과 우선순위 | 5순위에서 확정 응답 형태 기준으로 갱신 |
 | `src/api/api-response-contract.js` | API 응답 버전, 행동 타입, 에러 코드, 응답 생성 헬퍼 | 현재 `index.html`에서 로드하지 않음. 미래 FastAPI/Vue 연결 기준 |
 | `docs/API_RESPONSE_CONTRACT.md` | 서버-프론트 응답 형태 계약서 | FastAPI 구현 전 반드시 참고 |
-| `tools/smoke_api_response_contract.js` | 응답 계약 헬퍼/예시 검증 | `node tools/smoke_api_response_contract.js` |
+| `tools/smoke/frontend/smoke_api_response_contract.js` | 응답 계약 헬퍼/예시 검증 | `node tools/smoke/frontend/smoke_api_response_contract.js` |
 
 
 ---

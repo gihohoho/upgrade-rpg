@@ -10,7 +10,7 @@
 
 ```txt
 src/api/master-data-adapter.js
-tools/smoke_master_data_adapter.js
+tools/smoke/game/smoke_master_data_adapter.js
 docs/MASTER_DATA_ADAPTER.md
 ```
 
@@ -99,7 +99,7 @@ lightsabre.baseProcRate null 보존
 위치: 프로젝트 루트
 
 ```bash
-node tools/smoke_master_data_adapter.js
+node tools/smoke/game/smoke_master_data_adapter.js
 ```
 
 정상이면 다음이 출력됩니다.
