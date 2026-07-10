@@ -68,7 +68,7 @@ assert_true("def admin_ok_response(type: str" in helper, "admin_ok_response help
 assert_true("return ok_response(type=type, **kwargs)" in helper, "helper must preserve ok_response envelope")
 assert_true('"splitStatus": "admin-schema-field-constraint-contract-v238"' in contract, "backend contract splitStatus should be v216")
 assert_true('"backend/app/api/routes/admin_response_helpers.py"' in contract, "helper should be listed in backend split contract")
-assert_true('const VERSION = "v242.backend-admin-request-content-negotiation-contract"' in entry, "frontend readiness version should be v216")
+assert_true('const VERSION = "v243.backend-admin-request-media-size-boundary-contract"' in entry, "frontend readiness version should be v216")
 assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry, "frontend splitStatus should be v216")
 assert_true("routeResponseHelperReady" in entry, "frontend route response helper readiness flag missing")
 assert_true("routeParamsReady" in entry, "frontend route params readiness flag missing")

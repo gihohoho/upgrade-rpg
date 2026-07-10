@@ -56,7 +56,7 @@ assert_true("admin_change_logs_route_exception_guarded" in error_helpers, "guard
 assert_true('"backend/app/api/routes/admin_route_params.py"' in contract, "params helper should be listed in contract")
 assert_true('"backend/app/api/routes/admin_route_error_helpers.py"' in contract, "error helper should be listed in contract")
 assert_true('"splitStatus": "admin-schema-field-constraint-contract-v238"' in contract, "contract splitStatus should be v216")
-assert_true('const VERSION = "v242.backend-admin-request-content-negotiation-contract"' in entry, "frontend readiness version should be v216")
+assert_true('const VERSION = "v243.backend-admin-request-media-size-boundary-contract"' in entry, "frontend readiness version should be v216")
 assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry, "frontend splitStatus should be v216")
 assert_true("backendRouteParamsReady" in entry, "top-level route params readiness flag missing")
 assert_true("backendRouteErrorHelperReady" in entry, "top-level route error helper readiness flag missing")

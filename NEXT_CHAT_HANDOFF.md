@@ -1,56 +1,48 @@
 # Next Chat Handoff
 
-## Current stable version
+## Current stable state
 
-- Admin readiness version: `v242.backend-admin-request-content-negotiation-contract`
+- Admin readiness version: `v243.backend-admin-request-media-size-boundary-contract`
 - Backend splitStatus: `admin-schema-field-constraint-contract-v238`
-- No route path, API response body, DB, env, seed, auth, or write-guard changes.
+- ZIP: `rpg_v243_backend_admin_request_media_size_boundary_contract.zip`
+- DB/env/seed changes: none
+- Route paths, API response bodies, schemas, authentication, and apply write guards: unchanged
 
-## v242 completed
+## v243 completed
 
-- Added 8 isolated request-boundary cases.
-- `application/json; charset=utf-8` succeeds.
-- A valid JSON object without a Content-Type header succeeds in the current FastAPI/Starlette stack.
-- Top-level JSON arrays and strings produce stable `422 model_attributes_type` errors.
-- Empty JSON object and completely empty body remain distinguishable by error location.
-- `Accept: application/json` and `Accept: text/plain` both keep the default JSON response.
-- `detail[].input` and `detail[].ctx` remain outside the compatibility contract.
-- Service calls and DB write attempts remain zero.
+- Added non-JSON request media boundary checks for `application/octet-stream`, `application/x-www-form-urlencoded`, and `multipart/form-data`.
+- Empty binary body remains a body-level `missing` 422.
+- Non-empty binary/form bodies remain `model_attributes_type` 422 responses.
+- A 64 KiB JSON body is accepted in the isolated TestClient app, documenting that no explicit application body-size limit is configured.
+- Production size-limit ownership is explicitly `deployment-proxy-or-server-configuration`; no risky middleware was added.
+- Service call count and DB write attempt count remain zero.
+- Added synchronized backend/frontend readiness marker: `backendRequestMediaSizeBoundaryContractReady`.
 
-## New files
+## Validation
 
-- `backend/app/api/routes/admin_request_content_negotiation_contract.py`
-- `tools/smoke_backend_admin_request_content_negotiation_contract.py`
-
-## Verification
+Run from project root:
 
 ```bash
-python tools/smoke_backend_admin_request_content_negotiation_contract.py
-python tools/smoke_backend_admin_validation_error_compatibility_contract.py
-python tools/smoke_backend_admin_request_payload_validation_contract.py
-node tools/smoke_admin_readonly_page.js
-python tools/smoke_backend_admin_runtime_route_contract.py
-python tools/smoke_backend_admin_request_metadata_contract.py
-python tools/smoke_backend_admin_schema_model_contract.py
-python tools/smoke_backend_admin_schema_field_constraint_contract.py
-python -m compileall -q backend/app backend/scripts tools
+python tools/smoke_backend_admin_request_media_size_boundary_contract.py && python tools/smoke_backend_admin_request_content_negotiation_contract.py && python tools/smoke_backend_admin_validation_error_compatibility_contract.py && python tools/smoke_backend_admin_request_payload_validation_contract.py && node tools/smoke_admin_readonly_page.js && python -m compileall -q backend/app backend/scripts tools
 ```
 
-## Console expectation after backend restart
+`tools/run_smoke_core.sh` passed through the runtime-route section before the execution timeout; every remaining smoke was then run individually and passed.
+
+## Admin console expected
 
 ```js
 ({
   version: checkAdminReadOnlyPageReady().version,
   pageReady: checkAdminReadOnlyPageReady().ok,
   failedChecks: checkAdminReadOnlyPageReady().failedChecks,
-  contentNegotiationReady: checkAdminReadOnlyPageReady().backendRequestContentNegotiationContractReady,
+  mediaSizeBoundaryReady: checkAdminReadOnlyPageReady().backendRequestMediaSizeBoundaryContractReady,
 })
 ```
 
-Expected version: `v242.backend-admin-request-content-negotiation-contract`; `pageReady: true`; `failedChecks: []`; `contentNegotiationReady: true`.
+Expected version: `v243.backend-admin-request-media-size-boundary-contract`, `pageReady: true`, `failedChecks: []`, `mediaSizeBoundaryReady: true`.
 
-## Next recommended work
+## Recommended next work
 
-`v243 backend admin request size and media-type boundary contract`
+`v244 backend admin request header and encoding compatibility contract`
 
-Suggested scope: oversized or policy-limited request body behavior, unsupported binary/form media types, and stable 4xx boundaries without invoking services or DB writes.
+Safely verify duplicate/odd Content-Type parameters, UTF-8 non-ASCII JSON, invalid byte encoding, and transfer/header normalization without service or DB execution. Do not introduce a production body-size limit until deployment proxy/server settings are known.

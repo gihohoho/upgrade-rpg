@@ -1,3 +1,14 @@
+# Changelog
+
+## v243.backend-admin-request-media-size-boundary-contract
+
+- Added `admin_request_media_size_boundary_contract.py` and its smoke test.
+- Frozen octet-stream, URL-encoded form, multipart form, empty binary, and arbitrary binary request parsing boundaries without calling admin services or the DB.
+- Added a 64 KiB JSON probe to document that the FastAPI application currently has no explicit request-body size limit.
+- Declared request-size enforcement ownership as deployment proxy/server configuration rather than silently changing live API behavior.
+- Added backend/frontend readiness synchronization and `backendRequestMediaSizeBoundaryContractReady`.
+- Kept route paths, response bodies, schemas, write guards, DB, env, seed, and splitStatus unchanged.
+
 ## v242.1 frontend/runtime compatibility hotfix
 
 - Fixed the `json-without-content-type` contract for Starlette/FastAPI version differences.

@@ -114,7 +114,7 @@ assert_true('"backend/app/api/routes/admin_route_operation_contract.py"' in cont
 assert_true('"splitStatus": "admin-schema-field-constraint-contract-v238"' in contract, "backend split contract should be v228")
 assert_true('"Admin route operation metadata lives in admin_route_operation_contract.py"' in contract, "backend route contract should mention operation metadata")
 assert_true('"Runtime route endpoint metadata is checked against static response type markers"' in contract, "backend route contract should mention runtime endpoint metadata")
-assert_true('const VERSION = "v242.backend-admin-request-content-negotiation-contract"' in entry, "frontend readiness version should be v228")
+assert_true('const VERSION = "v243.backend-admin-request-media-size-boundary-contract"' in entry, "frontend readiness version should be v228")
 assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry, "frontend splitStatus should be v228")
 assert_true("backendRouteOperationContractReady" in entry, "frontend top-level route operation readiness flag missing")
 assert_true("backendRuntimeRouteEndpointMetadataReady" in entry, "frontend top-level runtime endpoint metadata flag missing")
