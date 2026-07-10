@@ -3,11 +3,13 @@ from __future__ import annotations
 from typing import Any, get_args, get_origin
 
 from fastapi import FastAPI
-from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
 from app.api.routes.admin_request_metadata_contract import ADMIN_REQUEST_METADATA_CONTRACT
-from app.api.routes.admin_runtime_route_contract import ADMIN_RUNTIME_ROUTE_CONTRACT
+from app.api.routes.admin_runtime_route_contract import (
+    ADMIN_RUNTIME_ROUTE_CONTRACT,
+    collect_admin_runtime_route_entries,
+)
 from app.schemas import admin as admin_schemas
 
 
@@ -42,19 +44,28 @@ ADMIN_SCHEMA_MODEL_CONTRACT: dict[str, Any] = {
 }
 
 
-def _admin_routes(app: FastAPI) -> dict[tuple[str, str], APIRoute]:
+def _admin_routes(app: FastAPI) -> dict[tuple[str, str], Any]:
+    """Return concrete admin routes using the shared runtime collector.
+
+    Windows/FastAPI/Pydantic combinations can expose assembled routes through
+    different internal containers. The schema/model contract must not use its
+    own ``app.routes`` scan; it should reuse the same collector that runtime,
+    operation, response metadata, and request metadata contracts use.
+    """
+
     api_prefix = ADMIN_RUNTIME_ROUTE_CONTRACT["apiPrefix"]
     admin_prefix = ADMIN_RUNTIME_ROUTE_CONTRACT["adminPrefix"]
     prefix = f"{api_prefix}{admin_prefix}"
-    result: dict[tuple[str, str], APIRoute] = {}
-    for route in app.routes:
-        if not isinstance(route, APIRoute) or not route.path.startswith(prefix):
+    result: dict[tuple[str, str], Any] = {}
+    entries, _source = collect_admin_runtime_route_entries(app)
+    for entry in entries:
+        path = entry.get("path", "")
+        method = str(entry.get("method", "")).upper()
+        route = entry.get("route")
+        if not isinstance(path, str) or not path.startswith(prefix) or not method or route is None:
             continue
-        relative_path = route.path[len(prefix):] or "/"
-        for method in sorted(route.methods or []):
-            if method in {"HEAD", "OPTIONS"}:
-                continue
-            result[(method, relative_path)] = route
+        relative_path = path[len(prefix):] or "/"
+        result[(method, relative_path)] = route
     return result
 
 
@@ -68,7 +79,7 @@ def _model_name_from_annotation(annotation: Any) -> str | None:
     return None
 
 
-def _runtime_body_model_name(route: APIRoute) -> str | None:
+def _runtime_body_model_name(route: Any) -> str | None:
     body_field = getattr(route, "body_field", None)
     if body_field is None:
         return None

@@ -121,22 +121,89 @@ def _constraints(field_info: Any) -> list[str]:
     return [repr(item) for item in (getattr(field_info, "metadata", []) or [])]
 
 
+def _field_info(param: Any) -> Any:
+    return getattr(param, "field_info", None)
+
+
+def _field_name(param: Any) -> str:
+    field_info = _field_info(param)
+    return str(
+        getattr(param, "name", None)
+        or getattr(param, "alias", None)
+        or getattr(field_info, "alias", None)
+        or ""
+    )
+
+
+def _field_alias(param: Any) -> str:
+    field_info = _field_info(param)
+    name = _field_name(param)
+    return str(getattr(field_info, "alias", None) or getattr(param, "alias", None) or name)
+
+
+def _field_default(param: Any) -> Any:
+    field_info = _field_info(param)
+    if hasattr(param, "default"):
+        return getattr(param, "default")
+    if hasattr(field_info, "default"):
+        return getattr(field_info, "default")
+    return None
+
+
+def _field_required(param: Any) -> bool:
+    """Return required metadata across FastAPI/Pydantic compatibility layers.
+
+    FastAPI can expose params as Pydantic v1 ``ModelField`` objects, Pydantic
+    v2 compatibility ``ModelField`` objects, or thin wrapper objects depending
+    on the installed versions. Some expose ``.required`` while newer wrappers
+    expose ``.is_required()`` only. The contract must read both shapes.
+    """
+
+    required = getattr(param, "required", None)
+    if required is not None:
+        return bool(required)
+
+    is_required = getattr(param, "is_required", None)
+    if callable(is_required):
+        return bool(is_required())
+
+    field_info = _field_info(param)
+    field_info_required = getattr(field_info, "is_required", None)
+    if callable(field_info_required):
+        return bool(field_info_required())
+
+    return _default_value(_field_default(param)) == "PydanticUndefined"
+
+
+def _field_annotation(param: Any) -> str:
+    field_info = _field_info(param)
+    annotation = (
+        getattr(field_info, "annotation", None)
+        or getattr(param, "annotation", None)
+        or getattr(param, "type_", None)
+        or getattr(param, "outer_type_", None)
+        or ""
+    )
+    return str(annotation)
+
+
 def _param_metadata(param: Any) -> dict[str, Any]:
+    field_info = _field_info(param)
     return {
-        "name": param.name,
-        "alias": getattr(param.field_info, "alias", None) or param.name,
-        "required": bool(param.required),
-        "default": _default_value(param.default),
-        "constraints": _constraints(param.field_info),
+        "name": _field_name(param),
+        "alias": _field_alias(param),
+        "required": _field_required(param),
+        "default": _default_value(_field_default(param)),
+        "constraints": _constraints(field_info),
     }
 
 
 def _body_metadata(param: Any) -> dict[str, Any]:
-    annotation = str(getattr(param.field_info, "annotation", ""))
+    annotation = _field_annotation(param)
     models = _SCHEMA_RE.findall(annotation)
     return {
-        "name": param.name,
-        "required": bool(param.required),
+        "name": _field_name(param),
+        "required": _field_required(param),
         "model": models[0] if models else annotation,
     }
 

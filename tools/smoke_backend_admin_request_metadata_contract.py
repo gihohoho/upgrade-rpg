@@ -49,6 +49,8 @@ _install_db_import_stubs()
 
 from app.api.routes.admin_request_metadata_contract import (  # noqa: E402
     ADMIN_REQUEST_METADATA_CONTRACT,
+    _body_metadata,
+    _param_metadata,
     get_admin_request_metadata_contract_readiness,
 )
 from app.api.routes.admin_response_metadata_contract import get_admin_response_metadata_contract_readiness  # noqa: E402
@@ -70,6 +72,27 @@ def assert_true(condition: bool, message: str) -> None:
 
 response_metadata = get_admin_response_metadata_contract_readiness(app)
 request_metadata = get_admin_request_metadata_contract_readiness(app, root=ROOT)
+
+
+class _CompatFieldInfo:
+    alias = "compatAlias"
+    default = None
+    metadata = []
+    annotation = "AdminMasterDataCreateApplyRequest"
+
+
+class _CompatModelFieldWithoutRequired:
+    name = "compat_param"
+    default = None
+    field_info = _CompatFieldInfo()
+
+    def is_required(self) -> bool:
+        return True
+
+
+compat_param = _CompatModelFieldWithoutRequired()
+compat_param_metadata = _param_metadata(compat_param)
+compat_body_metadata = _body_metadata(compat_param)
 contract = read(CONTRACT)
 entry = read(ENTRY)
 run_smoke = read(RUN_SMOKE)
@@ -78,6 +101,9 @@ assert_true(ADMIN_REQUEST_METADATA_CONTRACT["version"] == "v233.backend-admin-ro
 assert_true(ADMIN_REQUEST_METADATA_CONTRACT["status"] == "route-request-dependency-metadata-v233", "request metadata contract status mismatch")
 assert_true(response_metadata["ok"], f"response metadata contract should pass before request metadata check: {response_metadata}")
 assert_true(request_metadata["ok"], f"request metadata readiness failed: {request_metadata}")
+assert_true(compat_param_metadata["required"] is True, "request metadata should support ModelField.is_required() without .required")
+assert_true(compat_param_metadata["alias"] == "compatAlias", "request metadata should read aliases from compatibility field_info")
+assert_true(compat_body_metadata["model"] == "AdminMasterDataCreateApplyRequest", "request body metadata should read compatibility annotations")
 assert_true(request_metadata["expectedRouteCount"] == 21, "request metadata contract should cover all 21 admin routes")
 assert_true(request_metadata["runtimeRouteCount"] == 21, "runtime request metadata should expose all 21 admin routes")
 assert_true(request_metadata["openApiRouteCount"] == 21, "OpenAPI request metadata should expose all 21 admin routes")
@@ -109,7 +135,7 @@ for key in (
     assert_true(key in contract, f"split contract should mention {key}")
 
 assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry, "admin page splitStatus should be v234")
-assert_true('const VERSION = "v239.backend-admin-shared-route-collector-hotfix"' in entry, "admin page version should be v234")
+assert_true('const VERSION = "v239.2.backend-admin-schema-model-shared-collector-hotfix"' in entry, "admin page version should be v234")
 assert_true('backendRequestMetadataContractReady' in entry, "admin page should expose request metadata contract readiness flag")
 assert_true('backendRuntimeRequestMetadataReady' in entry, "admin page should expose runtime request metadata readiness flag")
 assert_true('backendOpenApiRequestMetadataReady' in entry, "admin page should expose OpenAPI request metadata readiness flag")

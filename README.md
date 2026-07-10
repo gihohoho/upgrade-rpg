@@ -29,7 +29,7 @@ checkAdminReadOnlyPageReady().version
 예상:
 
 ```txt
-v239.backend-admin-shared-route-collector-hotfix
+v239.2.backend-admin-schema-model-shared-collector-hotfix
 ```
 
 ```js

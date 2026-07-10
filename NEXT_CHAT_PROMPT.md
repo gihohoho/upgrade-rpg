@@ -2,9 +2,9 @@
 
 ## 현재 안정 버전
 
-- 관리자 페이지 readiness version: `v239.backend-admin-shared-route-collector-hotfix`
+- 관리자 페이지 readiness version: `v239.2.backend-admin-schema-model-shared-collector-hotfix`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
-- 현재 패키지: `rpg_v239_next_chat_handoff_clean_ready.zip`
+- 현재 패키지: `rpg_v239_2_next_chat_handoff_clean_ready.zip`
 
 ## 이번 단계 완료 내용
 
@@ -25,7 +25,7 @@ route path, API 응답 body 구조, DB/env는 변경하지 않았습니다.
   failedChecks: checkAdminReadOnlyPageReady().failedChecks,
 })
 // {
-//   version: "v239.backend-admin-shared-route-collector-hotfix",
+//   version: "v239.2.backend-admin-schema-model-shared-collector-hotfix",
 //   pageReady: true,
 //   failedChecks: []
 // }

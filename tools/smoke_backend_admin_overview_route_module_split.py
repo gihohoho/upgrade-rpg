@@ -76,7 +76,7 @@ assert_true("admin_route_meta(" in overview, "overview route module should use m
 assert_true('"backend/app/api/routes/admin_overview_snapshot_routes.py"' in contract, "contract should list overview route module")
 assert_true('"splitStatus": "admin-schema-field-constraint-contract-v238"' in contract, "contract splitStatus should be v216")
 assert_true('"Overview/save-snapshot routes live in admin_overview_snapshot_routes.py"' in contract, "route contract should mention overview module")
-assert_true('const VERSION = "v239.backend-admin-shared-route-collector-hotfix"' in entry, "frontend readiness version should be v216")
+assert_true('const VERSION = "v239.2.backend-admin-schema-model-shared-collector-hotfix"' in entry, "frontend readiness version should be v216")
 assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry, "frontend splitStatus should be v216")
 assert_true("backendRouteOverviewSnapshotModuleReady" in entry, "top-level overview route module readiness flag missing")
 assert_true("backendRouteFacadeReady" in entry, "top-level route facade readiness flag missing")

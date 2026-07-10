@@ -1,8 +1,8 @@
 # Current Status — v239
 
-현재 기준: **v239 backend admin shared runtime route collector hotfix**
+현재 기준: **v239.2 backend admin schema/model shared collector hotfix**
 
-이 패키지 기준 ZIP: **rpg_v239_next_chat_handoff_clean_ready.zip**
+이 패키지 기준 ZIP: **rpg_v239_2_next_chat_handoff_clean_ready.zip**
 
 ## 완료된 큰 흐름
 
@@ -13,7 +13,7 @@
 - Admin request schema/model contract 완료
 - Admin request required/default/length/range/model-config/runtime validation contract 완료
 - Runtime route collector 공용화 완료
-- request metadata가 runtime과 같은 collector fallback chain을 사용하도록 수정 완료
+- request metadata와 schema/model contract가 runtime과 같은 collector fallback chain을 사용하도록 수정 완료
 - API 주소, 응답 body 구조, DB/env 변경 없음
 
 ## 관리자 콘솔 확인
@@ -25,7 +25,7 @@
   failedChecks: checkAdminReadOnlyPageReady().failedChecks,
 })
 // {
-//   version: "v239.backend-admin-shared-route-collector-hotfix",
+//   version: "v239.2.backend-admin-schema-model-shared-collector-hotfix",
 //   pageReady: true,
 //   failedChecks: []
 // }
@@ -37,6 +37,7 @@
 
 ```bash
 python tools/smoke_backend_admin_request_metadata_contract.py
+python tools/smoke_backend_admin_schema_model_contract.py
 bash tools/run_smoke_core.sh
 python -m compileall -q backend/app backend/scripts tools
 ```

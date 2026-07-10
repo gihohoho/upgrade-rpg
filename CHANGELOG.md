@@ -1,3 +1,12 @@
+
+## v239.2.backend-admin-schema-model-shared-collector-hotfix
+
+- Updated the admin schema/model contract to reuse `collect_admin_runtime_route_entries()` instead of scanning `app.routes` directly.
+- Fixes Windows/FastAPI environments where request metadata passed but schema/model route body checks returned `actualModel: None`.
+- Added a smoke guard so the schema/model contract cannot reintroduce a direct `app.routes` scan.
+- Kept v239.1 Pydantic required-field compatibility helpers unchanged.
+- No API path, response body, DB, or env changes.
+
 ## v239 - backend admin shared runtime route collector hotfix
 
 - Centralized admin runtime route collection in `collect_admin_runtime_route_entries()`.

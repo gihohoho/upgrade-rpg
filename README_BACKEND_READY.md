@@ -1,6 +1,6 @@
 # Backend Ready — v238
 
-현재 안정 버전: `v239.backend-admin-shared-route-collector-hotfix`
+현재 안정 버전: `v239.2.backend-admin-schema-model-shared-collector-hotfix`
 
 ## 백엔드 상태
 
