@@ -58,6 +58,7 @@ required_readiness_links = [
     ("admin_request_media_size_boundary_contract.py", "requestMediaSizeBoundaryContractReady", "backendRequestMediaSizeBoundaryContractReady"),
     ("admin_request_header_encoding_contract.py", "requestHeaderEncodingContractReady", "backendRequestHeaderEncodingContractReady"),
     ("admin_request_transport_header_observation_contract.py", "requestTransportHeaderObservationContractReady", "backendRequestTransportHeaderObservationContractReady"),
+    ("admin_write_replay_safety_contract.py", "writeReplaySafetyContractReady", "backendWriteReplaySafetyContractReady"),
 ]
 missing_readiness_links = [
     {"file": file_name, "internal": internal, "public": public}

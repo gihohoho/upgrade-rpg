@@ -1,3 +1,12 @@
+## v246.backend-admin-write-replay-safety-contract
+
+- Added isolated repeated-preview parsing checks for all five preview request models.
+- Verified all five apply route functions still bind `_write_guard` to `ADMIN_WRITE_GUARD_DEP`.
+- Explicitly records that `Idempotency-Key` is not currently supported; no replay-protection behavior is claimed or added.
+- Service calls and DB write attempts remain zero.
+- Added backend/frontend parity coverage and admin readiness marker `backendWriteReplaySafetyContractReady`.
+- Route paths, API response bodies, schemas, DB, env, seed, authentication, and splitStatus are unchanged.
+
 ## v245.backend-admin-transport-header-observation-contract
 
 - Added `admin_request_transport_header_observation_contract.py` and its smoke test.
