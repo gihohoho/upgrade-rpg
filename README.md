@@ -1,49 +1,58 @@
 # RPG Admin Backend Split Ready
 
-현재 안정 버전: **v232 backend admin response metadata contract**
+현재 안정 버전: **v234 backend admin request metadata contract**
 
-새 채팅 인수인계 ZIP: **rpg_v232_backend_admin_response_metadata_contract_ready.zip**
+## 현재 적용 상태
 
-## 현재 상태
+- 관리자 백엔드 서비스 분리 완료
+- 관리자 route module 분리 완료
+- `AdminService`는 facade로 유지
+- `backend/app/api/routes/admin.py`는 include-router facade로 유지
+- static route ownership / runtime route / operation / OpenAPI / response metadata contract 연결 완료
+- v234에서 request/dependency metadata contract 추가 완료
+- API 주소, schema, 응답 body 구조, DB/env 변경 없음
 
-- Vue/FastAPI 기반 RPG 관리자 페이지 정리 진행 중
-- 관리자 API route path/schema/response body 구조 변경 없음
-- DB/env 변경 없음
-- `admin.py`는 include-router facade로 축소 완료
-- 관리자 route module / runtime route / OpenAPI route / response metadata contract까지 검증 연결 완료
+## 새 채팅에서 먼저 볼 파일
 
-## 이번 버전 핵심
-
-- `backend/app/api/routes/admin_response_metadata_contract.py` 추가
-- FastAPI runtime route의 `status_code`, `response_model`, `include_in_schema` metadata 고정
-- OpenAPI summary / response code / response description drift 검증
-- route별 200 응답과 필요한 422 validation 응답 유지 확인
+1. `NEXT_CHAT_PROMPT.md` — 새 채팅에 그대로 붙여넣기 좋은 프롬프트
+2. `NEXT_CHAT_HANDOFF.md` — 현재 상태와 다음 단계 요약
+3. `docs/CURRENT_STATUS.md` — 현재 안정 상태
+4. `docs/NEXT_STEPS.md` — 다음 추천 작업
+5. `docs/PROJECT_STRUCTURE.md` — 주요 폴더/파일 역할
 
 ## 관리자 콘솔 확인
 
 ```js
 checkAdminReadOnlyPageReady().version
-// v232.backend-admin-response-metadata-contract
+```
+
+예상:
+
+```txt
+v239.backend-admin-shared-route-collector-hotfix
 ```
 
 ```js
-checkAdminReadOnlyPageReady().backendResponseMetadataContractReady
-// true
+checkAdminReadOnlyPageReady().backendRequestMetadataContractReady
+checkAdminReadOnlyPageReady().backendRuntimeRequestMetadataReady
+checkAdminReadOnlyPageReady().backendOpenApiRequestMetadataReady
+checkAdminReadOnlyPageReady().backendWriteGuardDependencyMetadataReady
 ```
 
-```js
-checkAdminReadOnlyPageReady().backendRuntimeResponseDefaultsReady
-// true
-```
+예상:
 
-```js
-checkAdminReadOnlyPageReady().backendOpenApiResponseCodeMetadataReady
-// true
+```txt
+true
 ```
 
 ```js
 getAdminBackendServiceSplitContractReadiness().splitStatus
-// admin-response-metadata-contract-v232
+```
+
+예상:
+
+```txt
+admin-schema-field-constraint-contract-v238
 ```
 
 ## 검증 명령
@@ -52,17 +61,19 @@ getAdminBackendServiceSplitContractReadiness().splitStatus
 
 ```bash
 bash tools/run_smoke_core.sh
+python tools/smoke_backend_admin_request_metadata_contract.py
 python tools/smoke_backend_admin_response_metadata_contract.py
-python tools/smoke_backend_admin_openapi_route_contract.py
 python tools/smoke_seed_import_long_asset_columns.py
 python tools/smoke_seed_import_structure.py
 python -m compileall -q backend/app backend/scripts tools
 ```
 
-## 다음 추천 작업
+## 서버 재실행
 
-v233 backend admin route request/dependency metadata contract
+실행 위치: backend 폴더
 
-- query/path/body parameter metadata 검증
-- apply route write guard dependency 유지 확인
-- route path/schema/API 응답 구조 변경 없음
+```bash
+uvicorn app.main:app --reload
+```
+
+DB reset/seed 재실행은 필요 없습니다.

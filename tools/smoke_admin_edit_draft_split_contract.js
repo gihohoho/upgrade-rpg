@@ -32,7 +32,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "v190.admin-edit-draft-split-contract",
   "v189.1.admin-create-lifecycle-split-hotfix",
   "ADMIN_EDIT_DRAFT_SPLIT_CONTRACT",
-  "contract-frozen-v190",
+  "extracted-v191",
   "src/api/admin/admin-edit-draft.js",
   "requiredApiMethods",
   "requiredWindowExports",

@@ -1,3 +1,54 @@
+
+## v238.7 backend admin readiness/runtime fallback hotfix
+
+- Fixed `editDraftSplitContractReady` comparing extracted v191 contract against obsolete frozen v190 status.
+- Added canonical `api_router` fallback when local FastAPI/Starlette hides included routes behind an opaque root adapter.
+- Preserved list-only runtime route collector compatibility for operation/response metadata contracts.
+- No API path, response body, DB, or env changes.
+
+
+## v238.4 backend admin runtime route nested hotfix
+
+- FastAPI/Starlette dependency combinations that retain included routers as nested containers are now supported by the runtime route contract.
+- Removed the brittle assumption that `api_router.routes` must already contain all 21 flattened admin operations.
+- Runtime collection now recursively walks `routes` and nested `router.routes` while preserving prefixes.
+- API paths, response bodies, DB, and env remain unchanged.
+
+## v238.2 - Backend admin runtime route contract environment hotfix
+
+- `tools/smoke_backend_admin_runtime_route_contract.py`가 개발자 PC의 셸 환경변수나 프로젝트 루트 `.env`에 설정된 `API_PREFIX` 값에 영향을 받지 않도록, 앱 import 전에 계약 기준값 `/api/v1`을 명시적으로 고정했습니다.
+- runtime route smoke가 실제 등록 경로를 하나도 찾지 못할 경우 전체 `registered paths`를 오류 메시지에 포함하도록 진단을 강화했습니다.
+- Windows Git Bash, macOS/Linux, CI에서 동일한 21개 Admin route 계약을 검사하도록 smoke 실행을 결정적으로 만들었습니다.
+- API route, 응답 body, DB, backend `.env` 구조는 변경하지 않았습니다.
+
+## v238.1 - Backend admin schema readiness hotfix
+
+- 프론트 `ADMIN_BACKEND_SERVICE_SPLIT_CONTRACT.routeContract`에 schema/model 및 field constraint readiness marker를 추가했습니다.
+- 두 readiness 값이 실제로 `true`가 되는 연결을 복구했습니다.
+- 관련 smoke가 변수명 존재만 확인하지 않고 실제 marker 존재까지 검사하도록 강화했습니다.
+- API/DB/env/route/schema/응답 body 변경은 없습니다.
+
+# v236 - Backend admin schema/model contract
+
+- `backend/app/api/routes/admin_schema_model_contract.py`를 추가했습니다.
+- OpenAPI `components.schemas`의 Admin request schema 11개를 고정했습니다.
+- 관리자 body route 11개와 `backend/app/schemas/admin.py` class 이름을 대조합니다.
+- 쓰기 apply schema 5개의 `confirmText` / `reason` 필드와 alias를 검증합니다.
+- schema drift가 발생하면 core smoke에서 즉시 실패하도록 추가했습니다.
+- `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `admin-schema-field-constraint-contract-v238`으로 갱신했습니다.
+- `checkAdminReadOnlyPageReady().version`을 `v238.backend-admin-schema-field-constraint-contract`로 갱신했습니다.
+- route path/API 응답 body 구조/DB/env 변경은 없습니다.
+
+# v234 - Backend admin request metadata contract
+
+- `backend/app/api/routes/admin_request_metadata_contract.py`를 추가했습니다.
+- 관리자 route 21개의 query/path/body/dependency metadata contract를 추가했습니다.
+- FastAPI runtime route의 request metadata와 OpenAPI request metadata를 대조합니다.
+- 쓰기 route 5개의 `require_admin_write_dev_key` write guard 유지 여부를 검증합니다.
+- `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `admin-schema-field-constraint-contract-v238`로 갱신했습니다.
+- `checkAdminReadOnlyPageReady().version`을 `v238.backend-admin-schema-field-constraint-contract`로 갱신했습니다.
+- route path/schema/API 응답 body 구조/DB/env 변경은 없습니다.
+
 # v232 - Backend admin response metadata contract
 
 - `backend/app/api/routes/admin_response_metadata_contract.py`를 추가했습니다.
@@ -763,3 +814,11 @@
 - 외부 모듈 configure 호출을 `configureAdminExternalModules()`로 묶음.
 - `getAdminThinEntryCleanupReadiness()` / `renderAdminThinEntryCleanupReadiness()` 추가.
 - `tools/smoke_admin_thin_entry_cleanup.js` 추가.
+
+## v238 — Backend admin schema field constraint contract
+
+- Added `admin_schema_field_constraint_contract.py`.
+- Frozen required fields, defaults, length/range constraints, and Pydantic normalization behavior for Admin request models.
+- Added runtime validation checks for whitespace stripping, alias/name population, and invalid payload rejection.
+- Added the new smoke to `tools/run_smoke_core.sh`.
+- No route path, response body, DB, or env changes.

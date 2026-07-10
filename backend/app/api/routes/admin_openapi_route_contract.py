@@ -32,7 +32,8 @@ def _operation_key(method: str, path: str) -> str:
 def _expected_openapi_operation_id(endpoint: str, full_path: str, method: str) -> str:
     # Mirrors FastAPI's default unique-id shape for this project:
     # <endpoint><path-with-non-word-chars-as-underscores>_<method>
-    return f'{endpoint}{re.sub(r"\W", "_", full_path)}_{method.lower()}'
+    normalized_path = re.sub(r"\W", "_", full_path)
+    return f"{endpoint}{normalized_path}_{method.lower()}"
 
 
 def _expected_openapi_operations() -> list[dict[str, Any]]:

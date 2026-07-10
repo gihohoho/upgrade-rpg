@@ -65,28 +65,23 @@ def _expected_response_codes(source_path: str) -> list[str]:
 
 
 def _runtime_admin_route_metadata(app: FastAPI) -> list[dict[str, Any]]:
-    base = f'{ADMIN_RESPONSE_METADATA_CONTRACT["apiPrefix"]}{ADMIN_RESPONSE_METADATA_CONTRACT["adminPrefix"]}'
+    # Reuse the runtime contract collector so metadata checks survive the same
+    # FastAPI/Starlette opaque-router layouts handled by v238.8.
     metadata: list[dict[str, Any]] = []
-    ignored_methods = {"HEAD", "OPTIONS"}
-    for route in app.routes:
-        path = getattr(route, "path", "")
-        if not isinstance(path, str) or not path.startswith(base):
-            continue
-        methods = sorted((getattr(route, "methods", set()) or set()) - ignored_methods)
-        for method in methods:
-            metadata.append(
-                {
-                    "method": method.upper(),
-                    "path": path,
-                    "key": _operation_key(method, path),
-                    "endpoint": getattr(getattr(route, "endpoint", None), "__name__", None),
-                    "name": getattr(route, "name", None),
-                    "statusCode": getattr(route, "status_code", None),
-                    "responseModel": getattr(route, "response_model", None),
-                    "responseDescription": getattr(route, "response_description", None),
-                    "includeInSchema": getattr(route, "include_in_schema", None),
-                }
-            )
+    for route in _runtime_admin_routes(app):
+        metadata.append(
+            {
+                "method": route["method"],
+                "path": route["path"],
+                "key": route["key"],
+                "endpoint": route.get("endpoint"),
+                "name": route.get("name"),
+                "statusCode": route.get("statusCode"),
+                "responseModel": route.get("responseModel"),
+                "responseDescription": route.get("responseDescription"),
+                "includeInSchema": route.get("includeInSchema"),
+            }
+        )
     return sorted(metadata, key=lambda item: item["key"])
 
 

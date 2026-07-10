@@ -1,11 +1,24 @@
-# Next Steps — after v216
+# Next Steps — after v238
 
-다음 추천 단계는 **v217 admin route legacy smoke marker cleanup**입니다.
+다음 추천 단계는 **v239~v240 backend admin request example/payload contract**입니다.
 
-1. `admin.py` 하단의 legacy static-smoke marker 주석을 더 짧게 정리
-2. 오래된 smoke가 실제 route module 파일을 보도록 조금씩 조정
-3. `admin.py`를 최종적으로 include facade + 최소 주석만 남기기
-4. route path/schema/API 응답 구조는 그대로 유지
-5. v217 전용 smoke 추가
+## 목표
 
-그 다음 후보는 admin route module별 README 또는 route registry 문서화입니다.
+1. OpenAPI request body example 또는 대표 payload fixture 추가
+2. preview/apply request의 alias 직렬화 결과 고정
+3. 잘못된 payload가 예상한 422 validation detail 형태로 거절되는지 검증
+4. 정상 payload가 route/service 진입 전까지 동일하게 파싱되는지 검증
+5. route path/API 응답 body 구조 유지
+6. DB/env 변경 없음
+
+## 추천 구현 파일
+
+- `backend/app/api/routes/admin_request_payload_contract.py`
+- `tools/smoke_backend_admin_request_payload_contract.py`
+
+## 작업 원칙
+
+- 실제 DB 쓰기 호출 금지
+- write guard 유지
+- validation contract만 추가
+- 새 smoke를 `tools/run_smoke_core.sh`에 연결

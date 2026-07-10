@@ -110,7 +110,7 @@ for key in (
 ):
     assert_true(key in contract, f"split contract should mention {key}")
 
-assert_true('splitStatus: "admin-response-metadata-contract-v232"' in entry, "admin page splitStatus should be v232")
+assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry, "admin page splitStatus should be v232")
 assert_true('backendResponseMetadataContractReady' in entry, "admin page should expose response metadata contract readiness flag")
 assert_true('backendOpenApiResponseCodeMetadataReady' in entry, "admin page should expose OpenAPI response-code readiness flag")
 assert_true('backendRuntimeResponseDefaultsReady' in entry, "admin page should expose runtime response defaults readiness flag")

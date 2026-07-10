@@ -235,6 +235,6 @@ assert(readiness.status === "contract-frozen-v194", "bootstrap binding status sh
 assert(readiness.delegatedActionCount === expectedActions.length, "delegated action count should match expected action map");
 assert(readiness.staticActionCount === staticActionElements.length, "static action count should be collected from DOM");
 assert(readiness.unknownStaticActions.length === 0, "static HTML actions should all be represented in contract");
-assert(sandbox.RpgAdminReadOnlyPage.VERSION === "v232.backend-admin-response-metadata-contract", "RpgAdminReadOnlyPage should expose v216 version");
+assert(sandbox.RpgAdminReadOnlyPage.VERSION === "v239.backend-admin-shared-route-collector-hotfix", "RpgAdminReadOnlyPage should expose v216 version");
 
 console.log("admin bootstrap/bindEvents readiness smoke test passed");

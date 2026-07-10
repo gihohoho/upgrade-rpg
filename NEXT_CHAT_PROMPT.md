@@ -1,29 +1,60 @@
-# 다음 채팅 시작 프롬프트 — RPG v232 이후
+# NEXT CHAT PROMPT — v239 clean package
 
-이 프로젝트는 Vue/FastAPI 기반 RPG 관리자 페이지/백엔드 정리 작업이다. 질문자는 코딩을 잘 모르는 기호이므로, 설명은 한국어로 쉽게 하고 터미널 명령은 항상 실행 위치를 먼저 적은 뒤 복사 가능한 코드 블록으로 준다. git 명령은 `git add`, `git commit`, `git push`를 프로젝트 루트에서 한 번에 복사 가능한 하나의 코드블록으로 제공한다.
+## 현재 안정 버전
 
-현재 기준 ZIP은 `rpg_v232_backend_admin_response_metadata_contract_ready.zip` 이다.
+- 관리자 페이지 readiness version: `v239.backend-admin-shared-route-collector-hotfix`
+- backend splitStatus: `admin-schema-field-constraint-contract-v238`
+- 현재 패키지: `rpg_v239_next_chat_handoff_clean_ready.zip`
 
-## 현재 안정 상태
+## 이번 단계 완료 내용
 
-- `checkAdminReadOnlyPageReady().version`: `v232.backend-admin-response-metadata-contract`
-- `getAdminBackendServiceSplitContractReadiness().splitStatus`: `admin-response-metadata-contract-v232`
-- API route path/schema/response body 구조 변경 없음
-- DB/env 변경 없음
+1. Runtime admin route collector를 `collect_admin_runtime_route_entries()`로 공용화
+2. runtime / operation / response metadata / request metadata 계약이 같은 수집 체인을 쓰도록 정리
+3. `app` → `api_router` → concrete owner router 3개 fallback 순서 유지
+4. request metadata smoke가 더 이상 옛 `app.routes` 직접 검사 방식으로 `runtimeRouteCount: 0`을 내지 않도록 수정
+5. OpenAPI f-string hotfix, editDraft readiness hotfix, schema/model/field constraint 계약 유지
 
-## 최근 완료 작업
+route path, API 응답 body 구조, DB/env는 변경하지 않았습니다.
 
-- `backend/app/api/routes/admin_response_metadata_contract.py` 추가
-- FastAPI runtime route의 기본 응답 metadata 검증
-- OpenAPI summary / 200 response / 422 validation response metadata를 static operation contract와 대조
-- `tools/smoke_backend_admin_response_metadata_contract.py` 추가
-- `tools/run_smoke_core.sh`에 response metadata contract smoke 연결
+## 관리자 콘솔 확인값
 
-## 다음 추천 작업
+```js
+({
+  version: checkAdminReadOnlyPageReady().version,
+  pageReady: checkAdminReadOnlyPageReady().ok,
+  failedChecks: checkAdminReadOnlyPageReady().failedChecks,
+})
+// {
+//   version: "v239.backend-admin-shared-route-collector-hotfix",
+//   pageReady: true,
+//   failedChecks: []
+// }
+```
 
-v233 backend admin route request/dependency metadata contract:
+## 검증 명령
 
-1. FastAPI runtime route dependency/query/body metadata 추출
-2. route별 query/path/body parameter drift 검증
-3. apply route의 write guard dependency 유지 검증
-4. route path/schema/API 응답 구조 변경 없이 smoke만 강화
+실행 위치: 프로젝트 루트
+
+```bash
+python tools/smoke_backend_admin_request_metadata_contract.py
+bash tools/run_smoke_core.sh
+python -m compileall -q backend/app backend/scripts tools
+```
+
+## 서버 재실행
+
+실행 위치: backend 폴더
+
+```bash
+uvicorn app.main:app --reload
+```
+
+DB reset/seed 재실행은 필요 없습니다.
+
+## 다음 추천 단계
+
+`v240 backend admin request payload and 422 validation contract`
+
+- 정상 payload alias 직렬화 고정
+- 대표 잘못된 payload의 422 validation detail 검증
+- 실제 DB 쓰기 없이 request parsing 경계 검증
