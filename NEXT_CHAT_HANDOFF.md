@@ -1,61 +1,64 @@
-# NEXT CHAT HANDOFF — v239 clean package
+# Next Chat Handoff
 
-## 현재 안정 버전
+## Current stable version
 
-- 관리자 페이지 readiness version: `v239.2.backend-admin-schema-model-shared-collector-hotfix`
-- backend splitStatus: `admin-schema-field-constraint-contract-v238`
-- 현재 패키지: `rpg_v239_2_next_chat_handoff_clean_ready.zip`
+- Admin readiness version: `v240.backend-admin-request-payload-validation-contract`
+- Backend splitStatus: `admin-schema-field-constraint-contract-v238`
+- No route path, API response body, DB, env, seed, auth, or write-guard changes.
 
-## 이번 단계 완료 내용
+## v240 completed
 
-1. Runtime admin route collector를 `collect_admin_runtime_route_entries()`로 공용화
-2. runtime / operation / response metadata / request metadata / schema-model 계약이 같은 수집 체인을 쓰도록 정리
-3. `app` → `api_router` → concrete owner router 3개 fallback 순서 유지
-4. request metadata와 schema/model smoke가 더 이상 옛 `app.routes` 직접 검사 방식으로 `runtimeRouteCount: 0` 또는 `actualModel: None`을 내지 않도록 수정
-5. OpenAPI f-string hotfix, editDraft readiness hotfix, schema/model/field constraint 계약 유지
+- Normal payload alias serialization is frozen for all 10 admin request body models.
+- Aliases covered include `dryRun`, `confirmText`, and `baseValues`.
+- Representative invalid payloads verify FastAPI 422 `detail[].type`, `loc`, and `msg`.
+- Contract uses an isolated FastAPI parsing app; service calls and DB writes remain zero.
+- New files:
+  - `backend/app/api/routes/admin_request_payload_validation_contract.py`
+  - `tools/smoke_backend_admin_request_payload_validation_contract.py`
 
-route path, API 응답 body 구조, DB/env는 변경하지 않았습니다.
+## Verification
 
-## 관리자 콘솔 확인값
+```bash
+python tools/smoke_backend_admin_runtime_route_contract.py
+python tools/smoke_backend_admin_request_metadata_contract.py
+python tools/smoke_backend_admin_schema_model_contract.py
+python tools/smoke_backend_admin_schema_field_constraint_contract.py
+python tools/smoke_backend_admin_request_payload_validation_contract.py
+bash tools/run_smoke_core.sh
+python -m compileall -q backend/app backend/scripts tools
+```
+
+All individual smoke tests passed. In the packaging environment, the full core script exceeded the single-command time limit after the route-operation smoke; every remaining command was rerun individually and passed.
+
+## Console expectation after backend restart
 
 ```js
 ({
   version: checkAdminReadOnlyPageReady().version,
   pageReady: checkAdminReadOnlyPageReady().ok,
   failedChecks: checkAdminReadOnlyPageReady().failedChecks,
+  payloadValidationReady: checkAdminReadOnlyPageReady().backendRequestPayloadValidationContractReady,
 })
-// {
-//   version: "v239.2.backend-admin-schema-model-shared-collector-hotfix",
-//   pageReady: true,
-//   failedChecks: []
-// }
 ```
 
-## 검증 명령
+Expected:
 
-실행 위치: 프로젝트 루트
-
-```bash
-python tools/smoke_backend_admin_request_metadata_contract.py
-python tools/smoke_backend_admin_schema_model_contract.py
-bash tools/run_smoke_core.sh
-python -m compileall -q backend/app backend/scripts tools
+```js
+{
+  version: "v240.backend-admin-request-payload-validation-contract",
+  pageReady: true,
+  failedChecks: [],
+  payloadValidationReady: true,
+}
 ```
 
-## 서버 재실행
+## Recommended next step
 
-실행 위치: backend 폴더
+`v241 backend admin validation error compatibility contract`
 
-```bash
-uvicorn app.main:app --reload
-```
+Suggested scope:
 
-DB reset/seed 재실행은 필요 없습니다.
-
-## 다음 추천 단계
-
-`v240 backend admin request payload and 422 validation contract`
-
-- 정상 payload alias 직렬화 고정
-- 대표 잘못된 payload의 422 validation detail 검증
-- 실제 DB 쓰기 없이 request parsing 경계 검증
+1. Normalize compatibility expectations across supported FastAPI/Pydantic versions.
+2. Freeze only stable 422 fields (`type`, `loc`, `msg`) and explicitly ignore unstable context/input fields.
+3. Verify malformed JSON and wrong content-type behavior without reaching services or DB.
+4. Preserve routes, response bodies, write guards, DB, env, and seed data.

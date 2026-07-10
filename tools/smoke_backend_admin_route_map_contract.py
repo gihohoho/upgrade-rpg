@@ -108,7 +108,7 @@ for smoke_path, target in legacy_smoke_files.items():
 assert_true('"backend/app/api/routes/admin_route_map_contract.py"' in contract, "backend split contract should list route map contract")
 assert_true('"splitStatus": "admin-schema-field-constraint-contract-v238"' in contract, "backend split contract should be v224")
 assert_true('"Admin route ownership map verifies exact module-only ownership"' in contract, "backend route contract should mention strict ownership")
-assert_true('const VERSION = "v239.2.backend-admin-schema-model-shared-collector-hotfix"' in entry, "frontend readiness version should be v224")
+assert_true('const VERSION = "v240.backend-admin-request-payload-validation-contract"' in entry, "frontend readiness version should be v224")
 assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry, "frontend splitStatus should be v224")
 assert_true("backendRouteMapContractReady" in entry, "frontend top-level route map readiness flag missing")
 assert_true("backendRouteOwnershipStrictReady" in entry, "frontend top-level strict ownership readiness flag missing")

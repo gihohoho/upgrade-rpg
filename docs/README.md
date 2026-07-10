@@ -10,8 +10,10 @@
 2. `../NEXT_CHAT_HANDOFF.md` — 새 채팅 인수인계 전체 요약
 3. `CURRENT_STATUS.md` — 현재 정상 작동 상태 요약
 4. `NEXT_STEPS.md` — 다음 단계 추천
+6. `PROJECT_WORKING_RULES.md` — 기호 프로젝트 작업 방식
+7. `NEXT_STEP_V240_REQUEST_PAYLOAD_VALIDATION.md` — v240 세부 계획
 5. `PROJECT_STRUCTURE.md` — 현재 폴더 구조와 주요 파일 역할
-6. `CHANGELOG.md` — 전체 변경 히스토리
+8. `CHANGELOG.md` — 전체 변경 히스토리
 
 ## 현재 관리자 백엔드 핵심 문서
 
@@ -28,6 +30,8 @@
 - `BACKEND_ADMIN_ROUTE_RESPONSE_HELPER.md` — route response helper
 - `BACKEND_ADMIN_ROUTE_PARAMS_ERROR_HELPERS.md` — route params/error helper
 - `BACKEND_ADMIN_ROUTE_RESPONSE_DATA_META_HELPERS.md` — route data/meta helper
+- `BACKEND_ADMIN_SCHEMA_MODEL_CONTRACT.md` — schema/model contract
+- `BACKEND_ADMIN_SCHEMA_FIELD_CONSTRAINT_CONTRACT.md` — schema field constraint contract
 
 ## 현재 관리자 프론트 핵심 문서
 

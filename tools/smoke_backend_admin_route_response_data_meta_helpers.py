@@ -62,7 +62,7 @@ assert_true('"backend/app/api/routes/admin_response_data_helpers.py"' in contrac
 assert_true('"backend/app/api/routes/admin_response_meta_helpers.py"' in contract, "meta helper should be listed in backend contract")
 assert_true('"splitStatus": "admin-schema-field-constraint-contract-v238"' in contract, "contract splitStatus should be v216")
 assert_true('"No route path changes through v234"' in contract, "route path contract should mention v214")
-assert_true('const VERSION = "v239.2.backend-admin-schema-model-shared-collector-hotfix"' in entry, "frontend readiness version should be v216")
+assert_true('const VERSION = "v240.backend-admin-request-payload-validation-contract"' in entry, "frontend readiness version should be v216")
 assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry, "frontend splitStatus should be v216")
 assert_true("backendRouteResponseDataHelperReady" in entry, "top-level response data readiness flag missing")
 assert_true("backendRouteResponseMetaHelperReady" in entry, "top-level response meta readiness flag missing")
