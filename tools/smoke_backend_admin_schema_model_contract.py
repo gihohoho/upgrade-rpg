@@ -67,7 +67,7 @@ assert_true(not readiness["failedGuardedFieldChecks"], "guarded apply schemas sh
 assert_true("backend/app/api/routes/admin_schema_model_contract.py" in contract_text, "split contract should list schema/model contract")
 assert_true("Admin request schema classes and OpenAPI components.schemas are checked for drift" in contract_text, "split contract should mention schema drift guard")
 assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry_text, "frontend splitStatus should be v236")
-assert_true('const VERSION = "v241.backend-admin-validation-error-compatibility-contract"' in entry_text, "frontend readiness version should be v238.1.1")
+assert_true('const VERSION = "v242.backend-admin-request-content-negotiation-contract"' in entry_text, "frontend readiness version should be v238.1.1")
 assert_true('Admin request schema classes and OpenAPI components.schemas are checked for drift' in entry_text, "frontend split contract should include the matching readiness marker")
 assert_true("backendSchemaModelContractReady" in entry_text, "frontend should expose schema/model contract readiness")
 assert_true("smoke_backend_admin_schema_model_contract.py" in run_smoke_text, "core smoke should run schema/model contract smoke")

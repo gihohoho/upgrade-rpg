@@ -37,7 +37,7 @@ assert_true("backend/app/api/routes/admin_request_payload_validation_contract.py
 assert_true("FastAPI 422 validation detail" in split_text, "route contract must describe v240 422 boundary")
 
 entry_text = (ROOT / "src/api/admin-page-readonly.js").read_text(encoding="utf-8")
-assert_true('const VERSION = "v241.backend-admin-validation-error-compatibility-contract"' in entry_text, "frontend readiness version must be v240")
+assert_true('const VERSION = "v242.backend-admin-request-content-negotiation-contract"' in entry_text, "frontend readiness version must be v240")
 assert_true("backend/app/api/routes/admin_request_payload_validation_contract.py" in entry_text, "frontend split contract must track v240 payload contract file")
 assert_true("Normal request payload aliases and representative FastAPI 422 validation detail" in entry_text, "frontend split contract must track v240 payload validation rule")
 assert_true("requestPayloadValidationContractReady" in entry_text, "frontend readiness must expose payload validation contract")

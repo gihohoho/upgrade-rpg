@@ -156,7 +156,7 @@ assert_true("POST /api/v1/admin/change-logs/{change_log_id}/rollback-apply" in {
 assert_true('"backend/app/api/routes/admin_runtime_route_contract.py"' in contract, "backend split contract should list runtime route contract")
 assert_true('"splitStatus": "admin-schema-field-constraint-contract-v238"' in contract, "backend split contract should be v226")
 assert_true('"FastAPI runtime route registration is checked against static ownership map"' in contract, "backend route contract should mention runtime registration")
-assert_true('const VERSION = "v241.backend-admin-validation-error-compatibility-contract"' in entry, "frontend readiness version should be v226")
+assert_true('const VERSION = "v242.backend-admin-request-content-negotiation-contract"' in entry, "frontend readiness version should be v226")
 assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry, "frontend splitStatus should be v226")
 assert_true("backendRuntimeRouteContractReady" in entry, "frontend top-level runtime route contract readiness flag missing")
 assert_true("backendRuntimeRouteRegistrationReady" in entry, "frontend top-level runtime route registration readiness flag missing")

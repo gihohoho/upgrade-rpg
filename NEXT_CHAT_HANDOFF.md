@@ -2,33 +2,39 @@
 
 ## Current stable version
 
-- Admin readiness version: `v241.backend-admin-validation-error-compatibility-contract`
+- Admin readiness version: `v242.backend-admin-request-content-negotiation-contract`
 - Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - No route path, API response body, DB, env, seed, auth, or write-guard changes.
 
-## v240 completed
+## v242 completed
 
-- Normal payload alias serialization is frozen for all 10 admin request body models.
-- Aliases covered include `dryRun`, `confirmText`, and `baseValues`.
-- Representative invalid payloads verify FastAPI 422 `detail[].type`, `loc`, and `msg`.
-- Contract uses an isolated FastAPI parsing app; service calls and DB writes remain zero.
-- New files:
-  - `backend/app/api/routes/admin_request_payload_validation_contract.py`
-  - `tools/smoke_backend_admin_request_payload_validation_contract.py`
+- Added 8 isolated request-boundary cases.
+- `application/json; charset=utf-8` succeeds.
+- A valid JSON object without a Content-Type header succeeds in the current FastAPI/Starlette stack.
+- Top-level JSON arrays and strings produce stable `422 model_attributes_type` errors.
+- Empty JSON object and completely empty body remain distinguishable by error location.
+- `Accept: application/json` and `Accept: text/plain` both keep the default JSON response.
+- `detail[].input` and `detail[].ctx` remain outside the compatibility contract.
+- Service calls and DB write attempts remain zero.
+
+## New files
+
+- `backend/app/api/routes/admin_request_content_negotiation_contract.py`
+- `tools/smoke_backend_admin_request_content_negotiation_contract.py`
 
 ## Verification
 
 ```bash
+python tools/smoke_backend_admin_request_content_negotiation_contract.py
+python tools/smoke_backend_admin_validation_error_compatibility_contract.py
+python tools/smoke_backend_admin_request_payload_validation_contract.py
+node tools/smoke_admin_readonly_page.js
 python tools/smoke_backend_admin_runtime_route_contract.py
 python tools/smoke_backend_admin_request_metadata_contract.py
 python tools/smoke_backend_admin_schema_model_contract.py
 python tools/smoke_backend_admin_schema_field_constraint_contract.py
-python tools/smoke_backend_admin_request_payload_validation_contract.py
-bash tools/run_smoke_core.sh
 python -m compileall -q backend/app backend/scripts tools
 ```
-
-All individual smoke tests passed. In the packaging environment, the full core script exceeded the single-command time limit after the route-operation smoke; every remaining command was rerun individually and passed.
 
 ## Console expectation after backend restart
 
@@ -37,34 +43,14 @@ All individual smoke tests passed. In the packaging environment, the full core s
   version: checkAdminReadOnlyPageReady().version,
   pageReady: checkAdminReadOnlyPageReady().ok,
   failedChecks: checkAdminReadOnlyPageReady().failedChecks,
-  payloadValidationReady: checkAdminReadOnlyPageReady().backendRequestPayloadValidationContractReady,
+  contentNegotiationReady: checkAdminReadOnlyPageReady().backendRequestContentNegotiationContractReady,
 })
 ```
 
-Expected:
+Expected version: `v242.backend-admin-request-content-negotiation-contract`; `pageReady: true`; `failedChecks: []`; `contentNegotiationReady: true`.
 
-```js
-{
-  version: "v241.backend-admin-validation-error-compatibility-contract",
-  pageReady: true,
-  failedChecks: [],
-  payloadValidationReady: true,
-}
-```
+## Next recommended work
 
-## Recommended next step
+`v243 backend admin request size and media-type boundary contract`
 
-`v241 backend admin validation error compatibility contract`
-
-Suggested scope:
-
-1. Normalize compatibility expectations across supported FastAPI/Pydantic versions.
-2. Freeze only stable 422 fields (`type`, `loc`, `msg`) and explicitly ignore unstable context/input fields.
-3. Verify malformed JSON and wrong content-type behavior without reaching services or DB.
-4. Preserve routes, response bodies, write guards, DB, env, and seed data.
-
-
-## v241
-- Added malformed JSON, empty body, and unsupported content-type FastAPI 422 compatibility contract.
-- Stable contract fields: type, loc, msg. Excluded version-sensitive input and ctx.
-- No DB/env/seed/route/response-body changes.
+Suggested scope: oversized or policy-limited request body behavior, unsupported binary/form media types, and stable 4xx boundaries without invoking services or DB writes.

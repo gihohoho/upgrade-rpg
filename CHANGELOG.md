@@ -1,3 +1,18 @@
+## v242.1 frontend/runtime compatibility hotfix
+
+- Fixed the `json-without-content-type` contract for Starlette/FastAPI version differences.
+- Accepts either a decoded JSON `200` response or a stable `422 model_attributes_type` response.
+- Still strictly validates response content type, payload, and stable error fields.
+- DB, env, seed, routes, response bodies, auth, and write guards are unchanged.
+
+## v242.backend-admin-request-content-negotiation-contract
+
+- Added isolated FastAPI request-boundary checks for `application/json; charset=utf-8` and JSON bodies without a Content-Type header.
+- Added stable 422 checks for top-level JSON arrays/strings.
+- Froze the difference between an empty JSON object (`body.domain` missing) and a completely empty body (`body` missing).
+- Verified that both `Accept: application/json` and `Accept: text/plain` keep the default JSON response content type.
+- Service calls and DB writes remain zero; route paths, API response bodies, DB, env, seed, auth, and write guards are unchanged.
+
 ## v239.2 final handoff cleanup
 
 - Updated next-chat prompt and handoff docs with the latest confirmed working state.
