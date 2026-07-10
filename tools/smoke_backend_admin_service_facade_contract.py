@@ -56,7 +56,7 @@ assert_true("class AdminService(\n" in admin_service_source, "AdminService class
 assert_true("backend/app/services/admin_service_facade_contract.py" in split_readiness["extractedFiles"], "split contract should include facade contract file")
 assert_true(split_readiness["splitStatus"] == "admin-schema-field-constraint-contract-v238", "splitStatus should be v222")
 assert_true('"key": "service-facade-contract"' in split_contract_source, "split contract should include service-facade-contract group")
-assert_true('const VERSION = "v243.backend-admin-request-media-size-boundary-contract"' in entry_source, "frontend readiness version should be v222")
+assert_true('const VERSION = "v244.backend-admin-request-header-encoding-compatibility-contract"' in entry_source, "frontend readiness version should be v222")
 assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry_source, "frontend splitStatus should be v222")
 assert_true("backendServiceFacadeContractReady" in entry_source, "frontend should expose service facade contract readiness")
 assert_true("smoke_backend_admin_service_facade_contract.py" in run_smoke_source, "core smoke should include v222 smoke")

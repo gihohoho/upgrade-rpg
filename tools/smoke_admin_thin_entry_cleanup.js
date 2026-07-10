@@ -224,7 +224,7 @@ sandbox.RpgAdminSettingsHelpers = Object.assign(makeModule("v197.admin-settings-
 
 vm.createContext(sandbox);
 vm.runInContext(text, sandbox, { filename: "src/api/admin-page-readonly.js" });
-assert(sandbox.RpgAdminReadOnlyPage.VERSION === "v243.backend-admin-request-media-size-boundary-contract", "RpgAdminReadOnlyPage should expose v216 version");
+assert(sandbox.RpgAdminReadOnlyPage.VERSION === "v244.backend-admin-request-header-encoding-compatibility-contract", "RpgAdminReadOnlyPage should expose v216 version");
 assert(typeof sandbox.getAdminClickActionHandlers === "function", "getAdminClickActionHandlers should be exported");
 const handlers = sandbox.getAdminClickActionHandlers();
 for (const action of expectedActions) {

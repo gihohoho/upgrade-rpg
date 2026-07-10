@@ -2,7 +2,7 @@
 
 ## Current stable state
 
-- Admin readiness version: `v243.backend-admin-request-media-size-boundary-contract`
+- Admin readiness version: `v244.backend-admin-request-header-encoding-compatibility-contract`
 - Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - ZIP: `rpg_v243_backend_admin_request_media_size_boundary_contract.zip`
 - DB/env/seed changes: none
@@ -39,10 +39,16 @@ python tools/smoke_backend_admin_request_media_size_boundary_contract.py && pyth
 })
 ```
 
-Expected version: `v243.backend-admin-request-media-size-boundary-contract`, `pageReady: true`, `failedChecks: []`, `mediaSizeBoundaryReady: true`.
+Expected version: `v244.backend-admin-request-header-encoding-compatibility-contract`, `pageReady: true`, `failedChecks: []`, `mediaSizeBoundaryReady: true`, `headerEncodingReady: true`.
 
 ## Recommended next work
 
 `v244 backend admin request header and encoding compatibility contract`
 
 Safely verify duplicate/odd Content-Type parameters, UTF-8 non-ASCII JSON, invalid byte encoding, and transfer/header normalization without service or DB execution. Do not introduce a production body-size limit until deployment proxy/server settings are known.
+
+
+## v244 added
+- Added `admin_request_header_encoding_contract.py`.
+- UTF-8 Korean/symbol JSON, Content-Type parameter normalization, header-name case insensitivity, and malformed byte parsing are verified without service or DB execution.
+- Environment-sensitive malformed/ambiguous encoding outcomes use explicit allowed outcomes with detailed validation.

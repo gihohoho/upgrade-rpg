@@ -79,7 +79,7 @@ assert_true(split_readiness["ok"], f"backend service split contract readiness fa
 assert_true(split_readiness["splitStatus"] == "admin-schema-field-constraint-contract-v238", "splitStatus should be v222")
 assert_true("backend/app/api/routes/admin_route_services.py" in split_readiness["extractedFiles"], "split contract should include route service helper")
 assert_true("backend/app/services/admin_service_legacy_markers.py" in split_readiness["extractedFiles"], "split contract should include legacy marker file")
-assert_true('const VERSION = "v243.backend-admin-request-media-size-boundary-contract"' in entry_source, "frontend readiness version should be v222")
+assert_true('const VERSION = "v244.backend-admin-request-header-encoding-compatibility-contract"' in entry_source, "frontend readiness version should be v222")
 assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry_source, "frontend splitStatus should be v222")
 assert_true("backendRouteServiceDependencyReady" in entry_source, "frontend should expose route service dependency readiness")
 assert_true("backendServiceLegacyMarkersReady" in entry_source, "frontend should expose service legacy marker readiness")

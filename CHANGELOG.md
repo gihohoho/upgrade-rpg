@@ -1,6 +1,13 @@
+## v244.backend-admin-request-header-encoding-compatibility-contract
+
+- Added isolated FastAPI contract coverage for UTF-8 Korean/symbol payloads.
+- Added Content-Type parameter and header-name case normalization checks.
+- Added malformed UTF-8 byte compatibility outcomes without service or DB execution.
+- Kept route paths, response bodies, DB, env, seed, auth, and write guards unchanged.
+
 # Changelog
 
-## v243.backend-admin-request-media-size-boundary-contract
+## v244.backend-admin-request-header-encoding-compatibility-contract
 
 - Added `admin_request_media_size_boundary_contract.py` and its smoke test.
 - Frozen octet-stream, URL-encoded form, multipart form, empty binary, and arbitrary binary request parsing boundaries without calling admin services or the DB.

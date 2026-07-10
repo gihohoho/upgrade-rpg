@@ -113,7 +113,7 @@ assert_true('"backend/app/api/routes/admin_openapi_route_contract.py"' in contra
 assert_true('"splitStatus": "admin-schema-field-constraint-contract-v238"' in contract, "backend split contract should be v230")
 assert_true('"FastAPI OpenAPI admin route metadata is checked against operation contract"' in contract, "backend route contract should mention OpenAPI metadata")
 assert_true('"OpenAPI operationId metadata is checked against runtime endpoint names"' in contract, "backend route contract should mention OpenAPI operationId metadata")
-assert_true('const VERSION = "v243.backend-admin-request-media-size-boundary-contract"' in entry, "frontend readiness version should be v230")
+assert_true('const VERSION = "v244.backend-admin-request-header-encoding-compatibility-contract"' in entry, "frontend readiness version should be v230")
 assert_true('splitStatus: "admin-schema-field-constraint-contract-v238"' in entry, "frontend splitStatus should be v230")
 assert_true("backendOpenApiRouteContractReady" in entry, "frontend top-level OpenAPI route contract flag missing")
 assert_true("backendOpenApiRouteMetadataReady" in entry, "frontend top-level OpenAPI route metadata flag missing")
