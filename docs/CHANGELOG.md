@@ -1,3 +1,12 @@
+# v232 - Backend admin response metadata contract
+
+- `backend/app/api/routes/admin_response_metadata_contract.py`를 추가했습니다.
+- FastAPI runtime route의 `status_code`, `response_model`, `include_in_schema` metadata를 검증합니다.
+- OpenAPI summary / 200 response / 필요한 422 validation response metadata를 static operation contract와 대조합니다.
+- `getAdminBackendServiceSplitContractReadiness().splitStatus`를 `admin-response-metadata-contract-v232`로 갱신했습니다.
+- `checkAdminReadOnlyPageReady().version`을 `v232.backend-admin-response-metadata-contract`로 갱신했습니다.
+- route path/schema/API 응답 구조/DB/env 변경은 없습니다.
+
 # v230 - Backend admin OpenAPI route contract
 
 - `backend/app/api/routes/admin_openapi_route_contract.py`를 추가했습니다.

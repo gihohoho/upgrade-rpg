@@ -7,7 +7,7 @@ from typing import Any
 ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
     "version": "v198.backend-admin-service-split-contract",
     "status": "contract-frozen-v198",
-    "splitStatus": "admin-openapi-route-contract-v230",
+    "splitStatus": "admin-response-metadata-contract-v232",
     "extractedFiles": [
         "backend/app/services/admin/admin_overview_snapshots_service.py",
         "backend/app/services/admin/admin_master_catalog_service.py",
@@ -30,6 +30,7 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "backend/app/api/routes/admin_runtime_route_contract.py",
         "backend/app/api/routes/admin_route_operation_contract.py",
         "backend/app/api/routes/admin_openapi_route_contract.py",
+        "backend/app/api/routes/admin_response_metadata_contract.py",
         "backend/app/api/routes/admin_route_services.py",
         "backend/app/services/admin_service_legacy_markers.py",
         "backend/app/services/admin_service_facade_contract.py",
@@ -288,6 +289,13 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
             "helperMethods": [],
         },
         {
+            "key": "route-response-metadata",
+            "label": "Admin route response status/model/OpenAPI metadata contract",
+            "candidateFile": "backend/app/api/routes/admin_response_metadata_contract.py",
+            "publicMethods": [],
+            "helperMethods": [],
+        },
+        {
             "key": "route-service-dependency",
             "label": "Admin route service factory dependency",
             "candidateFile": "backend/app/api/routes/admin_route_services.py",
@@ -342,6 +350,9 @@ ADMIN_SERVICE_SPLIT_CONTRACT: dict[str, Any] = {
         "Runtime route endpoint metadata is checked against static response type markers",
         "FastAPI OpenAPI admin route metadata is checked against operation contract",
         "OpenAPI operationId metadata is checked against runtime endpoint names",
+        "Admin route response metadata contract lives in admin_response_metadata_contract.py",
+        "Runtime response defaults keep default 200 status_code and no response_model",
+        "OpenAPI response codes and summaries are checked against runtime route defaults",
         "Legacy service smoke markers live outside admin_service.py",
         "AdminService facade MRO/import order is tracked by admin_service_facade_contract.py",
         "Admin route responses go through admin_ok_response helper",
