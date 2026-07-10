@@ -93,3 +93,5 @@ fi
 
 echo "[core smoke] passed"
 exit 0
+
+python tools/smoke_backend_packaging_contract.py

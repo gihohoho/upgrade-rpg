@@ -1,48 +1,33 @@
-# Backend Ready — v239.2
+# Backend Ready — v246
 
-현재 안정 버전: `v239.2.backend-admin-schema-model-shared-collector-hotfix`
+현재 안정 버전: `v246.backend-admin-write-replay-safety-contract`
 
-## 백엔드 상태
-
-- Admin request schema/model 계약 유지
-- Admin request field constraint/default/required/model-config 계약 유지
-- 공용 admin runtime route collector 적용 완료
-- `backend/app/services/admin_service_split_contract.py` splitStatus: `admin-schema-field-constraint-contract-v238`
-- 관리자 route path/API 응답 body 구조 변경 없음
-- DB/env 변경 없음
+Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 
 ## 핵심 보장
 
-- OpenAPI에 노출되는 Admin request schema 11개와 route body model 연결을 검증합니다.
-- `domain` 1~80자, `reason` 최대 500자, `confirmText` 최대 80자 제약을 고정합니다.
-- 편집 request의 `id >= 1` 제약을 고정합니다.
-- preview의 `dryRun=true`, apply의 `dryRun=false` 기본값을 고정합니다.
-- required 필드 목록과 alias 기반 OpenAPI 직렬화가 바뀌면 smoke가 실패합니다.
-- `populate_by_name`, `str_strip_whitespace`, alias/name 입력 허용 동작을 검증합니다.
-- FastAPI app / api_router / concrete owner router fallback으로 Windows/FastAPI 내부 route 표현 차이를 견딥니다.
-- Pydantic v1/v2 계열의 required-field metadata 차이를 helper로 흡수합니다.
+- 관리자 runtime route/OpenAPI/request/response/schema 계약 유지
+- FastAPI/Starlette/Pydantic 환경 차이는 허용 결과와 세부 오류 구조로 검증
+- backend/frontend `extractedFiles`와 `routeContract` 전체 순서 parity 유지
+- preview request 5종의 반복 parsing 결과 일관성 유지
+- apply route 5종의 `ADMIN_WRITE_GUARD_DEP` 유지
+- `Idempotency-Key`는 현재 미지원으로 명시
+- 격리 계약 검사에서 service 호출과 DB 쓰기 시도 0회
 
-## 관련 핵심 파일
+## 개발 테스트 의존성
 
-- `backend/app/api/routes/admin_runtime_route_contract.py`
-- `backend/app/api/routes/admin_request_metadata_contract.py`
-- `backend/app/api/routes/admin_schema_model_contract.py`
-- `backend/app/api/routes/admin_schema_field_constraint_contract.py`
-- `backend/app/schemas/admin.py`
-- `tools/smoke_backend_admin_runtime_route_contract.py`
-- `tools/smoke_backend_admin_request_metadata_contract.py`
-- `tools/smoke_backend_admin_schema_model_contract.py`
-- `tools/smoke_backend_admin_schema_field_constraint_contract.py`
+FastAPI `TestClient` 계약 검사를 위해 dev 의존성에 `httpx2`가 포함되어 있습니다.
 
-## 검증 명령
+실행 위치: backend 폴더
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+## 검증
 
 실행 위치: 프로젝트 루트
 
 ```bash
-python tools/smoke_backend_admin_runtime_route_contract.py
-python tools/smoke_backend_admin_request_metadata_contract.py
-python tools/smoke_backend_admin_schema_model_contract.py
-python tools/smoke_backend_admin_schema_field_constraint_contract.py
-bash tools/run_smoke_core.sh
-python -m compileall -q backend/app backend/scripts tools
+python tools/smoke_backend_admin_write_replay_safety_contract.py && python tools/smoke_backend_admin_frontend_contract_parity.py && node tools/smoke_admin_readonly_page.js && python -m compileall -q backend/app backend/scripts tools
 ```

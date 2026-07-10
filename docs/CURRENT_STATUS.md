@@ -1,50 +1,47 @@
-# Current Status — v239.2
+# Current Status — v246
 
-현재 기준: **v239.2.backend-admin-schema-model-shared-collector-hotfix**
+현재 기준: **v246.backend-admin-write-replay-safety-contract**
 
-이 패키지 기준 ZIP: **rpg_v239_2_next_chat_handoff_final_ready.zip**
+Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 
-## 완료된 큰 흐름
+## 완료된 흐름
 
-- 관리자 프론트 JS helper/thin entry 분리 완료
-- 관리자 백엔드 `AdminService` mixin 분리 및 facade 유지
-- 관리자 route module 분리 완료
-- route ownership/runtime/operation/OpenAPI/response/request metadata contract 완료
-- Admin request schema/model contract 완료
-- Admin request required/default/length/range/model-config/runtime validation contract 완료
-- Runtime route collector 공용화 완료
-- request metadata와 schema/model contract가 runtime과 같은 collector fallback chain을 사용하도록 수정 완료
-- Windows/FastAPI/Pydantic 환경 차이 대응 완료
-- API 주소, 응답 body 구조, DB/env 변경 없음
+- 관리자 frontend thin entry/helper 분리
+- backend `AdminService` facade/service split
+- 관리자 route module/facade 분리
+- route ownership/runtime/operation/OpenAPI/response/request metadata 계약
+- schema/model/field constraint 계약
+- request payload와 대표 FastAPI 422 계약
+- malformed JSON·빈 body·Content-Type/Accept 계약
+- media type·size policy·UTF-8/header encoding 계약
+- transport header 관찰 계약
+- preview replay parsing과 apply write guard 계약
+- backend/frontend 계약 전체 parity smoke
 
-## 관리자 콘솔 확인
+## 안전 상태
+
+- DB/env/seed 변경 없음
+- route path/API 응답 body/schema/인증 변경 없음
+- 실제 service 호출 및 DB write 없이 request 경계 검사
+- `Idempotency-Key` 현재 미지원
+
+## 관리자 콘솔 기대값
 
 ```js
 ({
   version: checkAdminReadOnlyPageReady().version,
   pageReady: checkAdminReadOnlyPageReady().ok,
   failedChecks: checkAdminReadOnlyPageReady().failedChecks,
+  writeReplaySafetyReady:
+    checkAdminReadOnlyPageReady().backendWriteReplaySafetyContractReady,
 })
-// {
-//   version: "v239.2.backend-admin-schema-model-shared-collector-hotfix",
-//   pageReady: true,
-//   failedChecks: []
-// }
 ```
 
-## 최신 핵심 검증
-
-실행 위치: 프로젝트 루트
-
-```bash
-python tools/smoke_backend_admin_runtime_route_contract.py
-python tools/smoke_backend_admin_request_metadata_contract.py
-python tools/smoke_backend_admin_schema_model_contract.py
-python tools/smoke_backend_admin_schema_field_constraint_contract.py
-bash tools/run_smoke_core.sh
-python -m compileall -q backend/app backend/scripts tools
+```js
+{
+  version: "v246.backend-admin-write-replay-safety-contract",
+  pageReady: true,
+  failedChecks: [],
+  writeReplaySafetyReady: true
+}
 ```
-
-## 사용자 확인
-
-v239.2 적용 후 사용자가 “완벽해”라고 확인했습니다.

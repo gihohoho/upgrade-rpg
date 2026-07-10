@@ -1,3 +1,20 @@
+## v246.2 - Backend editable-install packaging hotfix
+
+- Added an explicit setuptools build backend and package discovery rule.
+- Editable installs now include only `backend/app*` and exclude `alembic`, `seeds`, `sql`, and tests from package discovery.
+- Added `tools/smoke_backend_packaging_contract.py` to prevent the flat-layout discovery error from returning.
+- No DB, API route, response body, authentication, seed, or write-guard changes.
+
+# Changelog
+
+## v246.1 — project cleanup and handoff refresh
+
+- Refreshed root/readiness/current-status/next-step documents to v246.
+- Removed packaged Windows `.venv`, local `backend/.env`, Python caches, and compiled files.
+- Moved the completed v240 next-step note to `docs/archive/stage-notes/`.
+- Added `httpx2` to backend dev dependencies for FastAPI TestClient smoke contracts.
+- Kept runtime code, DB, seed, routes, schemas, response bodies, authentication, and write guards unchanged.
+
 ## v246.backend-admin-write-replay-safety-contract
 
 - Added isolated repeated-preview parsing checks for all five preview request models.
