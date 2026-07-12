@@ -93,13 +93,11 @@ fi
 
 python tools/smoke/contracts/smoke_admin_contract_registry_sync.py
 python tools/smoke/contracts/smoke_backend_admin_preview_integration.py
-
-echo "[core smoke] passed"
-exit 0
-
 python tools/smoke/backend/smoke_backend_packaging_contract.py
-
 python tools/smoke/contracts/smoke_backend_admin_preview_side_effect_contract.py
 python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contract.py
 python tools/smoke/contracts/smoke_backend_admin_diff_engine_contract.py
+python tools/smoke/contracts/smoke_backend_admin_change_log_shared_diff.py
 python tools/smoke/contracts/smoke_backend_admin_rollback_snapshot_contract.py
+
+echo "[core smoke] passed"

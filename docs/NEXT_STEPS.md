@@ -1,20 +1,10 @@
-# Next Steps — after v246
+# NEXT STEPS
 
-다음 추천 단계는 **v247 backend admin preview side-effect static contract**입니다.
+현재 추천 단계는 **Snapshot 기반 Rollback Preview 강화**입니다.
 
-## 목표
+1. Preview 응답의 `rollbackSnapshot` fingerprint를 관리자 UI에서 전체 확인 가능하게 표시
+2. Rollback Preview 요청 시 저장된 snapshot과 현재 대상의 일치 여부를 비교하는 읽기 전용 검증 추가
+3. mismatch가 있으면 실제 write 없이 차단 사유와 변경 경로를 UI에 표시
+4. 기존 route path, API response body의 기존 필드, Write Guard는 유지
 
-1. preview service 메서드에서 `commit()` 호출 금지
-2. preview service 메서드에서 `flush()` 호출 금지
-3. preview service 메서드에서 `add()`·`delete()` 호출 금지
-4. apply 메서드가 mutation boundary인지 정적 확인
-5. rollback/예외 처리용 호출은 메서드별로 구분
-6. 실제 DB 호출 없이 AST/static contract로 검증
-
-## 작업 원칙
-
-- 실제 DB 쓰기 금지
-- 기존 write guard 유지
-- API 주소/응답 body/schema 변경 금지
-- backend/frontend parity smoke 필수
-- FastAPI/Starlette/Pydantic 결과는 실행 관찰 후 계약화
+그다음 단계는 게임 콘텐츠 개발 재개입니다.

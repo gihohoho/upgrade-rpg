@@ -18,6 +18,7 @@ from app.models import (
     Skill,
 )
 from app.services.game_service import serialize_value
+from app.services.admin.admin_diff_engine import build_admin_field_changes
 
 
 class AdminChangeLogService:
@@ -576,17 +577,15 @@ class AdminChangeLogService:
         return base
 
     def _build_change_log_changes(self, before_json: Any, after_json: Any) -> list[dict[str, Any]]:
-        before_dict = before_json if isinstance(before_json, dict) else {}
-        after_dict = after_json if isinstance(after_json, dict) else {}
-        keys = sorted(set(before_dict.keys()) | set(after_dict.keys()))
+        changes = build_admin_field_changes(before_json, after_json)
         return [
             {
-                "key": key,
-                "label": self._humanize_field_name(key),
-                "before": serialize_value(before_dict.get(key)),
-                "after": serialize_value(after_dict.get(key)),
+                **change,
+                "label": self._humanize_field_name(str(change.get("key") or "")),
+                "before": serialize_value(change.get("before")),
+                "after": serialize_value(change.get("after")),
             }
-            for key in keys
+            for change in changes
         ]
 
     async def _build_change_log_changes_with_relations(self, session: AsyncSession, domain: str | None, before_json: Any, after_json: Any) -> list[dict[str, Any]]:

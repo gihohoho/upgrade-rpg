@@ -35,3 +35,30 @@ def build_admin_diff(before: Any, after: Any, *, path: str = "$") -> list[dict[s
     if before != after or type(before) is not type(after):
         changes.append({"path": path, "op": "replace", "before": deepcopy(before), "after": deepcopy(after)})
     return changes
+
+
+def build_admin_field_changes(before: Any, after: Any) -> list[dict[str, Any]]:
+    """Convert the shared recursive diff into the legacy top-level change rows.
+
+    Admin ChangeLog responses historically expose ``key/before/after`` rows.
+    Keep that response shape while deriving the changed keys and values from the
+    same deterministic engine used by Preview APIs.
+    """
+    before_dict = before if isinstance(before, dict) else {}
+    after_dict = after if isinstance(after, dict) else {}
+    changes: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for item in build_admin_diff(before_dict, after_dict):
+        path = str(item.get("path") or "")
+        if not path.startswith("$."):
+            continue
+        key = path[2:].split(".", 1)[0].split("[", 1)[0]
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        changes.append({
+            "key": key,
+            "before": deepcopy(before_dict.get(key)),
+            "after": deepcopy(after_dict.get(key)),
+        })
+    return changes

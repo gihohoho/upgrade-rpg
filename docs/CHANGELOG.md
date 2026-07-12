@@ -822,3 +822,10 @@
 - Added runtime validation checks for whitespace stripping, alias/name population, and invalid payload rejection.
 - Added the new smoke to `tools/run_smoke_core.sh`.
 - No route path, response body, DB, or env changes.
+
+## v251 - Shared Diff Preview Integration
+
+- 관리자 Preview API에 연결된 `unifiedDiff` / `rollbackSnapshot` 흐름을 기준으로 ChangeLog의 기존 최상위 필드 변경 계산도 공통 Diff Engine을 사용하도록 통합했습니다.
+- 기존 API 응답의 `key`, `label`, `before`, `after` 구조는 그대로 유지했습니다.
+- `run_smoke_core.sh` 중간 `exit 0` 때문에 v247~v250 Contract 검사가 실행되지 않던 문제를 수정했습니다.
+- 공통 Diff Engine에서 legacy ChangeLog 행으로 안전하게 투영하는 스모크 검사를 추가했습니다.
