@@ -1,3 +1,11 @@
+# v268 - Project structure transition prep
+
+- 현재 ZIP 기준으로 프로젝트 구조를 다시 점검했습니다.
+- Vue/FastAPI/DB 전환을 위해 legacy 보존 범위와 이식 후보를 정리했습니다.
+- smoke/contract 경로 의존성 때문에 실제 파일 대이동은 보류했습니다.
+- 다음 단계는 legacy 경로 의존성 자동 목록화와 Vue 앱 생성 위치 결정입니다.
+- 런타임 코드, DB, env, seed, route path, API response body, auth, write guard, 실제 write 로직은 변경하지 않았습니다.
+
 # v258 - Admin Workspace navigation UX
 
 - Added an admin workspace hub that splits the page into task-first modes instead of one long mixed screen.

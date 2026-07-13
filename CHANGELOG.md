@@ -1,3 +1,12 @@
+## v268 - Project structure transition prep
+
+- 현재 ZIP 기준으로 `admin.html`, `index.html`, `src`, `backend`, `tools`, `docs`의 역할을 다시 정리했습니다.
+- Vue/FastAPI/DB 전환을 위해 보존/이식/대체 후보를 문서화했습니다.
+- smoke/contract가 직접 참조하는 legacy 경로 의존성을 1차 분석했습니다.
+- `admin.html`, `index.html`, `src/api`, `src/api/admin`, `backend/app/api/routes`, `backend/app/services`는 당장 이동하지 않는 것으로 결정했습니다.
+- `docs/current/PROJECT_STRUCTURE.md`, `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`, `docs/NEXT_STEPS.md`, `docs/current/ROADMAP.md`, 인계 문서를 갱신했습니다.
+- 런타임 코드, DB, env, seed, route path, API response body, auth, write guard, 실제 write 로직은 변경하지 않았습니다.
+
 ## v266 - Admin practical UX polish after feedback
 
 - v262의 `보기 방식` 선택은 롤백해 `마스터 데이터 카탈로그`를 다시 단일 목록으로 정리했습니다.

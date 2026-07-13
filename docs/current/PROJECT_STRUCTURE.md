@@ -1,6 +1,10 @@
-# Project Structure — v234
+# Project Structure — v268
 
-현재 ZIP 기준 주요 구조입니다.
+현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
+
+이번 v268에서는 실제 파일 대이동을 하지 않았습니다. 이유는 `admin.html`, `index.html`, `src/`, `backend/`, `tools/` 경로가 기존 smoke/contract에 많이 연결되어 있기 때문입니다. 먼저 구조와 영향 범위를 문서로 고정하고, Vue/FastAPI/DB 전환은 다음 단계에서 안전하게 나눠 진행합니다.
+
+## 최상위 구조
 
 ```txt
 .
@@ -17,118 +21,133 @@
 └── tools/
 ```
 
-## 루트 파일
+## 루트 파일 역할
 
-- `index.html` — 현재 실제 게임 화면. 아직 Vue가 아니라 기존 HTML/JS/CSS 기반입니다.
-- `admin.html` — 관리자 페이지입니다.
-- `README.md` — 현재 안정 버전 요약입니다.
-- `README_BACKEND_READY.md` — 백엔드 readiness 요약입니다.
-- `NEXT_CHAT_HANDOFF.md` — 새 채팅 인수인계 핵심 문서입니다.
-- `NEXT_CHAT_PROMPT.md` — 새 채팅에 그대로 붙여넣기 좋은 프롬프트입니다.
-- `docker-compose.yml` — PostgreSQL / Adminer 로컬 실행 설정입니다.
+| 경로 | 현재 역할 | v268 판단 |
+|---|---|---|
+| `index.html` | 현재 실제 게임 화면 진입점 | Vue 이식 전까지 legacy 기준 화면으로 유지 |
+| `admin.html` | 현재 관리자 페이지 진입점 | Vue 관리자 이식 전까지 운영/검증 도구로 유지 |
+| `README.md` | 최신 상태 요약 | v268 기준으로 갱신 대상 |
+| `README_BACKEND_READY.md` | 백엔드 readiness 요약 | 현상 유지 |
+| `NEXT_CHAT_HANDOFF.md` | 다음 채팅 인수인계 | v268 완료 후 갱신 대상 |
+| `NEXT_CHAT_PROMPT.md` | 다음 채팅 시작 프롬프트 | v268 완료 후 갱신 대상 |
+| `docker-compose.yml` | 로컬 PostgreSQL/Adminer 실행 설정 | DB 실제 도입 전까지 현상 유지 |
 
-## backend
+## `backend/` 역할
 
 FastAPI 백엔드입니다.
 
-주요 역할:
+현재 역할:
 
 - master-data API
 - save snapshot API
 - admin read/write API
-- create / delete / restore / rollback 제한 API
-- PostgreSQL 연동
+- create/delete/restore/rollback 제한 API
+- PostgreSQL/Alembic 도입 준비 파일 보유
+- 관리자 contract/readiness 검증 대상
 
-중요 파일:
+주요 구조:
 
 ```txt
-backend/app/main.py
-backend/app/api/routes/admin.py
-backend/app/api/routes/admin_overview_snapshot_routes.py
-backend/app/api/routes/admin_master_data_routes.py
-backend/app/api/routes/admin_change_log_routes.py
-backend/app/api/routes/admin_request_metadata_contract.py
-backend/app/services/admin_service.py
-backend/app/services/admin_service_split_contract.py
-backend/app/schemas/admin.py
+backend/
+├── app/
+│   ├── main.py
+│   ├── api/
+│   │   ├── router.py
+│   │   └── routes/
+│   ├── core/
+│   ├── db/
+│   ├── models/
+│   ├── schemas/
+│   └── services/
+├── scripts/
+├── seeds/
+├── sql/
+├── alembic/
+├── alembic.ini
+├── pyproject.toml
+└── README.md
 ```
 
-## backend/app/api/routes
+### `backend/app/api/routes/`
 
 관리자 route는 기능별 파일로 분리되어 있습니다.
 
-- `admin.py` — include-router facade
-- `admin_overview_snapshot_routes.py` — requirements / overview / save-snapshots / change-preview
-- `admin_master_data_routes.py` — master-data catalog/detail/create/edit/relation
-- `admin_change_log_routes.py` — change-logs / rollback / create-delete / restore
+| 파일 | 역할 |
+|---|---|
+| `admin.py` | 관리자 router facade |
+| `admin_overview_snapshot_routes.py` | requirements/overview/save-snapshots/change-preview 계열 |
+| `admin_master_data_routes.py` | master-data catalog/detail/create/edit/relation 계열 |
+| `admin_change_log_routes.py` | change-logs/rollback/create-delete/restore 계열 |
+| `admin_*_contract.py` | route/request/response/schema/write safety 계약 검증용 route |
+| `game.py` | 게임 API 초안 |
+| `health.py` | health check |
 
-관리자 route contract 파일:
+### `backend/app/services/`
 
-- `admin_route_map_contract.py`
-- `admin_route_module_import_contract.py`
-- `admin_runtime_route_contract.py`
-- `admin_route_operation_contract.py`
-- `admin_openapi_route_contract.py`
-- `admin_response_metadata_contract.py`
-- `admin_request_metadata_contract.py`
+`AdminService`는 facade이고 실제 기능은 `backend/app/services/admin/` 하위 service로 분리되어 있습니다.
 
-## backend/app/services
+| 경로 | 역할 |
+|---|---|
+| `admin_service.py` | facade |
+| `admin_service_split_contract.py` | backend split readiness contract |
+| `admin/admin_config.py` | 관리자 설정/카탈로그 설정 |
+| `admin/admin_shared_utils.py` | 공통 유틸 |
+| `admin/admin_readiness_service.py` | readiness 계산 |
+| `admin/admin_overview_snapshots_service.py` | overview/save snapshot 계열 |
+| `admin/admin_master_catalog_service.py` | master catalog/detail 계열 |
+| `admin/admin_create_lifecycle_service.py` | create/delete/restore 계열 |
+| `admin/admin_change_log_service.py` | change log/rollback 계열 |
+| `admin/admin_edit_draft_service.py` | edit draft/preview 계열 |
+| `admin/admin_diff_engine.py` | 공통 diff 계산 |
+| `admin/admin_rollback_snapshot.py` | 공통 rollback snapshot |
+| `admin/admin_preview_enrichment.py` | preview 응답 보강 |
 
-`AdminService`는 facade이고, 실제 기능은 mixin service로 분리되어 있습니다.
+## `src/` 역할
 
-- `admin_service.py` — facade
-- `admin_service_split_contract.py` — backend split readiness contract
-- `admin/admin_config.py`
-- `admin/admin_shared_utils.py`
-- `admin/admin_readiness_service.py`
-- `admin/admin_overview_snapshots_service.py`
-- `admin/admin_master_catalog_service.py`
-- `admin/admin_create_lifecycle_service.py`
-- `admin/admin_change_log_service.py`
-- `admin/admin_edit_draft_service.py`
-
-## src
-
-브라우저에서 사용하는 JS 모듈입니다.
-
-주요 역할:
-
-- master-data fetch / fallback
-- save-data bridge
-- admin page helper
-- 분리된 관리자 layout / field help / settings helpers / change logs / create lifecycle / edit draft / master catalog / overview snapshots helper
-- smoke에서 확인하는 브라우저 helper 함수 제공
-
-중요 파일:
+현재 Vue 앱이 아니라 브라우저에서 직접 읽는 legacy JS/CSS 모듈입니다.
 
 ```txt
-src/api/admin-page-readonly.js
-src/api/admin/admin-change-logs.js
-src/api/admin/admin-create-lifecycle.js
-src/api/admin/admin-edit-draft.js
-src/api/admin/admin-master-catalog.js
-src/api/admin/admin-overview-snapshots.js
+src/
+├── api/
+├── app/
+├── data/
+├── rules/
+├── state/
+├── styles/
+├── systems/
+├── ui/
+└── utils/
 ```
 
-## docs
+| 경로 | 현재 역할 | Vue 전환 판단 |
+|---|---|---|
+| `src/api/game-api-client.js` | legacy 화면과 관리자 화면의 API client | Vue API client 설계 시 참고/이식 후보 |
+| `src/api/admin-page-readonly.js` | 관리자 페이지 메인 glue/helper | Vue 관리자 이식 시 가장 큰 분해 대상 |
+| `src/api/admin/*.js` | 관리자 기능별 helper | Vue composable/store/service로 이식 후보 |
+| `src/api/master-data-*.js` | master-data 로딩/검증/전환 | Vue 전환 초기에도 보존 필요 |
+| `src/api/save-data-*.js` | save data bridge/slot/integrity | 인증/DB 전환 전까지 보존 필요 |
+| `src/data/*.js` | 현재 게임 데이터/부트스트랩 데이터 | DB seed와 Vue data adapter의 기준 자료 |
+| `src/rules/*.js` | 드랍/표시/장비 규칙 | 게임 콘텐츠 개발 보류, 전환 후 이식 |
+| `src/state/game-state.js` | legacy 게임 상태 | Vue store 전환 후보 |
+| `src/systems/*.js` | 전투/아이템/스탯/action result 로직 | Vue와 독립적인 domain module로 분리 후보 |
+| `src/ui/render-ui.js` | legacy DOM 렌더링 | Vue component로 대체 후보 |
+| `src/styles/style.css` | 현재 게임 CSS | Vue 전환 시 legacy CSS 보존 후 점진 분해 |
 
-새 채팅에서 우선 볼 문서:
+## `tools/` 역할
 
-- `docs/CURRENT_STATUS.md`
-- `docs/NEXT_STEPS.md`
-- `docs/README.md`
-- `docs/PROJECT_STRUCTURE.md`
-- `docs/CHANGELOG.md`
+smoke test와 계약 점검 스크립트 폴더입니다.
 
-과거 단계 문서:
+```txt
+tools/
+├── run_smoke_core.sh
+├── run_smoke_all.sh
+├── check_backend_ready.py
+├── contracts/
+└── smoke/
+```
 
-- `docs/archive/stage-notes/`
-
-## tools
-
-smoke test와 점검 스크립트 폴더입니다.
-
-자주 쓰는 명령:
+현재 가장 중요한 검증 명령:
 
 실행 위치: 프로젝트 루트
 
@@ -139,8 +158,78 @@ bash tools/run_smoke_core.sh
 실행 위치: 프로젝트 루트
 
 ```bash
-bash tools/run_smoke_all.sh
+python -m compileall -q backend/app backend/scripts tools
 ```
+
+## `docs/` 역할
+
+```txt
+docs/
+├── current/
+├── handoff/
+├── contracts/
+├── archive/
+└── *.md
+```
+
+| 경로 | 역할 | v268 판단 |
+|---|---|---|
+| `docs/current/` | 현재 기준 문서 | 앞으로 우선 갱신할 canonical 문서 |
+| `docs/handoff/` | 다음 채팅 인수인계 복사본 | 루트 handoff 문서와 함께 유지 |
+| `docs/contracts/` | admin contract registry 문서/JSON | contract 추가 시 동기화 대상 |
+| `docs/archive/stage-notes/` | 과거 단계 문서 | 실제 이동은 smoke 영향 확인 후 진행 |
+| `docs/*.md` | 단계별 기록 문서 | 당장 삭제/이동하지 않고 archive 계획만 먼저 작성 |
+
+## v268 구조 점검에서 확인한 경로 의존성
+
+아래 숫자는 v268 ZIP에서 단순 텍스트 검색으로 확인한 참고값입니다. 정식 contract는 아니지만, 대이동 위험도를 판단하는 근거입니다.
+
+| 경로/문자열 | 참조 수 | 참조 파일 수 | 판단 |
+|---|---:|---:|---|
+| `admin.html` | 166 | 84 | 관리자 smoke가 강하게 의존하므로 당장 이동 금지 |
+| `index.html` | 82 | 48 | 게임 smoke와 관리자 URL helper가 의존하므로 당장 이동 금지 |
+| `src/api` | 589 | 167 | frontend/admin smoke가 강하게 의존하므로 당장 이동 금지 |
+| `src/api/admin` | 352 | 128 | 관리자 helper split smoke가 직접 확인하므로 당장 이동 금지 |
+| `backend/app/api/routes` | 350 | 73 | route contract가 직접 확인하므로 당장 이동 금지 |
+| `backend/app/services` | 258 | 89 | service split contract가 직접 확인하므로 당장 이동 금지 |
+| `backend/seeds` | 30 | 10 | seed 관련 검증/문서가 참조하므로 변경 금지 |
+| `tools/run_smoke_core.sh` | 75 | 70 | 새 contract 등록 시 core smoke 포함 여부를 검사하므로 유지 |
+
+## Vue 전환 시 보존/이식/대체 후보
+
+### 반드시 보존
+
+- `admin.html`
+- `index.html`
+- `src/` 전체 legacy 동작
+- `backend/app/api/routes/` 기존 route path
+- `backend/app/services/` 기존 service 의미
+- `backend/seeds/` 현재 seed 자료
+- `tools/run_smoke_core.sh`
+- 기존 smoke/contract 의미
+
+### Vue로 이식할 후보
+
+- `src/api/admin/*.js` → Vue admin composable/service/store 후보
+- `src/api/game-api-client.js` → Vue API client/interceptor 설계 참고
+- `src/state/game-state.js` → Pinia 또는 별도 store 후보
+- `src/ui/render-ui.js` → Vue component 후보
+- `src/styles/style.css` → page/component CSS로 점진 분해 후보
+
+### 나중에 대체할 후보
+
+- `admin.html` → Vue 관리자 라우트로 대체
+- `index.html` → Vue 게임 라우트로 대체
+- legacy DOM 직접 조작 함수 → Vue component/state 기반 구조로 대체
+
+## 다음 구조 변경 전 체크리스트
+
+1. `admin.html` script 경로를 바꾸지 않고 Vue shell을 새로 만들 수 있는지 확인합니다.
+2. `index.html`을 이동하지 않고 Vue 앱을 별도 폴더에 만들 수 있는지 확인합니다.
+3. `tools/smoke/**/*.js`, `tools/smoke/**/*.py`에서 직접 읽는 경로를 목록화합니다.
+4. route path/API response body는 변경하지 않습니다.
+5. 새 Contract가 필요하면 실제 실행 결과를 먼저 수집합니다.
+6. core smoke가 끝까지 통과하기 전 ZIP을 만들지 않습니다.
 
 ## ZIP 포함/제외 원칙
 
