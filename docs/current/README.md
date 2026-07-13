@@ -1,6 +1,6 @@
 # Current documents
 
-- 최신 작업: `v279.vue-admin-readonly-detail-panel`
+- 최신 작업: `v281.vue-admin-related-detail-navigation`
 - 현재 상태: `CURRENT_STATUS.md`
 - Vue 관리자 GET 이식: `VUE_ADMIN_READONLY_CATALOG.md`
 - Vue/FastAPI/DB 전환 계획: `VUE_FASTAPI_DB_TRANSITION_PLAN.md`

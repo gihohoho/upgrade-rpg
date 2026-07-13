@@ -1,4 +1,4 @@
-# Roadmap — v279
+# Roadmap — v281
 
 ## 당분간 보류
 
@@ -18,32 +18,34 @@
 - v275 backend route map
 - v276 도메인 목록
 - v277 첫 카탈로그
-- v278 카탈로그 검색/필터/페이지네이션
-- v279 선택 row 상세 GET
+- v278 검색/필터/페이지네이션
+- v279 상세 GET
+- v280 관계 그룹 GET
+- v281 연관 row 상세 이동/뒤로가기
 
 ## 현재 경계
 
-Vue `/admin`은 도메인, 카탈로그, 상세까지만 GET으로 연결합니다.
+Vue `/admin`은 도메인, 카탈로그, 상세, 관계까지 GET으로 연결합니다.
 
 계속 보류:
 
-- relations GET
+- 관계 편집
 - Preview/Apply/write
 - 인증
-- DB 구조 변경
+- DB 구조/env/seed 변경
 
 ## 다음 작업
 
-### v280 — read-only relations
+### v282 — PostgreSQL/Alembic 준비 계획
 
-- 선택 상세의 관계 group 조회
-- loading/error/empty 상태
-- 관련 row 클릭 이동은 응답 구조 확인 후 판단
-- GET만 사용
+- 현재 model/session/config/Alembic 구조 분석
+- 전환 순서와 rollback 체크리스트
+- 실제 환경에서 실행할 사전 점검 명령 정의
+- DB와 `.env`는 변경하지 않음
 
 ### 이후
 
-- PostgreSQL/Alembic 도입 준비 문서 구체화
+- 사용자 승인 후 PostgreSQL/Alembic 단계별 도입
 - 인증/관리자 권한 설계
 - 관리자 Vue 이식 확대
 - 게임 Vue 이식

@@ -2,12 +2,13 @@
   <ShellCard
     label="Admin"
     title="관리자 페이지 Vue 이식 준비"
-    description="현재 실제 관리자 도구는 아직 루트 admin.html에서 실행합니다. v276~v279에서는 안전한 GET 도메인·카탈로그·상세 조회만 Vue shell에서 확인합니다."
+    description="현재 실제 관리자 도구는 아직 루트 admin.html에서 실행합니다. v276~v281에서는 안전한 GET 도메인·카탈로그·상세·관계 조회만 Vue shell에서 확인합니다."
   >
     <ul class="shell-list">
       <li>legacy 기준 진입점: <code>admin.html</code></li>
-      <li>현재 Vue 연결 범위: 상태 확인, 도메인 목록, 검색/상태/정렬/페이지네이션, 선택 row 상세</li>
-      <li>relations와 Preview/Apply/write는 계약과 화면 경계를 다시 확인한 뒤 단계적으로 옮깁니다.</li>
+      <li>현재 Vue 연결 범위: 상태 확인, 도메인 목록, 검색/상태/정렬/페이지네이션, 상세, 관계 그룹</li>
+      <li>연관 row 상세 이동과 이전 상세 돌아가기는 GET 조회만 사용합니다.</li>
+      <li>관계 편집과 Preview/Apply/write는 계속 제외합니다.</li>
     </ul>
 
     <ReadOnlyApiStatusPanel
@@ -24,7 +25,7 @@
       :searchable-fields="selectedDomain?.searchableFields || []"
       :supports-enabled-filter="Boolean(selectedDomain?.supportsEnabledFilter)"
       :default-sort="selectedDomain?.defaultSort || 'id_asc'"
-      :selected-row-id="selectedRow?.rowId || null"
+      :selected-row-id="selectedRow?.domain === selectedDomain?.key ? selectedRow?.rowId : null"
       @row-selected="handleRowSelected"
     />
 
@@ -32,12 +33,21 @@
       :domain="selectedRow?.domain || ''"
       :row-id="selectedRow?.rowId || null"
       :row-title="selectedRow?.title || ''"
-      @clear-selection="handleRowSelected(null)"
+      :navigation-depth="selectionHistory.length"
+      @back-selection="handleBackSelection"
+      @clear-selection="clearRowSelection"
+    />
+
+    <AdminMasterRelationsPanel
+      :domain="selectedRow?.domain || ''"
+      :row-id="selectedRow?.rowId || null"
+      :row-title="selectedRow?.title || ''"
+      @related-row-selected="handleRelatedRowSelected"
     />
 
     <section class="api-route-preview" aria-label="Admin read-only API route preview">
       <h3>읽기 전용 관리자 API 준비 목록</h3>
-      <p>도메인·카탈로그·상세 GET까지 화면에 연결했습니다. relations와 모든 Preview/Apply/write는 아직 제외합니다.</p>
+      <p>도메인·카탈로그·상세·관계 GET까지 화면에 연결했습니다. 관계 편집과 모든 Preview/Apply/write는 제외합니다.</p>
       <ul class="api-route-preview__list">
         <li v-for="route in adminRoutes" :key="route.name">
           <code>GET</code>
@@ -56,10 +66,12 @@ import ReadOnlyApiStatusPanel from '@/components/ReadOnlyApiStatusPanel.vue';
 import AdminMasterDomainPanel from '@/components/AdminMasterDomainPanel.vue';
 import AdminMasterCatalogMiniPanel from '@/components/AdminMasterCatalogMiniPanel.vue';
 import AdminMasterDetailPanel from '@/components/AdminMasterDetailPanel.vue';
+import AdminMasterRelationsPanel from '@/components/AdminMasterRelationsPanel.vue';
 import { ADMIN_READONLY_ROUTES, adminReadOnlyApi, healthReadOnlyApi } from '@/api';
 
 const selectedDomain = ref(null);
 const selectedRow = ref(null);
+const selectionHistory = ref([]);
 const adminRoutes = Object.entries(ADMIN_READONLY_ROUTES).map(([name, path]) => ({ name, path }));
 
 const adminStatusChecks = [
@@ -84,9 +96,28 @@ const adminStatusChecks = [
 function handleDomainSelected(domain) {
   selectedDomain.value = domain;
   selectedRow.value = null;
+  selectionHistory.value = [];
 }
 
 function handleRowSelected(row) {
   selectedRow.value = row;
+  selectionHistory.value = [];
+}
+
+function handleRelatedRowSelected(row) {
+  if (!row?.domain || !row?.rowId) return;
+  if (selectedRow.value) {
+    selectionHistory.value.push(selectedRow.value);
+  }
+  selectedRow.value = row;
+}
+
+function handleBackSelection() {
+  selectedRow.value = selectionHistory.value.pop() || null;
+}
+
+function clearRowSelection() {
+  selectedRow.value = null;
+  selectionHistory.value = [];
 }
 </script>

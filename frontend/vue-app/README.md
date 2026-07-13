@@ -1,53 +1,43 @@
-# Upgrade RPG Vue App Shell — v279
+# Upgrade RPG Vue App Shell — v281
 
 이 폴더는 기존 게임/관리자 화면을 바로 대체하지 않는 Vue 준비 앱입니다.
 
-현재 실제 화면:
-
-- 게임: 루트 `index.html`
-- 관리자: 루트 `admin.html`
-- legacy JS/CSS: 루트 `src/`
+실제 화면은 계속 루트 `index.html`, `admin.html`, legacy `src/`를 사용합니다.
 
 ## 현재 Vue 연결 범위
 
-`/game`:
+`/game`은 `GET /health`를 사용합니다.
 
-- `GET /health`
+`/admin`은 아래 GET을 사용합니다.
 
-`/admin`:
-
-- `GET /health`
-- `GET /admin/requirements`
-- `GET /admin/master-data/domains`
-- `GET /admin/master-data/catalog`
-- `GET /admin/master-data/detail`
+- `/health`
+- `/admin/requirements`
+- `/admin/master-data/domains`
+- `/admin/master-data/catalog`
+- `/admin/master-data/detail`
+- `/admin/master-data/relations`
 
 지원 기능:
 
 - 도메인 선택
-- 검색어
-- 활성/비활성 필터
-- 정렬
-- 이전/다음 페이지
-- 선택 row 상세
-- scalar 필드
-- 관계 힌트
-- 안전한 JSON 미리보기
+- 검색, 활성/비활성 필터, 정렬, 페이지네이션
+- scalar/JSON 안전 상세
+- 관계 그룹 표
+- 연관 row 상세 이동
+- `이전 상세로`
 
 아직 연결하지 않은 것:
 
-- relations GET
+- 관계 편집
 - Preview/Apply/write
 - 인증/token/interceptor
 
 ## 설치
 
-v278~v279에서 새 라이브러리나 프레임워크는 추가하지 않았습니다.
-
-처음 실행하는 경우에만:
+v280~v281에서 새 라이브러리나 프레임워크는 없습니다.
 
 실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 필요 없음
+`.venv` 상태: 필요 없음 / 꺼져 있어도 됨
 
 ```bash
 npm install
@@ -56,7 +46,7 @@ npm install
 ## Vue 실행
 
 실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 필요 없음
+`.venv` 상태: 필요 없음 / 꺼져 있어도 됨
 
 ```bash
 npm run dev
@@ -86,11 +76,3 @@ python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```bash
 npm run build
 ```
-
-## 변경하지 않은 것
-
-- DB/env/seed/auth
-- route path/API response body
-- Write Guard/실제 write
-- Preview/Apply 요청 body
-- 기존 smoke/contract 의미

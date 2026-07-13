@@ -1,37 +1,27 @@
 # Upgrade RPG
 
-현재 기준: **v279.vue-admin-readonly-detail-panel**
+현재 기준: **v281.vue-admin-related-detail-navigation**
 
 ## 현재 상태
 
-- 기존 실제 게임 화면: `index.html`
-- 기존 실제 관리자 화면: `admin.html`
-- 기존 legacy JS/CSS: 루트 `src/`
+- 실제 게임 화면: 루트 `index.html`
+- 실제 관리자 화면: 루트 `admin.html`
+- legacy JS/CSS: 루트 `src/`
 - 새 Vue shell: `frontend/vue-app/`
 - FastAPI 백엔드: `backend/`
 
-Vue `/admin`에 현재 연결된 안전한 GET 범위:
+Vue `/admin`에는 안전한 GET 상태 확인, 도메인, 카탈로그, 상세, 관계 그룹을 연결했습니다. 관계 표의 `이 row 상세`로 연관 row를 조회하고 `이전 상세로`로 돌아갈 수 있습니다.
 
-- `/health`
-- `/admin/requirements`
-- `/admin/master-data/domains`
-- `/admin/master-data/catalog`
-- `/admin/master-data/detail`
-
-v278에서는 카탈로그 검색·활성 상태·정렬·페이지네이션을 추가했습니다.  
-v279에서는 선택 row의 scalar 필드, 관계 힌트, 안전한 JSON 미리보기를 표시하는 상세 패널을 추가했습니다.  
-`/admin/requirements`는 성공해도 `-`로 보이던 대신 `readOnlyOverviewReady`를 기준으로 `준비 완료`를 표시합니다.
-
-기존 게임/관리자 동작, API route, API 응답 body, DB, env, seed, 인증, Write Guard, 실제 write 로직은 변경하지 않았습니다.
+관계 편집, Preview/Apply/write, DB/env/seed/auth는 변경하거나 연결하지 않았습니다.
 
 ## 설치해야 하는 것
 
-v278~v279에서 새 라이브러리나 프레임워크는 추가하지 않았습니다.
+v280~v281에서 새 라이브러리나 프레임워크는 추가하지 않았습니다.
 
 `frontend/vue-app/node_modules`가 없다면 한 번만 설치합니다.
 
 실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
+`.venv` 상태: 필요 없음 / 꺼져 있어도 됨
 
 ```bash
 npm install
@@ -40,17 +30,13 @@ npm install
 ## Vue 앱 실행
 
 실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
+`.venv` 상태: 필요 없음 / 꺼져 있어도 됨
 
 ```bash
 npm run dev
 ```
 
-확인 주소:
-
-```txt
-http://127.0.0.1:5173/admin
-```
+확인 주소: `http://127.0.0.1:5173/admin`
 
 ## FastAPI 서버 실행
 
@@ -68,46 +54,17 @@ http://127.0.0.1:5173/admin
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-## 검증 명령
-
-Vue shell/API 검사:
+## 검증
 
 실행 위치: 프로젝트 루트  
-`.venv` 상태: 켜져 있거나 꺼져 있어도 됨
+`.venv` 상태: Vue 검사는 무관, Python/core 검사는 켜진 상태 권장
 
 ```bash
 bash tools/run_smoke_vue_shell.sh
-```
-
-기존 core smoke:
-
-실행 위치: 프로젝트 루트  
-`.venv` 상태: 켜진 상태 권장
-
-```bash
+python -m compileall -q backend/app backend/scripts tools
 bash tools/run_smoke_core.sh
 ```
 
-Python compile 검사:
+## 다음 방향
 
-실행 위치: 프로젝트 루트  
-`.venv` 상태: 켜진 상태 권장
-
-```bash
-python -m compileall -q backend/app backend/scripts tools
-```
-
-보고서 검사:
-
-실행 위치: 프로젝트 루트  
-`.venv` 상태: 켜진 상태 권장
-
-```bash
-python tools/report_legacy_path_dependencies.py --check && python tools/report_backend_structure_plan.py --check && python tools/report_backend_route_map.py --check
-```
-
-## 현재 개발 방향
-
-당분간 게임 콘텐츠 개발은 하지 않습니다.
-
-다음 추천 작업은 `v280 Vue admin read-only relations panel`입니다. 관계 GET만 연결하고 Preview/Apply/write는 계속 보류합니다.
+다음은 실제 DB를 바꾸지 않고 PostgreSQL/Alembic 도입 계획과 검증 체크리스트를 구체화합니다.

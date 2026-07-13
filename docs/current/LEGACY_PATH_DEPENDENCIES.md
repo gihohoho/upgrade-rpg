@@ -17,7 +17,7 @@
 | --- | --- | --- | --- | --- |
 | `admin.html` | O | 193 | 87 | 절대 이동 금지 |
 | `index.html` | O | 112 | 51 | 절대 이동 금지 |
-| `src/` | O | 1171 | 216 | 절대 이동 금지 |
+| `src/` | O | 1184 | 217 | 절대 이동 금지 |
 | `src/api/` | O | 669 | 179 | Vue 이식 후보이지만 현 위치 유지 |
 | `src/api/admin/` | O | 377 | 138 | Vue 관리자 이식 후보이지만 현 위치 유지 |
 | `src/data/` | O | 81 | 28 | DB seed 준비 전 이동 금지 |
@@ -25,12 +25,12 @@
 | `src/state/` | O | 19 | 14 | Vue store 후보, 현 위치 유지 |
 | `src/systems/` | O | 65 | 27 | domain module 후보, 현 위치 유지 |
 | `src/ui/` | O | 22 | 15 | Vue component 대체 후보, 현 위치 유지 |
-| `src/styles/` | O | 29 | 12 | Vue CSS 분해 후보, 현 위치 유지 |
+| `src/styles/` | O | 31 | 13 | Vue CSS 분해 후보, 현 위치 유지 |
 | `backend/app/api/routes/` | O | 420 | 80 | route path/contract 보호 |
 | `backend/app/services/` | O | 289 | 94 | service contract 보호 |
 | `backend/seeds/` | O | 32 | 12 | 사용자 승인 전 변경 금지 |
 | `tools/run_smoke_core.sh` | O | 85 | 71 | 검증 기준 유지 |
-| `tools/smoke/` | O | 316 | 128 | 경로 의존성 기준 |
+| `tools/smoke/` | O | 317 | 128 | 경로 의존성 기준 |
 
 ## 참조 파일 예시
 
@@ -239,12 +239,12 @@
 | `src/api/admin/admin-edit-draft.js` | 16 |
 | `src/api/admin/admin-master-catalog.js` | 15 |
 | `src/api/admin-layout-shell.js` | 14 |
+| `src/pages/AdminShell.vue` | 13 |
 | `backend/app/api/routes/admin_response_data_helpers.py` | 11 |
 | `src/api/admin/admin-field-help.js` | 11 |
 | `src/app/main.js` | 11 |
 | `backend/app/services/admin_service.py` | 10 |
 | `backend/app/services/admin/__init__.py` | 10 |
-| `src/pages/AdminShell.vue` | 10 |
 | `src/api/save-data-preview.js` | 10 |
 | `backend/app/schemas/admin.py` | 9 |
 | `src/api/admin/admin-overview-snapshots.js` | 9 |
@@ -254,14 +254,14 @@
 | `backend/app/api/routes/admin.py` | 7 |
 | `backend/app/services/admin/admin_change_log_service.py` | 7 |
 | `src/api/admin/admin-settings-helpers.js` | 7 |
+| `src/styles/base.css` | 7 |
 | `src/pages/GameShell.vue` | 7 |
 | `src/api/master-data-adapter.js` | 7 |
 | `src/api/save-data-slots.js` | 7 |
 | `backend/app/api/routes/game.py` | 6 |
 | `backend/app/api/routes/admin_response_meta_helpers.py` | 6 |
+| `src/components/AdminMasterDetailPanel.vue` | 6 |
 | `src/systems/item-system.js` | 5 |
-| `backend/scripts/check_admin_readonly_api.py` | 5 |
-| `src/styles/base.css` | 5 |
 
 ## Vue 앱 생성 위치 결정
 

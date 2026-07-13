@@ -1,3 +1,17 @@
+# v281 - Vue admin related-row detail navigation
+
+- Added read-only related-row detail navigation from the relations panel.
+- Preserves prior selections in a local `selectionHistory` stack and adds `이전 상세로` without changing routes or write behavior.
+- Clears history when the domain/catalog selection is reset.
+
+# v280 - Vue admin read-only relations panel
+
+- Added `AdminMasterRelationsPanel.vue` for `GET /admin/master-data/relations`.
+- Displays backend-provided relation groups, compact columns/rows, counts, limited indicators, and loading/error/empty/success states.
+- Uses `limit=20`, cancels stale requests, and never requests raw JSON/assets or mutation APIs.
+- Added a dedicated read-only relations/navigation smoke.
+- Kept DB, env, seed, auth, route paths, API response bodies, Write Guard, Preview/Apply request bodies, and actual write logic unchanged.
+
 # v279 - Vue admin read-only detail panel
 
 - Added `AdminMasterDetailPanel.vue` for `GET /admin/master-data/detail`.

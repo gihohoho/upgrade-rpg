@@ -9,6 +9,7 @@ REQUIRED_FILES = [
     "src/components/AdminMasterDomainPanel.vue",
     "src/components/AdminMasterCatalogMiniPanel.vue",
     "src/components/AdminMasterDetailPanel.vue",
+    "src/components/AdminMasterRelationsPanel.vue",
     "src/pages/AdminShell.vue",
     "src/styles/base.css",
     "docs/current/VUE_ADMIN_READONLY_CATALOG.md",
@@ -91,7 +92,7 @@ def main() -> None:
     assert_contains(detail_panel, "payload.assetFields", "detail asset fields payload")
     assert_contains(detail_panel, "payload.relationHints", "detail relation hints payload")
     assert_contains(detail_panel, "sanitizedJsonReturned", "detail sanitized JSON flag")
-    assert_contains(detail_panel, "관계 목록 API는 아직 호출하지 않습니다", "relations exclusion text")
+    assert_contains(detail_panel, "실제 축약 관계 목록은 아래 GET 관계 패널", "relations panel bridge text")
     assert_contains(detail_panel, "AbortController", "detail stale request guard")
     assert_read_only("src/components/AdminMasterDetailPanel.vue")
 
@@ -103,11 +104,11 @@ def main() -> None:
     assert_contains(admin_shell, "searchable-fields", "domain search metadata bridge")
     assert_contains(admin_shell, "handleRowSelected", "admin selected row bridge")
     assert_contains(admin_shell, "준비 완료", "requirements meaningful summary")
-    assert_contains(admin_shell, "relations와 Preview/Apply/write", "admin mutation exclusion note")
+    assert_contains(admin_shell, "관계 편집과 Preview/Apply/write", "admin mutation exclusion note")
     assert_read_only("src/pages/AdminShell.vue")
 
     app = read("src/App.vue")
-    assert_contains(app, "Upgrade RPG v279", "Vue shell visible version")
+    assert_contains(app, "Upgrade RPG v281", "Vue shell visible version")
 
     css = read("src/styles/base.css")
     assert_contains(css, ".admin-catalog-controls", "admin catalog controls CSS")
@@ -121,7 +122,7 @@ def main() -> None:
     assert_contains(docs, "query", "catalog search query doc")
     assert_contains(docs, "enabled", "catalog enabled query doc")
     assert_contains(docs, "GET /api/v1/admin/master-data/detail", "detail endpoint doc")
-    assert_contains(docs, "relations", "relations exclusion note")
+    assert_contains(docs, "GET /api/v1/admin/master-data/relations", "relations endpoint note")
     assert_contains(docs, "Preview/Apply/write", "write exclusion note")
     assert_contains(docs, "`.venv` 상태", "venv guidance")
     assert_contains(docs, "npm run dev", "Vue run guidance")

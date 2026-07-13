@@ -763,3 +763,53 @@ code {
     width: 100%;
   }
 }
+
+.admin-relations-groups {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.admin-relations-group {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(232, 238, 248, 0.1);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.admin-relations-group__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.admin-relations-group__header h4 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.admin-relations-group__header p {
+  font-size: 13px;
+}
+
+.admin-relations-group__limited {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border: 1px solid rgba(245, 214, 139, 0.25);
+  border-radius: 999px;
+  color: #f5d68b;
+  background: rgba(139, 102, 29, 0.13);
+  font-size: 12px;
+}
+
+.admin-relations-table-wrap {
+  margin-top: 12px;
+}
+
+@media (max-width: 720px) {
+  .admin-relations-group__header {
+    display: grid;
+  }
+}

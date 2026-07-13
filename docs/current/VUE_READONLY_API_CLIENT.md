@@ -208,10 +208,10 @@ Vue `/admin`에서 아래 GET이 추가로 실제 호출됩니다.
 검색/필터/페이지네이션/detail/relations/Preview/Apply/write는 아직 연결하지 않습니다.
 
 
-## v278~v279 실제 연결 확장
+## v278~v281 실제 연결 확장
 
 Vue `/admin`은 기존 read-only client를 사용해 카탈로그의 `query`, `enabled`, `sort`, `page`를 GET query로 전송합니다.
 선택 row 상세는 `fetchMasterDetail({ domain, rowId })`를 사용하며 wrapper가 backend query 이름 `id`로 변환합니다.
 
-현재 연결된 상세는 `payload.fields`, `payload.jsonFields`, `payload.assetFields`, `payload.relationHints`만 표시합니다.
-`relations`, Preview/Apply/write는 아직 호출하지 않습니다.
+상세는 `payload.fields`, `payload.jsonFields`, `payload.assetFields`, `payload.relationHints`를 표시합니다.
+관계는 `fetchMasterRelations({ domain, rowId, limit: 20 })`로 조회하고 `payload.groups[].columns/rows`를 표시합니다. 연관 row 이동은 다시 GET detail/relations만 호출합니다. Preview/Apply/write는 호출하지 않습니다.

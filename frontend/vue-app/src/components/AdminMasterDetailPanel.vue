@@ -2,11 +2,11 @@
   <section class="admin-readonly-panel" aria-label="선택한 마스터 데이터 상세">
     <div class="admin-readonly-panel__header">
       <div>
-        <p class="admin-readonly-panel__eyebrow">v279 · GET detail</p>
+        <p class="admin-readonly-panel__eyebrow">v279~v281 · GET detail</p>
         <h3>선택 row 상세</h3>
         <p>
           표의 <strong>상세 보기</strong>를 누르면 <code>GET /admin/master-data/detail</code>의 안전하게 정리된 응답만 표시합니다.
-          관계 조회와 편집·Preview·Apply·write는 아직 연결하지 않습니다.
+          관계 목록은 별도 GET 패널에서 확인하며 편집·Preview·Apply·write는 연결하지 않습니다.
         </p>
       </div>
       <div class="admin-detail-actions">
@@ -17,6 +17,14 @@
           @click="loadDetail"
         >
           {{ status === 'loading' ? '불러오는 중...' : '상세 다시 조회' }}
+        </button>
+        <button
+          v-if="navigationDepth > 0"
+          type="button"
+          class="admin-readonly-panel__button admin-readonly-panel__button--secondary"
+          @click="goBackSelection"
+        >
+          이전 상세로
         </button>
         <button
           v-if="rowId"
@@ -79,7 +87,7 @@
             <dd>{{ formatValue(hint.value) }}</dd>
           </div>
         </dl>
-        <p class="admin-detail-note">숫자와 코드 힌트만 표시하며, 관계 목록 API는 아직 호출하지 않습니다.</p>
+        <p class="admin-detail-note">숫자와 코드 힌트는 여기서 확인하고, 실제 축약 관계 목록은 아래 GET 관계 패널에서 확인합니다.</p>
       </section>
 
       <section v-if="detail.jsonFields.length" class="admin-detail-section">
@@ -125,9 +133,13 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  navigationDepth: {
+    type: Number,
+    default: 0,
+  },
 });
 
-const emit = defineEmits(['clear-selection']);
+const emit = defineEmits(['clear-selection', 'back-selection']);
 
 const status = ref('idle');
 const detail = ref(null);
@@ -175,6 +187,10 @@ function normalizeDetail(response) {
 
 function clearSelection() {
   emit('clear-selection');
+}
+
+function goBackSelection() {
+  emit('back-selection');
 }
 
 async function loadDetail() {
