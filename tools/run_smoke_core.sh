@@ -10,6 +10,7 @@ node tools/smoke/frontend/smoke_admin_edit_stale_guard.js
 node tools/smoke/frontend/smoke_admin_write_dev_key_guard.js
 node tools/smoke/frontend/smoke_admin_guarded_edit_apply.js
 node tools/smoke/frontend/smoke_admin_change_log_rollback.js
+node tools/smoke/frontend/smoke_admin_rollback_snapshot_preview.js
 node tools/smoke/frontend/smoke_admin_create_blueprint_readonly.js
 node tools/smoke/frontend/smoke_admin_create_draft_preview.js
 node tools/smoke/frontend/smoke_admin_create_apply_limited.js
@@ -99,5 +100,6 @@ python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contr
 python tools/smoke/contracts/smoke_backend_admin_diff_engine_contract.py
 python tools/smoke/contracts/smoke_backend_admin_change_log_shared_diff.py
 python tools/smoke/contracts/smoke_backend_admin_rollback_snapshot_contract.py
+python tools/smoke/contracts/smoke_backend_admin_rollback_preview_snapshot.py
 
 echo "[core smoke] passed"

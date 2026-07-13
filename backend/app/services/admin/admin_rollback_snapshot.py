@@ -25,7 +25,24 @@ def build_rollback_snapshot(*, domain: str, target_id: int | str, before: Any, a
     }
 
 
+def verify_rollback_snapshot(snapshot: dict[str, Any]) -> bool:
+    """Verify snapshot metadata and fingerprint without reading or mutating the DB."""
+    if not isinstance(snapshot, dict) or snapshot.get("schemaVersion") != 1:
+        return False
+    required = {"domain", "targetId", "before", "after", "fingerprint"}
+    if not required.issubset(snapshot):
+        return False
+    fingerprint_source = {
+        "domain": snapshot.get("domain"),
+        "targetId": snapshot.get("targetId"),
+        "before": snapshot.get("before"),
+        "after": snapshot.get("after"),
+    }
+    expected = sha256(_canonical_json(fingerprint_source).encode("utf-8")).hexdigest()
+    return str(snapshot.get("fingerprint") or "") == expected
+
+
 def build_rollback_restore_payload(snapshot: dict[str, Any]) -> Any:
-    if snapshot.get("schemaVersion") != 1 or "before" not in snapshot:
-        raise ValueError("unsupported rollback snapshot")
+    if not verify_rollback_snapshot(snapshot):
+        raise ValueError("unsupported or corrupted rollback snapshot")
     return deepcopy(snapshot["before"])

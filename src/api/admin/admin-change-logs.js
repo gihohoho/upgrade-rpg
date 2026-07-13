@@ -189,12 +189,60 @@
 
 
 
+  function buildSnapshotDiff(before, after, path) {
+    const currentPath = path || "$";
+    const beforeIsObject = before && typeof before === "object" && !Array.isArray(before);
+    const afterIsObject = after && typeof after === "object" && !Array.isArray(after);
+    if (beforeIsObject && afterIsObject) {
+      const keys = Array.from(new Set([...Object.keys(before), ...Object.keys(after)])).sort();
+      return keys.flatMap((key) => {
+        const hasBefore = Object.prototype.hasOwnProperty.call(before, key);
+        const hasAfter = Object.prototype.hasOwnProperty.call(after, key);
+        const childPath = `${currentPath}.${key}`;
+        if (!hasBefore) return [{ path: childPath, op: "add", before: null, after: after[key] }];
+        if (!hasAfter) return [{ path: childPath, op: "remove", before: before[key], after: null }];
+        return buildSnapshotDiff(before[key], after[key], childPath);
+      });
+    }
+    if (Array.isArray(before) && Array.isArray(after)) {
+      const changes = [];
+      const maxLength = Math.max(before.length, after.length);
+      for (let index = 0; index < maxLength; index += 1) {
+        const childPath = `${currentPath}[${index}]`;
+        if (index >= before.length) changes.push({ path: childPath, op: "add", before: null, after: after[index] });
+        else if (index >= after.length) changes.push({ path: childPath, op: "remove", before: before[index], after: null });
+        else changes.push(...buildSnapshotDiff(before[index], after[index], childPath));
+      }
+      return changes;
+    }
+    if (before !== after || typeof before !== typeof after) {
+      return [{ path: currentPath, op: "replace", before, after }];
+    }
+    return [];
+  }
+
+  function isRollbackSnapshotConsistent(snapshot, diff) {
+    if (!snapshot || snapshot.schemaVersion !== 1 || typeof snapshot.fingerprint !== "string" || snapshot.fingerprint.length !== 64) return false;
+    const snapshotDiff = buildSnapshotDiff(snapshot.before, snapshot.after, "$");
+    return JSON.stringify(snapshotDiff) === JSON.stringify(Array.isArray(diff) ? diff : []);
+  }
+
   function renderUnifiedPreviewDiff(payload) {
     const diff = payload && Array.isArray(payload.unifiedDiff) ? payload.unifiedDiff : [];
     const snapshot = payload && payload.rollbackSnapshot ? payload.rollbackSnapshot : null;
     if (!diff.length && !snapshot) return "";
     const rows = diff.length ? diff.map((item) => `<tr><td>${escapeHtml(item.path || "$")}</td><td>${escapeHtml(item.op || "replace")}</td><td>${escapeHtml(formatValue(item.before))}</td><td>${escapeHtml(formatValue(item.after))}</td></tr>`).join("") : `<tr><td colspan="4">변경 없음</td></tr>`;
-    return `<details class="json-detail" open><summary>공통 Diff <span class="pill good">${escapeHtml(formatValue(diff.length))}</span></summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>경로</th><th>작업</th><th>이전</th><th>이후</th></tr></thead><tbody>${rows}</tbody></table></div>${snapshot ? `<div class="filter-help">rollback snapshot: schema v${escapeHtml(formatValue(snapshot.schemaVersion))} · fingerprint ${escapeHtml(String(snapshot.fingerprint || "").slice(0, 12))}…</div>` : ""}</details>`;
+    const snapshotConsistent = snapshot ? isRollbackSnapshotConsistent(snapshot, diff) : false;
+    const snapshotDetail = snapshot ? `
+      <div class="draft-preview-summary">
+        <span class="pill ${snapshotConsistent ? "good" : "blocked"}">snapshot/diff ${snapshotConsistent ? "일치" : "불일치"}</span>
+        <span class="pill good">schema v${escapeHtml(formatValue(snapshot.schemaVersion))}</span>
+        <span class="pill warn">target ${escapeHtml(formatValue(snapshot.domain))} / ${escapeHtml(formatValue(snapshot.targetId))}</span>
+      </div>
+      <div class="filter-help">fingerprint: <code>${escapeHtml(String(snapshot.fingerprint || ""))}</code></div>
+      <details class="json-detail"><summary>Snapshot 기준값 확인</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>구분</th><th>값</th></tr></thead><tbody><tr><td>현재/적용 기준</td><td>${escapeHtml(formatValue(snapshot.before))}</td></tr><tr><td>되돌릴 기준</td><td>${escapeHtml(formatValue(snapshot.after))}</td></tr></tbody></table></div></details>
+    ` : "";
+    return `<details class="json-detail" open><summary>공통 Diff <span class="pill good">${escapeHtml(formatValue(diff.length))}</span></summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>경로</th><th>작업</th><th>이전</th><th>이후</th></tr></thead><tbody>${rows}</tbody></table></div>${snapshotDetail}</details>`;
   }
   function renderAdminChangeLogs(logsPayload) {
     const target = $(`[data-admin-change-log-table]`);
@@ -670,6 +718,9 @@
     applyAdminChangeLogRollback,
     readAdminRollbackControls,
     renderAdminRollbackResult,
+    buildSnapshotDiff,
+    isRollbackSnapshotConsistent,
+    renderUnifiedPreviewDiff,
     previewAdminCreateDeleteRollback,
     applyAdminCreateDeleteRollback,
     readAdminCreateDeleteControls,

@@ -829,3 +829,12 @@
 - 기존 API 응답의 `key`, `label`, `before`, `after` 구조는 그대로 유지했습니다.
 - `run_smoke_core.sh` 중간 `exit 0` 때문에 v247~v250 Contract 검사가 실행되지 않던 문제를 수정했습니다.
 - 공통 Diff Engine에서 legacy ChangeLog 행으로 안전하게 투영하는 스모크 검사를 추가했습니다.
+
+## v252 - Snapshot-based Rollback Preview Guard
+
+- Rollback Preview의 공통 Snapshot 방향을 `현재/적용 값 -> 되돌릴 값`으로 통일했습니다.
+- 성공 Preview의 `acceptedChanges`가 없고 기존 ChangeLog `changes`만 남는 차단 상황에서도 Snapshot 방향이 뒤집히지 않도록 보정했습니다.
+- 백엔드에 Snapshot schema/fingerprint 무결성 검사를 추가하고, 손상된 Snapshot restore payload 사용을 차단했습니다.
+- 관리자 UI에 전체 fingerprint, Snapshot 기준값, 공통 Diff와 Snapshot의 일치 여부를 표시했습니다.
+- 새 route, 새 Contract, DB/env/seed/auth/write 로직, 기존 API 응답 필드는 변경하지 않았습니다.
+- 전용 Backend/Frontend Smoke를 추가했습니다.
