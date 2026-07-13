@@ -294,11 +294,15 @@
 
 
   function renderUnifiedPreviewDiff(payload) {
-    const diff = payload && Array.isArray(payload.unifiedDiff) ? payload.unifiedDiff : [];
-    const snapshot = payload && payload.rollbackSnapshot ? payload.rollbackSnapshot : null;
-    if (!diff.length && !snapshot) return "";
-    const rows = diff.length ? diff.map((item) => `<tr><td>${escapeHtml(item.path || "$")}</td><td>${escapeHtml(item.op || "replace")}</td><td>${escapeHtml(formatValue(item.before))}</td><td>${escapeHtml(formatValue(item.after))}</td></tr>`).join("") : `<tr><td colspan="4">변경 없음</td></tr>`;
-    return `<details class="json-detail" open><summary>공통 Diff <span class="pill good">${escapeHtml(formatValue(diff.length))}</span></summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>경로</th><th>작업</th><th>이전</th><th>이후</th></tr></thead><tbody>${rows}</tbody></table></div>${snapshot ? `<div class="filter-help">rollback snapshot: schema v${escapeHtml(formatValue(snapshot.schemaVersion))} · fingerprint ${escapeHtml(String(snapshot.fingerprint || "").slice(0, 12))}…</div>` : ""}</details>`;
+    const renderer = window.RpgAdminPreviewDiff;
+    if (!renderer || typeof renderer.renderUnifiedPreviewDiff !== "function") return "";
+    return renderer.renderUnifiedPreviewDiff(payload, { escapeHtml, formatValue });
+  }
+
+  function renderPreviewResultSummary(payload, options) {
+    const renderer = window.RpgAdminPreviewDiff;
+    if (!renderer || typeof renderer.renderPreviewResultSummary !== "function") return "";
+    return renderer.renderPreviewResultSummary(payload, { ...(options || {}), escapeHtml, formatValue });
   }
   function renderAdminCreateBlueprintRelationCell(field) {
     const relation = field && field.relation ? field.relation : null;
@@ -994,20 +998,30 @@
       <tr><td>${escapeHtml(field.label || field.key)}</td><td>${escapeHtml(formatValue(field.after))}</td><td>${escapeHtml(field.reason || "rejected")}</td></tr>
     `).join("") : `<tr><td colspan="3">오류 없음</td></tr>`;
     target.innerHTML = `
-      <div class="draft-preview-summary">
-        <span class="pill ${payload.wouldBeValid ? "good" : "blocked"}">valid: ${escapeHtml(formatValue(payload.wouldBeValid))}</span>
-        <span class="pill ${payload.dryRun ? "warn" : "good"}">dryRun: ${escapeHtml(formatValue(payload.dryRun))}</span>
-        <span class="pill ${payload.writeBlocked ? "blocked" : "good"}">writeBlocked: ${escapeHtml(formatValue(payload.writeBlocked))}</span>
-        <span class="pill ${payload.createApplyReady ? "warn" : "blocked"}">createApplyReady: ${escapeHtml(formatValue(payload.createApplyReady))}</span>
-        ${payload.created ? `<span class="pill good">created #${escapeHtml(formatValue(payload.id))}</span>` : ""}
-        ${payload.changeLogId ? `<span class="pill good">changeLog #${escapeHtml(formatValue(payload.changeLogId))}</span>` : ""}
-        <span class="pill">fields ${escapeHtml(formatValue(payload.fieldCount || accepted.length))}</span>
-        <span class="pill ${rejected.length ? "blocked" : "good"}">errors ${escapeHtml(formatValue(payload.errorCount || rejected.length))}</span>
-        <span class="pill ${payload.relationFieldCount ? "warn" : "good"}">relation ${escapeHtml(formatValue(payload.relationFieldCount || 0))}</span>
-        <span class="pill ${payload.comboGuardCount ? "warn" : "good"}">combo ${escapeHtml(formatValue(payload.comboGuardCount || 0))}</span>
-      </div>
+      ${renderPreviewResultSummary(payload, {
+        banner: {
+          tone: payload.wouldBeValid ? "good" : "blocked",
+          title: payload.wouldBeValid ? "생성 Preview 통과" : "생성 Preview 차단",
+          subtitle: payload.wouldBeValid ? "현재 초안은 생성 검증을 통과했습니다." : "검증 오류를 수정한 뒤 다시 Preview해야 합니다.",
+          metrics: [
+            { label: "통과 필드", value: accepted.length, tone: accepted.length ? "good" : "warn" },
+            { label: "검증 오류", value: rejected.length, tone: rejected.length ? "blocked" : "good" },
+          ],
+        },
+        badges: [
+          { label: "valid", value: payload.wouldBeValid, tone: payload.wouldBeValid ? "good" : "blocked" },
+          { label: "dryRun", value: payload.dryRun, tone: payload.dryRun ? "warn" : "good" },
+          { label: "writeBlocked", value: payload.writeBlocked, tone: payload.writeBlocked ? "blocked" : "good" },
+          { label: "createApplyReady", value: payload.createApplyReady, tone: payload.createApplyReady ? "warn" : "blocked" },
+          { label: "created", value: payload.id, tone: "good", hidden: !payload.created },
+          { label: "changeLog", value: payload.changeLogId, tone: "good", hidden: !payload.changeLogId },
+          { label: "fields", value: payload.fieldCount || accepted.length },
+          { label: "errors", value: payload.errorCount || rejected.length, tone: rejected.length ? "blocked" : "good" },
+          { label: "relation", value: payload.relationFieldCount || 0, tone: payload.relationFieldCount ? "warn" : "good" },
+          { label: "combo", value: payload.comboGuardCount || 0, tone: payload.comboGuardCount ? "warn" : "good" },
+        ],
+      })}
       ${payload.comboGuardLabels && payload.comboGuardLabels.length ? `<div class="filter-help">중복 조합 검사: ${escapeHtml(payload.comboGuardLabels.join(", "))}</div>` : ""}
-      ${payload.note ? `<div class="filter-help">${escapeHtml(payload.note)}</div>` : ""}
       ${renderUnifiedPreviewDiff(payload)}
       <details class="json-detail" open>
         <summary>검증 통과 필드 <span class="pill good">${escapeHtml(formatValue(accepted.length))}</span></summary>

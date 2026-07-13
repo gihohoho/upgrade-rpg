@@ -11,6 +11,8 @@ node tools/smoke/frontend/smoke_admin_write_dev_key_guard.js
 node tools/smoke/frontend/smoke_admin_guarded_edit_apply.js
 node tools/smoke/frontend/smoke_admin_change_log_rollback.js
 node tools/smoke/frontend/smoke_admin_rollback_snapshot_preview.js
+node tools/smoke/frontend/smoke_admin_preview_result_summary.js
+node tools/smoke/frontend/smoke_admin_preview_browser_verification.js
 node tools/smoke/frontend/smoke_admin_create_blueprint_readonly.js
 node tools/smoke/frontend/smoke_admin_create_draft_preview.js
 node tools/smoke/frontend/smoke_admin_create_apply_limited.js

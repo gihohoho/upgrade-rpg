@@ -204,11 +204,15 @@
 
 
   function renderUnifiedPreviewDiff(payload) {
-    const diff = payload && Array.isArray(payload.unifiedDiff) ? payload.unifiedDiff : [];
-    const snapshot = payload && payload.rollbackSnapshot ? payload.rollbackSnapshot : null;
-    if (!diff.length && !snapshot) return "";
-    const rows = diff.length ? diff.map((item) => `<tr><td>${escapeHtml(item.path || "$")}</td><td>${escapeHtml(item.op || "replace")}</td><td>${escapeHtml(formatValue(item.before))}</td><td>${escapeHtml(formatValue(item.after))}</td></tr>`).join("") : `<tr><td colspan="4">변경 없음</td></tr>`;
-    return `<details class="json-detail" open><summary>공통 Diff <span class="pill good">${escapeHtml(formatValue(diff.length))}</span></summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>경로</th><th>작업</th><th>이전</th><th>이후</th></tr></thead><tbody>${rows}</tbody></table></div>${snapshot ? `<div class="filter-help">rollback snapshot: schema v${escapeHtml(formatValue(snapshot.schemaVersion))} · fingerprint ${escapeHtml(String(snapshot.fingerprint || "").slice(0, 12))}…</div>` : ""}</details>`;
+    const renderer = window.RpgAdminPreviewDiff;
+    if (!renderer || typeof renderer.renderUnifiedPreviewDiff !== "function") return "";
+    return renderer.renderUnifiedPreviewDiff(payload, { escapeHtml, formatValue });
+  }
+
+  function renderPreviewResultSummary(payload, options) {
+    const renderer = window.RpgAdminPreviewDiff;
+    if (!renderer || typeof renderer.renderPreviewResultSummary !== "function") return "";
+    return renderer.renderPreviewResultSummary(payload, { ...(options || {}), escapeHtml, formatValue });
   }
   function renderAdminDraftSelectOptionsHtml(options, selectedValue) {
     const selectedText = selectedValue === null || selectedValue === undefined ? "" : String(selectedValue);
@@ -1078,20 +1082,31 @@
     renderAdminEditDraftReview(buildAdminEditDraftReview(draftValuesForImpact));
     renderAdminEditImpactGuide(buildAdminEditImpactGuide(draftValuesForImpact.domain, impactChanges, { applied }));
     target.innerHTML = `
-      <div class="draft-preview-summary">
-        <span class="pill ${payload.wouldBeValid ? "good" : "blocked"}">valid: ${escapeHtml(formatValue(payload.wouldBeValid))}</span>
-        <span class="pill ${payload.dryRun ? "warn" : "good"}">dryRun: ${escapeHtml(formatValue(payload.dryRun))}</span>
-        <span class="pill ${payload.writeBlocked ? "blocked" : "good"}">writeBlocked: ${escapeHtml(formatValue(payload.writeBlocked))}</span>
-        <span class="pill ${applied ? "good" : "warn"}">applied: ${escapeHtml(formatValue(applied))}</span>
-        <span class="pill">diff ${escapeHtml(formatValue(payload.diffCount))}</span>
-        <span class="pill">errors ${escapeHtml(formatValue(payload.errorCount))}</span>
-        <span class="pill">unchanged ${escapeHtml(formatValue(payload.unchangedCount || unchanged.length))}</span>
-        <span class="pill ${payload.staleGuardEnabled === false ? "warn" : "good"}">stale guard: ${escapeHtml(payload.staleGuardEnabled === false ? "off" : "on")}</span>
-        <span class="pill ${stale.length ? "blocked" : "good"}">stale ${escapeHtml(formatValue(payload.staleCount || stale.length))}</span>
-        ${payload.changeLogId ? `<span class="pill good">change log #${escapeHtml(formatValue(payload.changeLogId))}</span>` : ""}
-      </div>
-      ${warnings.length ? `<div class="filter-help">warnings: ${escapeHtml(warnings.join(", "))}</div>` : ""}
-      ${payload.note ? `<div class="filter-help">${escapeHtml(payload.note)}</div>` : ""}
+      ${renderPreviewResultSummary(payload, {
+        banner: {
+          tone: payload.wouldBeValid && !stale.length ? "good" : "blocked",
+          title: payload.wouldBeValid && !stale.length ? "편집 Preview 통과" : "편집 Preview 차단",
+          subtitle: stale.length ? "화면을 연 뒤 DB 값이 바뀌어 오래된 초안으로 차단됐습니다." : (payload.wouldBeValid ? "현재 변경안은 편집 검증을 통과했습니다." : "검증 오류를 수정한 뒤 다시 Preview해야 합니다."),
+          metrics: [
+            { label: "변경", value: payload.diffCount || accepted.length, tone: accepted.length ? "warn" : "good" },
+            { label: "검증 오류", value: payload.errorCount || rejected.length, tone: rejected.length ? "blocked" : "good" },
+            { label: "stale", value: payload.staleCount || stale.length, tone: stale.length ? "blocked" : "good" },
+          ],
+        },
+        badges: [
+          { label: "valid", value: payload.wouldBeValid, tone: payload.wouldBeValid ? "good" : "blocked" },
+          { label: "dryRun", value: payload.dryRun, tone: payload.dryRun ? "warn" : "good" },
+          { label: "writeBlocked", value: payload.writeBlocked, tone: payload.writeBlocked ? "blocked" : "good" },
+          { label: "applied", value: applied, tone: applied ? "good" : "warn" },
+          { label: "diff", value: payload.diffCount },
+          { label: "errors", value: payload.errorCount, tone: rejected.length ? "blocked" : "good" },
+          { label: "unchanged", value: payload.unchangedCount || unchanged.length },
+          { label: "stale guard", value: payload.staleGuardEnabled === false ? "off" : "on", tone: payload.staleGuardEnabled === false ? "warn" : "good" },
+          { label: "stale", value: payload.staleCount || stale.length, tone: stale.length ? "blocked" : "good" },
+          { label: "change log", value: payload.changeLogId, tone: "good", hidden: !payload.changeLogId },
+        ],
+        warnings,
+      })}
       ${renderUnifiedPreviewDiff(payload)}
       <details class="json-detail" open>
         <summary>변경 값 <span class="pill good">${escapeHtml(modeLabel)}</span></summary>

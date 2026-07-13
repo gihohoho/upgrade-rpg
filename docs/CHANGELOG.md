@@ -838,3 +838,25 @@
 - 관리자 UI에 전체 fingerprint, Snapshot 기준값, 공통 Diff와 Snapshot의 일치 여부를 표시했습니다.
 - 새 route, 새 Contract, DB/env/seed/auth/write 로직, 기존 API 응답 필드는 변경하지 않았습니다.
 - 전용 Backend/Frontend Smoke를 추가했습니다.
+
+## v253 - Admin Preview Diff 공통 렌더러 통합
+
+- `src/api/admin/admin-preview-diff.js`를 추가해 Create/Edit/ChangeLog/Rollback Preview의 Unified Diff 및 Rollback Snapshot 표시를 공통화했습니다.
+- Snapshot schema/fingerprint 형식과 Unified Diff 일치 검사를 공통 모듈 한 곳에서 수행합니다.
+- 기존 각 관리자 모듈의 `renderUnifiedPreviewDiff()` 함수 이름과 호출 구조는 유지하고 공통 렌더러로 위임하도록 변경했습니다.
+- 기존 route, API 응답 body, DB/env/seed/auth, Write Guard 및 실제 write 로직은 변경하지 않았습니다.
+- `smoke_admin_rollback_snapshot_preview.js`를 공통 렌더러 실행·로드 순서·중복 제거까지 확인하도록 강화했습니다.
+
+## v254 admin preview result summary shared renderer
+
+- Added a shared Preview result summary renderer for status banners, metrics, badges, warnings, and notes.
+- Connected create, edit, rollback, create-delete, and create-delete-restore Preview result screens to the shared summary renderer.
+- Preserved existing API response bodies, routes, DB/env/seed/auth settings, write guards, and write behavior.
+- Added frontend smoke coverage for the shared result summary and kept the existing shared Diff/Snapshot renderer unchanged.
+
+## v255 - Admin Preview browser verification
+
+- 관리자 페이지에 API/DB를 호출하지 않는 읽기 전용 Preview 화면 점검 섹션을 추가했습니다.
+- 정상 Create, 오류 Create, 정상 Edit, stale Edit, 정상 Rollback, Snapshot 불일치, 삭제 dependency 차단, 복원 ID/code 충돌의 8개 fixture를 제공합니다.
+- 모든 예시는 공통 Preview 결과 요약/Diff 렌더러를 사용하며 실제 write 로직과 분리되어 있습니다.
+- 전용 smoke에서 API 호출 0회, write 작업 0회, 스크립트 로드 순서와 8개 시나리오 등록을 검사합니다.

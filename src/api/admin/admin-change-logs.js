@@ -190,59 +190,27 @@
 
 
   function buildSnapshotDiff(before, after, path) {
-    const currentPath = path || "$";
-    const beforeIsObject = before && typeof before === "object" && !Array.isArray(before);
-    const afterIsObject = after && typeof after === "object" && !Array.isArray(after);
-    if (beforeIsObject && afterIsObject) {
-      const keys = Array.from(new Set([...Object.keys(before), ...Object.keys(after)])).sort();
-      return keys.flatMap((key) => {
-        const hasBefore = Object.prototype.hasOwnProperty.call(before, key);
-        const hasAfter = Object.prototype.hasOwnProperty.call(after, key);
-        const childPath = `${currentPath}.${key}`;
-        if (!hasBefore) return [{ path: childPath, op: "add", before: null, after: after[key] }];
-        if (!hasAfter) return [{ path: childPath, op: "remove", before: before[key], after: null }];
-        return buildSnapshotDiff(before[key], after[key], childPath);
-      });
-    }
-    if (Array.isArray(before) && Array.isArray(after)) {
-      const changes = [];
-      const maxLength = Math.max(before.length, after.length);
-      for (let index = 0; index < maxLength; index += 1) {
-        const childPath = `${currentPath}[${index}]`;
-        if (index >= before.length) changes.push({ path: childPath, op: "add", before: null, after: after[index] });
-        else if (index >= after.length) changes.push({ path: childPath, op: "remove", before: before[index], after: null });
-        else changes.push(...buildSnapshotDiff(before[index], after[index], childPath));
-      }
-      return changes;
-    }
-    if (before !== after || typeof before !== typeof after) {
-      return [{ path: currentPath, op: "replace", before, after }];
-    }
-    return [];
+    const renderer = window.RpgAdminPreviewDiff;
+    return renderer && typeof renderer.buildSnapshotDiff === "function"
+      ? renderer.buildSnapshotDiff(before, after, path)
+      : [];
   }
 
   function isRollbackSnapshotConsistent(snapshot, diff) {
-    if (!snapshot || snapshot.schemaVersion !== 1 || typeof snapshot.fingerprint !== "string" || snapshot.fingerprint.length !== 64) return false;
-    const snapshotDiff = buildSnapshotDiff(snapshot.before, snapshot.after, "$");
-    return JSON.stringify(snapshotDiff) === JSON.stringify(Array.isArray(diff) ? diff : []);
+    const renderer = window.RpgAdminPreviewDiff;
+    return !!(renderer && typeof renderer.isRollbackSnapshotConsistent === "function" && renderer.isRollbackSnapshotConsistent(snapshot, diff));
   }
 
   function renderUnifiedPreviewDiff(payload) {
-    const diff = payload && Array.isArray(payload.unifiedDiff) ? payload.unifiedDiff : [];
-    const snapshot = payload && payload.rollbackSnapshot ? payload.rollbackSnapshot : null;
-    if (!diff.length && !snapshot) return "";
-    const rows = diff.length ? diff.map((item) => `<tr><td>${escapeHtml(item.path || "$")}</td><td>${escapeHtml(item.op || "replace")}</td><td>${escapeHtml(formatValue(item.before))}</td><td>${escapeHtml(formatValue(item.after))}</td></tr>`).join("") : `<tr><td colspan="4">변경 없음</td></tr>`;
-    const snapshotConsistent = snapshot ? isRollbackSnapshotConsistent(snapshot, diff) : false;
-    const snapshotDetail = snapshot ? `
-      <div class="draft-preview-summary">
-        <span class="pill ${snapshotConsistent ? "good" : "blocked"}">snapshot/diff ${snapshotConsistent ? "일치" : "불일치"}</span>
-        <span class="pill good">schema v${escapeHtml(formatValue(snapshot.schemaVersion))}</span>
-        <span class="pill warn">target ${escapeHtml(formatValue(snapshot.domain))} / ${escapeHtml(formatValue(snapshot.targetId))}</span>
-      </div>
-      <div class="filter-help">fingerprint: <code>${escapeHtml(String(snapshot.fingerprint || ""))}</code></div>
-      <details class="json-detail"><summary>Snapshot 기준값 확인</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>구분</th><th>값</th></tr></thead><tbody><tr><td>현재/적용 기준</td><td>${escapeHtml(formatValue(snapshot.before))}</td></tr><tr><td>되돌릴 기준</td><td>${escapeHtml(formatValue(snapshot.after))}</td></tr></tbody></table></div></details>
-    ` : "";
-    return `<details class="json-detail" open><summary>공통 Diff <span class="pill good">${escapeHtml(formatValue(diff.length))}</span></summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>경로</th><th>작업</th><th>이전</th><th>이후</th></tr></thead><tbody>${rows}</tbody></table></div>${snapshotDetail}</details>`;
+    const renderer = window.RpgAdminPreviewDiff;
+    if (!renderer || typeof renderer.renderUnifiedPreviewDiff !== "function") return "";
+    return renderer.renderUnifiedPreviewDiff(payload, { escapeHtml, formatValue });
+  }
+
+  function renderPreviewResultSummary(payload, options) {
+    const renderer = window.RpgAdminPreviewDiff;
+    if (!renderer || typeof renderer.renderPreviewResultSummary !== "function") return "";
+    return renderer.renderPreviewResultSummary(payload, { ...(options || {}), escapeHtml, formatValue });
   }
   function renderAdminChangeLogs(logsPayload) {
     const target = $(`[data-admin-change-log-table]`);
@@ -361,17 +329,27 @@
       <tr><td>${escapeHtml(item.label || item.key)}${item.relation ? ` <span class="pill warn">relation</span>` : ""}</td><td>${renderAdminRollbackMismatchValueCell(result.domain, item, "current")}</td><td>${renderAdminRollbackMismatchValueCell(result.domain, item, "expectedAfter")}</td><td>${renderAdminRollbackMismatchValueCell(result.domain, item, "rollbackTo")}</td></tr>
     `).join("") : `<tr><td colspan="4">현재 DB 값 일치</td></tr>`;
     target.innerHTML = `
-      <div class="draft-preview-summary">
-        <span class="pill ${result.rollbackReady ? "good" : "blocked"}">rollbackReady: ${escapeHtml(formatValue(result.rollbackReady))}</span>
-        <span class="pill ${result.currentMatchesAfter ? "good" : "blocked"}">currentMatchesAfter: ${escapeHtml(formatValue(result.currentMatchesAfter))}</span>
-        <span class="pill ${result.dryRun ? "warn" : "good"}">dryRun: ${escapeHtml(formatValue(result.dryRun))}</span>
-        <span class="pill ${result.writeBlocked ? "blocked" : "good"}">writeBlocked: ${escapeHtml(formatValue(result.writeBlocked))}</span>
-        <span class="pill ${result.rolledBack ? "good" : "warn"}">rolledBack: ${escapeHtml(formatValue(result.rolledBack === true))}</span>
-        <span class="pill ${relationCount ? "warn" : "good"}">relation ${escapeHtml(formatValue(relationCount || 0))}</span>
-        ${result.rollbackChangeLogId ? `<span class="pill good">rollback log #${escapeHtml(formatValue(result.rollbackChangeLogId))}</span>` : ""}
-      </div>
-      ${warnings.length ? `<div class="filter-help">warnings: ${escapeHtml(warnings.join(", "))}</div>` : ""}
-      ${result.note ? `<div class="filter-help">${escapeHtml(result.note)}</div>` : ""}
+      ${renderPreviewResultSummary(result, {
+        banner: {
+          tone: result.rollbackReady ? "good" : "blocked",
+          title: result.rollbackReady ? "Rollback Preview 통과" : "Rollback Preview 차단",
+          subtitle: result.rollbackReady ? "현재 DB 값과 이력 기준값이 일치합니다." : "현재값 불일치 또는 안전 차단 사유를 확인해야 합니다.",
+          metrics: [
+            { label: "되돌릴 변경", value: changes.length, tone: changes.length ? "warn" : "good" },
+            { label: "현재값 불일치", value: mismatches.length, tone: mismatches.length ? "blocked" : "good" },
+          ],
+        },
+        badges: [
+          { label: "rollbackReady", value: result.rollbackReady, tone: result.rollbackReady ? "good" : "blocked" },
+          { label: "currentMatchesAfter", value: result.currentMatchesAfter, tone: result.currentMatchesAfter ? "good" : "blocked" },
+          { label: "dryRun", value: result.dryRun, tone: result.dryRun ? "warn" : "good" },
+          { label: "writeBlocked", value: result.writeBlocked, tone: result.writeBlocked ? "blocked" : "good" },
+          { label: "rolledBack", value: result.rolledBack === true, tone: result.rolledBack ? "good" : "warn" },
+          { label: "relation", value: relationCount || 0, tone: relationCount ? "warn" : "good" },
+          { label: "rollback log", value: result.rollbackChangeLogId, tone: "good", hidden: !result.rollbackChangeLogId },
+        ],
+        warnings,
+      })}
       ${renderUnifiedPreviewDiff(result)}
       <details class="json-detail" open><summary>되돌릴 값</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>현재/적용 값</th><th>되돌릴 값</th></tr></thead><tbody>${rows}</tbody></table></div></details>
       <details class="json-detail" ${mismatches.length ? "open" : ""}><summary>현재값 안전 검사</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>현재 DB 값</th><th>이력의 적용 값</th><th>되돌릴 값</th></tr></thead><tbody>${mismatchRows}</tbody></table></div></details>
@@ -489,18 +467,18 @@
           { label: "dryRun", value: result.dryRun, tone: result.dryRun ? "warn" : "good" },
         ],
       })}
-      <div class="draft-preview-summary">
-        <span class="pill ${result.createDeleteReady ? "good" : "blocked"}">createDeleteReady: ${escapeHtml(formatValue(result.createDeleteReady))}</span>
-        <span class="pill ${result.currentMatchesCreateValues ? "good" : "blocked"}">currentMatchesCreateValues: ${escapeHtml(formatValue(result.currentMatchesCreateValues))}</span>
-        <span class="pill ${dependencyBlockerRowCount ? "blocked" : "good"}">dependency blockers: ${escapeHtml(formatValue(dependencyBlockerRowCount))}</span>
-        <span class="pill ${result.dryRun ? "warn" : "good"}">dryRun: ${escapeHtml(formatValue(result.dryRun))}</span>
-        <span class="pill ${result.writeBlocked ? "blocked" : "good"}">writeBlocked: ${escapeHtml(formatValue(result.writeBlocked))}</span>
-        <span class="pill ${result.deleted ? "good" : "warn"}">deleted: ${escapeHtml(formatValue(result.deleted === true))}</span>
-        ${result.deleteChangeLogId ? `<span class="pill good">delete log #${escapeHtml(formatValue(result.deleteChangeLogId))}</span>` : ""}
-      </div>
-      ${renderAdminCreateDeleteBlockerSummary(dependencyChecks)}
-      ${warnings.length ? `<div class="filter-help">warnings: ${escapeHtml(warnings.join(", "))}</div>` : ""}
-      ${result.note ? `<div class="filter-help">${escapeHtml(result.note)}</div>` : ""}
+      ${renderPreviewResultSummary(result, {
+        badges: [
+          { label: "createDeleteReady", value: result.createDeleteReady, tone: result.createDeleteReady ? "good" : "blocked" },
+          { label: "currentMatchesCreateValues", value: result.currentMatchesCreateValues, tone: result.currentMatchesCreateValues ? "good" : "blocked" },
+          { label: "dependency blockers", value: dependencyBlockerRowCount, tone: dependencyBlockerRowCount ? "blocked" : "good" },
+          { label: "dryRun", value: result.dryRun, tone: result.dryRun ? "warn" : "good" },
+          { label: "writeBlocked", value: result.writeBlocked, tone: result.writeBlocked ? "blocked" : "good" },
+          { label: "deleted", value: result.deleted === true, tone: result.deleted ? "good" : "warn" },
+          { label: "delete log", value: result.deleteChangeLogId, tone: "good", hidden: !result.deleteChangeLogId },
+        ],
+        warnings,
+      })}
       ${renderUnifiedPreviewDiff(result)}
       <details class="json-detail" open><summary>삭제될 생성 값</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>생성 값</th><th>삭제 후</th></tr></thead><tbody>${rows}</tbody></table></div></details>
       <details class="json-detail" ${mismatches.length ? "open" : ""}><summary>현재값 안전 검사</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>현재 DB 값</th><th>생성 당시 값</th><th>판정</th></tr></thead><tbody>${mismatchRows}</tbody></table></div></details>
@@ -597,19 +575,20 @@
           { label: "code 충돌", value: result.codeConflict === true, tone: result.codeConflict ? "blocked" : "good" },
         ],
       })}
-      <div class="draft-preview-summary">
-        <span class="pill ${result.createDeleteRestoreReady ? "good" : "blocked"}">createDeleteRestoreReady: ${escapeHtml(formatValue(result.createDeleteRestoreReady))}</span>
-        <span class="pill ${result.targetRowMissing ? "good" : "blocked"}">targetRowMissing: ${escapeHtml(formatValue(result.targetRowMissing))}</span>
-        <span class="pill ${result.idConflict ? "blocked" : "good"}">idConflict: ${escapeHtml(formatValue(result.idConflict === true))}</span>
-        <span class="pill ${result.codeConflict ? "blocked" : "good"}">codeConflict: ${escapeHtml(formatValue(result.codeConflict === true))}</span>
-        <span class="pill ${validationErrorCount ? "blocked" : "good"}">validation errors: ${escapeHtml(formatValue(validationErrorCount))}</span>
-        <span class="pill ${result.dryRun ? "warn" : "good"}">dryRun: ${escapeHtml(formatValue(result.dryRun))}</span>
-        <span class="pill ${result.writeBlocked ? "blocked" : "good"}">writeBlocked: ${escapeHtml(formatValue(result.writeBlocked))}</span>
-        <span class="pill ${result.restored ? "good" : "warn"}">restored: ${escapeHtml(formatValue(result.restored === true))}</span>
-        ${result.restoreChangeLogId ? `<span class="pill good">restore log #${escapeHtml(formatValue(result.restoreChangeLogId))}</span>` : ""}
-      </div>
-      ${warnings.length ? `<div class="filter-help">warnings: ${escapeHtml(warnings.join(", "))}</div>` : ""}
-      ${result.note ? `<div class="filter-help">${escapeHtml(result.note)}</div>` : ""}
+      ${renderPreviewResultSummary(result, {
+        badges: [
+          { label: "createDeleteRestoreReady", value: result.createDeleteRestoreReady, tone: result.createDeleteRestoreReady ? "good" : "blocked" },
+          { label: "targetRowMissing", value: result.targetRowMissing, tone: result.targetRowMissing ? "good" : "blocked" },
+          { label: "idConflict", value: result.idConflict === true, tone: result.idConflict ? "blocked" : "good" },
+          { label: "codeConflict", value: result.codeConflict === true, tone: result.codeConflict ? "blocked" : "good" },
+          { label: "validation errors", value: validationErrorCount, tone: validationErrorCount ? "blocked" : "good" },
+          { label: "dryRun", value: result.dryRun, tone: result.dryRun ? "warn" : "good" },
+          { label: "writeBlocked", value: result.writeBlocked, tone: result.writeBlocked ? "blocked" : "good" },
+          { label: "restored", value: result.restored === true, tone: result.restored ? "good" : "warn" },
+          { label: "restore log", value: result.restoreChangeLogId, tone: "good", hidden: !result.restoreChangeLogId },
+        ],
+        warnings,
+      })}
       ${renderUnifiedPreviewDiff(result)}
       <details class="json-detail" open><summary>복원될 값</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>복원 전</th><th>복원 후</th></tr></thead><tbody>${rows}</tbody></table></div></details>
       <details class="json-detail" ${validationErrors.length ? "open" : ""}><summary>복원 검증 오류</summary><div class="table-wrap relation-table-wrap"><table><thead><tr><th>필드</th><th>값</th><th>사유</th></tr></thead><tbody>${errorRows}</tbody></table></div></details>
