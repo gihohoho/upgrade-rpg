@@ -12,3 +12,10 @@ DB/env/seed/auth/route/API body/write guard/실제 write 로직은 변경하지 
 # 다음 채팅 시작 프롬프트
 
 최신 문서: `docs/handoff/NEXT_CHAT_PROMPT.md`
+
+Continue from v265 admin practical UX bundle. Focus on convenience/readability/optimization/UI cleanup unless the user explicitly asks for game content work. Preserve DB/env/seed/auth/routes/API response body/Write Guard/write logic.
+
+
+## Latest v266 note
+
+Use `rpg_v266_admin_practical_ux_polish.zip` as the latest baseline. v266 applied user feedback to the v261-v265 UX bundle: catalog view modes were rolled back to one list, visible button risk chips were removed in favor of color/tooltips, long value previews are shorter, and detail quick buttons now scroll/expand to their target areas. Keep DB/env/seed/auth/routes/API bodies/write guard/write logic unchanged unless explicitly requested.

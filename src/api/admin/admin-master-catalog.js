@@ -3,6 +3,37 @@
 
   const VERSION = "v192.admin-master-catalog-detail-split";
   const LEGACY_SMOKE_VERSION_MARKERS = "v191.admin-edit-draft-split v189.1.admin-create-lifecycle-split-hotfix v187.admin-change-logs-split v185.admin-layout-shell-split";
+  const CATALOG_VIEW_MODES = ["detail"];
+  const CATALOG_COLUMN_PRESETS = {
+    itemTemplates: {
+      basic: ["id", "code", "name", "itemType", "item_type", "grade", "equipSlot", "equip_slot", "stackable", "updatedAt", "updated_at", "updated"],
+      json: ["id", "code", "name", "jsonKeys", "json_keys", "updatedAt", "updated_at", "updated"],
+    },
+    skills: {
+      basic: ["id", "code", "name", "slotKey", "slot_key", "cooldownSeconds", "cooldown_seconds", "procRate", "proc_rate", "updatedAt", "updated_at", "updated"],
+      json: ["id", "code", "name", "jsonKeys", "json_keys", "updatedAt", "updated_at", "updated"],
+    },
+    bosses: {
+      basic: ["id", "code", "name", "bossType", "boss_type", "enemyHp", "enemy_hp", "goldReward", "gold_reward", "updatedAt", "updated_at", "updated"],
+      json: ["id", "code", "name", "jsonKeys", "json_keys", "updatedAt", "updated_at", "updated"],
+    },
+    fieldZones: {
+      basic: ["id", "code", "name", "enemyHp", "enemy_hp", "goldReward", "gold_reward", "sortOrder", "sort_order", "updatedAt", "updated_at", "updated"],
+      json: ["id", "code", "name", "jsonKeys", "json_keys", "updatedAt", "updated_at", "updated"],
+    },
+    dropTableItems: {
+      basic: ["id", "dropTableCode", "drop_table_code", "itemTemplateCode", "item_template_code", "rate", "minQuantity", "min_quantity", "maxQuantity", "max_quantity", "updatedAt", "updated_at", "updated"],
+      json: ["id", "dropTableCode", "drop_table_code", "itemTemplateCode", "item_template_code", "jsonKeys", "json_keys", "updatedAt", "updated_at", "updated"],
+    },
+    skillLevels: {
+      basic: ["id", "skillCode", "skill_code", "level", "damageMultiplier", "damage_multiplier", "cooldownSeconds", "cooldown_seconds", "updatedAt", "updated_at", "updated"],
+      json: ["id", "skillCode", "skill_code", "level", "jsonKeys", "json_keys", "updatedAt", "updated_at", "updated"],
+    },
+    enhancementLevels: {
+      basic: ["id", "groupCode", "group_code", "fromLevel", "from_level", "toLevel", "to_level", "successRate", "success_rate", "goldCost", "gold_cost", "updatedAt", "updated_at", "updated"],
+      json: ["id", "groupCode", "group_code", "fromLevel", "from_level", "toLevel", "to_level", "jsonKeys", "json_keys", "updatedAt", "updated_at", "updated"],
+    },
+  };
 
   let configured = false;
   let DEFAULT_MASTER_DOMAIN = "itemTemplates";
@@ -210,6 +241,28 @@ function normalizeCatalogFieldKey(key) {
     return String(key || "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
   }
 
+function readMasterCatalogViewModeFromDom() {
+    return "detail";
+  }
+
+function getCatalogPresetForDomain(domain) {
+    return CATALOG_COLUMN_PRESETS[String(domain || "")] || null;
+  }
+
+function columnMatchesAny(column, keys) {
+    const normalized = normalizeCatalogFieldKey(column && column.key);
+    const normalizedKeys = (keys || []).map(normalizeCatalogFieldKey);
+    return normalizedKeys.includes(normalized);
+  }
+
+function filterCatalogColumnsForView(_domain, columns, _viewMode) {
+    return Array.isArray(columns) ? columns : [];
+  }
+
+function getCatalogViewModeLabel(_viewMode) {
+    return "전체 컬럼";
+  }
+
 function isCatalogUpdatedAtField(key) {
     const normalized = normalizeCatalogFieldKey(key);
     return normalized === "updatedat" || normalized === "modifiedat" || normalized === "updated";
@@ -257,11 +310,20 @@ function formatCatalogJsonKeysCell(value) {
     return `<span class="json-keys-compact" title="${escapeHtml(fullText)}">${visible.map((key) => `<span class="json-key-chip">${escapeHtml(key)}</span>`).join("")}${hiddenCount ? `<span class="json-key-more">외 ${escapeHtml(hiddenCount)}개</span>` : ""}<span class="field-help-badge catalog-json-keys-badge" title="${escapeHtml(fullText)}">?</span></span>`;
   }
 
+function renderCatalogLongValueCell(key, value) {
+    const text = formatValue(value);
+    if (text === "-" || text.length <= 44) return escapeHtml(text);
+    if (window.RpgAdminLongValueModal && typeof window.RpgAdminLongValueModal.renderLongValueTrigger === "function") {
+      return window.RpgAdminLongValueModal.renderLongValueTrigger(`${key} 전체 보기`, text, { previewLength: 28, buttonLabel: "전체" });
+    }
+    return `<span class="catalog-cell-compact"><span class="catalog-cell-preview" title="${escapeHtml(text)}">${escapeHtml(text.slice(0, 27))}…</span></span>`;
+  }
+
 function formatCatalogCellValue(key, value) {
     if (isCatalogUpdatedAtField(key)) return formatCatalogUpdatedAtCell(value);
     if (isCatalogJsonKeysField(key)) return formatCatalogJsonKeysCell(value);
     const hint = getAdminFieldValueHint(key, value);
-    if (!hint) return escapeHtml(formatValue(value));
+    if (!hint) return renderCatalogLongValueCell(key, value);
     const titleText = `${hint.label}
 ${hint.body || ""}`;
     return `<span class="field-value-compact" title="${escapeHtml(titleText)}"><strong>${escapeHtml(hint.label)}</strong>${renderFieldHelpBadge(key)}</span>`;
@@ -272,20 +334,22 @@ function renderMasterCatalogTable(catalogPayload) {
     const meta = $("[data-admin-master-catalog-meta]");
     if (!target) return;
     const rows = Array.isArray(catalogPayload.rows) ? catalogPayload.rows : [];
-    const columns = Array.isArray(catalogPayload.columns) ? catalogPayload.columns : [];
+    const rawColumns = Array.isArray(catalogPayload.columns) ? catalogPayload.columns : [];
+    const viewMode = readMasterCatalogViewModeFromDom();
+    const columns = filterCatalogColumnsForView(catalogPayload.domain, rawColumns, viewMode);
     const filters = catalogPayload.filters || {};
     const totalAllNote = catalogPayload.totalAll !== undefined ? ` / 전체 ${formatValue(catalogPayload.totalAll)}` : "";
     const page = Number(catalogPayload.page) || 1;
     const totalPages = Number(catalogPayload.totalPages) || 1;
     const filterNote = filters.hasActiveFilters ? ` · ${describeMasterCatalogFilters(filters)}` : "";
-    if (meta) meta.textContent = `${escapeHtml(catalogPayload.domainLabel || catalogPayload.domain || "-")} · ${formatValue(rows.length)} / ${formatValue(catalogPayload.total)} shown · page ${formatValue(page)} / ${formatValue(totalPages)}${totalAllNote}${filterNote}`;
+    if (meta) meta.textContent = `${escapeHtml(catalogPayload.domainLabel || catalogPayload.domain || "-")} · ${getCatalogViewModeLabel(viewMode)} · ${formatValue(rows.length)} / ${formatValue(catalogPayload.total)} shown · page ${formatValue(page)} / ${formatValue(totalPages)}${totalAllNote}${filterNote}`;
     renderMasterCatalogPagination(catalogPayload);
     if (!rows.length || !columns.length) {
       target.innerHTML = `<div class="empty">마스터 데이터 카탈로그 결과가 없습니다.</div>`;
       return;
     }
     target.innerHTML = `
-      <table>
+      <table data-admin-master-catalog-view-mode="${escapeHtml(viewMode)}">
         <thead><tr><th>상세</th>${columns.map((column) => `<th title="${escapeHtml((getAdminFieldHelp(column.key) && getAdminFieldHelp(column.key).body) || column.key)}">${escapeHtml(column.label || column.key)}${renderFieldHelpBadge(column.key)}</th>`).join("")}<th>원본 JSON</th><th>이미지</th></tr></thead>
         <tbody>
           ${rows.map((row) => {
@@ -537,6 +601,24 @@ function renderMasterDetail(detailPayload) {
     const fieldRows = fields.map((field) => `
       <tr><th>${escapeHtml(field.label || field.key)}${renderFieldHelpBadge(field.key)}</th><td>${formatValueWithFieldHint(field.key, field.value)}${renderFieldHelpInline(field.key)}</td></tr>
     `).join("");
+    const detailSummaryHtml = `
+      <div class="detail-quick-summary">
+        <div>
+          <h3>${escapeHtml(detail.title || detail.name || detail.code || `#${detail.id}`)}</h3>
+          <p>${escapeHtml(formatValue(detail.domainLabel || detail.domain))} · #${escapeHtml(formatValue(detail.id))} · 아래 순서로 기본 필드 → 편집 Preview → 연결 항목 → JSON 미리보기를 확인하세요.</p>
+        </div>
+        <div class="detail-next-actions">
+          <button class="btn mini" type="button" data-admin-action="verify-master-api-target" data-admin-detail-jump-target="admin-master-api-verify-card" title="아래 API 반영 확인 카드로 이동한 뒤 현재 항목을 점검합니다.">API 반영 확인</button>
+          <button class="btn mini" type="button" data-admin-action="open-master-relations" data-admin-detail-jump-target="admin-master-relations-card" data-admin-relation-domain="${escapeHtml(detail.domain || "")}" data-admin-relation-id="${escapeHtml(detail.id)}" title="아래 실제 연결 항목 카드로 이동하고 관계 데이터를 불러옵니다.">연결 항목</button>
+          <a class="btn mini" href="#section-field-help" data-admin-detail-scroll-target="section-field-help" title="필드 용어 도움말 섹션을 펼치고 이동합니다.">필드 도움말</a>
+        </div>
+      </div>
+      <div class="detail-section-guide">
+        <div class="guide-mini-card"><strong>1. 기본 필드</strong>짧은 값과 ? 도움말로 현재 상태를 먼저 읽습니다.</div>
+        <div class="guide-mini-card"><strong>2. Preview</strong>변경 전/후 Diff와 stale 여부를 확인합니다.</div>
+        <div class="guide-mini-card"><strong>3. JSON/연결</strong>긴 값과 연결 항목은 접힌 영역에서 필요할 때만 봅니다.</div>
+      </div>
+    `;
     const relationRows = relationHints.length ? relationHints.map((hint) => `
       <span class="pill">${escapeHtml(hint.label)}: ${escapeHtml(formatValue(hint.value))}</span>
     `).join(" ") : `<span class="pill">연결 요약 없음</span>`;
@@ -556,6 +638,7 @@ function renderMasterDetail(detailPayload) {
     }).join("") : `<div class="empty">JSON 필드 없음</div>`;
 
     target.innerHTML = `
+      ${detailSummaryHtml}
       <div class="detail-grid">
         <div class="detail-card">
           <div class="detail-title">기본 필드</div>
@@ -573,7 +656,7 @@ function renderMasterDetail(detailPayload) {
         </div>
       </div>
       <div style="margin:0 14px 12px;">${renderMasterEditDraft(detail, fields)}</div>
-      <div class="detail-card" style="margin:0 14px 12px;">
+      <div class="detail-card" style="margin:0 14px 12px;" data-admin-detail-target="admin-master-api-verify-card">
         <div class="detail-title">인게임 master-data API 반영 확인 <span class="pill good">diagnostic</span></div>
         <div class="filter-help">관리자 상세 값이 게임이 읽는 <code>/game/master-data</code> 응답에도 같은 값으로 보이는지 확인합니다. DB 적용 직후 게임 새로고침 전 점검용입니다.</div>
         <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
@@ -582,7 +665,7 @@ function renderMasterDetail(detailPayload) {
         </div>
         <div class="edit-draft-result" data-admin-master-api-verify-result><div class="empty">버튼을 누르면 현재 선택한 상세 항목이 <strong>/game/master-data</strong> 응답에도 같은 값으로 보이는지 확인합니다.</div></div>
       </div>
-      <div class="detail-card" style="margin:0 14px 12px;">
+      <div class="detail-card" style="margin:0 14px 12px;" data-admin-detail-target="admin-master-relations-card">
         <div class="detail-title">실제 연결 항목</div>
         <div class="filter-help">관련 마스터 데이터를 축약된 목록으로 보여줍니다. 행의 보기 버튼을 누르면 해당 항목 상세로 이동합니다.</div>
         <div data-admin-master-relations><div class="empty">연결 항목을 불러오지 않았습니다.</div></div>
@@ -729,6 +812,8 @@ async function refreshAdminMasterCatalog(options) {
       "renderMasterTable",
       "renderMasterCatalogTable",
       "formatCatalogCellValue",
+      "filterCatalogColumnsForView",
+      "readMasterCatalogViewModeFromDom",
       "openAdminMasterDataDetail",
       "openAdminMasterDataDetailByCode",
       "openAdminMasterDataRelations",
@@ -773,6 +858,11 @@ async function refreshAdminMasterCatalog(options) {
     refreshMasterCatalogWithPage,
     renderMasterCatalogTable,
     formatCatalogCellValue,
+    renderCatalogLongValueCell,
+    readMasterCatalogViewModeFromDom,
+    filterCatalogColumnsForView,
+    getCatalogViewModeLabel,
+    CATALOG_COLUMN_PRESETS,
     makeAdminDetailFieldMap,
     valuesEqualForApiVerify,
     findMasterApiRow,

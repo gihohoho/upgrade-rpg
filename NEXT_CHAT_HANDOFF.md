@@ -1,3 +1,16 @@
+## v266 handoff
+
+- Latest ZIP should be `rpg_v266_admin_practical_ux_polish.zip`.
+- User feedback from v265 was applied:
+  - keep v261 first-entry guide,
+  - roll back v262 catalog view modes,
+  - keep v263 long-value modal but shorten preview width,
+  - remove v264 visible risk text chips and use color/tooltips only,
+  - keep v265 detail summary but make quick buttons scroll/expand to their target sections.
+- New file: `src/api/admin/admin-detail-shortcuts.js`. It does not call fetch, RpgGameApi, apply, or write helpers.
+- No DB/env/seed/auth/route/API body/write guard/write logic changes.
+- Recommended manual check: open Admin Workspace → 조회·상세 확인, confirm catalog filters fit in one row, no `보기 방식` select exists, button risk text chips are gone, long values are shorter, and detail quick buttons move to their cards/field help.
+
 
 ## v260 note
 
@@ -28,3 +41,15 @@
 ## v257 note
 - Fixed admin console confusion: `checkAdminReadOnlyPageReady()` now returns both `ok` and `pageReady` with the same boolean value.
 - No backend route/body/write logic changes.
+
+## v261-v265 handoff
+
+- Latest ZIP should be `rpg_v265_admin_practical_ux_bundle.zip`.
+- Main UX changes:
+  - beginner start guide in Admin Workspace,
+  - catalog view mode presets (`basic`, `detail`, `json`),
+  - long value modal,
+  - button safety labels,
+  - detail quick summary/next actions.
+- No backend contract, route, response body, DB, seed, env, auth, write guard, or write logic changes were made.
+- Recommended next check: open `admin.html`, choose `조회·상세 확인`, switch catalog view modes, open a detail row, and test a long-value `전체` modal if present.

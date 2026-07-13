@@ -1,3 +1,13 @@
+## v266 - Admin practical UX polish after feedback
+
+- v262의 `보기 방식` 선택은 롤백해 `마스터 데이터 카탈로그`를 다시 단일 목록으로 정리했습니다.
+- 카탈로그 필터 행은 기존처럼 한 줄에 더 잘 들어가도록 `보기 방식` 필드를 제거하고 버튼 위험도 텍스트 chip을 제거했습니다.
+- 버튼 위험도는 `조회/Preview/적용주의/고위험` 문구를 버튼 안에 추가하지 않고 색상과 tooltip으로만 전달하도록 변경했습니다.
+- 긴 값 미리보기 너비를 기존보다 줄여 표 셀이 덜 늘어나게 했습니다. 전체 값은 기존 `전체` 모달에서 확인합니다.
+- 상세 화면 상단의 `API 반영 확인`, `연결 항목`, `필드 도움말` 바로가기 버튼은 클릭 시 관련 카드/섹션으로 이동하거나 펼쳐지도록 보완했습니다.
+- 새 파일 `src/api/admin/admin-detail-shortcuts.js`를 추가했습니다. 이 파일은 화면 이동/펼치기만 담당하며 API 호출, fetch, write 로직을 사용하지 않습니다.
+- DB/env/seed/API body/route/auth/write guard/실제 write 로직은 변경하지 않았습니다.
+
 ## v260 - Admin catalog date/limit/json keys UX
 
 - `마스터 데이터 카탈로그`의 수정 시각 계열 셀은 화면에 `YYYY-MM-DD` 일자만 표시하고, 값 옆 `?` tooltip에서 초 단위 상세 시각을 확인하도록 정리했습니다.
@@ -178,3 +188,12 @@
 - preview 응답에 optional unifiedDiff/rollbackSnapshot 필드 추가
 - 생성/수정/rollback/create-delete/restore 관리자 UI에 공통 Diff 표시
 - 기존 API 필드, DB, env, seed, 인증, write guard 변경 없음
+
+## v261-v265.admin-practical-ux-bundle
+
+- 관리자 첫 진입 화면에 처음 사용하는 추천 순서와 버튼 안전도 안내를 추가했습니다.
+- 마스터 데이터 카탈로그에 기본 보기/자세히 보기/JSON 보기 프리셋을 추가했습니다.
+- 긴 카탈로그 값은 표에서 축약하고 `전체` 버튼으로 모달에서 확인하도록 개선했습니다.
+- 관리자 버튼에 조회/Preview/적용주의/고위험 위험도 라벨을 자동 표시합니다.
+- 선택한 마스터 데이터 상세 화면에 요약과 다음 행동 안내를 추가했습니다.
+- DB/env/seed/auth/route/API body/Write Guard/실제 write 로직은 변경하지 않았습니다.

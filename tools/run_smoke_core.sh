@@ -16,6 +16,7 @@ node tools/smoke/frontend/smoke_admin_preview_browser_verification.js
 node tools/smoke/frontend/smoke_admin_preview_live_api_render_check.js
 node tools/smoke/frontend/smoke_admin_workspace_navigation.js
 node tools/smoke/frontend/smoke_admin_catalog_help_compact_ux.js
+node tools/smoke/frontend/smoke_admin_practical_ux_bundle.js
 node tools/smoke/frontend/smoke_admin_create_blueprint_readonly.js
 node tools/smoke/frontend/smoke_admin_create_draft_preview.js
 node tools/smoke/frontend/smoke_admin_create_apply_limited.js
