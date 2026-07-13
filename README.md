@@ -1,44 +1,50 @@
 # Upgrade RPG
 
-현재 안정 버전: **v250.backend-admin-rollback-snapshot**
+현재 인계 기준: **v267.next-chat-handoff-ready**
+
+직전 기능 기준: `v266.admin-practical-ux-polish`
+
+관리자 readiness: `v250.backend-admin-rollback-snapshot`
 
 Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 
 ## 현재 상태
 
-- 관리자 프론트 thin entry/helper 분리 완료
-- 관리자 페이지 작업 시작 허브/업무 모드/안내 모달 추가
-- `AdminService` facade 및 backend service split 유지
-- 관리자 route module/facade 분리 완료
-- runtime/OpenAPI/response/request/schema 계약 완료
-- request payload·422·Content-Type·encoding·transport header 계약 완료
-- preview 반복 parsing과 apply write guard 계약 완료
-- backend/frontend 계약 목록과 routeContract 전체 parity 검사 적용
-- DB, env, seed, API 주소, 응답 body 변경 없음
+- 관리자 HTML 페이지는 임시 운영/검증 도구로 충분히 안정화했습니다.
+- 게임 콘텐츠 개발은 당분간 보류합니다.
+- 다음 우선순위는 Vue + FastAPI + DB + 배포 직전 구조 준비입니다.
+- DB, env, seed, 인증, 기존 route, API 응답 body, Write Guard, 실제 write 로직은 유지합니다.
 
 ## 먼저 볼 파일
 
 1. `NEXT_CHAT_PROMPT.md`
 2. `NEXT_CHAT_HANDOFF.md`
-3. `docs/CURRENT_STATUS.md`
-4. `docs/NEXT_STEPS.md`
-5. `docs/PROJECT_WORKING_RULES.md`
-6. `docs/PROJECT_STRUCTURE.md`
+3. `docs/current/CURRENT_STATUS.md`
+4. `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`
+5. `docs/current/ROADMAP.md`
+6. `docs/NEXT_STEPS.md`
+7. `docs/PROJECT_WORKING_RULES.md`
 
 ## 핵심 검증
 
 실행 위치: 프로젝트 루트
 
 ```bash
-python tools/smoke/contracts/smoke_backend_admin_write_replay_safety_contract.py && python tools/smoke/contracts/smoke_backend_admin_frontend_contract_parity.py && node tools/smoke/frontend/smoke_admin_readonly_page.js && python tools/smoke/contracts/smoke_backend_admin_runtime_route_contract.py && python tools/smoke/contracts/smoke_backend_admin_request_metadata_contract.py && python tools/smoke/contracts/smoke_backend_admin_schema_model_contract.py && python tools/smoke/contracts/smoke_backend_admin_schema_field_constraint_contract.py && python -m compileall -q backend/app backend/scripts tools
+bash tools/run_smoke_core.sh
+```
+
+실행 위치: 프로젝트 루트
+
+```bash
+python -m compileall -q backend/app backend/scripts tools
 ```
 
 ## 서버 실행
 
-실행 위치: backend 폴더
+실행 위치: `backend` 폴더
 
 ```bash
-uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-DB reset과 seed 재실행은 필요 없습니다.
+그다음 프로젝트 루트의 `admin.html` 또는 `index.html`을 브라우저에서 엽니다.

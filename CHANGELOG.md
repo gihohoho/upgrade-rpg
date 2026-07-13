@@ -197,3 +197,10 @@
 - 관리자 버튼에 조회/Preview/적용주의/고위험 위험도 라벨을 자동 표시합니다.
 - 선택한 마스터 데이터 상세 화면에 요약과 다음 행동 안내를 추가했습니다.
 - DB/env/seed/auth/route/API body/Write Guard/실제 write 로직은 변경하지 않았습니다.
+## v267.next-chat-handoff-ready
+
+- 다음 채팅에서 바로 이어갈 수 있도록 root/docs handoff prompt를 최신 v266 기준으로 정리했습니다.
+- 오래된 v250/v260 중심 인계 문구를 v267/Vue-FastAPI-DB 전환 방향으로 갱신했습니다.
+- `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`를 추가했습니다.
+- `docs/current/CURRENT_STATUS.md`, `docs/current/ROADMAP.md`, `docs/NEXT_STEPS.md`, `README.md`, `README_BACKEND_READY.md`를 최신 방향에 맞게 정리했습니다.
+- 런타임 코드, DB, env, seed, 인증, route, API 응답 body, Write Guard, 실제 write 로직은 변경하지 않았습니다.

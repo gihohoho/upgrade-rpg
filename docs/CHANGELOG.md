@@ -876,3 +876,10 @@
 - 정상 Create, 오류 Create, 정상 Edit, stale Edit, 정상 Rollback, Snapshot 불일치, 삭제 dependency 차단, 복원 ID/code 충돌의 8개 fixture를 제공합니다.
 - 모든 예시는 공통 Preview 결과 요약/Diff 렌더러를 사용하며 실제 write 로직과 분리되어 있습니다.
 - 전용 smoke에서 API 호출 0회, write 작업 0회, 스크립트 로드 순서와 8개 시나리오 등록을 검사합니다.
+## v267.next-chat-handoff-ready
+
+- 다음 채팅에서 바로 이어갈 수 있도록 root/docs handoff prompt를 최신 v266 기준으로 정리했습니다.
+- 오래된 v250/v260 중심 인계 문구를 v267/Vue-FastAPI-DB 전환 방향으로 갱신했습니다.
+- `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`를 추가했습니다.
+- `docs/current/CURRENT_STATUS.md`, `docs/current/ROADMAP.md`, `docs/NEXT_STEPS.md`, `README.md`, `README_BACKEND_READY.md`를 최신 방향에 맞게 정리했습니다.
+- 런타임 코드, DB, env, seed, 인증, route, API 응답 body, Write Guard, 실제 write 로직은 변경하지 않았습니다.
