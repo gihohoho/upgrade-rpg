@@ -1,8 +1,8 @@
-# Project Structure — v272
+# Project Structure — v275
 
 현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
 
-v272에서는 기존 legacy 화면을 건드리지 않고, `frontend/vue-app/` 내부에 읽기 전용 API client 준비 구조만 추가했습니다.
+v275에서는 기존 legacy 화면과 route를 건드리지 않고, FastAPI backend 구조 분석에 이어 실제 route map 자동 보고서를 추가했습니다.
 
 중요한 결론:
 
@@ -12,6 +12,7 @@ v272에서는 기존 legacy 화면을 건드리지 않고, `frontend/vue-app/` �
 - Vue API client는 아직 `GET` 조회용 준비 단계입니다.
 - DB/env/seed/인증/API 응답 body/route/write 로직은 변경하지 않았습니다.
 - 기존 smoke/contract 의미는 변경하지 않았습니다.
+- `docs/current/BACKEND_STRUCTURE_PLAN.md`가 backend route/service/schema/model/db/core 유지 범위를 설명하고, `docs/current/BACKEND_ROUTE_MAP.md`가 실제 FastAPI route 27개를 정리합니다.
 
 ## 최상위 구조
 
@@ -34,7 +35,7 @@ v272에서는 기존 legacy 화면을 건드리지 않고, `frontend/vue-app/` �
 
 ## 루트 파일 역할
 
-| 경로 | 현재 역할 | v272 판단 |
+| 경로 | 현재 역할 | v275 판단 |
 |---|---|---|
 | `index.html` | 현재 실제 게임 화면 진입점 | Vue 이식 전까지 legacy 기준 화면으로 유지 |
 | `admin.html` | 현재 관리자 페이지 진입점 | Vue 관리자 이식 전까지 운영/검증 도구로 유지 |
@@ -42,11 +43,11 @@ v272에서는 기존 legacy 화면을 건드리지 않고, `frontend/vue-app/` �
 | `frontend/vue-app/` | 새 Vue shell + 읽기 전용 API client 준비 | 실제 기능 대체 전 단계 |
 | `backend/` | FastAPI 백엔드 | 기존 route/body/DB/env/seed 유지 |
 | `tools/` | smoke/contract/검증 도구 | 기존 core smoke 유지, Vue shell/API smoke 추가 |
-| `docs/` | 현재 상태/전환 계획/인수인계 문서 | v272 기준 갱신 |
+| `docs/` | 현재 상태/전환 계획/인수인계 문서 | v275 기준 갱신 |
 
 ## `frontend/vue-app/` 역할
 
-v270에서 만든 Vue/Vite shell에, v272에서 읽기 전용 API client 준비 구조를 추가했습니다.
+v270에서 만든 Vue/Vite shell에, v272에서 읽기 전용 API client 준비 구조를 추가했고, v275에서 backend route map 기준 query 이름을 점검했습니다.
 
 ```txt
 frontend/vue-app/
@@ -90,7 +91,7 @@ frontend/vue-app/
 
 v272 Vue shell은 안전한 read-only API 상태 확인을 실제로 호출합니다. v273에서는 이 호출이 로컬 CORS에 막히지 않도록 FastAPI local/debug CORS 기본값을 보강했습니다.
 
-## v273 Vue API client/CORS 준비 범위
+## v275 Vue API client/CORS/route map 준비 범위
 
 추가 위치:
 
@@ -113,6 +114,49 @@ frontend/vue-app/src/api/
 - token 저장/갱신
 - Preview/Apply/write API wrapper
 - `.env` 생성/수정
+
+## v275 backend route map
+
+추가 위치:
+
+```txt
+tools/report_backend_route_map.py
+tools/smoke/backend/smoke_backend_route_map_report.py
+docs/current/BACKEND_ROUTE_MAP.md
+```
+
+요약:
+
+| 구분 | 수 |
+|---|---:|
+| 전체 route | 27 |
+| GET | 15 |
+| POST | 12 |
+| admin group | 21 |
+| game group | 4 |
+| health group | 2 |
+
+현재 Vue 자동 smoke 화면에 연결된 route는 `GET /api/v1/health`, `GET /api/v1/admin/requirements`입니다. 다음 후보는 `GET /api/v1/admin/master-data/domains`입니다. Preview/Apply/write route는 계속 보류합니다.
+
+
+## v274 backend 구조 계획
+
+추가된 문서/도구:
+
+```txt
+tools/report_backend_structure_plan.py
+tools/smoke/backend/smoke_backend_structure_plan.py
+docs/current/BACKEND_STRUCTURE_PLAN.md
+```
+
+현재 결론:
+
+- `backend/app/api/routes/`는 route path/contract 보호 대상으로 유지합니다.
+- `backend/app/services/admin_service.py` facade는 유지합니다.
+- `backend/app/services/admin/`은 이미 분리된 service 후보지만 당장 이동하지 않습니다.
+- `backend/app/schemas/`, `backend/app/models/`, `backend/app/db/`는 DB/Alembic 실제 전환 전까지 구조 변경하지 않습니다.
+- Vue에서는 당분간 안전한 `GET` read-only API만 연결합니다.
+- Preview/Apply/write API는 인증/권한/Write Guard 설계 전까지 Vue에서 확장하지 않습니다.
 
 ## `backend/` 역할
 

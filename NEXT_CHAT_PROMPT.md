@@ -11,15 +11,15 @@
 설명은 항상 한국어로 쉽고 자세하게 해주세요.
 
 터미널 명령을 줄 때는 반드시 실행 위치를 먼저 적어주세요.
-`npm install`, `npm run dev`, `npm run build` 같은 Vue/npm 명령은 `.venv`를 켤 필요가 없는지까지 같이 말해주세요.
+`npm install`, `npm run dev`, `npm run build` 같은 npm/Vue 명령은 `.venv`를 켤 필요가 있는지/없는지 반드시 같이 말해주세요.
 FastAPI/Python 명령은 `.venv`를 켠 상태 기준으로 안내해주세요.
-
-새로 설치해야 하는 파일/라이브러리/프레임워크가 있으면 사용자가 확인할 사항과 함께 반드시 알려주세요.
 
 git 명령은 git status && git add . && git commit -m "..." && git push 형태로 한 줄 블록으로 주세요.
 
 필요한 라이브러리나 파일은 설치/추가해도 됩니다.
 여러 단계를 한 번에 진행해도 됩니다.
+새로 설치해야 하는 파일/라이브러리/프레임워크가 있으면 사용자가 확인할 사항과 함께 반드시 알려주세요.
+
 다만 위험한 작업은 반드시 작게 나누고 검증 후 진행해주세요.
 
 ========================
@@ -27,10 +27,10 @@ git 명령은 git status && git add . && git commit -m "..." && git push 형태�
 ========================
 
 최신 ZIP:
-rpg_v273_local_dev_cors_vue_fix.zip
+rpg_v275_backend_route_map_report.zip
 
 직전 기능 기준:
-v273.local-dev-cors-vue-fix
+v275.backend-route-map-report
 
 readiness version:
 v250.backend-admin-rollback-snapshot
@@ -39,35 +39,48 @@ backend splitStatus:
 admin-schema-field-constraint-contract-v238
 
 ========================
-v273까지 완료된 핵심 상태
+v275까지 완료된 핵심 상태
 ========================
 
-기존 실제 화면:
+관리자 페이지는 임시 운영/검증 도구로 충분한 수준까지 안정화했습니다.
 
-- 게임: 루트 index.html
-- 관리자: 루트 admin.html
-- legacy JS/CSS: 루트 src/
+v270~v273:
 
-Vue 전환 준비:
+- `frontend/vue-app/`에 Vue 기본 shell 생성
+- `/game`, `/admin` Vue route 준비
+- Vue read-only API client 준비
+- Vue shell에서 `GET /health`, `GET /admin/requirements` 상태 확인
+- local CORS 오류 수정
 
-- v270에서 frontend/vue-app/에 Vite + Vue 기본 shell 추가
-- /game, /admin Vue route 추가
-- v271에서 frontend/vue-app/src/api/에 읽기 전용 API client 준비 구조 추가
-- v272에서 Vue shell 화면에 안전한 GET API 상태 확인 패널 추가
-- v273에서 Vue 개발 서버 5173 → FastAPI 8000 호출 CORS 오류 수정
+v274:
 
-v272에서 실제 화면에 연결한 API:
+- FastAPI 구조 정리 계획 문서화
+- `backend/app/api/routes`, `services`, `schemas`, `models`, `db`, `core` 역할 분석
 
-- /game: GET /health
-- /admin: GET /health
-- /admin: GET /admin/requirements
+v275:
 
-v273 CORS 수정:
+- FastAPI route map 자동 보고서 추가
+- `docs/current/BACKEND_ROUTE_MAP.md` 생성
+- 전체 route 27개 확인
+- GET 15개, POST 12개 확인
+- Vue read-only 연결 후보와 보류 route 분리
+- `frontend/vue-app/src/api/adminReadOnlyApi.js`에서 `rowId` 입력을 backend query `id`로 변환하도록 수정
 
-- backend/app/core/config.py에서 local/debug 환경 기본 CORS origin 보강
-- 오래된 로컬 .env에 5173이 없어도 Vue 개발 서버 호출 허용
-- production/debug-false에서는 명시 origin만 사용
-- tools/smoke/backend/smoke_backend_local_cors.py 추가
+현재 Vue 자동 smoke 화면에 연결된 route:
+
+- `GET /api/v1/health`
+- `GET /api/v1/admin/requirements`
+
+다음 연결 후보:
+
+- `GET /api/v1/admin/master-data/domains`
+
+계속 보류:
+
+- 관리자 Preview 계열 POST
+- 관리자 Apply/write 계열 POST
+- `POST /api/v1/game/save`
+- 인증/권한/Write Guard가 필요한 route
 
 ========================
 지금부터의 방향
@@ -87,38 +100,43 @@ v273 CORS 수정:
 
 앞으로 우선순위는 다음입니다.
 
-1. FastAPI 구조 정리 계획 수립
-2. PostgreSQL/Alembic 도입 준비
-3. 인증 설계 준비
-4. 관리자 페이지 Vue 이식 계획
-5. 게임 화면 Vue 이식 계획
-6. 배포 직전 안정화 계획
+1. Vue read-only 관리자 패널을 매우 작게 확장
+2. FastAPI 구조 정리 계획 유지
+3. PostgreSQL/Alembic 도입 준비
+4. 인증 설계 준비
+5. 관리자 페이지 Vue 이식 계획
+6. 게임 화면 Vue 이식 계획
+7. 배포 직전 안정화 계획
 
 ========================
 다음 단계 추천 작업
 ========================
 
-다음 채팅의 첫 작업은 v274로 진행해주세요.
+다음 채팅의 첫 작업은 v276로 진행해주세요.
 
 추천 작업명:
 
-v274 FastAPI 구조 정리 계획 구체화
+v276 Vue admin read-only catalog mini panel
 
 작업 목표:
 
-- 현재 backend/app/api/routes, backend/app/services, backend/app/schemas, backend/app/models 역할을 실제 파일 기준으로 정리합니다.
-- Vue에서 앞으로 사용할 read-only API와 legacy 유지 API를 구분합니다.
+- Vue 관리자 shell에 작은 read-only 카탈로그 점검 패널을 추가합니다.
+- 첫 연결은 `GET /api/v1/admin/master-data/domains`만 사용합니다.
+- loading/error/empty/success 상태를 표시합니다.
+- catalog row 목록, detail, relations는 아직 자동 호출하지 않습니다.
+- Preview/Apply/write route는 계속 보류합니다.
+- 기존 `admin.html`, `index.html`, 루트 `src/`는 유지합니다.
 - route path/API response body는 변경하지 않습니다.
-- DB/Alembic/인증은 실제 변경하지 않고 계획만 문서화합니다.
-- 기존 smoke/contract 의미를 깨지 않는지 영향 범위를 확인합니다.
+- DB/Alembic/인증/env/seed는 변경하지 않습니다.
 
 추천 산출물:
 
-- docs/current/FASTAPI_STRUCTURE_PLAN.md 신규 작성
-- docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md 갱신
-- docs/current/CURRENT_STATUS.md 갱신
-- docs/NEXT_STEPS.md 갱신
-- 필요하면 구조 분석용 smoke만 추가
+- `frontend/vue-app/src/components/AdminReadOnlyCatalogMiniPanel.vue`
+- `frontend/vue-app/src/pages/AdminShell.vue` 갱신
+- `docs/current/VUE_ADMIN_READONLY_CATALOG_PANEL.md`
+- 관련 frontend smoke 추가
+- `docs/current/BACKEND_ROUTE_MAP.md` 유지 검사
+- `docs/NEXT_STEPS.md`, `NEXT_CHAT_HANDOFF.md`, `NEXT_CHAT_PROMPT.md` 갱신
 
 ========================
 절대 변경 금지 / 고위험 항목
@@ -136,6 +154,38 @@ v274 FastAPI 구조 정리 계획 구체화
 - Write Guard
 - 관리자 Preview/Apply 요청 body
 - 기존 Smoke/Contract 의미
+
+========================
+새 Contract 추가 원칙
+========================
+
+새 Contract를 추가해야 할 때는 반드시 아래 순서로 진행하세요.
+
+1. 현재 환경에서 먼저 실제 실행
+2. 환경별 차이 확인
+3. Contract 작성
+4. Backend readiness 등록
+5. Frontend readiness 등록
+6. Frontend 반환 객체 등록
+7. Parity 검사
+8. Admin ReadOnly 검사
+9. 기존 전체 Smoke
+10. compileall
+11. ZIP 생성
+
+절대 “될 것이다”라고 추측해서 Contract를 만들지 마세요.
+
+========================
+반드시 반복하지 말아야 할 실수
+========================
+
+- Frontend readiness 계산만 하고 반환 객체에 누락
+- Backend Contract 추가 후 Frontend Contract 목록 누락
+- Backend routeContract 추가 후 Frontend routeContract 누락
+- FastAPI/Starlette/Pydantic 환경 차이를 한 결과만 정답으로 고정
+- 새 Contract 후 Parity 검사 누락
+- 새 Contract 후 ReadOnly 검사 누락
+- run_smoke_core.sh 통과 전 ZIP 생성
 
 ========================
 검증 원칙

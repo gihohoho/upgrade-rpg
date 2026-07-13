@@ -1,8 +1,8 @@
-# Vue API Layer — v272
+# Vue API Layer — v275
 
 이 폴더는 Vue 앱에서 FastAPI를 호출할 때 사용할 API client 준비 공간입니다.
 
-v272 기준 원칙:
+v275 기준 원칙:
 
 - 읽기 전용 `GET` API만 연결합니다.
 - `POST`, `PUT`, `PATCH`, `DELETE` 요청은 아직 추가하지 않습니다.
@@ -28,9 +28,31 @@ v272 기준 원칙:
 - `/admin`: `GET /health`
 - `/admin`: `GET /admin/requirements`
 
+## v275에서 확인한 route map 기준
+
+자동 route map 문서:
+
+```txt
+docs/current/BACKEND_ROUTE_MAP.md
+```
+
+현재 Vue 자동 smoke 화면에 쓰는 route:
+
+- `GET /api/v1/health`
+- `GET /api/v1/admin/requirements`
+
+다음 연결 후보:
+
+- `GET /api/v1/admin/master-data/domains`
+
+주의:
+
+- 상세/관계 조회 wrapper는 사용자가 이해하기 쉽게 `rowId`를 받지만, 실제 backend query 이름은 `id`입니다.
+- 따라서 `adminReadOnlyApi.js`는 `rowId`를 `id`로 변환해서 요청합니다.
+
 ## 사용자가 설치해야 하는 것
 
-v272에서 새 라이브러리는 추가하지 않았습니다.
+v275에서 새 라이브러리는 추가하지 않았습니다.
 
 다만 Vue 앱을 처음 실행한다면 기존 v270에서 추가된 Vue 의존성을 한 번 설치해야 합니다.
 
@@ -56,7 +78,7 @@ npm run dev
 `.venv` 상태: 켜야 함
 
 ```bash
-.venv\\Scripts\\activate
+.venv\Scripts\activate
 ```
 
 실행 위치: `backend` 폴더  

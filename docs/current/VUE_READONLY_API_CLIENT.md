@@ -1,8 +1,8 @@
-# Vue Read-only API Client — v273
+# Vue Read-only API Client — v275
 
 ## 한 줄 요약
 
-v271에서는 Vue 앱 내부에 `GET` 전용 API client 구조를 만들었고, v272에서는 그 client를 이용해 Vue shell 화면에서 안전한 GET API를 실제로 작게 호출하도록 연결했습니다. v273에서는 Vue 개발 서버에서 FastAPI를 호출할 때 발생한 local CORS 오류를 수정했습니다.
+v271에서는 Vue 앱 내부에 `GET` 전용 API client 구조를 만들었고, v272에서는 그 client를 이용해 Vue shell 화면에서 안전한 GET API를 실제로 작게 호출하도록 연결했습니다. v273에서는 Vue 개발 서버에서 FastAPI를 호출할 때 발생한 local CORS 오류를 수정했습니다. v275에서는 backend route map 자동 보고서를 기준으로 read-only 후보와 보류 route를 다시 정리했고, 상세/관계 조회 query 이름을 backend 기준에 맞췄습니다.
 
 ## v272에서 실제 화면에 연결한 API
 
@@ -14,15 +14,48 @@ v271에서는 Vue 앱 내부에 `GET` 전용 API client 구조를 만들었고, 
 
 `/game/master-data`, `/game/load`, `/game/save-slots`는 아직 화면 자동 호출에 넣지 않았습니다. 이 경로들은 조회용이지만 DB 상태에 영향을 받을 수 있으므로, v272에서는 공통 `/health`만 먼저 연결했습니다.
 
+## v275 route map 기준
+
+자동 보고서:
+
+```txt
+docs/current/BACKEND_ROUTE_MAP.md
+```
+
+현재 Vue 자동 smoke 화면에 쓰는 route:
+
+- `GET /api/v1/health`
+- `GET /api/v1/admin/requirements`
+
+다음 연결 후보:
+
+- `GET /api/v1/admin/master-data/domains`
+
+아직 보류:
+
+- 관리자 Preview 계열 POST
+- 관리자 Apply/write 계열 POST
+- `POST /api/v1/game/save`
+- 인증/권한/Write Guard가 필요한 route
+
+## v275 query 이름 수정
+
+백엔드의 관리자 상세/관계 조회 route는 row 식별자 query 이름으로 `id`를 사용합니다.
+
+| Vue wrapper 입력 | 실제 backend query |
+|---|---|
+| `fetchMasterDetail({ domain, rowId })` | `?domain=...&id=...` |
+| `fetchMasterRelations({ domain, rowId })` | `?domain=...&id=...` |
+
+즉 Vue 코드에서는 사람이 이해하기 쉬운 `rowId`를 받되, 실제 요청은 `id`로 변환합니다.
+
 ## 추가/변경 위치
 
 ```txt
-frontend/vue-app/src/api/healthReadOnlyApi.js
-frontend/vue-app/src/components/ReadOnlyApiStatusPanel.vue
-frontend/vue-app/src/pages/AdminShell.vue
-frontend/vue-app/src/pages/GameShell.vue
-frontend/vue-app/src/styles/base.css
-tools/smoke/frontend/smoke_vue_readonly_api_status_panel.py
+frontend/vue-app/src/api/adminReadOnlyApi.js
+tools/report_backend_route_map.py
+tools/smoke/backend/smoke_backend_route_map_report.py
+docs/current/BACKEND_ROUTE_MAP.md
 ```
 
 ## 상태 표시 구조
@@ -46,16 +79,16 @@ tools/smoke/frontend/smoke_vue_readonly_api_status_panel.py
 http://127.0.0.1:8000/api/v1
 ```
 
-v272/v273에서도 `.env` 파일을 만들거나 수정하지 않았습니다. v273에서는 오래된 로컬 `.env`에 `5173` origin이 빠져 있어도 local/debug 환경에서 기본 개발 origin을 자동 포함합니다. 나중에 실제 개발/배포 주소 분리가 필요해지면 `VITE_API_BASE_URL` 도입을 별도 단계에서 검토합니다.
+`.env` 파일은 만들거나 수정하지 않았습니다. v273에서는 오래된 로컬 `.env`에 `5173` origin이 빠져 있어도 local/debug 환경에서 기본 개발 origin을 자동 포함합니다. 나중에 실제 개발/배포 주소 분리가 필요해지면 `VITE_API_BASE_URL` 도입을 별도 단계에서 검토합니다.
 
 ## 현재 준비된 관리자 GET 경로
 
-| 이름 | 경로 | v272 자동 화면 확인 여부 |
+| 이름 | 경로 | v275 자동 화면 확인 여부 |
 |---|---|---|
 | requirements | `/admin/requirements` | 사용 |
 | overview | `/admin/overview` | 아직 미사용 |
 | saveSnapshots | `/admin/save-snapshots` | 아직 미사용 |
-| masterDomains | `/admin/master-data/domains` | 아직 미사용 |
+| masterDomains | `/admin/master-data/domains` | 다음 후보 |
 | masterCatalog | `/admin/master-data/catalog` | 아직 미사용 |
 | masterCreateBlueprint | `/admin/master-data/create-blueprint` | 아직 미사용 |
 | masterDetail | `/admin/master-data/detail` | 아직 미사용 |
@@ -65,17 +98,15 @@ v272/v273에서도 `.env` 파일을 만들거나 수정하지 않았습니다. v
 
 ## 현재 준비된 게임 GET 경로
 
-| 이름 | 경로 | v272 자동 화면 확인 여부 |
+| 이름 | 경로 | v275 자동 화면 확인 여부 |
 |---|---|---|
 | masterData | `/game/master-data` | 아직 미사용 |
 | load | `/game/load` | 아직 미사용 |
 | saveSlots | `/game/save-slots` | 아직 미사용 |
 
-## v272에서 일부러 제외한 것
+## 일부러 제외한 것
 
 Preview/Apply/write 계열은 아직 Vue 화면에 실제 연결하지 않습니다.
-
-아래는 아직 Vue API client 화면에 실제 연결하지 않았습니다.
 
 - `POST /game/save`
 - 관리자 Preview 계열 POST
@@ -110,7 +141,7 @@ Vue 화면에서 API 상태가 `성공`으로 뜨려면 FastAPI 서버가 켜져
 `.venv` 상태: 켜야 함
 
 ```bash
-.venv\\Scripts\\activate
+.venv\Scripts\activate
 ```
 
 실행 위치: `backend` 폴더  
@@ -136,11 +167,6 @@ http://127.0.0.1:5173/game
 http://127.0.0.1:5173/admin
 ```
 
-확인할 것:
-
-- FastAPI 서버가 켜져 있으면 `/game`과 `/admin`의 API 상태 패널이 `성공`으로 바뀌는지 확인합니다.
-- FastAPI 서버가 꺼져 있으면 `오류`가 표시되는 것이 정상입니다. 화면 전체가 깨지지 않으면 됩니다.
-
 ## 검증 명령
 
 Vue shell/API 구조 검증:
@@ -150,6 +176,15 @@ Vue shell/API 구조 검증:
 
 ```bash
 bash tools/run_smoke_vue_shell.sh
+```
+
+Backend route map 검사:
+
+실행 위치: 프로젝트 루트  
+`.venv` 상태: 켜진 상태 권장
+
+```bash
+python tools/report_backend_route_map.py --check
 ```
 
 Vue build 검증:

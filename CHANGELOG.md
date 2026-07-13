@@ -1,3 +1,18 @@
+## v275.backend-route-map-report
+
+- Added `tools/report_backend_route_map.py` to generate/check a deterministic backend route map without importing `app.main`.
+- Added `docs/current/BACKEND_ROUTE_MAP.md` with all 27 FastAPI routes, GET/POST counts, Vue read-only candidates, and postponed Preview/Apply/write routes.
+- Added `tools/smoke/backend/smoke_backend_route_map_report.py` and included it in `tools/run_smoke_core.sh`.
+- Updated `frontend/vue-app/src/api/adminReadOnlyApi.js` so master-data detail/relations wrappers translate `rowId` to the backend query name `id`.
+- Confirmed that route paths, API response bodies, DB, env, seed, auth, Write Guard, Preview/Apply request bodies, write logic, existing smoke/contract meaning, and game content remain unchanged.
+
+## v274.backend-structure-plan
+
+- Added `tools/report_backend_structure_plan.py` to generate/check a deterministic backend structure plan.
+- Added `docs/current/BACKEND_STRUCTURE_PLAN.md` with current route/service/schema/model/db/core responsibilities.
+- Added `tools/smoke/backend/smoke_backend_structure_plan.py` to guard that the structure plan stays up to date.
+- Confirmed that route paths, API response bodies, DB, env, seed, auth, Write Guard, Preview/Apply request bodies, write logic, existing smoke/contract meaning, and game content remain unchanged.
+
 ## v272.vue-readonly-api-smoke-screen
 
 - Added `healthReadOnlyApi` for safe `GET /health` and prepared `GET /health/db` without auto-calling DB health.

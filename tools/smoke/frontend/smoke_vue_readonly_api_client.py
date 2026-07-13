@@ -128,6 +128,10 @@ def main() -> None:
     assert_contains(admin_api, "fetchMasterCatalog", "admin master catalog wrapper")
     assert_contains(admin_api, "fetchChangeLogDetail", "admin change log detail wrapper")
     assert_contains(admin_api, "sort = 'id_asc'", "admin catalog safe default sort")
+    assert_contains(admin_api, "query: { domain, id: rowId }", "master detail rowId-to-id query translation")
+    assert_contains(admin_api, "query: { domain, id: rowId, limit }", "master relations rowId-to-id query translation")
+    if "query: { domain, rowId }" in admin_api or "query: { domain, rowId, limit }" in admin_api:
+        raise AssertionError("Admin read-only API must not send rowId as a backend query name")
 
     game_api = read("src/api/gameReadOnlyApi.js")
     assert_contains(game_api, "fetchMasterData", "game master data wrapper")

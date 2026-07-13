@@ -277,3 +277,58 @@ v272에서 시작했습니다.
 - Write Guard 변경 없음
 - 관리자 Preview/Apply 요청 body 변경 없음
 - 게임 콘텐츠 개발 없음
+
+
+## v274 FastAPI 구조 정리 계획
+
+v274에서는 실제 파일 이동 없이 backend 구조를 문서화했습니다. 자세한 분석 결과는 아래 문서를 기준으로 합니다.
+
+```txt
+docs/current/BACKEND_STRUCTURE_PLAN.md
+```
+
+현재 유지 결정:
+
+- `backend/app/api/routes/` route path는 변경하지 않습니다.
+- `backend/app/services/admin_service.py` facade는 유지합니다.
+- `backend/app/services/admin/` 하위 service는 당장 이동하지 않습니다.
+- `schemas`, `models`, `db`는 PostgreSQL/Alembic 실제 도입 전까지 유지합니다.
+- Vue에서는 `GET` read-only API만 매우 작게 연결합니다.
+- Preview/Apply/write API는 인증/권한/Write Guard 설계 전까지 연결하지 않습니다.
+
+다음 단계는 FastAPI app에서 실제 route 목록을 자동 추출해 `docs/current/BACKEND_ROUTE_MAP.md`를 만드는 것입니다.
+
+## v275 Backend route map 자동 보고서
+
+v275에서는 실제 route path를 변경하지 않고, FastAPI route 파일을 정적으로 분석해 route map 보고서를 만들었습니다.
+
+```txt
+docs/current/BACKEND_ROUTE_MAP.md
+tools/report_backend_route_map.py
+tools/smoke/backend/smoke_backend_route_map_report.py
+```
+
+확인된 route 요약:
+
+- 전체 route: 27개
+- GET: 15개
+- POST: 12개
+- 중복 method/path: 0개
+
+현재 Vue 자동 smoke 화면에 연결된 route:
+
+- `GET /api/v1/health`
+- `GET /api/v1/admin/requirements`
+
+다음 후보:
+
+- `GET /api/v1/admin/master-data/domains`
+
+계속 보류:
+
+- 관리자 Preview 계열 POST
+- 관리자 Apply/write 계열 POST
+- `POST /api/v1/game/save`
+- 인증/권한/Write Guard 설계가 필요한 route
+
+v275에서는 Vue 관리자 상세/관계 조회 wrapper가 `rowId` 입력을 backend query 이름 `id`로 변환하도록 맞췄습니다. route path, API response body, Preview/Apply request body, DB, env, seed, 인증, Write Guard, 실제 write 로직은 변경하지 않았습니다.

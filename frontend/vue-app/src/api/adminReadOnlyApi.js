@@ -38,14 +38,14 @@ export const adminReadOnlyApi = Object.freeze({
   fetchMasterDetail({ domain, rowId } = {}, options = {}) {
     return requestReadOnly(ADMIN_READONLY_ROUTES.masterDetail, {
       ...options,
-      query: { domain, rowId },
+      query: { domain, id: rowId },
     });
   },
 
   fetchMasterRelations({ domain, rowId, limit = 50 } = {}, options = {}) {
     return requestReadOnly(ADMIN_READONLY_ROUTES.masterRelations, {
       ...options,
-      query: { domain, rowId, limit },
+      query: { domain, id: rowId, limit },
     });
   },
 

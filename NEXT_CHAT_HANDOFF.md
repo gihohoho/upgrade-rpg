@@ -1,13 +1,13 @@
-# NEXT CHAT HANDOFF — Upgrade RPG v273
+# NEXT CHAT HANDOFF — Upgrade RPG v275
 
 ## 최신 ZIP
 
-- `rpg_v273_local_dev_cors_vue_fix.zip`
+- `rpg_v275_backend_route_map_report.zip`
 
 ## 현재 기준
 
-- 현재 작업 기준: `v273.local-dev-cors-vue-fix`
-- 직전 기준: `v272.vue-readonly-api-smoke-screen`
+- 현재 작업 기준: `v275.backend-route-map-report`
+- 직전 기준: `v274.backend-structure-plan`
 - readiness version: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 
@@ -25,7 +25,7 @@
 git status && git add . && git commit -m "..." && git push
 ```
 
-## v270~v272 완료 내용
+## v270~v273 완료 내용
 
 기존 legacy 화면을 건드리지 않고 `frontend/vue-app/`에 Vue shell을 추가했습니다.
 
@@ -34,37 +34,78 @@ git status && git add . && git commit -m "..." && git push
 - `/game`
 - `/admin`
 
-v272에서 Vue shell에 실제 연결한 안전 GET API:
+Vue shell에 실제 연결한 안전 GET API:
 
 - `/game` → `GET /health`
 - `/admin` → `GET /health`
 - `/admin` → `GET /admin/requirements`
 
-## v273 완료 내용
+v273에서는 Vue 개발 서버 `http://127.0.0.1:5173`에서 FastAPI `http://127.0.0.1:8000` 호출이 CORS로 막히는 문제를 local/debug 환경 기본 CORS origin 보강으로 해결했습니다.
 
-사용자가 Vue 화면에서 아래 CORS 오류를 확인했습니다.
+## v274 완료 내용
 
-```txt
-Access to fetch at 'http://127.0.0.1:8000/api/v1/health' from origin 'http://127.0.0.1:5173' has been blocked by CORS policy
-```
+v274에서는 FastAPI 구조를 실제 파일 기준으로 분석하고, Vue/FastAPI/DB 전환 전에 유지해야 할 backend 경계를 문서화했습니다.
 
-v273에서는 이 문제를 수정했습니다.
+추가:
 
-변경:
+- `tools/report_backend_structure_plan.py`
+- `tools/smoke/backend/smoke_backend_structure_plan.py`
+- `docs/current/BACKEND_STRUCTURE_PLAN.md`
 
-- `backend/app/core/config.py`
-  - local/debug 환경에서 기본 개발 CORS origin을 자동 포함
-  - 오래된 로컬 `.env`의 `CORS_ORIGINS`에 `5173`이 빠져 있어도 Vue 개발 서버 호출 허용
-  - production/debug-false에서는 명시 origin만 사용
-- `tools/smoke/backend/smoke_backend_local_cors.py`
-  - 오래된 CORS 설정 fallback 검증
-  - production 비자동 추가 검증
-  - 실제 FastAPI app CORS preflight header 검증
-- `tools/run_smoke_core.sh`
-  - CORS smoke 포함
-- `docs/current/LOCAL_DEV_CORS.md`
+핵심 결론:
 
-## v273에서 변경하지 않은 것
+- `backend/app/api/routes/`는 route path/contract 보호 대상으로 유지합니다.
+- `backend/app/services/admin_service.py` facade는 유지합니다.
+- `backend/app/services/admin/`은 당장 이동하지 않습니다.
+- `backend/app/schemas/`, `backend/app/models/`, `backend/app/db/`는 PostgreSQL/Alembic 준비 전까지 구조 변경하지 않습니다.
+- Vue에서는 당분간 안전한 `GET` read-only API만 연결합니다.
+- Preview/Apply/write API는 인증/권한/Write Guard 설계 전까지 Vue에서 확장하지 않습니다.
+
+## v275 완료 내용
+
+v275에서는 FastAPI route map 자동 보고서를 만들고, Vue read-only 연결 후보와 보류 route를 분리했습니다.
+
+추가/변경:
+
+- `tools/report_backend_route_map.py`
+- `tools/smoke/backend/smoke_backend_route_map_report.py`
+- `docs/current/BACKEND_ROUTE_MAP.md`
+- `frontend/vue-app/src/api/adminReadOnlyApi.js`
+
+route map 요약:
+
+| 구분 | 수 |
+|---|---:|
+| 전체 route | 27 |
+| GET | 15 |
+| POST | 12 |
+| admin group | 21 |
+| game group | 4 |
+| health group | 2 |
+| 중복 method/path | 0 |
+
+현재 Vue 자동 smoke 화면에 연결된 route:
+
+- `GET /api/v1/health`
+- `GET /api/v1/admin/requirements`
+
+다음 연결 후보:
+
+- `GET /api/v1/admin/master-data/domains`
+
+보류:
+
+- 관리자 Preview 계열 POST
+- 관리자 Apply/write 계열 POST
+- `POST /api/v1/game/save`
+- 인증/권한/Write Guard가 필요한 route
+
+v275에서 함께 고친 것:
+
+- Vue wrapper는 `rowId`를 받을 수 있지만 backend query 이름은 `id`입니다.
+- `fetchMasterDetail({ rowId })`, `fetchMasterRelations({ rowId })`가 실제 요청에서는 `id`로 보내도록 맞췄습니다.
+
+## v275에서 변경하지 않은 것
 
 - DB 구조
 - `.env` 파일
@@ -88,7 +129,7 @@ v273에서는 이 문제를 수정했습니다.
 
 ## 사용자가 설치/확인해야 할 것
 
-v273에서 새 라이브러리/프레임워크는 추가하지 않았습니다.
+v275에서 새 라이브러리/프레임워크는 추가하지 않았습니다.
 
 Vue 앱을 처음 실행한다면 기존 Vue 의존성 설치가 필요합니다. 이미 `frontend/vue-app/node_modules`가 있다면 다시 설치하지 않아도 됩니다.
 
@@ -100,8 +141,6 @@ npm install
 ```
 
 FastAPI 서버 실행:
-
-주의: v273 CORS 수정은 서버를 재시작해야 반영됩니다. 기존 서버가 켜져 있다면 끄고 다시 실행합니다.
 
 실행 위치: 프로젝트 루트  
 `.venv` 상태: 켜야 함
@@ -133,16 +172,14 @@ http://127.0.0.1:5173/game
 http://127.0.0.1:5173/admin
 ```
 
-확인 기준:
-
-- FastAPI 서버가 켜져 있으면 API 상태가 `성공`으로 표시됩니다.
-- CORS 수정 후에도 오류가 남으면 FastAPI 서버가 완전히 재시작되었는지 먼저 확인합니다.
-- FastAPI 서버가 꺼져 있으면 API 상태가 `오류`로 표시됩니다. 이 경우도 정상이며, 화면 전체가 깨지지 않으면 됩니다.
-
 ## 검증 기준
 
-v273에서 확인한 검증:
+v275에서 확인한 검증:
 
+- backend route map report smoke
+- backend route map report `--check`
+- backend structure plan smoke
+- backend structure report `--check`
 - backend local CORS smoke
 - Vue shell/API smoke
 - Vue read-only API status panel smoke
@@ -154,15 +191,17 @@ v273에서 확인한 검증:
 
 ## 다음 추천 작업
 
-`v274 FastAPI 구조 정리 계획 구체화`
+`v276 Vue admin read-only catalog mini panel`
 
 목표:
 
-- 현재 `backend/app/api/routes`, `backend/app/services`, `backend/app/schemas`, `backend/app/models` 역할을 실제 파일 기준으로 정리합니다.
-- Vue에서 앞으로 사용할 read-only API와 legacy 유지 API를 구분합니다.
+- Vue 관리자 shell에 작은 read-only 카탈로그 점검 패널을 추가합니다.
+- 첫 연결은 `GET /api/v1/admin/master-data/domains`만 사용합니다.
+- 성공/오류/빈 데이터 상태를 표시합니다.
+- catalog row 목록/detail/relations는 아직 자동 호출하지 않습니다.
+- Preview/Apply/write route는 계속 보류합니다.
 - route path/API response body는 변경하지 않습니다.
-- DB/Alembic/인증은 실제 변경하지 않고 계획만 문서화합니다.
-- 기존 smoke/contract 의미를 깨지 않는지 영향 범위를 확인합니다.
+- DB/Alembic/인증/env/seed는 실제 변경하지 않습니다.
 
 ## 주의
 
