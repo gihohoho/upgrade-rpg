@@ -1,8 +1,8 @@
-# NEXT CHAT HANDOFF — Upgrade RPG v269
+# NEXT CHAT HANDOFF — Upgrade RPG v270
 
 ## 현재 최신 ZIP
 
-- `rpg_v269_legacy_path_dependency_report.zip`
+- `rpg_v270_vue_app_basic_shell.zip`
 
 반드시 이 ZIP을 기준으로 작업합니다.
 
@@ -17,95 +17,82 @@
 git status && git add . && git commit -m "..." && git push
 ```
 
+- 앞으로 사용자가 확인해야 할 사항, 설치해야 할 파일, 라이브러리, 프레임워크는 빠짐없이 알려줍니다.
+- 필요한 라이브러리/파일은 추가해도 됩니다.
+- 여러 단계를 한 번에 진행해도 됩니다.
+- 위험한 작업은 작게 나누고 검증 후 진행합니다.
+
 ## 현재 기준
 
-- 현재 작업 기준: `v269.legacy-path-dependency-report`
+- 현재 작업 기준: `v270.vue-app-basic-shell`
+- 직전 작업 기준: `v269.legacy-path-dependency-report`
 - 직전 기능 기준: `v266.admin-practical-ux-polish`
-- 직전 구조 기준: `v268.project-structure-transition-prep`
 - readiness version: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 
-## v269 완료 내용
+## v270 완료 내용
 
-- legacy 경로 의존성 자동 목록화 도구 추가
-- `docs/current/LEGACY_PATH_DEPENDENCIES.md` 생성
-- Vue 앱 생성 위치를 `frontend/vue-app/`로 결정
-- 기존 `admin.html`, `index.html`, `src/` 이동하지 않기로 확정
-- 실제 Vue 앱 생성은 아직 하지 않음
-- DB/env/seed/auth/API body/route/write guard/실제 write 로직 변경 없음
+- `frontend/vue-app/`에 Vite + Vue 기본 shell 추가
+- `package.json`, `vite.config.js`, `index.html` 추가
+- `src/main.js`, `src/App.vue` 추가
+- Vue Router 기본 구조 추가
+- `/game` → `GameShell.vue`
+- `/admin` → `AdminShell.vue`
+- 공통 `ShellCard.vue` 추가
+- Vue 기본 CSS 추가
+- `tools/smoke/frontend/smoke_vue_shell_structure.py` 추가
+- `tools/run_smoke_vue_shell.sh` 추가
+- 관련 문서 갱신
 
-## 새로 추가된 주요 파일
+## v270에서 변경하지 않은 것
 
-- `tools/report_legacy_path_dependencies.py`
-- `docs/current/LEGACY_PATH_DEPENDENCIES.md`
-
-## 현재 핵심 결론
-
-현재 root `src/`는 Vue 앱 소스 폴더가 아닙니다. `admin.html`과 `index.html`이 직접 로드하는 legacy JS/CSS 폴더입니다.
-
-따라서 Vue 앱은 root `src/`를 재사용하지 않고 아래 경로에 새로 만듭니다.
-
-```txt
-frontend/vue-app/
-```
-
-## 절대 변경 금지 / 고위험 항목
-
-아래는 사용자 명시 승인 없이는 변경하지 않습니다.
-
-- DB 구조
+- DB
 - env
 - seed
 - 인증
-- API 응답 body
 - 기존 route path
-- 실제 write 로직
+- 기존 API 응답 body
 - Write Guard
+- 실제 write 로직
 - 관리자 Preview/Apply 요청 body
-- 기존 Smoke/Contract 의미
+- 기존 smoke/contract 의미
+- 게임 콘텐츠
 
-## 당분간 보류
+## 사용자가 설치해야 할 것
 
-게임 콘텐츠 개발은 하지 않습니다.
+Vue 앱을 실제로 실행하려면 처음 한 번 설치가 필요합니다.
 
-보류:
+실행 위치: `frontend/vue-app` 폴더
 
-- 장비 추가
-- 스킬 추가
-- 보스 추가
-- 필드 추가
-- 드랍률/밸런스 조정
-- 강화 수치 조정
-- 신규 콘텐츠 기획 반영
+```bash
+npm install
+```
 
-## 다음 추천 작업
+Vue 개발 서버 실행:
 
-다음 작업은 `v270 Vue 앱 기본 shell 생성`입니다.
+실행 위치: `frontend/vue-app` 폴더
 
-권장 목표:
+```bash
+npm run dev
+```
 
-- `frontend/vue-app/`에 Vite + Vue 기본 프로젝트 생성
-- 기존 `admin.html`, `index.html`, `src/`는 그대로 유지
-- Vue에는 실제 관리자/게임 로직을 아직 연결하지 않음
-- `AdminShell.vue`, `GameShell.vue` 같은 빈 shell과 router만 준비
-- Vue 실행/빌드 검증과 기존 legacy smoke를 분리
-- DB/env/seed/auth/API/write 로직 변경 없음
+브라우저 확인:
 
-## 검증 기준
+```txt
+http://127.0.0.1:5173
+```
 
-코드나 구조를 건드렸다면 최소 다음을 확인합니다.
+## 검증 명령
+
+Vue shell 검사:
 
 실행 위치: 프로젝트 루트
 
 ```bash
-python tools/report_legacy_path_dependencies.py --check
+bash tools/run_smoke_vue_shell.sh
 ```
 
-실행 위치: 프로젝트 루트
-
-```bash
-python -m compileall -q backend/app backend/scripts tools
-```
+기존 core smoke:
 
 실행 위치: 프로젝트 루트
 
@@ -113,10 +100,23 @@ python -m compileall -q backend/app backend/scripts tools
 bash tools/run_smoke_core.sh
 ```
 
-Vue 앱을 만든 뒤에는 별도 위치에서 Vue 검증도 실행합니다.
+Python compile:
 
-실행 위치: `frontend/vue-app` 폴더
+실행 위치: 프로젝트 루트
 
 ```bash
-npm run build
+python -m compileall -q backend/app backend/scripts tools
 ```
+
+## 다음 추천 작업
+
+`v271 Vue API client 읽기 전용 설계 + backend route map 연결 준비`
+
+목표:
+
+- Vue용 API client 폴더/파일을 준비합니다.
+- 기존 FastAPI route path 목록을 문서와 연결합니다.
+- 처음에는 GET/읽기 전용 API만 대상으로 합니다.
+- 인증/interceptor/write는 아직 구현하지 않습니다.
+- 관리자 Preview/Apply 요청 body는 변경하지 않습니다.
+- 기존 legacy `admin.html`, `index.html`, 루트 `src/`는 유지합니다.

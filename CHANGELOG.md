@@ -220,3 +220,13 @@
 - `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`를 추가했습니다.
 - `docs/current/CURRENT_STATUS.md`, `docs/current/ROADMAP.md`, `docs/NEXT_STEPS.md`, `README.md`, `README_BACKEND_READY.md`를 최신 방향에 맞게 정리했습니다.
 - 런타임 코드, DB, env, seed, 인증, route, API 응답 body, Write Guard, 실제 write 로직은 변경하지 않았습니다.
+
+## v270.vue-app-basic-shell
+
+- Added a separated Vite + Vue shell under `frontend/vue-app/`.
+- Added basic Vue Router routes for `/game` and `/admin` without replacing legacy `index.html` or `admin.html`.
+- Added `GameShell.vue`, `AdminShell.vue`, `ShellCard.vue`, and base shell CSS.
+- Added Vue shell structure smoke: `tools/smoke/frontend/smoke_vue_shell_structure.py`.
+- Added Vue shell smoke runner: `tools/run_smoke_vue_shell.sh`.
+- Documented required user install step: `npm install` in `frontend/vue-app`.
+- Preserved DB, env, seed, auth, route paths, API response bodies, write guards, write logic, Preview/Apply request bodies, and existing smoke/contract meaning.

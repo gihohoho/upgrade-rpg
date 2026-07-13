@@ -10,11 +10,9 @@
 - 카탈로그 compact UX
 - 긴 값 모달
 - 상세 화면 바로가기 버튼 보완
-- 관리자 HTML 페이지는 임시 운영/검증 도구로 충분한 수준까지 안정화
 - v268 프로젝트 구조 점검
-- Vue/FastAPI/DB 전환 계획 문서 갱신
-- v269 legacy 경로 의존성 자동 목록화 도구 추가
-- v269 Vue 앱 생성 위치 `frontend/vue-app/` 결정
+- v269 legacy 경로 의존성 자동 목록화
+- v270 Vue 기본 shell 생성
 
 ## 현재 결정
 
@@ -28,60 +26,82 @@
 
 - Vue + FastAPI + DB + 배포 직전 구조 준비
 
-## v269 결론
+## v270 결론
 
-현재 구조는 smoke/contract가 legacy 경로를 직접 많이 참조합니다.
-
-특히 다음 경로는 바로 이동하면 위험합니다.
-
-- `admin.html`
-- `index.html`
-- `src/`
-- `src/api/`
-- `src/api/admin/`
-- `backend/app/api/routes/`
-- `backend/app/services/`
-- `backend/seeds/`
-- `tools/run_smoke_core.sh`
-- `tools/smoke/`
-
-따라서 지금은 `legacy/` 폴더로 대이동하지 않습니다.
-
-새 Vue 앱은 기존 구조 옆의 다음 경로에 만드는 것이 안전합니다.
+새 Vue 앱은 다음 위치에 생성했습니다.
 
 ```txt
 frontend/vue-app/
 ```
 
+기존 legacy 경로는 그대로 유지합니다.
+
+- `admin.html`
+- `index.html`
+- 루트 `src/`
+- `backend/`
+- `tools/`
+
+Vue shell은 실제 게임/관리자 기능을 아직 대체하지 않습니다.
+
+## 사용자가 설치/확인해야 할 것
+
+처음 Vue 앱 실행 전 설치:
+
+실행 위치: `frontend/vue-app` 폴더
+
+```bash
+npm install
+```
+
+Vue 개발 서버 실행:
+
+실행 위치: `frontend/vue-app` 폴더
+
+```bash
+npm run dev
+```
+
+브라우저 확인:
+
+```txt
+http://127.0.0.1:5173
+```
+
+확인할 화면:
+
+- `/game`
+- `/admin`
+
 ## 다음 작업
 
-`v270 Vue 앱 기본 shell 생성`
+`v271 Vue API client 읽기 전용 설계 + backend route map 연결 준비`
 
 해야 할 일:
 
-1. 사용자 승인 후 `frontend/vue-app/`에 Vite + Vue 기본 프로젝트를 생성합니다.
-2. 기존 `admin.html`, `index.html`, `src/`는 그대로 둡니다.
-3. Vue shell에는 처음부터 실제 관리자/게임 로직을 붙이지 않습니다.
-4. `AdminShell`, `GameShell` 같은 빈 화면/라우팅 구조만 만듭니다.
-5. 기존 legacy smoke와 Vue 기본 검증을 분리합니다.
-6. Vue 앱 생성으로 root smoke가 깨지지 않는지 확인합니다.
-7. package manager와 실행 명령을 문서화합니다.
+1. 기존 FastAPI route path 목록을 Vue 쪽 문서와 연결합니다.
+2. Vue용 API client 파일 구조를 만듭니다.
+3. 처음에는 GET/읽기 전용 API만 대상으로 합니다.
+4. 인증/interceptor는 아직 실제 구현하지 않습니다.
+5. Preview/Apply/write 요청 body는 건드리지 않습니다.
+6. 기존 `admin.html`/`index.html`은 계속 유지합니다.
+7. Vue shell smoke와 legacy core smoke를 모두 확인합니다.
 
 ## 그다음 작업 후보
 
-### v271 Backend 구조 정리 계획
+### v272 Backend 구조 정리 계획
 
 - FastAPI route/service/schema/model/repository 역할 재정의
 - 기존 route path 유지 방식 정리
 - contract/readiness 영향 분석
 
-### v272 DB/PostgreSQL/Alembic 준비
+### v273 DB/PostgreSQL/Alembic 준비
 
 - migration/seed/운영 데이터 역할 분리
 - DB transaction/rollback snapshot 정책 검토
 - 실제 DB 구조 변경은 사용자 승인 후 진행
 
-### v273 인증 설계 준비
+### v274 인증 설계 준비
 
 - 사용자/관리자 권한 정의
 - token 저장 방식 결정

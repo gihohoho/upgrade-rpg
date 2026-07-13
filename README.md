@@ -1,78 +1,48 @@
 # Upgrade RPG
 
-현재 인계 기준: **v269.legacy-path-dependency-report**
-
-직전 기능 기준: `v266.admin-practical-ux-polish`
-
-직전 구조 기준: `v268.project-structure-transition-prep`
-
-관리자 readiness: `v250.backend-admin-rollback-snapshot`
-
-Backend splitStatus: `admin-schema-field-constraint-contract-v238`
+현재 기준: **v270.vue-app-basic-shell**
 
 ## 현재 상태
 
-- 관리자 HTML 페이지는 임시 운영/검증 도구로 충분히 안정화했습니다.
-- 게임 콘텐츠 개발은 당분간 보류합니다.
-- v268에서는 프로젝트 구조와 Vue/FastAPI/DB 전환 준비 문서를 갱신했습니다.
-- v269에서는 legacy 경로 의존성 자동 목록화 도구와 보고서를 추가했습니다.
-- 새 Vue 앱 위치는 `frontend/vue-app/`로 결정했습니다.
-- 실제 파일 대이동과 Vue 앱 생성은 아직 하지 않았습니다.
-- `admin.html`, `index.html`, `src/`, `backend/`, `tools/` 기존 경로는 smoke/contract가 많이 참조하므로 유지합니다.
-- DB, env, seed, 인증, 기존 route, API 응답 body, Write Guard, 실제 write 로직은 유지합니다.
+- 기존 실제 게임 화면: `index.html`
+- 기존 실제 관리자 화면: `admin.html`
+- 기존 legacy JS/CSS: 루트 `src/`
+- 새 Vue shell: `frontend/vue-app/`
+- FastAPI 백엔드: `backend/`
 
-## 먼저 볼 파일
+v270에서는 Vue 기본 shell을 추가했습니다.
+기존 게임/관리자 동작, API route, API 응답 body, DB, env, seed, 인증, Write Guard, 실제 write 로직은 변경하지 않았습니다.
 
-1. `NEXT_CHAT_PROMPT.md`
-2. `NEXT_CHAT_HANDOFF.md`
-3. `docs/current/CURRENT_STATUS.md`
-4. `docs/current/LEGACY_PATH_DEPENDENCIES.md`
-5. `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`
-6. `docs/current/PROJECT_STRUCTURE.md`
-7. `docs/current/ROADMAP.md`
-8. `docs/NEXT_STEPS.md`
-9. `docs/PROJECT_WORKING_RULES.md`
+## 사용자가 설치해야 하는 것
 
-## v269 핵심 결론
+Vue 앱을 처음 실행할 때만 Node 패키지 설치가 필요합니다.
 
-당장 `legacy/` 폴더로 이동하지 않습니다.
+실행 위치: `frontend/vue-app` 폴더
 
-이유:
+```bash
+npm install
+```
 
-- `admin.html` 참조가 많습니다.
-- `index.html` 참조가 많습니다.
-- root `src/`는 현재 Vue 소스가 아니라 legacy JS/CSS입니다.
-- `src/api`와 `src/api/admin`을 smoke가 직접 확인합니다.
-- `backend/app/api/routes`와 `backend/app/services`를 contract가 직접 확인합니다.
-- `tools/run_smoke_core.sh` 포함 여부를 여러 smoke가 확인합니다.
+## Vue 앱 실행
 
-새 Vue 앱은 다음 위치에 만드는 것이 안전합니다.
+실행 위치: `frontend/vue-app` 폴더
+
+```bash
+npm run dev
+```
+
+브라우저 주소:
 
 ```txt
-frontend/vue-app/
+http://127.0.0.1:5173
 ```
 
-## 핵심 검증
+확인할 화면:
 
-실행 위치: 프로젝트 루트
+- `http://127.0.0.1:5173/game`
+- `http://127.0.0.1:5173/admin`
 
-```bash
-python tools/report_legacy_path_dependencies.py --check
-```
-
-실행 위치: 프로젝트 루트
-
-```bash
-bash tools/run_smoke_core.sh
-```
-
-실행 위치: 프로젝트 루트
-
-```bash
-python -m compileall -q backend/app backend/scripts tools
-```
-
-## 서버 실행
+## FastAPI 서버 실행
 
 실행 위치: `backend` 폴더
 
@@ -80,4 +50,73 @@ python -m compileall -q backend/app backend/scripts tools
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-그다음 프로젝트 루트의 `admin.html` 또는 `index.html`을 브라우저에서 엽니다.
+## 검증 명령
+
+Vue shell 구조 검사:
+
+실행 위치: 프로젝트 루트
+
+```bash
+bash tools/run_smoke_vue_shell.sh
+```
+
+기존 core smoke:
+
+실행 위치: 프로젝트 루트
+
+```bash
+bash tools/run_smoke_core.sh
+```
+
+Python compile 검사:
+
+실행 위치: 프로젝트 루트
+
+```bash
+python -m compileall -q backend/app backend/scripts tools
+```
+
+legacy 경로 의존성 검사:
+
+실행 위치: 프로젝트 루트
+
+```bash
+python tools/report_legacy_path_dependencies.py --check
+```
+
+## 현재 개발 방향
+
+당분간 게임 콘텐츠 개발은 하지 않습니다.
+
+보류:
+
+- 장비 추가
+- 스킬 추가
+- 보스 추가
+- 필드 추가
+- 드랍률/밸런스 조정
+- 강화 수치 조정
+- 신규 콘텐츠 기획 반영
+
+우선순위:
+
+1. Vue/FastAPI/DB 전환 준비
+2. legacy 유지 범위 확정
+3. Vue API client 설계
+4. FastAPI 구조 정리 계획
+5. PostgreSQL/Alembic 준비
+6. 인증 설계 준비
+7. 관리자 페이지 Vue 이식
+8. 게임 화면 Vue 이식
+9. 배포 직전 안정화
+
+## 주요 문서
+
+- `docs/current/CURRENT_STATUS.md`
+- `docs/current/PROJECT_STRUCTURE.md`
+- `docs/current/VUE_APP_SHELL.md`
+- `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`
+- `docs/current/LEGACY_PATH_DEPENDENCIES.md`
+- `docs/NEXT_STEPS.md`
+- `NEXT_CHAT_HANDOFF.md`
+- `NEXT_CHAT_PROMPT.md`
