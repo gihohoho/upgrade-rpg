@@ -1,3 +1,11 @@
+
+## v257 - Admin readiness pageReady alias
+
+- `checkAdminReadOnlyPageReady()` 반환 객체에 `pageReady` 별칭을 추가했습니다.
+- 기존 `ok` 필드는 그대로 유지하여 기존 Smoke/호출과 호환됩니다.
+- 기호가 브라우저 콘솔에서 `ready.pageReady`를 바로 확인할 수 있도록 ReadOnly smoke에 alias 검사를 추가했습니다.
+- DB/env/seed/API body/route/auth/write guard/실제 write 로직은 변경하지 않았습니다.
+
 ## v250.1 - frontend readiness return hotfix
 
 - Fixed four v247-v250 readiness values that were calculated internally but omitted from `getAdminBackendServiceSplitContractReadiness()` return object.

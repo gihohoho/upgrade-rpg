@@ -45,6 +45,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "fetchAdminReadOnlyPageData",
   "refreshAdminReadOnlyPage",
   "checkAdminReadOnlyPageReady",
+  "pageReady",
   "fetchAdminOverview",
   "listAdminSaveSnapshots",
   "listAdminMasterCatalogRows",

@@ -13,6 +13,7 @@ node tools/smoke/frontend/smoke_admin_change_log_rollback.js
 node tools/smoke/frontend/smoke_admin_rollback_snapshot_preview.js
 node tools/smoke/frontend/smoke_admin_preview_result_summary.js
 node tools/smoke/frontend/smoke_admin_preview_browser_verification.js
+node tools/smoke/frontend/smoke_admin_preview_live_api_render_check.js
 node tools/smoke/frontend/smoke_admin_create_blueprint_readonly.js
 node tools/smoke/frontend/smoke_admin_create_draft_preview.js
 node tools/smoke/frontend/smoke_admin_create_apply_limited.js

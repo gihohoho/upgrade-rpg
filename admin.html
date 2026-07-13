@@ -1577,13 +1577,19 @@
     <section class="section" id="section-preview-verification" data-admin-collapsible data-admin-section-key="preview-verification" aria-label="관리자 Preview 화면 점검">
       <div class="section-header">
         <h2 class="section-title">Preview 화면 읽기 전용 점검</h2>
-        <div class="section-meta">v255 · fixture only · API/DB/write 없음</div>
+        <div class="section-meta">v256 live preview API render check · v255 fixture only · write 없음</div>
       </div>
       <div style="padding:14px; border-bottom:1px solid rgba(148, 163, 184, 0.14);">
         <div class="filter-help" style="margin:0 0 10px;">아래 버튼은 실제 API를 호출하지 않고 고정 예시 데이터로 상태 UI만 재현합니다. 정상·차단·stale·Snapshot 불일치·삭제 의존성·복원 충돌 화면을 안전하게 비교할 수 있습니다.</div>
         <div class="filter-actions preview-verification-actions" data-admin-preview-verification-scenarios></div>
       </div>
-      <div style="padding:14px;" data-admin-preview-verification-result><div class="empty">Preview 화면 예시를 준비하는 중...</div></div>
+      <div style="padding:14px; border-bottom:1px solid rgba(148, 163, 184, 0.14);" data-admin-preview-verification-result><div class="empty">Preview 화면 예시를 준비하는 중...</div></div>
+      <div style="padding:14px; border-bottom:1px solid rgba(148, 163, 184, 0.14);">
+        <h3 style="margin:0 0 8px; font-size:15px;">실제 Preview API 응답 표시 점검</h3>
+        <div class="filter-help" style="margin:0 0 10px;">현재 관리자 화면의 입력값을 읽어 실제 Preview API만 호출합니다. dryRun 응답을 공통 렌더러로 표시하며 apply API, confirmText, write header는 사용하지 않습니다.</div>
+        <div class="filter-actions preview-verification-actions" data-admin-live-preview-actions></div>
+      </div>
+      <div style="padding:14px;" data-admin-live-preview-result><div class="empty">위 버튼은 현재 열려 있는 생성 초안, 편집 초안, 변경 이력 상세가 있을 때만 Preview API 응답을 표시합니다.</div></div>
     </section>
 
     <section class="section" id="section-admin-js-split-readiness" data-admin-collapsible data-admin-section-key="admin-js-split-readiness" aria-label="관리자 JS 분리 준비">
@@ -1738,7 +1744,7 @@
 
     <footer class="admin-footer" data-admin-footer>
       <p class="footer-note"><strong>v192 admin master catalog/detail split · v191 admin edit draft split · v189 admin create lifecycle split · v187 admin change logs split · v185 admin layout shell split</strong> · v183 admin create lifecycle batch check · v182 admin create lifecycle result summary · v181 admin create lifecycle guard helper · v180 admin create lifecycle guide · static HTML + JS · FastAPI guarded write/rollback APIs</p>
-      <p class="footer-note">v255 preview browser verification · legacy smoke marker: v165 admin create apply limited · v171 admin create delete restore · v174 admin collapsed panel style fix · v175 admin create apply fieldZones · v176 admin create apply bosses · v177 admin create apply skills/dropTables · v178 admin create apply itemTemplates/dropTableItems · v179 admin create apply level/link tables</p>
+      <p class="footer-note">v256 live preview API render check · v255 preview browser verification · legacy smoke marker: v165 admin create apply limited · v171 admin create delete restore · v174 admin collapsed panel style fix · v175 admin create apply fieldZones · v176 admin create apply bosses · v177 admin create apply skills/dropTables · v178 admin create apply itemTemplates/dropTableItems · v179 admin create apply level/link tables</p>
     </footer>
   </main>
 
@@ -1751,6 +1757,7 @@
   <script src="src/api/admin/admin-change-logs.js"></script>
   <script src="src/api/admin/admin-create-lifecycle.js"></script>
   <script src="src/api/admin/admin-edit-draft.js"></script>
+  <script src="src/api/admin/admin-preview-live-verification.js"></script>
   <script src="src/api/admin/admin-master-catalog.js"></script>
   <script src="src/api/admin/admin-overview-snapshots.js"></script>
   <script src="src/api/admin-page-readonly.js"></script>

@@ -1,3 +1,11 @@
+# v256 - Admin Preview live API render check
+
+- Added a read-only live Preview API render check panel to the admin Preview verification section.
+- The panel calls only existing dry-run Preview API methods and renders their actual response payload through the shared Preview result summary and Diff/Snapshot renderer.
+- Covered Create, Edit, Rollback, create-delete, and create-delete-restore Preview APIs.
+- Added `tools/smoke/frontend/smoke_admin_preview_live_api_render_check.js` to verify allowed Preview methods, script load order, dryRun-only calls, no `confirmText`, no write headers, and no `applyAdmin*` calls.
+- No DB, env, seed, auth, route path, API response body, write guard, or real write logic changes.
+
 
 ## v238.7 backend admin readiness/runtime fallback hotfix
 
