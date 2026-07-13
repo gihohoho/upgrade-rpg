@@ -15,10 +15,10 @@
 
 | 대상 | 존재 | 참조 수 | 참조 파일 수 | 판단 |
 | --- | --- | --- | --- | --- |
-| `admin.html` | O | 194 | 88 | 절대 이동 금지 |
-| `index.html` | O | 113 | 52 | 절대 이동 금지 |
-| `src/` | O | 1174 | 218 | 절대 이동 금지 |
-| `src/api/` | O | 670 | 180 | Vue 이식 후보이지만 현 위치 유지 |
+| `admin.html` | O | 193 | 87 | 절대 이동 금지 |
+| `index.html` | O | 112 | 51 | 절대 이동 금지 |
+| `src/` | O | 1171 | 216 | 절대 이동 금지 |
+| `src/api/` | O | 669 | 179 | Vue 이식 후보이지만 현 위치 유지 |
 | `src/api/admin/` | O | 377 | 138 | Vue 관리자 이식 후보이지만 현 위치 유지 |
 | `src/data/` | O | 81 | 28 | DB seed 준비 전 이동 금지 |
 | `src/rules/` | O | 33 | 15 | 콘텐츠 개발 보류, 현 위치 유지 |
@@ -30,7 +30,7 @@
 | `backend/app/services/` | O | 289 | 94 | service contract 보호 |
 | `backend/seeds/` | O | 32 | 12 | 사용자 승인 전 변경 금지 |
 | `tools/run_smoke_core.sh` | O | 85 | 71 | 검증 기준 유지 |
-| `tools/smoke/` | O | 319 | 131 | 경로 의존성 기준 |
+| `tools/smoke/` | O | 316 | 128 | 경로 의존성 기준 |
 
 ## 참조 파일 예시
 
@@ -40,8 +40,8 @@
 |---|---|
 | `admin.html` | `CHANGELOG.md`<br>`README.md`<br>`admin.html`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_LAYOUT_NAVIGATION_SHELL.md`<br>`docs/ADMIN_LAYOUT_SHELL_SPLIT.md`<br>`docs/ADMIN_MASTER_DATA_CATALOG.md` |
 | `index.html` | `CHANGELOG.md`<br>`README.md`<br>`admin.html`<br>`docs/ADMIN_PAGE_URL_HELPER.md`<br>`docs/ADMIN_READONLY_PAGE.md`<br>`docs/CHANGELOG.md`<br>`docs/CODE_MAP.md`<br>`docs/CSS_AUDIT.md` |
-| `src/` | `CHANGELOG.md`<br>`NEXT_CHAT_HANDOFF.md`<br>`README.md`<br>`admin.html`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md` |
-| `src/api/` | `CHANGELOG.md`<br>`README.md`<br>`admin.html`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT.md` |
+| `src/` | `CHANGELOG.md`<br>`README.md`<br>`admin.html`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT.md` |
+| `src/api/` | `CHANGELOG.md`<br>`admin.html`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT_CONTRACT.md` |
 | `src/api/admin/` | `CHANGELOG.md`<br>`admin.html`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT_CONTRACT.md` |
 | `src/data/` | `docs/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/CODE_MAP.md`<br>`docs/FRONTEND_MASTER_DATA_BRIDGE.md`<br>`docs/MASTER_DATA_PARITY_CHECKER.md`<br>`docs/PROJECT_STRUCTURE.md`<br>`docs/SEED_EXTRACTION.md`<br>`docs/SKILL_DAMAGE_TEXT_FIX.md` |
 | `src/rules/` | `docs/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/CODE_MAP.md`<br>`docs/PROJECT_STRUCTURE.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/current/PROJECT_STRUCTURE.md` |
@@ -53,7 +53,7 @@
 | `backend/app/services/` | `CHANGELOG.md`<br>`backend/app/api/routes/admin_preview_side_effect_contract.py`<br>`backend/app/api/routes/admin_route_error_helpers.py`<br>`backend/app/api/routes/admin_service_mutation_boundary_contract.py`<br>`backend/app/services/admin/README.md`<br>`backend/app/services/admin/admin_shared_utils.py`<br>`backend/app/services/admin_service.py`<br>`backend/app/services/admin_service_facade_contract.py` |
 | `backend/seeds/` | `backend/seeds/README.md`<br>`docs/CHANGELOG.md`<br>`docs/LOCAL_DEV_SETUP.md`<br>`docs/MASTER_DATA_PARITY_CHECKER.md`<br>`docs/PROJECT_STRUCTURE.md`<br>`docs/SEED_EXTRACTION.md`<br>`docs/SEED_IMPORT.md`<br>`docs/archive/stage-notes/SEED_EXTRACTION.md` |
 | `tools/run_smoke_core.sh` | `CHANGELOG.md`<br>`README.md`<br>`README_BACKEND_READY.md`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_GUIDE.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md` |
-| `tools/smoke/` | `CHANGELOG.md`<br>`NEXT_CHAT_HANDOFF.md`<br>`README.md`<br>`backend/README.md`<br>`backend/seeds/README.md`<br>`docs/ADMIN_BOOTSTRAP_BINDINGS_READINESS.md`<br>`docs/ADMIN_CATALOG_COMPACT_HELP_UX.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_GUIDE.md` |
+| `tools/smoke/` | `CHANGELOG.md`<br>`backend/README.md`<br>`backend/seeds/README.md`<br>`docs/ADMIN_BOOTSTRAP_BINDINGS_READINESS.md`<br>`docs/ADMIN_CATALOG_COMPACT_HELP_UX.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_GUIDE.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md` |
 
 ## HTML 진입점 직접 로드 관계
 

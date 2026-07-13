@@ -1,4 +1,4 @@
-# Upgrade RPG Vue App Shell — v277
+# Upgrade RPG Vue App Shell — v279
 
 이 폴더는 기존 게임/관리자 화면을 바로 대체하지 않는 Vue 준비 앱입니다.
 
@@ -19,25 +19,35 @@
 - `GET /health`
 - `GET /admin/requirements`
 - `GET /admin/master-data/domains`
-- `GET /admin/master-data/catalog` 첫 페이지
+- `GET /admin/master-data/catalog`
+- `GET /admin/master-data/detail`
 
-v276에서는 도메인 목록을 연결했고, v277에서는 선택 도메인의 첫 20개 row를 표로 연결했습니다.
+지원 기능:
+
+- 도메인 선택
+- 검색어
+- 활성/비활성 필터
+- 정렬
+- 이전/다음 페이지
+- 선택 row 상세
+- scalar 필드
+- 관계 힌트
+- 안전한 JSON 미리보기
 
 아직 연결하지 않은 것:
 
-- 검색/필터/페이지네이션
-- detail/relations
+- relations GET
 - Preview/Apply/write
 - 인증/token/interceptor
 
 ## 설치
 
-v277에서 새 라이브러리나 프레임워크는 추가하지 않았습니다.
+v278~v279에서 새 라이브러리나 프레임워크는 추가하지 않았습니다.
 
 처음 실행하는 경우에만:
 
 실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
+`.venv` 상태: 필요 없음
 
 ```bash
 npm install
@@ -46,7 +56,7 @@ npm install
 ## Vue 실행
 
 실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
+`.venv` 상태: 필요 없음
 
 ```bash
 npm run dev
@@ -55,7 +65,7 @@ npm run dev
 ## FastAPI 실행
 
 실행 위치: 프로젝트 루트  
-`.venv` 상태: 켜야 함
+`.venv` 상태: 꺼져 있다면 켜야 함
 
 ```bash
 .venv\Scripts\activate
@@ -68,17 +78,10 @@ npm run dev
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-확인 주소:
-
-```txt
-http://127.0.0.1:5173/game
-http://127.0.0.1:5173/admin
-```
-
 ## 빌드 확인
 
 실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
+`.venv` 상태: 필요 없음
 
 ```bash
 npm run build

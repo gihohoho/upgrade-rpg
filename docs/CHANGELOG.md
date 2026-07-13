@@ -1,3 +1,17 @@
+# v279 - Vue admin read-only detail panel
+
+- Added `AdminMasterDetailPanel.vue` for `GET /admin/master-data/detail`.
+- Displays scalar fields, relation hints, sanitized JSON previews, asset hiding state, and warnings without calling relations or write APIs.
+- Improved `/admin/requirements` summary from `-` to `준비 완료` using the existing `readOnlyOverviewReady` response field.
+- Kept DB, env, seed, auth, route paths, API response bodies, Write Guard, Preview/Apply request bodies, and actual write logic unchanged.
+
+# v278 - Vue admin catalog query controls
+
+- Added search, enabled/disabled filtering, safe sort selection, and previous/next pagination using the existing catalog GET query contract.
+- Resets filters/page when the domain changes and clears stale detail selection whenever the catalog is reloaded.
+- Keeps page size at 20 and cancels stale requests with `AbortController`.
+- Added no library or framework.
+
 # v277 - Vue admin read-only catalog mini panel
 
 - Added `AdminMasterDomainPanel.vue` for `GET /admin/master-data/domains`.

@@ -2,7 +2,7 @@
   <main class="vue-shell">
     <header class="vue-shell__header">
       <div>
-        <p class="vue-shell__eyebrow">Upgrade RPG v277</p>
+        <p class="vue-shell__eyebrow">Upgrade RPG v279</p>
         <h1>Vue 전환 준비 Shell</h1>
       </div>
       <nav class="vue-shell__nav" aria-label="Vue shell navigation">

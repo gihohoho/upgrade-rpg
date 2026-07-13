@@ -62,8 +62,8 @@ def main() -> None:
         raise AssertionError(f"Missing Vue read-only API status panel files: {missing}")
 
     package = json.loads((VUE_APP / "package.json").read_text(encoding="utf-8"))
-    if package.get("version") != "0.0.0-v277":
-        raise AssertionError("Vue package version must be bumped to 0.0.0-v277")
+    if package.get("version") != "0.0.0-v279":
+        raise AssertionError("Vue package version must be bumped to 0.0.0-v279")
 
     health_api = read("src/api/healthReadOnlyApi.js")
     assert_contains(health_api, "HEALTH_READONLY_ROUTES", "health API route import")
@@ -80,12 +80,14 @@ def main() -> None:
     assert_contains(panel, "success", "success status")
     assert_contains(panel, "error", "error status")
     assert_contains(panel, "다시 확인", "retry button label")
+    assert_contains(panel, "check.summarize", "custom status summarizer support")
     assert_no_mutation_patterns("src/components/ReadOnlyApiStatusPanel.vue")
 
     admin_shell = read("src/pages/AdminShell.vue")
     assert_contains(admin_shell, "ReadOnlyApiStatusPanel", "admin shell status panel")
     assert_contains(admin_shell, "healthReadOnlyApi.fetchHealth", "admin health check")
     assert_contains(admin_shell, "adminReadOnlyApi.fetchRequirements", "admin requirements check")
+    assert_contains(admin_shell, "준비 완료", "admin requirements meaningful status")
     assert_contains(admin_shell, "Preview/Apply/write", "admin write exclusion note")
     assert_no_mutation_patterns("src/pages/AdminShell.vue")
 

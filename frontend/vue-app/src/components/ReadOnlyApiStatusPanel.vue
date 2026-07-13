@@ -68,13 +68,17 @@ function createInitialStates() {
     label: check.label,
     description: check.description,
     run: check.run,
+    summarize: check.summarize,
     status: 'idle',
     summary: null,
     error: '',
   }));
 }
 
-function summarizeResponse(response) {
+function summarizeResponse(check, response) {
+  if (typeof check.summarize === 'function') {
+    return check.summarize(response);
+  }
   return {
     type: response?.type || '',
     status: response?.data?.status || response?.payload?.status || response?.status || '',
@@ -101,7 +105,7 @@ async function runChecks() {
         return {
           ...check,
           status: 'success',
-          summary: summarizeResponse(response),
+          summary: summarizeResponse(check, response),
           error: '',
         };
       } catch (error) {

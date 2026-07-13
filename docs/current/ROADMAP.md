@@ -1,8 +1,6 @@
-# Roadmap — v277
+# Roadmap — v279
 
 ## 당분간 보류
-
-게임 콘텐츠 개발은 아직 하지 않습니다.
 
 - 장비/스킬/보스/필드 추가
 - 드랍률/밸런스/강화 수치 변경
@@ -12,41 +10,36 @@
 
 - v268 프로젝트 구조 점검
 - v269 legacy 경로 의존성 자동 목록화
-- v270 Vue 기본 shell 생성
-- v271 Vue read-only API client 준비
+- v270 Vue 기본 shell
+- v271 read-only API client
 - v272 안전 GET 상태 화면
-- v273 local CORS 수정
+- v273 local CORS
 - v274 FastAPI 구조 계획
 - v275 backend route map
-- v276 Vue 관리자 도메인 목록
-- v277 Vue 관리자 첫 카탈로그 페이지
+- v276 도메인 목록
+- v277 첫 카탈로그
+- v278 카탈로그 검색/필터/페이지네이션
+- v279 선택 row 상세 GET
 
 ## 현재 경계
 
-Vue `/admin`은 아래 GET만 실제 호출합니다.
+Vue `/admin`은 도메인, 카탈로그, 상세까지만 GET으로 연결합니다.
 
-- `/health`
-- `/admin/requirements`
-- `/admin/master-data/domains`
-- `/admin/master-data/catalog`
+계속 보류:
 
-Preview/Apply/write, 인증, DB 구조 변경은 아직 하지 않습니다.
+- relations GET
+- Preview/Apply/write
+- 인증
+- DB 구조 변경
 
 ## 다음 작업
 
-### v278 — catalog query controls
+### v280 — read-only relations
 
-- 검색어
-- 활성/비활성 필터
-- 페이지네이션
-- 안전한 GET query만 사용
-- stale request 취소 유지
-
-### v279 — read-only detail 준비
-
-- 선택 row의 detail GET
-- 상세 loading/error/empty 처리
-- relations는 별도 단계
+- 선택 상세의 관계 group 조회
+- loading/error/empty 상태
+- 관련 row 클릭 이동은 응답 구조 확인 후 판단
+- GET만 사용
 
 ### 이후
 

@@ -3,77 +3,54 @@
 ## 현재 완료
 
 - v268~v275 구조/route/read-only client 준비
-- v276 Vue 관리자 도메인 목록 패널
-- v277 Vue 관리자 첫 카탈로그 미니 패널
+- v276 도메인 목록
+- v277 첫 카탈로그
+- v278 검색·활성 필터·정렬·페이지네이션
+- v279 선택 row 상세 GET
 
-현재 Vue `/admin`에서는 GET만 사용합니다.
+현재 Vue `/admin`에서 사용하는 API:
 
 ```txt
 GET /api/v1/health
 GET /api/v1/admin/requirements
 GET /api/v1/admin/master-data/domains
 GET /api/v1/admin/master-data/catalog
+GET /api/v1/admin/master-data/detail
 ```
 
 ## 현재 보류
 
-- detail/relations
+- relations GET
 - 모든 Preview/Apply/write
 - 인증/token/interceptor
 - DB/Alembic 실제 변경
 - env/seed 변경
 - 게임 콘텐츠
 
-## 다음 작업 — v278
+## 다음 작업 — v280
 
-`Vue admin catalog query controls`
+`Vue admin read-only relations panel`
 
 추천 범위:
 
-1. 검색어 입력
-2. 활성/비활성 필터
-3. 이전/다음 페이지
-4. backend GET query와 화면 상태 연결
-5. 도메인 변경 시 필터/페이지 초기화
-6. stale request 취소 유지
-7. 전용 smoke 추가
+1. 실제 relations 응답 구조 재확인
+2. 선택 row의 relation group GET
+3. loading/error/empty/success
+4. stale 요청 취소
+5. raw JSON/asset 비표시 확인
+6. 전용 smoke
 
-이번 다음 단계에서도 detail/relations와 Preview/Apply/write는 연결하지 않습니다.
+Preview/Apply/write는 연결하지 않습니다.
 
 ## 설치 관련
 
-v277까지 새 라이브러리/프레임워크는 없습니다.
+새 라이브러리/프레임워크는 없습니다.
 
-Vue를 처음 실행하는 경우에만:
+Vue 의존성이 없는 경우에만:
 
 실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
+`.venv` 상태: 필요 없음
 
 ```bash
 npm install
-```
-
-Vue 실행:
-
-실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
-
-```bash
-npm run dev
-```
-
-FastAPI 실행 전 가상환경:
-
-실행 위치: 프로젝트 루트  
-`.venv` 상태: 켜야 함
-
-```bash
-.venv\Scripts\activate
-```
-
-실행 위치: `backend` 폴더  
-`.venv` 상태: 켜진 상태
-
-```bash
-python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
