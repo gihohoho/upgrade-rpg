@@ -1,140 +1,122 @@
-# 다음 채팅 인계 — Upgrade RPG v268 structure transition prep
+# NEXT CHAT HANDOFF — Upgrade RPG v269
 
-## 최신 ZIP
+## 현재 최신 ZIP
 
-`rpg_v268_project_structure_transition_prep.zip`
+- `rpg_v269_legacy_path_dependency_report.zip`
 
-이 ZIP은 v267 handoff ZIP을 기준으로 v268 구조 점검과 Vue/FastAPI/DB 전환 준비 문서를 갱신한 버전입니다.
+반드시 이 ZIP을 기준으로 작업합니다.
 
-## 현재 안정 기준
+## 사용자/응답 방식
 
-- 이번 작업 기준: `v268.project-structure-transition-prep`
+- 사용자는 코딩을 거의 모릅니다.
+- 설명은 항상 한국어로 쉽고 자세하게 합니다.
+- 터미널 명령을 줄 때는 반드시 실행 위치를 먼저 적습니다.
+- git 명령은 아래처럼 한 줄 블록으로 줍니다.
+
+```bash
+git status && git add . && git commit -m "..." && git push
+```
+
+## 현재 기준
+
+- 현재 작업 기준: `v269.legacy-path-dependency-report`
 - 직전 기능 기준: `v266.admin-practical-ux-polish`
+- 직전 구조 기준: `v268.project-structure-transition-prep`
 - readiness version: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 
-## v266까지의 결론
+## v269 완료 내용
 
-관리자 HTML 페이지는 임시 운영/검증 도구로 충분히 안정화했습니다.
+- legacy 경로 의존성 자동 목록화 도구 추가
+- `docs/current/LEGACY_PATH_DEPENDENCIES.md` 생성
+- Vue 앱 생성 위치를 `frontend/vue-app/`로 결정
+- 기존 `admin.html`, `index.html`, `src/` 이동하지 않기로 확정
+- 실제 Vue 앱 생성은 아직 하지 않음
+- DB/env/seed/auth/API body/route/write guard/실제 write 로직 변경 없음
 
-현재 관리자 페이지에서 가능한 것:
+## 새로 추가된 주요 파일
 
-- 마스터 데이터 카탈로그 조회
-- 마스터 데이터 상세 확인
-- 신규 row 생성 Preview
-- 편집 Preview
-- ChangeLog 조회
-- Rollback Preview
-- 생성 row 삭제 Preview
-- 삭제 row 복원 Preview
-- Preview fixture 점검
-- Live Preview API 응답 표시 점검
-- 공통 Diff/Snapshot/Preview summary 렌더링
-- 초보자용 Admin Workspace
+- `tools/report_legacy_path_dependencies.py`
+- `docs/current/LEGACY_PATH_DEPENDENCIES.md`
 
-v266 사용자 피드백 반영:
+## 현재 핵심 결론
 
-- 카탈로그 보기 방식 3분할은 제거했습니다.
-- 긴 값 모달은 유지하되 미리보기 폭을 줄였습니다.
-- 버튼 위험도 텍스트 chip은 제거하고 색상/tooltip만 남겼습니다.
-- 상세 화면 바로가기 버튼은 관련 섹션을 펼치고 스크롤 이동하도록 보완했습니다.
+현재 root `src/`는 Vue 앱 소스 폴더가 아닙니다. `admin.html`과 `index.html`이 직접 로드하는 legacy JS/CSS 폴더입니다.
 
-## v268에서 한 일
+따라서 Vue 앱은 root `src/`를 재사용하지 않고 아래 경로에 새로 만듭니다.
 
-v268은 문서/구조 분석 중심 작업입니다.
+```txt
+frontend/vue-app/
+```
 
-완료:
+## 절대 변경 금지 / 고위험 항목
 
-- 현재 파일/폴더 구조 분석
-- `admin.html`, `index.html`, `src/`, `backend/`, `tools/`, `docs/` 역할 정리
-- Vue 전환 시 보존/이식/대체 후보 분류
-- smoke/contract 경로 의존성 1차 분석
-- 실제 파일 대이동 보류 결정
-- Vue/FastAPI/DB 전환 계획 확장
-- `docs/NEXT_STEPS.md`, `docs/current/PROJECT_STRUCTURE.md`, `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md` 등 갱신
+아래는 사용자 명시 승인 없이는 변경하지 않습니다.
 
-## v268 핵심 결론
+- DB 구조
+- env
+- seed
+- 인증
+- API 응답 body
+- 기존 route path
+- 실제 write 로직
+- Write Guard
+- 관리자 Preview/Apply 요청 body
+- 기존 Smoke/Contract 의미
 
-당장 `legacy/` 폴더로 대이동하지 않습니다.
+## 당분간 보류
 
-이유:
-
-- `admin.html`은 smoke/문서/도구에서 많이 참조합니다.
-- `index.html`도 게임 smoke와 관리자 URL helper에서 참조합니다.
-- `src/api`와 `src/api/admin`은 frontend/admin smoke가 직접 확인합니다.
-- `backend/app/api/routes`와 `backend/app/services`는 backend contract가 직접 확인합니다.
-- `tools/run_smoke_core.sh`는 contract 등록 여부 확인에 쓰입니다.
-
-따라서 다음 단계는 기존 legacy 구조 옆에 Vue 앱을 추가할 수 있는지 확인하는 방향이 안전합니다.
-
-## 앞으로의 방향
-
-사용자가 명확히 정했습니다.
-
-당분간 게임 콘텐츠 개발은 하지 않습니다.
+게임 콘텐츠 개발은 하지 않습니다.
 
 보류:
 
-- 장비/스킬/보스/필드/드랍/강화/밸런스 신규 개발
-
-우선:
-
-- Vue + FastAPI + DB + 배포 직전 구조 완성 준비
-- 프로젝트 구조 정리
-- legacy HTML/JS 경계 확정
-- FastAPI 구조 정리 계획
-- PostgreSQL/Alembic 도입 준비
-- 인증 설계 준비
-- Vue 앱 초기 세팅과 관리자 이식 계획
+- 장비 추가
+- 스킬 추가
+- 보스 추가
+- 필드 추가
+- 드랍률/밸런스 조정
+- 강화 수치 조정
+- 신규 콘텐츠 기획 반영
 
 ## 다음 추천 작업
 
-다음 채팅에서는 `v269 legacy 경로 의존성 자동 목록화 + Vue 앱 생성 위치 결정`부터 시작하는 것이 좋습니다.
+다음 작업은 `v270 Vue 앱 기본 shell 생성`입니다.
 
-권장 순서:
+권장 목표:
 
-1. ZIP 압축 해제
-2. 현재 문서 확인
-3. smoke가 직접 읽는 경로 목록 자동 추출
-4. 이동 금지/이식 후보/나중 대체 후보 재분류
-5. `frontend/vue-app/` 생성 여부 결정
-6. 생성한다면 기존 `admin.html`, `index.html`, `src/`는 그대로 유지
-7. Vue 기본 검증과 기존 core smoke 검증을 분리
-8. 전체 smoke/compileall 확인
-9. 새 ZIP 생성
+- `frontend/vue-app/`에 Vite + Vue 기본 프로젝트 생성
+- 기존 `admin.html`, `index.html`, `src/`는 그대로 유지
+- Vue에는 실제 관리자/게임 로직을 아직 연결하지 않음
+- `AdminShell.vue`, `GameShell.vue` 같은 빈 shell과 router만 준비
+- Vue 실행/빌드 검증과 기존 legacy smoke를 분리
+- DB/env/seed/auth/API/write 로직 변경 없음
 
-## 반드시 유지할 것
+## 검증 기준
 
-- DB 변경 금지
-- env 변경 금지
-- seed 변경 금지
-- 인증 변경 금지
-- 기존 route path 변경 금지
-- API 응답 body 변경 금지
-- Write Guard 변경 금지
-- 실제 write 로직 변경 금지
-- 관리자 Preview/Apply 요청 body 변경 금지
-- 기존 Smoke/Contract 의미 변경 금지
+코드나 구조를 건드렸다면 최소 다음을 확인합니다.
 
-## 주요 문서
+실행 위치: 프로젝트 루트
 
-- `NEXT_CHAT_PROMPT.md`
-- `NEXT_CHAT_HANDOFF.md`
-- `docs/current/CURRENT_STATUS.md`
-- `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`
-- `docs/current/PROJECT_STRUCTURE.md`
-- `docs/current/ROADMAP.md`
-- `docs/NEXT_STEPS.md`
-- `docs/PROJECT_WORKING_RULES.md`
+```bash
+python tools/report_legacy_path_dependencies.py --check
+```
 
-## 검증 결과
+실행 위치: 프로젝트 루트
 
-v268은 문서 중심 작업입니다.
-런타임 코드 변경은 하지 않았습니다.
+```bash
+python -m compileall -q backend/app backend/scripts tools
+```
 
-확인한 검증:
+실행 위치: 프로젝트 루트
 
-- `python -m compileall -q backend/app backend/scripts tools`
-- JS 문법 검사
-- `bash tools/run_smoke_core.sh`
-- ZIP 무결성 검사
+```bash
+bash tools/run_smoke_core.sh
+```
+
+Vue 앱을 만든 뒤에는 별도 위치에서 Vue 검증도 실행합니다.
+
+실행 위치: `frontend/vue-app` 폴더
+
+```bash
+npm run build
+```

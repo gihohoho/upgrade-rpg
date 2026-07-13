@@ -1,27 +1,59 @@
-# 현재 상태 — v268 structure transition prep
+# 현재 상태 — v269 legacy path dependency report
 
 ## 안정 기준
 
-- 최신 인계 ZIP: `rpg_v268_project_structure_transition_prep.zip`
-- 이번 작업 기준: `v268.project-structure-transition-prep`
+- 최신 인계 ZIP: `rpg_v269_legacy_path_dependency_report.zip`
+- 이번 작업 기준: `v269.legacy-path-dependency-report`
 - 직전 기능 기준: `v266.admin-practical-ux-polish`
+- 직전 구조 기준: `v268.project-structure-transition-prep`
 - 관리자 readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 
-## v268 핵심 결론
+## v269 핵심 결론
 
-관리자 페이지와 게임 화면은 아직 Vue가 아닙니다.
+v269에서는 실제 파일 이동이나 Vue 앱 생성을 하지 않았습니다.
 
-현재 구조는 다음 legacy 경로에 강하게 묶여 있습니다.
+대신 다음을 확정했습니다.
+
+- legacy 경로 의존성을 자동 목록화하는 도구를 추가했습니다.
+- 생성 보고서 `docs/current/LEGACY_PATH_DEPENDENCIES.md`를 추가했습니다.
+- 새 Vue 앱 생성 위치는 `frontend/vue-app/`가 가장 안전하다고 결정했습니다.
+- 현재 `src/`는 Vue 앱 소스가 아니라 legacy 브라우저 JS/CSS이므로 Vue 앱용으로 재사용하지 않습니다.
+- `admin.html`, `index.html`, 기존 `src/`는 Vue 이식 전까지 그대로 유지합니다.
+
+## v269 추가 파일
+
+- `tools/report_legacy_path_dependencies.py`
+- `docs/current/LEGACY_PATH_DEPENDENCIES.md`
+
+## 현재 유지되는 legacy 기준
+
+아래 경로는 smoke/contract와 HTML 직접 로드 관계가 강하므로 아직 이동하지 않습니다.
 
 - `admin.html`
 - `index.html`
 - `src/`
+- `src/api/`
+- `src/api/admin/`
 - `backend/app/api/routes/`
 - `backend/app/services/`
+- `backend/seeds/`
 - `tools/run_smoke_core.sh`
+- `tools/smoke/`
 
-따라서 v268에서는 실제 파일 대이동을 하지 않았습니다. 대신 현재 구조와 Vue/FastAPI/DB 전환 계획을 문서로 정리했습니다.
+## Vue 앱 위치 결정
+
+결정:
+
+```txt
+frontend/vue-app/
+```
+
+이유:
+
+- 기존 root `src/`는 현재 게임/관리자 legacy JS가 들어 있는 폴더입니다.
+- Vite/Vue 기본 `src/`와 충돌하면 기존 smoke와 HTML 직접 로드 경로가 깨질 수 있습니다.
+- `frontend/vue-app/`는 기존 legacy와 분리되어 있어서 Vue shell을 만들어도 기존 게임/관리자 화면을 그대로 검증할 수 있습니다.
 
 ## 관리자 페이지 상태
 
@@ -41,31 +73,9 @@
 - Live Preview API 응답 표시 점검
 - 공통 Diff/Snapshot/Preview Summary 표시
 
-## v266 UX 상태 유지
+## 당분간 보류
 
-- Admin Workspace와 초보자 안내 유지
-- 카탈로그 보기 방식 3분할 제거 상태 유지
-- 긴 값은 짧은 미리보기 + 모달 전체 보기 유지
-- 버튼 위험도는 텍스트 chip 없이 색상/tooltip 중심 유지
-- 상세 화면 바로가기 버튼은 실제 섹션 펼침/스크롤 이동 유지
-
-## v268 문서 갱신 상태
-
-갱신/추가된 핵심 문서:
-
-- `docs/current/PROJECT_STRUCTURE.md`
-- `docs/PROJECT_STRUCTURE.md`
-- `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`
-- `docs/NEXT_STEPS.md`
-- `docs/current/ROADMAP.md`
-- `docs/current/CURRENT_STATUS.md`
-- `README.md`
-- `NEXT_CHAT_HANDOFF.md`
-- `NEXT_CHAT_PROMPT.md`
-
-## 현재 방향
-
-당분간 게임 콘텐츠 개발은 하지 않습니다.
+게임 콘텐츠 개발은 하지 않습니다.
 
 보류:
 
@@ -76,17 +86,6 @@
 - 드랍률/밸런스 조정
 - 강화 수치 조정
 - 신규 콘텐츠 기획 반영
-
-우선:
-
-1. legacy 경로 의존성 자동 목록화
-2. Vue 앱 생성 위치 결정
-3. FastAPI 구조 정리 계획 구체화
-4. PostgreSQL/Alembic 도입 준비
-5. 인증 설계 준비
-6. 관리자 페이지 Vue 이식 계획
-7. 게임 화면 Vue 이식 계획
-8. 배포 직전 안정화 계획
 
 ## 안전 원칙
 
@@ -103,13 +102,14 @@
 - 관리자 Preview/Apply 요청 body
 - 기존 Smoke/Contract 의미
 
-## v268 검증 메모
+## v269 검증 메모
 
-문서 중심 작업이므로 런타임 동작은 변경하지 않았습니다.
+문서/도구 중심 작업이므로 런타임 동작은 변경하지 않았습니다.
 
 검증 기준:
 
-- `python -m compileall -q backend/app backend/scripts tools`
+- `python tools/report_legacy_path_dependencies.py --check`
 - JS 문법 검사
+- `python -m compileall -q backend/app backend/scripts tools`
 - `bash tools/run_smoke_core.sh`
 - ZIP 무결성 검사

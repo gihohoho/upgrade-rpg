@@ -1,8 +1,10 @@
-# Project Structure — v268
+# Project Structure — v269
 
 현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
 
-이번 v268에서는 실제 파일 대이동을 하지 않았습니다. 이유는 `admin.html`, `index.html`, `src/`, `backend/`, `tools/` 경로가 기존 smoke/contract에 많이 연결되어 있기 때문입니다. 먼저 구조와 영향 범위를 문서로 고정하고, Vue/FastAPI/DB 전환은 다음 단계에서 안전하게 나눠 진행합니다.
+v269에서는 실제 파일 대이동을 하지 않았습니다. 이유는 `admin.html`, `index.html`, `src/`, `backend/`, `tools/` 경로가 기존 smoke/contract에 많이 연결되어 있기 때문입니다.
+
+이번 단계에서는 legacy 경로 의존성을 자동으로 목록화하는 도구를 추가했고, 새 Vue 앱 위치를 `frontend/vue-app/`로 결정했습니다.
 
 ## 최상위 구조
 
@@ -21,16 +23,18 @@
 └── tools/
 ```
 
+아직 `frontend/vue-app/`는 만들지 않았습니다. 다음 v270에서 사용자 승인 후 생성하는 것이 안전합니다.
+
 ## 루트 파일 역할
 
-| 경로 | 현재 역할 | v268 판단 |
+| 경로 | 현재 역할 | v269 판단 |
 |---|---|---|
 | `index.html` | 현재 실제 게임 화면 진입점 | Vue 이식 전까지 legacy 기준 화면으로 유지 |
 | `admin.html` | 현재 관리자 페이지 진입점 | Vue 관리자 이식 전까지 운영/검증 도구로 유지 |
-| `README.md` | 최신 상태 요약 | v268 기준으로 갱신 대상 |
+| `README.md` | 최신 상태 요약 | v269 기준으로 갱신 대상 |
 | `README_BACKEND_READY.md` | 백엔드 readiness 요약 | 현상 유지 |
-| `NEXT_CHAT_HANDOFF.md` | 다음 채팅 인수인계 | v268 완료 후 갱신 대상 |
-| `NEXT_CHAT_PROMPT.md` | 다음 채팅 시작 프롬프트 | v268 완료 후 갱신 대상 |
+| `NEXT_CHAT_HANDOFF.md` | 다음 채팅 인수인계 | v269 완료 후 갱신 대상 |
+| `NEXT_CHAT_PROMPT.md` | 다음 채팅 시작 프롬프트 | v269 완료 후 갱신 대상 |
 | `docker-compose.yml` | 로컬 PostgreSQL/Adminer 실행 설정 | DB 실제 도입 전까지 현상 유지 |
 
 ## `backend/` 역할
@@ -105,7 +109,7 @@ backend/
 
 ## `src/` 역할
 
-현재 Vue 앱이 아니라 브라우저에서 직접 읽는 legacy JS/CSS 모듈입니다.
+현재 `src/`는 Vue 앱 폴더가 아닙니다. 브라우저에서 `admin.html`과 `index.html`이 직접 읽는 legacy JS/CSS 모듈입니다.
 
 ```txt
 src/
@@ -143,6 +147,7 @@ tools/
 ├── run_smoke_core.sh
 ├── run_smoke_all.sh
 ├── check_backend_ready.py
+├── report_legacy_path_dependencies.py
 ├── contracts/
 └── smoke/
 ```
@@ -161,6 +166,14 @@ bash tools/run_smoke_core.sh
 python -m compileall -q backend/app backend/scripts tools
 ```
 
+legacy 경로 의존성 보고서 검사:
+
+실행 위치: 프로젝트 루트
+
+```bash
+python tools/report_legacy_path_dependencies.py --check
+```
+
 ## `docs/` 역할
 
 ```txt
@@ -172,28 +185,43 @@ docs/
 └── *.md
 ```
 
-| 경로 | 역할 | v268 판단 |
+| 경로 | 역할 | v269 판단 |
 |---|---|---|
 | `docs/current/` | 현재 기준 문서 | 앞으로 우선 갱신할 canonical 문서 |
+| `docs/current/LEGACY_PATH_DEPENDENCIES.md` | legacy 경로 자동 분석 보고서 | Vue 전환 전 필수 참고 문서 |
 | `docs/handoff/` | 다음 채팅 인수인계 복사본 | 루트 handoff 문서와 함께 유지 |
 | `docs/contracts/` | admin contract registry 문서/JSON | contract 추가 시 동기화 대상 |
 | `docs/archive/stage-notes/` | 과거 단계 문서 | 실제 이동은 smoke 영향 확인 후 진행 |
 | `docs/*.md` | 단계별 기록 문서 | 당장 삭제/이동하지 않고 archive 계획만 먼저 작성 |
 
-## v268 구조 점검에서 확인한 경로 의존성
+## v269 자동 분석 결과 요약
 
-아래 숫자는 v268 ZIP에서 단순 텍스트 검색으로 확인한 참고값입니다. 정식 contract는 아니지만, 대이동 위험도를 판단하는 근거입니다.
+자세한 내용은 `docs/current/LEGACY_PATH_DEPENDENCIES.md`를 봅니다.
 
-| 경로/문자열 | 참조 수 | 참조 파일 수 | 판단 |
-|---|---:|---:|---|
-| `admin.html` | 166 | 84 | 관리자 smoke가 강하게 의존하므로 당장 이동 금지 |
-| `index.html` | 82 | 48 | 게임 smoke와 관리자 URL helper가 의존하므로 당장 이동 금지 |
-| `src/api` | 589 | 167 | frontend/admin smoke가 강하게 의존하므로 당장 이동 금지 |
-| `src/api/admin` | 352 | 128 | 관리자 helper split smoke가 직접 확인하므로 당장 이동 금지 |
-| `backend/app/api/routes` | 350 | 73 | route contract가 직접 확인하므로 당장 이동 금지 |
-| `backend/app/services` | 258 | 89 | service split contract가 직접 확인하므로 당장 이동 금지 |
-| `backend/seeds` | 30 | 10 | seed 관련 검증/문서가 참조하므로 변경 금지 |
-| `tools/run_smoke_core.sh` | 75 | 70 | 새 contract 등록 시 core smoke 포함 여부를 검사하므로 유지 |
+핵심 결론:
+
+- `admin.html`은 관리자 smoke와 문서가 많이 참조하므로 이동 금지입니다.
+- `index.html`은 게임 smoke와 HTML 직접 로드 관계가 있으므로 이동 금지입니다.
+- 기존 `src/`는 Vue 앱용 `src/`가 아니라 legacy JS/CSS 루트입니다.
+- `backend/app/api/routes/`와 `backend/app/services/`는 backend contract가 직접 확인하므로 이동 금지입니다.
+- `tools/run_smoke_core.sh`와 `tools/smoke/`는 검증 기준이므로 유지합니다.
+
+## Vue 앱 생성 위치 결정
+
+새 Vue 앱은 다음 위치가 안전합니다.
+
+```txt
+frontend/vue-app/
+```
+
+아직 생성하지 않았습니다.
+
+이 위치를 선택한 이유:
+
+- 기존 root `src/`와 Vue app `src/` 충돌 방지
+- 기존 legacy smoke 유지
+- 기존 `admin.html`/`index.html` 유지
+- 추후 Vue shell 검증과 legacy smoke 분리 가능
 
 ## Vue 전환 시 보존/이식/대체 후보
 
@@ -224,9 +252,9 @@ docs/
 
 ## 다음 구조 변경 전 체크리스트
 
-1. `admin.html` script 경로를 바꾸지 않고 Vue shell을 새로 만들 수 있는지 확인합니다.
-2. `index.html`을 이동하지 않고 Vue 앱을 별도 폴더에 만들 수 있는지 확인합니다.
-3. `tools/smoke/**/*.js`, `tools/smoke/**/*.py`에서 직접 읽는 경로를 목록화합니다.
+1. `python tools/report_legacy_path_dependencies.py --check`를 통과시킵니다.
+2. `admin.html` script 경로를 바꾸지 않고 Vue shell을 새로 만들 수 있는지 확인합니다.
+3. `index.html`을 이동하지 않고 Vue 앱을 별도 폴더에 만들 수 있는지 확인합니다.
 4. route path/API response body는 변경하지 않습니다.
 5. 새 Contract가 필요하면 실제 실행 결과를 먼저 수집합니다.
 6. core smoke가 끝까지 통과하기 전 ZIP을 만들지 않습니다.

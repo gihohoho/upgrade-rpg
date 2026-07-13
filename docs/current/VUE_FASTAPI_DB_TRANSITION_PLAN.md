@@ -1,15 +1,16 @@
-# Vue/FastAPI/DB 전환 준비 계획 — v268
+# Vue/FastAPI/DB 전환 준비 계획 — v269
 
 ## 목적
 
 지금까지 만든 HTML/JS 기반 게임과 관리자 도구를 바로 갈아엎지 않고, 검증된 기능과 계약을 보존한 상태에서 Vue + FastAPI + PostgreSQL 구조로 옮길 준비를 합니다.
 
-v268의 핵심 결론은 다음입니다.
+v269의 핵심 결론은 다음입니다.
 
 - 실제 파일 대이동은 아직 하지 않습니다.
-- `admin.html`, `index.html`, `src/`, `backend/`, `tools/` 경로 의존성이 매우 큽니다.
-- 먼저 현재 구조/역할/경로 의존성을 문서화했습니다.
-- 다음 단계부터는 새 Vue 앱을 “기존 legacy 옆에” 만드는 방식이 가장 안전합니다.
+- `admin.html`, `index.html`, `src/`, `backend/`, `tools/` 경로 의존성이 큽니다.
+- legacy 경로 의존성을 자동 목록화하는 도구를 추가했습니다.
+- 새 Vue 앱 위치는 `frontend/vue-app/`로 결정했습니다.
+- 다음 단계에서 사용자 승인 후 Vue 기본 shell만 생성하는 것이 안전합니다.
 
 ## 절대 원칙
 
@@ -39,25 +40,73 @@ v268의 핵심 결론은 다음입니다.
 | `src/ui/` | legacy DOM 렌더링 | Vue component로 대체 후보 |
 | `src/styles/` | legacy CSS | 점진 분해 후보 |
 
-## v268에서 확인한 이동 위험도
+## v269 자동 분석 도구
 
-`tools/smoke`와 문서/코드가 아래 경로를 직접 읽거나 문자열로 확인합니다.
+추가한 도구:
 
-| 경로/문자열 | 참조 수 | 참조 파일 수 | 위험도 |
-|---|---:|---:|---|
-| `admin.html` | 166 | 84 | 매우 높음 |
-| `index.html` | 82 | 48 | 높음 |
-| `src/api` | 589 | 167 | 매우 높음 |
-| `src/api/admin` | 352 | 128 | 매우 높음 |
-| `backend/app/api/routes` | 350 | 73 | 매우 높음 |
-| `backend/app/services` | 258 | 89 | 매우 높음 |
-| `tools/run_smoke_core.sh` | 75 | 70 | 매우 높음 |
+```txt
+tools/report_legacy_path_dependencies.py
+```
 
-따라서 “폴더를 예쁘게 옮기는 작업”은 지금 하면 위험합니다. 먼저 새 구조를 옆에 만들고, 기존 구조는 그대로 두는 방식으로 가야 합니다.
+생성 문서:
+
+```txt
+docs/current/LEGACY_PATH_DEPENDENCIES.md
+```
+
+실행 위치: 프로젝트 루트
+
+```bash
+python tools/report_legacy_path_dependencies.py --write
+```
+
+검사만 할 때:
+
+실행 위치: 프로젝트 루트
+
+```bash
+python tools/report_legacy_path_dependencies.py --check
+```
+
+이 도구는 새 contract가 아닙니다. 구조 전환 전에 “어떤 경로를 움직이면 위험한지” 확인하기 위한 보조 도구입니다.
+
+## Vue 앱 위치 결정
+
+결정:
+
+```txt
+frontend/vue-app/
+```
+
+### 선택 이유
+
+- 기존 `src/`는 Vue 소스가 아니라 legacy 브라우저 JS/CSS입니다.
+- `admin.html`과 `index.html`이 `src/...` 파일을 직접 로드합니다.
+- Vue/Vite 기본 구조도 `src/`를 쓰기 때문에 root `src/`를 재사용하면 혼란과 smoke 실패 가능성이 큽니다.
+- `frontend/vue-app/`는 기존 legacy를 건드리지 않고 Vue shell을 만들 수 있습니다.
+
+### v270에서 만들 구조 초안
+
+```txt
+frontend/vue-app/
+├── package.json
+├── vite.config.js
+├── index.html
+└── src/
+    ├── app/
+    ├── pages/
+    │   ├── AdminShell.vue
+    │   └── GameShell.vue
+    ├── components/
+    ├── api/
+    ├── stores/
+    ├── router/
+    └── styles/
+```
 
 ## 권장 최종 구조 초안
 
-아래는 목표 구조 초안입니다. v268에서는 아직 만들지 않았습니다.
+아래는 목표 구조 초안입니다. v269에서는 아직 만들지 않았습니다.
 
 ```txt
 .
@@ -67,39 +116,19 @@ v268의 핵심 결론은 다음입니다.
 │   └── src/
 ├── frontend/
 │   └── vue-app/
-│       ├── package.json
-│       ├── vite.config.js
-│       └── src/
-│           ├── app/
-│           ├── pages/
-│           ├── components/
-│           ├── api/
-│           ├── stores/
-│           ├── router/
-│           └── styles/
 ├── backend/
-│   └── app/
-│       ├── api/
-│       │   └── v1/
-│       │       ├── admin/
-│       │       ├── game/
-│       │       └── auth/
-│       ├── core/
-│       ├── models/
-│       ├── schemas/
-│       ├── services/
-│       ├── repositories/
-│       └── contracts/
 ├── docs/
 └── tools/
 ```
 
-단, 실제 이동은 아래 순서가 끝난 뒤에만 진행합니다.
+단, `legacy/`로 실제 이동하는 작업은 아직 하지 않습니다.
 
-1. 기존 smoke가 직접 읽는 경로 전체 목록화
-2. 새 위치에서 legacy 경로를 어떻게 유지할지 결정
-3. 임시 alias/copy/symlink 중 안전한 방식 결정
-4. core smoke 통과
+먼저 다음이 필요합니다.
+
+1. Vue shell 생성
+2. legacy smoke 유지 확인
+3. Vue 기본 검증 추가
+4. alias/copy/symlink 전략 검토
 5. 사용자 승인
 
 ## 단계별 전환 로드맵
@@ -122,42 +151,25 @@ v268의 핵심 결론은 다음입니다.
 
 ### Phase 1 — 구조/경로 의존성 문서화
 
-v268에서 시작한 단계입니다.
+v268에서 시작했고 v269에서 자동화했습니다.
 
-완료/진행:
+완료:
 
 - 현재 파일/폴더 역할 정리
 - Vue 이식/legacy 보존 대상 분류
-- smoke 경로 의존성 1차 분석
+- smoke 경로 의존성 분석
+- 자동 보고서 생성 도구 추가
 - 실제 이동 보류 결정
 
-다음 보완:
-
-- `tools/smoke/**/*.js`, `tools/smoke/**/*.py`가 직접 읽는 경로를 자동 목록화하는 점검 스크립트 추가 검토
-- 문서 archive 정책 확정
-
 ### Phase 2 — Vue 앱 초기 세팅 준비
+
+다음 v270 후보입니다.
 
 권장 방식:
 
 - 기존 root `admin.html`/`index.html`은 유지합니다.
 - 새 Vue 앱은 `frontend/vue-app/`에 별도로 만듭니다.
 - 처음에는 기존 화면을 대체하지 않고 “껍데기 shell”만 만듭니다.
-
-초기 후보 구조:
-
-```txt
-frontend/vue-app/src/
-├── app/
-├── pages/
-│   ├── AdminPage.vue
-│   └── GamePage.vue
-├── components/
-├── api/
-├── stores/
-├── router/
-└── styles/
-```
 
 주의:
 
@@ -177,57 +189,32 @@ frontend/vue-app/src/
 계획:
 
 - Vue용 API client를 새로 만들되, 기존 API route와 response body를 그대로 사용합니다.
-- 인증 도입 전에는 인증 없는 API client부터 만듭니다.
-- 인증 토큰/interceptor는 별도 단계에서 설계합니다.
+- 인증 도입 전에는 인증 없는 API client shell만 준비합니다.
+- 인증/토큰/interceptor는 별도 승인 후 진행합니다.
 
 ### Phase 4 — 관리자 페이지 Vue 이식 계획
 
-관리자 이식 우선순위:
+순서:
 
-1. 읽기 전용 overview/readiness
-2. 마스터 데이터 카탈로그
-3. 상세 조회
-4. Preview 결과 공통 렌더러
-5. Diff/Snapshot 공통 렌더러
-6. 신규 row 생성 Preview
-7. 기존 row 편집 Preview
-8. ChangeLog/Rollback Preview
-9. 실제 Apply/write 계열은 마지막
-
-안전 원칙:
-
-- Preview/Apply 요청 body는 기존과 동일해야 합니다.
-- Write Guard는 유지해야 합니다.
-- 실제 write 로직은 사용자가 명시 승인하기 전 변경하지 않습니다.
+1. AdminShell 생성
+2. 읽기 전용 catalog/detail만 shell에 배치
+3. 기존 `admin.html` 유지
+4. Preview 기능 이식 전 요청 body/response body 계약 재검증
+5. Apply/write 관련 기능은 가장 마지막에 이식
 
 ### Phase 5 — 게임 화면 Vue 이식 계획
 
-게임 콘텐츠 개발은 보류합니다.
+순서:
 
-이식 순서 후보:
-
-1. 게임 상태 표시 UI
-2. 인벤토리/장비 UI
-3. 전투 로그/결과 UI
-4. 필드/보스 선택 UI
-5. 강화/스킬 UI
-6. save/load UI
-
-주의:
-
-- 장비/스킬/보스/필드/드랍/밸런스 수치 추가/변경 금지
-- 먼저 legacy와 같은 결과를 내는지 확인합니다.
+1. GameShell 생성
+2. HUD/layout부터 component화
+3. 기존 state/rules/systems는 domain module로 먼저 보존
+4. DOM 직접 조작을 Vue component로 대체
+5. 저장/로드/슬롯 검증 후 전환
 
 ### Phase 6 — PostgreSQL/Alembic 준비
 
-현재 존재:
-
-- `docker-compose.yml`
-- `backend/alembic/`
-- `backend/alembic.ini`
-- `backend/app/db/`
-- `backend/seeds/generated/`
-- `backend/sql/schema_draft.sql`
+현재 DB 도입 준비 파일은 있으나 실제 DB 구조 변경은 하지 않습니다.
 
 도입 원칙:
 
@@ -288,16 +275,17 @@ frontend/vue-app/src/
 1. `docs/current/`를 현재 기준 canonical 문서로 사용합니다.
 2. `docs/handoff/`는 다음 채팅용 복사본으로 유지합니다.
 3. 오래된 단계 문서는 `docs/archive/stage-notes/`로 이동하되, 먼저 smoke 영향 확인을 합니다.
-4. 문서 이동 후에는 `tools/smoke/game/smoke_docs_index_archive.js`를 반드시 확인합니다.
+4. 문서 이동 후에는 관련 smoke를 반드시 확인합니다.
 5. 문서 이동은 한 번에 많이 하지 말고 묶음별로 진행합니다.
 
 ## 다음 작업 권장
 
-다음 단계는 `v269 legacy 경로 의존성 자동 목록화 + Vue 앱 생성 위치 결정`입니다.
+다음 단계는 `v270 Vue 앱 기본 shell 생성`입니다.
 
-v269에서 할 일:
+v270에서 할 일:
 
-1. smoke가 직접 읽는 파일 경로 목록을 자동 추출합니다.
-2. `frontend/vue-app/` 생성 여부를 결정합니다.
-3. Vue 앱을 만들더라도 legacy 동작은 건드리지 않습니다.
-4. 새 Vue 앱 생성 후에는 기존 core smoke와 별도 Vue 기본 검증을 나눠 실행합니다.
+1. 사용자 승인 후 `frontend/vue-app/` 생성
+2. Vue/Vite 기본 실행 확인
+3. legacy smoke와 Vue smoke 분리
+4. 기존 `admin.html`/`index.html`/`src/` 유지
+5. DB/env/seed/auth/API/write 로직 변경 없음

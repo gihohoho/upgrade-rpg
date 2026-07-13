@@ -1,37 +1,53 @@
 # tools
 
-이 폴더는 개발/검증용 보조 스크립트를 모아둔 곳입니다.
-게임 실행 코드에는 직접 포함되지 않습니다.
+이 폴더는 Upgrade RPG 프로젝트의 검증/보조 스크립트를 모아둔 곳입니다.
 
-## 빠른 smoke test
+## 핵심 smoke
 
-자주 쓰는 핵심 검사만 실행합니다.
+실행 위치: 프로젝트 루트
 
 ```bash
-# 위치: 프로젝트 루트
 bash tools/run_smoke_core.sh
 ```
 
-전체 smoke test를 실행합니다.
+## 전체 smoke
+
+실행 위치: 프로젝트 루트
 
 ```bash
-# 위치: 프로젝트 루트
 bash tools/run_smoke_all.sh
 ```
 
-## 백엔드 live check
+## backend readiness 확인
 
-FastAPI 서버와 Docker PostgreSQL이 켜져 있을 때 실행합니다.
+실행 위치: 프로젝트 루트
 
 ```bash
-# 위치: backend 폴더 + 가상환경 activate 상태
-python scripts/check_admin_readonly_api.py
+python tools/check_backend_ready.py
 ```
 
-## 기타 주요 도구
+## legacy 경로 의존성 보고서
+
+v269에서 추가한 구조 전환 보조 도구입니다.
+
+실행 위치: 프로젝트 루트
+
+```bash
+python tools/report_legacy_path_dependencies.py --write
+```
+
+보고서가 최신인지 확인할 때:
+
+실행 위치: 프로젝트 루트
+
+```bash
+python tools/report_legacy_path_dependencies.py --check
+```
+
+생성되는 문서:
 
 ```txt
-check_backend_ready.py        로컬 백엔드/Docker/PostgreSQL 준비 상태 점검
-extract_seed_data.js          현재 JS 마스터 데이터를 JSON seed로 추출
-smoke_*.js / smoke_*.py       단계별 정적 smoke test
+docs/current/LEGACY_PATH_DEPENDENCIES.md
 ```
+
+이 도구는 새 contract가 아닙니다. Vue/FastAPI/DB 전환 전에 기존 legacy 경로를 움직여도 되는지 판단하기 위한 보조 도구입니다.

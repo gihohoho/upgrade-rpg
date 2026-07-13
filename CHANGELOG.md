@@ -1,3 +1,10 @@
+## v269.legacy-path-dependency-report
+
+- Added `tools/report_legacy_path_dependencies.py` to generate/check a legacy path dependency report before Vue/FastAPI/DB transition work.
+- Added `docs/current/LEGACY_PATH_DEPENDENCIES.md` with current high-risk legacy path references, HTML direct-load relationships, and core smoke path dependencies.
+- Decided that the future Vue app should be created under `frontend/vue-app/` instead of reusing the root `src/` folder.
+- Kept `admin.html`, `index.html`, existing `src/`, backend routes/services, DB, env, seed, auth, API response bodies, write guards, and actual write logic unchanged.
+
 ## v268 - Project structure transition prep
 
 - 현재 ZIP 기준으로 `admin.html`, `index.html`, `src`, `backend`, `tools`, `docs`의 역할을 다시 정리했습니다.
