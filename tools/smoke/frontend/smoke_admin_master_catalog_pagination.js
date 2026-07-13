@@ -46,7 +46,7 @@ assertContains("src/api/game-api-client.js", [
 
 assertContains("src/api/admin-page-readonly.js", [
   "v165.admin-create-apply-limited",
-  "const DEFAULT_MASTER_LIMIT = 20",
+  "const DEFAULT_MASTER_LIMIT = 10",
   'const DEFAULT_MASTER_SORT = "id_asc"',
   "data-admin-master-page",
   "renderMasterCatalogPagination",
@@ -59,7 +59,7 @@ assertContains("admin.html", [
   "data-admin-master-page",
   "data-admin-master-catalog-pagination",
   "catalog-pagination",
-  '<option value="20" selected>20</option>',
+  '<option value="10" selected>10</option>',
   '<option value="id_asc" selected>ID순</option>',
 ]);
 

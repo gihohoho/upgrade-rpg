@@ -81,7 +81,7 @@ assertContains("tools/run_smoke_core.sh", [
 const masterCatalogText = read("src/api/admin/admin-master-catalog.js");
 const fakeElements = new Map([
   ["[data-admin-master-domain]", { value: "skills", innerHTML: "" }],
-  ["[data-admin-master-limit]", { value: "20" }],
+  ["[data-admin-master-limit]", { value: "10" }],
   ["[data-admin-master-query]", { value: "fire" }],
   ["[data-admin-master-enabled]", { value: "all" }],
   ["[data-admin-master-sort]", { value: "id_asc" }],
@@ -116,7 +116,7 @@ assert(sandbox.RpgAdminMasterCatalog, "RpgAdminMasterCatalog was not registered 
 sandbox.RpgAdminMasterCatalog.configure({
   querySelector: sandbox.document.querySelector.bind(sandbox.document),
   DEFAULT_MASTER_DOMAIN: "itemTemplates",
-  DEFAULT_MASTER_LIMIT: 20,
+  DEFAULT_MASTER_LIMIT: 10,
   DEFAULT_MASTER_SORT: "id_asc",
 });
 const readiness = sandbox.RpgAdminMasterCatalog.getReadiness({ log: false });

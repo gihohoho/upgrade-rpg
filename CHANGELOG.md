@@ -1,3 +1,30 @@
+## v260 - Admin catalog date/limit/json keys UX
+
+- `마스터 데이터 카탈로그`의 수정 시각 계열 셀은 화면에 `YYYY-MM-DD` 일자만 표시하고, 값 옆 `?` tooltip에서 초 단위 상세 시각을 확인하도록 정리했습니다.
+- 카탈로그 `표시 개수` 선택지를 `10`, `30`, `50`, `100` 네 개로 제한하고 기본값을 `10`으로 변경했습니다.
+- `JSON 키` 셀은 앞 3개 키만 chip으로 표시하고 남은 키는 `외 N개`로 접으며, 전체 키 목록은 `?` tooltip에서 확인하도록 변경했습니다.
+- 새 문서 `docs/ADMIN_CATALOG_DATE_LIMIT_JSON_KEYS_UX.md`를 추가했습니다.
+- DB/env/seed/API body/route/auth/write guard/실제 write 로직은 변경하지 않았습니다.
+
+## v259 - Admin catalog compact help UX
+
+- `마스터 데이터 카탈로그` 필터와 결과 목록을 하나의 섹션으로 합쳐 같은 탭 안에서 조회 조건과 결과를 확인하도록 정리했습니다.
+- 카탈로그 셀의 긴 설명문을 제거하고 `normal · 일반 장비`, `6 · 특수무기`처럼 핵심 라벨만 표시하도록 변경했습니다.
+- 자세한 설명은 표 제목/입력칸 옆 `?` 도움말과 tooltip으로 이동했습니다.
+- `필드 용어 도움말`을 기본 필드, 아이템·장비, 스킬·전투·보상, 관계·드랍·강화 기준으로 확장했습니다.
+- `formatCatalogCellValue()`를 추가해 카탈로그/관계 표가 공통 compact 표시 규칙을 사용하도록 했습니다.
+- 새 Smoke `smoke_admin_catalog_help_compact_ux.js`를 추가하고 전체 Smoke에 포함했습니다.
+- DB/env/seed/API body/route/auth/write guard/실제 write 로직은 변경하지 않았습니다.
+
+## v258 - Admin workspace navigation UX
+
+- 관리자 페이지 상단에 `Admin Workspace` 작업 시작 허브를 추가했습니다.
+- 조회·상세 확인, 신규 row 생성, 편집·적용 검토, Preview 화면 점검, 변경 이력·Rollback 5개 업무 모드로 화면 진입점을 분리했습니다.
+- 업무 모드를 누르면 관련 섹션만 펼쳐지고, 확인 순서/주의사항/주요 버튼을 안내하는 모달이 표시됩니다.
+- 사이드바에도 업무 모드 바로가기를 추가해 긴 관리자 페이지에서 목적지를 빠르게 찾을 수 있습니다.
+- 전체 보기/보조 섹션 접기 버튼을 추가해 한 화면에 너무 많은 정보가 보이는 문제를 줄였습니다.
+- 새 UI는 `src/api/admin/admin-workspace-navigation.js`에 분리했으며 API 호출, fetch, apply/write helper 호출을 하지 않습니다.
+- DB/env/seed/API body/route/auth/write guard/실제 write 로직은 변경하지 않았습니다.
 
 ## v257 - Admin readiness pageReady alias
 

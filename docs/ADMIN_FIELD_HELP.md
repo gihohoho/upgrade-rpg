@@ -48,3 +48,30 @@ v120 단계에서는 관리자 페이지에서 자주 헷갈리는 마스터 데
 - 쓰기 API 추가 없음
 
 DB reset/seed는 필요 없습니다.
+
+## v259 compact catalog help update
+
+관리자 카탈로그 목록은 긴 설명문을 직접 표시하지 않고 핵심 라벨만 보여준다.
+
+예시:
+
+- `normal · 일반 장비`
+- `skill_book · 스킬강화권`
+- `6 · 특수무기`
+- `true · 겹치기 가능`
+
+자세한 설명은 다음 위치에서 확인한다.
+
+- 카탈로그 표 제목 옆 `?` 배지
+- 편집 초안 입력칸 옆 `?` 배지
+- compact 값의 tooltip
+- `필드 용어 도움말` 섹션
+
+필드 도움말은 v259에서 다음 그룹으로 확장했다.
+
+- 기본 필드: `id`, `code`, `name`, `description`, `grade`, `is_enabled`, `sort_order`, `admin_note`
+- 아이템/장비: `item_type`, `equip_slot`, `stackable`, `enhance_group_code`, `base_stats`, `options`, `json_keys`
+- 스킬/전투/보상: `slot_key`, `proc_rate`, `proc_rate_bonus`, `cooldown_seconds`, `damage_multiplier`, `hp`, `enemy_hp`, `gold_reward`
+- 관계/드랍/강화: `owner_type`, `owner_code`, `drop_table_code`, `item_template_code`, `rate`, `min_quantity`, `max_quantity`, `from_level`, `to_level`, `success_rate`, `gold_cost`, `character_code`, `skill_code`
+
+이 작업은 화면 설명과 표시 방식만 바꾸며 DB reset/seed는 필요 없습니다.

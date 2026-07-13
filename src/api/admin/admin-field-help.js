@@ -118,6 +118,142 @@
       body: "이 마스터 데이터를 실제 게임 기준 데이터로 사용할지 여부입니다. false면 관리자에는 남아 있어도 게임 적용 대상에서 제외할 수 있습니다.",
       example: "테스트용/미사용 데이터는 false로 두는 식으로 활용합니다.",
     },
+    id: {
+      title: "id / 내부 숫자 ID",
+      body: "DB row를 구분하는 내부 숫자입니다. 관리자가 직접 의미를 부여하기보다는 상세 조회, 변경 이력, relation 연결 확인용으로 봅니다.",
+      example: "같은 도메인 안에서 id는 하나만 존재합니다.",
+    },
+    code: {
+      title: "code / 연결 코드",
+      body: "다른 마스터 데이터가 이 row를 찾을 때 쓰는 고유 문자열입니다. 이름보다 더 중요한 연결 기준이라 변경 시 relation과 드랍/스킬 연결을 함께 확인해야 합니다.",
+      example: "dropTables.owner_code, itemTemplates.code, skills.code 같은 필드가 서로 연결됩니다.",
+    },
+    name: {
+      title: "name / 표시 이름",
+      body: "관리자와 게임 화면에서 사람이 읽는 이름입니다. code와 달리 표시용이지만, 드랍명/툴팁/목록 노출에 영향을 줄 수 있습니다.",
+      example: "예: 초보자 스태프, 고블린 왕, 화염구",
+    },
+    description: {
+      title: "description / 설명",
+      body: "관리자 또는 게임 화면 설명으로 쓰는 문장입니다. 긴 안내문은 UI가 길어질 수 있으니 핵심만 유지하는 편이 좋습니다.",
+      example: "보스/필드/스킬 설명에 사용합니다.",
+    },
+    tier: {
+      title: "tier / 진행 티어",
+      body: "보스나 아이템이 어느 진행 구간에 속하는지 나타내는 숫자입니다. 난이도와 보상 단계 조정 기준으로 봅니다.",
+      example: "tier 1=초반, tier 10+=상위 구간",
+    },
+    hp: {
+      title: "hp / 보스 체력",
+      body: "보스의 체력 기준값입니다. 쿨타임, 드랍률, 보상과 함께 조정해야 체감 난이도가 안정적입니다.",
+      example: "bosses.hp",
+    },
+    enemyhp: {
+      title: "enemy hp / 필드 몬스터 체력",
+      body: "필드 사냥 대상의 체력 기준값입니다. 골드 보상과 함께 성장 속도에 직접 영향을 줍니다.",
+      example: "fieldZones.enemy_hp",
+    },
+    goldreward: {
+      title: "gold reward / 골드 보상",
+      body: "필드나 전투에서 얻는 골드 기준값입니다. 체력 대비 보상이 너무 높으면 성장 속도가 급격히 빨라질 수 있습니다.",
+      example: "fieldZones.gold_reward",
+    },
+    procrate: {
+      title: "proc rate / 발동 확률",
+      body: "스킬이나 효과가 발동할 기본 확률입니다. 장비/스킬레벨 보너스와 합산되어 최종 발동률 표시로 이어질 수 있습니다.",
+      example: "0.15라면 15% 계열 값으로 해석합니다.",
+    },
+    procratebonus: {
+      title: "proc rate bonus / 발동 확률 추가값",
+      body: "스킬 레벨이나 장비가 기본 발동률에 더해주는 추가 확률입니다. 최종 발동률 계산에 포함됩니다.",
+      example: "기본 발동률 + 추가 발동률 형태로 표시할 때 사용합니다.",
+    },
+    cooldownseconds: {
+      title: "cooldown seconds / 쿨타임 초",
+      body: "스킬 사용 또는 보스 재등장에 필요한 대기 시간입니다. 단위는 초입니다.",
+      example: "30이면 30초입니다.",
+    },
+    damagemultiplier: {
+      title: "damage multiplier / 피해 배율",
+      body: "스킬 레벨별 피해 배율입니다. 값이 커질수록 전투 밸런스에 직접 영향을 줍니다.",
+      example: "1.25는 125% 계열 배율로 봅니다.",
+    },
+    isdefault: {
+      title: "is default / 기본 장착 여부",
+      body: "캐릭터가 해당 스킬을 기본으로 가지고 시작하는지 나타냅니다.",
+      example: "characterSkills.is_default",
+    },
+    ownertype: {
+      title: "owner type / 드랍 소유자 종류",
+      body: "드랍 테이블이 보스 소유인지 필드 소유인지 구분합니다. owner_code가 어느 도메인의 code를 바라볼지 결정합니다.",
+      example: "boss=보스 드랍, field=필드 드랍",
+    },
+    ownercode: {
+      title: "owner code / 드랍 소유자 코드",
+      body: "owner_type에 따라 bosses.code 또는 fieldZones.code를 바라보는 연결 코드입니다.",
+      example: "owner_type=boss이면 boss code, field이면 field zone code",
+    },
+    itemtemplatecode: {
+      title: "item template code / 드랍 아이템 코드",
+      body: "드랍 테이블에서 실제로 떨어질 itemTemplates.code를 연결합니다.",
+      example: "dropTableItems.item_template_code",
+    },
+    rate: {
+      title: "rate / 드랍 또는 성공 확률",
+      body: "확률 계열 숫자입니다. 도메인에 따라 드랍 확률이나 성공 확률로 쓰입니다.",
+      example: "dropTableItems.rate, enhancementLevels.success_rate",
+    },
+    minquantity: {
+      title: "min quantity / 최소 수량",
+      body: "드랍 성공 시 최소로 지급되는 수량입니다. max_quantity보다 클 수 없습니다.",
+      example: "강화권 1~3개 드랍이면 min=1",
+    },
+    maxquantity: {
+      title: "max quantity / 최대 수량",
+      body: "드랍 성공 시 최대로 지급되는 수량입니다. min_quantity와 함께 보상량을 결정합니다.",
+      example: "강화권 1~3개 드랍이면 max=3",
+    },
+    maxlevel: {
+      title: "max level / 최대 강화 단계",
+      body: "강화 그룹에서 허용하는 최대 강화 단계입니다. enhancementLevels 규칙과 맞아야 합니다.",
+      example: "max_level=10이면 +10까지 설계된 강화 그룹입니다.",
+    },
+    tolevel: {
+      title: "to level / 강화 도착 단계",
+      body: "강화 성공 시 도착하는 레벨입니다. from_level과 함께 +0→+1 같은 규칙을 만듭니다.",
+      example: "from_level=0, to_level=1",
+    },
+    successrate: {
+      title: "success rate / 강화 성공 확률",
+      body: "강화 단계별 성공 확률입니다. 비용/재료/실패 규칙과 함께 조정해야 합니다.",
+      example: "0.8이면 80% 계열 값으로 봅니다.",
+    },
+    goldcost: {
+      title: "gold cost / 강화 비용",
+      body: "강화를 시도할 때 필요한 골드입니다. 성공률과 함께 체감 난이도를 만듭니다.",
+      example: "enhancementLevels.gold_cost",
+    },
+    updatedat: {
+      title: "updated at / 수정 시각",
+      body: "row가 마지막으로 바뀐 시각입니다. 카탈로그 목록에서는 일자까지만 짧게 보여주고, 값 옆 ? 도움말에서 초 단위 상세 시각을 확인합니다. stale guard나 변경 이력 확인 시 참고합니다.",
+      example: "예: 목록 2026-07-06, ? tooltip 2026-07-06 13:24:51 UTC",
+
+    },
+    jsonkeys: {
+      title: "json keys / JSON 요약 키",
+      body: "원본 JSON 전체를 목록에 노출하지 않고 어떤 JSON 묶음이 있는지만 보여주는 안전 요약입니다. 카탈로그 목록에서는 앞 3개 키와 남은 개수만 짧게 표시하고, ? 도움말에서 전체 키를 확인합니다.",
+      example: "baseStats, options, rules, conditions처럼 긴 키 목록은 칩 3개 + 외 N개로 축약합니다.",
+    },
+    basestats: {
+      title: "base stats / 기본 능력치 JSON",
+      body: "아이템의 기본 능력치 묶음입니다. 긴 JSON은 목록에서 숨기고 상세 미리보기에서만 축약 표시합니다.",
+      example: "공격력, 모든피해, 스킬피해 같은 기본 옵션",
+    },
+    options: {
+      title: "options / 추가 옵션 JSON",
+      body: "아이템/스킬의 추가 동작이나 특수 옵션을 담는 JSON 묶음입니다. 직접 수정 전 Preview Diff를 반드시 확인합니다.",
+      example: "스킬 발동률 증가, 특수 효과, 조건부 옵션 등",
+    },
   };
 
   function configure(deps) {
@@ -222,7 +358,9 @@
   function renderFieldValueHintInline(key, value) {
     const hint = getAdminFieldValueHint(key, value);
     if (!hint) return "";
-    return `<div class="field-value-hint"><strong>${escapeHtml(hint.label)}</strong> — ${escapeHtml(hint.body)}</div>`;
+    const titleText = `${hint.label}
+${hint.body || ""}`;
+    return `<div class="field-value-hint compact" title="${escapeHtml(titleText)}"><strong>${escapeHtml(hint.label)}</strong>${renderFieldHelpBadge(key)}</div>`;
   }
 
   function formatValueWithFieldHint(key, value) {

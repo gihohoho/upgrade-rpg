@@ -1,3 +1,11 @@
+# v258 - Admin Workspace navigation UX
+
+- Added an admin workspace hub that splits the page into task-first modes instead of one long mixed screen.
+- Added five modes: lookup/detail, create row, edit/apply review, Preview verification, and change-log/Rollback.
+- Each mode opens a guidance modal and expands only related sections while preserving all existing routes, response bodies, write guards, and backend behavior.
+- Added `src/api/admin/admin-workspace-navigation.js` and `tools/smoke/frontend/smoke_admin_workspace_navigation.js`.
+- The new navigation layer performs no fetch/API/apply/write calls.
+
 # v256 - Admin Preview live API render check
 
 - Added a read-only live Preview API render check panel to the admin Preview verification section.

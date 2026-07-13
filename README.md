@@ -7,6 +7,7 @@ Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 ## 현재 상태
 
 - 관리자 프론트 thin entry/helper 분리 완료
+- 관리자 페이지 작업 시작 허브/업무 모드/안내 모달 추가
 - `AdminService` facade 및 backend service split 유지
 - 관리자 route module/facade 분리 완료
 - runtime/OpenAPI/response/request/schema 계약 완료

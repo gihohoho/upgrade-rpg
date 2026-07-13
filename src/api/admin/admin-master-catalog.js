@@ -6,7 +6,7 @@
 
   let configured = false;
   let DEFAULT_MASTER_DOMAIN = "itemTemplates";
-  let DEFAULT_MASTER_LIMIT = 20;
+  let DEFAULT_MASTER_LIMIT = 10;
   let DEFAULT_MASTER_SORT = "id_asc";
   let DEFAULT_TIMEOUT_MS = 3500;
   let ADMIN_TO_MASTER_API_FIELD_MAP = {};
@@ -24,6 +24,7 @@
   let renderFieldHelpBadge = () => "";
   let renderFieldHelpInline = () => "";
   let getAdminFieldHelp = () => null;
+  let getAdminFieldValueHint = () => null;
   let renderMasterEditDraft = () => "";
   let ensureApi = () => {
     if (!window.RpgGameApi) throw new Error("RpgGameApi is not loaded");
@@ -48,6 +49,7 @@
     if (typeof d.renderFieldHelpBadge === "function") renderFieldHelpBadge = d.renderFieldHelpBadge;
     if (typeof d.renderFieldHelpInline === "function") renderFieldHelpInline = d.renderFieldHelpInline;
     if (typeof d.getAdminFieldHelp === "function") getAdminFieldHelp = d.getAdminFieldHelp;
+    if (typeof d.getAdminFieldValueHint === "function") getAdminFieldValueHint = d.getAdminFieldValueHint;
     if (typeof d.renderMasterEditDraft === "function") renderMasterEditDraft = d.renderMasterEditDraft;
     if (typeof d.ensureApi === "function") ensureApi = d.ensureApi;
     if (typeof d.setStatus === "function") setStatus = d.setStatus;
@@ -203,6 +205,68 @@ async function refreshMasterCatalogWithPage(page) {
     });
   }
 
+
+function normalizeCatalogFieldKey(key) {
+    return String(key || "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+  }
+
+function isCatalogUpdatedAtField(key) {
+    const normalized = normalizeCatalogFieldKey(key);
+    return normalized === "updatedat" || normalized === "modifiedat" || normalized === "updated";
+  }
+
+function isCatalogJsonKeysField(key) {
+    const normalized = normalizeCatalogFieldKey(key);
+    return normalized === "jsonkeys" || normalized.endsWith("jsonkeys");
+  }
+
+function formatCatalogTimestampDetail(value) {
+    if (value === null || value === undefined || value === "") return { dateOnly: "-", fullText: "상세 수정 시각 없음" };
+    const raw = String(value);
+    const dateMatch = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+    const dateOnly = dateMatch ? dateMatch[1] : formatValue(value);
+    let fullText = raw.replace("T", " ").replace(/\.\d+/, "");
+    fullText = fullText.replace(/Z$/, " UTC");
+    const timeMatch = fullText.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})(?!:)/);
+    if (timeMatch) fullText = fullText.replace(timeMatch[0], `${timeMatch[1]} ${timeMatch[2]}:00`);
+    return { dateOnly, fullText };
+  }
+
+function formatCatalogUpdatedAtCell(value) {
+    const time = formatCatalogTimestampDetail(value);
+    if (time.dateOnly === "-") return escapeHtml(time.dateOnly);
+    return `<span class="catalog-date-compact"><strong>${escapeHtml(time.dateOnly)}</strong><span class="field-help-badge catalog-time-badge" title="${escapeHtml(`상세 수정 시각\n${time.fullText}`)}">?</span></span>`;
+  }
+
+function extractCatalogJsonKeys(value) {
+    if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
+    if (value === null || value === undefined || value === "") return [];
+    return String(value)
+      .replace(/^\[|\]$/g, "")
+      .split(/[\n,|]/)
+      .map((item) => item.replace(/^['"\s]+|['"\s]+$/g, "").trim())
+      .filter(Boolean);
+  }
+
+function formatCatalogJsonKeysCell(value) {
+    const keys = Array.from(new Set(extractCatalogJsonKeys(value)));
+    if (!keys.length) return `<span class="pill good">JSON 키 없음</span>`;
+    const visible = keys.slice(0, 3);
+    const hiddenCount = Math.max(0, keys.length - visible.length);
+    const fullText = `전체 JSON 키 ${keys.length}개\n${keys.join(", ")}`;
+    return `<span class="json-keys-compact" title="${escapeHtml(fullText)}">${visible.map((key) => `<span class="json-key-chip">${escapeHtml(key)}</span>`).join("")}${hiddenCount ? `<span class="json-key-more">외 ${escapeHtml(hiddenCount)}개</span>` : ""}<span class="field-help-badge catalog-json-keys-badge" title="${escapeHtml(fullText)}">?</span></span>`;
+  }
+
+function formatCatalogCellValue(key, value) {
+    if (isCatalogUpdatedAtField(key)) return formatCatalogUpdatedAtCell(value);
+    if (isCatalogJsonKeysField(key)) return formatCatalogJsonKeysCell(value);
+    const hint = getAdminFieldValueHint(key, value);
+    if (!hint) return escapeHtml(formatValue(value));
+    const titleText = `${hint.label}
+${hint.body || ""}`;
+    return `<span class="field-value-compact" title="${escapeHtml(titleText)}"><strong>${escapeHtml(hint.label)}</strong>${renderFieldHelpBadge(key)}</span>`;
+  }
+
 function renderMasterCatalogTable(catalogPayload) {
     const target = $("[data-admin-master-catalog-table]");
     const meta = $("[data-admin-master-catalog-meta]");
@@ -229,7 +293,7 @@ function renderMasterCatalogTable(catalogPayload) {
             return `
               <tr data-admin-master-row-domain="${escapeHtml(row.domain || catalogPayload.domain || "")}" data-admin-master-row-id="${escapeHtml(row.id)}">
                 <td><button class="btn mini" type="button" data-admin-action="open-master-detail" data-admin-detail-domain="${escapeHtml(row.domain || catalogPayload.domain || "")}" data-admin-detail-id="${escapeHtml(row.id)}">보기</button><span data-admin-master-row-selected></span></td>
-                ${columns.map((column) => `<td>${formatValueWithFieldHint(column.key, cells[column.key])}</td>`).join("")}
+                ${columns.map((column) => `<td>${formatCatalogCellValue(column.key, cells[column.key])}</td>`).join("")}
                 <td><span class="pill ${row.rawJsonReturned ? "blocked" : "good"}">${row.rawJsonReturned ? "returned" : "hidden"}</span></td>
                 <td><span class="pill ${row.assetsReturned ? "blocked" : "good"}">${row.assetsReturned ? "returned" : "hidden"}</span></td>
               </tr>
@@ -564,7 +628,7 @@ function renderMasterRelations(relationsPayload) {
                         <td><button class="btn mini" type="button" data-admin-action="open-master-detail" data-admin-detail-domain="${escapeHtml(row.domain || group.domain || "")}" data-admin-detail-id="${escapeHtml(row.id)}">보기</button></td>
                         <td>${escapeHtml(formatValue(row.id))}</td>
                         <td>${escapeHtml(formatValue(row.title))}</td>
-                        ${columns.map((column) => `<td>${formatValueWithFieldHint(column.key, cells[column.key])}</td>`).join("")}
+                        ${columns.map((column) => `<td>${formatCatalogCellValue(column.key, cells[column.key])}</td>`).join("")}
                       </tr>
                     `;
                   }).join("")}
@@ -664,6 +728,7 @@ async function refreshAdminMasterCatalog(options) {
       "syncMasterDomainOptions",
       "renderMasterTable",
       "renderMasterCatalogTable",
+      "formatCatalogCellValue",
       "openAdminMasterDataDetail",
       "openAdminMasterDataDetailByCode",
       "openAdminMasterDataRelations",
@@ -707,6 +772,7 @@ async function refreshAdminMasterCatalog(options) {
     markSelectedMasterCatalogRow,
     refreshMasterCatalogWithPage,
     renderMasterCatalogTable,
+    formatCatalogCellValue,
     makeAdminDetailFieldMap,
     valuesEqualForApiVerify,
     findMasterApiRow,

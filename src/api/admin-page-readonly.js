@@ -7,7 +7,7 @@
   const DEFAULT_SNAPSHOT_LIMIT = 30;
   const DEFAULT_SNAPSHOT_SORT = "updated_desc";
   const DEFAULT_MASTER_DOMAIN = "itemTemplates";
-  const DEFAULT_MASTER_LIMIT = 20;
+  const DEFAULT_MASTER_LIMIT = 10;
   const DEFAULT_MASTER_SORT = "id_asc";
   const DEFAULT_CHANGE_LOG_LIMIT = 20;
   const DEFAULT_CHANGE_LOG_SORT = "created_desc";
@@ -1198,6 +1198,7 @@
       renderFieldHelpBadge,
       renderFieldHelpInline,
       getAdminFieldHelp,
+      getAdminFieldValueHint,
       renderMasterEditDraft,
       ensureApi,
       setStatus,
