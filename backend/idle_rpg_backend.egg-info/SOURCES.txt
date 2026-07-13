@@ -7,9 +7,11 @@ app/api/router.py
 app/api/routes/__init__.py
 app/api/routes/admin.py
 app/api/routes/admin_change_log_routes.py
+app/api/routes/admin_diff_engine_contract.py
 app/api/routes/admin_master_data_routes.py
 app/api/routes/admin_openapi_route_contract.py
 app/api/routes/admin_overview_snapshot_routes.py
+app/api/routes/admin_preview_side_effect_contract.py
 app/api/routes/admin_request_content_negotiation_contract.py
 app/api/routes/admin_request_header_encoding_contract.py
 app/api/routes/admin_request_media_size_boundary_contract.py
@@ -20,6 +22,7 @@ app/api/routes/admin_response_data_helpers.py
 app/api/routes/admin_response_helpers.py
 app/api/routes/admin_response_meta_helpers.py
 app/api/routes/admin_response_metadata_contract.py
+app/api/routes/admin_rollback_snapshot_contract.py
 app/api/routes/admin_route_error_helpers.py
 app/api/routes/admin_route_map_contract.py
 app/api/routes/admin_route_module_import_contract.py
@@ -29,6 +32,7 @@ app/api/routes/admin_route_services.py
 app/api/routes/admin_runtime_route_contract.py
 app/api/routes/admin_schema_field_constraint_contract.py
 app/api/routes/admin_schema_model_contract.py
+app/api/routes/admin_service_mutation_boundary_contract.py
 app/api/routes/admin_validation_error_compatibility_contract.py
 app/api/routes/admin_write_replay_safety_contract.py
 app/api/routes/game.py
@@ -65,10 +69,13 @@ app/services/admin/__init__.py
 app/services/admin/admin_change_log_service.py
 app/services/admin/admin_config.py
 app/services/admin/admin_create_lifecycle_service.py
+app/services/admin/admin_diff_engine.py
 app/services/admin/admin_edit_draft_service.py
 app/services/admin/admin_master_catalog_service.py
 app/services/admin/admin_overview_snapshots_service.py
+app/services/admin/admin_preview_enrichment.py
 app/services/admin/admin_readiness_service.py
+app/services/admin/admin_rollback_snapshot.py
 app/services/admin/admin_shared_utils.py
 idle_rpg_backend.egg-info/PKG-INFO
 idle_rpg_backend.egg-info/SOURCES.txt

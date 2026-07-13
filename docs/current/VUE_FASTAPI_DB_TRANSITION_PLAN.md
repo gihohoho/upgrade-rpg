@@ -1,13 +1,13 @@
-# Vue/FastAPI/DB 전환 준비 계획 — v271
+# Vue/FastAPI/DB 전환 준비 계획 — v272
 
 ## 목적
 
 기존 HTML/JS 기반 게임과 관리자 도구를 바로 갈아엎지 않고, 검증된 기능과 계약을 보존한 상태에서 Vue + FastAPI + PostgreSQL 구조로 점진 전환합니다.
 
-v271의 핵심 결론:
+v272의 핵심 결론:
 
 - `frontend/vue-app/`에 Vite + Vue 기본 shell이 유지됩니다.
-- v271에서 Vue 읽기 전용 API client 준비 구조를 추가했습니다.
+- v272에서 Vue 읽기 전용 API client 준비 구조를 추가했습니다.
 - 기존 `admin.html`, `index.html`, 루트 `src/`는 그대로 유지했습니다.
 - Vue shell은 route 목록을 보여주지만 아직 자동 API 호출은 하지 않습니다.
 - Vue shell/API 검증은 기존 core smoke와 분리했습니다.
@@ -76,7 +76,7 @@ frontend/vue-app/
 | `/admin` | 관리자 Vue 이식 준비 shell |
 
 
-## v271 Vue read-only API client
+## v272-v273 Vue read-only API client / local CORS
 
 추가 위치:
 
@@ -145,7 +145,7 @@ http://127.0.0.1:5173
 npm run build
 ```
 
-## v271 검증 명령
+## v272 검증 명령
 
 Vue shell/API 구조 검사:
 
@@ -194,6 +194,8 @@ python -m compileall -q backend/app backend/scripts tools
 - v269 legacy 경로 의존성 자동 목록화
 - v270 Vue shell 위치 고정
 - v271 Vue 읽기 전용 API client 구조 추가
+- v272 Vue read-only API smoke 화면 연결
+- v273 Vue 개발 서버 5173 → FastAPI 8000 read-only 호출 CORS 오류 수정
 
 ### Phase 2 — Vue shell 생성
 
@@ -206,7 +208,7 @@ v270 완료:
 
 ### Phase 3 — Vue API client/interceptor 설계
 
-v271에서 시작했습니다.
+v272에서 시작했습니다.
 
 완료:
 
@@ -263,7 +265,7 @@ v271에서 시작했습니다.
 - Vue route guard
 - 기존 Write Guard와의 관계
 
-## v271에서 하지 않은 것
+## v272에서 하지 않은 것
 
 - DB 구조 변경 없음
 - env 변경 없음

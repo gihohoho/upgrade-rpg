@@ -6,6 +6,7 @@ cd "$ROOT_DIR"
 
 python tools/smoke/frontend/smoke_vue_shell_structure.py
 python tools/smoke/frontend/smoke_vue_readonly_api_client.py
+python tools/smoke/frontend/smoke_vue_readonly_api_status_panel.py
 node --check frontend/vue-app/vite.config.js
 node --check frontend/vue-app/src/main.js
 node --check frontend/vue-app/src/router/index.js
@@ -20,4 +21,5 @@ node --check frontend/vue-app/src/api/readOnlyRoutes.js
 node --check frontend/vue-app/src/api/readOnlyClient.js
 node --check frontend/vue-app/src/api/adminReadOnlyApi.js
 node --check frontend/vue-app/src/api/gameReadOnlyApi.js
+node --check frontend/vue-app/src/api/healthReadOnlyApi.js
 node --check frontend/vue-app/src/api/index.js

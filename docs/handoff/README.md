@@ -1,17 +1,13 @@
 # Handoff Docs
 
-현재 인계 기준: **v271.vue-readonly-api-client**
+현재 인계 기준: **v273.local-dev-cors-vue-fix**
 
-다음 채팅에는 아래 파일을 참고하면 됩니다.
+다음 채팅에서는 `NEXT_CHAT_PROMPT.md` 내용을 그대로 보내고, 최신 ZIP `rpg_v273_local_dev_cors_vue_fix.zip`을 함께 첨부하면 됩니다.
 
-- `NEXT_CHAT_HANDOFF.md`
-- `NEXT_CHAT_PROMPT.md`
+핵심 주의:
 
-핵심:
-
-- 기존 실제 게임은 루트 `index.html`입니다.
-- 기존 실제 관리자는 루트 `admin.html`입니다.
-- 루트 `src/`는 legacy JS/CSS입니다.
-- Vue 앱은 `frontend/vue-app/`입니다.
-- v271에서는 Vue 읽기 전용 API client 준비 구조를 추가했습니다.
-- 실제 API 자동 호출은 아직 하지 않았습니다.
+- 사용자는 코딩을 거의 모릅니다.
+- npm/Vue 명령은 실행 위치와 `.venv` 불필요 여부를 같이 설명합니다.
+- FastAPI/Python 명령은 실행 위치와 `.venv` 켠 상태를 같이 설명합니다.
+- 새 설치 파일/라이브러리/프레임워크가 있으면 반드시 알려줍니다.
+- DB/env/seed/auth/route/API body/write/Write Guard/Preview Apply body는 사용자 승인 없이 변경하지 않습니다.

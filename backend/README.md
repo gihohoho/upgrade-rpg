@@ -38,8 +38,11 @@ DB 연결 확인은 FastAPI 실행 후 `/api/v1/health/db`에서 합니다.
 
 ## 로컬 실행
 
+실행 위치: `backend` 폴더  
+`.venv` 상태: 켜진 상태
+
 ```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 브라우저에서 확인:
@@ -233,3 +236,23 @@ python scripts/check_master_data_parity.py --include-assets
 
 유저 진행 데이터 마이그레이션의 첫 단계로 `idleRpgSaveV22` localStorage 원본을 PostgreSQL `user_save_snapshots`에 저장/조회하는 API와 브라우저 테스트 함수를 추가했습니다. 아직 게임 로딩 흐름은 localStorage를 유지합니다.
 
+
+
+## v273 local CORS
+
+Vue 개발 서버(`http://127.0.0.1:5173`)에서 FastAPI(`http://127.0.0.1:8000`)를 호출할 때 CORS 오류가 나지 않도록 local/debug 환경의 기본 개발 origin을 보강했습니다.
+
+CORS 설정은 서버 시작 시점에 반영됩니다. ZIP을 교체했는데도 Vue 화면에서 CORS 오류가 계속 보이면 FastAPI 서버를 완전히 종료하고 다시 실행합니다.
+
+변경하지 않은 것:
+
+```txt
+.env 파일
+DB 구조
+seed
+인증
+API route path
+API 응답 body
+write 로직
+Write Guard
+```

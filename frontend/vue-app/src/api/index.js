@@ -10,3 +10,4 @@ export {
 } from './readOnlyRoutes';
 export { adminReadOnlyApi } from './adminReadOnlyApi';
 export { gameReadOnlyApi } from './gameReadOnlyApi';
+export { healthReadOnlyApi } from './healthReadOnlyApi';

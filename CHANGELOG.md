@@ -1,3 +1,11 @@
+## v272.vue-readonly-api-smoke-screen
+
+- Added `healthReadOnlyApi` for safe `GET /health` and prepared `GET /health/db` without auto-calling DB health.
+- Added `ReadOnlyApiStatusPanel.vue` to show loading/success/error states and a retry button inside the Vue shell.
+- Connected `/game` to safe `GET /health` status checking and `/admin` to safe `GET /health` plus `GET /admin/requirements` status checking.
+- Added `smoke_vue_readonly_api_status_panel.py` and included it in `tools/run_smoke_vue_shell.sh`.
+- Kept legacy `index.html`, `admin.html`, root `src/`, route paths, API response bodies, DB, env, seed, auth, Write Guard, Preview/Apply body, write logic, and game content unchanged.
+
 ## v269.legacy-path-dependency-report
 
 - Added `tools/report_legacy_path_dependencies.py` to generate/check a legacy path dependency report before Vue/FastAPI/DB transition work.
@@ -240,3 +248,12 @@
 - Added Vue shell smoke runner: `tools/run_smoke_vue_shell.sh`.
 - Documented required user install step: `npm install` in `frontend/vue-app`.
 - Preserved DB, env, seed, auth, route paths, API response bodies, write guards, write logic, Preview/Apply request bodies, and existing smoke/contract meaning.
+## v273.local-dev-cors-vue-fix
+
+- Fixed the local Vue dev server CORS issue reported from `http://127.0.0.1:5173` to `http://127.0.0.1:8000/api/v1/*`.
+- Added local/debug fallback CORS origins in `backend/app/core/config.py` so older local `.env` values that omit Vite port `5173` do not block read-only Vue API checks.
+- Production CORS behavior remains explicit: production/debug-false settings do not auto-append local dev origins.
+- Added `tools/smoke/backend/smoke_backend_local_cors.py` and included it in `tools/run_smoke_core.sh`.
+- Added `docs/current/LOCAL_DEV_CORS.md`.
+- Did not change `.env`, DB, seed, auth, route paths, API response body, write logic, Write Guard, Preview/Apply request bodies, or game content.
+

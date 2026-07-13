@@ -4,6 +4,16 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+LOCAL_DEV_CORS_ORIGINS = (
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+)
+
+
 class Settings(BaseSettings):
     app_name: str = "Idle RPG Backend"
     environment: str = "local"
@@ -28,20 +38,30 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> list[str]:
         value = self.cors_origins_raw.strip()
+        parsed_origins: list[str]
         if not value:
-            return []
-
-        # JSON 리스트 형식: '["http://localhost:5173", "http://127.0.0.1:5500"]'
-        if value.startswith("["):
+            parsed_origins = []
+        elif value.startswith("["):
+            # JSON 리스트 형식: '["http://localhost:5173", "http://127.0.0.1:5500"]'
             import json
 
             parsed = json.loads(value)
             if not isinstance(parsed, list):
                 raise ValueError("CORS_ORIGINS JSON value must be a list")
-            return [str(item).strip() for item in parsed if str(item).strip()]
+            parsed_origins = [str(item).strip() for item in parsed if str(item).strip()]
+        else:
+            # 쉼표 형식: 'http://localhost:5173,http://127.0.0.1:5500'
+            parsed_origins = [item.strip() for item in value.split(",") if item.strip()]
 
-        # 쉼표 형식: 'http://localhost:5173,http://127.0.0.1:5500'
-        return [item.strip() for item in value.split(",") if item.strip()]
+        # 기존 로컬 .env가 오래되어 5173(Vite) 포트가 빠져 있어도,
+        # local/debug 환경에서는 Vue 개발 서버가 API를 읽을 수 있어야 합니다.
+        # 운영에서는 CORS_ORIGINS에 명시한 값만 사용합니다.
+        if self.environment == "local" or self.debug:
+            merged = [*parsed_origins, *LOCAL_DEV_CORS_ORIGINS]
+        else:
+            merged = parsed_origins
+
+        return list(dict.fromkeys(merged))
 
 
 @lru_cache

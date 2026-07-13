@@ -1,4 +1,4 @@
-# Roadmap — v271
+# Roadmap — v272
 
 ## 당분간 보류
 
@@ -19,7 +19,8 @@
 - v268 프로젝트 구조 점검
 - v269 legacy 경로 의존성 자동 목록화
 - v270 Vue 기본 shell 생성
-- v271 Vue 읽기 전용 API client 준비
+- v272 Vue read-only API smoke 화면 연결
+- v273 Vue 개발 서버 local CORS 오류 수정
 
 ## 다음 작업 후보
 

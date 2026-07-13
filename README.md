@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v271.vue-readonly-api-client**
+현재 기준: **v273.local-dev-cors-vue-fix**
 
 ## 현재 상태
 
@@ -11,12 +11,13 @@
 - Vue 읽기 전용 API client 준비 위치: `frontend/vue-app/src/api/`
 - FastAPI 백엔드: `backend/`
 
-v271에서는 Vue 앱 안에 읽기 전용 `GET` API client 준비 구조를 추가했습니다.
+v272에서는 Vue 앱 안에서 안전한 `GET /health`, `GET /admin/requirements` 상태 확인 패널을 실제 화면에 연결했습니다.
+v273에서는 Vue 개발 서버(`127.0.0.1:5173`)에서 FastAPI(`127.0.0.1:8000`)를 호출할 때 발생한 local CORS 오류를 수정했습니다.
 기존 게임/관리자 동작, API route, API 응답 body, DB, env, seed, 인증, Write Guard, 실제 write 로직은 변경하지 않았습니다.
 
 ## 사용자가 설치해야 하는 것
 
-v271에서 새 라이브러리는 추가하지 않았습니다.
+v273에서 새 라이브러리는 추가하지 않았습니다.
 
 Vue 앱을 처음 실행할 때만 Node 패키지 설치가 필요합니다.
 이미 `frontend/vue-app/node_modules`가 있다면 다시 설치하지 않아도 됩니다.
@@ -47,6 +48,18 @@ http://127.0.0.1:5173
 
 - `http://127.0.0.1:5173/game`
 - `http://127.0.0.1:5173/admin`
+
+
+## Vue API 상태 확인
+
+FastAPI 서버와 Vue 개발 서버를 둘 다 켠 뒤 아래 화면을 확인합니다.
+
+- `http://127.0.0.1:5173/game` → `GET /health` 상태 확인
+- `http://127.0.0.1:5173/admin` → `GET /health`, `GET /admin/requirements` 상태 확인
+
+FastAPI 서버가 꺼져 있으면 `오류`가 표시되는 것이 정상입니다. 중요한 것은 Vue 화면 전체가 깨지지 않는 것입니다.
+
+v273 ZIP 적용 후에도 CORS 오류가 남아 있으면 FastAPI 서버를 완전히 종료한 뒤 다시 실행해야 합니다. CORS 설정은 서버 시작 시점에 반영됩니다.
 
 ## FastAPI 서버 실행
 
@@ -134,6 +147,7 @@ python tools/report_legacy_path_dependencies.py --check
 - `docs/current/PROJECT_STRUCTURE.md`
 - `docs/current/VUE_APP_SHELL.md`
 - `docs/current/VUE_READONLY_API_CLIENT.md`
+- `docs/current/LOCAL_DEV_CORS.md`
 - `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`
 - `docs/current/LEGACY_PATH_DEPENDENCIES.md`
 - `docs/NEXT_STEPS.md`

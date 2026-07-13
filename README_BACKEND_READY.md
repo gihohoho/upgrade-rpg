@@ -16,19 +16,25 @@ Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 ## 현재 방향
 
 Backend 자체의 기능 확장보다 Vue/FastAPI/DB 전환 준비를 우선합니다.
-단, route path/API response body/write guard는 사용자 승인 없이 변경하지 않습니다.
+단, route path/API response body/write guard는 사용자 승인 없이 변경하지 않습니다. v273에서는 Vue 개발 서버 local CORS 오류만 수정했고 `.env` 파일은 변경하지 않았습니다.
 
 ## 개발 테스트 의존성
 
-실행 위치: `backend` 폴더
+실행 위치: `backend` 폴더  
+`.venv` 상태: 켜진 상태
 
 ```bash
 python -m pip install -e ".[dev]"
 ```
 
+## v273 local CORS 참고
+
+Vue 개발 서버는 `http://127.0.0.1:5173`, FastAPI는 `http://127.0.0.1:8000`에서 실행되므로 브라우저 CORS 검사가 발생합니다. v273에서는 local/debug 환경에서 Vite 개발 서버 origin을 기본 허용하도록 보강했습니다. CORS 변경은 FastAPI 서버 재시작 후 반영됩니다.
+
 ## 검증
 
-실행 위치: 프로젝트 루트
+실행 위치: 프로젝트 루트  
+`.venv` 상태: 켜진 상태 권장
 
 ```bash
 bash tools/run_smoke_core.sh && python -m compileall -q backend/app backend/scripts tools

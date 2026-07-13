@@ -14,6 +14,8 @@
 - v269 legacy 경로 의존성 자동 목록화
 - v270 Vue 기본 shell 생성
 - v271 Vue 읽기 전용 API client 준비
+- v272 Vue read-only API smoke 화면 연결
+- v273 Vue 개발 서버 local CORS 오류 수정
 
 ## 현재 결정
 
@@ -27,7 +29,7 @@
 
 - Vue + FastAPI + DB + 배포 직전 구조 준비
 
-## v271 결론
+## v273 결론
 
 새 Vue 앱은 다음 위치에 유지합니다.
 
@@ -35,10 +37,11 @@
 frontend/vue-app/
 ```
 
-v271에서 추가한 API 준비 위치:
+v272에서 Vue 화면에 실제 연결한 안전 GET API:
 
 ```txt
-frontend/vue-app/src/api/
+GET /health
+GET /admin/requirements
 ```
 
 기존 legacy 경로는 그대로 유지합니다.
@@ -49,12 +52,13 @@ frontend/vue-app/src/api/
 - `backend/`
 - `tools/`
 
-Vue API client는 아직 `GET` 읽기 전용 준비 단계입니다.
 Preview/Apply/write 요청은 아직 Vue에 연결하지 않았습니다.
+
+v273에서는 Vue 개발 서버 `http://127.0.0.1:5173`에서 FastAPI API 호출이 CORS로 막히지 않도록 local/debug CORS origin을 보강했습니다.
 
 ## 사용자가 설치/확인해야 할 것
 
-v271에서 새 라이브러리는 추가하지 않았습니다.
+v273에서 새 라이브러리는 추가하지 않았습니다.
 
 처음 Vue 앱 실행 전 설치:
 
@@ -65,27 +69,9 @@ v271에서 새 라이브러리는 추가하지 않았습니다.
 npm install
 ```
 
-Vue 개발 서버 실행:
+FastAPI 서버 실행:
 
-실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
-
-```bash
-npm run dev
-```
-
-브라우저 확인:
-
-```txt
-http://127.0.0.1:5173
-```
-
-확인할 화면:
-
-- `/game`
-- `/admin`
-
-FastAPI 서버도 함께 켜려면:
+주의: v273 CORS 수정은 FastAPI 서버를 재시작해야 반영됩니다.
 
 실행 위치: 프로젝트 루트  
 `.venv` 상태: 켜야 함
@@ -101,35 +87,48 @@ FastAPI 서버도 함께 켜려면:
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
+Vue 개발 서버 실행:
+
+실행 위치: `frontend/vue-app` 폴더  
+`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
+
+```bash
+npm run dev
+```
+
+브라우저 확인:
+
+```txt
+http://127.0.0.1:5173/game
+http://127.0.0.1:5173/admin
+```
+
+확인할 것:
+
+- FastAPI 서버가 켜져 있으면 API 상태가 `성공`으로 보입니다.
+- FastAPI 서버가 꺼져 있으면 API 상태가 `오류`로 보입니다. 이때도 Vue 화면 전체가 깨지지 않으면 정상입니다.
+
 ## 다음 작업
 
-`v272 Vue read-only API smoke 화면 연결`
+`v274 FastAPI 구조 정리 계획 구체화`
 
 해야 할 일:
 
-1. Vue에서 실제 GET API를 1~2개만 호출합니다.
-2. loading/error/success 상태 표시를 만듭니다.
-3. 실패해도 shell이 깨지지 않게 합니다.
-4. 인증/interceptor는 아직 실제 구현하지 않습니다.
-5. Preview/Apply/write 요청 body는 건드리지 않습니다.
-6. 기존 `admin.html`/`index.html`은 계속 유지합니다.
-7. Vue shell/API smoke와 legacy core smoke를 모두 확인합니다.
+1. 현재 `backend/app/api/routes`, `backend/app/services`, `backend/app/schemas`, `backend/app/models` 역할을 실제 파일 기준으로 정리합니다.
+2. Vue에서 앞으로 사용할 read-only API와 기존 legacy 유지 API를 구분합니다.
+3. route path/API response body는 변경하지 않습니다.
+4. DB/Alembic/인증은 실제 변경하지 않고 계획만 문서화합니다.
+5. 기존 smoke/contract 의미를 깨지 않는지 영향 범위를 확인합니다.
 
 ## 그다음 작업 후보
 
-### v273 Backend 구조 정리 계획
-
-- FastAPI route/service/schema/model/repository 역할 재정의
-- 기존 route path 유지 방식 정리
-- contract/readiness 영향 분석
-
-### v274 DB/PostgreSQL/Alembic 준비
+### v275 DB/PostgreSQL/Alembic 준비
 
 - migration/seed/운영 데이터 역할 분리
 - DB transaction/rollback snapshot 정책 검토
 - 실제 DB 구조 변경은 사용자 승인 후 진행
 
-### v275 인증 설계 준비
+### v276 인증 설계 준비
 
 - 사용자/관리자 권한 정의
 - token 저장 방식 결정

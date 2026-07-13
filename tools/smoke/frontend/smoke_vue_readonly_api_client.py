@@ -91,8 +91,8 @@ def main() -> None:
         raise AssertionError(f"Missing Vue read-only API client files: {missing}")
 
     package = json.loads((VUE_APP / "package.json").read_text(encoding="utf-8"))
-    if package.get("version") != "0.0.0-v271":
-        raise AssertionError("Vue package version must be bumped to 0.0.0-v271")
+    if package.get("version") != "0.0.0-v272":
+        raise AssertionError("Vue package version must be bumped to 0.0.0-v272")
 
     config = read("src/api/config.js")
     assert_contains(config, "http://127.0.0.1:8000/api/v1", "default API base URL")
@@ -140,14 +140,14 @@ def main() -> None:
         assert_contains(text, "GET", f"{shell} labels read-only route method")
 
     docs = read("docs/current/VUE_READONLY_API_CLIENT.md")
-    assert_contains(docs, "v271", "read-only API client doc version")
+    assert_contains(docs, "v272", "read-only API client doc version")
     assert_contains(docs, "POST /game/save", "doc excluded write route")
     assert_contains(docs, "`.venv` 상태", "doc venv guidance")
     assert_contains(docs, "npm install", "doc npm install guidance")
     assert_contains(docs, "npm run dev", "doc npm run dev guidance")
 
     if re.search(r"실제.*write.*추가", docs) and "아직" not in docs:
-        raise AssertionError("Docs must keep write connections explicitly out of v271")
+        raise AssertionError("Docs must keep write connections explicitly out of v272")
 
     print("OK: Vue read-only API client smoke passed")
 

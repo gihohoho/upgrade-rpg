@@ -1,4 +1,4 @@
-# Upgrade RPG Vue App Shell — v271
+# Upgrade RPG Vue App Shell — v272
 
 이 폴더는 기존 게임/관리자 화면을 바로 대체하지 않는 Vue 준비 앱입니다.
 
@@ -14,13 +14,16 @@
 Vue/Vite도 기본적으로 `src/` 폴더를 사용하므로, 루트에 바로 Vue를 만들면 기존 구조와 충돌할 수 있습니다.
 그래서 Vue 앱은 `frontend/vue-app/`에 분리했습니다.
 
-## v271에서 준비한 것
+## v272에서 준비한 것
 
 - Vite + Vue 기본 shell 유지
 - Vue Router 기본 shell 유지
 - `/game` 화면: 게임 이식 준비 화면
 - `/admin` 화면: 관리자 이식 준비 화면
-- 읽기 전용 API route 상수와 GET 전용 client 준비
+- 읽기 전용 API route 상수와 GET 전용 client 유지
+- 안전한 GET API 상태 확인 패널 추가
+- `/game`: `GET /health` 상태 확인
+- `/admin`: `GET /health`, `GET /admin/requirements` 상태 확인
 - 실제 관리자/게임 write 로직 연결은 아직 하지 않음
 
 ## API client 준비 위치
@@ -29,12 +32,12 @@ Vue/Vite도 기본적으로 `src/` 폴더를 사용하므로, 루트에 바로 V
 frontend/vue-app/src/api/
 ```
 
-v271에서는 `GET` API만 준비했습니다.
+v272에서도 `GET` API만 준비/사용합니다.
 `POST`, `PUT`, `PATCH`, `DELETE`는 아직 추가하지 않았습니다.
 
 ## 사용자가 설치해야 하는 것
 
-v271에서 새 라이브러리는 추가하지 않았습니다.
+v272에서 새 라이브러리는 추가하지 않았습니다.
 
 아직 ZIP에는 `node_modules`가 포함되어 있지 않습니다.
 처음 실행할 때 한 번만 설치가 필요합니다.
@@ -44,6 +47,24 @@ v271에서 새 라이브러리는 추가하지 않았습니다.
 
 ```bash
 npm install
+```
+
+## FastAPI 서버 실행
+
+Vue 화면에서 API 상태가 `성공`으로 뜨려면 FastAPI 서버가 켜져 있어야 합니다.
+
+실행 위치: 프로젝트 루트  
+`.venv` 상태: 켜야 함
+
+```bash
+.venv\\Scripts\\activate
+```
+
+실행 위치: `backend` 폴더  
+`.venv` 상태: 켜진 상태
+
+```bash
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 ## 개발 서버 실행
@@ -58,7 +79,8 @@ npm run dev
 브라우저에서 아래 주소를 엽니다.
 
 ```txt
-http://127.0.0.1:5173
+http://127.0.0.1:5173/game
+http://127.0.0.1:5173/admin
 ```
 
 ## 빌드 확인
@@ -72,7 +94,7 @@ npm run build
 
 ## 주의
 
-v271은 읽기 전용 API client 준비 단계입니다.
+v272는 안전한 read-only API smoke 화면 연결 단계입니다.
 
 아래는 변경하지 않았습니다.
 

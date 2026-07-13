@@ -1,8 +1,8 @@
-# Project Structure — v271
+# Project Structure — v272
 
 현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
 
-v271에서는 기존 legacy 화면을 건드리지 않고, `frontend/vue-app/` 내부에 읽기 전용 API client 준비 구조만 추가했습니다.
+v272에서는 기존 legacy 화면을 건드리지 않고, `frontend/vue-app/` 내부에 읽기 전용 API client 준비 구조만 추가했습니다.
 
 중요한 결론:
 
@@ -34,7 +34,7 @@ v271에서는 기존 legacy 화면을 건드리지 않고, `frontend/vue-app/` �
 
 ## 루트 파일 역할
 
-| 경로 | 현재 역할 | v271 판단 |
+| 경로 | 현재 역할 | v272 판단 |
 |---|---|---|
 | `index.html` | 현재 실제 게임 화면 진입점 | Vue 이식 전까지 legacy 기준 화면으로 유지 |
 | `admin.html` | 현재 관리자 페이지 진입점 | Vue 관리자 이식 전까지 운영/검증 도구로 유지 |
@@ -42,11 +42,11 @@ v271에서는 기존 legacy 화면을 건드리지 않고, `frontend/vue-app/` �
 | `frontend/vue-app/` | 새 Vue shell + 읽기 전용 API client 준비 | 실제 기능 대체 전 단계 |
 | `backend/` | FastAPI 백엔드 | 기존 route/body/DB/env/seed 유지 |
 | `tools/` | smoke/contract/검증 도구 | 기존 core smoke 유지, Vue shell/API smoke 추가 |
-| `docs/` | 현재 상태/전환 계획/인수인계 문서 | v271 기준 갱신 |
+| `docs/` | 현재 상태/전환 계획/인수인계 문서 | v272 기준 갱신 |
 
 ## `frontend/vue-app/` 역할
 
-v270에서 만든 Vue/Vite shell에, v271에서 읽기 전용 API client 준비 구조를 추가했습니다.
+v270에서 만든 Vue/Vite shell에, v272에서 읽기 전용 API client 준비 구조를 추가했습니다.
 
 ```txt
 frontend/vue-app/
@@ -88,9 +88,9 @@ frontend/vue-app/
 | `/game` | `GameShell.vue` | 나중에 게임 UI 이식 |
 | `/admin` | `AdminShell.vue` | 나중에 관리자 UI 이식 |
 
-v271 Vue shell은 route 목록을 화면에 보여주지만, 아직 자동으로 FastAPI를 호출하지 않습니다.
+v272 Vue shell은 안전한 read-only API 상태 확인을 실제로 호출합니다. v273에서는 이 호출이 로컬 CORS에 막히지 않도록 FastAPI local/debug CORS 기본값을 보강했습니다.
 
-## v271 Vue API client 준비 범위
+## v273 Vue API client/CORS 준비 범위
 
 추가 위치:
 
@@ -211,9 +211,9 @@ Vue shell/API 구조 검사:
 bash tools/run_smoke_vue_shell.sh
 ```
 
-## v271 설치/확인 필요 사항
+## v273 설치/확인 필요 사항
 
-v271에서 새 라이브러리는 추가하지 않았습니다.
+v273에서 새 라이브러리는 추가하지 않았습니다.
 
 단, Vue 앱을 처음 실행한다면 `node_modules`가 ZIP에 없기 때문에 한 번 설치해야 합니다.
 
@@ -239,13 +239,15 @@ npm run dev
 http://127.0.0.1:5173
 ```
 
-## v271 보존/변경 요약
+## v273 보존/변경 요약
 
 변경함:
 
 - Vue 읽기 전용 API client 준비 구조 추가
 - Vue shell에 읽기 전용 route 목록 표시
 - Vue API client smoke 추가
+- Vue 개발 서버 local CORS 오류 수정
+- backend local CORS smoke 추가
 - 문서 갱신
 
 변경하지 않음:
