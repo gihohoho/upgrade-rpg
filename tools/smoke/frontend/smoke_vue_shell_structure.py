@@ -88,7 +88,7 @@ def main() -> None:
 
     project_structure = (ROOT / "docs" / "current" / "PROJECT_STRUCTURE.md").read_text(encoding="utf-8")
     assert_contains(project_structure, "frontend/vue-app/", "PROJECT_STRUCTURE Vue app path")
-    assert_contains(project_structure, "v270", "PROJECT_STRUCTURE version")
+    assert_contains(project_structure, "v271", "PROJECT_STRUCTURE version")
 
     transition_plan = (ROOT / "docs" / "current" / "VUE_FASTAPI_DB_TRANSITION_PLAN.md").read_text(encoding="utf-8")
     assert_contains(transition_plan, "Vue shell", "transition plan Vue shell note")

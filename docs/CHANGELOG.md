@@ -899,6 +899,16 @@
 - `docs/current/CURRENT_STATUS.md`, `docs/current/ROADMAP.md`, `docs/NEXT_STEPS.md`, `README.md`, `README_BACKEND_READY.md`를 최신 방향에 맞게 정리했습니다.
 - 런타임 코드, DB, env, seed, 인증, route, API 응답 body, Write Guard, 실제 write 로직은 변경하지 않았습니다.
 
+## v271.vue-readonly-api-client
+
+- Added Vue read-only API client preparation files under `frontend/vue-app/src/api/`.
+- Added GET-only route constants for admin/game/health read APIs.
+- Added `requestReadOnly` fetch wrapper without write methods.
+- Updated AdminShell/GameShell to display prepared GET route lists without auto-calling APIs.
+- Added Vue read-only API smoke coverage.
+- Updated current docs, handoff docs, and next-step guidance for v272.
+- Did not change DB/env/seed/auth/API response body/route paths/write logic/Write Guard/Preview Apply bodies/game content.
+
 ## v270.vue-app-basic-shell
 
 - `frontend/vue-app/`에 Vite + Vue 기본 shell을 추가했습니다.

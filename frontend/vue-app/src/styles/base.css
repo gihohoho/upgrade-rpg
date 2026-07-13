@@ -107,3 +107,55 @@ code {
     display: grid;
   }
 }
+
+.api-route-preview {
+  margin-top: 28px;
+  padding: 18px;
+  border: 1px solid rgba(232, 238, 248, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.api-route-preview h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+}
+
+.api-route-preview p {
+  margin: 0;
+  color: #c8d3e7;
+  line-height: 1.6;
+}
+
+.api-route-preview__list {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.api-route-preview__list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.api-route-preview__list span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.api-route-preview__list small {
+  color: #9eb4d8;
+}
+
+@media (max-width: 720px) {
+  .api-route-preview__list li {
+    grid-template-columns: 1fr;
+  }
+}

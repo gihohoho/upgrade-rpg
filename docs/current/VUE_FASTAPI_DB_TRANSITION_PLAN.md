@@ -1,15 +1,16 @@
-# Vue/FastAPI/DB 전환 준비 계획 — v270
+# Vue/FastAPI/DB 전환 준비 계획 — v271
 
 ## 목적
 
 기존 HTML/JS 기반 게임과 관리자 도구를 바로 갈아엎지 않고, 검증된 기능과 계약을 보존한 상태에서 Vue + FastAPI + PostgreSQL 구조로 점진 전환합니다.
 
-v270의 핵심 결론:
+v271의 핵심 결론:
 
-- `frontend/vue-app/`에 Vite + Vue 기본 shell을 추가했습니다.
+- `frontend/vue-app/`에 Vite + Vue 기본 shell이 유지됩니다.
+- v271에서 Vue 읽기 전용 API client 준비 구조를 추가했습니다.
 - 기존 `admin.html`, `index.html`, 루트 `src/`는 그대로 유지했습니다.
-- Vue shell은 실제 관리자/게임 로직을 아직 호출하지 않습니다.
-- Vue shell 검증은 기존 core smoke와 분리했습니다.
+- Vue shell은 route 목록을 보여주지만 아직 자동 API 호출은 하지 않습니다.
+- Vue shell/API 검증은 기존 core smoke와 분리했습니다.
 - DB/env/seed/인증/API route/response body/write 로직은 변경하지 않았습니다.
 
 ## 절대 원칙
@@ -74,6 +75,38 @@ frontend/vue-app/
 | `/game` | 게임 Vue 이식 준비 shell |
 | `/admin` | 관리자 Vue 이식 준비 shell |
 
+
+## v271 Vue read-only API client
+
+추가 위치:
+
+```txt
+frontend/vue-app/src/api/
+```
+
+추가한 파일:
+
+```txt
+frontend/vue-app/src/api/
+├── README.md
+├── adminReadOnlyApi.js
+├── config.js
+├── gameReadOnlyApi.js
+├── index.js
+├── readOnlyClient.js
+└── readOnlyRoutes.js
+```
+
+원칙:
+
+- `GET` 요청만 준비합니다.
+- Preview/Apply/write 계열 `POST`는 아직 연결하지 않습니다.
+- 인증 interceptor는 아직 만들지 않습니다.
+- `.env` 파일은 만들거나 수정하지 않았습니다.
+- 기본 API 주소는 `http://127.0.0.1:8000/api/v1`입니다.
+
+자세한 내용은 `docs/current/VUE_READONLY_API_CLIENT.md`를 기준으로 봅니다.
+
 ## 사용자가 설치해야 하는 것
 
 Vue 앱은 Node 패키지가 필요합니다.
@@ -81,7 +114,8 @@ ZIP에는 `node_modules`를 넣지 않습니다.
 
 처음 한 번 설치:
 
-실행 위치: `frontend/vue-app` 폴더
+실행 위치: `frontend/vue-app` 폴더  
+`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
 
 ```bash
 npm install
@@ -89,7 +123,8 @@ npm install
 
 개발 서버 실행:
 
-실행 위치: `frontend/vue-app` 폴더
+실행 위치: `frontend/vue-app` 폴더  
+`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
 
 ```bash
 npm run dev
@@ -103,17 +138,19 @@ http://127.0.0.1:5173
 
 빌드 확인:
 
-실행 위치: `frontend/vue-app` 폴더
+실행 위치: `frontend/vue-app` 폴더  
+`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
 
 ```bash
 npm run build
 ```
 
-## v270 검증 명령
+## v271 검증 명령
 
-Vue shell 구조 검사:
+Vue shell/API 구조 검사:
 
-실행 위치: 프로젝트 루트
+실행 위치: 프로젝트 루트  
+`.venv` 상태: 켜진 상태 권장
 
 ```bash
 bash tools/run_smoke_vue_shell.sh
@@ -121,7 +158,8 @@ bash tools/run_smoke_vue_shell.sh
 
 기존 legacy/core smoke:
 
-실행 위치: 프로젝트 루트
+실행 위치: 프로젝트 루트  
+`.venv` 상태: 켜진 상태 권장
 
 ```bash
 bash tools/run_smoke_core.sh
@@ -129,7 +167,8 @@ bash tools/run_smoke_core.sh
 
 Python compile 검사:
 
-실행 위치: 프로젝트 루트
+실행 위치: 프로젝트 루트  
+`.venv` 상태: 켜진 상태 권장
 
 ```bash
 python -m compileall -q backend/app backend/scripts tools
@@ -154,6 +193,7 @@ python -m compileall -q backend/app backend/scripts tools
 - v268 프로젝트 구조 문서화
 - v269 legacy 경로 의존성 자동 목록화
 - v270 Vue shell 위치 고정
+- v271 Vue 읽기 전용 API client 구조 추가
 
 ### Phase 2 — Vue shell 생성
 
@@ -166,14 +206,21 @@ v270 완료:
 
 ### Phase 3 — Vue API client/interceptor 설계
 
-다음 후보입니다.
+v271에서 시작했습니다.
+
+완료:
+
+- 읽기 전용 GET route 상수 추가
+- GET 전용 `requestReadOnly` client 추가
+- 관리자/게임 읽기 전용 API wrapper 추가
+- Vue API client smoke 추가
 
 주의:
 
 - 아직 인증을 넣지 않습니다.
 - 기존 route path와 response body를 그대로 사용해야 합니다.
-- 먼저 읽기 전용 GET client부터 설계합니다.
 - Preview/Apply/write 요청 body는 아직 건드리지 않습니다.
+- 다음 단계에서 실제 화면 호출을 하더라도 먼저 GET API만 사용합니다.
 
 ### Phase 4 — 관리자 페이지 Vue 이식 계획
 
@@ -216,7 +263,7 @@ v270 완료:
 - Vue route guard
 - 기존 Write Guard와의 관계
 
-## v270에서 하지 않은 것
+## v271에서 하지 않은 것
 
 - DB 구조 변경 없음
 - env 변경 없음

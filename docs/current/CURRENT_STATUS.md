@@ -1,79 +1,109 @@
-# Current Status — v270
+# Current Status — v271
 
-## 현재 최신 작업
+## 현재 기준
 
-- 최신 작업: `v270.vue-app-basic-shell`
-- 직전 작업: `v269.legacy-path-dependency-report`
-- 직전 기능 기준: `v266.admin-practical-ux-polish`
+- 최신 작업: `v271.vue-readonly-api-client`
+- 기준 ZIP: `rpg_v271_vue_readonly_api_client.zip`
+- 직전 기준: `v270.vue-app-basic-shell`
 - readiness version: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 
-## 현재 상태 요약
+## v271 완료
 
-관리자 페이지는 임시 운영/검증 도구로 충분히 안정화된 상태입니다.
+v271에서는 기존 legacy 화면을 건드리지 않고, Vue 앱에 읽기 전용 API client 준비 구조만 추가했습니다.
 
-당분간 게임 콘텐츠 개발은 하지 않습니다.
+추가한 것:
 
-우선순위는 Vue + FastAPI + PostgreSQL + 관리자 페이지 + 배포 직전 안정화 구조를 준비하는 것입니다.
+- `frontend/vue-app/src/api/config.js`
+- `frontend/vue-app/src/api/readOnlyRoutes.js`
+- `frontend/vue-app/src/api/readOnlyClient.js`
+- `frontend/vue-app/src/api/adminReadOnlyApi.js`
+- `frontend/vue-app/src/api/gameReadOnlyApi.js`
+- `frontend/vue-app/src/api/index.js`
+- `docs/current/VUE_READONLY_API_CLIENT.md`
+- `tools/smoke/frontend/smoke_vue_readonly_api_client.py`
 
-## v270 완료
+Vue shell 변경:
 
-- `frontend/vue-app/`에 Vite + Vue 기본 shell 추가
-- Vue Router 기본 구조 추가
-- `GameShell.vue` 추가
-- `AdminShell.vue` 추가
-- `ShellCard.vue` 공통 shell 카드 추가
-- Vue shell 기본 CSS 추가
-- Vue shell 구조 smoke 추가
-- Vue 실행/설치 문서 추가
+- `AdminShell.vue`에 관리자 GET route 목록 표시
+- `GameShell.vue`에 게임 GET route 목록 표시
+- 아직 자동 API 호출은 하지 않음
 
-## v270에서 변경하지 않은 것
+## v271에서 변경하지 않은 것
 
-- DB
+- DB 구조
 - env
 - seed
 - 인증
 - 기존 route path
 - 기존 API 응답 body
+- 기존 write 로직
 - Write Guard
-- 실제 write 로직
 - 관리자 Preview/Apply 요청 body
 - 기존 smoke/contract 의미
 - 게임 콘텐츠
 
-## 사용자가 확인해야 할 것
+## 현재 실제 실행 기준
 
-Vue 앱을 실제로 실행하려면 한 번 설치가 필요합니다.
+| 화면 | 실제 기준 |
+|---|---|
+| 게임 | 루트 `index.html` |
+| 관리자 | 루트 `admin.html` |
+| Vue 준비 shell | `frontend/vue-app/` |
 
-실행 위치: `frontend/vue-app` 폴더
+Vue route:
+
+| 경로 | 의미 |
+|---|---|
+| `/game` | 게임 이식 준비 shell |
+| `/admin` | 관리자 이식 준비 shell |
+
+## 사용자가 설치/확인해야 할 것
+
+v271에서 새 라이브러리는 추가하지 않았습니다.
+
+Vue 앱을 처음 실행한다면 기존 Vue 의존성 설치가 필요합니다.
+이미 `frontend/vue-app/node_modules`가 있다면 다시 설치하지 않아도 됩니다.
+
+실행 위치: `frontend/vue-app` 폴더  
+`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
 
 ```bash
 npm install
 ```
 
-실행 위치: `frontend/vue-app` 폴더
+Vue 개발 서버 실행:
+
+실행 위치: `frontend/vue-app` 폴더  
+`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
 
 ```bash
 npm run dev
 ```
 
-브라우저 주소:
+FastAPI 서버 실행:
 
-```txt
-http://127.0.0.1:5173
+실행 위치: 프로젝트 루트  
+`.venv` 상태: 켜야 함
+
+```bash
+.venv\\Scripts\\activate
 ```
 
-확인할 화면:
+실행 위치: `backend` 폴더  
+`.venv` 상태: 켜진 상태
 
-- `/game`에서 게임 Shell 안내가 보이는지
-- `/admin`에서 관리자 Shell 안내가 보이는지
-- 기존 루트 `index.html`, `admin.html`은 그대로 열리는지
+```bash
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
 
-## 다음 추천
+## 다음 추천 단계
 
-`v271 Vue API client 읽기 전용 설계 + backend route map 연결 준비`
+`v272 Vue read-only API smoke 화면 연결`
 
-주의:
+추천 목표:
 
-- 인증/interceptor/write는 아직 넣지 않습니다.
-- 먼저 GET 계열 API client와 route 목록 문서화를 진행합니다.
+- Vue shell에서 실제 GET API 호출을 아주 작게 연결합니다.
+- 처음에는 `/admin/requirements` 또는 `/health`처럼 안전한 조회 API만 사용합니다.
+- 실패 시 화면이 깨지지 않도록 loading/error 상태를 먼저 만듭니다.
+- Preview/Apply/write 요청은 계속 제외합니다.

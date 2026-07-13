@@ -1,14 +1,15 @@
-# Project Structure — v270
+# Project Structure — v271
 
 현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
 
-v270에서는 기존 legacy 화면을 건드리지 않고 새 Vue 기본 shell만 `frontend/vue-app/`에 추가했습니다.
+v271에서는 기존 legacy 화면을 건드리지 않고, `frontend/vue-app/` 내부에 읽기 전용 API client 준비 구조만 추가했습니다.
 
 중요한 결론:
 
 - 루트 `admin.html`, `index.html`, `src/`는 그대로 유지합니다.
 - 루트 `src/`는 Vue 폴더가 아니라 legacy JS/CSS 폴더입니다.
-- 새 Vue 앱은 `frontend/vue-app/`에 분리했습니다.
+- 새 Vue 앱은 `frontend/vue-app/`에 분리되어 있습니다.
+- Vue API client는 아직 `GET` 조회용 준비 단계입니다.
 - DB/env/seed/인증/API 응답 body/route/write 로직은 변경하지 않았습니다.
 - 기존 smoke/contract 의미는 변경하지 않았습니다.
 
@@ -33,19 +34,19 @@ v270에서는 기존 legacy 화면을 건드리지 않고 새 Vue 기본 shell�
 
 ## 루트 파일 역할
 
-| 경로 | 현재 역할 | v270 판단 |
+| 경로 | 현재 역할 | v271 판단 |
 |---|---|---|
 | `index.html` | 현재 실제 게임 화면 진입점 | Vue 이식 전까지 legacy 기준 화면으로 유지 |
 | `admin.html` | 현재 관리자 페이지 진입점 | Vue 관리자 이식 전까지 운영/검증 도구로 유지 |
 | `src/` | legacy JS/CSS | 이동 금지, Vue 앱 `src/`와 구분 |
-| `frontend/vue-app/` | 새 Vue 기본 shell | v270에서 추가, 아직 실제 로직 연결 없음 |
+| `frontend/vue-app/` | 새 Vue shell + 읽기 전용 API client 준비 | 실제 기능 대체 전 단계 |
 | `backend/` | FastAPI 백엔드 | 기존 route/body/DB/env/seed 유지 |
-| `tools/` | smoke/contract/검증 도구 | 기존 core smoke 유지, Vue shell 별도 smoke 추가 |
-| `docs/` | 현재 상태/전환 계획/인수인계 문서 | v270 기준 갱신 |
+| `tools/` | smoke/contract/검증 도구 | 기존 core smoke 유지, Vue shell/API smoke 추가 |
+| `docs/` | 현재 상태/전환 계획/인수인계 문서 | v271 기준 갱신 |
 
 ## `frontend/vue-app/` 역할
 
-v270에서 새로 추가한 Vue/Vite 기본 앱입니다.
+v270에서 만든 Vue/Vite shell에, v271에서 읽기 전용 API client 준비 구조를 추가했습니다.
 
 ```txt
 frontend/vue-app/
@@ -57,7 +58,13 @@ frontend/vue-app/
     ├── App.vue
     ├── main.js
     ├── api/
-    │   └── README.md
+    │   ├── README.md
+    │   ├── adminReadOnlyApi.js
+    │   ├── config.js
+    │   ├── gameReadOnlyApi.js
+    │   ├── index.js
+    │   ├── readOnlyClient.js
+    │   └── readOnlyRoutes.js
     ├── app/
     │   └── README.md
     ├── components/
@@ -81,7 +88,31 @@ frontend/vue-app/
 | `/game` | `GameShell.vue` | 나중에 게임 UI 이식 |
 | `/admin` | `AdminShell.vue` | 나중에 관리자 UI 이식 |
 
-v270 Vue shell은 실제 관리자 API나 게임 로직을 호출하지 않습니다.
+v271 Vue shell은 route 목록을 화면에 보여주지만, 아직 자동으로 FastAPI를 호출하지 않습니다.
+
+## v271 Vue API client 준비 범위
+
+추가 위치:
+
+```txt
+frontend/vue-app/src/api/
+```
+
+| 파일 | 역할 |
+|---|---|
+| `config.js` | API 기본 주소 관리. 기본값은 `http://127.0.0.1:8000/api/v1` |
+| `readOnlyRoutes.js` | 읽기 전용 route 상수 목록 |
+| `readOnlyClient.js` | `fetch` 기반 GET 전용 요청 함수 |
+| `adminReadOnlyApi.js` | 관리자 읽기 전용 API 함수 묶음 |
+| `gameReadOnlyApi.js` | 게임 읽기 전용 API 함수 묶음 |
+| `index.js` | API layer export 모음 |
+
+아직 추가하지 않은 것:
+
+- 인증 interceptor
+- token 저장/갱신
+- Preview/Apply/write API wrapper
+- `.env` 생성/수정
 
 ## `backend/` 역할
 
@@ -95,29 +126,6 @@ FastAPI 백엔드입니다.
 - create/delete/restore/rollback 제한 API
 - PostgreSQL/Alembic 도입 준비 파일 보유
 - 관리자 contract/readiness 검증 대상
-
-주요 구조:
-
-```txt
-backend/
-├── app/
-│   ├── main.py
-│   ├── api/
-│   │   ├── router.py
-│   │   └── routes/
-│   ├── core/
-│   ├── db/
-│   ├── models/
-│   ├── schemas/
-│   └── services/
-├── scripts/
-├── seeds/
-├── sql/
-├── alembic/
-├── alembic.ini
-├── pyproject.toml
-└── README.md
-```
 
 관리자 route/service 구조는 기존과 동일합니다.
 
@@ -169,7 +177,8 @@ tools/
 
 기존 core smoke:
 
-실행 위치: 프로젝트 루트
+실행 위치: 프로젝트 루트  
+`.venv` 상태: 켜진 상태 권장
 
 ```bash
 bash tools/run_smoke_core.sh
@@ -177,7 +186,8 @@ bash tools/run_smoke_core.sh
 
 Python compile 검사:
 
-실행 위치: 프로젝트 루트
+실행 위치: 프로젝트 루트  
+`.venv` 상태: 켜진 상태 권장
 
 ```bash
 python -m compileall -q backend/app backend/scripts tools
@@ -185,26 +195,30 @@ python -m compileall -q backend/app backend/scripts tools
 
 legacy 경로 의존성 보고서 검사:
 
-실행 위치: 프로젝트 루트
+실행 위치: 프로젝트 루트  
+`.venv` 상태: 켜진 상태 권장
 
 ```bash
 python tools/report_legacy_path_dependencies.py --check
 ```
 
-Vue shell 구조 검사:
+Vue shell/API 구조 검사:
 
-실행 위치: 프로젝트 루트
+실행 위치: 프로젝트 루트  
+`.venv` 상태: 켜진 상태 권장
 
 ```bash
 bash tools/run_smoke_vue_shell.sh
 ```
 
-## v270 설치/확인 필요 사항
+## v271 설치/확인 필요 사항
 
-이번 ZIP에는 `node_modules`를 포함하지 않습니다.
-Vue 앱을 직접 실행하려면 사용자가 한 번 설치해야 합니다.
+v271에서 새 라이브러리는 추가하지 않았습니다.
 
-실행 위치: `frontend/vue-app` 폴더
+단, Vue 앱을 처음 실행한다면 `node_modules`가 ZIP에 없기 때문에 한 번 설치해야 합니다.
+
+실행 위치: `frontend/vue-app` 폴더  
+`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
 
 ```bash
 npm install
@@ -212,7 +226,8 @@ npm install
 
 개발 서버 실행:
 
-실행 위치: `frontend/vue-app` 폴더
+실행 위치: `frontend/vue-app` 폴더  
+`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
 
 ```bash
 npm run dev
@@ -224,12 +239,13 @@ npm run dev
 http://127.0.0.1:5173
 ```
 
-## v270 보존/변경 요약
+## v271 보존/변경 요약
 
 변경함:
 
-- `frontend/vue-app/` 추가
-- Vue shell 구조 smoke 추가
+- Vue 읽기 전용 API client 준비 구조 추가
+- Vue shell에 읽기 전용 route 목록 표시
+- Vue API client smoke 추가
 - 문서 갱신
 
 변경하지 않음:

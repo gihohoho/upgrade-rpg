@@ -1,11 +1,60 @@
-# Vue API 위치
+# Vue API Layer — v271
 
-v270에서는 API client를 아직 만들지 않습니다.
+이 폴더는 Vue 앱에서 FastAPI를 호출할 때 사용할 API client 준비 공간입니다.
 
-나중에 `src/api/game-api-client.js`와 `src/api/admin/*.js`를 참고해서 Vue 전용 client를 만들 예정입니다.
+v271 기준 원칙:
 
-주의:
+- 읽기 전용 `GET` API만 연결 준비합니다.
+- `POST`, `PUT`, `PATCH`, `DELETE` 요청은 아직 추가하지 않습니다.
+- 관리자 Preview/Apply/write 요청 body는 아직 Vue로 옮기지 않습니다.
+- 인증 interceptor는 아직 만들지 않습니다.
+- `.env` 파일은 만들거나 수정하지 않았습니다.
 
-- 기존 API route path 변경 금지
-- 기존 response body 변경 금지
-- 인증/interceptor는 별도 단계에서 설계
+## 파일 역할
+
+| 파일 | 역할 |
+|---|---|
+| `config.js` | API 기본 주소 관리. 기본값은 `http://127.0.0.1:8000/api/v1` |
+| `readOnlyRoutes.js` | 읽기 전용 route 상수 목록 |
+| `readOnlyClient.js` | `fetch` 기반 GET 전용 요청 함수 |
+| `adminReadOnlyApi.js` | 관리자 읽기 전용 API 함수 묶음 |
+| `gameReadOnlyApi.js` | 게임 읽기 전용 API 함수 묶음 |
+| `index.js` | API layer export 모음 |
+
+## 사용자가 설치해야 하는 것
+
+v271에서 새 라이브러리는 추가하지 않았습니다.
+
+다만 Vue 앱을 처음 실행한다면 기존 v270에서 추가된 Vue 의존성을 한 번 설치해야 합니다.
+
+실행 위치: `frontend/vue-app` 폴더  
+`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
+
+```bash
+npm install
+```
+
+## Vue 개발 서버 실행
+
+실행 위치: `frontend/vue-app` 폴더  
+`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
+
+```bash
+npm run dev
+```
+
+## FastAPI 서버 실행
+
+실행 위치: 프로젝트 루트  
+`.venv` 상태: 켜야 함
+
+```bash
+.venv\\Scripts\\activate
+```
+
+실행 위치: `backend` 폴더  
+`.venv` 상태: 켜진 상태
+
+```bash
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
