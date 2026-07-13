@@ -1,3 +1,18 @@
+# v277 - Vue admin read-only catalog mini panel
+
+- Added `AdminMasterDomainPanel.vue` for `GET /admin/master-data/domains`.
+- Added `AdminMasterCatalogMiniPanel.vue` for the selected domain first page using `limit=20`, `page=1`, `sort=id_asc`.
+- Added loading/error/empty/success states, domain selection, generic backend column/row rendering, and stale request cancellation.
+- Added dedicated Vue read-only catalog smoke and documentation.
+- Kept DB, env, seed, auth, route paths, API response bodies, Write Guard, Preview/Apply request bodies, and actual write logic unchanged.
+
+# v276 - Vue admin read-only domain panel
+
+- Connected `GET /admin/master-data/domains` to the Vue admin shell.
+- Parsed the actual response from `payload.domains` and `payload.defaultDomain`.
+- Added domain counts, retry, and loading/error/empty/success states.
+- No new library or framework was added.
+
 ## v275.backend-route-map-report
 
 - Added `tools/report_backend_route_map.py` to generate/check a deterministic backend route map without importing `app.main`.

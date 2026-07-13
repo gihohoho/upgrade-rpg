@@ -7,6 +7,7 @@ cd "$ROOT_DIR"
 python tools/smoke/frontend/smoke_vue_shell_structure.py
 python tools/smoke/frontend/smoke_vue_readonly_api_client.py
 python tools/smoke/frontend/smoke_vue_readonly_api_status_panel.py
+python tools/smoke/frontend/smoke_vue_admin_readonly_catalog_panel.py
 node --check frontend/vue-app/vite.config.js
 node --check frontend/vue-app/src/main.js
 node --check frontend/vue-app/src/router/index.js

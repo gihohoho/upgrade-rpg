@@ -1,17 +1,11 @@
-# Roadmap — v275
+# Roadmap — v277
 
 ## 당분간 보류
 
 게임 콘텐츠 개발은 아직 하지 않습니다.
 
-보류 항목:
-
-- 장비 추가
-- 스킬 추가
-- 보스 추가
-- 필드 추가
-- 드랍률/밸런스 조정
-- 강화 수치 조정
+- 장비/스킬/보스/필드 추가
+- 드랍률/밸런스/강화 수치 변경
 - 신규 콘텐츠 기획 반영
 
 ## 완료 흐름
@@ -19,51 +13,45 @@
 - v268 프로젝트 구조 점검
 - v269 legacy 경로 의존성 자동 목록화
 - v270 Vue 기본 shell 생성
-- v271 Vue 읽기 전용 API client 준비
-- v272 Vue read-only API smoke 화면 연결
-- v273 Vue 개발 서버 local CORS 오류 수정
-- v274 FastAPI 구조 정리 계획 구체화
-- v275 Backend route map 자동 보고서 + Vue read-only route 후보 확정
+- v271 Vue read-only API client 준비
+- v272 안전 GET 상태 화면
+- v273 local CORS 수정
+- v274 FastAPI 구조 계획
+- v275 backend route map
+- v276 Vue 관리자 도메인 목록
+- v277 Vue 관리자 첫 카탈로그 페이지
 
-## v275 결론
+## 현재 경계
 
-- 현재 FastAPI route는 총 27개입니다.
-- `GET` route는 15개, `POST` route는 12개입니다.
-- Vue 화면에서 이미 자동 확인 중인 route는 `GET /health`, `GET /admin/requirements`입니다.
-- 다음 Vue 연결 후보는 `GET /admin/master-data/domains`입니다.
-- Preview/Apply/write route는 인증/권한/Write Guard 설계 전까지 Vue 자동 화면에 연결하지 않습니다.
+Vue `/admin`은 아래 GET만 실제 호출합니다.
 
-## 다음 작업 후보
+- `/health`
+- `/admin/requirements`
+- `/admin/master-data/domains`
+- `/admin/master-data/catalog`
 
-### v276 — Vue admin read-only catalog mini panel
+Preview/Apply/write, 인증, DB 구조 변경은 아직 하지 않습니다.
 
-목표:
+## 다음 작업
 
-- Vue 관리자 shell에 작은 read-only 카탈로그 점검 패널을 추가합니다.
-- 첫 연결은 `GET /api/v1/admin/master-data/domains`만 사용합니다.
-- loading/error/empty/success 상태만 확인합니다.
-- route path/API response body는 변경하지 않습니다.
+### v278 — catalog query controls
 
-주의:
+- 검색어
+- 활성/비활성 필터
+- 페이지네이션
+- 안전한 GET query만 사용
+- stale request 취소 유지
 
-- Preview/Apply/write route 연결 금지
-- 인증/interceptor는 아직 구현하지 않음
-- DB/Alembic 실제 변경 없음
-- env/seed 변경 없음
+### v279 — read-only detail 준비
 
-### v277 — DB/PostgreSQL/Alembic 준비
+- 선택 row의 detail GET
+- 상세 loading/error/empty 처리
+- relations는 별도 단계
 
-목표:
+### 이후
 
-- migration/seed/운영 데이터 역할 분리
-- DB transaction/rollback snapshot 정책 검토
-- 실제 DB 구조 변경은 사용자 승인 후 진행
-
-### v278 — 인증 설계 준비
-
-목표:
-
-- 사용자/관리자 권한 정의
-- token 저장 방식 결정
-- FastAPI dependency와 Vue route guard 설계
-- 기존 Write Guard와의 관계 정리
+- PostgreSQL/Alembic 도입 준비 문서 구체화
+- 인증/관리자 권한 설계
+- 관리자 Vue 이식 확대
+- 게임 Vue 이식
+- 배포 직전 안정화

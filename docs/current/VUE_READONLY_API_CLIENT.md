@@ -195,3 +195,15 @@ Vue build 검증:
 ```bash
 npm run build
 ```
+
+## v276~v277 실제 연결 확장
+
+Vue `/admin`에서 아래 GET이 추가로 실제 호출됩니다.
+
+- `GET /admin/master-data/domains`
+- `GET /admin/master-data/catalog`
+
+도메인 목록은 `response.payload.domains`, 카탈로그는 `response.payload.columns`와 `response.payload.rows`를 사용합니다.
+카탈로그는 현재 `limit=20`, `page=1`, `sort=id_asc`로 고정했습니다.
+검색/필터/페이지네이션/detail/relations/Preview/Apply/write는 아직 연결하지 않습니다.
+

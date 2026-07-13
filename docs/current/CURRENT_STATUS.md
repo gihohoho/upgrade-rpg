@@ -1,98 +1,83 @@
-# Current Status — v275
+# Current Status — v277
 
 ## 현재 기준
 
-- 최신 작업: `v275.backend-route-map-report`
-- 기준 ZIP: `rpg_v275_backend_route_map_report.zip`
-- 직전 기준: `v274.backend-structure-plan`
+- 최신 작업: `v277.vue-admin-readonly-catalog-mini-panel`
+- 기준 ZIP: `rpg_v277_vue_admin_readonly_catalog_mini_panel.zip`
+- 직전 기준: `v275.backend-route-map-report`
 - readiness version: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 
-## v275 완료
+## v276~v277 완료
 
-v275에서는 FastAPI 실제 route 목록을 정적으로 분석해서 자동 보고서로 만들고, Vue에서 다음에 연결 가능한 read-only `GET` route 후보와 아직 보류해야 하는 route를 분리했습니다.
+Vue 관리자 shell의 read-only 이식을 두 단계 진행했습니다.
 
-추가/변경한 것:
+### v276 — 도메인 목록
 
-- `tools/report_backend_route_map.py`
-  - `app.main`을 import하지 않고 route 파일의 `@router.get/post(...)` decorator를 분석합니다.
-  - `docs/current/BACKEND_ROUTE_MAP.md`를 생성/검사합니다.
-  - 단순 문서 생성이 `asyncpg` 같은 로컬 DB 의존성 설치 상태에 막히지 않도록 설계했습니다.
-- `docs/current/BACKEND_ROUTE_MAP.md`
-  - 전체 route 27개를 정리했습니다.
-  - GET 15개, POST 12개를 분류했습니다.
-  - Vue 자동 smoke 화면에 이미 쓰는 route와 다음 read-only 후보를 분리했습니다.
-  - Preview/Apply/write route는 보류 목록으로 고정했습니다.
-- `tools/smoke/backend/smoke_backend_route_map_report.py`
-  - route map 보고서 최신 여부와 핵심 보호 문구를 검사합니다.
-  - Vue read-only wrapper가 상세/관계 조회에서 `rowId`를 backend query `id`로 변환하는지도 검사합니다.
-- `frontend/vue-app/src/api/adminReadOnlyApi.js`
-  - `fetchMasterDetail({ rowId })` → 실제 query `id`로 변환
-  - `fetchMasterRelations({ rowId })` → 실제 query `id`로 변환
+- `AdminMasterDomainPanel.vue` 추가
+- `GET /api/v1/admin/master-data/domains` 자동 호출
+- `response.payload.domains` 기준 표시
+- loading/error/empty/success 상태
+- 기본 도메인 선택
+- 전체/활성/비활성 개수 표시
 
-## v275 route map 요약
+### v277 — 첫 카탈로그 페이지
 
-| 구분 | 수 |
-|---|---:|
-| 전체 route | 27 |
-| GET | 15 |
-| POST | 12 |
-| admin group | 21 |
-| game group | 4 |
-| health group | 2 |
-| 중복 method/path | 0 |
+- `AdminMasterCatalogMiniPanel.vue` 추가
+- 선택된 도메인의 `GET /api/v1/admin/master-data/catalog` 자동 호출
+- 고정 query: `limit=20`, `page=1`, `sort=id_asc`
+- `response.payload.columns`, `response.payload.rows` 일반 표 렌더링
+- 도메인 변경 시 이전 요청 취소
+- loading/error/empty/success 상태
 
-현재 Vue 화면에서 실제 자동 호출 중인 route:
+## 현재 Vue `/admin` 연결 범위
+
+자동 호출:
 
 - `GET /api/v1/health`
 - `GET /api/v1/admin/requirements`
-
-다음 연결 후보:
-
 - `GET /api/v1/admin/master-data/domains`
-- 그다음에 catalog/detail/relations 등 단계적 연결
+- `GET /api/v1/admin/master-data/catalog`
 
-보류:
+아직 연결하지 않음:
 
-- 관리자 Preview 계열 POST
-- 관리자 Apply/write 계열 POST
-- `POST /api/v1/game/save`
-- 인증/권한/Write Guard 설계가 필요한 route
+- 검색/필터/페이지네이션
+- detail/relations
+- Preview/Apply/write
+- 인증/token/interceptor
 
-## v275에서 변경하지 않은 것
+## 변경하지 않은 것
 
 - DB 구조
-- env
+- `.env`
 - seed
 - 인증
 - 기존 route path
 - 기존 API 응답 body
-- 기존 write 로직
 - Write Guard
+- 실제 write 로직
 - 관리자 Preview/Apply 요청 body
 - 기존 smoke/contract 의미
 - 게임 콘텐츠
 
-## 현재 실제 실행 기준
+## 실제 화면 기준
 
-| 화면 | 실제 기준 |
+| 화면 | 현재 기준 |
 |---|---|
-| 게임 | 루트 `index.html` |
-| 관리자 | 루트 `admin.html` |
-| Vue 준비 shell | `frontend/vue-app/` |
+| 게임 운영/검증 화면 | 루트 `index.html` |
+| 관리자 운영/검증 화면 | 루트 `admin.html` |
+| Vue 이식 준비 화면 | `frontend/vue-app/` |
 
-Vue route:
+Vue 경로:
 
-| 경로 | 의미 |
-|---|---|
-| `/game` | 게임 이식 준비 shell + 안전 GET 상태 확인 |
-| `/admin` | 관리자 이식 준비 shell + 안전 GET 상태 확인 |
+- `http://127.0.0.1:5173/game`
+- `http://127.0.0.1:5173/admin`
 
-## 사용자가 설치/확인해야 할 것
+## 설치/실행
 
-v275에서 새 라이브러리/프레임워크는 추가하지 않았습니다.
+v276~v277에서 새 라이브러리나 프레임워크는 추가하지 않았습니다.
 
-Vue 앱을 처음 실행한다면 기존 Vue 의존성 설치가 필요합니다. 이미 `frontend/vue-app/node_modules`가 있다면 다시 설치하지 않아도 됩니다.
+Vue 의존성을 아직 설치하지 않은 경우에만:
 
 실행 위치: `frontend/vue-app` 폴더  
 `.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
@@ -101,7 +86,7 @@ Vue 앱을 처음 실행한다면 기존 Vue 의존성 설치가 필요합니다
 npm install
 ```
 
-FastAPI 서버 실행:
+FastAPI 실행:
 
 실행 위치: 프로젝트 루트  
 `.venv` 상태: 켜야 함
@@ -117,7 +102,7 @@ FastAPI 서버 실행:
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Vue 개발 서버 실행:
+Vue 실행:
 
 실행 위치: `frontend/vue-app` 폴더  
 `.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
@@ -126,21 +111,23 @@ Vue 개발 서버 실행:
 npm run dev
 ```
 
-확인 주소:
+## 사용자가 확인할 것
 
-```txt
-http://127.0.0.1:5173/game
-http://127.0.0.1:5173/admin
-```
+`http://127.0.0.1:5173/admin`에서 다음을 확인합니다.
+
+1. API 상태 2개가 성공인지
+2. 도메인 카드가 표시되는지
+3. 기본 도메인이 선택되는지
+4. 아래 표에 첫 20개 row가 표시되는지
+5. 다른 도메인을 선택하면 표가 바뀌는지
+6. 브라우저 콘솔 오류가 없는지
 
 ## 다음 추천 단계
 
-`v276 Vue admin read-only catalog mini panel`
+`v278 Vue admin catalog query controls`
 
-추천 목표:
-
-- Vue 관리자 shell에서 `GET /api/v1/admin/master-data/domains`만 먼저 호출합니다.
-- 성공/오류/빈 데이터 상태를 작게 보여줍니다.
-- catalog row 목록, detail, relations는 아직 자동 호출하지 않습니다.
-- Preview/Apply/write route는 계속 보류합니다.
-- DB/Alembic/인증/env/seed는 변경하지 않습니다.
+- 검색
+- 활성/비활성 필터
+- 페이지네이션
+- GET query만 사용
+- detail/relations와 Preview/Apply/write는 계속 보류
