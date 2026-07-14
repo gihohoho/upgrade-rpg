@@ -1,4 +1,4 @@
-# PostgreSQL / Alembic Readiness — v290
+# PostgreSQL / Alembic Readiness — v292
 
 이 문서는 현재 프로젝트 파일을 기준으로 PostgreSQL과 Alembic 도입 준비 상태를 자동 분석한 결과입니다.
 
@@ -17,7 +17,9 @@
 - v288에서는 columns/types/nullability/PK/FK/unique/index/check 구조를 읽기 전용으로 비교합니다.
 - v289에서는 PostgreSQL `FLOAT` alias를 정규화해 `DOUBLE PRECISION` reflection false positive를 제거합니다.
 - v290에서는 schema 차이 0개를 gate로 사용하는 backup/restore read-only preflight, client 도구 점검, 민감 backup 경로와 분리 DB 경계를 추가합니다.
-- 따라서 다음 위험 단계는 바로 migration을 적용하는 것이 아니라, **상세 schema 동등성 → 백업/복원 → 별도 빈 DB migration 검증** 순서여야 합니다.
+- v291에서는 승인된 source backup 한 단계만 수행하는 custom dump 생성, TOC 검증, SHA-256, source snapshot, manifest 도구를 추가합니다.
+- v292에서는 verified backup의 SHA-256과 source baseline을 다시 확인하고, target DB가 없을 때만 빈 `rpg_game_restore_rehearsal_v290`을 생성하는 도구를 추가합니다.
+- 따라서 다음 위험 단계는 바로 migration을 적용하는 것이 아니라, **상세 schema 동등성 → 백업 → 분리된 DB 복원 검증 → 별도 빈 DB migration 검증** 순서여야 합니다.
 
 ## 현재 구조 요약
 
@@ -110,6 +112,7 @@ python -m pip install -e ".[dev]"
 - Docker/schema/table count/health 읽기 전용 수집 도구: `tools/check_postgres_runtime_readonly_state.py`
 - SQLAlchemy metadata/실제 PostgreSQL 상세 구조 비교: `tools/check_postgres_schema_equivalence.py`
 - backup/restore schema gate와 client 도구 확인: `tools/check_postgres_backup_restore_preflight.py`
+- 승인된 source backup 생성/검증: `tools/create_postgres_backup.py`
 
 ## 현재 차단 요소 / 실제 검증 필요 지점
 
@@ -139,9 +142,11 @@ backend runtime/model/schema 경로에서 SQLite URL이나 SQLite 전용 타입�
 2. `/api/v1/health/db`가 `ok`인지 확인
 3. schema equivalence가 `structurally-equivalent`, 차이 0개인지 확인
 4. `tools/check_postgres_backup_restore_preflight.py`로 host/container client 도구 확인
-5. backup은 `local-backups/postgres/`에만 저장하고 Git/전달 ZIP에서 제외
-6. 원본 `rpg_game`에는 restore하지 않음
-7. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
+5. 사용자 승인 후 `tools/create_postgres_backup.py --execute`로 source backup 생성·검증
+6. backup은 `local-backups/postgres/`에만 저장하고 Git/전달 ZIP에서 제외
+7. v292 승인 후 `tools/create_postgres_restore_rehearsal_database.py --execute`로 target 존재 여부를 확인하고 없을 때만 빈 DB 생성
+8. 원본 `rpg_game`에는 restore하지 않음
+9. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
 
 ### Stage C — Alembic 실행 방식 검증
 
@@ -229,6 +234,18 @@ backup/restore 실행 전 gate와 client 도구를 읽기 전용으로 확인할
 python tools/check_postgres_backup_restore_preflight.py
 ```
 
+승인된 source backup을 생성하고 archive/체크섬을 검증할 때:
+
+```bash
+python tools/create_postgres_backup.py --execute
+```
+
+승인된 빈 restore rehearsal DB를 target이 없을 때만 생성할 때:
+
+```bash
+python tools/create_postgres_restore_rehearsal_database.py --execute
+```
+
 상세 전략은 `docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md`를 기준으로 합니다.
 
 ## 이번 단계에서 변경하지 않은 것
@@ -253,11 +270,14 @@ python tools/check_postgres_backup_restore_preflight.py
 - backup restore 리허설 대상 임시 DB
 - 별도 빈 DB 최초 revision upgrade/downgrade 검증 계획
 
-## v290 backup/restore preflight 경계
+## v291-v292 backup / empty rehearsal DB 경계
 
 - backup 폴더: `local-backups/postgres/`
-- custom dump 파일명: `rpg_game_YYYYMMDD_HHMMSS_KST_v290.custom.dump`
-- source DB: `rpg_game`
+- 실제 verified backup: `rpg_game_20260714_130403_KST_v290.custom.dump`
+- source DB: `rpg_game` / 22 tables / 748 rows
+- `pg_restore --list` TOC 검증과 SHA-256/source snapshot/manifest 완료
 - restore rehearsal DB: `rpg_game_restore_rehearsal_v290`
+- v292는 target 존재 여부 확인 후 없을 때만 owner `rpg_user`, template `template0` 빈 DB 생성
+- 생성 후 target tables 0, Alembic table 없음, source 22/748 유지 확인
 - empty migration test DB: `rpg_game_migration_empty_v290`
-- 실제 backup/restore/DB 생성·삭제/Alembic mutation은 사용자 승인 전 실행하지 않음
+- restore/drop/Alembic mutation은 아직 별도 사용자 승인 전 실행 금지

@@ -1,92 +1,85 @@
-# NEXT CHAT HANDOFF — Upgrade RPG v290
+# NEXT CHAT HANDOFF — Upgrade RPG v292
 
 ## 기준 ZIP
 
-- `rpg_v290_postgres_backup_restore_preflight_ready.zip`
+- `rpg_v292_postgres_restore_rehearsal_database_creation_ready.zip`
 
-## 현재 버전
+## 현재 기준
 
-- 최신 작업: `v290.postgres-backup-restore-preflight-gate`
+- 최신 작업: `v292.postgres-restore-rehearsal-database-create-tool`
 - readiness version: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
-- 실제 backend 가상환경: `backend/.venv`
+- backend virtualenv: `backend/.venv`
 
-## 실제 PostgreSQL 보존 기준
+## 사용자/진행 방식
 
-사용자 컴퓨터에서 이전 읽기 전용 단계로 확인된 기준:
+사용자는 코딩을 거의 모르는 기호입니다. 항상 한국어로 쉽고 자세하게 설명합니다.
+모든 터미널 명령 바로 위에 실행 위치와 Python `.venv` 상태를 적습니다.
+
+- backend 명령: `backend`에서 `source .venv/Scripts/activate`
+- Vue/npm 명령: `frontend/vue-app`, Python `.venv` 불필요
+- Git 명령: 프로젝트 루트에서 한 줄
+
+## 실제 PostgreSQL 상태
 
 ```txt
-Docker Compose project: upgraderpg
-containers: running(2)
-volume: upgraderpg_rpg_postgres_data
 PostgreSQL: 16.14
-DB: rpg_game / rpg_user
-DB size: 12 MB
-model tables: 22
+DB/user: rpg_game / rpg_user
+SQLAlchemy model tables: 22
 public tables: 22
 total rows: 748
-alembic_version: 없음
-current revision: 없음
-health/db: HTTP 200, status=ok
+alembic_version/current revision: 없음
 classification: existing-schema-without-alembic-baseline
+schema equivalence: structurally-equivalent / differences=0
 ```
 
-원본 DB 초기화 금지. 기존 데이터 보존형 baseline 전략입니다.
-
-## v289 schema alias 수정
-
-v288 실제 차이 두 개:
+보존 대상 예시:
 
 ```txt
-user_profiles.add_attack_speed: model=FLOAT db=DOUBLE PRECISION
-user_profiles.farm_atk_bonus: model=FLOAT db=DOUBLE PRECISION
+users: 1
+user_profiles: 1
+characters: 1
+user_save_snapshots: 2
+admin_change_logs: 13
 ```
 
-v289 checker는 아래처럼 정규화합니다.
+## 사용자 PC 실제 backup 결과
 
 ```txt
-FLOAT -> DOUBLE PRECISION
-FLOAT(1..24) -> REAL
-FLOAT(25..53) -> DOUBLE PRECISION
+result: backup-created-and-verified
+backup: local-backups/postgres/rpg_game_20260714_130403_KST_v290.custom.dump
+size: 126.60 KB
+SHA-256: b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481
+source tables: 22
+source rows: 748
+TOC table definitions/data entries: 22 / 22
 ```
 
-## v289 실제 재실행 상태
+backup과 `local-backups/`는 민감 데이터이므로 Git/ZIP/채팅에 포함하지 않습니다.
 
-기호 컴퓨터에서 v289 적용 후 결과는 다음 채팅 시작 시 다시 수집해야 합니다.
-이번 ZIP 제작 샌드박스에서는 `psycopg`가 없어 checker가 `connection-failed`였고, PostgreSQL/Docker client도 없어 실제 DB 결과를 확인할 수 없었습니다.
-따라서 `structurally-equivalent`, 차이 0개라고 미리 기록하지 않았습니다.
-
-## v290 완료
-
-- `tools/check_postgres_backup_restore_preflight.py` 추가
-- schema equivalence가 `structurally-equivalent`, 차이 0개인지 선행 gate
-- host 및 기존 `upgrade_rpg_postgres` container의 `pg_dump`, `pg_restore`, `createdb`, `dropdb` 버전/사용 가능 여부 확인
-- backup 폴더 `local-backups/postgres/` 확정
-- backup 파일명 `rpg_game_YYYYMMDD_HHMMSS_KST_v290.custom.dump` 확정
-- SHA-256 sidecar/민감정보/Git/ZIP 제외 규칙 확정
-- 원본 DB: `rpg_game`
-- restore rehearsal DB: `rpg_game_restore_rehearsal_v290`
-- empty migration test DB: `rpg_game_migration_empty_v290`
-- restore 전후 table별 row count/total/schema 비교 계획 확정
-- 별도 빈 DB 최초 Alembic 검증 계획 확정
-- 전용 smoke와 core smoke 등록
-- `/local-backups/`를 `.gitignore`, `.dockerignore`에 등록
-
-## 이번 단계에서 실행하지 않은 것
+## v292 추가
 
 ```txt
-backup 생성
-restore
-DB 생성/삭제
-Docker container/volume 변경
-.env 변경
-seed
-Alembic revision/upgrade/downgrade/stamp
-API route/body/write/auth 변경
-게임 콘텐츠 변경
+tools/create_postgres_restore_rehearsal_database.py
+tools/smoke/backend/smoke_postgres_restore_rehearsal_database_creation.py
+docs/current/POSTGRES_RESTORE_REHEARSAL_DB_CREATION.md
 ```
 
-## 다음 첫 확인
+도구 안전 경계:
+
+- 실행 직전 schema/preflight와 source 22 tables / 748 rows 재확인
+- verified backup manifest, size, SHA-256 sidecar 재검증
+- source `rpg_game`, target `rpg_game_restore_rehearsal_v290` 고정
+- target 존재 여부를 PostgreSQL catalog에서 먼저 확인
+- target이 이미 있으면 create/restore/drop 모두 중단
+- 없을 때만 `createdb` 정확히 1회
+- owner `rpg_user`, template `template0`
+- source와 같은 encoding/collation/locale provider 사용
+- 생성 후 target public tables 0, `alembic_version` 없음 확인
+- 원본 22 tables / 748 rows 유지 재확인
+- `pg_restore`, `dropdb`, `.env`, Docker, Alembic 작업 없음
+
+## 사용자 PC에서 다음 실행
 
 실행 위치: `backend` 폴더  
 `.venv` 상태: 꺼져 있을 때 Git Bash
@@ -99,34 +92,28 @@ source .venv/Scripts/activate
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/check_postgres_schema_equivalence.py
-python tools/check_postgres_backup_restore_preflight.py
+python tools/create_postgres_restore_rehearsal_database.py --execute
 ```
 
-## 결과 분기
-
-- `review-required`: backup/migration으로 넘어가지 않고 새로운 차이 분석
-- `connection-failed`: `.venv`, psycopg, Docker/PostgreSQL 연결만 확인
-- preflight `blocked`: blocking reason만 해결
-- preflight `ready-for-user-approval`: 실제 backup 생성 한 단계만 사용자 승인 요청
-
-## 설치 상태
-
-- 프로젝트 새 Python/npm 라이브러리 또는 프레임워크 추가 없음
-- host PostgreSQL client가 없어도 기존 container 내부 도구가 확인되면 추가 설치 불필요
-- npm package 변경 없음
-
-## 계속 실행 금지
+성공 기대값:
 
 ```txt
-python scripts/setup_dev_db.py --reset
-docker compose down -v
-python -m alembic revision --autogenerate
-python -m alembic upgrade head
-python -m alembic downgrade
-python -m alembic stamp head
-pg_dump 실제 backup 명령
-createdb 실제 DB 생성 명령
-pg_restore 실제 restore 명령
-dropdb 실제 DB 삭제 명령
+result: restore-rehearsal-database-created-empty-and-verified
+target public tables: 0
+target alembic_version: absent
+source tables before/after: 22 / 22
+source rows before/after: 748 / 748
 ```
+
+## 다음 승인 경계
+
+v292 성공 결과를 먼저 확인한 뒤에만 verified dump를 target DB에 `pg_restore`하는 단계를 별도 승인받습니다.
+실제 restore, target DB 삭제, Alembic revision/upgrade/downgrade/stamp는 아직 금지입니다.
+
+## 계속 보류
+
+- 게임 콘텐츠 개발
+- Vue Preview/Apply/write/인증 연결
+- 원본 DB schema/data 변경
+- seed/.env/API route/body/write guard 변경
+- Docker container/volume 삭제

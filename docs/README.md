@@ -18,6 +18,7 @@ docs/current/POSTGRES_RUNTIME_READONLY_STATE.md
 docs/current/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md
 docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md
 docs/current/POSTGRES_BACKUP_RESTORE_PREP.md
+docs/current/POSTGRES_BACKUP_CREATION.md
 ```
 
 ## 인수인계
@@ -28,7 +29,7 @@ NEXT_CHAT_HANDOFF.md
 docs/handoff/
 ```
 
-루트 인수인계 파일과 `docs/handoff/` 사본은 같은 v290 기준으로 유지합니다.
+루트 인수인계 파일과 `docs/handoff/` 사본은 같은 v292 기준으로 유지합니다.
 
 ## 문서 폴더
 
@@ -39,3 +40,5 @@ docs/handoff/
 - 루트의 기능별 문서: 기존 smoke와 구현 이력이 참조하는 상세 기록
 
 문서 대량 이동은 기존 smoke 경로를 확인한 뒤 진행합니다.
+
+- `current/POSTGRES_RESTORE_REHEARSAL_DB_CREATION.md`: 빈 restore rehearsal DB 생성 안전 경계

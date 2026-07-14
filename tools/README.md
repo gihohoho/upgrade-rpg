@@ -99,3 +99,18 @@ python tools/check_postgres_schema_equivalence.py
 ```
 
 이 도구는 columns/types/nullability/PK/FK/unique/index/check를 읽기 전용으로 비교하며 schema/data와 Alembic 이력을 변경하지 않습니다.
+
+## 승인된 PostgreSQL backup 생성/검증
+
+실행 위치: 프로젝트 루트  
+`.venv` 상태: `backend/.venv`가 켜진 상태
+
+```bash
+python tools/create_postgres_backup.py --execute
+```
+
+이 도구는 실행 직전에 schema/preflight gate를 다시 확인하고, `rpg_game` custom dump를 `local-backups/postgres/`에 생성한 뒤 `pg_restore --list`, SHA-256, source count snapshot, manifest를 검증합니다.
+
+- `.dump`는 민감 데이터이므로 업로드/Git/전달 ZIP 포함 금지
+- restore, DB 생성/삭제, Docker resource 변경, `.env`, Alembic mutation은 실행하지 않음
+- `--execute`가 없으면 실제 파일을 만들지 않음

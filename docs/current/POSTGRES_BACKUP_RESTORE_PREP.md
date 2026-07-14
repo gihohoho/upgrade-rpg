@@ -245,3 +245,12 @@ dropdb 실제 DB 삭제 명령
 ```
 
 위 항목은 각각 사용자 명시 승인 전까지 실행하지 않습니다.
+
+## v292 빈 restore rehearsal DB 경계
+
+- source: `rpg_game`
+- target: `rpg_game_restore_rehearsal_v290`
+- target 존재 시 즉시 중단
+- 없을 때만 owner `rpg_user`, template `template0`으로 생성
+- 생성 후 public tables 0, `alembic_version` 없음 확인
+- restore/drop/Alembic은 별도 승인 전 금지

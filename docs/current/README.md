@@ -1,11 +1,13 @@
 # Current documents
 
-- 최신 작업: `v290.postgres-backup-restore-preflight-gate`
+- 최신 작업: `v292.postgres-restore-rehearsal-database-create-tool`
 - 현재 상태: `CURRENT_STATUS.md`
 - PostgreSQL runtime 결과: `POSTGRES_RUNTIME_READONLY_STATE.md`
 - 기존 데이터 보존형 baseline 전략: `POSTGRES_ALEMBIC_BASELINE_STRATEGY.md`
 - 상세 schema 비교와 FLOAT alias 정규화: `POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md`
 - backup/restore preflight와 보존 경계: `POSTGRES_BACKUP_RESTORE_PREP.md`
+- 실제 backup 생성/검증: `POSTGRES_BACKUP_CREATION.md`
+- 빈 restore rehearsal DB 생성 경계: `POSTGRES_RESTORE_REHEARSAL_DB_CREATION.md`
 - Alembic asyncpg 수정: `ALEMBIC_ASYNC_ENV_FIX.md`
 - PostgreSQL/Alembic readiness: `POSTGRES_ALEMBIC_READINESS.md`
 - 로컬 설치/확인 체크리스트: `POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md`

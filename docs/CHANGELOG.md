@@ -1,3 +1,20 @@
+# v292 - PostgreSQL empty restore rehearsal database creation tool
+
+- Added `tools/create_postgres_restore_rehearsal_database.py` for the user-approved existence-check-and-create-empty-DB boundary.
+- Requires the verified v291 backup, recomputes SHA-256, rechecks the 22-table/748-row source baseline, and checks `pg_database` before any mutation.
+- Creates only `rpg_game_restore_rehearsal_v290` when absent, with owner `rpg_user`, template `template0`, and source-compatible encoding/collation/locale metadata.
+- Verifies the target has zero public tables and no `alembic_version`, then confirms the source remains 22 tables / 748 rows.
+- Stops when the target already exists and never runs `pg_restore`, `dropdb`, `.env` edits, Docker changes, Alembic mutations, API/auth/write changes, or game-content changes.
+- Added dedicated smoke coverage, core-smoke registration, current-state documentation, and v292 handoff synchronization.
+
+# v291 - PostgreSQL backup creation and archive verification tool
+
+- Added `tools/create_postgres_backup.py` for the user-approved source backup step only.
+- Re-runs schema/preflight gates, pins `rpg_game`/`rpg_user`/`upgrade_rpg_postgres`, streams a custom-format dump to a private partial file, validates the archive with `pg_restore --list`, and publishes it only after validation.
+- Adds SHA-256, TOC, source table/row snapshot, and manifest sidecars under ignored `local-backups/postgres/`.
+- Refuses overwrite/collision and does not restore, create/drop databases, change Docker resources, edit `.env`, run Alembic mutations, or change API/auth/write/game content.
+- Added a dedicated smoke and core-smoke registration; the handoff ZIP excludes all backup artifacts.
+
 # v290 - PostgreSQL backup/restore read-only preflight gate
 
 - Added `tools/check_postgres_backup_restore_preflight.py` to re-run the schema-equivalence gate, check host/existing-container `pg_dump`, `pg_restore`, `createdb`, and `dropdb` availability, and report whether the project is ready to request backup execution approval.

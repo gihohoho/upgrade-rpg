@@ -1,4 +1,4 @@
-# Vue/FastAPI/DB 전환 준비 계획 — v290
+# Vue/FastAPI/DB 전환 준비 계획 — v292
 
 ## 목적
 
@@ -365,3 +365,17 @@ v275에서는 Vue 관리자 상세/관계 조회 wrapper가 `rowId` 입력을 ba
 - 원본 `rpg_game`에는 restore하지 않습니다.
 - restore rehearsal DB와 empty migration test DB는 서로 분리합니다.
 - 실제 backup/restore/DB 생성·삭제/Alembic mutation은 사용자 승인 전 실행하지 않습니다.
+
+
+## v291 승인된 source backup 생성 경계
+
+- 사용자 PC에서 schema equivalence 차이 0개와 preflight `ready-for-user-approval`을 실제 확인했습니다.
+- 사용자는 source `rpg_game` backup 생성 한 단계만 승인했습니다.
+- `tools/create_postgres_backup.py`는 custom dump, TOC, SHA-256, source snapshot, manifest만 생성합니다.
+- 산출물은 `local-backups/`에만 두고 Git/전달 ZIP에서 제외합니다.
+- restore rehearsal DB 생성, restore, DB 삭제, Alembic revision/upgrade/downgrade/stamp는 계속 별도 승인 전 금지합니다.
+- Vue write/인증 이식과 게임 콘텐츠 개발은 PostgreSQL baseline 검증 완료 후까지 계속 보류합니다.
+
+## v292 verified backup 이후 분리 DB 생성 경계
+
+사용자 PC에서 verified backup 생성이 완료되었습니다. v292는 원본 `rpg_game`을 건드리지 않고 `rpg_game_restore_rehearsal_v290` 빈 DB 하나만 생성합니다. target 존재 여부, SHA-256, source 22 tables / 748 rows를 다시 확인하며 restore와 Alembic 작업은 포함하지 않습니다.

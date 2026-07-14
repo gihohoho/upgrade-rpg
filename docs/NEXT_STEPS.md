@@ -1,56 +1,28 @@
-# 다음 추천 단계
+# Next Steps — v292
 
-## v290 완료
+## 완료
 
-- schema equivalence 결과를 선행 조건으로 사용하는 backup/restore preflight gate 추가
-- host/container PostgreSQL client 네 도구 사용 가능 여부 점검 추가
-- backup 위치·파일명·민감정보 보존 규칙 확정
-- 원본/restore rehearsal/migration test DB 경계 확정
-- restore 전후 table/row/schema 비교 계획 확정
-- 실제 DB mutation은 실행하지 않음
+- schema equivalence 차이 0개 확인
+- backup/restore preflight 통과
+- verified custom backup 생성 완료
+- SHA-256/TOC/source snapshot/manifest 검증 완료
+- target 존재 여부 확인 후 없을 때만 빈 DB를 생성하는 v292 도구 준비
 
-## 먼저 실행할 명령
+## 현재 사용자 실행 단계
 
-실행 위치: `backend` 폴더  
-`.venv` 상태: 꺼져 있을 때 Git Bash
+1. `python tools/create_postgres_restore_rehearsal_database.py --execute`
+2. target `rpg_game_restore_rehearsal_v290` 생성 여부 확인
+3. target public tables 0개 확인
+4. source 22 tables / 748 rows 유지 확인
+5. 콘솔 결과만 공유
 
-```bash
-source .venv/Scripts/activate
-```
+## 다음 별도 승인
 
-실행 위치: 프로젝트 루트  
-`.venv` 상태: `backend/.venv`가 켜진 상태
+- verified dump를 target DB에 `pg_restore`
+- restore 후 table별 row count와 schema equivalence 비교
+- restore rehearsal DB 삭제 여부 결정
+- 별도 empty migration DB 준비와 최초 Alembic revision 검증
 
-```bash
-python tools/check_postgres_schema_equivalence.py
-python tools/check_postgres_backup_restore_preflight.py
-```
+## 계속 금지
 
-## 결과별 다음 행동
-
-- `review-required`: 새로운 차이만 분석하고 backup/migration으로 넘어가지 않음
-- `connection-failed`: `.venv`, `psycopg`, Docker/PostgreSQL 연결 상태만 확인하고 DB 변경 금지
-- schema 차이 0개 + preflight `blocked`: 누락 도구 또는 Git 제외 규칙만 해결
-- preflight `ready-for-user-approval`: 실제 backup 한 단계에 대한 사용자 승인 요청
-
-## 설치 관련
-
-- 프로젝트에 새 Python/npm 라이브러리 또는 프레임워크 추가 없음
-- host PostgreSQL client가 없어도 container 내부 네 도구가 있으면 별도 설치 불필요
-- host와 container 모두 도구가 없을 때만 PostgreSQL client 설치 여부를 결정
-- npm package 변경 없음
-
-## 계속 실행 금지
-
-```txt
-python scripts/setup_dev_db.py --reset
-docker compose down -v
-python -m alembic revision --autogenerate
-python -m alembic upgrade head
-python -m alembic downgrade
-python -m alembic stamp head
-pg_dump 실제 backup 명령
-createdb 실제 DB 생성 명령
-pg_restore 실제 restore 명령
-dropdb 실제 DB 삭제 명령
-```
+원본 DB 변경, `dropdb`, Alembic revision/upgrade/downgrade/stamp, `.env`, seed, 인증, API body/route/write guard, 게임 콘텐츠 변경.
