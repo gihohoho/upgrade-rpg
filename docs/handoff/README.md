@@ -1,6 +1,9 @@
-# Handoff
+# Handoff package — v298
 
-현재 인계 기준: **v294.postgres-migration-empty-database-create-tool**
+기준 파일:
 
-다음 채팅에서는 루트 `NEXT_CHAT_PROMPT.md`와 최신 ZIP `rpg_v294_postgres_migration_test_database_creation_ready.zip`을 사용합니다.
-backup `.dump`, restore report, `local-backups/`는 민감 데이터이므로 인계 ZIP에 포함하지 않습니다.
+```txt
+rpg_v298_postgres_initial_alembic_manual_review_upgrade_ready.zip
+```
+
+root의 `NEXT_CHAT_PROMPT.md`, `NEXT_CHAT_HANDOFF.md`와 이 폴더의 사본은 항상 동일해야 합니다.

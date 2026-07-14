@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v294.postgres-migration-empty-database-create-tool**
+현재 기준: **v298.postgres-initial-alembic-manual-review-upgrade-ready**
 
 ## 현재 구조
 
@@ -11,60 +11,51 @@
 - FastAPI 백엔드: `backend/`
 - 실제 Python 가상환경: `backend/.venv`
 
-Vue `/admin`에는 GET health, requirements, domains, catalog, detail, relations가 연결되어 있습니다. 게임 콘텐츠 개발과 Vue write/인증 확대는 계속 보류합니다.
+게임 콘텐츠 개발과 Vue write/인증 확대는 계속 보류합니다.
 
-## 실제 PostgreSQL 보존 기준
-
-```txt
-PostgreSQL 16.14 / rpg_game / rpg_user
-SQLAlchemy model tables 22 / public tables 22
-total rows 748
-alembic_version 없음 / current revision 없음
-classification existing-schema-without-alembic-baseline
-schema equivalence structurally-equivalent / differences 0
-```
-
-## 실제 backup과 restore rehearsal 완료
+## PostgreSQL / Alembic 현재 상태
 
 ```txt
-backup: local-backups/postgres/rpg_game_20260714_130403_KST_v290.custom.dump
-SHA-256: b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481
-source tables/rows: 22 / 748
-restore DB: rpg_game_restore_rehearsal_v290
-restore tables/rows: 22 / 748
-restore schema: structurally-equivalent / differences 0
+source rpg_game: 22 tables / 748 rows / differences=0 / alembic_version 없음
+restore rehearsal: 22 tables / 748 rows / differences=0 / alembic_version 없음
+migration test DB: alembic_version 1 table / 0 rows / recorded revision 없음
+initial revision: v295_initial_schema
+revision SHA-256: 24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa
+manual review: passed
 ```
 
-`local-backups/`는 실제 사용자/게임 데이터가 포함될 수 있으므로 Git, Docker build context, 전달 ZIP, 채팅에서 제외합니다.
+## v298 핵심
 
-## v294 핵심
-
-새 도구:
+사용자가 생성한 review bundle을 실제 코드 기준으로 수동 검토했습니다.
 
 ```txt
-tools/create_postgres_migration_test_database.py
+tables: 22 / 22
+columns: 209 / 209
+indexes: 42 / 42
+foreign keys: 21
+explicit unique constraints: 6
+check constraints: 0
 ```
 
-승인 범위는 아래 DB가 없을 때 빈 DB 하나만 생성하는 것입니다.
+타입, 길이, nullable, PK, FK, unique, index, server default가 모델과 일치합니다. downgrade는 upgrade table 생성 순서의 정확한 역순이며 FK 자식 테이블이 부모보다 먼저 삭제됩니다.
+
+추가된 안전 도구:
 
 ```txt
-source (preserve): rpg_game
-verified restore (preserve): rpg_game_restore_rehearsal_v290
-create empty only: rpg_game_migration_empty_v290
+tools/upgrade_postgres_migration_test_database.py
+tools/smoke/backend/smoke_postgres_initial_alembic_revision_manual_review.py
+tools/smoke/backend/smoke_postgres_migration_test_database_upgrade.py
 ```
 
-안전 경계:
+실제 `upgrade head`는 사용자 별도 승인 전 실행하지 않습니다. 승인 후에도 target은 아래 하나로 고정됩니다.
 
-- exact backup/SHA-256와 v293 restore report 재검증
-- source와 restore DB의 table별 row counts 재검증
-- restore DB schema differences=0 재검증
-- target이 이미 존재하면 즉시 중단
-- `createdb`, owner `rpg_user`, `template0`
-- 생성 후 target 0 tables / 0 rows / `alembic_version` 없음 확인
-- source와 restore DB 작업 전후 동일 확인
-- `pg_restore`, `dropdb`, Alembic revision/upgrade/downgrade/stamp 실행 금지
+```txt
+rpg_game_migration_empty_v290
+```
 
-## 빈 migration test DB 실행
+원본 `rpg_game`, restore rehearsal DB, `.env`, Docker volume은 변경하지 않습니다.
+
+## 읽기 전용 다음 확인
 
 실행 위치: `backend` 폴더  
 `.venv` 상태: 꺼져 있을 때 Git Bash
@@ -77,24 +68,20 @@ source .venv/Scripts/activate
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/create_postgres_migration_test_database.py --execute
+python tools/upgrade_postgres_migration_test_database.py --inspect
 ```
+
+`ready-for-separate-upgrade-approval`이 확인된 뒤에만 별도 승인을 받아 `--execute`를 사용합니다.
 
 ## 서버 실행
 
-FastAPI:
-
-실행 위치: `backend` 폴더  
-`.venv` 상태: 켜진 상태
+FastAPI — 실행 위치: `backend`, `.venv` 켜짐
 
 ```bash
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Vue:
-
-실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: Python 가상환경 필요 없음
+Vue — 실행 위치: `frontend/vue-app`, Python `.venv` 불필요
 
 ```bash
 npm run dev
@@ -109,10 +96,3 @@ npm run dev
 python -m compileall -q backend/app backend/scripts backend/alembic tools
 bash tools/run_smoke_core.sh
 ```
-
-상세 문서:
-
-- `docs/current/POSTGRES_RESTORE_REHEARSAL.md`
-- `docs/current/POSTGRES_MIGRATION_TEST_DB_CREATION.md`
-- `docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md`
-- `NEXT_CHAT_HANDOFF.md`

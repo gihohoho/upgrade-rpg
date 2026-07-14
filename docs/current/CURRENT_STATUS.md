@@ -1,62 +1,62 @@
-# Current Status — v294
+# Current Status — v298
 
 ## 기준
 
-- 최신 작업: `v294.postgres-migration-empty-database-create-tool`
-- 기준 ZIP: `rpg_v294_postgres_migration_test_database_creation_ready.zip`
+- 최신 작업: `v298.postgres-initial-alembic-manual-review-upgrade-ready`
+- 기준 ZIP: `rpg_v298_postgres_initial_alembic_manual_review_upgrade_ready.zip`
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
 
-## 실제 PostgreSQL source 상태
+## 실제 PostgreSQL 완료 상태
 
 ```txt
-PostgreSQL 16.14
-rpg_game / rpg_user
-model/public tables: 22 / 22
-total rows: 748
-alembic_version/current revision: 없음
-classification: existing-schema-without-alembic-baseline
-schema: structurally-equivalent / differences=0
+source rpg_game: 22 tables / 748 rows / differences=0 / alembic_version 없음
+restore rehearsal: 22 tables / 748 rows / differences=0 / alembic_version 없음
+migration workspace: alembic_version 1 table / 0 rows / recorded revision 없음
 ```
 
-## 실제 backup 완료
+## 최초 revision 생성 완료
 
 ```txt
-backup: local-backups/postgres/rpg_game_20260714_130403_KST_v290.custom.dump
-size: 126.60 KB
-SHA-256: b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481
-source tables/rows: 22 / 748
-TOC definitions/data: 22 / 22
+revision: v295_initial_schema
+file: backend/alembic/versions/v295_initial_schema_initial_postgresql_schema.py
+SHA-256: 24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa
+upgrade: create_table 22 / create_index 42
+downgrade: drop_index 42 / drop_table 22
 ```
 
-## 실제 restore rehearsal 완료
+## v298 수동 검토 완료
+
+- model/revision tables: `22 / 22`
+- columns: `209 / 209`
+- indexes: `42 / 42`
+- Foreign Key: `21`
+- explicit Unique: `6`
+- Check: `0`
+- type/length/nullable/PK/FK/ondelete/onupdate/unique/index/server default 일치
+- FLOAT 2개는 PostgreSQL `DOUBLE PRECISION` alias 정책과 일치
+- downgrade는 exact reverse create order
+- FK dependency order 위반 0개
+
+결론:
 
 ```txt
-result: restore-rehearsal-completed-and-verified
-target: rpg_game_restore_rehearsal_v290
-public tables/rows: 22 / 748
-schema: structurally-equivalent / differences=0
-alembic_version: 없음
-source before/after: 22 tables / 748 rows
+approved-for-isolated-empty-migration-database-upgrade-only
 ```
 
-## v294 준비 완료
+## 다음 단계
 
-- exact backup/SHA-256와 v293 restore report 재검증
-- source live 22 tables / 748 rows / table별 counts 재검증
-- rehearsal live 22 tables / 748 rows / differences=0 재검증
-- migration target 존재 시 즉시 중단
-- 없을 때만 `rpg_game_migration_empty_v290` 빈 DB 생성
-- owner `rpg_user`, `template0`, source와 같은 locale metadata
-- 생성 후 0 tables / 0 rows / alembic_version 없음 확인
-- source/rehearsal 작업 전후 동일 확인
-- no restore/drop/.env/Docker/Alembic/API/auth/game-content change
-
-## 다음 사용자 실행
+먼저 읽기 전용:
 
 ```bash
-python tools/create_postgres_migration_test_database.py --execute
+python tools/upgrade_postgres_migration_test_database.py --inspect
 ```
 
-성공 결과를 확인한 뒤 최초 Alembic revision 생성 계획과 수동 검토 절차를 별도 승인 경계로 진행합니다.
+별도 사용자 승인 후에만:
+
+```bash
+python tools/upgrade_postgres_migration_test_database.py --execute
+```
+
+아직 원본 DB upgrade/stamp, migration DB downgrade, DB 삭제는 금지합니다.

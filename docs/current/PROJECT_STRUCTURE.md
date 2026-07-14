@@ -1,8 +1,8 @@
-# Project Structure — v294
+# Project Structure — v298
 
 현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
 
-v294에서는 legacy/Vue/backend 구조를 유지하면서 verified restore DB를 보존한 채 별도 empty migration test DB를 생성하는 경계를 추가했습니다.
+v298에서는 검토된 최초 Alembic revision을 포함하고 isolated migration DB upgrade head만 허용하는 실행 가드와 수동 검토 문서를 추가했습니다.
 
 중요한 결론:
 
@@ -42,8 +42,8 @@ v294에서는 legacy/Vue/backend 구조를 유지하면서 verified restore DB�
 | `src/` | legacy JS/CSS | 이동 금지, Vue 앱 `src/`와 구분 |
 | `frontend/vue-app/` | 새 Vue shell + 읽기 전용 API client 준비 | 실제 기능 대체 전 단계 |
 | `backend/` | FastAPI 백엔드 | 기존 route/body/DB/env/seed 유지 |
-| `tools/` | smoke/contract/검증/backup/restore 도구 | v294 empty migration test DB 생성 도구와 전용 smoke 추가 |
-| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v294 기준 갱신 |
+| `tools/` | smoke/contract/검증/backup/restore 도구 | v297 Alembic `op.f` parser 복구와 전용 smoke 보강 |
+| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v297 기준 갱신 |
 
 ## `frontend/vue-app/` 역할
 
@@ -386,3 +386,34 @@ docs/current/POSTGRES_RESTORE_REHEARSAL.md
 - `--single-transaction`으로 부분 restore commit을 방지합니다.
 - restore 후 22 tables / 748 rows / table별 counts / schema differences=0을 확인합니다.
 - source 변경, target create/drop/clean, Docker/.env/Alembic 작업은 하지 않습니다.
+
+
+## v295 Alembic revision 준비 범위
+
+추가 위치:
+
+```txt
+backend/alembic/script.py.mako
+tools/create_postgres_initial_alembic_revision.py
+tools/smoke/backend/smoke_postgres_initial_alembic_revision_creation.py
+docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_CREATION.md
+```
+
+- revision target은 `rpg_game_migration_empty_v290`으로 고정합니다.
+- `.env`를 수정하지 않고 child process 환경변수만 사용합니다.
+- generated revision과 schema-only review bundle만 생성합니다.
+- `local-review-artifacts/`는 Git/Docker/전달 ZIP에서 제외합니다.
+- upgrade/downgrade/stamp와 DB create/drop/restore는 실행하지 않습니다.
+
+## v297 op.f parser recovery 범위
+
+`tools/create_postgres_initial_alembic_revision.py`는 migration workspace에 정확히 빈 `alembic_version` 테이블 하나만 있을 때 재시도를 허용합니다. 별도 DB 삭제·table drop·revision 적용은 하지 않습니다.
+
+## v298 manual review / isolated upgrade 범위
+
+- `backend/alembic/versions/v295_initial_schema_initial_postgresql_schema.py`: exact reviewed revision, SHA-256 고정
+- `docs/current/review/v295_initial_schema.manual-review.json`: machine-readable 수동 검토 증거
+- `docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md`: 사람이 읽는 검토 결론
+- `tools/upgrade_postgres_migration_test_database.py`: `rpg_game_migration_empty_v290`에만 `upgrade head` 허용
+- `tools/smoke/backend/smoke_postgres_initial_alembic_revision_manual_review.py`: 모델/revision 전체 구조 교차 검증
+- `tools/smoke/backend/smoke_postgres_migration_test_database_upgrade.py`: target/command/postcondition 경계 검증

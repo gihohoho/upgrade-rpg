@@ -15,7 +15,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-PROJECT_VERSION = "v293"
+PROJECT_VERSION = "v298"
 REPORT_PATH = Path("docs/current/POSTGRES_ALEMBIC_READINESS.md")
 
 
@@ -134,7 +134,7 @@ def render(root: Path) -> str:
 
 - 현재 backend는 이미 PostgreSQL 전용 타입과 두 드라이버를 전제로 설계되어 있습니다.
 - FastAPI 런타임은 `asyncpg`, 로컬 schema/seed 도구는 `psycopg` 사용을 전제로 분리되어 있습니다.
-- SQLAlchemy 모델은 존재하지만 Alembic revision 체계는 아직 시작되지 않았습니다.
+- SQLAlchemy 모델과 수동 검토가 끝난 최초 Alembic revision 1개가 존재합니다.
 - v284에서 사용자 실제 `MissingGreenlet` 결과를 근거로 Alembic online 경로를 async engine 방식으로 수정했습니다.
 - 기호 컴퓨터에서 `alembic history`, `heads`, `current`가 모두 정상 완료되고 PostgreSQL 연결이 확인되었습니다.
 - 기호 컴퓨터의 실제 runtime 점검에서 모델/DB 테이블 22개, 전체 row 748개, `alembic_version` 없음, DB health 정상 결과가 확인되었습니다.
@@ -146,7 +146,12 @@ def render(root: Path) -> str:
 - v291에서는 승인된 source backup 한 단계만 수행하는 custom dump 생성, TOC 검증, SHA-256, source snapshot, manifest 도구를 추가합니다.
 - v292에서는 verified backup의 SHA-256과 source baseline을 다시 확인하고, target DB가 없을 때만 빈 `rpg_game_restore_rehearsal_v290`을 생성하는 도구를 추가합니다.
 - v293에서는 exact verified backup을 빈 target에 single transaction으로 복원하고, table별 row count와 SQLAlchemy schema 동등성을 확인하는 도구를 추가합니다.
-- 따라서 다음 위험 단계는 바로 migration을 적용하는 것이 아니라, **상세 schema 동등성 → 백업 → 분리된 DB 복원 검증 → 별도 빈 DB migration 검증** 순서여야 합니다.
+- v294에서는 verified restore DB를 보존한 채 `rpg_game_migration_empty_v290`을 0 tables / 0 rows 상태로 생성·검증합니다.
+- v295 최초 실행에서는 Alembic autogenerate가 빈 `alembic_version` 제어 테이블을 만들었고, 기존 사후 검사가 이를 비정상으로 오판했습니다.
+- v296에서는 정확히 `alembic_version` 1 table / 0 rows / recorded revision 없음만 recovery workspace로 허용하고, `--inspect-workspace` 후 기존 placeholder를 재사용합니다.
+- v297에서는 generated revision의 nested `op.f(...)` naming helper를 migration operation 집계에서 제외해 v296 parser false positive를 제거합니다.
+- v298에서는 사용자 review bundle의 exact revision SHA를 기준으로 22 tables / 209 columns / 42 indexes / types / nullable / PK / FK / unique / downgrade dependency order 수동 검토를 완료하고, isolated migration DB `upgrade head` 실행 가드를 추가합니다.
+- 따라서 다음 위험 단계는 바로 source DB에 migration을 적용하는 것이 아니라, **생성 revision 수동 검토 → empty DB upgrade → schema equivalence → downgrade/upgrade 왕복 → source baseline stamp 검토** 순서여야 합니다.
 
 ## 현재 구조 요약
 
@@ -217,6 +222,10 @@ python -m pip install -e ".[dev]"
 - backup/restore schema gate와 client 도구 확인: `tools/check_postgres_backup_restore_preflight.py`
 - 승인된 source backup 생성/검증: `tools/create_postgres_backup.py`
 - isolated target restore 및 검증: `tools/restore_postgres_rehearsal_database.py`
+- empty migration test DB 생성: `tools/create_postgres_migration_test_database.py`
+- 최초 revision 생성·자동 검토: `tools/create_postgres_initial_alembic_revision.py`
+- 최초 revision 수동 검토: `docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md`
+- isolated migration DB upgrade guard: `tools/upgrade_postgres_migration_test_database.py`
 
 ## 현재 차단 요소 / 실제 검증 필요 지점
 
@@ -248,8 +257,13 @@ backend runtime/model/schema 경로에서 SQLite URL이나 SQLite 전용 타입�
 7. v292 승인 후 `tools/create_postgres_restore_rehearsal_database.py --execute`로 빈 target DB 생성 및 검증
 8. v293 승인 후 `tools/restore_postgres_rehearsal_database.py --execute`로 exact backup을 target에만 single transaction restore
 9. restore 후 target 22 tables / 748 rows / table별 counts / schema differences=0 확인
-10. 원본 `rpg_game`에는 restore하지 않음
-11. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
+10. v294 승인 후 `tools/create_postgres_migration_test_database.py --execute`로 0 tables / 0 rows empty migration DB 생성
+11. v297에서 `tools/create_postgres_initial_alembic_revision.py --inspect-workspace`로 placeholder 상태를 읽기 전용 확인
+12. 같은 v297 도구의 `--execute`로 existing placeholder를 재사용하고 nested `op.f(...)` helper를 제외한 실제 operations만 자동 검토
+13. v298에서 exact revision SHA `24a30adb...`를 모델과 수동 교차 검토하고 isolated DB upgrade guard를 준비
+14. 사용자 별도 승인 후 `tools/upgrade_postgres_migration_test_database.py --execute`로 migration test DB에만 `upgrade head`
+15. 원본 `rpg_game`에는 restore하거나 revision을 적용하지 않음
+16. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
 
 ### Stage C — Alembic 실행 방식 검증
 
@@ -363,8 +377,8 @@ python tools/restore_postgres_rehearsal_database.py --execute
 - Docker volume
 - `.env`
 - seed
-- Alembic revision 생성
-- migration 적용/rollback/stamp
+- 원본 DB Alembic revision 생성
+- 원본 DB migration 적용/rollback/stamp
 - API route path/response body
 - 인증/Write Guard/write 로직
 - 게임 콘텐츠

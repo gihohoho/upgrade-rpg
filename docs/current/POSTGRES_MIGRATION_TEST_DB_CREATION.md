@@ -78,9 +78,24 @@ source tables/rows before/after: 22/748 -> 22/748
 rehearsal tables/rows before/after: 22/748 -> 22/748
 ```
 
+
+## 사용자 PC 실제 완료 결과
+
+```txt
+result: migration-test-database-created-empty-and-verified
+migration test DB: rpg_game_migration_empty_v290
+target public tables: 0
+target total rows: 0
+target alembic_version: absent
+source tables/rows before/after: 22/748 -> 22/748
+rehearsal tables/rows before/after: 22/748 -> 22/748
+```
+
+이 DB는 v295 최초 revision autogenerate의 유일한 target으로 보존합니다.
+
 ## 여전히 금지
 
-- `python -m alembic revision --autogenerate`
+- raw `python -m alembic revision --autogenerate` 직접 실행
 - `python -m alembic upgrade head`
 - `python -m alembic downgrade`
 - `python -m alembic stamp head`
@@ -89,4 +104,4 @@ rehearsal tables/rows before/after: 22/748 -> 22/748
 - `.env` 변경
 - Docker container/volume 변경
 
-빈 DB 생성 성공 결과를 확인한 뒤 최초 revision 생성은 별도 승인과 수동 검토 경계로 진행합니다.
+빈 DB 생성 성공이 확인되었으며, v295 guarded 도구로 최초 revision 파일 생성·자동 검토를 진행합니다. 수동 검토 전에는 upgrade를 실행하지 않습니다.

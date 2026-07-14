@@ -108,3 +108,14 @@ verified custom backup이 isolated target에 복원되었고 22 tables / 748 row
 ## v294 empty migration DB 단계
 
 `rpg_game_migration_empty_v290`을 `template0` 기반 빈 DB로 생성하되 source와 restore rehearsal DB는 보존합니다. 생성 후 0 tables / 0 rows / `alembic_version` 없음이 확인되어야 최초 revision 생성 계획으로 넘어갑니다. 기존 `rpg_game` stamp와 Alembic revision/upgrade/downgrade는 아직 금지입니다.
+## v295 최초 revision 생성·자동 검토 경계
+
+- user PC에서 `rpg_game_migration_empty_v290`이 0 tables / 0 rows / `alembic_version` 없음으로 확인되었습니다.
+- `tools/create_postgres_initial_alembic_revision.py`만 revision generation entry point로 사용합니다.
+- child process `DATABASE_URL`만 empty migration DB로 override하며 `.env`는 수정하지 않습니다.
+- revision ID는 `v295_initial_schema`로 고정합니다.
+- 생성 후 22 tables / 209 columns / nullable / PK / FK / unique / index를 자동 검토합니다.
+- source/rehearsal/migration DB가 전후 동일해야 성공합니다.
+- 생성된 schema-only review bundle을 수동 검토한 뒤에만 empty DB `upgrade head` 승인을 검토합니다.
+- source DB stamp, upgrade/downgrade, drop은 계속 금지입니다.
+

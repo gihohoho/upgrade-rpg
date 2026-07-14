@@ -35,3 +35,5 @@ build/
 *.zip
 # Local PostgreSQL backups (sensitive data; never commit or hand off)
 /local-backups/
+# Local schema-only review bundles; inspect before committing generated migrations
+/local-review-artifacts/

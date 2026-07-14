@@ -22,6 +22,9 @@ docs/current/POSTGRES_BACKUP_CREATION.md
 docs/current/POSTGRES_RESTORE_REHEARSAL_DB_CREATION.md
 docs/current/POSTGRES_RESTORE_REHEARSAL.md
 docs/current/POSTGRES_MIGRATION_TEST_DB_CREATION.md
+docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_CREATION.md
+docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md
+docs/current/POSTGRES_MIGRATION_TEST_UPGRADE.md
 ```
 
 ## 인수인계
@@ -32,20 +35,13 @@ NEXT_CHAT_HANDOFF.md
 docs/handoff/
 ```
 
-루트 인수인계 파일과 `docs/handoff/` 사본은 같은 v294 기준으로 유지합니다.
+루트 인수인계 파일과 `docs/handoff/` 사본은 같은 v298 기준으로 유지합니다.
 
-## 문서 폴더
+## 폴더 역할
 
-- `current/`: 현재 상태, DB 전환, Vue/FastAPI 전환, 로드맵
+- `current/`: 현재 상태와 DB/Vue/FastAPI 전환 계획
 - `contracts/`: 관리자 contract와 parity 기준
 - `handoff/`: 다음 채팅 인수인계 사본
 - `archive/`: 완료된 과거 단계 기록
-- 루트의 기능별 문서: 기존 smoke와 구현 이력이 참조하는 상세 기록
 
-문서 대량 이동은 기존 smoke 경로를 확인한 뒤 진행합니다.
-
-- `current/POSTGRES_RESTORE_REHEARSAL_DB_CREATION.md`: 빈 restore rehearsal DB 생성 안전 경계
-
-- `current/POSTGRES_RESTORE_REHEARSAL.md`: verified dump isolated restore 및 사후 검증 경계
-
-- `current/POSTGRES_MIGRATION_TEST_DB_CREATION.md`: 빈 Alembic migration test DB 생성 안전 경계
+`local-backups/`는 민감 DB 자료이고, `local-review-artifacts/`는 생성 revision 검토용 임시 bundle이므로 Git/전달 ZIP에서 제외합니다.

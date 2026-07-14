@@ -1,3 +1,31 @@
+## v298.postgres-initial-alembic-manual-review-upgrade-ready
+
+- 사용자 review bundle의 exact revision SHA-256과 bundle SHA-256을 재검증
+- `v295_initial_schema`를 SQLAlchemy model과 수동 교차 검토: 22 tables / 209 columns / 42 indexes / 21 FK / 6 Unique
+- 타입, 길이, nullable, PK/FK/ondelete/onupdate, unique, index, server default 일치 확인
+- PostgreSQL FLOAT 2개가 v289 DOUBLE PRECISION alias 정책과 일치함을 확인
+- downgrade index/table 대응과 FK dependency reverse order 검증
+- 검토된 revision 파일과 machine-readable manual review manifest를 프로젝트 기준 파일로 포함
+- `tools/upgrade_postgres_migration_test_database.py` 추가: exact reviewed revision을 `rpg_game_migration_empty_v290`에만 `upgrade head`하도록 준비
+- 실제 upgrade/downgrade/stamp/source DB mutation은 실행하지 않음
+- manual review/upgrade guard smoke, core 등록, v298 문서/handoff 동기화
+
+## v297.postgres-initial-alembic-op-f-parser-recovery
+
+- 사용자 실제 v296 결과 `unexpected Alembic operations: upgrade=['f'], downgrade=['f']`를 재현하고 원인을 확인
+- Alembic generated revision의 nested `op.f(...)`를 naming helper로 분리해 operation allowlist false positive 제거
+- 실제 create/drop/index/constraint operation 검사와 execute/data/destructive operation 차단 유지
+- 전용 smoke가 `op.create_index(op.f(...))`, `op.drop_index(op.f(...))`를 생성하고 `f`가 operation count에 포함되지 않음을 검증
+- 실패 시 생성 revision/review artifact 정리, empty `alembic_version` placeholder 재사용, DB/env/Alembic apply 경계 유지
+- v297 current/readiness/handoff 문서 동기화
+
+## v296.postgres-initial-alembic-revision-placeholder-recovery
+
+- v295 autogenerate가 남긴 정확히 `alembic_version` 1 table / 0 rows / no revision 상태를 안전한 recovery workspace로 인정
+- `--inspect-workspace` 읽기 전용 진단과 placeholder 재사용 경계 추가
+- 다른 application table/row/revision이 있으면 실행 전 차단
+- upgrade/downgrade/stamp, DB create/drop/restore 미실행
+
 # v292 - PostgreSQL empty restore rehearsal database creation tool
 
 - Added `tools/create_postgres_restore_rehearsal_database.py` for the user-approved existence-check-and-create-empty-DB boundary.

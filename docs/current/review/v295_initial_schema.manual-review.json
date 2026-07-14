@@ -1,0 +1,49 @@
+{
+  "reviewVersion": "v298.postgres-initial-alembic-manual-review",
+  "reviewResult": "passed",
+  "revisionId": "v295_initial_schema",
+  "revisionFile": "backend/alembic/versions/v295_initial_schema_initial_postgresql_schema.py",
+  "revisionSha256": "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa",
+  "reviewBundleSha256": "c4210a57c68a65855fa86e8f9c52dd5b7782aa59182d4c393575a499c49a8db5",
+  "modelTableCount": 22,
+  "revisionCreateTableCount": 22,
+  "modelColumnCount": 209,
+  "revisionColumnCount": 209,
+  "modelIndexCount": 42,
+  "revisionCreateIndexCount": 42,
+  "foreignKeyConstraintCount": 21,
+  "uniqueConstraintCount": 6,
+  "checkConstraintCount": 0,
+  "serverDefaultCount": 0,
+  "pythonDefaultCount": 115,
+  "floatColumns": [
+    "user_profiles.farm_atk_bonus",
+    "user_profiles.add_attack_speed"
+  ],
+  "floatPolicy": "SQLAlchemy FLOAT compiles to PostgreSQL FLOAT and PostgreSQL stores/reflection-normalizes it as DOUBLE PRECISION",
+  "upgradeAllowedOperations": {
+    "create_table": 22,
+    "create_index": 42
+  },
+  "downgradeAllowedOperations": {
+    "drop_index": 42,
+    "drop_table": 22
+  },
+  "downgradeIsExactReverseCreateOrder": true,
+  "foreignKeyDependencyOrderValid": true,
+  "typeComparisonPassed": true,
+  "nullableComparisonPassed": true,
+  "primaryKeyComparisonPassed": true,
+  "foreignKeyComparisonPassed": true,
+  "uniqueConstraintComparisonPassed": true,
+  "indexComparisonPassed": true,
+  "serverDefaultComparisonPassed": true,
+  "unexpectedOperations": [],
+  "dataOperations": [],
+  "environmentOrDatabaseSecretsPresent": false,
+  "upgradeExecuted": false,
+  "downgradeExecuted": false,
+  "stampExecuted": false,
+  "manualConclusion": "approved-for-isolated-empty-migration-database-upgrade-only",
+  "sourceDatabaseApproval": false
+}
