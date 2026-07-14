@@ -76,3 +76,19 @@ pg_restore
 .env/Docker volume 변경
 seed/인증/API write 변경
 ```
+
+
+## 사용자 PC 실제 실행 결과 — 2026-07-14
+
+```txt
+result: migration-test-database-downgraded-to-base-and-verified
+target public tables after downgrade: 1
+target application tables remaining: 0
+target total rows: 0
+target current revisions: []
+expected empty-workspace schema: review-required / differences=22
+source tables/rows preserved: 22/748
+rehearsal tables/rows preserved: 22/748
+```
+
+다음 기준 문서: `docs/current/POSTGRES_MIGRATION_TEST_ROUNDTRIP.md`

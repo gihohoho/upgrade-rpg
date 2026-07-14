@@ -1,9 +1,9 @@
-# Current Status — v299
+# Current Status — v300
 
 ## 기준
 
-- 최신 작업: `v299.postgres-migration-test-downgrade-base-ready`
-- 기준 ZIP: `rpg_v299_postgres_migration_test_downgrade_base_ready.zip`
+- 최신 작업: `v300.postgres-migration-roundtrip-reupgrade-ready`
+- 기준 ZIP: `rpg_v300_postgres_migration_roundtrip_reupgrade_ready.zip`
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -13,9 +13,10 @@
 ```txt
 source rpg_game: 22 tables / 748 rows / differences=0 / alembic_version 없음
 restore rehearsal: 22 tables / 748 rows / differences=0 / alembic_version 없음
-migration test DB: 23 public tables / total rows 1
-migration current revision: v295_initial_schema
-migration schema: structurally-equivalent / differences=0
+migration test DB: public tables 1 / total rows 0
+migration tables: ['alembic_version']
+migration current revision: 없음
+migration schema: review-required / differences=22
 ```
 
 ## 최초 revision
@@ -29,25 +30,21 @@ downgrade: drop_index 42 / drop_table 22
 manual review: passed
 ```
 
-## v298 실제 upgrade 완료
+## 실제 왕복 진행 상태
 
 ```txt
-result: migration-test-database-upgraded-and-verified
-model tables: 22
-alembic control row: 1
-current revision: v295_initial_schema
-differences: 0
+v298 first upgrade: passed / 23 public tables / differences=0
+v299 downgrade base: passed / 1 placeholder table / differences=22
+v300 second upgrade: 실행 대기
 source/rehearsal preserved: 22/748
 ```
 
-## v299 다음 실행
-
-사용자 승인 완료 범위:
+## v300 다음 실행
 
 ```bash
-python tools/downgrade_postgres_migration_test_database.py --execute
+python tools/reupgrade_postgres_migration_test_database.py --inspect && python tools/reupgrade_postgres_migration_test_database.py --execute
 ```
 
-대상은 `rpg_game_migration_empty_v290` 하나입니다. 성공 후에는 빈 `alembic_version` placeholder만 남아야 합니다.
+대상은 `rpg_game_migration_empty_v290` 하나입니다. 두 번째 upgrade 결과가 v298 첫 upgrade와 정확히 같아야 성공합니다.
 
-원본 DB upgrade/stamp, DB 삭제, 자동 재-upgrade는 아직 금지합니다.
+원본 DB upgrade/stamp, DB 삭제, 자동 추가 downgrade는 아직 금지합니다.

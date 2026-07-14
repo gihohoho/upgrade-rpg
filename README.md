@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v299.postgres-migration-test-downgrade-base-ready**
+현재 기준: **v300.postgres-migration-roundtrip-reupgrade-ready**
 
 ## 현재 구조
 
@@ -18,34 +18,31 @@
 ```txt
 source rpg_game: 22 tables / 748 rows / differences=0 / alembic_version 없음
 restore rehearsal: 22 tables / 748 rows / differences=0 / alembic_version 없음
-migration test DB: 22 model tables + alembic_version / total rows 1
-migration current revision: v295_initial_schema
+migration test DB: alembic_version placeholder 1 table / 0 rows
+migration current revision: 없음
+initial revision: v295_initial_schema
 initial revision SHA-256: 24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa
-upgrade verification: passed / differences=0
+first upgrade: passed / differences=0
+verified downgrade base: passed / differences=22
 ```
 
-## v299 핵심
+## v300 핵심
 
-사용자 PC에서 isolated migration DB의 `upgrade head`가 실제로 성공했습니다.
+사용자 PC에서 아래 왕복 중 앞의 두 단계가 실제 성공했습니다.
 
 ```txt
-result: migration-test-database-upgraded-and-verified
-public tables: 23
-model tables: 22
-current revision: v295_initial_schema
-schema differences: 0
-source/rehearsal DB: preserved
+upgrade head -> downgrade base -> [두 번째 upgrade head 대기]
 ```
 
-v299에서는 같은 isolated DB에서 exact `alembic downgrade base`만 허용하는 실행 가드를 추가했습니다.
+v300에서는 첫 v298 upgrade 보고서와 v299 downgrade 보고서를 모두 확인한 뒤, 같은 isolated DB에 exact `alembic upgrade head`를 한 번만 실행합니다.
 
 ```txt
-tools/downgrade_postgres_migration_test_database.py
-tools/smoke/backend/smoke_postgres_migration_test_database_downgrade.py
-docs/current/POSTGRES_MIGRATION_TEST_DOWNGRADE.md
+tools/reupgrade_postgres_migration_test_database.py
+tools/smoke/backend/smoke_postgres_migration_test_database_roundtrip.py
+docs/current/POSTGRES_MIGRATION_TEST_ROUNDTRIP.md
 ```
 
-성공 조건은 애플리케이션 테이블 22개가 모두 제거되고 빈 `alembic_version` placeholder만 남는 것입니다. 원본 DB, restore rehearsal DB, `.env`, Docker volume은 변경하지 않습니다.
+성공 조건은 두 번째 upgrade의 테이블·행 수·revision·schema signature가 첫 번째 upgrade 결과와 정확히 같은 것입니다. 원본 DB, restore rehearsal DB, `.env`, Docker volume은 변경하지 않습니다.
 
 ## 다음 실행
 
@@ -60,7 +57,7 @@ source .venv/Scripts/activate
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/downgrade_postgres_migration_test_database.py --execute
+python tools/reupgrade_postgres_migration_test_database.py --inspect && python tools/reupgrade_postgres_migration_test_database.py --execute
 ```
 
 ## 서버 실행

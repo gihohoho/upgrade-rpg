@@ -1,4 +1,4 @@
-# PostgreSQL / Alembic Readiness — v299
+# PostgreSQL / Alembic Readiness — v300
 
 이 문서는 현재 프로젝트 파일을 기준으로 PostgreSQL과 Alembic 도입 준비 상태를 자동 분석한 결과입니다.
 
@@ -26,6 +26,7 @@
 - v297에서는 generated revision의 nested `op.f(...)` naming helper를 migration operation 집계에서 제외해 v296 parser false positive를 제거합니다.
 - v298에서는 사용자 review bundle의 exact revision SHA를 기준으로 22 tables / 209 columns / 42 indexes / types / nullable / PK / FK / unique / downgrade dependency order 수동 검토를 완료하고, isolated migration DB `upgrade head` 실행 가드를 추가합니다.
 - v299에서는 사용자 PC에서 성공한 isolated `upgrade head` 결과를 전제로 exact `downgrade base`만 허용하고, target이 빈 `alembic_version` placeholder 상태로 복귀하는지 검증하는 가드를 추가합니다.
+- v300에서는 verified first upgrade와 verified downgrade evidence를 모두 고정하고, 같은 isolated DB의 두 번째 `upgrade head` 결과가 첫 upgrade signature와 정확히 같은지 검증하는 가드를 추가합니다.
 - 따라서 다음 위험 단계는 바로 source DB에 migration을 적용하는 것이 아니라, **생성 revision 수동 검토 → empty DB upgrade → schema equivalence → downgrade/upgrade 왕복 → source baseline stamp 검토** 순서여야 합니다.
 
 ## 현재 구조 요약
@@ -126,6 +127,7 @@ python -m pip install -e ".[dev]"
 - 최초 revision 수동 검토: `docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md`
 - isolated migration DB upgrade guard: `tools/upgrade_postgres_migration_test_database.py`
 - isolated migration DB downgrade guard: `tools/downgrade_postgres_migration_test_database.py`
+- isolated migration round-trip re-upgrade guard: `tools/reupgrade_postgres_migration_test_database.py`
 
 ## 현재 차단 요소 / 실제 검증 필요 지점
 
@@ -162,9 +164,11 @@ backend runtime/model/schema 경로에서 SQLite URL이나 SQLite 전용 타입�
 11. v297에서 `tools/create_postgres_initial_alembic_revision.py --inspect-workspace`로 placeholder 상태를 읽기 전용 확인
 12. 같은 v297 도구의 `--execute`로 existing placeholder를 재사용하고 nested `op.f(...)` helper를 제외한 실제 operations만 자동 검토
 13. v298에서 exact revision SHA `24a30adb...`를 모델과 수동 교차 검토하고 isolated DB upgrade guard를 준비
-14. 사용자 별도 승인 후 `tools/upgrade_postgres_migration_test_database.py --execute`로 migration test DB에만 `upgrade head`
-15. 원본 `rpg_game`에는 restore하거나 revision을 적용하지 않음
-16. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
+14. 사용자 별도 승인 후 `tools/upgrade_postgres_migration_test_database.py --execute`로 migration test DB에만 첫 `upgrade head`
+15. v299에서 같은 DB의 `downgrade base`를 검증하고 빈 Alembic placeholder로 복귀
+16. v300에서 `tools/reupgrade_postgres_migration_test_database.py --execute`로 두 번째 `upgrade head`와 첫 결과를 exact 비교
+17. 원본 `rpg_game`에는 restore하거나 revision을 적용하지 않음
+18. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
 
 ### Stage C — Alembic 실행 방식 검증
 

@@ -1,12 +1,12 @@
-# NEXT CHAT HANDOFF — Upgrade RPG v299
+# NEXT CHAT HANDOFF — Upgrade RPG v300
 
 ## 기준 ZIP
 
-- `rpg_v299_postgres_migration_test_downgrade_base_ready.zip`
+- `rpg_v300_postgres_migration_roundtrip_reupgrade_ready.zip`
 
 ## 현재 기준
 
-- 최신 작업: `v299.postgres-migration-test-downgrade-base-ready`
+- 최신 작업: `v300.postgres-migration-roundtrip-reupgrade-ready`
 - readiness version: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -25,21 +25,14 @@
 source rpg_game: 22 tables / 748 rows / schema differences=0 / alembic_version 없음
 restore rehearsal rpg_game_restore_rehearsal_v290: 22 tables / 748 rows / differences=0
 migration test DB rpg_game_migration_empty_v290:
-  public tables: 23
-  model tables: 22
-  total rows: 1 (Alembic control row only)
-  current revision: v295_initial_schema
-  schema differences: 0
+  public tables: 1
+  tables: ['alembic_version']
+  total rows: 0
+  current revision: 없음
+  schema differences: 22 (empty workspace expected)
 ```
 
-verified backup:
-
-```txt
-local-backups/postgres/rpg_game_20260714_130403_KST_v290.custom.dump
-SHA-256: b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481
-```
-
-민감한 `local-backups/`와 `local-review-artifacts/`는 Git/ZIP/채팅에서 제외합니다.
+verified backup과 실제 DB 보고서는 `local-backups/`, `local-review-artifacts/`에 있으며 Git/ZIP/채팅에서 제외합니다.
 
 ## 최초 revision
 
@@ -51,53 +44,51 @@ downgrade drop_table/drop_index: 22 / 42
 manual review: passed
 ```
 
-## 첫 upgrade 실제 성공
+## 실제 왕복 진행
 
 ```txt
-result: migration-test-database-upgraded-and-verified
-target public tables: 23
-target model tables: 22
-target current revision: ['v295_initial_schema']
-target schema: structurally-equivalent / differences=0
+v298 first upgrade: passed / 23 public tables / differences=0
+v299 downgrade base: passed / 1 placeholder table / differences=22
 source/rehearsal preserved: 22/748
 ```
 
-upgrade report:
+필수 로컬 보고서:
 
 ```txt
 local-review-artifacts/alembic/v295_initial_schema.upgrade-v298.json
+local-review-artifacts/alembic/v295_initial_schema.downgrade-v299.json
 ```
 
-## 다음 첫 작업 — 승인 완료
+## 다음 첫 작업 — 사용자 승인 완료
 
 ```bash
-python tools/downgrade_postgres_migration_test_database.py --execute
+python tools/reupgrade_postgres_migration_test_database.py --inspect && python tools/reupgrade_postgres_migration_test_database.py --execute
 ```
 
 허용 범위:
 
 - target은 `rpg_game_migration_empty_v290`만
-- exact `alembic downgrade base` 한 번
+- exact `alembic upgrade head` 한 번
+- 첫/두 번째 upgrade signature exact 비교
 - source/rehearsal DB 작업 전후 비교
-- 성공 후 빈 `alembic_version` placeholder만 허용
 - 자동 retry 없음
 
 성공 기대:
 
 ```txt
-result: migration-test-database-downgraded-to-base-and-verified
-target public tables after downgrade: 1
-target application tables remaining: 0
-target current revisions: []
-expected empty-workspace schema: review-required / differences=22
+result: migration-test-database-roundtrip-upgraded-and-verified
+target public tables: 23
+target current revision: ['v295_initial_schema']
+target schema: structurally-equivalent / differences=0
+first/second upgrade signatures: identical
 source/rehearsal preserved: 22/748
 ```
 
 아직 금지:
 
 ```txt
-source rpg_game upgrade/stamp
-migration DB 자동 재-upgrade
+source rpg_game upgrade/downgrade/stamp
+migration DB 자동 추가 downgrade
 createdb/dropdb/pg_restore
 .env/Docker volume 변경
 ```

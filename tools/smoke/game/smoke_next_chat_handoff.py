@@ -44,14 +44,17 @@ def main() -> None:
         "tools/create_postgres_initial_alembic_revision.py",
         "tools/upgrade_postgres_migration_test_database.py",
         "tools/downgrade_postgres_migration_test_database.py",
+        "tools/reupgrade_postgres_migration_test_database.py",
         "tools/smoke/backend/smoke_postgres_initial_alembic_revision_creation.py",
         "tools/smoke/backend/smoke_postgres_initial_alembic_revision_manual_review.py",
         "tools/smoke/backend/smoke_postgres_migration_test_database_upgrade.py",
         "tools/smoke/backend/smoke_postgres_migration_test_database_downgrade.py",
+        "tools/smoke/backend/smoke_postgres_migration_test_database_roundtrip.py",
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_CREATION.md",
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md",
         "docs/current/POSTGRES_MIGRATION_TEST_UPGRADE.md",
         "docs/current/POSTGRES_MIGRATION_TEST_DOWNGRADE.md",
+        "docs/current/POSTGRES_MIGRATION_TEST_ROUNDTRIP.md",
         "docs/current/review/v295_initial_schema.manual-review.json",
     ]
     for relative_path in required_files:
@@ -59,30 +62,31 @@ def main() -> None:
 
     assert_contains(
         "NEXT_CHAT_PROMPT.md",
-        "rpg_v299_postgres_migration_test_downgrade_base_ready.zip",
-        "v299.postgres-migration-test-downgrade-base-ready",
+        "rpg_v300_postgres_migration_roundtrip_reupgrade_ready.zip",
+        "v300.postgres-migration-roundtrip-reupgrade-ready",
         "backend/.venv",
-        "downgrade_postgres_migration_test_database.py --execute",
+        "reupgrade_postgres_migration_test_database.py --inspect",
+        "reupgrade_postgres_migration_test_database.py --execute",
         "v295_initial_schema",
         "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa",
         "rpg_game_migration_empty_v290",
-        "두 번째 `upgrade head`",
+        "첫 v298 upgrade signature",
     )
     assert_contains(
         "NEXT_CHAT_HANDOFF.md",
         "22 tables / 748 rows",
-        "public tables: 23",
-        "current revision: v295_initial_schema",
-        "migration-test-database-upgraded-and-verified",
-        "downgrade base",
-        "differences=22",
+        "public tables: 1",
+        "current revision: 없음",
+        "v298 first upgrade: passed",
+        "v299 downgrade base: passed",
+        "first/second upgrade signatures: identical",
     )
     assert_contains(
         "README.md",
-        "v299.postgres-migration-test-downgrade-base-ready",
-        "downgrade_postgres_migration_test_database.py",
+        "v300.postgres-migration-roundtrip-reupgrade-ready",
+        "reupgrade_postgres_migration_test_database.py",
         "v295_initial_schema",
-        "upgrade verification: passed",
+        "verified downgrade base: passed",
     )
     assert_contains(
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md",
@@ -108,6 +112,14 @@ def main() -> None:
         "application tables remaining: 0",
         "differences: 22",
         "v295_initial_schema.upgrade-v298.json",
+    )
+    assert_contains(
+        "docs/current/POSTGRES_MIGRATION_TEST_ROUNDTRIP.md",
+        "v298 first upgrade",
+        "v299 downgrade",
+        "upgrade head",
+        "first/second upgrade signatures: identical",
+        "v295_initial_schema.roundtrip-upgrade-v300.json",
     )
     assert_contains(
         ".gitignore",

@@ -1,4 +1,4 @@
-# Next Steps — v299
+# Next Steps — v300
 
 ## 완료
 
@@ -6,34 +6,34 @@
 - verified custom backup 생성
 - isolated restore rehearsal 22 tables / 748 rows / differences=0
 - 최초 revision `v295_initial_schema` 생성 및 수동 검토 통과
-- isolated migration DB `upgrade head` 실제 성공
-- migration DB current revision `v295_initial_schema`
-- migration DB schema differences=0
-- source/rehearsal DB 작업 전후 동일
+- isolated migration DB 첫 `upgrade head` 실제 성공
+- isolated migration DB `downgrade base` 실제 성공
+- 현재 migration DB는 빈 `alembic_version` placeholder
 
 ## 현재 승인된 단계
 
 ```bash
-python tools/downgrade_postgres_migration_test_database.py --execute
+python tools/reupgrade_postgres_migration_test_database.py --inspect && python tools/reupgrade_postgres_migration_test_database.py --execute
 ```
 
 성공 기준:
 
 ```txt
-result: migration-test-database-downgraded-to-base-and-verified
-public tables: ['alembic_version']
-application tables remaining: 0
-recorded revisions: []
-differences: 22
+result: migration-test-database-roundtrip-upgraded-and-verified
+public tables: 23
+current revision: ['v295_initial_schema']
+differences: 0
+first/second upgrade signatures: identical
 source/rehearsal preserved: 22/748
 ```
 
 ## 그다음 별도 승인
 
-- 같은 migration DB에서 다시 `upgrade head`
-- 두 번째 upgrade 결과가 첫 번째와 동일한지 왕복 재현성 비교
-- 왕복 통과 후 기존 source DB에 baseline `stamp`를 적용할지 전략 검토
+- 왕복 결과를 유지한 채 source DB baseline stamp preflight 설계
+- source DB의 exact schema/row/revision 부재 상태 재검사
+- stamp 적용 전 backup/checksum 재검증
+- 실제 source DB `stamp`는 별도 명시 승인
 
 ## 계속 금지
 
-원본 DB `upgrade/stamp`, `dropdb`, `.env`, seed, 인증, API body/route/write guard, 게임 콘텐츠 변경.
+원본 DB `upgrade/downgrade/stamp`, `dropdb`, `.env`, seed, 인증, API body/route/write guard, 게임 콘텐츠 변경.

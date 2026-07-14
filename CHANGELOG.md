@@ -1,3 +1,10 @@
+## v300.postgres-migration-roundtrip-reupgrade-ready
+
+- v298 first upgrade와 v299 downgrade report를 모두 요구하는 두 번째 `upgrade head` 왕복 검증 가드 추가
+- 첫/두 번째 upgrade의 table list, row counts, revision, schema classification, differences exact signature 비교
+- source/rehearsal DB 보존, no retry, no stamp/downgrade/create/drop/restore 경계 유지
+- 전용 smoke, core 등록, readiness/current/handoff 문서 v300 동기화
+
 ## v299.postgres-migration-test-downgrade-base-ready
 
 - 사용자 PC에서 v298 isolated `upgrade head` 성공 결과 반영
