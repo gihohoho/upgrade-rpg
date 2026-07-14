@@ -1,4 +1,4 @@
-# PostgreSQL / Alembic Readiness — v300
+# PostgreSQL / Alembic Readiness — v301
 
 이 문서는 현재 프로젝트 파일을 기준으로 PostgreSQL과 Alembic 도입 준비 상태를 자동 분석한 결과입니다.
 
@@ -27,7 +27,9 @@
 - v298에서는 사용자 review bundle의 exact revision SHA를 기준으로 22 tables / 209 columns / 42 indexes / types / nullable / PK / FK / unique / downgrade dependency order 수동 검토를 완료하고, isolated migration DB `upgrade head` 실행 가드를 추가합니다.
 - v299에서는 사용자 PC에서 성공한 isolated `upgrade head` 결과를 전제로 exact `downgrade base`만 허용하고, target이 빈 `alembic_version` placeholder 상태로 복귀하는지 검증하는 가드를 추가합니다.
 - v300에서는 verified first upgrade와 verified downgrade evidence를 모두 고정하고, 같은 isolated DB의 두 번째 `upgrade head` 결과가 첫 upgrade signature와 정확히 같은지 검증하는 가드를 추가합니다.
-- 따라서 다음 위험 단계는 바로 source DB에 migration을 적용하는 것이 아니라, **생성 revision 수동 검토 → empty DB upgrade → schema equivalence → downgrade/upgrade 왕복 → source baseline stamp 검토** 순서여야 합니다.
+- 사용자 PC에서 v300 `upgrade -> downgrade base -> upgrade` 왕복이 실제 성공했고 first/second upgrade signatures가 동일함을 확인했습니다.
+- v301에서는 source 22 tables / 748 rows / no Alembic, exact backup/revision, restore evidence, v300 round-trip head를 한 번에 읽기 전용으로 재검사하는 source baseline stamp preflight를 추가합니다.
+- 다음 mutation은 source DB가 아니라 restore rehearsal DB에서 별도 승인 후 `stamp head` 동작을 검증하는 단계입니다.
 
 ## 현재 구조 요약
 
@@ -128,6 +130,7 @@ python -m pip install -e ".[dev]"
 - isolated migration DB upgrade guard: `tools/upgrade_postgres_migration_test_database.py`
 - isolated migration DB downgrade guard: `tools/downgrade_postgres_migration_test_database.py`
 - isolated migration round-trip re-upgrade guard: `tools/reupgrade_postgres_migration_test_database.py`
+- source baseline stamp read-only preflight: `tools/check_postgres_source_baseline_stamp_preflight.py`
 
 ## 현재 차단 요소 / 실제 검증 필요 지점
 
@@ -167,8 +170,11 @@ backend runtime/model/schema 경로에서 SQLite URL이나 SQLite 전용 타입�
 14. 사용자 별도 승인 후 `tools/upgrade_postgres_migration_test_database.py --execute`로 migration test DB에만 첫 `upgrade head`
 15. v299에서 같은 DB의 `downgrade base`를 검증하고 빈 Alembic placeholder로 복귀
 16. v300에서 `tools/reupgrade_postgres_migration_test_database.py --execute`로 두 번째 `upgrade head`와 첫 결과를 exact 비교
-17. 원본 `rpg_game`에는 restore하거나 revision을 적용하지 않음
-18. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
+17. 사용자 PC에서 왕복 signatures 동일과 source/rehearsal 보존을 실제 확인
+18. v301에서 `tools/check_postgres_source_baseline_stamp_preflight.py --strict`로 source/backup/revision/round-trip evidence를 읽기 전용 재검사
+19. 통과 후에도 source를 바로 stamp하지 않고 restore rehearsal DB stamp 검증을 별도 승인으로 진행
+20. 원본 `rpg_game`에는 restore하거나 revision을 적용하지 않음
+21. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
 
 ### Stage C — Alembic 실행 방식 검증
 

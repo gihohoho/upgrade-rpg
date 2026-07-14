@@ -1,8 +1,8 @@
-# Project Structure — v300
+# Project Structure — v301
 
 현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
 
-v300에서는 실제 upgrade → downgrade base 완료 결과를 보존하고, 같은 migration DB에서 두 번째 upgrade 결과를 첫 upgrade와 비교하는 왕복 재현성 가드와 문서를 추가했습니다.
+v301에서는 실제 upgrade → downgrade base → upgrade 왕복 성공 결과를 보존하고, 원본 DB baseline stamp 전에 backup/revision/round-trip/current source 상태를 읽기 전용으로 재검사하는 preflight를 추가했습니다.
 
 중요한 결론:
 
@@ -42,8 +42,8 @@ v300에서는 실제 upgrade → downgrade base 완료 결과를 보존하고, �
 | `src/` | legacy JS/CSS | 이동 금지, Vue 앱 `src/`와 구분 |
 | `frontend/vue-app/` | 새 Vue shell + 읽기 전용 API client 준비 | 실제 기능 대체 전 단계 |
 | `backend/` | FastAPI 백엔드 | 기존 route/body/DB/env/seed 유지 |
-| `tools/` | smoke/contract/검증/backup/restore/migration 도구 | v300 isolated round-trip re-upgrade guard와 전용 smoke 보강 |
-| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v300 기준 갱신 |
+| `tools/` | smoke/contract/검증/backup/restore/migration 도구 | v301 source baseline stamp read-only preflight와 전용 smoke 보강 |
+| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v301 기준 갱신 |
 
 ## `frontend/vue-app/` 역할
 

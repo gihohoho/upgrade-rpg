@@ -118,6 +118,7 @@ python tools/smoke/backend/smoke_postgres_initial_alembic_revision_manual_review
 python tools/smoke/backend/smoke_postgres_migration_test_database_upgrade.py
 python tools/smoke/backend/smoke_postgres_migration_test_database_downgrade.py
 python tools/smoke/backend/smoke_postgres_migration_test_database_roundtrip.py
+python tools/smoke/backend/smoke_postgres_source_baseline_stamp_preflight.py
 python tools/smoke/game/smoke_next_chat_handoff.py
 python tools/smoke/contracts/smoke_backend_admin_preview_side_effect_contract.py
 python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contract.py

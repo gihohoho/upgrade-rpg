@@ -45,16 +45,19 @@ def main() -> None:
         "tools/upgrade_postgres_migration_test_database.py",
         "tools/downgrade_postgres_migration_test_database.py",
         "tools/reupgrade_postgres_migration_test_database.py",
+        "tools/check_postgres_source_baseline_stamp_preflight.py",
         "tools/smoke/backend/smoke_postgres_initial_alembic_revision_creation.py",
         "tools/smoke/backend/smoke_postgres_initial_alembic_revision_manual_review.py",
         "tools/smoke/backend/smoke_postgres_migration_test_database_upgrade.py",
         "tools/smoke/backend/smoke_postgres_migration_test_database_downgrade.py",
         "tools/smoke/backend/smoke_postgres_migration_test_database_roundtrip.py",
+        "tools/smoke/backend/smoke_postgres_source_baseline_stamp_preflight.py",
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_CREATION.md",
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md",
         "docs/current/POSTGRES_MIGRATION_TEST_UPGRADE.md",
         "docs/current/POSTGRES_MIGRATION_TEST_DOWNGRADE.md",
         "docs/current/POSTGRES_MIGRATION_TEST_ROUNDTRIP.md",
+        "docs/current/POSTGRES_SOURCE_BASELINE_STAMP_PREFLIGHT.md",
         "docs/current/review/v295_initial_schema.manual-review.json",
     ]
     for relative_path in required_files:
@@ -62,31 +65,31 @@ def main() -> None:
 
     assert_contains(
         "NEXT_CHAT_PROMPT.md",
-        "rpg_v300_postgres_migration_roundtrip_reupgrade_ready.zip",
-        "v300.postgres-migration-roundtrip-reupgrade-ready",
+        "rpg_v301_postgres_source_baseline_stamp_preflight_handoff_ready.zip",
+        "v301.postgres-source-baseline-stamp-readonly-preflight-handoff",
         "backend/.venv",
-        "reupgrade_postgres_migration_test_database.py --inspect",
-        "reupgrade_postgres_migration_test_database.py --execute",
+        "check_postgres_source_baseline_stamp_preflight.py --strict",
         "v295_initial_schema",
         "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa",
-        "rpg_game_migration_empty_v290",
-        "첫 v298 upgrade signature",
+        "rpg_game_restore_rehearsal_v290",
+        "first/second upgrade signatures: identical",
+        "ready-for-separate-restore-rehearsal-stamp-approval",
     )
     assert_contains(
         "NEXT_CHAT_HANDOFF.md",
         "22 tables / 748 rows",
-        "public tables: 1",
-        "current revision: 없음",
-        "v298 first upgrade: passed",
-        "v299 downgrade base: passed",
-        "first/second upgrade signatures: identical",
+        "public tables 23",
+        "current revision v295_initial_schema",
+        "v300 second upgrade: passed",
+        "upgrade -> downgrade base -> upgrade verified",
+        "check_postgres_source_baseline_stamp_preflight.py",
     )
     assert_contains(
         "README.md",
-        "v300.postgres-migration-roundtrip-reupgrade-ready",
-        "reupgrade_postgres_migration_test_database.py",
+        "v301.postgres-source-baseline-stamp-readonly-preflight-handoff",
+        "check_postgres_source_baseline_stamp_preflight.py",
         "v295_initial_schema",
-        "verified downgrade base: passed",
+        "first/second upgrade signatures: identical",
     )
     assert_contains(
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md",
@@ -120,6 +123,14 @@ def main() -> None:
         "upgrade head",
         "first/second upgrade signatures: identical",
         "v295_initial_schema.roundtrip-upgrade-v300.json",
+    )
+    assert_contains(
+        "docs/current/POSTGRES_SOURCE_BASELINE_STAMP_PREFLIGHT.md",
+        "v301",
+        "읽기 전용",
+        "ready-for-separate-restore-rehearsal-stamp-approval",
+        "rpg_game_restore_rehearsal_v290",
+        "source rpg_game stamp/upgrade/downgrade",
     )
     assert_contains(
         ".gitignore",

@@ -1,9 +1,9 @@
-# Current Status — v300
+# Current Status — v301
 
 ## 기준
 
-- 최신 작업: `v300.postgres-migration-roundtrip-reupgrade-ready`
-- 기준 ZIP: `rpg_v300_postgres_migration_roundtrip_reupgrade_ready.zip`
+- 최신 작업: `v301.postgres-source-baseline-stamp-readonly-preflight-handoff`
+- 기준 ZIP: `rpg_v301_postgres_source_baseline_stamp_preflight_handoff_ready.zip`
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -13,10 +13,9 @@
 ```txt
 source rpg_game: 22 tables / 748 rows / differences=0 / alembic_version 없음
 restore rehearsal: 22 tables / 748 rows / differences=0 / alembic_version 없음
-migration test DB: public tables 1 / total rows 0
-migration tables: ['alembic_version']
-migration current revision: 없음
-migration schema: review-required / differences=22
+migration test DB: 23 public tables / 1 total row
+migration current revision: v295_initial_schema
+migration schema: structurally-equivalent / differences=0
 ```
 
 ## 최초 revision
@@ -30,21 +29,23 @@ downgrade: drop_index 42 / drop_table 22
 manual review: passed
 ```
 
-## 실제 왕복 진행 상태
+## 실제 왕복 완료
 
 ```txt
-v298 first upgrade: passed / 23 public tables / differences=0
-v299 downgrade base: passed / 1 placeholder table / differences=22
-v300 second upgrade: 실행 대기
+v298 first upgrade: passed
+v299 downgrade base: passed
+v300 second upgrade: passed
+first/second upgrade signatures: identical
+sequence: upgrade -> downgrade base -> upgrade verified
 source/rehearsal preserved: 22/748
 ```
 
-## v300 다음 실행
+## v301 현재 단계
+
+원본 DB baseline stamp 여부를 판단하기 위한 읽기 전용 preflight 도구가 준비됐습니다.
 
 ```bash
-python tools/reupgrade_postgres_migration_test_database.py --inspect && python tools/reupgrade_postgres_migration_test_database.py --execute
+python tools/check_postgres_source_baseline_stamp_preflight.py --strict
 ```
 
-대상은 `rpg_game_migration_empty_v290` 하나입니다. 두 번째 upgrade 결과가 v298 첫 upgrade와 정확히 같아야 성공합니다.
-
-원본 DB upgrade/stamp, DB 삭제, 자동 추가 downgrade는 아직 금지합니다.
+통과 후에도 원본 DB를 바로 stamp하지 않습니다. 먼저 restore rehearsal DB stamp rehearsal guard를 준비하고 별도 승인을 받습니다.

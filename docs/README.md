@@ -25,6 +25,7 @@ docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md
 docs/current/POSTGRES_MIGRATION_TEST_UPGRADE.md
 docs/current/POSTGRES_MIGRATION_TEST_DOWNGRADE.md
 docs/current/POSTGRES_MIGRATION_TEST_ROUNDTRIP.md
+docs/current/POSTGRES_SOURCE_BASELINE_STAMP_PREFLIGHT.md
 ```
 
 ## 인수인계
@@ -35,6 +36,6 @@ NEXT_CHAT_HANDOFF.md
 docs/handoff/
 ```
 
-루트 인수인계 파일과 `docs/handoff/` 사본은 같은 v300 기준으로 유지합니다.
+루트 인수인계 파일과 `docs/handoff/` 사본은 같은 v301 기준으로 유지합니다.
 
 `local-backups/`와 `local-review-artifacts/`는 Git/전달 ZIP에서 제외합니다.

@@ -116,3 +116,15 @@ python tools/create_postgres_backup.py --execute
 - `--execute`가 없으면 실제 파일을 만들지 않음
 
 - `downgrade_postgres_migration_test_database.py`: 검토된 isolated migration DB를 base로 downgrade하고 source/rehearsal 보존을 검증합니다.
+
+
+## 원본 baseline stamp 읽기 전용 preflight
+
+실행 위치: 프로젝트 루트  
+`.venv` 상태: `backend/.venv`가 켜진 상태
+
+```bash
+python tools/check_postgres_source_baseline_stamp_preflight.py --strict
+```
+
+이 도구는 verified backup, restore rehearsal, reviewed revision, isolated migration 왕복 결과와 현재 source schema/data를 읽기 전용으로 대조합니다. `stamp`, `upgrade`, `downgrade`, DB 생성·삭제·복원, `.env` 변경, row write를 실행하지 않습니다. 통과 후 다음 단계도 원본 DB가 아니라 restore rehearsal DB stamp 검증부터 별도 승인으로 진행합니다.

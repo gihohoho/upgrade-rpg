@@ -1,6 +1,6 @@
-# PostgreSQL isolated migration round-trip re-upgrade — v300
+# PostgreSQL isolated migration round-trip re-upgrade — v300 completed
 
-## 실제 전제 상태
+## 실행 전 전제 상태
 
 ```txt
 v298 first upgrade: migration-test-database-upgraded-and-verified
@@ -66,3 +66,20 @@ local-review-artifacts/alembic/v295_initial_schema.roundtrip-upgrade-v300.json
 ```
 
 이 로컬 보고서는 Git/전달 ZIP/채팅에 포함하지 않습니다.
+
+
+## 사용자 PC 실제 완료 결과
+
+```txt
+result: migration-test-database-roundtrip-upgraded-and-verified
+public tables: 23
+model tables: 22
+total rows: 1
+current revision: ['v295_initial_schema']
+schema: structurally-equivalent / differences=0
+first/second upgrade signatures: identical
+round-trip: upgrade -> downgrade base -> upgrade verified
+source/rehearsal preserved: 22/748
+```
+
+성공 보고서는 `local-review-artifacts/`에만 보존하며 Git/전달 ZIP/채팅에 포함하지 않습니다.

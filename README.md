@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v300.postgres-migration-roundtrip-reupgrade-ready**
+현재 기준: **v301.postgres-source-baseline-stamp-readonly-preflight-handoff**
 
 ## 현재 구조
 
@@ -18,31 +18,24 @@
 ```txt
 source rpg_game: 22 tables / 748 rows / differences=0 / alembic_version 없음
 restore rehearsal: 22 tables / 748 rows / differences=0 / alembic_version 없음
-migration test DB: alembic_version placeholder 1 table / 0 rows
-migration current revision: 없음
-initial revision: v295_initial_schema
+migration test DB: 23 public tables / revision v295_initial_schema / differences=0
 initial revision SHA-256: 24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa
-first upgrade: passed / differences=0
-verified downgrade base: passed / differences=22
+round-trip: upgrade -> downgrade base -> upgrade verified
+first/second upgrade signatures: identical
 ```
 
-## v300 핵심
+## v301 핵심
 
-사용자 PC에서 아래 왕복 중 앞의 두 단계가 실제 성공했습니다.
+원본 DB baseline stamp 전에 필요한 증거를 한 번에 읽기 전용으로 재검사합니다.
 
 ```txt
-upgrade head -> downgrade base -> [두 번째 upgrade head 대기]
+tools/check_postgres_source_baseline_stamp_preflight.py
+tools/smoke/backend/smoke_postgres_source_baseline_stamp_preflight.py
+docs/current/POSTGRES_SOURCE_BASELINE_STAMP_PREFLIGHT.md
 ```
 
-v300에서는 첫 v298 upgrade 보고서와 v299 downgrade 보고서를 모두 확인한 뒤, 같은 isolated DB에 exact `alembic upgrade head`를 한 번만 실행합니다.
-
-```txt
-tools/reupgrade_postgres_migration_test_database.py
-tools/smoke/backend/smoke_postgres_migration_test_database_roundtrip.py
-docs/current/POSTGRES_MIGRATION_TEST_ROUNDTRIP.md
-```
-
-성공 조건은 두 번째 upgrade의 테이블·행 수·revision·schema signature가 첫 번째 upgrade 결과와 정확히 같은 것입니다. 원본 DB, restore rehearsal DB, `.env`, Docker volume은 변경하지 않습니다.
+이 도구는 stamp/upgrade/downgrade/DB 생성·삭제·복원이나 row write를 실행하지 않습니다.
+통과 후에도 원본 DB를 바로 stamp하지 않고 restore rehearsal DB에서 먼저 stamp 동작을 검증합니다.
 
 ## 다음 실행
 
@@ -57,7 +50,7 @@ source .venv/Scripts/activate
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/reupgrade_postgres_migration_test_database.py --inspect && python tools/reupgrade_postgres_migration_test_database.py --execute
+python tools/check_postgres_source_baseline_stamp_preflight.py --strict
 ```
 
 ## 서버 실행

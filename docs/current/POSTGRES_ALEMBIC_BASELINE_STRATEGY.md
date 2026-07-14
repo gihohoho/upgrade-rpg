@@ -1,4 +1,4 @@
-# PostgreSQL / Alembic 최초 baseline 전략 — v290
+# PostgreSQL / Alembic 최초 baseline 전략 — v301
 
 ## 실제 분류
 
@@ -119,3 +119,27 @@ verified custom backup이 isolated target에 복원되었고 22 tables / 748 row
 - 생성된 schema-only review bundle을 수동 검토한 뒤에만 empty DB `upgrade head` 승인을 검토합니다.
 - source DB stamp, upgrade/downgrade, drop은 계속 금지입니다.
 
+
+
+## v300 왕복 검증 완료
+
+사용자 PC에서 isolated migration DB에 대해 다음 순서가 실제 성공했습니다.
+
+```txt
+upgrade head -> downgrade base -> upgrade head
+first/second upgrade signatures: identical
+current revision: v295_initial_schema
+schema differences: 0
+source/rehearsal preserved: 22 tables / 748 rows
+```
+
+## v301 source baseline stamp preflight
+
+`tools/check_postgres_source_baseline_stamp_preflight.py`는 source DB를 변경하지 않고 다음을 한 번에 재검사합니다.
+
+- source 22 tables / 748 rows / differences=0 / no Alembic
+- exact verified backup/SHA와 restore evidence
+- exact reviewed revision/SHA
+- v300 round-trip 보고서와 현재 migration DB head 일치
+
+성공 결과는 source stamp 승인이 아닙니다. 다음 mutation은 source 복사본인 `rpg_game_restore_rehearsal_v290`에서 별도 승인 후 `stamp head` rehearsal로 진행합니다.

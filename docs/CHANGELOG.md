@@ -1,3 +1,11 @@
+# v301 - Source baseline stamp read-only preflight handoff
+
+- Recorded the user-PC v300 round-trip result: `upgrade -> downgrade base -> upgrade`, identical first/second signatures, source/rehearsal preserved.
+- Added `tools/check_postgres_source_baseline_stamp_preflight.py` to revalidate source schema/data, exact backup, reviewed revision, v300 evidence, and current migration head without mutation.
+- Added a dedicated smoke and registered it in core smoke.
+- Updated current/handoff/root documentation to move the next safety boundary to a restore-rehearsal `stamp head` rehearsal, not the source DB.
+- Kept source/rehearsal/migration DBs, `.env`, Docker resources, route paths, response bodies, auth, Write Guard, Preview/Apply bodies, and game content unchanged.
+
 ## v300.postgres-migration-roundtrip-reupgrade-ready
 
 - v298 first upgrade와 v299 downgrade report를 고정한 두 번째 upgrade 왕복 검증 가드 추가
