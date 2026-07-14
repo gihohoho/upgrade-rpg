@@ -1,3 +1,26 @@
+# v284 - Alembic asyncpg online env fix
+
+- Fixed the user-reproduced `sqlalchemy.exc.MissingGreenlet` from `python -m alembic current`.
+- Replaced sync `engine_from_config()` with `async_engine_from_config()`, async connection handling, and `connection.run_sync()`.
+- Added `tools/check_alembic_readonly_state.py` for read-only `history`, `heads`, and `current` collection.
+- Added a dedicated Alembic async env smoke and registered it in core smoke.
+- Recorded that the actual backend virtualenv is `backend/.venv`.
+- Kept DB schema/data, Docker volume, env, seed, revisions, migration apply/stamp, routes, API bodies, auth, and write logic unchanged.
+
+# v283 - PostgreSQL/Alembic prerequisite checker
+
+- Added `tools/check_postgres_alembic_prerequisites.py`, a read-only local checker for Python, virtualenv, Docker, Compose, SQLAlchemy, Alembic, asyncpg, psycopg, and required project files.
+- Added `docs/current/POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md` with exact install locations, `.venv` states, and dangerous commands that remain forbidden.
+- The checker never connects to the DB, starts Docker, changes `.env`, or runs migrations.
+
+# v282 - PostgreSQL/Alembic readiness report
+
+- Added `tools/report_postgres_alembic_readiness.py` and `docs/current/POSTGRES_ALEMBIC_READINESS.md`.
+- Documented 22 SQLAlchemy tables, PostgreSQL-specific types, asyncpg/psycopg responsibilities, Docker settings, and the current Alembic state with zero revisions.
+- Recorded missing `versions/` and `script.py.mako`, create_all ownership, async online execution verification risk, and destructive reset/down-volume commands.
+- Added `tools/smoke/backend/smoke_postgres_alembic_readiness.py`.
+- Kept DB schema/data, Docker volumes, env, seed, route paths, response bodies, auth, Write Guard, write logic, and game content unchanged.
+
 # v281 - Vue admin related-row detail navigation
 
 - Added read-only related-row detail navigation from the relations panel.

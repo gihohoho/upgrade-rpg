@@ -51,3 +51,29 @@ docs/current/LEGACY_PATH_DEPENDENCIES.md
 ```
 
 이 도구는 새 contract가 아닙니다. Vue/FastAPI/DB 전환 전에 기존 legacy 경로를 움직여도 되는지 판단하기 위한 보조 도구입니다.
+
+## PostgreSQL/Alembic readiness 보고서
+
+실행 위치: 프로젝트 루트  
+`.venv` 상태: 켜진 상태 권장
+
+```bash
+python tools/report_postgres_alembic_readiness.py --check
+```
+
+생성 문서:
+
+```txt
+docs/current/POSTGRES_ALEMBIC_READINESS.md
+```
+
+## PostgreSQL/Alembic 로컬 사전 점검
+
+실행 위치: 프로젝트 루트  
+`.venv` 상태: 켜진 상태
+
+```bash
+python tools/check_postgres_alembic_prerequisites.py
+```
+
+이 도구는 DB 접속, Docker 시작, `.env` 변경, migration 실행을 하지 않습니다. Docker와 Python 패키지/필수 파일 존재만 확인합니다.

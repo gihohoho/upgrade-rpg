@@ -1,8 +1,8 @@
-# Project Structure — v275
+# Project Structure — v284
 
 현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
 
-v275에서는 기존 legacy 화면과 route를 건드리지 않고, FastAPI backend 구조 분석에 이어 실제 route map 자동 보고서를 추가했습니다.
+v284에서는 legacy/Vue/backend 구조를 유지한 채 사용자 실제 `MissingGreenlet` 결과를 근거로 Alembic online env만 asyncpg 호환 방식으로 수정했습니다.
 
 중요한 결론:
 
@@ -43,7 +43,7 @@ v275에서는 기존 legacy 화면과 route를 건드리지 않고, FastAPI back
 | `frontend/vue-app/` | 새 Vue shell + 읽기 전용 API client 준비 | 실제 기능 대체 전 단계 |
 | `backend/` | FastAPI 백엔드 | 기존 route/body/DB/env/seed 유지 |
 | `tools/` | smoke/contract/검증 도구 | 기존 core smoke 유지, Vue shell/API smoke 추가 |
-| `docs/` | 현재 상태/전환 계획/인수인계 문서 | v275 기준 갱신 |
+| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v284 기준 갱신 |
 
 ## `frontend/vue-app/` 역할
 
@@ -157,6 +157,23 @@ docs/current/BACKEND_STRUCTURE_PLAN.md
 - `backend/app/schemas/`, `backend/app/models/`, `backend/app/db/`는 DB/Alembic 실제 전환 전까지 구조 변경하지 않습니다.
 - Vue에서는 당분간 안전한 `GET` read-only API만 연결합니다.
 - Preview/Apply/write API는 인증/권한/Write Guard 설계 전까지 Vue에서 확장하지 않습니다.
+
+
+## v282~v284 PostgreSQL/Alembic 준비 도구
+
+추가 위치:
+
+```txt
+tools/report_postgres_alembic_readiness.py
+tools/check_postgres_alembic_prerequisites.py
+tools/check_alembic_readonly_state.py
+tools/smoke/backend/smoke_postgres_alembic_readiness.py
+tools/smoke/backend/smoke_backend_alembic_async_env.py
+docs/current/POSTGRES_ALEMBIC_READINESS.md
+docs/current/POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md
+```
+
+이 도구들은 DB 연결, `.env` 변경, migration 생성/적용을 하지 않습니다. 현재 파일과 로컬 설치 상태만 읽기 전용으로 확인합니다.
 
 ## `backend/` 역할
 

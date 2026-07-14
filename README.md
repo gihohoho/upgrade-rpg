@@ -1,51 +1,62 @@
 # Upgrade RPG
 
-현재 기준: **v281.vue-admin-related-detail-navigation**
+현재 기준: **v284.alembic-async-env-fix**
 
 ## 현재 상태
 
 - 실제 게임 화면: 루트 `index.html`
 - 실제 관리자 화면: 루트 `admin.html`
 - legacy JS/CSS: 루트 `src/`
-- 새 Vue shell: `frontend/vue-app/`
+- 새 Vue 앱: `frontend/vue-app/`
 - FastAPI 백엔드: `backend/`
+- 실제 Python 가상환경: `backend/.venv`
 
-Vue `/admin`에는 안전한 GET 상태 확인, 도메인, 카탈로그, 상세, 관계 그룹을 연결했습니다. 관계 표의 `이 row 상세`로 연관 row를 조회하고 `이전 상세로`로 돌아갈 수 있습니다.
+Vue `/admin`에는 안전한 GET health, requirements, domains, catalog, detail, relations가 연결되어 있습니다.
 
-관계 편집, Preview/Apply/write, DB/env/seed/auth는 변경하거나 연결하지 않았습니다.
+## v284 핵심
 
-## 설치해야 하는 것
+기호 컴퓨터에서 `python -m alembic current` 실행 시 확인된 `MissingGreenlet` 오류를 수정했습니다.
 
-v280~v281에서 새 라이브러리나 프레임워크는 추가하지 않았습니다.
+기존 동기식 Alembic 연결을 다음 asyncpg 호환 구조로 변경했습니다.
 
-`frontend/vue-app/node_modules`가 없다면 한 번만 설치합니다.
+- `async_engine_from_config()`
+- `async with connectable.connect()`
+- `await connection.run_sync(...)`
+- `asyncio.run(...)`
 
-실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 필요 없음 / 꺼져 있어도 됨
+DB schema, 데이터, `.env`, seed, revision, upgrade/downgrade/stamp는 변경하지 않았습니다.
 
-```bash
-npm install
+관련 문서:
+
+```txt
+docs/current/ALEMBIC_ASYNC_ENV_FIX.md
+docs/current/POSTGRES_ALEMBIC_READINESS.md
+docs/current/POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md
 ```
 
-## Vue 앱 실행
+## backend 가상환경 활성화
 
-실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 필요 없음 / 꺼져 있어도 됨
-
-```bash
-npm run dev
-```
-
-확인 주소: `http://127.0.0.1:5173/admin`
-
-## FastAPI 서버 실행
-
-실행 위치: 프로젝트 루트  
-`.venv` 상태: 꺼져 있다면 켜야 함
+실행 위치: `backend` 폴더  
+`.venv` 상태: 꺼져 있을 때 실행
 
 ```bash
 .venv\Scripts\activate
 ```
+
+## Alembic 읽기 전용 상태 확인
+
+실행 위치: 프로젝트 루트  
+`.venv` 상태: `backend/.venv`가 켜진 상태
+
+```bash
+python tools/check_alembic_readonly_state.py
+```
+
+이 도구는 `history`, `heads`, `current`만 실행하며 DB 구조를 변경하지 않습니다.
+
+## 기존 서버 실행
+
+FastAPI:
 
 실행 위치: `backend` 폴더  
 `.venv` 상태: 켜진 상태
@@ -54,17 +65,26 @@ npm run dev
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-## 검증
+Vue:
 
-실행 위치: 프로젝트 루트  
-`.venv` 상태: Vue 검사는 무관, Python/core 검사는 켜진 상태 권장
+실행 위치: `frontend/vue-app` 폴더  
+`.venv` 상태: 필요 없음 / 꺼져 있어도 됨
 
 ```bash
-bash tools/run_smoke_vue_shell.sh
-python -m compileall -q backend/app backend/scripts tools
-bash tools/run_smoke_core.sh
+npm run dev
+```
+
+## 현재 실행 금지
+
+```txt
+python scripts/setup_dev_db.py --reset
+docker compose down -v
+python -m alembic revision --autogenerate
+python -m alembic upgrade head
+python -m alembic downgrade
+python -m alembic stamp head
 ```
 
 ## 다음 방향
 
-다음은 실제 DB를 바꾸지 않고 PostgreSQL/Alembic 도입 계획과 검증 체크리스트를 구체화합니다.
+v284 ZIP 적용 후 읽기 전용 Alembic 상태와 Docker/PostgreSQL 상태를 확인합니다. 실제 DB 상태가 확인되기 전에는 baseline migration이나 stamp를 만들지 않습니다.

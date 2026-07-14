@@ -1,0 +1,352 @@
+#!/usr/bin/env python3
+"""Generate a deterministic PostgreSQL/Alembic readiness report.
+
+This tool is intentionally static and read-only. It inspects project files only;
+it never imports the FastAPI app, opens a DB connection, changes .env, creates a
+migration, or runs Alembic commands.
+"""
+from __future__ import annotations
+
+import argparse
+import ast
+import difflib
+import re
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+PROJECT_VERSION = "v284"
+REPORT_PATH = Path("docs/current/POSTGRES_ALEMBIC_READINESS.md")
+
+
+@dataclass(frozen=True)
+class ModelInfo:
+    name: str
+    table: str
+    file: str
+
+
+def read(path: Path) -> str:
+    return path.read_text(encoding="utf-8") if path.exists() else ""
+
+
+def model_infos(root: Path) -> list[ModelInfo]:
+    result: list[ModelInfo] = []
+    model_root = root / "backend/app/models"
+    for path in sorted(model_root.glob("*.py")):
+        if path.name in {"__init__.py", "mixins.py"}:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in tree.body:
+            if not isinstance(node, ast.ClassDef):
+                continue
+            table = ""
+            for item in node.body:
+                if (
+                    isinstance(item, ast.Assign)
+                    and any(isinstance(target, ast.Name) and target.id == "__tablename__" for target in item.targets)
+                    and isinstance(item.value, ast.Constant)
+                    and isinstance(item.value.value, str)
+                ):
+                    table = item.value.value
+                    break
+            if table:
+                result.append(
+                    ModelInfo(
+                        name=node.name,
+                        table=table,
+                        file=path.relative_to(root).as_posix(),
+                    )
+                )
+    return result
+
+
+def dependency_names(pyproject_text: str) -> list[str]:
+    wanted = ["sqlalchemy", "asyncpg", "psycopg", "alembic"]
+    return [name for name in wanted if re.search(rf'"{re.escape(name)}(?:\[.*?\])?>=', pyproject_text)]
+
+
+def yes_no(value: bool) -> str:
+    return "있음" if value else "없음"
+
+
+def render(root: Path) -> str:
+    models = model_infos(root)
+    model_files = sorted({item.file for item in models})
+    model_text = "\n".join(read(root / file) for file in model_files)
+    pyproject = read(root / "backend/pyproject.toml")
+    env_example = read(root / "backend/.env.example")
+    compose = read(root / "docker-compose.yml")
+    alembic_ini = read(root / "backend/alembic.ini")
+    alembic_env = read(root / "backend/alembic/env.py")
+    setup_script = read(root / "backend/scripts/setup_dev_db.py")
+    session = read(root / "backend/app/db/session.py")
+
+    versions_dir = root / "backend/alembic/versions"
+    revision_files = sorted(versions_dir.glob("*.py")) if versions_dir.exists() else []
+    script_template = root / "backend/alembic/script.py.mako"
+
+    jsonb_count = model_text.count("mapped_column(JSONB")
+    numeric_count = model_text.count("mapped_column(Numeric")
+    foreign_key_count = model_text.count("ForeignKey(")
+    unique_constraint_count = model_text.count("UniqueConstraint(")
+    deps = dependency_names(pyproject)
+    async_alembic_online = all(
+        marker in alembic_env
+        for marker in (
+            "async_engine_from_config",
+            "async with connectable.connect() as connection:",
+            "await connection.run_sync(do_run_migrations)",
+            "asyncio.run(run_async_migrations())",
+        )
+    )
+
+    model_rows = "\n".join(
+        f"| `{item.table}` | `{item.name}` | `{item.file}` |" for item in models
+    ) or "| - | - | - |"
+
+    blockers: list[str] = []
+    if not versions_dir.exists():
+        blockers.append("`backend/alembic/versions/` 폴더가 없습니다.")
+    if not script_template.exists():
+        blockers.append("`backend/alembic/script.py.mako` migration 템플릿이 없습니다.")
+    if not revision_files:
+        blockers.append("Alembic revision 파일이 아직 0개입니다.")
+    if "Base.metadata.create_all" in setup_script:
+        blockers.append("현재 로컬 스키마 생성은 Alembic이 아니라 `Base.metadata.create_all()`을 사용합니다.")
+    if "DROP SCHEMA IF EXISTS public CASCADE" in setup_script:
+        blockers.append("`setup_dev_db.py --reset`은 `public` 스키마 전체를 삭제하는 고위험 경로입니다.")
+    if not async_alembic_online and "+asyncpg" in alembic_ini:
+        blockers.append(
+            "Alembic online 경로가 asyncpg URL과 호환되는 async engine 패턴으로 구성되지 않았습니다."
+        )
+
+    blocker_lines = "\n".join(f"- {item}" for item in blockers) or "- 없음"
+    dependency_lines = "\n".join(f"- `{name}`: `backend/pyproject.toml`에 선언됨" for name in deps)
+
+    return f"""# PostgreSQL / Alembic Readiness — {PROJECT_VERSION}
+
+이 문서는 현재 프로젝트 파일을 기준으로 PostgreSQL과 Alembic 도입 준비 상태를 자동 분석한 결과입니다.
+
+중요: 이 보고서는 **읽기 전용 정적 분석**입니다. DB 연결, `.env` 변경, schema 생성/삭제, seed import, migration 생성/적용을 수행하지 않습니다.
+
+## 결론
+
+- 현재 backend는 이미 PostgreSQL 전용 타입과 두 드라이버를 전제로 설계되어 있습니다.
+- FastAPI 런타임은 `asyncpg`, 로컬 schema/seed 도구는 `psycopg` 사용을 전제로 분리되어 있습니다.
+- SQLAlchemy 모델은 존재하지만 Alembic revision 체계는 아직 시작되지 않았습니다.
+- v284에서 사용자 실제 `MissingGreenlet` 결과를 근거로 Alembic online 경로를 async engine 방식으로 수정했습니다.
+- 따라서 다음 위험 단계는 바로 migration을 적용하는 것이 아니라, **로컬 PostgreSQL 상태/백업 확인 → `current` 재검증 → 현재 schema 기준 baseline 전략 확정** 순서여야 합니다.
+
+## 현재 구조 요약
+
+| 항목 | 현재 상태 |
+|---|---|
+| SQLAlchemy model table 수 | {len(models)}개 |
+| PostgreSQL `JSONB` mapped column | {jsonb_count}개 |
+| 큰 수/확률용 `Numeric` mapped column | {numeric_count}개 |
+| `ForeignKey` 선언 | {foreign_key_count}개 |
+| 명시적 `UniqueConstraint` 선언 | {unique_constraint_count}개 |
+| async session | {yes_no("create_async_engine" in session and "AsyncSession" in session)} |
+| Docker PostgreSQL 16 | {yes_no("postgres:16-alpine" in compose)} |
+| 로컬 host port 55432 | {yes_no('55432:5432' in compose)} |
+| Adminer 8081 | {yes_no('8081:8080' in compose)} |
+| `.env.example` asyncpg URL | {yes_no("postgresql+asyncpg://" in env_example)} |
+| Alembic 설정 파일 | {yes_no((root / 'backend/alembic.ini').exists())} |
+| Alembic env | {yes_no((root / 'backend/alembic/env.py').exists())} |
+| Alembic asyncpg-compatible online env | {yes_no(async_alembic_online)} |
+| Alembic versions 폴더 | {yes_no(versions_dir.exists())} |
+| Alembic revision 수 | {len(revision_files)}개 |
+| Alembic script template | {yes_no(script_template.exists())} |
+
+## Python 의존성 선언
+
+{dependency_lines}
+
+개별 패키지를 따로 설치하기보다, backend 가상환경에서 프로젝트 의존성을 한 번에 설치하는 방식을 기준으로 합니다.
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+## 현재 SQLAlchemy model 목록
+
+| 테이블 | 모델 | 파일 |
+|---|---|---|
+{model_rows}
+
+## 현재 DB 실행 경로
+
+### FastAPI 런타임
+
+- 파일: `backend/app/db/session.py`
+- URL: `postgresql+asyncpg://...`
+- 방식: `create_async_engine()` + `AsyncSession`
+- 연결 확인 API: `GET /api/v1/health/db`
+
+### 로컬 schema/seed 도구
+
+- 파일: `backend/scripts/setup_dev_db.py`
+- URL 변환: `postgresql+asyncpg://...` → `postgresql+psycopg://...`
+- 방식: sync SQLAlchemy + psycopg
+- `--create-schema`: 누락 테이블 생성
+- `--seed`: seed import
+- `--verify`: table count 조회
+- `--reset`: `public` schema 전체 삭제 후 재생성 — **사용자 승인 전 실행 금지**
+
+### Alembic
+
+- 설정: `backend/alembic.ini`
+- env: `backend/alembic/env.py`
+- metadata: `Base.metadata`
+- online 방식: `async_engine_from_config()` + `connection.run_sync()`
+- 현재 revision: {len(revision_files)}개
+- `history`, `heads`, `current` 읽기 전용 수집 도구: `tools/check_alembic_readonly_state.py`
+
+## 현재 차단 요소 / 실제 검증 필요 지점
+
+{blocker_lines}
+
+## SQLite 의존성 점검
+
+backend runtime/model/schema 경로에서 SQLite URL이나 SQLite 전용 타입은 발견되지 않았습니다.
+현재 모델은 오히려 PostgreSQL `JSONB`에 직접 의존하므로 SQLite를 임시 대체 DB로 사용하면 동일 동작을 보장할 수 없습니다.
+
+## 안전한 도입 순서
+
+### Stage A — 설치/실행 환경만 확인
+
+1. Docker Desktop 설치 여부 확인
+2. `docker compose` 사용 가능 여부 확인
+3. backend `.venv`에서 프로젝트 Python 의존성 설치 여부 확인
+4. `asyncpg`, `psycopg`, `alembic`, `sqlalchemy` import 확인
+5. 아직 DB 생성/삭제/migration은 실행하지 않음
+
+### Stage B — 로컬 PostgreSQL과 백업 경로 확인
+
+1. `docker compose up -d postgres adminer`
+2. container가 `healthy`인지 확인
+3. `/api/v1/health/db`가 `ok`인지 확인
+4. 비어 있는 개발 DB에서만 backup/restore 명령을 리허설
+5. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
+
+### Stage C — Alembic 실행 방식 검증
+
+1. 사용자 실제 환경에서 sync `engine_from_config()` + asyncpg 조합의 `MissingGreenlet` 확인
+2. v284에서 `async_engine_from_config()` + `connection.run_sync()` 방식으로 수정
+3. 전용 Alembic async env smoke 추가
+4. `history`, `heads`, `current`를 읽기 전용 도구로 다시 수집
+5. `current`가 DB 연결 오류를 내면 container/URL 상태를 확인하되 schema는 변경하지 않음
+6. 이 단계에서도 revision 생성, upgrade, downgrade, stamp는 실행하지 않음
+
+### Stage D — baseline 전략 선택
+
+현재 가능한 전략은 두 가지이며, 실제 DB 상태를 확인한 뒤 하나만 선택해야 합니다.
+
+- 새 빈 DB: 첫 revision이 전체 schema를 생성하도록 구성
+- 이미 create_all/seed 된 DB: 현재 schema와 revision을 비교한 뒤 baseline/stamp 전략 수립
+
+`alembic stamp head`는 migration을 실행하지 않고 이력만 기록하므로, schema가 정확히 일치한다고 검증하기 전에는 사용하면 안 됩니다.
+
+### Stage E — 사용자 승인 후 첫 migration
+
+1. DB 백업
+2. 첫 revision 생성
+3. 생성된 migration 파일 수동 검토
+4. 임시 빈 DB에서 upgrade/downgrade 왕복
+5. table/index/FK/JSONB/Numeric 비교
+6. smoke 및 `/health/db` 확인
+7. 그 후에만 실제 개발 DB 적용
+
+## Rollback 원칙
+
+- 코드 rollback과 DB rollback을 분리합니다.
+- migration 전 DB backup을 반드시 만듭니다.
+- downgrade가 안전한지 임시 DB에서 먼저 확인합니다.
+- seed import와 schema migration을 한 명령에 묶지 않습니다.
+- `setup_dev_db.py --reset`과 `docker compose down -v`는 복구 불가능한 로컬 데이터 삭제가 될 수 있으므로 명시 승인 없이는 실행하지 않습니다.
+
+## 기호 컴퓨터에서 사용할 사전 점검
+
+v283에서 추가한 도구는 설치 상태만 확인하고 DB에는 접속하지 않습니다.
+
+```bash
+python tools/check_postgres_alembic_prerequisites.py
+```
+
+JSON 결과가 필요할 때:
+
+```bash
+python tools/check_postgres_alembic_prerequisites.py --json
+```
+
+모든 필수 항목이 설치되어야 성공 코드로 끝나게 확인할 때:
+
+```bash
+python tools/check_postgres_alembic_prerequisites.py --strict
+```
+
+Alembic 읽기 전용 상태를 한 번에 수집할 때:
+
+```bash
+python tools/check_alembic_readonly_state.py
+```
+
+이 도구의 `current`만 DB에 연결해 현재 revision을 읽으며, schema와 migration history는 변경하지 않습니다.
+
+## 이번 단계에서 변경하지 않은 것
+
+- DB schema
+- Docker volume
+- `.env`
+- seed
+- Alembic revision 생성
+- migration 적용/rollback/stamp
+- API route path/response body
+- 인증/Write Guard/write 로직
+- 게임 콘텐츠
+
+## 다음 승인 전 체크포인트
+
+아래 결과를 기호 컴퓨터에서 확인한 뒤 다음 단계로 갑니다.
+
+- `python tools/check_alembic_readonly_state.py` 결과
+- `alembic current`가 더 이상 `MissingGreenlet`을 내지 않는지
+- 기존 PostgreSQL container/volume 존재 여부
+- `/api/v1/health/db` 실제 결과
+- 현재 개발 DB에 보존할 데이터가 있는지 여부
+"""
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true", help="Fail when the generated report is stale")
+    args = parser.parse_args()
+
+    root = Path(__file__).resolve().parents[1]
+    expected = render(root)
+    report = root / REPORT_PATH
+
+    if args.check:
+        if not report.exists():
+            print(f"missing report: {REPORT_PATH.as_posix()}", file=sys.stderr)
+            return 1
+        actual = report.read_text(encoding="utf-8")
+        if actual != expected:
+            print(f"stale report: {REPORT_PATH.as_posix()}", file=sys.stderr)
+            for line in difflib.unified_diff(
+                actual.splitlines(), expected.splitlines(), fromfile="actual", tofile="expected", lineterm=""
+            ):
+                print(line, file=sys.stderr)
+            return 1
+        print("OK: PostgreSQL/Alembic readiness report is up to date")
+        return 0
+
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(expected, encoding="utf-8")
+    print(f"wrote {REPORT_PATH.as_posix()}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

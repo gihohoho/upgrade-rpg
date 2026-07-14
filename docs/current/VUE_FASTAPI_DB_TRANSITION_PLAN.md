@@ -1,4 +1,4 @@
-# Vue/FastAPI/DB 전환 준비 계획 — v272
+# Vue/FastAPI/DB 전환 준비 계획 — v284
 
 ## 목적
 
@@ -173,6 +173,24 @@ Python compile 검사:
 ```bash
 python -m compileall -q backend/app backend/scripts tools
 ```
+
+
+## v282~v284 PostgreSQL/Alembic readiness
+
+실제 DB를 변경하지 않고 다음을 확정했습니다.
+
+- 사용자 실제 `alembic current`에서 sync Alembic env + asyncpg 조합의 `MissingGreenlet`을 확인했습니다.
+- v284에서 Alembic online env를 async engine + `connection.run_sync()` 방식으로 수정했습니다.
+
+- SQLAlchemy table model 22개
+- PostgreSQL JSONB/Numeric/FK/UniqueConstraint 사용 현황
+- FastAPI asyncpg, schema/seed psycopg 경로 분리
+- Docker PostgreSQL 16 + Adminer + host port 55432
+- Alembic `versions/`, revision, `script.py.mako` 미구성
+- `setup_dev_db.py --reset`, `docker compose down -v` 고위험 명령
+- Docker/Python package prerequisite 읽기 전용 checker
+
+현재는 migration을 만들거나 적용하지 않습니다. 다음 단계에서 기호 컴퓨터의 실제 Docker/DB 상태와 Alembic 명령 결과를 먼저 수집합니다.
 
 ## 다음 단계 로드맵
 

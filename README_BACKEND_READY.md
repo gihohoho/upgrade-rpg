@@ -1,24 +1,37 @@
 # Backend Ready
 
-현재 안정 버전: `v250.backend-admin-rollback-snapshot`
+현재 안정 readiness: `v250.backend-admin-rollback-snapshot`
 
 Backend splitStatus: `admin-schema-field-constraint-contract-v238`
+
+현재 프로젝트 작업 버전: `v284.alembic-async-env-fix`
 
 ## 핵심 보장
 
 - 관리자 runtime route/OpenAPI/request/response/schema 계약 유지
-- FastAPI/Starlette/Pydantic 환경 차이는 허용 결과와 세부 오류 구조로 검증
-- backend/frontend `extractedFiles`와 `routeContract` parity 유지
-- preview request 반복 parsing 결과 일관성 유지
-- apply route의 Write Guard 유지
-- 격리 계약 검사에서 service 호출과 DB 쓰기 시도 0회
+- backend/frontend contract parity 유지
+- apply route Write Guard 유지
+- 기존 route path/API response body/write 의미 유지
+- DB schema/data/env/seed/revision 변경 없음
 
-## 현재 방향
+## v284 Alembic 수정
 
-Backend 자체의 기능 확장보다 Vue/FastAPI/DB 전환 준비를 우선합니다.
-단, route path/API response body/write guard는 사용자 승인 없이 변경하지 않습니다. v273에서는 Vue 개발 서버 local CORS 오류만 수정했고 `.env` 파일은 변경하지 않았습니다.
+- 사용자 실제 `MissingGreenlet` 결과 확인
+- sync `engine_from_config()` 제거
+- `async_engine_from_config()` + `connection.run_sync()` 적용
+- 읽기 전용 `history/heads/current` 수집 도구 추가
+- 전용 async env smoke 추가
 
-## 개발 테스트 의존성
+## backend 가상환경
+
+실행 위치: `backend` 폴더  
+`.venv` 상태: 꺼져 있을 때 실행
+
+```bash
+.venv\Scripts\activate
+```
+
+의존성 누락 시에만:
 
 실행 위치: `backend` 폴더  
 `.venv` 상태: 켜진 상태
@@ -27,15 +40,20 @@ Backend 자체의 기능 확장보다 Vue/FastAPI/DB 전환 준비를 우선합�
 python -m pip install -e ".[dev]"
 ```
 
-## v273 local CORS 참고
+## 읽기 전용 Alembic 확인
 
-Vue 개발 서버는 `http://127.0.0.1:5173`, FastAPI는 `http://127.0.0.1:8000`에서 실행되므로 브라우저 CORS 검사가 발생합니다. v273에서는 local/debug 환경에서 Vite 개발 서버 origin을 기본 허용하도록 보강했습니다. CORS 변경은 FastAPI 서버 재시작 후 반영됩니다.
+실행 위치: 프로젝트 루트  
+`.venv` 상태: `backend/.venv`가 켜진 상태
+
+```bash
+python tools/check_alembic_readonly_state.py
+```
 
 ## 검증
 
 실행 위치: 프로젝트 루트  
-`.venv` 상태: 켜진 상태 권장
+`.venv` 상태: `backend/.venv`가 켜진 상태 권장
 
 ```bash
-bash tools/run_smoke_core.sh && python -m compileall -q backend/app backend/scripts tools
+bash tools/run_smoke_core.sh && python -m compileall -q backend/app backend/scripts backend/alembic tools
 ```
