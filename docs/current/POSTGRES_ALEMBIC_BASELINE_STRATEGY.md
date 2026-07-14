@@ -1,4 +1,4 @@
-# PostgreSQL / Alembic 최초 baseline 전략 — v287 확정
+# PostgreSQL / Alembic 최초 baseline 전략 — v289
 
 ## 실제 분류
 
@@ -83,3 +83,11 @@ python -m alembic upgrade head
 python -m alembic downgrade
 python -m alembic stamp head
 ```
+
+## v288~v289 schema 비교 결론
+
+v288 실제 차이 2개는 `FLOAT`와 `DOUBLE PRECISION`의 PostgreSQL alias 표현 차이였습니다.
+v289 checker에서 alias를 정규화했으며 실제 DB와 model 자체는 변경하지 않았습니다.
+
+v289 checker 재실행에서 차이 0개가 확인되면 다음 단계는 backup/restore 리허설 경계 확정입니다.
+그래도 바로 revision 생성이나 `stamp head`를 실행하지 않습니다.

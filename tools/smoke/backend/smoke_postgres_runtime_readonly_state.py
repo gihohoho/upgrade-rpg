@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke checks for v285-v286 PostgreSQL runtime inspection and baseline plan."""
+"""Smoke checks for the current PostgreSQL runtime inspection and baseline plan."""
 from __future__ import annotations
 
 import ast
@@ -93,7 +93,7 @@ def main() -> int:
 
     strategy_text = STRATEGY_DOC.read_text(encoding="utf-8")
     for marker in (
-        "PostgreSQL / Alembic 최초 baseline 전략 — v287 확정",
+        "PostgreSQL / Alembic 최초 baseline 전략 — v289",
         "existing-schema-without-alembic-baseline",
         "기존 `create_all()` schema와 데이터를 보존하는 baseline 방식",
         "python tools/check_postgres_schema_equivalence.py",

@@ -108,6 +108,7 @@ python tools/smoke/backend/smoke_backend_alembic_async_env.py
 python tools/smoke/backend/smoke_postgres_runtime_readonly_state.py
 python tools/smoke/backend/smoke_windows_subprocess_decode.py
 python tools/smoke/backend/smoke_postgres_schema_equivalence.py
+python tools/smoke/game/smoke_next_chat_handoff.py
 python tools/smoke/contracts/smoke_backend_admin_preview_side_effect_contract.py
 python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contract.py
 python tools/smoke/contracts/smoke_backend_admin_diff_engine_contract.py

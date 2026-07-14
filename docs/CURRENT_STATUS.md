@@ -1,47 +1,58 @@
-# Current Status — v246
+# Current Status — v289
 
-현재 기준: **v250.backend-admin-rollback-snapshot**
+## 현재 기준
 
-Backend splitStatus: `admin-schema-field-constraint-contract-v238`
+- 최신 작업: `v289.postgres-float-type-normalization-handoff`
+- 기준 ZIP: `rpg_v289_postgres_float_normalization_handoff_ready.zip`
+- readiness version: `v250.backend-admin-rollback-snapshot`
+- backend splitStatus: `admin-schema-field-constraint-contract-v238`
+- 실제 backend 가상환경: `backend/.venv`
 
-## 완료된 흐름
+## 실제 PostgreSQL 상태
 
-- 관리자 frontend thin entry/helper 분리
-- backend `AdminService` facade/service split
-- 관리자 route module/facade 분리
-- route ownership/runtime/operation/OpenAPI/response/request metadata 계약
-- schema/model/field constraint 계약
-- request payload와 대표 FastAPI 422 계약
-- malformed JSON·빈 body·Content-Type/Accept 계약
-- media type·size policy·UTF-8/header encoding 계약
-- transport header 관찰 계약
-- preview replay parsing과 apply write guard 계약
-- backend/frontend 계약 전체 parity smoke
-
-## 안전 상태
-
-- DB/env/seed 변경 없음
-- route path/API 응답 body/schema/인증 변경 없음
-- 실제 service 호출 및 DB write 없이 request 경계 검사
-- `Idempotency-Key` 현재 미지원
-
-## 관리자 콘솔 기대값
-
-```js
-({
-  version: checkAdminReadOnlyPageReady().version,
-  pageReady: checkAdminReadOnlyPageReady().ok,
-  failedChecks: checkAdminReadOnlyPageReady().failedChecks,
-  writeReplaySafetyReady:
-    checkAdminReadOnlyPageReady().backendWriteReplaySafetyContractReady,
-})
+```txt
+Docker Compose project: upgraderpg
+containers: running(2)
+volume: upgraderpg_rpg_postgres_data
+PostgreSQL: 16.14
+DB: rpg_game / rpg_user
+DB size: 12 MB
+SQLAlchemy model tables: 22
+public tables: 22
+total rows: 748
+alembic_version: 없음
+current revision: 없음
+health/db: HTTP 200, status=ok
+classification: existing-schema-without-alembic-baseline
 ```
 
-```js
-{
-  version: "v250.backend-admin-rollback-snapshot",
-  pageReady: true,
-  failedChecks: [],
-  writeReplaySafetyReady: true
-}
+## v288 실제 schema 비교 결과
+
+두 차이는 모두 `user_profiles`의 SQLAlchemy `FLOAT`와 PostgreSQL reflection `DOUBLE PRECISION` 표현 차이였습니다.
+
+```txt
+add_attack_speed: FLOAT / DOUBLE PRECISION
+farm_atk_bonus: FLOAT / DOUBLE PRECISION
 ```
+
+## v289 완료
+
+- PostgreSQL `FLOAT` alias 정규화를 schema 비교 도구에 추가
+- precision 없는 `FLOAT`를 `DOUBLE PRECISION`으로 비교
+- alias false positive 전용 smoke 추가
+- 오래된 다음 채팅 smoke를 현재 인수인계 기준으로 갱신
+- `backend/idle_rpg_backend.egg-info/` 생성 산출물 제거 및 `.gitignore` 등록
+- 중복 `backend/env.example` 제거, `backend/.env.example`을 단일 예시 파일로 유지
+- 루트/current/handoff 문서를 v289 기준으로 정리
+- 실제 DB, Docker, `.env`, seed, migration은 변경하지 않음
+
+## 다음 확인
+
+실행 위치: 프로젝트 루트
+`.venv` 상태: `backend/.venv`가 켜진 상태
+
+```bash
+python tools/check_postgres_schema_equivalence.py
+```
+
+실제 다른 차이가 없다면 `structurally-equivalent`, 차이 0개가 기대되지만 실행 결과를 먼저 수집합니다.

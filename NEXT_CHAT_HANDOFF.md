@@ -1,17 +1,17 @@
-# NEXT CHAT HANDOFF — Upgrade RPG v288
+# NEXT CHAT HANDOFF — Upgrade RPG v289
 
 ## 기준 ZIP
 
-- `rpg_v288_postgres_baseline_schema_equivalence_preflight.zip`
+- `rpg_v289_postgres_float_normalization_handoff_ready.zip`
 
 ## 현재 버전
 
-- 최신 작업: `v288.postgres-baseline-schema-equivalence-preflight`
+- 최신 작업: `v289.postgres-float-type-normalization-handoff`
 - readiness version: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - 실제 backend 가상환경: `backend/.venv`
 
-## 사용자 실제 PostgreSQL 결과
+## 실제 PostgreSQL 상태
 
 ```txt
 Docker Compose project: upgraderpg
@@ -29,36 +29,33 @@ health/db: HTTP 200, status=ok
 classification: existing-schema-without-alembic-baseline
 ```
 
-보존 대상 예시:
+DB 초기화 금지. 기존 데이터 보존형 baseline 전략입니다.
+
+## v288 실제 schema 비교
 
 ```txt
-users 1
-user_profiles 1
-characters 1
-user_save_snapshots 2
-admin_change_logs 13
+classification: review-required
+differenceCount: 2
+user_profiles.add_attack_speed: model=FLOAT db=DOUBLE PRECISION
+user_profiles.farm_atk_bonus: model=FLOAT db=DOUBLE PRECISION
 ```
 
-DB 초기화 금지. 기존 데이터 보존형 baseline 전략으로 확정했습니다.
+두 항목은 PostgreSQL에서 동일하게 double precision으로 처리되는 타입 alias 표현 차이입니다.
 
-## v287 완료
+## v289 완료
 
-- Windows Docker output의 UTF-8/cp949 혼합 `UnicodeDecodeError` 수정
-- `tools/_safe_subprocess.py` 추가
-- runtime/prerequisite/Alembic read-only 도구에 공통 safe decode 적용
-- 실제 DB 결과를 문서와 baseline 전략에 반영
+- FLOAT alias 정규화 추가
+- `FLOAT` -> `DOUBLE PRECISION`
+- `FLOAT(1..24)` -> `REAL`
+- `FLOAT(25..53)` -> `DOUBLE PRECISION`
+- alias 정규화 smoke 보강
+- handoff smoke 최신화 및 core smoke 등록
+- 생성 `egg-info` 제거 및 ignore 규칙 추가
+- 중복 `backend/env.example` 제거
+- stale root/current/handoff 문서 v289 동기화
+- DB/Docker/env/seed/migration 미변경
 
-## v288 완료
-
-- `tools/check_postgres_schema_equivalence.py` 추가
-- columns/types/nullability/PK/FK/unique/index/check 상세 비교
-- DB 변경 없는 read-only 도구
-- 전용 smoke와 core smoke 등록
-- `docs/current/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md` 추가
-
-## 다음 첫 작업 — v289
-
-사용자에게 아래 실행 결과를 받습니다.
+## 다음 첫 확인
 
 실행 위치: `backend` 폴더  
 `.venv` 상태: 꺼져 있을 때 Git Bash
@@ -74,13 +71,14 @@ source .venv/Scripts/activate
 python tools/check_postgres_schema_equivalence.py
 ```
 
-결과가:
+기대 후보는 `structurally-equivalent`, 차이 0개입니다. 실제 결과를 먼저 수집합니다.
 
-- `structurally-equivalent`: backup/restore + 별도 빈 DB migration 검증 계획 작성
-- `review-required`: category/table별 차이 분석
-- `connection-failed`: 연결 환경만 점검
+## 다음 작업 — v290
 
-## 절대 실행 금지
+차이 0개 확인 후 원본 DB에 영향을 주지 않는 backup/restore preflight와 별도 테스트 DB 계획을 진행합니다.
+실제 backup/restore/DB 생성·삭제는 사용자 승인 후 단계적으로 수행합니다.
+
+## 실행 금지
 
 ```txt
 python scripts/setup_dev_db.py --reset
@@ -94,5 +92,5 @@ python -m alembic stamp head
 ## 설치 상태
 
 - 새 라이브러리/프레임워크 없음
-- Docker, Compose, SQLAlchemy, Alembic, asyncpg, psycopg, FastAPI 설치 확인 완료
+- Docker, Compose, SQLAlchemy, Alembic, asyncpg, psycopg, FastAPI 확인 완료
 - npm package 변경 없음

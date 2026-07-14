@@ -1,15 +1,41 @@
 # Documentation
 
-문서 폴더 안내입니다.
+## 현재 문서
 
-- `current/`: 현재 상태와 로드맵. 새 채팅에서는 이 폴더를 먼저 봅니다.
-- `contracts/`: 관리자 계약과 자동 동기화 기준입니다.
-- `handoff/`: 다음 채팅 인계 자료입니다.
-- `archive/`: 완료된 과거 단계 기록입니다.
-- 루트의 기존 기능 문서: 아직 참조되는 상세 구현 기록입니다.
+새 채팅과 현재 작업에서는 먼저 아래를 확인합니다.
 
-v268 기준:
+```txt
+docs/current/README.md
+docs/current/CURRENT_STATUS.md
+docs/current/ROADMAP.md
+docs/NEXT_STEPS.md
+```
 
-- `docs/current/PROJECT_STRUCTURE.md`에 현재 구조와 경로 의존성 분석이 정리되어 있습니다.
-- `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`에 Vue/FastAPI/DB 전환 계획이 정리되어 있습니다.
-- 문서 대량 이동은 아직 하지 않습니다. 일부 smoke가 문서/경로를 직접 확인하므로, 먼저 영향 분석 후 진행합니다.
+현재 PostgreSQL/Alembic 핵심 문서:
+
+```txt
+docs/current/POSTGRES_RUNTIME_READONLY_STATE.md
+docs/current/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md
+docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md
+docs/current/POSTGRES_BACKUP_RESTORE_PREP.md
+```
+
+## 인수인계
+
+```txt
+NEXT_CHAT_PROMPT.md
+NEXT_CHAT_HANDOFF.md
+docs/handoff/
+```
+
+루트 인수인계 파일과 `docs/handoff/` 사본은 같은 v289 기준으로 유지합니다.
+
+## 문서 폴더
+
+- `current/`: 현재 상태, DB 전환, Vue/FastAPI 전환, 로드맵
+- `contracts/`: 관리자 contract와 parity 기준
+- `handoff/`: 다음 채팅 인수인계 사본
+- `archive/`: 완료된 과거 단계 기록
+- 루트의 기능별 문서: 기존 smoke와 구현 이력이 참조하는 상세 기록
+
+문서 대량 이동은 기존 smoke 경로를 확인한 뒤 진행합니다.

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,14 +26,33 @@ class Difference:
 
 
 def normalized_type(type_: Any) -> str:
-    """Compile both model and reflected types with one PostgreSQL dialect."""
+    """Compile and canonicalize model/reflected PostgreSQL type aliases.
+
+    PostgreSQL treats ``FLOAT`` without a precision as ``DOUBLE PRECISION``.
+    Reflection therefore returns ``DOUBLE PRECISION`` for a SQLAlchemy ``Float()``
+    column.  Normalize the SQL-standard FLOAT aliases before comparing so this
+    representational difference is not reported as schema drift.
+    """
     from sqlalchemy.dialects import postgresql  # noqa: PLC0415
 
     try:
         compiled = str(type_.compile(dialect=postgresql.dialect()))
     except Exception:
         compiled = str(type_)
-    return " ".join(compiled.upper().split())
+    normalized = " ".join(compiled.upper().split())
+
+    if normalized == "FLOAT":
+        return "DOUBLE PRECISION"
+
+    match = re.fullmatch(r"FLOAT\((\d+)\)", normalized)
+    if match:
+        precision = int(match.group(1))
+        if 1 <= precision <= 24:
+            return "REAL"
+        if 25 <= precision <= 53:
+            return "DOUBLE PRECISION"
+
+    return normalized
 
 
 def normalize_columns(columns: Iterable[str] | None) -> tuple[str, ...]:
@@ -243,6 +263,7 @@ def collect(root: Path) -> dict[str, Any]:
                     "schemaChanged": False,
                     "connected": True,
                     "classification": "structurally-equivalent" if not differences else "review-required",
+                    "typeNormalization": "postgresql-float-aliases.v1",
                     "modelTableCount": len(model_names),
                     "databaseTableCount": len(actual_tables),
                     "comparedTables": compared_tables,
@@ -279,6 +300,7 @@ def render_text(payload: dict[str, Any]) -> str:
             f"- 비교 테이블: {len(payload['comparedTables'])}개",
             f"- 모델/DB 테이블: {payload['modelTableCount']} / {payload['databaseTableCount']}",
             f"- 분류: {payload['classification']}",
+            f"- 타입 정규화: {payload.get('typeNormalization', 'none')}",
             f"- 차이: {payload['differenceCount']}개",
         ]
     )

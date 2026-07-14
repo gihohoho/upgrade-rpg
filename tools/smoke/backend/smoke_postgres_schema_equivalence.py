@@ -25,6 +25,20 @@ def main() -> int:
 
     source = TOOL.read_text(encoding="utf-8")
     ast.parse(source, filename=str(TOOL))
+
+    sys.path.insert(0, str(ROOT / "tools"))
+    from check_postgres_schema_equivalence import normalized_type  # noqa: PLC0415
+    from sqlalchemy import Float  # noqa: PLC0415
+    from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION, REAL  # noqa: PLC0415
+
+    if normalized_type(Float()) != "DOUBLE PRECISION":
+        return fail("PostgreSQL FLOAT without precision must normalize to DOUBLE PRECISION")
+    if normalized_type(DOUBLE_PRECISION()) != "DOUBLE PRECISION":
+        return fail("reflected DOUBLE PRECISION normalization is incorrect")
+    if normalized_type(Float(24)) != normalized_type(REAL()):
+        return fail("FLOAT(24) must normalize to REAL")
+    if normalized_type(Float(25)) != normalized_type(DOUBLE_PRECISION()):
+        return fail("FLOAT(25) must normalize to DOUBLE PRECISION")
     for marker in (
         '"readOnly": True',
         '"schemaChanged": False',
@@ -35,6 +49,8 @@ def main() -> int:
         'inspector.get_unique_constraints',
         'inspector.get_indexes',
         'inspector.get_check_constraints',
+        'postgresql-float-aliases.v1',
+        'FLOAT\\((\\d+)\\)',
     ):
         if marker not in source:
             return fail(f"schema checker missing marker: {marker}")
@@ -78,7 +94,7 @@ def main() -> int:
 
     doc_text = DOC.read_text(encoding="utf-8")
     for marker in (
-        "PostgreSQL schema 동등성 읽기 전용 점검 — v288",
+        "PostgreSQL schema 동등성 읽기 전용 점검 — v289",
         "python tools/check_postgres_schema_equivalence.py",
         "structurally-equivalent",
         "review-required",

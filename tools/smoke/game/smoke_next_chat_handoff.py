@@ -30,43 +30,39 @@ def main() -> None:
         "docs/NEXT_STEPS.md",
         "docs/PROJECT_STRUCTURE.md",
         "docs/NEXT_CHAT_START_GUIDE.md",
-        "docs/BACKEND_ADMIN_SERVICE_MAP.md",
-        "docs/BACKEND_ADMIN_CHANGE_LOG_SCHEMA_GUARD.md",
-        "backend/app/services/admin/README.md",
-        "src/api/admin/README.md",
+        "docs/current/CURRENT_STATUS.md",
+        "docs/current/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md",
+        "docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md",
+        "docs/current/POSTGRES_BACKUP_RESTORE_PREP.md",
     ]
     for relative_path in required_files:
         read_required(relative_path)
 
     assert_contains(
         "NEXT_CHAT_PROMPT.md",
-        "v202 backend admin change log service split",
-        "backend/app/services/admin/admin_change_log_service.py",
-        "rpg_v201_2_change_logs_500_hotfix.zip",
+        "rpg_v289_postgres_float_normalization_handoff_ready.zip",
+        "v289.postgres-float-type-normalization-handoff",
+        "backend/.venv",
+        "v290",
     )
     assert_contains(
         "NEXT_CHAT_HANDOFF.md",
-        "v201.2 admin change log schema guard hotfix",
-        "v202 backend admin change log service split",
-        "bash tools/run_smoke_core.sh",
+        "FLOAT",
+        "DOUBLE PRECISION",
+        "748",
+        "기존 데이터 보존형",
     )
     assert_contains(
         "docs/README.md",
-        "Docs Index",
-        "지금 자주 보는 문서",
-        "보관 문서",
-        "docs/archive/stage-notes/",
-    )
-    assert_contains(
-        "docs/BACKEND_ADMIN_SERVICE_MAP.md",
-        "AdminChangeLogService",
-        "list_admin_change_logs",
-        "apply_admin_change_log_rollback",
+        "현재 문서",
+        "인수인계",
+        "archive",
     )
     assert_contains(
         "docs/NEXT_CHAT_START_GUIDE.md",
-        "checkAdminReadOnlyPageReady().version",
-        "create-lifecycle-extracted-v201",
+        "backend/.venv",
+        "check_postgres_schema_equivalence.py",
+        "run_smoke_core.sh",
     )
 
     print("next chat handoff smoke test passed")

@@ -1,8 +1,8 @@
-# Project Structure — v284
+# Project Structure — v289
 
 현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
 
-v284에서는 legacy/Vue/backend 구조를 유지한 채 사용자 실제 `MissingGreenlet` 결과를 근거로 Alembic online env만 asyncpg 호환 방식으로 수정했습니다.
+v289에서는 legacy/Vue/backend 구조를 유지하면서 PostgreSQL FLOAT alias 비교 false positive와 전달용 생성 산출물/중복 파일을 정리했습니다.
 
 중요한 결론:
 
@@ -43,7 +43,7 @@ v284에서는 legacy/Vue/backend 구조를 유지한 채 사용자 실제 `Missi
 | `frontend/vue-app/` | 새 Vue shell + 읽기 전용 API client 준비 | 실제 기능 대체 전 단계 |
 | `backend/` | FastAPI 백엔드 | 기존 route/body/DB/env/seed 유지 |
 | `tools/` | smoke/contract/검증 도구 | 기존 core smoke 유지, Vue shell/API smoke 추가 |
-| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v284 기준 갱신 |
+| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v289 기준 갱신 |
 
 ## `frontend/vue-app/` 역할
 
@@ -323,3 +323,10 @@ http://127.0.0.1:5173
 - Write Guard
 - 관리자 Preview/Apply 요청 body
 - 기존 smoke/contract 의미
+
+## v289 전달/폴더 정리
+
+- `backend/idle_rpg_backend.egg-info/`는 editable install이 만드는 생성 산출물이므로 제거하고 `*.egg-info/`를 ignore합니다.
+- 중복된 `backend/env.example`은 제거하고 `backend/.env.example`만 유지합니다.
+- 오래된 루트 `tools/smoke_next_chat_handoff.py`는 제거하고 `tools/smoke/game/smoke_next_chat_handoff.py`를 canonical 경로로 사용합니다.
+- 전달 ZIP에는 `.git`, `backend/.venv`, `backend/.env`, `node_modules`, `dist`, Python cache를 포함하지 않습니다.

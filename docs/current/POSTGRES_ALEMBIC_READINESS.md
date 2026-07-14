@@ -1,4 +1,4 @@
-# PostgreSQL / Alembic Readiness — v288
+# PostgreSQL / Alembic Readiness — v289
 
 이 문서는 현재 프로젝트 파일을 기준으로 PostgreSQL과 Alembic 도입 준비 상태를 자동 분석한 결과입니다.
 
@@ -15,6 +15,7 @@
 - 현재 분류는 `existing-schema-without-alembic-baseline`이며 기존 데이터 보존형 전략으로 확정되었습니다.
 - v287에서 Windows Docker 출력의 UTF-8/cp949 혼합 decode 오류를 보완했습니다.
 - v288에서는 columns/types/nullability/PK/FK/unique/index/check 구조를 읽기 전용으로 비교합니다.
+- v289에서는 PostgreSQL `FLOAT` alias를 정규화해 `DOUBLE PRECISION` reflection false positive를 제거합니다.
 - 따라서 다음 위험 단계는 바로 migration을 적용하는 것이 아니라, **상세 schema 동등성 → 백업/복원 → 별도 빈 DB migration 검증** 순서여야 합니다.
 
 ## 현재 구조 요약
@@ -34,7 +35,7 @@
 | Alembic 설정 파일 | 있음 |
 | Alembic env | 있음 |
 | Alembic asyncpg-compatible online env | 있음 |
-| Alembic versions 폴더 | 없음 |
+| Alembic versions 폴더 | 있음 |
 | Alembic revision 수 | 0개 |
 | Alembic script template | 없음 |
 
@@ -110,7 +111,6 @@ python -m pip install -e ".[dev]"
 
 ## 현재 차단 요소 / 실제 검증 필요 지점
 
-- `backend/alembic/versions/` 폴더가 없습니다.
 - `backend/alembic/script.py.mako` migration 템플릿이 없습니다.
 - Alembic revision 파일이 아직 0개입니다.
 - 현재 로컬 스키마 생성은 Alembic이 아니라 `Base.metadata.create_all()`을 사용합니다.

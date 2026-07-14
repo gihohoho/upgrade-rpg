@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v288.postgres-baseline-schema-equivalence-preflight**
+현재 기준: **v289.postgres-float-type-normalization-handoff**
 
 ## 현재 구조
 
@@ -11,43 +11,37 @@
 - FastAPI 백엔드: `backend/`
 - 실제 Python 가상환경: `backend/.venv`
 
-Vue `/admin`에는 안전한 GET health, requirements, domains, catalog, detail, relations가 연결되어 있습니다.
+Vue `/admin`에는 GET health, requirements, domains, catalog, detail, relations가 연결되어 있습니다.
+게임 콘텐츠 개발과 write/인증 확대는 계속 보류합니다.
 
 ## 실제 PostgreSQL 상태
 
-기호 컴퓨터에서 읽기 전용 점검으로 확인된 결과:
-
 ```txt
-Docker Compose: upgraderpg, running(2)
-PostgreSQL volume: upgraderpg_rpg_postgres_data
-PostgreSQL: 16.14
-DB: rpg_game
-DB size: 12 MB
-SQLAlchemy model tables: 22
-public tables: 22
-total rows: 748
-alembic_version: 없음
-current revision: 없음
-health/db: HTTP 200, status=ok
-classification: existing-schema-without-alembic-baseline
+PostgreSQL 16.14 / rpg_game / 12 MB
+SQLAlchemy model tables 22 / public tables 22
+total rows 748
+alembic_version 없음 / current revision 없음
+health/db HTTP 200
+classification existing-schema-without-alembic-baseline
 ```
 
-현재 DB는 삭제/초기화 대상이 아니라 **기존 데이터 보존형 Alembic baseline 대상**입니다.
+현재 DB는 삭제/초기화 대상이 아니라 기존 데이터 보존형 Alembic baseline 대상입니다.
 
-## Windows Docker 출력 오류 수정
+## v289 핵심
 
-v287에서 subprocess 출력을 UTF-8/cp949 혼합 환경에서도 안전하게 읽도록 수정했습니다.
+기존 checker에서 나온 아래 두 차이는 PostgreSQL 타입 alias 표현 차이였습니다.
 
 ```txt
-tools/_safe_subprocess.py
+FLOAT <-> DOUBLE PRECISION
 ```
 
-## 다음 읽기 전용 schema 비교
+v289 checker는 PostgreSQL 규칙에 맞게 precision 없는 `FLOAT`를 `DOUBLE PRECISION`으로 정규화합니다.
+DB schema와 model은 변경하지 않았습니다.
 
-backend 가상환경 활성화:
+## 다음 읽기 전용 확인
 
 실행 위치: `backend` 폴더  
-`.venv` 상태: 꺼져 있을 때 Git Bash에서 실행
+`.venv` 상태: 꺼져 있을 때 Git Bash
 
 ```bash
 source .venv/Scripts/activate
@@ -60,25 +54,7 @@ source .venv/Scripts/activate
 python tools/check_postgres_schema_equivalence.py
 ```
 
-비교 범위:
-
-- columns/types/nullability
-- primary key
-- foreign key
-- unique constraint
-- index
-- check constraint
-
-관련 문서:
-
-```txt
-docs/current/POSTGRES_RUNTIME_READONLY_STATE.md
-docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md
-docs/current/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md
-docs/current/POSTGRES_ALEMBIC_READINESS.md
-```
-
-## 기존 서버 실행
+## 서버 실행
 
 FastAPI:
 
@@ -98,7 +74,7 @@ Vue:
 npm run dev
 ```
 
-## 현재 실행 금지
+## 실행 금지
 
 ```txt
 python scripts/setup_dev_db.py --reset

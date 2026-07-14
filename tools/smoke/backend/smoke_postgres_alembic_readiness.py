@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke checks for v282-v284 PostgreSQL/Alembic preparation artifacts."""
+"""Smoke checks for the current PostgreSQL/Alembic preparation artifacts."""
 from __future__ import annotations
 
 import json
@@ -19,10 +19,10 @@ RUNTIME_DOC = ROOT / "docs/current/POSTGRES_RUNTIME_READONLY_STATE.md"
 BASELINE_DOC = ROOT / "docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md"
 
 REQUIRED_REPORT_TEXT = [
-    "PostgreSQL / Alembic Readiness — v288",
+    "PostgreSQL / Alembic Readiness — v289",
     "SQLAlchemy model table 수 | 22개",
     "Alembic asyncpg-compatible online env | 있음",
-    "Alembic versions 폴더 | 없음",
+    "Alembic versions 폴더 | 있음",
     "Alembic revision 수 | 0개",
     "async_engine_from_config()",
     "tools/check_postgres_runtime_readonly_state.py",

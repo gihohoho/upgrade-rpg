@@ -4,13 +4,14 @@
 
 - Alembic asyncpg online 연결 정상
 - PostgreSQL 실제 연결과 DB health 정상
-- model/public table 22개 일치
-- 전체 row 748개 및 보존 대상 데이터 확인
-- 분류 `existing-schema-without-alembic-baseline` 확정
-- Windows subprocess UTF-8/cp949 출력 오류 수정
-- 상세 schema 동등성 읽기 전용 도구 추가
+- 모델/실제 테이블 22개 일치
+- 전체 748 rows와 보존 대상 데이터 확인
+- 기존 데이터 보존형 baseline 전략 확정
+- Windows UTF-8/cp949 subprocess 출력 수정
+- 상세 schema 읽기 전용 비교 도구 추가
+- PostgreSQL `FLOAT` / `DOUBLE PRECISION` alias false positive 정규화
 
-## 기호가 먼저 확인할 명령
+## 먼저 다시 확인할 명령
 
 backend 가상환경 활성화:
 
@@ -28,13 +29,19 @@ source .venv/Scripts/activate
 python tools/check_postgres_schema_equivalence.py
 ```
 
-## 다음 작업 — v289
+## 다음 작업 — v290
 
-결과에 따라 다음 중 하나로 진행합니다.
+`structurally-equivalent`, 차이 0개가 실제로 확인되면 다음을 진행합니다.
 
-1. `structurally-equivalent`: backup/restore 및 별도 빈 DB migration 검증 계획
-2. `review-required`: category/table별 schema 차이 분석과 보존 계획
-3. `connection-failed`: 연결 환경만 점검하며 DB 변경 금지 유지
+1. backup 파일 위치/파일명/민감정보 보존 규칙 확정
+2. `pg_dump`, `pg_restore`, `createdb`, `dropdb` 사용 가능 여부 점검
+3. 원본과 분리된 restore rehearsal DB 이름 확정
+4. 원본 DB에는 쓰지 않는 backup/restore 절차 작성
+5. restore 전후 테이블·row 수 검증 계획
+6. 별도 빈 DB 최초 Alembic migration 검증 계획
+7. 명령 실행은 사용자 승인 후 한 단계씩 진행
+
+alias 정규화 후에도 `review-required`이면 새로운 차이만 분석하며 backup/migration 단계로 넘어가지 않습니다.
 
 ## 계속 실행 금지
 
@@ -50,5 +57,5 @@ python -m alembic stamp head
 ## 설치 관련
 
 - 새 라이브러리/프레임워크 추가 없음
-- Docker/Python DB 패키지는 이미 모두 확인됨
-- npm 패키지 변경 없음
+- Docker/Python DB 패키지 설치 확인 완료
+- npm package 변경 없음

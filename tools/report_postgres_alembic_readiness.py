@@ -15,7 +15,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-PROJECT_VERSION = "v288"
+PROJECT_VERSION = "v289"
 REPORT_PATH = Path("docs/current/POSTGRES_ALEMBIC_READINESS.md")
 
 
@@ -141,6 +141,7 @@ def render(root: Path) -> str:
 - 현재 분류는 `existing-schema-without-alembic-baseline`이며 기존 데이터 보존형 전략으로 확정되었습니다.
 - v287에서 Windows Docker 출력의 UTF-8/cp949 혼합 decode 오류를 보완했습니다.
 - v288에서는 columns/types/nullability/PK/FK/unique/index/check 구조를 읽기 전용으로 비교합니다.
+- v289에서는 PostgreSQL `FLOAT` alias를 정규화해 `DOUBLE PRECISION` reflection false positive를 제거합니다.
 - 따라서 다음 위험 단계는 바로 migration을 적용하는 것이 아니라, **상세 schema 동등성 → 백업/복원 → 별도 빈 DB migration 검증** 순서여야 합니다.
 
 ## 현재 구조 요약

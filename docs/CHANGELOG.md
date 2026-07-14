@@ -1,3 +1,11 @@
+# v289 - PostgreSQL FLOAT alias normalization and handoff cleanup
+
+- Normalized PostgreSQL `FLOAT` aliases in the read-only schema checker so SQLAlchemy `FLOAT` and reflected `DOUBLE PRECISION` are compared as the same storage type.
+- Added smoke coverage for `FLOAT`, `FLOAT(24)`, `FLOAT(25)`, `REAL`, and `DOUBLE PRECISION` normalization.
+- Updated and registered the canonical next-chat handoff smoke.
+- Removed generated `backend/idle_rpg_backend.egg-info/`, added `*.egg-info/` to `.gitignore`, removed duplicate `backend/env.example`, and synchronized current/root/handoff docs.
+- Did not change PostgreSQL schema/data, Docker resources, `.env`, seed, Alembic revisions, routes, response bodies, authentication, or write logic.
+
 # v288 - PostgreSQL schema equivalence read-only preflight
 
 - Added `tools/check_postgres_schema_equivalence.py` to compare live PostgreSQL tables, columns, types, nullability, PK, FK, unique constraints, indexes, and check constraints with SQLAlchemy metadata.

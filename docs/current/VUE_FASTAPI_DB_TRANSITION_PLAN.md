@@ -1,4 +1,4 @@
-# Vue/FastAPI/DB 전환 준비 계획 — v284
+# Vue/FastAPI/DB 전환 준비 계획 — v289
 
 ## 목적
 
@@ -350,3 +350,10 @@ tools/smoke/backend/smoke_backend_route_map_report.py
 - 인증/권한/Write Guard 설계가 필요한 route
 
 v275에서는 Vue 관리자 상세/관계 조회 wrapper가 `rowId` 입력을 backend query 이름 `id`로 변환하도록 맞췄습니다. route path, API response body, Preview/Apply request body, DB, env, seed, 인증, Write Guard, 실제 write 로직은 변경하지 않았습니다.
+
+## v289 PostgreSQL baseline 현재 경계
+
+- 실제 DB 22 tables / 748 rows를 보존합니다.
+- `FLOAT` / `DOUBLE PRECISION` alias는 checker 정규화 대상이며 model/DB 수정 대상이 아닙니다.
+- schema 차이 0개 재확인 후에도 backup/restore 리허설과 별도 빈 DB migration 검증이 먼저입니다.
+- 인증과 Vue write 이식은 PostgreSQL baseline 안정화 뒤로 계속 보류합니다.
