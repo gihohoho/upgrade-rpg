@@ -114,3 +114,5 @@ python tools/create_postgres_backup.py --execute
 - `.dump`는 민감 데이터이므로 업로드/Git/전달 ZIP 포함 금지
 - restore, DB 생성/삭제, Docker resource 변경, `.env`, Alembic mutation은 실행하지 않음
 - `--execute`가 없으면 실제 파일을 만들지 않음
+
+- `downgrade_postgres_migration_test_database.py`: 검토된 isolated migration DB를 base로 downgrade하고 source/rehearsal 보존을 검증합니다.

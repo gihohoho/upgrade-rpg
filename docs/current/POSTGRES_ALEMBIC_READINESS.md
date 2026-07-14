@@ -1,4 +1,4 @@
-# PostgreSQL / Alembic Readiness — v298
+# PostgreSQL / Alembic Readiness — v299
 
 이 문서는 현재 프로젝트 파일을 기준으로 PostgreSQL과 Alembic 도입 준비 상태를 자동 분석한 결과입니다.
 
@@ -25,6 +25,7 @@
 - v296에서는 정확히 `alembic_version` 1 table / 0 rows / recorded revision 없음만 recovery workspace로 허용하고, `--inspect-workspace` 후 기존 placeholder를 재사용합니다.
 - v297에서는 generated revision의 nested `op.f(...)` naming helper를 migration operation 집계에서 제외해 v296 parser false positive를 제거합니다.
 - v298에서는 사용자 review bundle의 exact revision SHA를 기준으로 22 tables / 209 columns / 42 indexes / types / nullable / PK / FK / unique / downgrade dependency order 수동 검토를 완료하고, isolated migration DB `upgrade head` 실행 가드를 추가합니다.
+- v299에서는 사용자 PC에서 성공한 isolated `upgrade head` 결과를 전제로 exact `downgrade base`만 허용하고, target이 빈 `alembic_version` placeholder 상태로 복귀하는지 검증하는 가드를 추가합니다.
 - 따라서 다음 위험 단계는 바로 source DB에 migration을 적용하는 것이 아니라, **생성 revision 수동 검토 → empty DB upgrade → schema equivalence → downgrade/upgrade 왕복 → source baseline stamp 검토** 순서여야 합니다.
 
 ## 현재 구조 요약
@@ -124,6 +125,7 @@ python -m pip install -e ".[dev]"
 - 최초 revision 생성·자동 검토: `tools/create_postgres_initial_alembic_revision.py`
 - 최초 revision 수동 검토: `docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md`
 - isolated migration DB upgrade guard: `tools/upgrade_postgres_migration_test_database.py`
+- isolated migration DB downgrade guard: `tools/downgrade_postgres_migration_test_database.py`
 
 ## 현재 차단 요소 / 실제 검증 필요 지점
 

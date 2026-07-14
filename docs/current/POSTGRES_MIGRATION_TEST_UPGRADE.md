@@ -53,3 +53,18 @@ createdb/dropdb
 pg_restore
 .env/Docker volume 변경
 ```
+
+## 사용자 PC 실제 실행 결과 — 2026-07-14
+
+```txt
+result: migration-test-database-upgraded-and-verified
+target public tables: 23
+target model tables: 22
+target total rows including Alembic control row: 1
+target current revision: ['v295_initial_schema']
+target schema: structurally-equivalent / differences=0
+source tables/rows preserved: 22/748
+rehearsal tables/rows preserved: 22/748
+```
+
+다음 기준 문서: `docs/current/POSTGRES_MIGRATION_TEST_DOWNGRADE.md`

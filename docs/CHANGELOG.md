@@ -1,3 +1,11 @@
+## v299.postgres-migration-test-downgrade-base-ready
+
+- 사용자 PC에서 v298 isolated `upgrade head` 성공 결과 반영
+- exact reviewed revision과 v298 upgrade report를 요구하는 `downgrade base` 실행 가드 추가
+- target DB가 빈 `alembic_version` placeholder로 복귀하는지 검증
+- source/rehearsal DB 작업 전후 보존, 자동 retry/upgrade/stamp/create/drop/restore 차단
+- 전용 smoke, core 등록, readiness/current/handoff 문서 v299 동기화
+
 ## v298.postgres-initial-alembic-manual-review-upgrade-ready
 
 - 사용자 review bundle의 exact revision SHA-256과 bundle SHA-256을 재검증

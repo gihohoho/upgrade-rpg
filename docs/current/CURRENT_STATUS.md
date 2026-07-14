@@ -1,9 +1,9 @@
-# Current Status — v298
+# Current Status — v299
 
 ## 기준
 
-- 최신 작업: `v298.postgres-initial-alembic-manual-review-upgrade-ready`
-- 기준 ZIP: `rpg_v298_postgres_initial_alembic_manual_review_upgrade_ready.zip`
+- 최신 작업: `v299.postgres-migration-test-downgrade-base-ready`
+- 기준 ZIP: `rpg_v299_postgres_migration_test_downgrade_base_ready.zip`
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -13,10 +13,12 @@
 ```txt
 source rpg_game: 22 tables / 748 rows / differences=0 / alembic_version 없음
 restore rehearsal: 22 tables / 748 rows / differences=0 / alembic_version 없음
-migration workspace: alembic_version 1 table / 0 rows / recorded revision 없음
+migration test DB: 23 public tables / total rows 1
+migration current revision: v295_initial_schema
+migration schema: structurally-equivalent / differences=0
 ```
 
-## 최초 revision 생성 완료
+## 최초 revision
 
 ```txt
 revision: v295_initial_schema
@@ -24,39 +26,28 @@ file: backend/alembic/versions/v295_initial_schema_initial_postgresql_schema.py
 SHA-256: 24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa
 upgrade: create_table 22 / create_index 42
 downgrade: drop_index 42 / drop_table 22
+manual review: passed
 ```
 
-## v298 수동 검토 완료
-
-- model/revision tables: `22 / 22`
-- columns: `209 / 209`
-- indexes: `42 / 42`
-- Foreign Key: `21`
-- explicit Unique: `6`
-- Check: `0`
-- type/length/nullable/PK/FK/ondelete/onupdate/unique/index/server default 일치
-- FLOAT 2개는 PostgreSQL `DOUBLE PRECISION` alias 정책과 일치
-- downgrade는 exact reverse create order
-- FK dependency order 위반 0개
-
-결론:
+## v298 실제 upgrade 완료
 
 ```txt
-approved-for-isolated-empty-migration-database-upgrade-only
+result: migration-test-database-upgraded-and-verified
+model tables: 22
+alembic control row: 1
+current revision: v295_initial_schema
+differences: 0
+source/rehearsal preserved: 22/748
 ```
 
-## 다음 단계
+## v299 다음 실행
 
-먼저 읽기 전용:
+사용자 승인 완료 범위:
 
 ```bash
-python tools/upgrade_postgres_migration_test_database.py --inspect
+python tools/downgrade_postgres_migration_test_database.py --execute
 ```
 
-별도 사용자 승인 후에만:
+대상은 `rpg_game_migration_empty_v290` 하나입니다. 성공 후에는 빈 `alembic_version` placeholder만 남아야 합니다.
 
-```bash
-python tools/upgrade_postgres_migration_test_database.py --execute
-```
-
-아직 원본 DB upgrade/stamp, migration DB downgrade, DB 삭제는 금지합니다.
+원본 DB upgrade/stamp, DB 삭제, 자동 재-upgrade는 아직 금지합니다.

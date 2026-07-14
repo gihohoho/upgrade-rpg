@@ -1,34 +1,21 @@
-# Roadmap — v298
+# Roadmap — v299
 
-## 완료 흐름
+## 완료
 
-- v268~v281 구조/route/Vue 관리자 GET 이식
-- v282~v289 PostgreSQL/Alembic readiness, runtime, schema equivalence, FLOAT normalization
-- v290 backup/restore read-only gate
-- v291 verified custom backup 생성
-- v292 빈 restore rehearsal DB 생성
-- v293 isolated restore 22 tables / 748 rows / differences=0
-- v294 empty migration test DB 생성
-- v295~v297 최초 revision 생성 과정의 placeholder/op.f false positive 복구
-- v297 실제 revision 생성 및 자동 검토 성공
-- v298 exact revision 수동 교차 검토와 isolated upgrade guard 준비
+- PostgreSQL runtime/schema 동등성 확인
+- verified backup과 isolated restore rehearsal
+- empty migration DB 생성
+- 최초 Alembic revision 생성·자동/수동 검토
+- isolated migration DB 첫 번째 `upgrade head` 성공
 
-## 현재 단계
+## 현재
 
-```bash
-python tools/upgrade_postgres_migration_test_database.py --inspect
-```
+- isolated migration DB `downgrade base` 실행·검증
 
-읽기 전용 결과가 `ready-for-separate-upgrade-approval`일 때 별도 사용자 승인을 받습니다.
+## 다음
 
-## 이후 승인 경계
-
-1. isolated migration DB `upgrade head`
-2. 22 model tables + `alembic_version`, differences=0 확인
-3. migration DB downgrade 별도 승인
-4. downgrade 후 placeholder/empty 상태 확인
-5. 재-upgrade 별도 승인 및 왕복 검증
-6. source DB baseline stamp 여부 최종 검토
-7. 필요할 때만 rehearsal/migration DB drop 별도 승인
-
-각 upgrade/downgrade/stamp/drop은 실제 결과를 확인한 뒤 별도 승인합니다.
+1. 같은 DB에서 두 번째 `upgrade head`
+2. 첫 upgrade와 두 번째 upgrade의 schema/revision 결과 비교
+3. 필요 시 두 번째 downgrade 또는 테스트 DB 보존/삭제 정책 결정
+4. 기존 `rpg_game`의 baseline stamp 전략 검토
+5. 사용자 별도 승인 전 source DB에는 migration mutation 금지

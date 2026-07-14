@@ -43,12 +43,15 @@ def main() -> None:
         "tools/create_postgres_migration_test_database.py",
         "tools/create_postgres_initial_alembic_revision.py",
         "tools/upgrade_postgres_migration_test_database.py",
+        "tools/downgrade_postgres_migration_test_database.py",
         "tools/smoke/backend/smoke_postgres_initial_alembic_revision_creation.py",
         "tools/smoke/backend/smoke_postgres_initial_alembic_revision_manual_review.py",
         "tools/smoke/backend/smoke_postgres_migration_test_database_upgrade.py",
+        "tools/smoke/backend/smoke_postgres_migration_test_database_downgrade.py",
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_CREATION.md",
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md",
         "docs/current/POSTGRES_MIGRATION_TEST_UPGRADE.md",
+        "docs/current/POSTGRES_MIGRATION_TEST_DOWNGRADE.md",
         "docs/current/review/v295_initial_schema.manual-review.json",
     ]
     for relative_path in required_files:
@@ -56,33 +59,30 @@ def main() -> None:
 
     assert_contains(
         "NEXT_CHAT_PROMPT.md",
-        "rpg_v298_postgres_initial_alembic_manual_review_upgrade_ready.zip",
-        "v298.postgres-initial-alembic-manual-review-upgrade-ready",
+        "rpg_v299_postgres_migration_test_downgrade_base_ready.zip",
+        "v299.postgres-migration-test-downgrade-base-ready",
         "backend/.venv",
-        "upgrade_postgres_migration_test_database.py --inspect",
-        "upgrade_postgres_migration_test_database.py --execute",
+        "downgrade_postgres_migration_test_database.py --execute",
         "v295_initial_schema",
         "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa",
-        "approved-for-isolated-empty-migration-database-upgrade-only",
         "rpg_game_migration_empty_v290",
+        "두 번째 `upgrade head`",
     )
     assert_contains(
         "NEXT_CHAT_HANDOFF.md",
         "22 tables / 748 rows",
-        "alembic_version",
-        "0 rows",
-        "22 / 22",
-        "209 / 209",
-        "42 / 42",
-        "upgrade head",
-        "differences=0",
+        "public tables: 23",
+        "current revision: v295_initial_schema",
+        "migration-test-database-upgraded-and-verified",
+        "downgrade base",
+        "differences=22",
     )
     assert_contains(
         "README.md",
-        "v298.postgres-initial-alembic-manual-review-upgrade-ready",
-        "upgrade_postgres_migration_test_database.py",
+        "v299.postgres-migration-test-downgrade-base-ready",
+        "downgrade_postgres_migration_test_database.py",
         "v295_initial_schema",
-        "manual review: passed",
+        "upgrade verification: passed",
     )
     assert_contains(
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md",
@@ -99,7 +99,15 @@ def main() -> None:
         "upgrade head",
         "public tables: 23",
         "differences: 0",
-        "source DB upgrade",
+        "사용자 PC 실제 실행 결과",
+    )
+    assert_contains(
+        "docs/current/POSTGRES_MIGRATION_TEST_DOWNGRADE.md",
+        "rpg_game_migration_empty_v290",
+        "downgrade base",
+        "application tables remaining: 0",
+        "differences: 22",
+        "v295_initial_schema.upgrade-v298.json",
     )
     assert_contains(
         ".gitignore",
@@ -116,6 +124,10 @@ def main() -> None:
         raise AssertionError("root/docs handoff prompt copies differ")
     if read_required("NEXT_CHAT_HANDOFF.md") != read_required("docs/handoff/NEXT_CHAT_HANDOFF.md"):
         raise AssertionError("root/docs handoff copies differ")
+    if read_required("docs/CURRENT_STATUS.md") != read_required("docs/current/CURRENT_STATUS.md"):
+        raise AssertionError("current status copies differ")
+    if read_required("docs/PROJECT_STRUCTURE.md") != read_required("docs/current/PROJECT_STRUCTURE.md"):
+        raise AssertionError("project structure copies differ")
 
     print("next chat handoff smoke test passed")
 

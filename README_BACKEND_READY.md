@@ -1,8 +1,8 @@
-# Backend Ready — v298
+# Backend Ready — v299
 
 현재 안정 readiness: `v250.backend-admin-rollback-snapshot`  
 Backend splitStatus: `admin-schema-field-constraint-contract-v238`  
-현재 프로젝트 작업 버전: `v298.postgres-initial-alembic-manual-review-upgrade-ready`
+현재 프로젝트 작업 버전: `v299.postgres-migration-test-downgrade-base-ready`
 
 ## 핵심 보장
 
@@ -16,12 +16,11 @@ Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 
 - source: 22 tables / 748 rows / schema differences=0
 - verified backup과 restore rehearsal 완료
-- migration test DB: `alembic_version` 1 table / 0 rows / revision row 없음
-- 최초 revision `v295_initial_schema` 생성 완료
-- revision SHA-256: `24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa`
-- 수동 검토: 22 tables / 209 columns / 42 indexes, model schema와 일치
-- isolated migration DB의 `upgrade head` 실행 도구만 준비
-- 원본 DB upgrade/stamp와 migration DB downgrade는 아직 승인 전
+- 최초 revision `v295_initial_schema` 수동 검토 통과
+- isolated migration DB `upgrade head` 실제 성공
+- migration DB: 22 model tables + `alembic_version`, current=`v295_initial_schema`, differences=0
+- v299: 같은 migration DB의 `downgrade base` 실행·검증 가드 준비
+- 원본 DB upgrade/stamp와 DB 삭제는 아직 승인하지 않음
 
 ## 검증
 
