@@ -1,3 +1,13 @@
+# v302 - Restore rehearsal baseline stamp guard ready
+
+- Recorded the user-PC v301 source preflight success.
+- Added `tools/stamp_postgres_restore_rehearsal_database.py`, pinned to `rpg_game_restore_rehearsal_v290`, `v295_initial_schema`, and exact revision SHA-256.
+- Added read-only full application schema and row-content SHA-256 signatures for all 22 tables / 748 rows.
+- Added postconditions allowing only `alembic_version` 1 table / 1 row while requiring source and migration DB signatures to remain identical.
+- Added exact `--confirm-target` and `--confirm-revision` execution confirmations; actual stamp was not executed.
+- Added dedicated simulated smoke, core registration, current/handoff documentation, and v302 ZIP handoff.
+- Kept DB schema/data, `.env`, Docker resources, seed, auth, API routes/bodies, Write Guard, Preview/Apply bodies, and game content unchanged.
+
 # v301 - Source baseline stamp read-only preflight handoff
 
 - Recorded the user-PC v300 round-trip result: `upgrade -> downgrade base -> upgrade`, identical first/second signatures, source/rehearsal preserved.

@@ -1,4 +1,4 @@
-# PostgreSQL / Alembic 최초 baseline 전략 — v301
+# PostgreSQL / Alembic 최초 baseline 전략 — v302
 
 ## 실제 분류
 
@@ -143,3 +143,25 @@ source/rehearsal preserved: 22 tables / 748 rows
 - v300 round-trip 보고서와 현재 migration DB head 일치
 
 성공 결과는 source stamp 승인이 아닙니다. 다음 mutation은 source 복사본인 `rpg_game_restore_rehearsal_v290`에서 별도 승인 후 `stamp head` rehearsal로 진행합니다.
+
+
+## v302 restore rehearsal stamp guard
+
+사용자 PC에서 v301 preflight가 실제 통과했습니다.
+
+```txt
+result: ready-for-separate-restore-rehearsal-stamp-approval
+source: 22 tables / 748 rows / no alembic_version
+migration current revision: v295_initial_schema
+```
+
+v302는 원본보다 먼저 `rpg_game_restore_rehearsal_v290`에서만 stamp 동작을 검증하도록 다음을 고정합니다.
+
+- exact target DB와 exact revision/SHA-256
+- 허용 명령은 `alembic stamp head` 하나
+- 22개 application table의 구조 SHA-256
+- 전체 748개 application row-content SHA-256
+- source/rehearsal/migration DB 전체 signature 전후 비교
+- 성공 시 허용되는 유일한 추가는 `alembic_version` 1 table / revision row 1개
+
+현재는 `--inspect` 읽기 전용 결과만 수집합니다. 실제 rehearsal stamp는 별도 사용자 승인 전 실행하지 않습니다.

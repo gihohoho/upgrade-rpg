@@ -1,9 +1,9 @@
-# Current Status — v301
+# Current Status — v302
 
 ## 기준
 
-- 최신 작업: `v301.postgres-source-baseline-stamp-readonly-preflight-handoff`
-- 기준 ZIP: `rpg_v301_postgres_source_baseline_stamp_preflight_handoff_ready.zip`
+- 최신 작업: `v302.postgres-restore-rehearsal-stamp-head-guard-ready`
+- 기준 ZIP: `rpg_v302_postgres_restore_rehearsal_stamp_guard_ready.zip`
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -29,7 +29,7 @@ downgrade: drop_index 42 / drop_table 22
 manual review: passed
 ```
 
-## 실제 왕복 완료
+## 실제 완료 증거
 
 ```txt
 v298 first upgrade: passed
@@ -38,14 +38,25 @@ v300 second upgrade: passed
 first/second upgrade signatures: identical
 sequence: upgrade -> downgrade base -> upgrade verified
 source/rehearsal preserved: 22/748
+v301 source baseline preflight: passed on user PC
+v301 result: ready-for-separate-restore-rehearsal-stamp-approval
 ```
 
-## v301 현재 단계
+## v302 현재 단계
 
-원본 DB baseline stamp 여부를 판단하기 위한 읽기 전용 preflight 도구가 준비됐습니다.
+restore rehearsal DB만 대상으로 하는 baseline stamp guard가 준비됐습니다.
 
 ```bash
-python tools/check_postgres_source_baseline_stamp_preflight.py --strict
+python tools/stamp_postgres_restore_rehearsal_database.py --inspect
 ```
 
-통과 후에도 원본 DB를 바로 stamp하지 않습니다. 먼저 restore rehearsal DB stamp rehearsal guard를 준비하고 별도 승인을 받습니다.
+`--inspect`는 mutation 없이 다음을 확인합니다.
+
+- exact target `rpg_game_restore_rehearsal_v290`
+- exact revision `v295_initial_schema`와 SHA-256
+- source/rehearsal/migration DB 현재 경계
+- rehearsal 22개 application table 구조 digest
+- rehearsal 전체 748개 row-content digest
+- 실제 stamp 성공 시 허용되는 변화가 `alembic_version` 1 table/1 row뿐인지에 대한 postcondition
+
+실제 `stamp head`는 아직 승인되지 않았습니다.

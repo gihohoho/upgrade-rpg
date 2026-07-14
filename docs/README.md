@@ -1,41 +1,22 @@
-# Documentation
+# Upgrade RPG 문서 안내 — v302
 
-## 현재 문서
+현재 작업 기준은 `v302.postgres-restore-rehearsal-stamp-head-guard-ready`입니다.
 
-새 채팅과 현재 작업에서는 먼저 아래를 확인합니다.
+## 먼저 읽을 문서
 
 ```txt
-docs/current/README.md
 docs/current/CURRENT_STATUS.md
-docs/current/ROADMAP.md
 docs/NEXT_STEPS.md
+docs/current/POSTGRES_RESTORE_REHEARSAL_STAMP_GUARD.md
+docs/NEXT_CHAT_START_GUIDE.md
 ```
 
-현재 PostgreSQL/Alembic 핵심 문서:
+## 핵심 상태
 
-```txt
-docs/current/POSTGRES_RUNTIME_READONLY_STATE.md
-docs/current/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md
-docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md
-docs/current/POSTGRES_BACKUP_CREATION.md
-docs/current/POSTGRES_RESTORE_REHEARSAL.md
-docs/current/POSTGRES_MIGRATION_TEST_DB_CREATION.md
-docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_CREATION.md
-docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md
-docs/current/POSTGRES_MIGRATION_TEST_UPGRADE.md
-docs/current/POSTGRES_MIGRATION_TEST_DOWNGRADE.md
-docs/current/POSTGRES_MIGRATION_TEST_ROUNDTRIP.md
-docs/current/POSTGRES_SOURCE_BASELINE_STAMP_PREFLIGHT.md
-```
+- v301 source baseline stamp preflight 사용자 PC 실제 통과
+- v302 restore rehearsal stamp guard 준비 완료
+- `--inspect`는 exact target/revision과 application schema/row-content digest를 읽기 전용 확인
+- 실제 rehearsal stamp는 별도 승인 전 금지
+- 원본 `rpg_game` stamp/upgrade/downgrade는 계속 금지
 
-## 인수인계
-
-```txt
-NEXT_CHAT_PROMPT.md
-NEXT_CHAT_HANDOFF.md
-docs/handoff/
-```
-
-루트 인수인계 파일과 `docs/handoff/` 사본은 같은 v301 기준으로 유지합니다.
-
-`local-backups/`와 `local-review-artifacts/`는 Git/전달 ZIP에서 제외합니다.
+루트 인수인계 파일과 `docs/handoff/` 사본은 같은 v302 기준으로 유지합니다.

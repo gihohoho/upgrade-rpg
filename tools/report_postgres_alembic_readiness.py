@@ -15,7 +15,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-PROJECT_VERSION = "v301"
+PROJECT_VERSION = "v302"
 REPORT_PATH = Path("docs/current/POSTGRES_ALEMBIC_READINESS.md")
 
 
@@ -155,7 +155,9 @@ def render(root: Path) -> str:
 - v300에서는 verified first upgrade와 verified downgrade evidence를 모두 고정하고, 같은 isolated DB의 두 번째 `upgrade head` 결과가 첫 upgrade signature와 정확히 같은지 검증하는 가드를 추가합니다.
 - 사용자 PC에서 v300 `upgrade -> downgrade base -> upgrade` 왕복이 실제 성공했고 first/second upgrade signatures가 동일함을 확인했습니다.
 - v301에서는 source 22 tables / 748 rows / no Alembic, exact backup/revision, restore evidence, v300 round-trip head를 한 번에 읽기 전용으로 재검사하는 source baseline stamp preflight를 추가합니다.
-- 다음 mutation은 source DB가 아니라 restore rehearsal DB에서 별도 승인 후 `stamp head` 동작을 검증하는 단계입니다.
+- 사용자 PC에서 v301 preflight가 `ready-for-separate-restore-rehearsal-stamp-approval`로 실제 통과했습니다.
+- v302에서는 exact restore rehearsal DB만 대상으로 고정하고, 22개 application table 구조와 전체 748개 row-content SHA-256을 stamp 전후 비교하는 guard를 추가합니다.
+- 실제 rehearsal `stamp head` 실행은 여전히 별도 사용자 승인 전 금지입니다.
 
 ## 현재 구조 요약
 
@@ -233,6 +235,7 @@ python -m pip install -e ".[dev]"
 - isolated migration DB downgrade guard: `tools/downgrade_postgres_migration_test_database.py`
 - isolated migration round-trip re-upgrade guard: `tools/reupgrade_postgres_migration_test_database.py`
 - source baseline stamp read-only preflight: `tools/check_postgres_source_baseline_stamp_preflight.py`
+- restore rehearsal stamp guard: `tools/stamp_postgres_restore_rehearsal_database.py`
 
 ## 현재 차단 요소 / 실제 검증 필요 지점
 
@@ -273,9 +276,12 @@ backend runtime/model/schema 경로에서 SQLite URL이나 SQLite 전용 타입�
 16. v300에서 `tools/reupgrade_postgres_migration_test_database.py --execute`로 두 번째 `upgrade head`와 첫 결과를 exact 비교
 17. 사용자 PC에서 왕복 signatures 동일과 source/rehearsal 보존을 실제 확인
 18. v301에서 `tools/check_postgres_source_baseline_stamp_preflight.py --strict`로 source/backup/revision/round-trip evidence를 읽기 전용 재검사
-19. 통과 후에도 source를 바로 stamp하지 않고 restore rehearsal DB stamp 검증을 별도 승인으로 진행
-20. 원본 `rpg_game`에는 restore하거나 revision을 적용하지 않음
-21. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
+19. 사용자 PC에서 v301 preflight 실제 통과 확인
+20. v302에서 `tools/stamp_postgres_restore_rehearsal_database.py --inspect`로 exact target/revision과 schema/data content signatures를 읽기 전용 수집
+21. 사용자 별도 승인 후에만 restore rehearsal DB에 `stamp head` 실행
+22. stamp 성공 조건은 application schema/data signatures 동일 + `alembic_version` 1 table/1 row 추가뿐
+23. 원본 `rpg_game`에는 restore하거나 revision을 적용하지 않음
+24. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
 
 ### Stage C — Alembic 실행 방식 검증
 

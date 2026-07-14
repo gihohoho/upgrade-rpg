@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v301.postgres-source-baseline-stamp-readonly-preflight-handoff**
+현재 기준: **v302.postgres-restore-rehearsal-stamp-head-guard-ready**
 
 ## 현재 구조
 
@@ -22,20 +22,29 @@ migration test DB: 23 public tables / revision v295_initial_schema / differences
 initial revision SHA-256: 24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa
 round-trip: upgrade -> downgrade base -> upgrade verified
 first/second upgrade signatures: identical
+v301 source preflight: user-PC passed
 ```
 
-## v301 핵심
+## v302 핵심
 
-원본 DB baseline stamp 전에 필요한 증거를 한 번에 읽기 전용으로 재검사합니다.
+원본 DB보다 먼저 restore rehearsal DB에서 baseline stamp를 검증하기 위한 가드를 준비했습니다.
 
 ```txt
-tools/check_postgres_source_baseline_stamp_preflight.py
-tools/smoke/backend/smoke_postgres_source_baseline_stamp_preflight.py
-docs/current/POSTGRES_SOURCE_BASELINE_STAMP_PREFLIGHT.md
+tools/stamp_postgres_restore_rehearsal_database.py
+tools/smoke/backend/smoke_postgres_restore_rehearsal_stamp_guard.py
+docs/current/POSTGRES_RESTORE_REHEARSAL_STAMP_GUARD.md
 ```
 
-이 도구는 stamp/upgrade/downgrade/DB 생성·삭제·복원이나 row write를 실행하지 않습니다.
-통과 후에도 원본 DB를 바로 stamp하지 않고 restore rehearsal DB에서 먼저 stamp 동작을 검증합니다.
+가드는 정확히 다음만 대상으로 허용합니다.
+
+```txt
+target: rpg_game_restore_rehearsal_v290
+revision: v295_initial_schema
+command: alembic stamp head
+```
+
+`--inspect`는 읽기 전용이며, 22개 application table의 구조 SHA-256과 전체 748개 row-content SHA-256을 수집합니다.
+실제 stamp는 별도 승인 전 실행하지 않습니다.
 
 ## 다음 실행
 
@@ -50,7 +59,7 @@ source .venv/Scripts/activate
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/check_postgres_source_baseline_stamp_preflight.py --strict
+python tools/stamp_postgres_restore_rehearsal_database.py --inspect
 ```
 
 ## 서버 실행

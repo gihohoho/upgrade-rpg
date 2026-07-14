@@ -1,11 +1,10 @@
-# Handoff package — v301
+# Handoff package — v302
 
-기준 파일:
+현재 전달 기준:
 
 ```txt
-rpg_v301_postgres_source_baseline_stamp_preflight_handoff_ready.zip
+rpg_v302_postgres_restore_rehearsal_stamp_guard_ready.zip
 ```
 
-루트의 `NEXT_CHAT_PROMPT.md`, `NEXT_CHAT_HANDOFF.md`와 이 폴더의 사본은 항상 동일해야 합니다.
-
-로컬 DB backup/report는 ZIP에 포함하지 않습니다.
+첫 작업은 `tools/stamp_postgres_restore_rehearsal_database.py --inspect` 읽기 전용 결과 수집입니다.
+실제 rehearsal stamp와 원본 source stamp는 별도 승인 전 실행하지 않습니다.

@@ -19,7 +19,7 @@ RUNTIME_DOC = ROOT / "docs/current/POSTGRES_RUNTIME_READONLY_STATE.md"
 BASELINE_DOC = ROOT / "docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md"
 
 REQUIRED_REPORT_TEXT = [
-    "PostgreSQL / Alembic Readiness — v301",
+    "PostgreSQL / Alembic Readiness — v302",
     "SQLAlchemy model table 수 | 22개",
     "Alembic asyncpg-compatible online env | 있음",
     "Alembic versions 폴더 | 있음",
@@ -37,6 +37,7 @@ REQUIRED_REPORT_TEXT = [
     "tools/downgrade_postgres_migration_test_database.py",
     "tools/reupgrade_postgres_migration_test_database.py",
     "tools/check_postgres_source_baseline_stamp_preflight.py",
+    "tools/stamp_postgres_restore_rehearsal_database.py",
     "POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md",
     "Alembic script template | 있음",
     "setup_dev_db.py --reset",

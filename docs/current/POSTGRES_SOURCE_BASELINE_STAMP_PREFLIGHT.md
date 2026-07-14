@@ -43,6 +43,22 @@ result: ready-for-separate-restore-rehearsal-stamp-approval
 
 이 결과는 원본 stamp 승인이 아닙니다. 다음 mutation은 source 복사본인 `rpg_game_restore_rehearsal_v290`에서만 별도 승인 후 stamp rehearsal로 진행합니다.
 
+
+## 사용자 PC 실제 결과
+
+2026-07-14 사용자 PC에서 `--strict`가 실제 통과했습니다.
+
+```txt
+source tables/rows: 22/748
+source alembic_version: False
+source schema: structurally-equivalent / differences=0
+reviewed revision: v295_initial_schema
+migration test current revision: ['v295_initial_schema']
+result: ready-for-separate-restore-rehearsal-stamp-approval
+```
+
+이 결과를 근거로 v302 restore rehearsal stamp guard 준비 단계로 이동했습니다. 원본 source stamp는 승인되지 않았습니다.
+
 ## 다음 안전 단계
 
 1. restore rehearsal DB가 현재 22 tables / 748 rows / no Alembic인지 재확인
