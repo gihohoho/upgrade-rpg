@@ -105,6 +105,9 @@ python tools/smoke/backend/smoke_backend_local_cors.py
 python tools/smoke/backend/smoke_backend_route_map_report.py
 python tools/smoke/backend/smoke_postgres_alembic_readiness.py
 python tools/smoke/backend/smoke_backend_alembic_async_env.py
+python tools/smoke/backend/smoke_postgres_runtime_readonly_state.py
+python tools/smoke/backend/smoke_windows_subprocess_decode.py
+python tools/smoke/backend/smoke_postgres_schema_equivalence.py
 python tools/smoke/contracts/smoke_backend_admin_preview_side_effect_contract.py
 python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contract.py
 python tools/smoke/contracts/smoke_backend_admin_diff_engine_contract.py

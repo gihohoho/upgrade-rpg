@@ -11,10 +11,11 @@ import importlib.metadata
 import json
 import platform
 import shutil
-import subprocess
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
+
+from _safe_subprocess import run_captured
 
 
 @dataclass(frozen=True)
@@ -31,17 +32,14 @@ def command_version(command: list[str]) -> tuple[bool, str]:
     if not executable:
         return False, "not found"
     try:
-        result = subprocess.run(
+        result, decoded_output = run_captured(
             command,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
             timeout=10,
             check=False,
         )
     except Exception as exc:
         return False, f"{type(exc).__name__}: {exc}"
-    output = (result.stdout or "").strip().splitlines()
+    output = decoded_output.splitlines()
     value = output[0] if output else f"exit={result.returncode}"
     return result.returncode == 0, value
 

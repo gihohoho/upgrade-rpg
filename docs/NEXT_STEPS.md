@@ -2,42 +2,39 @@
 
 ## 현재 완료
 
-- v284에서 실제 `MissingGreenlet` 원인을 확인하고 Alembic online env를 asyncpg 호환 방식으로 수정
-- 읽기 전용 `history/heads/current` 통합 확인 도구 추가
-- DB schema/data/env/seed/revision은 변경하지 않음
+- Alembic asyncpg online 연결 정상
+- PostgreSQL 실제 연결과 DB health 정상
+- model/public table 22개 일치
+- 전체 row 748개 및 보존 대상 데이터 확인
+- 분류 `existing-schema-without-alembic-baseline` 확정
+- Windows subprocess UTF-8/cp949 출력 오류 수정
+- 상세 schema 동등성 읽기 전용 도구 추가
 
 ## 기호가 먼저 확인할 명령
 
-v284 ZIP 적용 후 실행합니다.
-
-### 가상환경 활성화
+backend 가상환경 활성화:
 
 실행 위치: `backend` 폴더  
-`.venv` 상태: 꺼져 있을 때 실행
+`.venv` 상태: 꺼져 있을 때 Git Bash에서 실행
 
 ```bash
-.venv\Scripts\activate
+source .venv/Scripts/activate
 ```
-
-### Alembic 읽기 전용 상태 확인
 
 실행 위치: 프로젝트 루트  
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/check_alembic_readonly_state.py
+python tools/check_postgres_schema_equivalence.py
 ```
 
-## 다음 작업 — v285
+## 다음 작업 — v289
 
-`로컬 PostgreSQL 비파괴 런타임 상태 확인`
+결과에 따라 다음 중 하나로 진행합니다.
 
-1. `MissingGreenlet` 재발 여부 확인
-2. Docker container/volume 목록 확인
-3. PostgreSQL health 확인
-4. `/api/v1/health/db` 결과 확인
-5. DB에 보존할 데이터 존재 여부 확인
-6. revision 생성/upgrade/stamp 없이 baseline 전략만 문서화
+1. `structurally-equivalent`: backup/restore 및 별도 빈 DB migration 검증 계획
+2. `review-required`: category/table별 schema 차이 분석과 보존 계획
+3. `connection-failed`: 연결 환경만 점검하며 DB 변경 금지 유지
 
 ## 계속 실행 금지
 
@@ -53,5 +50,5 @@ python -m alembic stamp head
 ## 설치 관련
 
 - 새 라이브러리/프레임워크 추가 없음
-- 기호 컴퓨터의 필수 Python/Docker 패키지는 이미 모두 확인됨
+- Docker/Python DB 패키지는 이미 모두 확인됨
 - npm 패키지 변경 없음

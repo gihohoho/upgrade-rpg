@@ -1,0 +1,85 @@
+# PostgreSQL / Alembic 최초 baseline 전략 — v287 확정
+
+## 실제 분류
+
+기호 컴퓨터의 실제 PostgreSQL 결과는 다음과 같습니다.
+
+```txt
+classification: existing-schema-without-alembic-baseline
+model tables: 22
+public tables: 22
+total rows: 748
+alembic_version: 없음
+current revision: 없음
+DB health: 정상
+```
+
+따라서 전략은 **기존 `create_all()` schema와 데이터를 보존하는 baseline 방식**으로 확정합니다.
+
+## 지금 바로 stamp하면 안 되는 이유
+
+`stamp head`는 실제 schema를 생성하거나 수정하지 않고 revision 이력만 기록합니다.
+
+현재 테이블 개수만 22개로 일치한다는 사실만으로는 아래 구조가 완전히 같은지 알 수 없습니다.
+
+- 컬럼 이름과 누락 여부
+- PostgreSQL type, 길이, precision/scale
+- nullable
+- primary key
+- foreign key 및 delete/update 규칙
+- unique constraint
+- index
+- check constraint
+
+구조가 다른 상태에서 stamp하면 불일치를 숨길 수 있습니다.
+
+## 승인 전 안전 순서
+
+1. 현재 DB와 SQLAlchemy metadata 상세 schema 동등성 점검
+2. DB backup 파일 생성
+3. backup 복원 리허설
+4. 최초 revision 파일 생성
+5. revision 파일 전체 수동 검토
+6. 별도 빈 임시 PostgreSQL DB에서 `upgrade head`
+7. 빈 DB 결과와 SQLAlchemy metadata 동등성 점검
+8. downgrade/upgrade 왕복 검증
+9. 기존 DB와 최초 revision 결과가 완전히 같다는 증거 확보
+10. 사용자 명시 승인 후 기존 DB에만 baseline stamp 검토
+
+## 현재 데이터 보존 기준
+
+현재 확인된 row 748개는 삭제 대상이 아닙니다.
+
+특히 다음 데이터는 사용자 진행 상태와 운영 검증 이력을 포함할 가능성이 있어 반드시 보존합니다.
+
+```txt
+users: 1
+user_profiles: 1
+characters: 1
+user_save_snapshots: 2
+admin_change_logs: 13
+```
+
+## 다음 읽기 전용 점검
+
+실행 위치: 프로젝트 루트  
+`.venv` 상태: `backend/.venv`가 켜진 상태
+
+```bash
+python tools/check_postgres_schema_equivalence.py
+```
+
+결과가 `structurally-equivalent`이고 차이가 0개일 때도 바로 stamp하지 않습니다. backup/restore와 별도 빈 DB migration 검증이 먼저입니다.
+
+결과가 `review-required`이면 차이 항목별 보존/수정 계획부터 작성합니다.
+
+## 계속 실행 금지
+
+```txt
+python scripts/setup_dev_db.py --reset
+docker compose down -v
+python -m alembic revision --autogenerate
+python -m alembic upgrade head
+python -m alembic downgrade
+python -m alembic stamp head
+```

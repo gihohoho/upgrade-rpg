@@ -77,3 +77,25 @@ python tools/check_postgres_alembic_prerequisites.py
 ```
 
 이 도구는 DB 접속, Docker 시작, `.env` 변경, migration 실행을 하지 않습니다. Docker와 Python 패키지/필수 파일 존재만 확인합니다.
+
+## PostgreSQL runtime 읽기 전용 상태
+
+실행 위치: 프로젝트 루트  
+`.venv` 상태: `backend/.venv`가 켜진 상태
+
+```bash
+python tools/check_postgres_runtime_readonly_state.py
+```
+
+Windows Docker 출력은 `tools/_safe_subprocess.py`가 UTF-8/cp949 혼합 환경에서도 안전하게 처리합니다.
+
+## PostgreSQL / SQLAlchemy schema 동등성 점검
+
+실행 위치: 프로젝트 루트  
+`.venv` 상태: `backend/.venv`가 켜진 상태
+
+```bash
+python tools/check_postgres_schema_equivalence.py
+```
+
+이 도구는 columns/types/nullability/PK/FK/unique/index/check를 읽기 전용으로 비교하며 schema/data와 Alembic 이력을 변경하지 않습니다.

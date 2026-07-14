@@ -30,7 +30,7 @@
 | `backend/app/services/` | O | 287 | 94 | service contract 보호 |
 | `backend/seeds/` | O | 31 | 11 | 사용자 승인 전 변경 금지 |
 | `tools/run_smoke_core.sh` | O | 82 | 70 | 검증 기준 유지 |
-| `tools/smoke/` | O | 326 | 129 | 경로 의존성 기준 |
+| `tools/smoke/` | O | 328 | 128 | 경로 의존성 기준 |
 
 ## 참조 파일 예시
 
@@ -213,12 +213,15 @@
 | 90 | `python tools/smoke/backend/smoke_backend_route_map_report.py` |
 | 91 | `python tools/smoke/backend/smoke_postgres_alembic_readiness.py` |
 | 92 | `python tools/smoke/backend/smoke_backend_alembic_async_env.py` |
-| 93 | `python tools/smoke/contracts/smoke_backend_admin_preview_side_effect_contract.py` |
-| 94 | `python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contract.py` |
-| 95 | `python tools/smoke/contracts/smoke_backend_admin_diff_engine_contract.py` |
-| 96 | `python tools/smoke/contracts/smoke_backend_admin_change_log_shared_diff.py` |
-| 97 | `python tools/smoke/contracts/smoke_backend_admin_rollback_snapshot_contract.py` |
-| 98 | `python tools/smoke/contracts/smoke_backend_admin_rollback_preview_snapshot.py` |
+| 93 | `python tools/smoke/backend/smoke_postgres_runtime_readonly_state.py` |
+| 94 | `python tools/smoke/backend/smoke_windows_subprocess_decode.py` |
+| 95 | `python tools/smoke/backend/smoke_postgres_schema_equivalence.py` |
+| 96 | `python tools/smoke/contracts/smoke_backend_admin_preview_side_effect_contract.py` |
+| 97 | `python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contract.py` |
+| 98 | `python tools/smoke/contracts/smoke_backend_admin_diff_engine_contract.py` |
+| 99 | `python tools/smoke/contracts/smoke_backend_admin_change_log_shared_diff.py` |
+| 100 | `python tools/smoke/contracts/smoke_backend_admin_rollback_snapshot_contract.py` |
+| 101 | `python tools/smoke/contracts/smoke_backend_admin_rollback_preview_snapshot.py` |
 
 ## smoke 내부에서 많이 발견된 경로 문자열
 

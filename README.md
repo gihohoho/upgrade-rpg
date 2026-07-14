@@ -1,8 +1,8 @@
 # Upgrade RPG
 
-현재 기준: **v284.alembic-async-env-fix**
+현재 기준: **v288.postgres-baseline-schema-equivalence-preflight**
 
-## 현재 상태
+## 현재 구조
 
 - 실제 게임 화면: 루트 `index.html`
 - 실제 관리자 화면: 루트 `admin.html`
@@ -13,46 +13,70 @@
 
 Vue `/admin`에는 안전한 GET health, requirements, domains, catalog, detail, relations가 연결되어 있습니다.
 
-## v284 핵심
+## 실제 PostgreSQL 상태
 
-기호 컴퓨터에서 `python -m alembic current` 실행 시 확인된 `MissingGreenlet` 오류를 수정했습니다.
-
-기존 동기식 Alembic 연결을 다음 asyncpg 호환 구조로 변경했습니다.
-
-- `async_engine_from_config()`
-- `async with connectable.connect()`
-- `await connection.run_sync(...)`
-- `asyncio.run(...)`
-
-DB schema, 데이터, `.env`, seed, revision, upgrade/downgrade/stamp는 변경하지 않았습니다.
-
-관련 문서:
+기호 컴퓨터에서 읽기 전용 점검으로 확인된 결과:
 
 ```txt
-docs/current/ALEMBIC_ASYNC_ENV_FIX.md
-docs/current/POSTGRES_ALEMBIC_READINESS.md
-docs/current/POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md
+Docker Compose: upgraderpg, running(2)
+PostgreSQL volume: upgraderpg_rpg_postgres_data
+PostgreSQL: 16.14
+DB: rpg_game
+DB size: 12 MB
+SQLAlchemy model tables: 22
+public tables: 22
+total rows: 748
+alembic_version: 없음
+current revision: 없음
+health/db: HTTP 200, status=ok
+classification: existing-schema-without-alembic-baseline
 ```
 
-## backend 가상환경 활성화
+현재 DB는 삭제/초기화 대상이 아니라 **기존 데이터 보존형 Alembic baseline 대상**입니다.
+
+## Windows Docker 출력 오류 수정
+
+v287에서 subprocess 출력을 UTF-8/cp949 혼합 환경에서도 안전하게 읽도록 수정했습니다.
+
+```txt
+tools/_safe_subprocess.py
+```
+
+## 다음 읽기 전용 schema 비교
+
+backend 가상환경 활성화:
 
 실행 위치: `backend` 폴더  
-`.venv` 상태: 꺼져 있을 때 실행
+`.venv` 상태: 꺼져 있을 때 Git Bash에서 실행
 
 ```bash
-.venv\Scripts\activate
+source .venv/Scripts/activate
 ```
-
-## Alembic 읽기 전용 상태 확인
 
 실행 위치: 프로젝트 루트  
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/check_alembic_readonly_state.py
+python tools/check_postgres_schema_equivalence.py
 ```
 
-이 도구는 `history`, `heads`, `current`만 실행하며 DB 구조를 변경하지 않습니다.
+비교 범위:
+
+- columns/types/nullability
+- primary key
+- foreign key
+- unique constraint
+- index
+- check constraint
+
+관련 문서:
+
+```txt
+docs/current/POSTGRES_RUNTIME_READONLY_STATE.md
+docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md
+docs/current/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md
+docs/current/POSTGRES_ALEMBIC_READINESS.md
+```
 
 ## 기존 서버 실행
 
@@ -84,7 +108,3 @@ python -m alembic upgrade head
 python -m alembic downgrade
 python -m alembic stamp head
 ```
-
-## 다음 방향
-
-v284 ZIP 적용 후 읽기 전용 Alembic 상태와 Docker/PostgreSQL 상태를 확인합니다. 실제 DB 상태가 확인되기 전에는 baseline migration이나 stamp를 만들지 않습니다.

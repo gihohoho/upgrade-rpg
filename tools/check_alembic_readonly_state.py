@@ -8,10 +8,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
+
+from _safe_subprocess import run_captured
 
 
 @dataclass(frozen=True)
@@ -24,16 +25,12 @@ class CommandResult:
 
 def run_command(backend: Path, *args: str) -> CommandResult:
     command = [sys.executable, "-m", "alembic", *args]
-    completed = subprocess.run(
+    completed, output = run_captured(
         command,
         cwd=backend,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
         check=False,
         timeout=15,
     )
-    output = (completed.stdout or "").strip()
     return CommandResult(
         command=" ".join(command),
         returncode=completed.returncode,

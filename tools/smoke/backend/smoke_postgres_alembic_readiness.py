@@ -14,14 +14,19 @@ STATE_TOOL = ROOT / "tools/check_alembic_readonly_state.py"
 REPORT = ROOT / "docs/current/POSTGRES_ALEMBIC_READINESS.md"
 CHECKLIST = ROOT / "docs/current/POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md"
 ASYNC_FIX_DOC = ROOT / "docs/current/ALEMBIC_ASYNC_ENV_FIX.md"
+RUNTIME_TOOL = ROOT / "tools/check_postgres_runtime_readonly_state.py"
+RUNTIME_DOC = ROOT / "docs/current/POSTGRES_RUNTIME_READONLY_STATE.md"
+BASELINE_DOC = ROOT / "docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md"
 
 REQUIRED_REPORT_TEXT = [
-    "PostgreSQL / Alembic Readiness — v284",
+    "PostgreSQL / Alembic Readiness — v288",
     "SQLAlchemy model table 수 | 22개",
     "Alembic asyncpg-compatible online env | 있음",
     "Alembic versions 폴더 | 없음",
     "Alembic revision 수 | 0개",
     "async_engine_from_config()",
+    "tools/check_postgres_runtime_readonly_state.py",
+    "tools/check_postgres_schema_equivalence.py",
     "setup_dev_db.py --reset",
     "docker compose down -v",
     "DB schema",
@@ -63,7 +68,7 @@ def run(command: list[str]) -> subprocess.CompletedProcess[str]:
 
 
 def main() -> int:
-    for path in (REPORT_TOOL, CHECK_TOOL, STATE_TOOL, REPORT, CHECKLIST, ASYNC_FIX_DOC):
+    for path in (REPORT_TOOL, CHECK_TOOL, STATE_TOOL, RUNTIME_TOOL, REPORT, CHECKLIST, ASYNC_FIX_DOC, RUNTIME_DOC, BASELINE_DOC):
         if not path.exists():
             return fail(f"missing file: {path.relative_to(ROOT).as_posix()}")
 

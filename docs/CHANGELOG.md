@@ -1,3 +1,29 @@
+# v288 - PostgreSQL schema equivalence read-only preflight
+
+- Added `tools/check_postgres_schema_equivalence.py` to compare live PostgreSQL tables, columns, types, nullability, PK, FK, unique constraints, indexes, and check constraints with SQLAlchemy metadata.
+- Added `docs/current/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md` and a dedicated core smoke.
+- Kept DB schema/data, Docker resources, env, seed, revisions, migration apply/stamp, API contracts, auth, and write behavior unchanged.
+
+# v287 - Windows subprocess decode fix and baseline strategy confirmation
+
+- Fixed the user-reproduced Windows `cp949`/UTF-8 mixed Docker output `UnicodeDecodeError` with `tools/_safe_subprocess.py`.
+- Applied safe decoding to PostgreSQL runtime, prerequisite, and Alembic read-only checkers.
+- Recorded the actual DB result: PostgreSQL 16.14, 22 model/public tables, 748 rows, no `alembic_version`, healthy DB endpoint.
+- Confirmed `existing-schema-without-alembic-baseline` and the existing-data-preserving baseline strategy.
+
+# v286 - PostgreSQL/Alembic baseline strategy plan
+
+- Added a decision matrix for empty DB, existing create_all schema with preserved data, and schema drift.
+- Requires backup/restore rehearsal and separate empty-DB migration verification before any baseline stamp.
+- Kept revision creation, upgrade, downgrade, stamp, DB schema/data, Docker resources, and env unchanged.
+
+# v285 - PostgreSQL runtime read-only state checker
+
+- Added `tools/check_postgres_runtime_readonly_state.py` for read-only Docker status, PostgreSQL schema/table/row counts, model-table comparison, Alembic version state, and FastAPI DB health.
+- Added automatic classifications: `empty-database`, `existing-schema-without-alembic-baseline`, `schema-drift`, and `alembic-managed`.
+- Added a dedicated smoke and registered it in core smoke.
+- The checker never starts/stops Docker, mutates SQL data/schema, edits env, or runs migration mutation commands.
+
 # v284 - Alembic asyncpg online env fix
 
 - Fixed the user-reproduced `sqlalchemy.exc.MissingGreenlet` from `python -m alembic current`.

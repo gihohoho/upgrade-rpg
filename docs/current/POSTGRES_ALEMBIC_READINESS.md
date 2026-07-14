@@ -1,4 +1,4 @@
-# PostgreSQL / Alembic Readiness — v284
+# PostgreSQL / Alembic Readiness — v288
 
 이 문서는 현재 프로젝트 파일을 기준으로 PostgreSQL과 Alembic 도입 준비 상태를 자동 분석한 결과입니다.
 
@@ -10,7 +10,12 @@
 - FastAPI 런타임은 `asyncpg`, 로컬 schema/seed 도구는 `psycopg` 사용을 전제로 분리되어 있습니다.
 - SQLAlchemy 모델은 존재하지만 Alembic revision 체계는 아직 시작되지 않았습니다.
 - v284에서 사용자 실제 `MissingGreenlet` 결과를 근거로 Alembic online 경로를 async engine 방식으로 수정했습니다.
-- 따라서 다음 위험 단계는 바로 migration을 적용하는 것이 아니라, **로컬 PostgreSQL 상태/백업 확인 → `current` 재검증 → 현재 schema 기준 baseline 전략 확정** 순서여야 합니다.
+- 기호 컴퓨터에서 `alembic history`, `heads`, `current`가 모두 정상 완료되고 PostgreSQL 연결이 확인되었습니다.
+- 기호 컴퓨터의 실제 runtime 점검에서 모델/DB 테이블 22개, 전체 row 748개, `alembic_version` 없음, DB health 정상 결과가 확인되었습니다.
+- 현재 분류는 `existing-schema-without-alembic-baseline`이며 기존 데이터 보존형 전략으로 확정되었습니다.
+- v287에서 Windows Docker 출력의 UTF-8/cp949 혼합 decode 오류를 보완했습니다.
+- v288에서는 columns/types/nullability/PK/FK/unique/index/check 구조를 읽기 전용으로 비교합니다.
+- 따라서 다음 위험 단계는 바로 migration을 적용하는 것이 아니라, **상세 schema 동등성 → 백업/복원 → 별도 빈 DB migration 검증** 순서여야 합니다.
 
 ## 현재 구조 요약
 
@@ -100,6 +105,8 @@ python -m pip install -e ".[dev]"
 - online 방식: `async_engine_from_config()` + `connection.run_sync()`
 - 현재 revision: 0개
 - `history`, `heads`, `current` 읽기 전용 수집 도구: `tools/check_alembic_readonly_state.py`
+- Docker/schema/table count/health 읽기 전용 수집 도구: `tools/check_postgres_runtime_readonly_state.py`
+- SQLAlchemy metadata/실제 PostgreSQL 상세 구조 비교: `tools/check_postgres_schema_equivalence.py`
 
 ## 현재 차단 요소 / 실제 검증 필요 지점
 
@@ -143,10 +150,14 @@ backend runtime/model/schema 경로에서 SQLite URL이나 SQLite 전용 타입�
 
 ### Stage D — baseline 전략 선택
 
-현재 가능한 전략은 두 가지이며, 실제 DB 상태를 확인한 뒤 하나만 선택해야 합니다.
+실제 DB 상태 수집 결과, 현재 프로젝트는 다음으로 확정되었습니다.
 
-- 새 빈 DB: 첫 revision이 전체 schema를 생성하도록 구성
-- 이미 create_all/seed 된 DB: 현재 schema와 revision을 비교한 뒤 baseline/stamp 전략 수립
+- `existing-schema-without-alembic-baseline`
+- 모델/실제 테이블 22개 일치
+- 전체 row 748개 보존 필요
+- `alembic_version` 없음
+
+다만 table 개수 일치만으로 stamp하지 않고 상세 schema 동등성을 먼저 확인합니다.
 
 `alembic stamp head`는 migration을 실행하지 않고 이력만 기록하므로, schema가 정확히 일치한다고 검증하기 전에는 사용하면 안 됩니다.
 
@@ -196,6 +207,20 @@ python tools/check_alembic_readonly_state.py
 
 이 도구의 `current`만 DB에 연결해 현재 revision을 읽으며, schema와 migration history는 변경하지 않습니다.
 
+PostgreSQL runtime/schema/data 존재 여부를 읽기 전용으로 수집할 때:
+
+```bash
+python tools/check_postgres_runtime_readonly_state.py
+```
+
+SQLAlchemy metadata와 실제 PostgreSQL 상세 구조를 비교할 때:
+
+```bash
+python tools/check_postgres_schema_equivalence.py
+```
+
+상세 전략은 `docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md`를 기준으로 합니다.
+
 ## 이번 단계에서 변경하지 않은 것
 
 - DB schema
@@ -212,8 +237,8 @@ python tools/check_alembic_readonly_state.py
 
 아래 결과를 기호 컴퓨터에서 확인한 뒤 다음 단계로 갑니다.
 
-- `python tools/check_alembic_readonly_state.py` 결과
-- `alembic current`가 더 이상 `MissingGreenlet`을 내지 않는지
-- 기존 PostgreSQL container/volume 존재 여부
-- `/api/v1/health/db` 실제 결과
-- 현재 개발 DB에 보존할 데이터가 있는지 여부
+- `python tools/check_postgres_schema_equivalence.py` 결과
+- 상세 column/type/nullability/PK/FK/unique/index/check 차이 여부
+- DB backup 생성 위치와 파일명
+- backup restore 리허설 대상 임시 DB
+- 별도 빈 DB 최초 revision upgrade/downgrade 검증 계획
