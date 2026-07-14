@@ -1,8 +1,8 @@
-# Project Structure — v303
+# Project Structure — v304
 
 현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
 
-v303에서는 사용자 승인으로 실행된 v302 restore rehearsal stamp 이후 상태를 읽기 전용으로 검증하도록 post-check를 보강했습니다. 정상 추가된 `alembic_version`을 pre-stamp 오류로 오판하던 문제를 수정하고, 실제 승인 digest를 고정했습니다.
+v304에서는 검증 완료된 restore rehearsal 결과를 전제로 원본 `rpg_game` baseline stamp 직전 상태를 읽기 전용으로 확인하는 final guard를 추가했습니다. source/rehearsal application schema와 전체 row digest, verified backup, revision, v302 report, migration endpoint를 한 번에 검증하며 실제 source stamp는 별도 승인 전까지 차단합니다.
 
 중요한 결론:
 
@@ -42,30 +42,32 @@ v303에서는 사용자 승인으로 실행된 v302 restore rehearsal stamp 이�
 | `src/` | legacy JS/CSS | 이동 금지, Vue 앱 `src/`와 구분 |
 | `frontend/vue-app/` | 새 Vue shell + 읽기 전용 API client 준비 | 실제 기능 대체 전 단계 |
 | `backend/` | FastAPI 백엔드 | 기존 route/body/DB/env/seed 유지 |
-| `tools/` | smoke/contract/검증/backup/restore/migration 도구 | v303 restore rehearsal stamp guard와 schema/data digest smoke 보강 |
-| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v303 기준 갱신 |
+| `tools/` | smoke/contract/검증/backup/restore/migration 도구 | v304 source baseline stamp final guard와 exact-target smoke 보강 |
+| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v304 기준 갱신 |
 
 
-## v303 restore rehearsal stamp post-check
+## v304 source baseline stamp final guard
 
 추가 위치:
 
 ```txt
-tools/stamp_postgres_restore_rehearsal_database.py
-tools/smoke/backend/smoke_postgres_restore_rehearsal_stamp_guard.py
-docs/current/POSTGRES_RESTORE_REHEARSAL_STAMP_GUARD.md
+tools/stamp_postgres_source_database.py
+tools/smoke/backend/smoke_postgres_source_baseline_stamp_guard.py
+docs/current/POSTGRES_SOURCE_BASELINE_STAMP_FINAL_GUARD.md
 ```
 
 고정 경계:
 
-- target DB: `rpg_game_restore_rehearsal_v290`
+- target DB: `rpg_game`
 - revision: `v295_initial_schema`
-- `--inspect`: 읽기 전용 pre/post-stamp 자동 분류
-- post-stamp 기대 상태: 23 public tables / 749 rows / revision `v295_initial_schema`
-- application 22 tables / 748 rows의 schema/data digest를 실제 승인값과 exact 비교
-- source와 migration DB의 현재 상태 및 v302 실행 보고서 검증
-- 같은 rehearsal stamp 재실행 금지
-- 원본 source stamp는 별도 guard와 별도 승인 전 금지
+- backup SHA-256와 v302 rehearsal success result exact 확인
+- source/rehearsal application 22 tables / 748 rows 전체 schema/data digest exact 비교
+- migration DB verified v300 endpoint 확인
+- `--inspect`: 읽기 전용 pre/post-source-stamp 자동 분류
+- future execute: target/revision/backup/rehearsal 네 confirmation 모두 필요
+- 허용 변화: source `alembic_version` 1 table / 1 row만
+- source actual stamp는 별도 사용자 승인 전 금지
+- rehearsal stamp 재실행과 migration 추가 변경 금지
 
 ## `frontend/vue-app/` 역할
 

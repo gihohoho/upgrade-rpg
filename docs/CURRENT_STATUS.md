@@ -1,9 +1,9 @@
-# Current Status — v303
+# Current Status — v304
 
 ## 기준
 
-- 최신 작업: `v303.postgres-restore-rehearsal-stamp-postcheck-recovery`
-- 기준 ZIP: `rpg_v303_postgres_restore_rehearsal_stamp_postcheck_recovery.zip`
+- 최신 작업: `v304.postgres-source-baseline-stamp-final-guard`
+- 기준 ZIP: `rpg_v304_postgres_source_baseline_stamp_final_guard_ready.zip`
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -12,13 +12,16 @@
 
 ```txt
 source rpg_game:
-  22 tables / 748 rows / differences=0
-  alembic_version 없음
-  source stamp 미승인
+  22 application tables / 748 rows / differences=0
+  alembic_version 없음 / current revision 없음
+  source stamp 실제 실행 미승인
 
 restore rehearsal rpg_game_restore_rehearsal_v290:
-  v302 stamp actual execution 사용자 승인 및 실행 완료 보고
-  v303 read-only post-check 실제 결과 수집 대기
+  23 public tables / 749 total rows
+  application 22 tables / 748 rows preserved
+  current revision v295_initial_schema
+  v303 post-check passed
+  v302 execution report verified
 
 migration rpg_game_migration_empty_v290:
   23 public tables / 1 total row
@@ -26,44 +29,32 @@ migration rpg_game_migration_empty_v290:
   differences=0
 ```
 
-## 고정 revision
+## 고정 증거
 
 ```txt
-revision: v295_initial_schema
-file: backend/alembic/versions/v295_initial_schema_initial_postgresql_schema.py
-SHA-256: 24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa
-manual review: passed
+revision SHA-256: 24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa
+backup SHA-256: b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481
+schema digest: 7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921
+data digest: ecb19e57283dc6b780426339bfc46f2bac14da63a618249808f30132508f9244
 ```
 
-## 실제 완료 증거
+## 사용자 PC 실제 완료
 
 ```txt
 v298 first upgrade: passed
 v299 downgrade base: passed
 v300 second upgrade: passed
-upgrade -> downgrade base -> upgrade verified
-v301 source baseline preflight: passed on user PC
-v302 rehearsal pre-stamp inspect: passed on user PC
-v302 rehearsal stamp: user approved and executed
+v301 source preflight: passed
+v302 rehearsal pre-stamp inspect: passed
+v302 rehearsal stamp: passed
+v303 rehearsal post-check: passed
+result: restore-rehearsal-stamp-current-state-verified
 ```
 
-v302 stamp 전 승인 application digest:
-
-```txt
-schema: 7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921
-data: ecb19e57283dc6b780426339bfc46f2bac14da63a618249808f30132508f9244
-```
-
-## v302 inspect 오류 원인
-
-stamp 후 `alembic_version`이 정상 추가됐지만 v302 `--inspect`가 22-table 사전 상태만
-허용해 `rehearsal table list differs from approved snapshot`으로 차단했습니다.
-DB 재실행이나 rollback이 필요한 오류가 아니라 post-check 판정 버그입니다.
-
-## v303 다음 첫 작업
+## v304 다음 첫 작업
 
 ```bash
-python tools/stamp_postgres_restore_rehearsal_database.py --inspect
+python tools/stamp_postgres_source_database.py --inspect
 ```
 
-v303은 DB를 읽기만 하며 pre/post-stamp를 자동 구분합니다. 실제 stamp 재실행은 금지합니다.
+이 명령은 source/rehearsal/migration DB와 로컬 증거를 읽기만 합니다. 정상 통과해도 원본 source stamp는 다시 별도 명시 승인 전까지 실행하지 않습니다.

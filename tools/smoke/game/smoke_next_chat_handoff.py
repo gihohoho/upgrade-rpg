@@ -47,6 +47,7 @@ def main() -> None:
         "tools/reupgrade_postgres_migration_test_database.py",
         "tools/check_postgres_source_baseline_stamp_preflight.py",
         "tools/stamp_postgres_restore_rehearsal_database.py",
+        "tools/stamp_postgres_source_database.py",
         "tools/smoke/backend/smoke_postgres_initial_alembic_revision_creation.py",
         "tools/smoke/backend/smoke_postgres_initial_alembic_revision_manual_review.py",
         "tools/smoke/backend/smoke_postgres_migration_test_database_upgrade.py",
@@ -54,6 +55,7 @@ def main() -> None:
         "tools/smoke/backend/smoke_postgres_migration_test_database_roundtrip.py",
         "tools/smoke/backend/smoke_postgres_source_baseline_stamp_preflight.py",
         "tools/smoke/backend/smoke_postgres_restore_rehearsal_stamp_guard.py",
+        "tools/smoke/backend/smoke_postgres_source_baseline_stamp_guard.py",
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_CREATION.md",
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md",
         "docs/current/POSTGRES_MIGRATION_TEST_UPGRADE.md",
@@ -61,6 +63,7 @@ def main() -> None:
         "docs/current/POSTGRES_MIGRATION_TEST_ROUNDTRIP.md",
         "docs/current/POSTGRES_SOURCE_BASELINE_STAMP_PREFLIGHT.md",
         "docs/current/POSTGRES_RESTORE_REHEARSAL_STAMP_GUARD.md",
+        "docs/current/POSTGRES_SOURCE_BASELINE_STAMP_FINAL_GUARD.md",
         "docs/current/review/v295_initial_schema.manual-review.json",
     ]
     for relative_path in required_files:
@@ -68,33 +71,33 @@ def main() -> None:
 
     assert_contains(
         "NEXT_CHAT_PROMPT.md",
-        "rpg_v303_postgres_restore_rehearsal_stamp_postcheck_recovery.zip",
-        "v303.postgres-restore-rehearsal-stamp-postcheck-recovery",
+        "rpg_v304_postgres_source_baseline_stamp_final_guard_ready.zip",
+        "v304.postgres-source-baseline-stamp-final-guard",
         "backend/.venv",
-        "stamp_postgres_restore_rehearsal_database.py --inspect",
+        "stamp_postgres_source_database.py --inspect",
         "v295_initial_schema",
         "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa",
         "rpg_game_restore_rehearsal_v290",
         "first/second upgrade signatures: identical",
         "restore-rehearsal-stamp-current-state-verified",
+        "ready-for-separate-source-baseline-stamp-execution-approval",
         "7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921",
     )
     assert_contains(
         "NEXT_CHAT_HANDOFF.md",
-        "22 tables / 748 rows",
-        "public tables 23",
+        "22 application tables / 748 rows",
+        "public tables/rows 23/749",
         "migration current revision v295_initial_schema",
-        "v302 stamp 사용자 명시 승인 및 실제 실행 완료 보고",
-        "SourceBaselinePreflightError: rehearsal table list differs from approved snapshot",
-        "stamp_postgres_restore_rehearsal_database.py",
-        "post-stamp",
+        "v303 post-check passed",
+        "stamp_postgres_source_database.py",
+        "source stamp 실제 실행 미승인",
     )
     assert_contains(
         "README.md",
-        "v303.postgres-restore-rehearsal-stamp-postcheck-recovery",
-        "stamp_postgres_restore_rehearsal_database.py",
+        "v304.postgres-source-baseline-stamp-final-guard",
+        "stamp_postgres_source_database.py",
         "v295_initial_schema",
-        "post-stamp",
+        "v303 post-check verified",
     )
     assert_contains(
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md",
@@ -146,6 +149,15 @@ def main() -> None:
         "approved pre-stamp application digests preserved",
         "alembic_version",
         "stamp를 다시 실행하지 않습니다",
+    )
+    assert_contains(
+        "docs/current/POSTGRES_SOURCE_BASELINE_STAMP_FINAL_GUARD.md",
+        "v304",
+        "rpg_game",
+        "ready-for-separate-source-baseline-stamp-execution-approval",
+        "b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481",
+        "restore-rehearsal-stamp-current-state-verified",
+        "별도 명시 승인",
     )
     assert_contains(
         ".gitignore",

@@ -1,3 +1,12 @@
+# v304 - PostgreSQL source baseline stamp final guard
+
+- Added an exact-source `rpg_game` baseline stamp guard with read-only pre/post inspection.
+- Pinned revision, backup SHA-256, verified rehearsal result, and approved application schema/data digests.
+- Added exact confirmation flags for the future source-only `stamp head` approval boundary.
+- Added post-stamp recovery classification that prevents automatic retries after a partial report failure.
+- Added dedicated source stamp smoke coverage and updated handoff/current-status documentation.
+- Did not execute source stamp, upgrade, downgrade, DB create/drop/restore, `.env`, Docker, API/write, auth, seed, or game-content changes.
+
 # v303 - Restore rehearsal stamp post-check recovery
 
 - Recorded the user-approved v302 rehearsal-only stamp execution.

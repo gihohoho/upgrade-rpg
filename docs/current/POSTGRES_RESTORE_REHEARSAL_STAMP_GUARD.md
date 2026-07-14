@@ -108,6 +108,22 @@ result: restore-rehearsal-stamp-current-state-verified-report-missing
 
 이 경우에도 stamp를 다시 실행하지 않습니다. 별도의 로컬 evidence 복구 단계만 검토합니다.
 
+## 사용자 PC 실제 v303 결과
+
+```txt
+lifecycle state: post-stamp
+public tables/rows: 23/749
+current revision: ['v295_initial_schema']
+application tables/rows: 22/748
+approved pre-stamp application digests preserved: yes
+source DB current state preserved: yes
+migration test DB current state preserved: yes
+v302 execution report: verified
+result: restore-rehearsal-stamp-current-state-verified
+```
+
+이 결과로 restore rehearsal stamp 단계는 완료됐으며 v304 source final guard 준비 단계로 이동했습니다.
+
 ## 계속 금지
 
 - v302 `--execute` 재실행

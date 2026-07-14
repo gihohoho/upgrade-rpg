@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v303.postgres-restore-rehearsal-stamp-postcheck-recovery**
+현재 기준: **v304.postgres-source-baseline-stamp-final-guard**
 
 ## 현재 구조
 
@@ -17,29 +17,28 @@
 
 ```txt
 source rpg_game: 22 tables / 748 rows / differences=0 / alembic_version 없음
-restore rehearsal: v302 stamp 사용자 승인/실행 완료 보고, v303 post-check 대기
-migration test DB: 23 public tables / revision v295_initial_schema / differences=0
+restore rehearsal: 23 public tables / 749 rows / v295_initial_schema / v303 post-check verified
+migration test DB: 23 public tables / 1 row / v295_initial_schema / differences=0
 initial revision SHA-256: 24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa
+backup SHA-256: b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481
 round-trip: upgrade -> downgrade base -> upgrade verified
 first/second upgrade signatures: identical
-v301 source preflight: user-PC passed
+v301 source preflight: passed
+v302 rehearsal stamp: passed
+v303 rehearsal post-check: passed / report verified
 ```
 
-## v303 핵심
+## v304 핵심
 
-v302 실제 rehearsal stamp 이후 기존 `--inspect`가 정상 추가된 `alembic_version`을
-사전 상태 위반으로 오판한 문제를 수정했습니다.
+원본 source stamp 전용 최종 guard를 별도 도구로 추가했습니다.
 
 ```txt
-tools/stamp_postgres_restore_rehearsal_database.py
-tools/smoke/backend/smoke_postgres_restore_rehearsal_stamp_guard.py
-docs/current/POSTGRES_RESTORE_REHEARSAL_STAMP_GUARD.md
+tools/stamp_postgres_source_database.py
+tools/smoke/backend/smoke_postgres_source_baseline_stamp_guard.py
+docs/current/POSTGRES_SOURCE_BASELINE_STAMP_FINAL_GUARD.md
 ```
 
-v303 `--inspect`는 읽기 전용으로 pre/post-stamp를 자동 구분합니다.
-post-stamp에서는 23 public tables / 749 rows 중 application 22 tables / 748 rows가
-stamp 전 승인 digest와 동일한지 검증하고, source/migration DB와 v302 로컬 실행 보고서도
-확인합니다. **v302 `--execute` 재실행은 금지합니다.**
+`--inspect`는 완전한 읽기 전용이며 source, backup, revision, verified rehearsal, migration endpoint와 22개 application table 전체 schema/data digest를 함께 검증합니다.
 
 ## 다음 실행
 
@@ -54,8 +53,10 @@ source .venv/Scripts/activate
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/stamp_postgres_restore_rehearsal_database.py --inspect
+python tools/stamp_postgres_source_database.py --inspect
 ```
+
+원본 source stamp 실제 실행은 별도 승인 전까지 금지합니다.
 
 ## 서버 실행
 
