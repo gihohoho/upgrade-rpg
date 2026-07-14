@@ -1,4 +1,4 @@
-# Vue/FastAPI/DB 전환 준비 계획 — v289
+# Vue/FastAPI/DB 전환 준비 계획 — v290
 
 ## 목적
 
@@ -357,3 +357,11 @@ v275에서는 Vue 관리자 상세/관계 조회 wrapper가 `rowId` 입력을 ba
 - `FLOAT` / `DOUBLE PRECISION` alias는 checker 정규화 대상이며 model/DB 수정 대상이 아닙니다.
 - schema 차이 0개 재확인 후에도 backup/restore 리허설과 별도 빈 DB migration 검증이 먼저입니다.
 - 인증과 Vue write 이식은 PostgreSQL baseline 안정화 뒤로 계속 보류합니다.
+
+## v290 backup/restore preflight 경계
+
+- `tools/check_postgres_backup_restore_preflight.py`가 v289 schema equivalence 차이 0개를 선행 gate로 사용합니다.
+- backup은 `local-backups/postgres/`의 custom-format dump로 계획하며 Git/전달 ZIP에서 제외합니다.
+- 원본 `rpg_game`에는 restore하지 않습니다.
+- restore rehearsal DB와 empty migration test DB는 서로 분리합니다.
+- 실제 backup/restore/DB 생성·삭제/Alembic mutation은 사용자 승인 전 실행하지 않습니다.

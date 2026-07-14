@@ -1,4 +1,4 @@
-# PostgreSQL / Alembic Readiness — v289
+# PostgreSQL / Alembic Readiness — v290
 
 이 문서는 현재 프로젝트 파일을 기준으로 PostgreSQL과 Alembic 도입 준비 상태를 자동 분석한 결과입니다.
 
@@ -16,6 +16,7 @@
 - v287에서 Windows Docker 출력의 UTF-8/cp949 혼합 decode 오류를 보완했습니다.
 - v288에서는 columns/types/nullability/PK/FK/unique/index/check 구조를 읽기 전용으로 비교합니다.
 - v289에서는 PostgreSQL `FLOAT` alias를 정규화해 `DOUBLE PRECISION` reflection false positive를 제거합니다.
+- v290에서는 schema 차이 0개를 gate로 사용하는 backup/restore read-only preflight, client 도구 점검, 민감 backup 경로와 분리 DB 경계를 추가합니다.
 - 따라서 다음 위험 단계는 바로 migration을 적용하는 것이 아니라, **상세 schema 동등성 → 백업/복원 → 별도 빈 DB migration 검증** 순서여야 합니다.
 
 ## 현재 구조 요약
@@ -108,6 +109,7 @@ python -m pip install -e ".[dev]"
 - `history`, `heads`, `current` 읽기 전용 수집 도구: `tools/check_alembic_readonly_state.py`
 - Docker/schema/table count/health 읽기 전용 수집 도구: `tools/check_postgres_runtime_readonly_state.py`
 - SQLAlchemy metadata/실제 PostgreSQL 상세 구조 비교: `tools/check_postgres_schema_equivalence.py`
+- backup/restore schema gate와 client 도구 확인: `tools/check_postgres_backup_restore_preflight.py`
 
 ## 현재 차단 요소 / 실제 검증 필요 지점
 
@@ -133,11 +135,13 @@ backend runtime/model/schema 경로에서 SQLite URL이나 SQLite 전용 타입�
 
 ### Stage B — 로컬 PostgreSQL과 백업 경로 확인
 
-1. `docker compose up -d postgres adminer`
-2. container가 `healthy`인지 확인
-3. `/api/v1/health/db`가 `ok`인지 확인
-4. 비어 있는 개발 DB에서만 backup/restore 명령을 리허설
-5. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
+1. 기존 container가 `healthy`인지 읽기 전용으로 확인
+2. `/api/v1/health/db`가 `ok`인지 확인
+3. schema equivalence가 `structurally-equivalent`, 차이 0개인지 확인
+4. `tools/check_postgres_backup_restore_preflight.py`로 host/container client 도구 확인
+5. backup은 `local-backups/postgres/`에만 저장하고 Git/전달 ZIP에서 제외
+6. 원본 `rpg_game`에는 restore하지 않음
+7. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
 
 ### Stage C — Alembic 실행 방식 검증
 
@@ -219,6 +223,12 @@ SQLAlchemy metadata와 실제 PostgreSQL 상세 구조를 비교할 때:
 python tools/check_postgres_schema_equivalence.py
 ```
 
+backup/restore 실행 전 gate와 client 도구를 읽기 전용으로 확인할 때:
+
+```bash
+python tools/check_postgres_backup_restore_preflight.py
+```
+
 상세 전략은 `docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md`를 기준으로 합니다.
 
 ## 이번 단계에서 변경하지 않은 것
@@ -242,3 +252,12 @@ python tools/check_postgres_schema_equivalence.py
 - DB backup 생성 위치와 파일명
 - backup restore 리허설 대상 임시 DB
 - 별도 빈 DB 최초 revision upgrade/downgrade 검증 계획
+
+## v290 backup/restore preflight 경계
+
+- backup 폴더: `local-backups/postgres/`
+- custom dump 파일명: `rpg_game_YYYYMMDD_HHMMSS_KST_v290.custom.dump`
+- source DB: `rpg_game`
+- restore rehearsal DB: `rpg_game_restore_rehearsal_v290`
+- empty migration test DB: `rpg_game_migration_empty_v290`
+- 실제 backup/restore/DB 생성·삭제/Alembic mutation은 사용자 승인 전 실행하지 않음

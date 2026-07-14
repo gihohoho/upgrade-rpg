@@ -19,7 +19,7 @@ RUNTIME_DOC = ROOT / "docs/current/POSTGRES_RUNTIME_READONLY_STATE.md"
 BASELINE_DOC = ROOT / "docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md"
 
 REQUIRED_REPORT_TEXT = [
-    "PostgreSQL / Alembic Readiness — v289",
+    "PostgreSQL / Alembic Readiness — v290",
     "SQLAlchemy model table 수 | 22개",
     "Alembic asyncpg-compatible online env | 있음",
     "Alembic versions 폴더 | 있음",
@@ -27,6 +27,7 @@ REQUIRED_REPORT_TEXT = [
     "async_engine_from_config()",
     "tools/check_postgres_runtime_readonly_state.py",
     "tools/check_postgres_schema_equivalence.py",
+    "tools/check_postgres_backup_restore_preflight.py",
     "setup_dev_db.py --reset",
     "docker compose down -v",
     "DB schema",

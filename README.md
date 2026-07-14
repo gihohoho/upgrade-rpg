@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v289.postgres-float-type-normalization-handoff**
+현재 기준: **v290.postgres-backup-restore-preflight-gate**
 
 ## 현재 구조
 
@@ -14,7 +14,7 @@
 Vue `/admin`에는 GET health, requirements, domains, catalog, detail, relations가 연결되어 있습니다.
 게임 콘텐츠 개발과 write/인증 확대는 계속 보류합니다.
 
-## 실제 PostgreSQL 상태
+## 실제 PostgreSQL 보존 기준
 
 ```txt
 PostgreSQL 16.14 / rpg_game / 12 MB
@@ -27,18 +27,20 @@ classification existing-schema-without-alembic-baseline
 
 현재 DB는 삭제/초기화 대상이 아니라 기존 데이터 보존형 Alembic baseline 대상입니다.
 
-## v289 핵심
+## v290 핵심
 
-기존 checker에서 나온 아래 두 차이는 PostgreSQL 타입 alias 표현 차이였습니다.
+v290은 실제 backup/restore를 실행하지 않고 다음 경계를 확정했습니다.
 
-```txt
-FLOAT <-> DOUBLE PRECISION
-```
+- schema equivalence 차이 0개 선행 gate
+- host/container `pg_dump`, `pg_restore`, `createdb`, `dropdb` 사용 가능 여부 확인
+- backup 폴더: `local-backups/postgres/`
+- backup 파일명: `rpg_game_YYYYMMDD_HHMMSS_KST_v290.custom.dump`
+- restore rehearsal DB: `rpg_game_restore_rehearsal_v290`
+- empty migration test DB: `rpg_game_migration_empty_v290`
+- 원본 `rpg_game` restore 금지
+- 실제 실행은 사용자 단계별 승인 후 진행
 
-v289 checker는 PostgreSQL 규칙에 맞게 precision 없는 `FLOAT`를 `DOUBLE PRECISION`으로 정규화합니다.
-DB schema와 model은 변경하지 않았습니다.
-
-## 다음 읽기 전용 확인
+## 먼저 실행할 읽기 전용 확인
 
 실행 위치: `backend` 폴더  
 `.venv` 상태: 꺼져 있을 때 Git Bash
@@ -52,6 +54,7 @@ source .venv/Scripts/activate
 
 ```bash
 python tools/check_postgres_schema_equivalence.py
+python tools/check_postgres_backup_restore_preflight.py
 ```
 
 ## 서버 실행
@@ -83,4 +86,8 @@ python -m alembic revision --autogenerate
 python -m alembic upgrade head
 python -m alembic downgrade
 python -m alembic stamp head
+pg_dump 실제 backup 명령
+createdb 실제 DB 생성 명령
+pg_restore 실제 restore 명령
+dropdb 실제 DB 삭제 명령
 ```

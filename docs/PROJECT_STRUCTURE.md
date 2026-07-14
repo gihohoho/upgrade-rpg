@@ -1,8 +1,8 @@
-# Project Structure — v289
+# Project Structure — v290
 
 현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
 
-v289에서는 legacy/Vue/backend 구조를 유지하면서 PostgreSQL FLOAT alias 비교 false positive와 전달용 생성 산출물/중복 파일을 정리했습니다.
+v290에서는 legacy/Vue/backend 구조를 유지하면서 PostgreSQL backup/restore 읽기 전용 preflight와 로컬 민감 backup 제외 경계를 추가했습니다.
 
 중요한 결론:
 
@@ -43,7 +43,7 @@ v289에서는 legacy/Vue/backend 구조를 유지하면서 PostgreSQL FLOAT alia
 | `frontend/vue-app/` | 새 Vue shell + 읽기 전용 API client 준비 | 실제 기능 대체 전 단계 |
 | `backend/` | FastAPI 백엔드 | 기존 route/body/DB/env/seed 유지 |
 | `tools/` | smoke/contract/검증 도구 | 기존 core smoke 유지, Vue shell/API smoke 추가 |
-| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v289 기준 갱신 |
+| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v290 기준 갱신 |
 
 ## `frontend/vue-app/` 역할
 
@@ -330,3 +330,17 @@ http://127.0.0.1:5173
 - 중복된 `backend/env.example`은 제거하고 `backend/.env.example`만 유지합니다.
 - 오래된 루트 `tools/smoke_next_chat_handoff.py`는 제거하고 `tools/smoke/game/smoke_next_chat_handoff.py`를 canonical 경로로 사용합니다.
 - 전달 ZIP에는 `.git`, `backend/.venv`, `backend/.env`, `node_modules`, `dist`, Python cache를 포함하지 않습니다.
+
+## v290 PostgreSQL backup/restore preflight 구조
+
+```txt
+tools/check_postgres_backup_restore_preflight.py
+tools/smoke/backend/smoke_postgres_backup_restore_preflight.py
+docs/current/POSTGRES_BACKUP_RESTORE_PREP.md
+local-backups/postgres/  # 실제 backup 생성 전에는 존재하지 않을 수 있으며 Git/ZIP 제외
+```
+
+- preflight 도구는 schema equivalence gate와 PostgreSQL client 버전만 확인합니다.
+- 실제 `pg_dump`, `pg_restore`, `createdb`, `dropdb` 동작은 실행하지 않습니다.
+- source `rpg_game`, restore rehearsal `rpg_game_restore_rehearsal_v290`, migration test `rpg_game_migration_empty_v290` 경계를 고정합니다.
+- `/local-backups/`는 민감 데이터 보호를 위해 `.gitignore`와 `.dockerignore`에서 제외합니다.

@@ -28,7 +28,7 @@ NEXT_CHAT_HANDOFF.md
 docs/handoff/
 ```
 
-루트 인수인계 파일과 `docs/handoff/` 사본은 같은 v289 기준으로 유지합니다.
+루트 인수인계 파일과 `docs/handoff/` 사본은 같은 v290 기준으로 유지합니다.
 
 ## 문서 폴더
 

@@ -33,3 +33,5 @@ build/
 
 # Temporary archives
 *.zip
+# Local PostgreSQL backups (sensitive data; never commit or hand off)
+/local-backups/

@@ -1,4 +1,4 @@
-# PostgreSQL / Alembic 최초 baseline 전략 — v289
+# PostgreSQL / Alembic 최초 baseline 전략 — v290
 
 ## 실제 분류
 
@@ -91,3 +91,11 @@ v289 checker에서 alias를 정규화했으며 실제 DB와 model 자체는 변�
 
 v289 checker 재실행에서 차이 0개가 확인되면 다음 단계는 backup/restore 리허설 경계 확정입니다.
 그래도 바로 revision 생성이나 `stamp head`를 실행하지 않습니다.
+
+## v290 backup/restore preflight 경계
+
+- `tools/check_postgres_backup_restore_preflight.py`가 v289 schema equivalence 차이 0개를 선행 gate로 사용합니다.
+- backup은 `local-backups/postgres/`의 custom-format dump로 계획하며 Git/전달 ZIP에서 제외합니다.
+- 원본 `rpg_game`에는 restore하지 않습니다.
+- restore rehearsal DB와 empty migration test DB는 서로 분리합니다.
+- 실제 backup/restore/DB 생성·삭제/Alembic mutation은 사용자 승인 전 실행하지 않습니다.

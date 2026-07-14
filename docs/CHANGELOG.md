@@ -1,3 +1,12 @@
+# v290 - PostgreSQL backup/restore read-only preflight gate
+
+- Added `tools/check_postgres_backup_restore_preflight.py` to re-run the schema-equivalence gate, check host/existing-container `pg_dump`, `pg_restore`, `createdb`, and `dropdb` availability, and report whether the project is ready to request backup execution approval.
+- Fixed the backup policy at `local-backups/postgres/` with KST timestamped PostgreSQL custom-format dump names and SHA-256 sidecars; added `/local-backups/` to Git/Docker exclusions.
+- Fixed isolated database boundaries: source `rpg_game`, restore rehearsal `rpg_game_restore_rehearsal_v290`, and empty migration test `rpg_game_migration_empty_v290`.
+- Added restore before/after table and row-count comparison planning, separate empty-DB Alembic validation planning, a dedicated smoke, and core-smoke registration.
+- The handoff sandbox could not connect because `psycopg` and PostgreSQL client/Docker tooling were unavailable there; this is recorded as non-authoritative and no zero-difference claim was made.
+- Did not create a dump, restore data, create/drop a database, modify Docker resources, edit `.env`, create/apply/stamp migrations, or change routes/auth/write/game content.
+
 # v289 - PostgreSQL FLOAT alias normalization and handoff cleanup
 
 - Normalized PostgreSQL `FLOAT` aliases in the read-only schema checker so SQLAlchemy `FLOAT` and reflected `DOUBLE PRECISION` are compared as the same storage type.

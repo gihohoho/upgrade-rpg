@@ -93,7 +93,7 @@ def main() -> int:
 
     strategy_text = STRATEGY_DOC.read_text(encoding="utf-8")
     for marker in (
-        "PostgreSQL / Alembic 최초 baseline 전략 — v289",
+        "PostgreSQL / Alembic 최초 baseline 전략 — v290",
         "existing-schema-without-alembic-baseline",
         "기존 `create_all()` schema와 데이터를 보존하는 baseline 방식",
         "python tools/check_postgres_schema_equivalence.py",

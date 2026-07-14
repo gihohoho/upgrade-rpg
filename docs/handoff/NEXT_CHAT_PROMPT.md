@@ -1,6 +1,6 @@
 기호의 Upgrade RPG 프로젝트를 이어서 진행합니다.
 
-이번에 첨부하는 최신 ZIP `rpg_v289_postgres_float_normalization_handoff_ready.zip`을 반드시 기준으로 작업해주세요.
+이번에 첨부하는 최신 ZIP `rpg_v290_postgres_backup_restore_preflight_ready.zip`을 반드시 기준으로 작업해주세요.
 
 ========================
 사용자/응답 방식
@@ -34,7 +34,7 @@ git status && git add . && git commit -m "..." && git push
 현재 최신 기준
 ========================
 
-- 최신 작업: `v289.postgres-float-type-normalization-handoff`
+- 최신 작업: `v290.postgres-backup-restore-preflight-gate`
 - readiness version: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -55,10 +55,10 @@ git status && git add . && git commit -m "..." && git push
 장비/스킬/보스/필드/드랍률/밸런스/강화 수치 추가·조정은 보류합니다.
 
 ========================
-실제 PostgreSQL 상태
+실제 PostgreSQL 보존 기준
 ========================
 
-사용자 컴퓨터에서 읽기 전용으로 확인한 실제 결과:
+사용자 컴퓨터에서 이전 읽기 전용 단계로 확인한 실제 결과:
 
 ```txt
 Docker Compose project: upgraderpg
@@ -89,18 +89,17 @@ admin_change_logs: 13
 현재 DB는 초기화 대상이 아니라 기존 데이터 보존형 Alembic baseline 대상입니다.
 
 ========================
-v288 실제 결과와 v289 수정
+v289 schema gate 상태
 ========================
 
-v288 checker 실제 결과는 아래 두 차이뿐이었습니다.
+v288 실제 차이는 아래 두 개였고 둘 다 PostgreSQL alias 표현 차이였습니다.
 
 ```txt
 user_profiles.add_attack_speed: model=FLOAT, db=DOUBLE PRECISION
 user_profiles.farm_atk_bonus: model=FLOAT, db=DOUBLE PRECISION
 ```
 
-PostgreSQL은 precision 없는 `FLOAT`를 `DOUBLE PRECISION`으로 취급합니다.
-v289에서 schema checker의 타입 alias 정규화를 추가했습니다.
+v289에서 아래 정규화를 추가했습니다.
 
 ```txt
 FLOAT -> DOUBLE PRECISION
@@ -108,55 +107,40 @@ FLOAT(1..24) -> REAL
 FLOAT(25..53) -> DOUBLE PRECISION
 ```
 
-이 수정은 비교 로직만 바꾸며 DB schema/data와 SQLAlchemy model은 변경하지 않았습니다.
-
-v289 적용 후 첫 확인 명령:
-
-실행 위치: `backend` 폴더
-`.venv` 상태: 꺼져 있을 때 Git Bash
-
-```bash
-source .venv/Scripts/activate
-```
-
-실행 위치: 프로젝트 루트
-`.venv` 상태: `backend/.venv`가 켜진 상태
-
-```bash
-python tools/check_postgres_schema_equivalence.py
-```
-
-실제 다른 차이가 없다면 `structurally-equivalent`, 차이 0개가 기대되지만 반드시 실제 결과를 먼저 확인하세요.
+ZIP 제작 샌드박스에는 `psycopg`와 PostgreSQL/Docker client가 없어 실제 DB에 연결하지 못했습니다.
+따라서 기호 컴퓨터에서 v289 checker를 다시 실행해 `structurally-equivalent`, 차이 0개인지 먼저 확인해야 합니다.
 
 ========================
-v289 정리 사항
+v290 완료
 ========================
 
-- `tools/check_postgres_schema_equivalence.py` FLOAT alias 정규화
-- schema equivalence smoke 보강
-- 다음 채팅 handoff smoke를 현재 기준으로 갱신하고 core smoke에 등록
-- 중복된 오래된 `tools/smoke_next_chat_handoff.py` 제거
-- 생성 산출물 `backend/idle_rpg_backend.egg-info/` 제거
-- `.gitignore`에 `*.egg-info/` 추가
-- 동일 내용 중복 파일 `backend/env.example` 제거
-- 실제 예시 파일은 `backend/.env.example` 하나로 유지
-- 루트/current/handoff 문서 v289 동기화
-- 전달 ZIP에서 `.git`, `backend/.venv`, `backend/.env`, `node_modules`, `dist`, cache 제외
+- `tools/check_postgres_backup_restore_preflight.py` 추가
+- schema equivalence 차이 0개 선행 gate
+- host/container `pg_dump`, `pg_restore`, `createdb`, `dropdb` 사용 가능 여부 확인
+- backup 위치 `local-backups/postgres/` 확정
+- 파일명 `rpg_game_YYYYMMDD_HHMMSS_KST_v290.custom.dump` 확정
+- SHA-256 sidecar와 민감정보/Git/ZIP 제외 규칙 확정
+- source DB `rpg_game` restore 금지
+- restore rehearsal DB `rpg_game_restore_rehearsal_v290` 확정
+- empty migration test DB `rpg_game_migration_empty_v290` 확정
+- restore 전후 table/row/schema 비교 계획 확정
+- 별도 빈 DB 최초 Alembic 검증 계획 확정
+- 전용 smoke와 core smoke 등록
+- `.gitignore`, `.dockerignore`에 `/local-backups/` 제외 규칙 추가
+- 실제 backup/restore/DB 생성·삭제/migration은 실행하지 않음
 
 ========================
-다음 첫 작업 — v290
+다음 첫 작업 — v291 후보
 ========================
 
-1. v289 checker의 사용자 실제 결과 확인
-2. 차이 0개이면 backup/restore preflight 진행
-3. backup 파일 위치·파일명·민감정보 보존 규칙 확정
-4. `pg_dump`, `pg_restore`, `createdb`, `dropdb` 사용 가능 여부만 먼저 점검
-5. 원본 `rpg_game`과 완전히 분리된 restore rehearsal DB 경계 확정
-6. restore 전후 table/row count 비교 계획 작성
-7. 별도 빈 DB 최초 Alembic migration 검증 계획 작성
-8. 실제 backup/restore/DB 생성·삭제는 사용자 승인 후 작은 단계로 실행
-
-alias 정규화 후에도 `review-required`가 나오면 backup/migration으로 넘어가지 말고 새로운 차이만 분석하세요.
+1. `backend/.venv` 활성화
+2. `python tools/check_postgres_schema_equivalence.py` 실제 결과 확인
+3. 차이 0개이면 `python tools/check_postgres_backup_restore_preflight.py` 실행
+4. `ready-for-user-approval` 여부와 selected execution mode 확인
+5. `review-required` 또는 `connection-failed`이면 backup/migration으로 넘어가지 않음
+6. 준비 완료여도 실제 backup 생성은 사용자에게 별도 승인 요청
+7. 승인 전에는 `pg_dump`, `createdb`, `pg_restore`, `dropdb` 실제 명령 실행 금지
+8. backup 생성 후에도 DB 생성/restore/삭제는 각각 별도 승인
 
 ========================
 절대 변경/실행 금지
@@ -174,6 +158,8 @@ alias 정규화 후에도 `review-required`가 나오면 backup/migration으로 
 - Preview/Apply request body
 - Alembic revision 생성
 - upgrade/downgrade/stamp
+- 실제 backup/restore
+- DB 생성/삭제
 
 ```txt
 python scripts/setup_dev_db.py --reset
@@ -182,6 +168,10 @@ python -m alembic revision --autogenerate
 python -m alembic upgrade head
 python -m alembic downgrade
 python -m alembic stamp head
+pg_dump 실제 backup 명령
+createdb 실제 DB 생성 명령
+pg_restore 실제 restore 명령
+dropdb 실제 DB 삭제 명령
 ```
 
 ========================

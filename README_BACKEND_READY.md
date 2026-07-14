@@ -1,8 +1,8 @@
-# Backend Ready — v289
+# Backend Ready — v290
 
-현재 안정 readiness: `v250.backend-admin-rollback-snapshot`
-Backend splitStatus: `admin-schema-field-constraint-contract-v238`
-현재 프로젝트 작업 버전: `v289.postgres-float-type-normalization-handoff`
+현재 안정 readiness: `v250.backend-admin-rollback-snapshot`  
+Backend splitStatus: `admin-schema-field-constraint-contract-v238`  
+현재 프로젝트 작업 버전: `v290.postgres-backup-restore-preflight-gate`
 
 ## 핵심 보장
 
@@ -19,11 +19,12 @@ Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - 총 748 rows
 - Alembic revision과 `alembic_version` 없음
 - 기존 데이터 보존형 baseline 대상
-- v289에서 `FLOAT`와 `DOUBLE PRECISION` alias 비교 false positive 수정
+- v289 FLOAT alias normalization 유지
+- v290 backup/restore preflight는 읽기 전용이며 실제 dump/restore/DB 생성·삭제를 수행하지 않음
 
 ## 검증
 
-실행 위치: 프로젝트 루트
+실행 위치: 프로젝트 루트  
 `.venv` 상태: `backend/.venv`가 켜진 상태 권장
 
 ```bash

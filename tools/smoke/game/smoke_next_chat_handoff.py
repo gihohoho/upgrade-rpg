@@ -34,16 +34,18 @@ def main() -> None:
         "docs/current/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md",
         "docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md",
         "docs/current/POSTGRES_BACKUP_RESTORE_PREP.md",
+        "tools/check_postgres_backup_restore_preflight.py",
     ]
     for relative_path in required_files:
         read_required(relative_path)
 
     assert_contains(
         "NEXT_CHAT_PROMPT.md",
-        "rpg_v289_postgres_float_normalization_handoff_ready.zip",
-        "v289.postgres-float-type-normalization-handoff",
+        "rpg_v290_postgres_backup_restore_preflight_ready.zip",
+        "v290.postgres-backup-restore-preflight-gate",
         "backend/.venv",
-        "v290",
+        "v291",
+        "check_postgres_backup_restore_preflight.py",
     )
     assert_contains(
         "NEXT_CHAT_HANDOFF.md",
@@ -51,18 +53,29 @@ def main() -> None:
         "DOUBLE PRECISION",
         "748",
         "기존 데이터 보존형",
+        "rpg_game_restore_rehearsal_v290",
+        "rpg_game_migration_empty_v290",
     )
     assert_contains(
         "docs/README.md",
         "현재 문서",
         "인수인계",
         "archive",
+        "v290",
     )
     assert_contains(
         "docs/NEXT_CHAT_START_GUIDE.md",
         "backend/.venv",
         "check_postgres_schema_equivalence.py",
+        "check_postgres_backup_restore_preflight.py",
         "run_smoke_core.sh",
+    )
+    assert_contains(
+        "docs/current/POSTGRES_BACKUP_RESTORE_PREP.md",
+        "local-backups/postgres",
+        "rpg_game_restore_rehearsal_v290",
+        "rpg_game_migration_empty_v290",
+        "사용자 승인",
     )
 
     print("next chat handoff smoke test passed")
