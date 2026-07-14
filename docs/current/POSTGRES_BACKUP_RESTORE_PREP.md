@@ -254,3 +254,15 @@ dropdb 실제 DB 삭제 명령
 - 없을 때만 owner `rpg_user`, template `template0`으로 생성
 - 생성 후 public tables 0, `alembic_version` 없음 확인
 - restore/drop/Alembic은 별도 승인 전 금지
+
+
+## v293 verified restore 실행 경계
+
+- source: `rpg_game` read-only
+- target: `rpg_game_restore_rehearsal_v290` write-only
+- exact dump/SHA/source snapshot 재검증
+- target 0 tables/0 rows gate
+- `pg_restore --single-transaction --exit-on-error --no-owner --no-privileges`
+- restore 후 target 22 tables / 748 rows / table별 counts / schema differences=0
+- source 작업 전후 동일
+- no create/clean/drop/Alembic mutation

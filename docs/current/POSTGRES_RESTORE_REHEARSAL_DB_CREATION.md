@@ -99,3 +99,16 @@ source rows before/after: 748 / 748
 ## 다음 승인 경계
 
 빈 target DB 생성과 검증이 성공한 뒤에만, verified dump를 `pg_restore`로 target에 쓰는 작업을 별도로 승인받습니다.
+
+
+## 사용자 PC 실제 완료 결과
+
+```txt
+result: restore-rehearsal-database-created-empty-and-verified
+target public tables: 0
+target alembic_version: absent
+source tables before/after: 22 / 22
+source rows before/after: 748 / 748
+```
+
+다음 승인 단계는 `tools/restore_postgres_rehearsal_database.py --execute`이며 상세 경계는 `POSTGRES_RESTORE_REHEARSAL.md`를 기준으로 합니다.

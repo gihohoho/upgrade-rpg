@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v292.postgres-restore-rehearsal-database-create-tool**
+현재 기준: **v293.postgres-restore-rehearsal-execute-tool**
 
 ## 현재 구조
 
@@ -11,8 +11,7 @@
 - FastAPI 백엔드: `backend/`
 - 실제 Python 가상환경: `backend/.venv`
 
-Vue `/admin`에는 GET health, requirements, domains, catalog, detail, relations가 연결되어 있습니다.
-게임 콘텐츠 개발과 Vue write/인증 확대는 계속 보류합니다.
+Vue `/admin`에는 GET health, requirements, domains, catalog, detail, relations가 연결되어 있습니다. 게임 콘텐츠 개발과 Vue write/인증 확대는 계속 보류합니다.
 
 ## 실제 PostgreSQL 보존 기준
 
@@ -28,44 +27,47 @@ schema equivalence structurally-equivalent / differences 0
 
 현재 DB는 초기화 대상이 아니라 기존 데이터 보존형 Alembic baseline 대상입니다.
 
-## 실제 backup 완료
-
-사용자 PC에서 다음 backup이 생성·검증되었습니다.
+## 실제 backup과 빈 리허설 DB 완료
 
 ```txt
-local-backups/postgres/rpg_game_20260714_130403_KST_v290.custom.dump
+backup: local-backups/postgres/rpg_game_20260714_130403_KST_v290.custom.dump
 size: 126.60 KB
 SHA-256: b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481
 source tables/rows: 22 / 748
-TOC table definitions/data entries: 22 / 22
+restore rehearsal DB: rpg_game_restore_rehearsal_v290
+restore rehearsal public tables: 0
+restore rehearsal alembic_version: 없음
 ```
 
 `local-backups/`는 실제 사용자/게임 데이터가 포함될 수 있으므로 Git, Docker build context, 전달 ZIP, 채팅에서 제외합니다.
 
-## v292 핵심
+## v293 핵심
 
 새 도구:
 
 ```txt
-tools/create_postgres_restore_rehearsal_database.py
+tools/restore_postgres_rehearsal_database.py
 ```
 
-승인된 범위는 원본 DB와 분리된 빈 DB 하나를 만드는 것뿐입니다.
+승인 범위는 exact verified backup을 아래 빈 target에만 복원하는 것입니다.
 
 ```txt
-source: rpg_game
-target: rpg_game_restore_rehearsal_v290
-owner: rpg_user
-template: template0
+source (read-only): rpg_game
+target (write only): rpg_game_restore_rehearsal_v290
 ```
 
-도구는 target 존재 여부를 먼저 확인하고, 이미 있으면 중단합니다. 없을 때만 생성한 뒤 target table 0개, `alembic_version` 없음, 원본 22 tables / 748 rows 유지 여부를 검증합니다.
+안전 경계:
 
-아직 `pg_restore`, `dropdb`, Alembic 작업은 실행하지 않습니다.
+- target이 여전히 0 tables/0 rows일 때만 진행
+- exact backup filename/manifest/source snapshot/SHA-256 재검증
+- `pg_restore --single-transaction --exit-on-error`
+- `--create`, `--clean`, `createdb`, `dropdb` 사용 금지
+- restore 후 target 22 tables / 748 rows / table별 counts 비교
+- target schema equivalence 차이 0개 확인
+- source 작업 전후 22 tables / 748 rows / table별 counts 동일 확인
+- target 삭제와 Alembic 작업은 실행하지 않음
 
-## 빈 리허설 DB 생성 명령
-
-먼저 가상환경 활성화:
+## restore rehearsal 실행
 
 실행 위치: `backend` 폴더  
 `.venv` 상태: 꺼져 있을 때 Git Bash
@@ -78,7 +80,7 @@ source .venv/Scripts/activate
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/create_postgres_restore_rehearsal_database.py --execute
+python tools/restore_postgres_rehearsal_database.py --execute
 ```
 
 ## 서버 실행
@@ -115,5 +117,6 @@ bash tools/run_smoke_core.sh
 
 - `docs/current/POSTGRES_BACKUP_CREATION.md`
 - `docs/current/POSTGRES_RESTORE_REHEARSAL_DB_CREATION.md`
+- `docs/current/POSTGRES_RESTORE_REHEARSAL.md`
 - `docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md`
 - `NEXT_CHAT_HANDOFF.md`

@@ -1,4 +1,4 @@
-# Vue/FastAPI/DB 전환 준비 계획 — v292
+# Vue/FastAPI/DB 전환 준비 계획 — v293
 
 ## 목적
 
@@ -379,3 +379,8 @@ v275에서는 Vue 관리자 상세/관계 조회 wrapper가 `rowId` 입력을 ba
 ## v292 verified backup 이후 분리 DB 생성 경계
 
 사용자 PC에서 verified backup 생성이 완료되었습니다. v292는 원본 `rpg_game`을 건드리지 않고 `rpg_game_restore_rehearsal_v290` 빈 DB 하나만 생성합니다. target 존재 여부, SHA-256, source 22 tables / 748 rows를 다시 확인하며 restore와 Alembic 작업은 포함하지 않습니다.
+
+
+## v293 isolated restore rehearsal 경계
+
+사용자 PC에서 verified backup과 빈 target DB 생성이 완료되었습니다. v293은 exact backup을 `rpg_game_restore_rehearsal_v290`에만 `pg_restore --single-transaction`으로 복원합니다. 복원 후 table별 row count와 SQLAlchemy schema equivalence를 확인하며 source `rpg_game`은 작업 전후 read-only baseline이 동일해야 합니다. target drop과 Alembic revision/upgrade/downgrade/stamp는 계속 별도 승인 전 금지합니다.

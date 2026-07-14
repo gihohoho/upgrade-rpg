@@ -398,3 +398,15 @@
 - Added `docs/current/LOCAL_DEV_CORS.md`.
 - Did not change `.env`, DB, seed, auth, route paths, API response body, write logic, Write Guard, Preview/Apply request bodies, or game content.
 
+
+
+## v293.postgres-restore-rehearsal-execute-tool
+
+- Added `tools/restore_postgres_rehearsal_database.py`.
+- Pinned restore source to the exact verified v291 custom archive and SHA-256.
+- Required the v292 target DB to exist and remain empty before restore.
+- Added single-transaction/exit-on-error pg_restore boundary without create, clean, or drop.
+- Added target table/row/table-count/schema-equivalence verification and source before/after checks.
+- Added `tools/smoke/backend/smoke_postgres_restore_rehearsal.py` and core smoke registration.
+- Updated current/readiness/handoff documentation to v293.
+- Did not execute restore in the handoff build environment and did not include local backup artifacts in the ZIP.

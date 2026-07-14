@@ -99,3 +99,8 @@ v289 checker 재실행에서 차이 0개가 확인되면 다음 단계는 backup
 - 원본 `rpg_game`에는 restore하지 않습니다.
 - restore rehearsal DB와 empty migration test DB는 서로 분리합니다.
 - 실제 backup/restore/DB 생성·삭제/Alembic mutation은 사용자 승인 전 실행하지 않습니다.
+
+
+## v293 restore rehearsal 상태
+
+verified custom backup과 빈 rehearsal DB 생성이 완료되었습니다. 다음 실행은 exact backup을 isolated target에만 복원하고 row counts/schema equivalence를 검증하는 단계입니다. 이 결과가 정상이어야 별도 empty migration DB와 최초 revision 검증으로 넘어갑니다. 기존 `rpg_game` stamp는 아직 금지입니다.

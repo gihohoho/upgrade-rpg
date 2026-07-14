@@ -1,8 +1,8 @@
-# Project Structure — v292
+# Project Structure — v293
 
 현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
 
-v292에서는 legacy/Vue/backend 구조를 유지하면서 verified backup 이후 빈 restore rehearsal DB 생성 경계를 추가했습니다.
+v293에서는 legacy/Vue/backend 구조를 유지하면서 verified backup을 빈 restore rehearsal DB에만 복원하고 검증하는 경계를 추가했습니다.
 
 중요한 결론:
 
@@ -42,8 +42,8 @@ v292에서는 legacy/Vue/backend 구조를 유지하면서 verified backup 이�
 | `src/` | legacy JS/CSS | 이동 금지, Vue 앱 `src/`와 구분 |
 | `frontend/vue-app/` | 새 Vue shell + 읽기 전용 API client 준비 | 실제 기능 대체 전 단계 |
 | `backend/` | FastAPI 백엔드 | 기존 route/body/DB/env/seed 유지 |
-| `tools/` | smoke/contract/검증/backup 도구 | `create_postgres_backup.py`와 전용 smoke 추가 |
-| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v292 기준 갱신 |
+| `tools/` | smoke/contract/검증/backup/restore 도구 | v293 isolated restore 도구와 전용 smoke 추가 |
+| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v293 기준 갱신 |
 
 ## `frontend/vue-app/` 역할
 
@@ -371,3 +371,18 @@ docs/current/POSTGRES_RESTORE_REHEARSAL_DB_CREATION.md
 ```
 
 이 도구는 verified backup의 SHA-256과 source 22 tables / 748 rows 상태를 재확인하고, target `rpg_game_restore_rehearsal_v290`이 없을 때만 빈 DB를 생성합니다. `pg_restore`, `dropdb`, `.env`, Docker resource, Alembic 작업은 포함하지 않습니다.
+
+
+## v293 PostgreSQL restore rehearsal 도구
+
+```txt
+tools/restore_postgres_rehearsal_database.py
+tools/smoke/backend/smoke_postgres_restore_rehearsal.py
+docs/current/POSTGRES_RESTORE_REHEARSAL.md
+```
+
+- exact backup과 SHA-256/source snapshot을 다시 검증합니다.
+- 이미 생성된 빈 `rpg_game_restore_rehearsal_v290`에만 restore합니다.
+- `--single-transaction`으로 부분 restore commit을 방지합니다.
+- restore 후 22 tables / 748 rows / table별 counts / schema differences=0을 확인합니다.
+- source 변경, target create/drop/clean, Docker/.env/Alembic 작업은 하지 않습니다.

@@ -19,7 +19,7 @@ RUNTIME_DOC = ROOT / "docs/current/POSTGRES_RUNTIME_READONLY_STATE.md"
 BASELINE_DOC = ROOT / "docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md"
 
 REQUIRED_REPORT_TEXT = [
-    "PostgreSQL / Alembic Readiness — v292",
+    "PostgreSQL / Alembic Readiness — v293",
     "SQLAlchemy model table 수 | 22개",
     "Alembic asyncpg-compatible online env | 있음",
     "Alembic versions 폴더 | 있음",
@@ -30,6 +30,7 @@ REQUIRED_REPORT_TEXT = [
     "tools/check_postgres_backup_restore_preflight.py",
     "tools/create_postgres_backup.py",
     "tools/create_postgres_restore_rehearsal_database.py",
+    "tools/restore_postgres_rehearsal_database.py",
     "setup_dev_db.py --reset",
     "docker compose down -v",
     "DB schema",

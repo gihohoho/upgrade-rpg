@@ -149,3 +149,8 @@ TOC definitions/data: 22 / 22
 ```
 
 다음 단계는 `tools/create_postgres_restore_rehearsal_database.py --execute`로 빈 target DB만 생성하는 v292 경계입니다.
+
+
+## v292-v293 후속 진행
+
+빈 restore rehearsal DB 생성이 사용자 PC에서 완료되었습니다. v293은 이 문서의 exact dump/SHA/source snapshot을 다시 확인한 뒤 isolated target에만 restore합니다.

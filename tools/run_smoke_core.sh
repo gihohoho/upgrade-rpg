@@ -111,6 +111,7 @@ python tools/smoke/backend/smoke_postgres_schema_equivalence.py
 python tools/smoke/backend/smoke_postgres_backup_restore_preflight.py
 python tools/smoke/backend/smoke_postgres_backup_creation.py
 python tools/smoke/backend/smoke_postgres_restore_rehearsal_database_creation.py
+python tools/smoke/backend/smoke_postgres_restore_rehearsal.py
 python tools/smoke/game/smoke_next_chat_handoff.py
 python tools/smoke/contracts/smoke_backend_admin_preview_side_effect_contract.py
 python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contract.py
