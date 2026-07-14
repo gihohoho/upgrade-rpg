@@ -68,33 +68,33 @@ def main() -> None:
 
     assert_contains(
         "NEXT_CHAT_PROMPT.md",
-        "rpg_v302_postgres_restore_rehearsal_stamp_guard_ready.zip",
-        "v302.postgres-restore-rehearsal-stamp-head-guard-ready",
+        "rpg_v303_postgres_restore_rehearsal_stamp_postcheck_recovery.zip",
+        "v303.postgres-restore-rehearsal-stamp-postcheck-recovery",
         "backend/.venv",
         "stamp_postgres_restore_rehearsal_database.py --inspect",
         "v295_initial_schema",
         "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa",
         "rpg_game_restore_rehearsal_v290",
         "first/second upgrade signatures: identical",
-        "ready-for-separate-restore-rehearsal-stamp-execution-approval",
-        "row-content SHA-256",
+        "restore-rehearsal-stamp-current-state-verified",
+        "7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921",
     )
     assert_contains(
         "NEXT_CHAT_HANDOFF.md",
         "22 tables / 748 rows",
         "public tables 23",
         "migration current revision v295_initial_schema",
-        "v301 사용자 실제 결과",
-        "ready-for-separate-restore-rehearsal-stamp-approval",
+        "v302 stamp 사용자 명시 승인 및 실제 실행 완료 보고",
+        "SourceBaselinePreflightError: rehearsal table list differs from approved snapshot",
         "stamp_postgres_restore_rehearsal_database.py",
-        "fake subprocess",
+        "post-stamp",
     )
     assert_contains(
         "README.md",
-        "v302.postgres-restore-rehearsal-stamp-head-guard-ready",
+        "v303.postgres-restore-rehearsal-stamp-postcheck-recovery",
         "stamp_postgres_restore_rehearsal_database.py",
         "v295_initial_schema",
-        "row-content SHA-256",
+        "post-stamp",
     )
     assert_contains(
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md",
@@ -140,12 +140,12 @@ def main() -> None:
     )
     assert_contains(
         "docs/current/POSTGRES_RESTORE_REHEARSAL_STAMP_GUARD.md",
-        "v302",
+        "v303",
         "rpg_game_restore_rehearsal_v290",
         "v295_initial_schema",
-        "row-content SHA-256",
+        "approved pre-stamp application digests preserved",
         "alembic_version",
-        "별도 승인",
+        "stamp를 다시 실행하지 않습니다",
     )
     assert_contains(
         ".gitignore",

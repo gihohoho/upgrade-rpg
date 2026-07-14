@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v302.postgres-restore-rehearsal-stamp-head-guard-ready**
+현재 기준: **v303.postgres-restore-rehearsal-stamp-postcheck-recovery**
 
 ## 현재 구조
 
@@ -17,7 +17,7 @@
 
 ```txt
 source rpg_game: 22 tables / 748 rows / differences=0 / alembic_version 없음
-restore rehearsal: 22 tables / 748 rows / differences=0 / alembic_version 없음
+restore rehearsal: v302 stamp 사용자 승인/실행 완료 보고, v303 post-check 대기
 migration test DB: 23 public tables / revision v295_initial_schema / differences=0
 initial revision SHA-256: 24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa
 round-trip: upgrade -> downgrade base -> upgrade verified
@@ -25,9 +25,10 @@ first/second upgrade signatures: identical
 v301 source preflight: user-PC passed
 ```
 
-## v302 핵심
+## v303 핵심
 
-원본 DB보다 먼저 restore rehearsal DB에서 baseline stamp를 검증하기 위한 가드를 준비했습니다.
+v302 실제 rehearsal stamp 이후 기존 `--inspect`가 정상 추가된 `alembic_version`을
+사전 상태 위반으로 오판한 문제를 수정했습니다.
 
 ```txt
 tools/stamp_postgres_restore_rehearsal_database.py
@@ -35,16 +36,10 @@ tools/smoke/backend/smoke_postgres_restore_rehearsal_stamp_guard.py
 docs/current/POSTGRES_RESTORE_REHEARSAL_STAMP_GUARD.md
 ```
 
-가드는 정확히 다음만 대상으로 허용합니다.
-
-```txt
-target: rpg_game_restore_rehearsal_v290
-revision: v295_initial_schema
-command: alembic stamp head
-```
-
-`--inspect`는 읽기 전용이며, 22개 application table의 구조 SHA-256과 전체 748개 row-content SHA-256을 수집합니다.
-실제 stamp는 별도 승인 전 실행하지 않습니다.
+v303 `--inspect`는 읽기 전용으로 pre/post-stamp를 자동 구분합니다.
+post-stamp에서는 23 public tables / 749 rows 중 application 22 tables / 748 rows가
+stamp 전 승인 digest와 동일한지 검증하고, source/migration DB와 v302 로컬 실행 보고서도
+확인합니다. **v302 `--execute` 재실행은 금지합니다.**
 
 ## 다음 실행
 

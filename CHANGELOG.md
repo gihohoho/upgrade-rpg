@@ -1,3 +1,14 @@
+# v303 - Restore rehearsal stamp post-check recovery
+
+- Recorded the user-approved v302 rehearsal-only `stamp head` execution.
+- Identified the immediate v302 `--inspect` failure as a post-stamp inspector bug: it reused the pre-stamp 22-table validator and rejected the expected `alembic_version` table.
+- Updated `--inspect` to recognize both pre-stamp and post-stamp states without running any mutation or subprocess.
+- Pinned the actual user-confirmed pre-stamp application schema/data digests and require 22 application tables / 748 rows to remain identical after stamp.
+- Independently revalidate source `rpg_game`, the verified v300 migration endpoint, exact revision/SHA-256, and the local v302 execution report when present.
+- Added report-missing recovery classification without retrying stamp, rollback, upgrade, downgrade, DB create/drop/restore, or source mutation.
+- Expanded dedicated smoke coverage for pre-stamp, post-stamp with verified report, and post-stamp report-missing states.
+- Kept source stamp, API/write/auth/seed/game-content changes, `.env`, and Docker resources untouched.
+
 # v302 - Restore rehearsal baseline stamp guard ready
 
 - Recorded the user-PC v301 source preflight success.

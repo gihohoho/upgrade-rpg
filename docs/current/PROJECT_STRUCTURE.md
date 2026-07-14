@@ -1,8 +1,8 @@
-# Project Structure — v302
+# Project Structure — v303
 
 현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
 
-v302에서는 사용자 PC에서 통과한 v301 source preflight를 기준으로, restore rehearsal DB에만 적용 가능한 baseline stamp guard와 application schema/전체 row-content SHA-256 비교를 추가했습니다.
+v303에서는 사용자 승인으로 실행된 v302 restore rehearsal stamp 이후 상태를 읽기 전용으로 검증하도록 post-check를 보강했습니다. 정상 추가된 `alembic_version`을 pre-stamp 오류로 오판하던 문제를 수정하고, 실제 승인 digest를 고정했습니다.
 
 중요한 결론:
 
@@ -42,11 +42,11 @@ v302에서는 사용자 PC에서 통과한 v301 source preflight를 기준으로
 | `src/` | legacy JS/CSS | 이동 금지, Vue 앱 `src/`와 구분 |
 | `frontend/vue-app/` | 새 Vue shell + 읽기 전용 API client 준비 | 실제 기능 대체 전 단계 |
 | `backend/` | FastAPI 백엔드 | 기존 route/body/DB/env/seed 유지 |
-| `tools/` | smoke/contract/검증/backup/restore/migration 도구 | v302 restore rehearsal stamp guard와 schema/data digest smoke 보강 |
-| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v302 기준 갱신 |
+| `tools/` | smoke/contract/검증/backup/restore/migration 도구 | v303 restore rehearsal stamp guard와 schema/data digest smoke 보강 |
+| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v303 기준 갱신 |
 
 
-## v302 restore rehearsal stamp guard
+## v303 restore rehearsal stamp post-check
 
 추가 위치:
 
@@ -60,12 +60,12 @@ docs/current/POSTGRES_RESTORE_REHEARSAL_STAMP_GUARD.md
 
 - target DB: `rpg_game_restore_rehearsal_v290`
 - revision: `v295_initial_schema`
-- 허용 Alembic command: `stamp head`
-- `--inspect`: 읽기 전용
-- application 22 tables / 748 rows의 schema/data SHA-256을 stamp 전후 exact 비교
-- 성공 시 허용되는 유일한 추가: `alembic_version` 1 table / 1 row
-- source와 migration DB는 전체 signature가 동일해야 함
-- 실제 stamp 실행은 사용자 별도 승인 전 금지
+- `--inspect`: 읽기 전용 pre/post-stamp 자동 분류
+- post-stamp 기대 상태: 23 public tables / 749 rows / revision `v295_initial_schema`
+- application 22 tables / 748 rows의 schema/data digest를 실제 승인값과 exact 비교
+- source와 migration DB의 현재 상태 및 v302 실행 보고서 검증
+- 같은 rehearsal stamp 재실행 금지
+- 원본 source stamp는 별도 guard와 별도 승인 전 금지
 
 ## `frontend/vue-app/` 역할
 

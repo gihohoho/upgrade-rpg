@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
-"""Guard a future Alembic baseline stamp on the restored rehearsal DB only.
+"""Guard and verify the Alembic baseline stamp on the restored rehearsal DB.
 
-Approved mutation boundary for v302 (execution still requires separate user approval):
-- MAY run exactly `alembic stamp head` against
-  `rpg_game_restore_rehearsal_v290`.
-- MUST pin the exact reviewed revision file and SHA-256.
-- MUST prove all 22 application-table schema and row-content signatures are
-  identical before/after.
-- MUST allow only one new `alembic_version` table and one revision row.
-- MUST preserve source `rpg_game` and migration test DB unchanged.
-- MUST NOT upgrade, downgrade, create/drop/restore a DB, edit `.env`, touch
-  Docker volumes, seed data, auth, API routes/bodies, or application write paths.
+The user approved and ran the v302 rehearsal-only ``stamp head``. The original
+v302 ``--inspect`` path incorrectly reused a pre-stamp validator after the
+``alembic_version`` control table had been added. v303 fixes that post-check:
 
-`--inspect` is fully read-only. `--execute` is intentionally protected by exact
-confirmation flags and must not be used until the user separately approves the
-rehearsal stamp execution.
+- ``--inspect`` is fully read-only and recognizes both pre-stamp and post-stamp.
+- Post-stamp success requires exactly 22 application tables / 748 application
+  rows plus ``alembic_version`` 1 table / 1 row at ``v295_initial_schema``.
+- The application schema/data digests are pinned to the actual user-confirmed
+  v302 pre-stamp values and must remain identical.
+- Source ``rpg_game`` and the isolated migration test DB are independently
+  revalidated and, when present, matched to the local v302 execution report.
+- No automatic retry, rollback, upgrade, downgrade, DB create/drop/restore,
+  source stamp, or application row write is performed by inspection.
+
+The historical ``--execute`` route remains protected by exact target/revision
+confirmation and refuses an already-stamped or already-reported workspace.
 """
 from __future__ import annotations
 
@@ -46,10 +48,15 @@ from check_postgres_runtime_readonly_state import (
     load_backend_objects,
     to_sync_url,
 )
-from check_postgres_schema_equivalence import reflected_signature
+from check_postgres_schema_equivalence import (
+    collect as collect_schema_equivalence,
+    reflected_signature,
+)
 from check_postgres_source_baseline_stamp_preflight import (
     READY_RESULT as SOURCE_PREFLIGHT_READY_RESULT,
     inspect_readiness as inspect_source_preflight,
+    load_verified_roundtrip_evidence,
+    validate_source_schema_equivalence,
 )
 from create_postgres_migration_test_database import (
     MigrationTestDatabaseError,
@@ -60,6 +67,7 @@ from create_postgres_migration_test_database import (
 )
 from create_postgres_restore_rehearsal_database import SOURCE_DATABASE_USER
 from restore_postgres_rehearsal_database import inspect_named_database
+from reupgrade_postgres_migration_test_database import migration_signature
 from upgrade_postgres_migration_test_database import (
     REVISION_ID,
     REVISION_SHA256,
@@ -68,9 +76,19 @@ from upgrade_postgres_migration_test_database import (
     validate_migration_after,
 )
 
-TOOL_VERSION = "v302.postgres-restore-rehearsal-stamp-head-guard-ready"
+TOOL_VERSION = "v303.postgres-restore-rehearsal-stamp-postcheck-recovery"
 READY_RESULT = "ready-for-separate-restore-rehearsal-stamp-execution-approval"
 SUCCESS_RESULT = "restore-rehearsal-stamped-and-verified"
+POST_STAMP_VERIFIED_RESULT = "restore-rehearsal-stamp-current-state-verified"
+POST_STAMP_REPORT_MISSING_RESULT = (
+    "restore-rehearsal-stamp-current-state-verified-report-missing"
+)
+APPROVED_PRE_STAMP_SCHEMA_DIGEST = (
+    "7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921"
+)
+APPROVED_PRE_STAMP_DATA_DIGEST = (
+    "ecb19e57283dc6b780426339bfc46f2bac14da63a618249808f30132508f9244"
+)
 STAMP_REPORT_RELATIVE_PATH = Path(
     "local-review-artifacts/alembic/v295_initial_schema.restore-rehearsal-stamp-v302.json"
 )
@@ -362,37 +380,77 @@ def validate_preflight_payload(payload: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
-def inspect_readiness(
+def load_existing_stamp_report(root: Path) -> dict[str, Any] | None:
+    path = ensure_under(root, root / STAMP_REPORT_RELATIVE_PATH)
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RestoreRehearsalStampError(
+            f"existing v302 stamp report cannot be read: {path}: {exc}"
+        ) from exc
+    return payload
+
+
+def validate_existing_stamp_report(payload: dict[str, Any]) -> dict[str, Any]:
+    required = {
+        "result": SUCCESS_RESULT,
+        "targetDatabase": RESTORE_REHEARSAL_DATABASE,
+        "revisionId": REVISION_ID,
+        "revisionSha256": REVISION_SHA256,
+        "stampExecuted": True,
+        "upgradeExecuted": False,
+        "downgradeExecuted": False,
+        "databaseCreateDropRestoreExecuted": False,
+        "environmentFileChanged": False,
+        "sourceDatabaseMutationExecuted": False,
+        "migrationDatabaseMutationExecuted": False,
+    }
+    for key, expected in required.items():
+        if payload.get(key) != expected:
+            raise RestoreRehearsalStampError(
+                f"v302 stamp report mismatch: {key}={payload.get(key)!r}, expected={expected!r}"
+            )
+    if payload.get("sourceBefore") != payload.get("sourceAfter"):
+        raise RestoreRehearsalStampError("v302 report source before/after differs")
+    if payload.get("migrationBefore") != payload.get("migrationAfter"):
+        raise RestoreRehearsalStampError("v302 report migration before/after differs")
+    if payload.get("sourceIntegrityBefore") != payload.get("sourceIntegrityAfter"):
+        raise RestoreRehearsalStampError("v302 report source integrity before/after differs")
+    if payload.get("migrationIntegrityBefore") != payload.get("migrationIntegrityAfter"):
+        raise RestoreRehearsalStampError("v302 report migration integrity before/after differs")
+    if payload.get("rehearsalModelIntegrityBefore") != payload.get(
+        "rehearsalModelIntegrityAfter"
+    ):
+        raise RestoreRehearsalStampError(
+            "v302 report rehearsal application integrity before/after differs"
+        )
+    return payload
+
+
+def validate_current_source_and_migration(
     root: Path,
     *,
-    preflight_payload: dict[str, Any] | None = None,
-    evidence: dict[str, Any] | None = None,
-    source_raw: dict[str, Any] | None = None,
-    rehearsal_raw: dict[str, Any] | None = None,
-    migration_raw: dict[str, Any] | None = None,
-    source_integrity: dict[str, Any] | None = None,
-    rehearsal_integrity: dict[str, Any] | None = None,
-    migration_integrity: dict[str, Any] | None = None,
-) -> dict[str, Any]:
-    root = root.resolve()
-    revision_path, manual_review, automated_review = reviewed_revision(root)
-    preflight = validate_preflight_payload(
-        preflight_payload if preflight_payload is not None else inspect_source_preflight(root)
-    )
+    verified: dict[str, Any],
+    source_raw: dict[str, Any] | None,
+    migration_raw: dict[str, Any] | None,
+    schema_raw: dict[str, Any] | None,
+    roundtrip_evidence: dict[str, Any] | None,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     try:
-        verified = evidence if evidence is not None else load_verified_restore_evidence(root)
         source = validate_source_state(
-            source_raw if source_raw is not None else inspect_database(root, include_counts=True),
-            verified,
-        )
-        rehearsal = validate_rehearsal_state(
-            rehearsal_raw
-            if rehearsal_raw is not None
-            else inspect_named_database(root, RESTORE_REHEARSAL_DATABASE),
+            source_raw
+            if source_raw is not None
+            else inspect_database(root, include_counts=True),
             verified,
         )
     except MigrationTestDatabaseError as exc:
         raise RestoreRehearsalStampError(str(exc)) from exc
+    schema = validate_source_schema_equivalence(
+        schema_raw if schema_raw is not None else collect_schema_equivalence(root)
+    )
+    roundtrip = roundtrip_evidence or load_verified_roundtrip_evidence(root)
     try:
         migration = validate_migration_after(
             migration_raw
@@ -402,47 +460,171 @@ def inspect_readiness(
         )
     except MigrationUpgradeError as exc:
         raise RestoreRehearsalStampError(str(exc)) from exc
+    if migration_signature(migration) != migration_signature(
+        roundtrip.get("migrationAfter") or {}
+    ):
+        raise RestoreRehearsalStampError(
+            "current migration DB does not match the verified v300 round-trip endpoint"
+        )
+    return source, schema, migration
 
-    source_sig = (
-        source_integrity
-        if source_integrity is not None
-        else collect_database_integrity_signature(root, SOURCE_DATABASE)
+
+def inspect_readiness(
+    root: Path,
+    *,
+    evidence: dict[str, Any] | None = None,
+    source_raw: dict[str, Any] | None = None,
+    rehearsal_raw: dict[str, Any] | None = None,
+    migration_raw: dict[str, Any] | None = None,
+    schema_raw: dict[str, Any] | None = None,
+    source_integrity: dict[str, Any] | None = None,
+    rehearsal_integrity: dict[str, Any] | None = None,
+    migration_integrity: dict[str, Any] | None = None,
+    roundtrip_evidence: dict[str, Any] | None = None,
+    stamp_report: dict[str, Any] | None | object = ...,
+    approved_schema_digest: str = APPROVED_PRE_STAMP_SCHEMA_DIGEST,
+    approved_data_digest: str = APPROVED_PRE_STAMP_DATA_DIGEST,
+) -> dict[str, Any]:
+    """Inspect either the approved pre-stamp state or the verified post-stamp state.
+
+    The v301 preflight itself is intentionally pre-stamp-only because it requires
+    the rehearsal copy to have no ``alembic_version`` table. After the approved
+    rehearsal stamp, this v303 inspector independently revalidates source,
+    migration, revision, backup evidence, and the pinned application digests.
+    """
+    root = root.resolve()
+    revision_path, manual_review, automated_review = reviewed_revision(root)
+    try:
+        verified = evidence if evidence is not None else load_verified_restore_evidence(root)
+    except MigrationTestDatabaseError as exc:
+        raise RestoreRehearsalStampError(str(exc)) from exc
+
+    source, source_schema, migration = validate_current_source_and_migration(
+        root,
+        verified=verified,
+        source_raw=source_raw,
+        migration_raw=migration_raw,
+        schema_raw=schema_raw,
+        roundtrip_evidence=roundtrip_evidence,
     )
-    rehearsal_sig = (
-        rehearsal_integrity
-        if rehearsal_integrity is not None
-        else collect_database_integrity_signature(root, RESTORE_REHEARSAL_DATABASE)
+
+    raw_rehearsal = (
+        rehearsal_raw
+        if rehearsal_raw is not None
+        else inspect_named_database(root, RESTORE_REHEARSAL_DATABASE)
     )
-    migration_sig = (
-        migration_integrity
-        if migration_integrity is not None
-        else collect_database_integrity_signature(root, MIGRATION_TEST_DATABASE)
+    if raw_rehearsal.get("alembicVersionTableExists") is False:
+        try:
+            rehearsal = validate_rehearsal_state(raw_rehearsal, verified)
+        except MigrationTestDatabaseError as exc:
+            raise RestoreRehearsalStampError(str(exc)) from exc
+        lifecycle_state = "pre-stamp"
+        result_value = READY_RESULT
+    elif raw_rehearsal.get("alembicVersionTableExists") is True:
+        rehearsal = validate_rehearsal_after(raw_rehearsal, verified)
+        lifecycle_state = "post-stamp"
+        result_value = POST_STAMP_VERIFIED_RESULT
+    else:
+        raise RestoreRehearsalStampError("rehearsal Alembic lifecycle state is ambiguous")
+
+    source_sig = source_integrity or collect_database_integrity_signature(
+        root, SOURCE_DATABASE
+    )
+    rehearsal_sig = rehearsal_integrity or collect_database_integrity_signature(
+        root, RESTORE_REHEARSAL_DATABASE
+    )
+    migration_sig = migration_integrity or collect_database_integrity_signature(
+        root, MIGRATION_TEST_DATABASE
+    )
+    source_model_sig = model_table_integrity_signature(
+        source_sig, verified["expectedTables"]
     )
     rehearsal_model_sig = model_table_integrity_signature(
         rehearsal_sig, verified["expectedTables"]
     )
     if rehearsal_model_sig["tableCount"] != 22 or rehearsal_model_sig["rowCount"] != 748:
         raise RestoreRehearsalStampError("rehearsal integrity baseline is not 22 tables / 748 rows")
+    if source_model_sig["tableCount"] != 22 or source_model_sig["rowCount"] != 748:
+        raise RestoreRehearsalStampError("source integrity baseline is not 22 tables / 748 rows")
+    for label, signature in (
+        ("source", source_model_sig),
+        ("rehearsal", rehearsal_model_sig),
+    ):
+        if signature["schemaDigest"] != approved_schema_digest:
+            raise RestoreRehearsalStampError(
+                f"{label} application schema digest differs from approved v302 pre-stamp digest"
+            )
+        if signature["dataDigest"] != approved_data_digest:
+            raise RestoreRehearsalStampError(
+                f"{label} application data digest differs from approved v302 pre-stamp digest"
+            )
+    if source_model_sig != rehearsal_model_sig:
+        raise RestoreRehearsalStampError(
+            "source and rehearsal application integrity signatures differ"
+        )
+
+    if stamp_report is ...:
+        existing_report = load_existing_stamp_report(root)
+    else:
+        existing_report = stamp_report
+    report_status = "not-applicable"
+    if lifecycle_state == "pre-stamp":
+        if existing_report is not None:
+            raise RestoreRehearsalStampError(
+                "v302 stamp report exists while rehearsal DB is still pre-stamp"
+            )
+    else:
+        if existing_report is None:
+            report_status = "missing"
+            result_value = POST_STAMP_REPORT_MISSING_RESULT
+        else:
+            report = validate_existing_stamp_report(existing_report)
+            if report.get("sourceIntegrityAfter") != source_sig:
+                raise RestoreRehearsalStampError(
+                    "current source integrity differs from the verified v302 execution report"
+                )
+            if report.get("migrationIntegrityAfter") != migration_sig:
+                raise RestoreRehearsalStampError(
+                    "current migration integrity differs from the verified v302 execution report"
+                )
+            if report.get("rehearsalModelIntegrityAfter") != rehearsal_model_sig:
+                raise RestoreRehearsalStampError(
+                    "current rehearsal application integrity differs from the v302 execution report"
+                )
+            if report.get("rehearsalAfter") != rehearsal:
+                raise RestoreRehearsalStampError(
+                    "current rehearsal state differs from the verified v302 execution report"
+                )
+            report_status = "verified"
 
     return {
         "toolVersion": TOOL_VERSION,
-        "result": READY_RESULT,
+        "result": result_value,
         "readOnly": True,
         "mutationExecuted": False,
+        "lifecycleState": lifecycle_state,
         "targetDatabase": RESTORE_REHEARSAL_DATABASE,
         "revisionId": REVISION_ID,
         "revisionRelativePath": revision_path.relative_to(root).as_posix(),
         "revisionSha256": REVISION_SHA256,
         "manualReview": manual_review["manualConclusion"],
         "automatedReview": automated_review["result"],
-        "sourcePreflight": preflight["result"],
+        "sourceBaseline": "source-and-v300-roundtrip-current-state-verified",
+        "sourceSchema": source_schema,
         "source": source,
         "rehearsal": rehearsal,
         "migration": migration,
         "sourceIntegrity": source_sig,
+        "sourceModelIntegrity": source_model_sig,
         "rehearsalIntegrity": rehearsal_sig,
         "rehearsalModelIntegrity": rehearsal_model_sig,
         "migrationIntegrity": migration_sig,
+        "approvedPreStampDigests": {
+            "schemaDigest": approved_schema_digest,
+            "dataDigest": approved_data_digest,
+        },
+        "stampReportStatus": report_status,
+        "stampReportRelativePath": STAMP_REPORT_RELATIVE_PATH.as_posix(),
         "plannedAlembicCommand": build_stamp_command()[1:],
         "allowedPostcondition": {
             "applicationTables": 22,
@@ -452,7 +634,11 @@ def inspect_readiness(
             "recordedRevision": REVISION_ID,
         },
         "executionApproved": False,
-        "nextApprovalBoundary": "explicit-v302-restore-rehearsal-stamp-execute-approval",
+        "nextApprovalBoundary": (
+            "explicit-v302-restore-rehearsal-stamp-execute-approval"
+            if lifecycle_state == "pre-stamp"
+            else "review-v303-post-stamp-evidence-before-source-stamp-planning"
+        ),
     }
 
 
@@ -629,25 +815,49 @@ def execute_stamp(
 
 def render_inspection(result: dict[str, Any]) -> str:
     model_sig = result["rehearsalModelIntegrity"]
+    if result["lifecycleState"] == "pre-stamp":
+        return "\n".join(
+            [
+                "PostgreSQL restore rehearsal baseline stamp guard (read-only inspection)",
+                "No stamp, upgrade, downgrade, DB create/drop/restore, or row write was executed.",
+                "",
+                f"- lifecycle state: {result['lifecycleState']}",
+                f"- exact target DB: {result['targetDatabase']}",
+                f"- exact revision: {result['revisionId']}",
+                f"- revision SHA-256: {result['revisionSha256']}",
+                f"- source baseline: {result['sourceBaseline']}",
+                f"- rehearsal application tables/rows: {model_sig['tableCount']}/{model_sig['rowCount']}",
+                f"- rehearsal schema digest: {model_sig['schemaDigest']}",
+                f"- rehearsal data digest: {model_sig['dataDigest']}",
+                "- allowed mutation: alembic_version table 1 + revision row 1 only",
+                f"- planned command: {' '.join(result['plannedAlembicCommand'])}",
+                f"- result: {result['result']}",
+                "- actual stamp still requires separate user approval and exact confirmation flags.",
+            ]
+        )
+    rehearsal = result["rehearsal"]
     return "\n".join(
         [
-            "PostgreSQL restore rehearsal baseline stamp guard (read-only inspection)",
-            "No stamp, upgrade, downgrade, DB create/drop/restore, or row write was executed.",
+            "PostgreSQL restore rehearsal baseline stamp post-check (read-only)",
+            "No stamp, retry, rollback, upgrade, downgrade, DB create/drop/restore, or row write was executed.",
             "",
+            f"- lifecycle state: {result['lifecycleState']}",
             f"- exact target DB: {result['targetDatabase']}",
             f"- exact revision: {result['revisionId']}",
             f"- revision SHA-256: {result['revisionSha256']}",
-            f"- source preflight: {result['sourcePreflight']}",
-            f"- rehearsal application tables/rows: {model_sig['tableCount']}/{model_sig['rowCount']}",
-            f"- rehearsal schema digest: {model_sig['schemaDigest']}",
-            f"- rehearsal data digest: {model_sig['dataDigest']}",
-            "- allowed mutation: alembic_version table 1 + revision row 1 only",
-            f"- planned command: {' '.join(result['plannedAlembicCommand'])}",
+            f"- public tables/rows: {rehearsal.get('publicTableCount')}/{rehearsal.get('totalRows')}",
+            f"- current revision: {rehearsal.get('alembicCurrentRevisions')}",
+            f"- application tables/rows: {model_sig['tableCount']}/{model_sig['rowCount']}",
+            f"- application schema digest: {model_sig['schemaDigest']}",
+            f"- application data digest: {model_sig['dataDigest']}",
+            "- approved pre-stamp application digests preserved: yes",
+            "- source DB current state preserved: yes",
+            "- migration test DB current state preserved: yes",
+            f"- v302 execution report: {result['stampReportStatus']}",
             f"- result: {result['result']}",
-            "- actual stamp still requires separate user approval and exact confirmation flags.",
+            "- source rpg_game remains unstamped and unapproved.",
         ]
     )
-
 
 def render_success(result: dict[str, Any]) -> str:
     after = result["rehearsalAfter"]
@@ -675,7 +885,7 @@ def render_success(result: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("--inspect", action="store_true", help="Read-only stamp readiness inspection")
+    group.add_argument("--inspect", action="store_true", help="Read-only pre/post-stamp verification")
     group.add_argument("--execute", action="store_true", help="Stamp only the restored rehearsal DB")
     parser.add_argument("--confirm-target", default="")
     parser.add_argument("--confirm-revision", default="")

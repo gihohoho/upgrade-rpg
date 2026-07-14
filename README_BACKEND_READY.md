@@ -1,8 +1,8 @@
-# Backend Ready — v302
+# Backend Ready — v303
 
 현재 안정 readiness: `v250.backend-admin-rollback-snapshot`  
 Backend splitStatus: `admin-schema-field-constraint-contract-v238`  
-현재 프로젝트 작업 버전: `v302.postgres-restore-rehearsal-stamp-head-guard-ready`
+현재 프로젝트 작업 버전: `v303.postgres-restore-rehearsal-stamp-postcheck-recovery`
 
 ## 핵심 보장
 
@@ -20,9 +20,10 @@ Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - isolated migration DB upgrade → downgrade base → upgrade 왕복 성공
 - 첫/두 번째 upgrade signatures identical
 - v301 source baseline stamp preflight 사용자 실제 통과
-- v302 restore rehearsal stamp guard 준비 완료
-- v302 `--inspect`는 읽기 전용이며 구조/전체 row-content SHA-256을 수집
-- 다음 mutation은 restore rehearsal stamp 별도 승인 경계
+- v302 rehearsal pre-stamp inspect 실제 통과
+- v302 rehearsal stamp 사용자 승인 및 실행 완료 보고
+- v302 post-stamp inspect의 pre-state-only 판정 버그를 v303에서 수정
+- v303 `--inspect`는 읽기 전용 pre/post-state 검증과 승인 digest 비교 수행
 - 원본 DB upgrade/downgrade/stamp와 DB 삭제는 아직 승인하지 않음
 
 ## 검증

@@ -1,6 +1,6 @@
 기호의 Upgrade RPG 프로젝트를 이어서 진행합니다.
 
-이번에 첨부하는 최신 ZIP `rpg_v302_postgres_restore_rehearsal_stamp_guard_ready.zip`을 반드시 기준으로 작업해주세요.
+이번에 첨부하는 최신 ZIP `rpg_v303_postgres_restore_rehearsal_stamp_postcheck_recovery.zip`을 반드시 기준으로 작업해주세요.
 
 ========================
 사용자/응답 방식
@@ -34,7 +34,7 @@ git status && git add . && git commit -m "..." && git push
 현재 최신 기준
 ========================
 
-- 최신 작업: `v302.postgres-restore-rehearsal-stamp-head-guard-ready`
+- 최신 작업: `v303.postgres-restore-rehearsal-stamp-postcheck-recovery`
 - readiness version: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -70,6 +70,7 @@ schema: structurally-equivalent / differences=0
 alembic_version: 없음
 current revision: 없음
 classification: existing-schema-without-alembic-baseline
+source stamp: 미승인
 ```
 
 검증된 backup:
@@ -84,10 +85,9 @@ TOC definitions/data: 22 / 22
 
 ```txt
 DB: rpg_game_restore_rehearsal_v290
-tables: 22
-rows: 748
-schema: structurally-equivalent / differences=0
-alembic_version: 없음
+v302 pre-stamp inspect: 통과
+v302 stamp: 사용자 명시 승인 및 실제 실행 완료 보고
+v303 post-stamp read-only 검증: 결과 수집 대기
 ```
 
 migration 테스트 DB:
@@ -120,54 +120,59 @@ v299: downgrade base 성공
 v300: 두 번째 upgrade head 성공
 sequence: upgrade -> downgrade base -> upgrade
 first/second upgrade signatures: identical
-source/rehearsal preserved: 22 tables / 748 rows
-v301 source baseline stamp preflight: 실제 통과
-v301 result: ready-for-separate-restore-rehearsal-stamp-approval
+v301 source baseline stamp preflight: 통과
+v302 restore rehearsal pre-stamp inspect: 통과
+v302 restore rehearsal stamp: 사용자 승인 후 실행 완료 보고
 ```
 
-필수 로컬 증거는 아래에 있으며 Git/전달 ZIP/채팅에 포함하지 않습니다.
+v302 stamp 전 실제 승인 digest:
+
+```txt
+application tables/rows: 22/748
+schema digest: 7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921
+data digest: ecb19e57283dc6b780426339bfc46f2bac14da63a618249808f30132508f9244
+```
+
+필수 로컬 증거는 Git/전달 ZIP/채팅에 포함하지 않습니다.
 
 ```txt
 local-backups/
 local-review-artifacts/alembic/v295_initial_schema.upgrade-v298.json
 local-review-artifacts/alembic/v295_initial_schema.downgrade-v299.json
 local-review-artifacts/alembic/v295_initial_schema.roundtrip-upgrade-v300.json
+local-review-artifacts/alembic/v295_initial_schema.restore-rehearsal-stamp-v302.json
 ```
 
 ========================
-v302 준비 완료 범위
+v302 오류와 v303 수정
 ========================
 
-추가 파일:
+v302 실제 stamp 후 기존 `--inspect`가 아래 오류를 냈습니다.
 
 ```txt
-tools/stamp_postgres_restore_rehearsal_database.py
-tools/smoke/backend/smoke_postgres_restore_rehearsal_stamp_guard.py
-docs/current/POSTGRES_RESTORE_REHEARSAL_STAMP_GUARD.md
+SourceBaselinePreflightError: rehearsal table list differs from approved snapshot
 ```
 
-고정 경계:
+원인은 stamp 실패나 DB 손상이 아닙니다. v302 inspect가 정상 추가된 `alembic_version`을 허용하지 않고
+22-table 사전 상태 검사만 재사용한 버그입니다. stamp 명령을 재실행하면 안 됩니다.
 
-```txt
-exact target: rpg_game_restore_rehearsal_v290
-exact revision: v295_initial_schema
-exact revision SHA-256: 24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa
-allowed Alembic operation: stamp head only
-```
+v303은 다음을 수정했습니다.
 
-v302 guard는 table count뿐 아니라 22개 application table의 구조 SHA-256과 전체 748개 row-content SHA-256을 수집하고 stamp 전후 exact 비교하도록 준비됐습니다.
-성공 시 허용되는 유일한 차이는 `alembic_version` 1 table과 revision row 1개입니다.
-source와 migration DB의 전체 signatures도 전후 같아야 합니다.
-
-이번 ZIP 준비 과정에서는 실제 PostgreSQL stamp를 실행하지 않았습니다.
-전용 smoke의 stamp는 fake subprocess로만 검증했습니다.
+- pre-stamp/post-stamp 자동 구분
+- post-stamp exact 23 public tables / 749 rows 검증
+- application 22 tables / 748 rows 분리 검증
+- 위 실제 승인 schema/data digest exact 비교
+- source DB 22/748/no Alembic 독립 확인
+- migration DB verified v300 endpoint 확인
+- v302 local execution report가 있으면 before/after/current signature 비교
+- 보고서가 없으면 current-state-verified-report-missing으로 안전 분류
+- inspect에서는 stamp/rollback/upgrade/downgrade/DB write/subprocess 미실행
 
 ========================
-다음 첫 작업 — 읽기 전용 v302 inspect
+다음 첫 작업 — 읽기 전용 v303 post-check
 ========================
 
 먼저 사용자 PC에서 아래 명령의 실제 결과를 수집하세요.
-이 명령은 모든 DB를 읽기만 하며 stamp/upgrade/downgrade를 실행하지 않습니다.
 
 실행 위치: `backend` 폴더
 `.venv` 상태: 꺼져 있을 때 Git Bash
@@ -186,33 +191,47 @@ python tools/stamp_postgres_restore_rehearsal_database.py --inspect
 정상 기대 핵심:
 
 ```txt
+lifecycle state: post-stamp
 exact target DB: rpg_game_restore_rehearsal_v290
 exact revision: v295_initial_schema
 revision SHA-256: 24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa
-source preflight: ready-for-separate-restore-rehearsal-stamp-approval
-rehearsal application tables/rows: 22/748
-rehearsal schema digest: <SHA-256>
-rehearsal data digest: <SHA-256>
-result: ready-for-separate-restore-rehearsal-stamp-execution-approval
+public tables/rows: 23/749
+current revision: ['v295_initial_schema']
+application tables/rows: 22/748
+application schema digest: 7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921
+application data digest: ecb19e57283dc6b780426339bfc46f2bac14da63a618249808f30132508f9244
+approved pre-stamp application digests preserved: yes
+source DB current state preserved: yes
+migration test DB current state preserved: yes
 ```
 
-inspect가 통과해도 실제 rehearsal stamp를 바로 실행하지 마세요.
-전체 출력 확인 후 사용자에게 mutation 범위를 다시 설명하고 별도 명시 승인을 받아야 합니다.
+보고서 정상:
+
+```txt
+v302 execution report: verified
+result: restore-rehearsal-stamp-current-state-verified
+```
+
+보고서 누락:
+
+```txt
+v302 execution report: missing
+result: restore-rehearsal-stamp-current-state-verified-report-missing
+```
+
+둘 다 같은 stamp를 재실행하지 마세요.
 
 ========================
 다음 단계 안전 순서
 ========================
 
-1. v302 `--inspect` 실제 결과 확인
-2. exact target/revision/SHA와 digests 확인
-3. 사용자에게 실제 mutation이 `alembic_version` 1 table/1 row 추가뿐임을 설명
-4. 사용자 별도 명시 승인
-5. 승인 후 restore rehearsal DB에서만 exact `stamp head`
-6. application schema/data digest 동일 확인
-7. current revision `v295_initial_schema` 확인
-8. source/migration DB signatures 동일 확인
-9. rehearsal stamp 결과 통과 뒤 원본 source stamp guard 설계
-10. 원본 source stamp는 다시 별도 승인
+1. v303 post-stamp inspect 실제 결과 확인
+2. 23/749, revision, application digests 보존 확인
+3. v302 report verified/missing 확인
+4. verified이면 rehearsal stamp 완료 상태 문서화
+5. missing이면 DB 변경 없이 local evidence recovery만 준비
+6. 이후 원본 source stamp용 별도 read-only guard 설계
+7. 원본 source stamp 실제 실행은 사용자 별도 명시 승인
 
 ========================
 절대 변경/실행 금지
@@ -220,10 +239,10 @@ inspect가 통과해도 실제 rehearsal stamp를 바로 실행하지 마세요.
 
 사용자 명시 승인 전에는 다음을 변경하거나 실행하지 마세요.
 
-- `python tools/stamp_postgres_restore_rehearsal_database.py --execute ...`
+- v302 restore rehearsal `--execute` 재실행
 - 원본 `rpg_game`의 schema/data/Alembic 이력
 - 원본 DB `upgrade`, `downgrade`, `stamp`
-- migration test DB의 추가 upgrade/downgrade/stamp
+- migration test DB 추가 upgrade/downgrade/stamp
 - Docker container/volume 삭제
 - `.env`
 - seed
@@ -233,6 +252,7 @@ inspect가 통과해도 실제 rehearsal stamp를 바로 실행하지 마세요.
 - Preview/Apply request body
 - 새 Alembic revision 생성
 - DB 생성/삭제/복원
+- 게임 콘텐츠/밸런스 변경
 
 ```txt
 python scripts/setup_dev_db.py --reset

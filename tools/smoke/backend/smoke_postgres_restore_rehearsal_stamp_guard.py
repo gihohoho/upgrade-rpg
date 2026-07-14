@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke checks for the v302 restored-copy Alembic stamp guard."""
+"""Smoke checks for the v303 restored-copy stamp post-check recovery guard."""
 from __future__ import annotations
 
 import importlib.util
@@ -155,6 +155,17 @@ def preflight(module: Any) -> dict[str, Any]:
     }
 
 
+def schema_state() -> dict[str, Any]:
+    return {
+        "connected": True,
+        "classification": "structurally-equivalent",
+        "modelTableCount": 22,
+        "databaseTableCount": 22,
+        "differenceCount": 0,
+        "typeNormalization": "postgresql",
+    }
+
+
 def main() -> None:
     module = load_tool()
     source = source_state()
@@ -176,27 +187,34 @@ def main() -> None:
         "rpg_game_migration_empty_v290", migration_counts
     )
 
+    approved_model = module.model_table_integrity_signature(
+        rehearsal_before_integrity, evidence()["expectedTables"]
+    )
     inspected = module.inspect_readiness(
         ROOT,
-        preflight_payload=preflight(module),
         evidence=evidence(),
         source_raw=source,
         rehearsal_raw=rehearsal_before,
         migration_raw=migration,
+        schema_raw=schema_state(),
         source_integrity=source_integrity,
         rehearsal_integrity=rehearsal_before_integrity,
         migration_integrity=migration_integrity,
+        roundtrip_evidence={"migrationAfter": migration},
+        stamp_report=None,
+        approved_schema_digest=approved_model["schemaDigest"],
+        approved_data_digest=approved_model["dataDigest"],
     )
     if inspected["result"] != module.READY_RESULT:
-        raise AssertionError("v302 readiness classification mismatch")
+        raise AssertionError("v303 pre-stamp readiness classification mismatch")
     if inspected["readOnly"] is not True or inspected["mutationExecuted"] is not False:
-        raise AssertionError("v302 inspection must remain read-only")
+        raise AssertionError("v303 inspection must remain read-only")
     if inspected["targetDatabase"] != "rpg_game_restore_rehearsal_v290":
-        raise AssertionError("v302 exact target boundary mismatch")
+        raise AssertionError("v303 exact target boundary mismatch")
     if inspected["executionApproved"] is not False:
-        raise AssertionError("v302 inspection must not approve execution")
+        raise AssertionError("v303 inspection must not approve execution")
     if inspected["rehearsalModelIntegrity"]["rowCount"] != 748:
-        raise AssertionError("v302 pre-stamp row integrity mismatch")
+        raise AssertionError("v303 pre-stamp row integrity mismatch")
 
     calls: list[dict[str, Any]] = []
 
@@ -265,6 +283,48 @@ def main() -> None:
     if not captured:
         raise AssertionError("v302 verified execution did not prepare its local report")
 
+    post_inspected = module.inspect_readiness(
+        ROOT,
+        evidence=evidence(),
+        source_raw=source,
+        rehearsal_raw=rehearsal_after,
+        migration_raw=migration,
+        schema_raw=schema_state(),
+        source_integrity=source_integrity,
+        rehearsal_integrity=rehearsal_after_integrity,
+        migration_integrity=migration_integrity,
+        roundtrip_evidence={"migrationAfter": migration},
+        stamp_report=executed,
+        approved_schema_digest=approved_model["schemaDigest"],
+        approved_data_digest=approved_model["dataDigest"],
+    )
+    if post_inspected["result"] != module.POST_STAMP_VERIFIED_RESULT:
+        raise AssertionError("v303 post-stamp result classification mismatch")
+    if post_inspected["lifecycleState"] != "post-stamp":
+        raise AssertionError("v303 did not classify the stamped rehearsal DB")
+    if post_inspected["stampReportStatus"] != "verified":
+        raise AssertionError("v303 did not verify the existing v302 report")
+    if post_inspected["rehearsalModelIntegrity"] != approved_model:
+        raise AssertionError("v303 post-stamp application digest changed")
+
+    post_without_report = module.inspect_readiness(
+        ROOT,
+        evidence=evidence(),
+        source_raw=source,
+        rehearsal_raw=rehearsal_after,
+        migration_raw=migration,
+        schema_raw=schema_state(),
+        source_integrity=source_integrity,
+        rehearsal_integrity=rehearsal_after_integrity,
+        migration_integrity=migration_integrity,
+        roundtrip_evidence={"migrationAfter": migration},
+        stamp_report=None,
+        approved_schema_digest=approved_model["schemaDigest"],
+        approved_data_digest=approved_model["dataDigest"],
+    )
+    if post_without_report["result"] != module.POST_STAMP_REPORT_MISSING_RESULT:
+        raise AssertionError("v303 missing-report recovery classification mismatch")
+
     bad_after_integrity = integrity(
         "rpg_game_restore_rehearsal_v290", rehearsal_after_counts
     )
@@ -308,6 +368,8 @@ def main() -> None:
         "--confirm-target",
         "--confirm-revision",
         "collect_database_integrity_signature",
+        "POST_STAMP_VERIFIED_RESULT",
+        "APPROVED_PRE_STAMP_SCHEMA_DIGEST",
         "alembic_version",
     ]
     for marker in required_markers:
@@ -325,7 +387,7 @@ def main() -> None:
         if marker in source_text:
             raise AssertionError(f"v302 stamp guard contains forbidden command marker: {marker}")
 
-    print("OK: PostgreSQL restore rehearsal stamp guard smoke passed")
+    print("OK: PostgreSQL restore rehearsal stamp post-check recovery smoke passed")
 
 
 if __name__ == "__main__":

@@ -1,3 +1,12 @@
+# v303 - Restore rehearsal stamp post-check recovery
+
+- Recorded the user-approved v302 rehearsal-only stamp execution.
+- Fixed the v302 post-stamp inspect bug that rejected the expected `alembic_version` table by reusing the pre-stamp validator.
+- Added read-only pre/post lifecycle classification and pinned application schema/data digest verification.
+- Added current source/migration validation and optional v302 local execution report matching.
+- Added a report-missing recovery classification without retry, rollback, upgrade, downgrade, DB create/drop/restore, or source mutation.
+- Expanded dedicated smoke and synchronized current/handoff documentation.
+
 # v302 - Restore rehearsal baseline stamp guard ready
 
 - Recorded the user-PC v301 source preflight success.
