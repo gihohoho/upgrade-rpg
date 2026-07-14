@@ -38,19 +38,22 @@ def main() -> None:
         "tools/create_postgres_backup.py",
         "tools/create_postgres_restore_rehearsal_database.py",
         "tools/restore_postgres_rehearsal_database.py",
+        "tools/create_postgres_migration_test_database.py",
         "docs/current/POSTGRES_BACKUP_CREATION.md",
         "docs/current/POSTGRES_RESTORE_REHEARSAL_DB_CREATION.md",
         "docs/current/POSTGRES_RESTORE_REHEARSAL.md",
+        "docs/current/POSTGRES_MIGRATION_TEST_DB_CREATION.md",
     ]
     for relative_path in required_files:
         read_required(relative_path)
 
     assert_contains(
         "NEXT_CHAT_PROMPT.md",
-        "rpg_v293_postgres_restore_rehearsal_ready.zip",
-        "v293.postgres-restore-rehearsal-execute-tool",
+        "rpg_v294_postgres_migration_test_database_creation_ready.zip",
+        "v294.postgres-migration-empty-database-create-tool",
         "backend/.venv",
-        "restore_postgres_rehearsal_database.py --execute",
+        "create_postgres_migration_test_database.py --execute",
+        "migration-test-database-created-empty-and-verified",
         "restore-rehearsal-completed-and-verified",
         "b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481",
     )
@@ -58,30 +61,31 @@ def main() -> None:
         "NEXT_CHAT_HANDOFF.md",
         "structurally-equivalent",
         "748",
-        "restore-rehearsal-database-created-empty-and-verified",
+        "restore-rehearsal-completed-and-verified",
         "rpg_game_restore_rehearsal_v290",
-        "target public tables: 22",
-        "--single-transaction",
+        "rpg_game_migration_empty_v290",
+        "target public tables: 0",
+        "template0",
     )
     assert_contains(
         "README.md",
-        "v293.postgres-restore-rehearsal-execute-tool",
-        "restore_postgres_rehearsal_database.py",
-        "--single-transaction",
+        "v294.postgres-migration-empty-database-create-tool",
+        "create_postgres_migration_test_database.py",
+        "rpg_game_migration_empty_v290",
         "local-backups/postgres/rpg_game_20260714_130403_KST_v290.custom.dump",
     )
     assert_contains(
         "docs/NEXT_CHAT_START_GUIDE.md",
         "backend/.venv",
-        "restore_postgres_rehearsal_database.py --execute",
+        "create_postgres_migration_test_database.py --execute",
         "run_smoke_core.sh",
     )
     assert_contains(
-        "docs/current/POSTGRES_RESTORE_REHEARSAL.md",
-        "target public tables: 22",
-        "table별 row count",
+        "docs/current/POSTGRES_MIGRATION_TEST_DB_CREATION.md",
+        "rpg_game_migration_empty_v290",
+        "target public tables: 0",
         "SHA-256",
-        "--single-transaction",
+        "template0",
         "별도 승인",
     )
 

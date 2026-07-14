@@ -1,6 +1,6 @@
 기호의 Upgrade RPG 프로젝트를 이어서 진행합니다.
 
-이번에 첨부하는 최신 ZIP `rpg_v293_postgres_restore_rehearsal_ready.zip`을 반드시 기준으로 작업해주세요.
+이번에 첨부하는 최신 ZIP `rpg_v294_postgres_migration_test_database_creation_ready.zip`을 반드시 기준으로 작업해주세요.
 
 ========================
 사용자/응답 방식
@@ -33,7 +33,7 @@ DB/env/seed/인증/API body/route/write/migration/Docker volume 작업은 작게
 현재 최신 기준
 ========================
 
-- 최신 작업: `v293.postgres-restore-rehearsal-execute-tool`
+- 최신 작업: `v294.postgres-migration-empty-database-create-tool`
 - readiness version: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -78,13 +78,13 @@ source tables/rows: 22 / 748
 TOC definitions/data: 22 / 22
 ```
 
-실제 빈 restore rehearsal DB 결과:
+실제 restore rehearsal 결과:
 
 ```txt
+result: restore-rehearsal-completed-and-verified
 target: rpg_game_restore_rehearsal_v290
-owner/user: rpg_user
-template: template0
-public tables: 0
+public tables/rows: 22 / 748
+schema: structurally-equivalent / differences=0
 alembic_version: absent
 source before/after: 22 tables / 748 rows
 ```
@@ -92,22 +92,21 @@ source before/after: 22 tables / 748 rows
 `.dump`, restore report, `local-backups/`는 민감정보이므로 Git, ZIP, 채팅에 포함하지 않습니다.
 
 ========================
-v293 추가 사항
+v294 추가 사항
 ========================
 
-- `tools/restore_postgres_rehearsal_database.py`
-- `tools/smoke/backend/smoke_postgres_restore_rehearsal.py`
-- `docs/current/POSTGRES_RESTORE_REHEARSAL.md`
-- target이 0 tables/0 rows일 때만 restore
-- exact backup filename/manifest/source snapshot/SHA-256 재검증
-- source table별 row counts를 backup snapshot과 비교
-- `pg_restore --single-transaction --exit-on-error`
-- target은 `rpg_game_restore_rehearsal_v290`으로 고정
-- `--create`, `--clean`, createdb, dropdb 사용 안 함
-- restore 후 target 22 tables / 748 rows / table별 counts 비교
-- target SQLAlchemy schema differences=0 확인
-- source 작업 전후 동일 확인
-- target drop/Alembic mutation 없음
+- `tools/create_postgres_migration_test_database.py`
+- `tools/smoke/backend/smoke_postgres_migration_test_database_creation.py`
+- `docs/current/POSTGRES_MIGRATION_TEST_DB_CREATION.md`
+- exact backup/SHA-256와 v293 restore report 재검증
+- source/rehearsal table별 row counts 재검증
+- rehearsal schema differences=0 재검증
+- target은 `rpg_game_migration_empty_v290`으로 고정
+- target이 존재하면 생성 금지
+- 없을 때만 owner `rpg_user`, `template0`으로 빈 DB 생성
+- 생성 후 0 tables / 0 rows / `alembic_version` 없음 확인
+- source/rehearsal before/after 동일 확인
+- restore/drop/Alembic mutation 없음
 
 ========================
 다음 첫 작업
@@ -116,23 +115,23 @@ v293 추가 사항
 사용자가 아래 명령을 실제 PC에서 실행한 결과를 확인하세요.
 
 ```bash
-python tools/restore_postgres_rehearsal_database.py --execute
+python tools/create_postgres_migration_test_database.py --execute
 ```
 
 성공 기준:
 
 ```txt
-result: restore-rehearsal-completed-and-verified
-target public tables: 22
-target total rows: 748
-target schema: structurally-equivalent / differences=0
+result: migration-test-database-created-empty-and-verified
+migration test DB: rpg_game_migration_empty_v290
+target public tables: 0
+target total rows: 0
 target alembic_version: absent
-source tables before/after: 22 / 22
-source rows before/after: 748 / 748
+source tables/rows before/after: 22/748 -> 22/748
+rehearsal tables/rows before/after: 22/748 -> 22/748
 ```
 
-성공하면 target DB 보존/삭제와 별도 empty migration DB 준비를 다음 승인 경계로 진행합니다.
-오류가 나오면 자동 retry/clean/drop으로 넘어가지 말고 결과부터 분석하세요.
+성공하면 최초 Alembic revision 생성 계획과 수동 검토 절차를 다음 승인 경계로 진행합니다.
+오류가 나오면 자동 retry/drop으로 넘어가지 말고 결과부터 분석하세요.
 
 ========================
 절대 변경/실행 금지
@@ -141,13 +140,15 @@ source rows before/after: 748 / 748
 사용자 별도 승인 전:
 
 - `dropdb`
-- restore target 자동 clean/retry
-- 원본 DB schema/data
+- `python -m alembic revision --autogenerate`
+- `python -m alembic upgrade head`
+- `python -m alembic downgrade`
+- `python -m alembic stamp head`
+- 원본/리허설 DB schema/data
 - Docker container/volume 삭제
 - `.env`, seed, 인증
 - 기존 API route path/response body
 - 실제 write/Write Guard
-- Alembic revision/upgrade/downgrade/stamp
 - 게임 콘텐츠
 
 작업 후에는 관련 smoke, compileall, core smoke, ZIP 무결성/제외 검사를 수행하고 새 ZIP을 만들어주세요.

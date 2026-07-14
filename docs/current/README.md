@@ -1,6 +1,6 @@
 # Current documents
 
-- 최신 작업: `v293.postgres-restore-rehearsal-execute-tool`
+- 최신 작업: `v294.postgres-migration-empty-database-create-tool`
 - 현재 상태: `CURRENT_STATUS.md`
 - PostgreSQL runtime 결과: `POSTGRES_RUNTIME_READONLY_STATE.md`
 - 기존 데이터 보존형 baseline 전략: `POSTGRES_ALEMBIC_BASELINE_STRATEGY.md`
@@ -9,6 +9,7 @@
 - 실제 backup 생성/검증: `POSTGRES_BACKUP_CREATION.md`
 - 빈 restore rehearsal DB 생성 경계: `POSTGRES_RESTORE_REHEARSAL_DB_CREATION.md`
 - isolated restore 실행/검증 경계: `POSTGRES_RESTORE_REHEARSAL.md`
+- 빈 migration test DB 생성 경계: `POSTGRES_MIGRATION_TEST_DB_CREATION.md`
 - Alembic asyncpg 수정: `ALEMBIC_ASYNC_ENV_FIX.md`
 - PostgreSQL/Alembic readiness: `POSTGRES_ALEMBIC_READINESS.md`
 - 로컬 설치/확인 체크리스트: `POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md`

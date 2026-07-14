@@ -1,14 +1,14 @@
-# Current Status — v293
+# Current Status — v294
 
 ## 기준
 
-- 최신 작업: `v293.postgres-restore-rehearsal-execute-tool`
-- 기준 ZIP: `rpg_v293_postgres_restore_rehearsal_ready.zip`
+- 최신 작업: `v294.postgres-migration-empty-database-create-tool`
+- 기준 ZIP: `rpg_v294_postgres_migration_test_database_creation_ready.zip`
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
 
-## PostgreSQL 실제 source 상태
+## 실제 PostgreSQL source 상태
 
 ```txt
 PostgreSQL 16.14
@@ -30,32 +30,33 @@ source tables/rows: 22 / 748
 TOC definitions/data: 22 / 22
 ```
 
-## 실제 빈 restore rehearsal DB 완료
+## 실제 restore rehearsal 완료
 
 ```txt
+result: restore-rehearsal-completed-and-verified
 target: rpg_game_restore_rehearsal_v290
-owner/user: rpg_user
-template: template0
-public tables: 0
+public tables/rows: 22 / 748
+schema: structurally-equivalent / differences=0
 alembic_version: 없음
 source before/after: 22 tables / 748 rows
 ```
 
-## v293 준비 완료
+## v294 준비 완료
 
-- exact backup/manifest/snapshot/SHA-256 재검증
-- target empty gate
-- `pg_restore --single-transaction --exit-on-error`
-- target에만 restore하고 source는 read-only
-- restore 후 22 tables / 748 rows / table별 counts 비교
-- target SQLAlchemy schema equivalence 차이 0개 검사
-- source before/after 동일 검사
-- no create/drop/clean/.env/Docker/Alembic/API/auth/game-content change
+- exact backup/SHA-256와 v293 restore report 재검증
+- source live 22 tables / 748 rows / table별 counts 재검증
+- rehearsal live 22 tables / 748 rows / differences=0 재검증
+- migration target 존재 시 즉시 중단
+- 없을 때만 `rpg_game_migration_empty_v290` 빈 DB 생성
+- owner `rpg_user`, `template0`, source와 같은 locale metadata
+- 생성 후 0 tables / 0 rows / alembic_version 없음 확인
+- source/rehearsal 작업 전후 동일 확인
+- no restore/drop/.env/Docker/Alembic/API/auth/game-content change
 
 ## 다음 사용자 실행
 
 ```bash
-python tools/restore_postgres_rehearsal_database.py --execute
+python tools/create_postgres_migration_test_database.py --execute
 ```
 
-성공 결과를 확인한 뒤 target DB 보존/삭제와 empty migration DB 준비를 별도 결정합니다.
+성공 결과를 확인한 뒤 최초 Alembic revision 생성 계획과 수동 검토 절차를 별도 승인 경계로 진행합니다.

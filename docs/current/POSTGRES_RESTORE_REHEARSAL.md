@@ -105,6 +105,20 @@ local-backups/postgres/<dump filename>.restore-rehearsal-v293.json
 
 backup과 report는 민감한 로컬 산출물이므로 Git, ZIP, 채팅에 포함하지 않습니다.
 
+## 사용자 PC 실제 완료 결과
+
+```txt
+result: restore-rehearsal-completed-and-verified
+target public tables: 22
+target total rows: 748
+target schema: structurally-equivalent / differences=0
+target alembic_version: absent
+source tables before/after: 22 / 22
+source rows before/after: 748 / 748
+```
+
+리허설 DB는 삭제하지 않고 v294 empty migration test DB 준비의 검증 기준으로 보존합니다.
+
 ## 다음 승인 경계
 
 restore 결과 확인 후 다음 중 하나를 별도 결정합니다.

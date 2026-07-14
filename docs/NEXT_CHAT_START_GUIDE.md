@@ -1,12 +1,12 @@
-# Next Chat Start Guide — v293
+# Next Chat Start Guide — v294
 
 ## 기준
 
-- ZIP: `rpg_v293_postgres_restore_rehearsal_ready.zip`
+- ZIP: `rpg_v294_postgres_migration_test_database_creation_ready.zip`
 - backend virtualenv: `backend/.venv`
 - source DB: `rpg_game`
-- restore target DB: `rpg_game_restore_rehearsal_v290`
-- verified backup: `local-backups/postgres/rpg_game_20260714_130403_KST_v290.custom.dump`
+- verified restore DB: `rpg_game_restore_rehearsal_v290`
+- migration target DB: `rpg_game_migration_empty_v290`
 
 ## 현재 사용자 실행
 
@@ -21,10 +21,10 @@ source .venv/Scripts/activate
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/restore_postgres_rehearsal_database.py --execute
+python tools/create_postgres_migration_test_database.py --execute
 ```
 
-성공 기준은 `restore-rehearsal-completed-and-verified`, target 22 tables / 748 rows, schema differences=0, source before/after 동일입니다.
+성공 기준은 `migration-test-database-created-empty-and-verified`, target 0 tables / 0 rows, `alembic_version` 없음, source/rehearsal before/after 동일입니다.
 
 ## 검증
 
@@ -36,4 +36,4 @@ python -m compileall -q backend/app backend/scripts backend/alembic tools
 bash tools/run_smoke_core.sh
 ```
 
-성공 후에도 target `dropdb`와 Alembic 작업은 별도 승인 전 금지합니다.
+성공 후에도 Alembic revision/upgrade/downgrade/stamp와 `dropdb`는 별도 승인 전 금지합니다.

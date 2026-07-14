@@ -21,6 +21,7 @@ docs/current/POSTGRES_BACKUP_RESTORE_PREP.md
 docs/current/POSTGRES_BACKUP_CREATION.md
 docs/current/POSTGRES_RESTORE_REHEARSAL_DB_CREATION.md
 docs/current/POSTGRES_RESTORE_REHEARSAL.md
+docs/current/POSTGRES_MIGRATION_TEST_DB_CREATION.md
 ```
 
 ## 인수인계
@@ -31,7 +32,7 @@ NEXT_CHAT_HANDOFF.md
 docs/handoff/
 ```
 
-루트 인수인계 파일과 `docs/handoff/` 사본은 같은 v293 기준으로 유지합니다.
+루트 인수인계 파일과 `docs/handoff/` 사본은 같은 v294 기준으로 유지합니다.
 
 ## 문서 폴더
 
@@ -46,3 +47,5 @@ docs/handoff/
 - `current/POSTGRES_RESTORE_REHEARSAL_DB_CREATION.md`: 빈 restore rehearsal DB 생성 안전 경계
 
 - `current/POSTGRES_RESTORE_REHEARSAL.md`: verified dump isolated restore 및 사후 검증 경계
+
+- `current/POSTGRES_MIGRATION_TEST_DB_CREATION.md`: 빈 Alembic migration test DB 생성 안전 경계

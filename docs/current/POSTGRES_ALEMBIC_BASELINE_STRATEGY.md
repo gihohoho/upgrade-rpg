@@ -101,6 +101,10 @@ v289 checker 재실행에서 차이 0개가 확인되면 다음 단계는 backup
 - 실제 backup/restore/DB 생성·삭제/Alembic mutation은 사용자 승인 전 실행하지 않습니다.
 
 
-## v293 restore rehearsal 상태
+## v293 restore rehearsal 결과
 
-verified custom backup과 빈 rehearsal DB 생성이 완료되었습니다. 다음 실행은 exact backup을 isolated target에만 복원하고 row counts/schema equivalence를 검증하는 단계입니다. 이 결과가 정상이어야 별도 empty migration DB와 최초 revision 검증으로 넘어갑니다. 기존 `rpg_game` stamp는 아직 금지입니다.
+verified custom backup이 isolated target에 복원되었고 22 tables / 748 rows / schema differences=0, source before/after 동일이 확인되었습니다.
+
+## v294 empty migration DB 단계
+
+`rpg_game_migration_empty_v290`을 `template0` 기반 빈 DB로 생성하되 source와 restore rehearsal DB는 보존합니다. 생성 후 0 tables / 0 rows / `alembic_version` 없음이 확인되어야 최초 revision 생성 계획으로 넘어갑니다. 기존 `rpg_game` stamp와 Alembic revision/upgrade/downgrade는 아직 금지입니다.

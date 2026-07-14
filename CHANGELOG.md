@@ -1,3 +1,17 @@
+# Changelog
+
+## v294.postgres-migration-empty-database-create-tool
+
+- 실제 v293 restore rehearsal 성공 결과를 현재 기준에 반영
+- `tools/create_postgres_migration_test_database.py` 추가
+- exact backup/SHA-256, restore report, source/rehearsal live 상태를 생성 전 재검증
+- `rpg_game_migration_empty_v290`이 없을 때만 `createdb` 1회 허용
+- owner `rpg_user`, `template0`, source와 같은 locale metadata 적용
+- 생성 후 0 tables / 0 rows / alembic_version 없음 확인
+- source/rehearsal before/after 동일 확인
+- pg_restore/dropdb/Alembic revision/upgrade/downgrade/stamp 차단
+- 전용 smoke와 core smoke 등록, v294 문서/handoff 동기화
+
 # v292 - PostgreSQL empty restore rehearsal database creation tool
 
 - Added `tools/create_postgres_restore_rehearsal_database.py` for the user-approved existence-check-and-create-empty-DB boundary.

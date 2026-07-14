@@ -1,8 +1,8 @@
-# Project Structure — v293
+# Project Structure — v294
 
 현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
 
-v293에서는 legacy/Vue/backend 구조를 유지하면서 verified backup을 빈 restore rehearsal DB에만 복원하고 검증하는 경계를 추가했습니다.
+v294에서는 legacy/Vue/backend 구조를 유지하면서 verified restore DB를 보존한 채 별도 empty migration test DB를 생성하는 경계를 추가했습니다.
 
 중요한 결론:
 
@@ -42,8 +42,8 @@ v293에서는 legacy/Vue/backend 구조를 유지하면서 verified backup을 �
 | `src/` | legacy JS/CSS | 이동 금지, Vue 앱 `src/`와 구분 |
 | `frontend/vue-app/` | 새 Vue shell + 읽기 전용 API client 준비 | 실제 기능 대체 전 단계 |
 | `backend/` | FastAPI 백엔드 | 기존 route/body/DB/env/seed 유지 |
-| `tools/` | smoke/contract/검증/backup/restore 도구 | v293 isolated restore 도구와 전용 smoke 추가 |
-| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v293 기준 갱신 |
+| `tools/` | smoke/contract/검증/backup/restore 도구 | v294 empty migration test DB 생성 도구와 전용 smoke 추가 |
+| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v294 기준 갱신 |
 
 ## `frontend/vue-app/` 역할
 

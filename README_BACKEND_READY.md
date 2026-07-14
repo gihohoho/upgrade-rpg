@@ -1,8 +1,8 @@
-# Backend Ready — v293
+# Backend Ready — v294
 
 현재 안정 readiness: `v250.backend-admin-rollback-snapshot`  
 Backend splitStatus: `admin-schema-field-constraint-contract-v238`  
-현재 프로젝트 작업 버전: `v293.postgres-restore-rehearsal-execute-tool`
+현재 프로젝트 작업 버전: `v294.postgres-migration-empty-database-create-tool`
 
 ## 핵심 보장
 
@@ -14,14 +14,13 @@ Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 
 ## PostgreSQL 상태
 
-- 실제 source 22 tables / 748 rows
-- Alembic revision과 `alembic_version` 없음
-- schema equivalence `structurally-equivalent`, 차이 0개
+- source 22 tables / 748 rows / schema differences=0
 - verified custom backup 생성 완료
-- target `rpg_game_restore_rehearsal_v290` 빈 DB 생성 완료
-- v293은 exact backup을 해당 target에만 single transaction으로 restore
-- restore 후 table별 row count와 SQLAlchemy schema equivalence 검증
-- source 변경, target drop, Alembic mutation은 계속 차단
+- restore rehearsal 22 tables / 748 rows / differences=0 완료
+- source 작업 전후 동일 확인
+- v294은 `rpg_game_migration_empty_v290`이 없을 때만 빈 DB 하나 생성
+- 생성 후 0 tables / 0 rows / `alembic_version` 없음 확인
+- source/rehearsal 변경, DB drop, restore, Alembic mutation은 차단
 
 ## 검증
 
