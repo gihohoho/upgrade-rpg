@@ -1,8 +1,8 @@
-# Backend Ready — v306
+# Backend Ready — v307
 
 현재 안정 readiness: `v250.backend-admin-rollback-snapshot`  
 Backend splitStatus: `admin-schema-field-constraint-contract-v238`  
-현재 프로젝트 작업 버전: `v306.postgres-next-revision-readonly-preflight`
+현재 프로젝트 작업 버전: `v307.postgres-deployment-runtime-readiness-readonly`
 
 ## 핵심 보장
 
@@ -14,16 +14,23 @@ Backend splitStatus: `admin-schema-field-constraint-contract-v238`
 
 ## PostgreSQL / Alembic 상태
 
-- 최초 revision `v295_initial_schema` 수동 검토 통과
-- isolated migration DB upgrade → downgrade base → upgrade 왕복 성공
-- restore rehearsal와 source baseline stamp/post-check 통과
+- baseline classification `alembic-managed-baseline-complete`
 - source/rehearsal application 22 tables / 748 rows 보존
 - source current revision `v295_initial_schema`
 - v302/v304 실행 보고서 `verified`
-- classification `alembic-managed-baseline-complete`
 - v305 completion state 실제 통과
-- v306 next-revision read-only preflight 준비 완료
-- 새 revision/autogenerate/upgrade/downgrade는 미승인
+- v306 candidate operation 0개 / 새 revision 불필요 실제 통과
+- v307 deployment/runtime read-only checker 준비 완료
+- 새 revision/autogenerate/upgrade/downgrade/stamp는 미승인
+
+## v307에서 확인할 항목
+
+- runtime URL exact `rpg_game` + `postgresql+asyncpg`
+- FastAPI startup DB mutation 없음
+- Docker PostgreSQL running/healthy
+- DB health read-only contract
+- `.env` key inventory와 production hardening warnings
+- manual migration runbook 경계
 
 ## 검증
 

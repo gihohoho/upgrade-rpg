@@ -1,6 +1,6 @@
 기호의 Upgrade RPG 프로젝트를 이어서 진행합니다.
 
-이번에 첨부하는 최신 ZIP `rpg_v306_postgres_next_revision_readonly_preflight_ready.zip`을 반드시 기준으로 작업해주세요.
+이번에 첨부하는 최신 ZIP `rpg_v308_runtime_config_hardening_ready.zip`을 반드시 기준으로 작업해주세요.
 
 ========================
 사용자/응답 방식
@@ -18,23 +18,20 @@
 Git Bash에서는 `backend` 폴더에서 `source .venv/Scripts/activate`로 켭니다.
 Vue/npm 명령은 `frontend/vue-app`에서 실행하며 Python `.venv`가 필요 없습니다.
 
-사용자가 확인해야 할 사항, 설치해야 할 파일·라이브러리·프레임워크, 새로 추가되는 도구를 빠짐없이 알려주세요.
-새 설치가 없으면 없다고 명확히 적어주세요.
-
-git 명령은 프로젝트 루트에서 아래 형태의 한 줄 블록으로 주세요.
+설치·확인 항목과 새 도구를 빠짐없이 알려주세요. 새 설치가 없으면 없다고 명확히 적어주세요.
+Git 명령은 프로젝트 루트에서 한 줄로 주세요.
 
 ```bash
 git status && git add . && git commit -m "..." && git push
 ```
 
-필요한 라이브러리/파일 설치와 여러 단계 작업은 허용됩니다.
-다만 DB/env/seed/인증/API body/route/write/migration/Docker volume처럼 위험한 작업은 작은 승인 경계로 진행하고 실제 결과를 확인한 뒤 다음 단계로 넘어가세요.
+DB/env/seed/인증/API body/route/write/migration/Docker volume처럼 위험한 작업은 작은 승인 경계로 진행하고 실제 결과 확인 후 다음 단계로 넘어가세요.
 
 ========================
 현재 최신 기준
 ========================
 
-- 최신 작업: `v306.postgres-next-revision-readonly-preflight`
+- 최신 작업: `v308.runtime-config-hardening-ready`
 - readiness version: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -55,212 +52,131 @@ git status && git add . && git commit -m "..." && git push
 장비/스킬/보스/필드/드랍률/밸런스/강화 수치 추가·조정은 보류합니다.
 
 ========================
-실제 PostgreSQL/Alembic 완료 상태
+PostgreSQL/Alembic 완료 상태
 ========================
 
-원본 DB:
-
 ```txt
-DB: rpg_game
-owner/user: rpg_user
+classification: alembic-managed-baseline-complete
+source rpg_game: public 23/749, application 22/748
+source current revision: v295_initial_schema
+restore rehearsal rpg_game_restore_rehearsal_v290: 23/749 / v302 report verified
+migration test DB: 23/1 / differences=0
+v304 source report: verified
+v305 completion: postgres-baseline-completion-state-verified
+v306 next revision preflight: next-revision-not-required-current-schema-equivalent
+v306 candidate operations: 0 / next revision required no
+v307 strict + require-health: passed
 PostgreSQL: 16.14
-public tables/rows: 23/749
-application tables/rows: 22/748
-schema: structurally-equivalent / differences=0
-alembic_version: 있음 / 1 row
-current revision: v295_initial_schema
-runtime classification: alembic-managed
-project classification: alembic-managed-baseline-complete
-v304 source execution report: verified
-v305 completion check: postgres-baseline-completion-state-verified
+Docker PostgreSQL: running/healthy
 ```
 
-검증된 backup:
+고정값:
 
 ```txt
-file: local-backups/postgres/rpg_game_20260714_130403_KST_v290.custom.dump
-SHA-256: b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481
-TOC definitions/data: 22 / 22
-```
-
-복원 리허설 DB:
-
-```txt
-DB: rpg_game_restore_rehearsal_v290
-public tables/rows: 23/749
-application tables/rows: 22/748
-current revision: v295_initial_schema
-v302 execution report: verified
-```
-
-migration 테스트 DB:
-
-```txt
-DB: rpg_game_migration_empty_v290
-public tables/rows: 23/1
-model tables: 22
-current revision: v295_initial_schema
-schema: structurally-equivalent / differences=0
-```
-
-최초 revision:
-
-```txt
-revision ID: v295_initial_schema
-revision file: backend/alembic/versions/v295_initial_schema_initial_postgresql_schema.py
+backup: local-backups/postgres/rpg_game_20260714_130403_KST_v290.custom.dump
+backup SHA-256: b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481
+revision: v295_initial_schema
 revision SHA-256: 24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa
-manual review: passed
-create_table/create_index: 22 / 42
-drop_table/drop_index: 22 / 42
-```
-
-사용자 PC 실제 완료:
-
-```txt
-v298 upgrade head: 성공
-v299 downgrade base: 성공
-v300 second upgrade head: 성공
-first/second upgrade signatures: identical
-v301 source preflight: 통과
-v302 rehearsal stamp: 통과
-v303 rehearsal post-check: 통과 / report verified
-v303 result: restore-rehearsal-stamp-current-state-verified
-v304 source stamp: 통과
-v304 source post-check: source-baseline-stamp-current-state-verified
-v304 source execution report: verified
-v305 completion check: postgres-baseline-completion-state-verified
-```
-
-승인 application digest:
-
-```txt
 schema digest: 7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921
 data digest: ecb19e57283dc6b780426339bfc46f2bac14da63a618249808f30132508f9244
 ```
 
-필수 로컬 증거는 Git/전달 ZIP/채팅에 포함하지 않습니다.
+로컬 backup/review evidence는 Git/ZIP/채팅에 포함하지 않습니다.
+
+========================
+v308 runtime config hardening
+========================
+
+추가·변경 파일:
 
 ```txt
-local-backups/
-local-review-artifacts/alembic/v295_initial_schema.upgrade-v298.json
-local-review-artifacts/alembic/v295_initial_schema.downgrade-v299.json
-local-review-artifacts/alembic/v295_initial_schema.roundtrip-upgrade-v300.json
-local-review-artifacts/alembic/v295_initial_schema.restore-rehearsal-stamp-v302.json
-local-review-artifacts/alembic/v295_initial_schema.source-stamp-v304.json
+backend/app/core/config.py
+backend/app/db/session.py
+backend/app/main.py
+backend/.env.example
+backend/Dockerfile
+deploy/docker-compose.production.yml
+deploy/README.md
+tools/check_runtime_config_hardening.py
+tools/smoke/backend/smoke_runtime_config_hardening.py
+docs/current/POSTGRES_RUNTIME_CONFIG_HARDENING.md
+docs/current/POSTGRES_PRODUCTION_DEPLOYMENT_TEMPLATE.md
+```
+
+적용 상태:
+
+```txt
+pool_pre_ping: true
+pool_size: 5
+max_overflow: 10
+pool_timeout: 30 seconds
+pool_recycle: 1800 seconds
+shutdown: await engine.dispose()
+production guard: DEBUG/local default secret/short secret fail closed
+backend Dockerfile: non-root / Uvicorn only / no automatic Alembic
+production Compose: separate template / no Adminer / no PostgreSQL host port
+actual backend/.env: unchanged
+local docker-compose.yml: unchanged
+DB schema/data/Alembic revision: unchanged
 ```
 
 ========================
-v306 next revision read-only preflight
+다음 첫 작업 — v308 읽기 전용 검증
 ========================
 
-추가 파일:
-
-```txt
-tools/check_postgres_next_revision_preflight.py
-tools/smoke/backend/smoke_postgres_next_revision_preflight.py
-docs/current/POSTGRES_NEXT_REVISION_PREFLIGHT.md
-docs/current/POSTGRES_NEXT_REVISION_READONLY_PLAN.md
-```
-
-preflight는 다음을 읽기 전용으로 확인합니다.
-
-- v305 baseline completion 유지
-- Alembic graph single base/single head
-- exact reviewed revision 1개
-- 승인 SQLAlchemy model/Alembic env source snapshot 13개
-- canonical schema 22/22, differences=0
-- PostgreSQL read-only transaction + SQL write guard
-- Alembic `compare_metadata()` candidate operations
-- type/server default/nullable/index/constraint 비교
-- integer PK sequence ownership과 unowned sequence
-
-이 도구는 Alembic CLI의 revision/autogenerate/upgrade/downgrade/stamp를 호출하지 않습니다.
-
-========================
-다음 첫 작업 — 읽기 전용 v306 next-revision preflight
-========================
-
-실행 위치: `backend` 폴더
+실행 위치: `backend` 폴더  
 `.venv` 상태: 꺼져 있을 때 Git Bash
 
 ```bash
 source .venv/Scripts/activate
 ```
 
-실행 위치: 프로젝트 루트
+실행 위치: 프로젝트 루트  
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/check_postgres_next_revision_preflight.py --strict
+python tools/check_runtime_config_hardening.py --strict --require-health
 ```
 
-정상 변경 없음 기대 핵심:
+정상 기대 결과:
 
 ```txt
-baseline completion: postgres-baseline-completion-state-verified
-exact source DB: rpg_game
-source current revision: ['v295_initial_schema']
-Alembic graph heads/bases: ['v295_initial_schema']/['v295_initial_schema']
-approved model source snapshot: matched / 13 files
-SQLAlchemy metadata tables: 22
-canonical schema: structurally-equivalent / differences=0
-Alembic candidate operations: 0
-next revision required: no
-result: next-revision-not-required-current-schema-equivalent
-next safe stage: keep-single-baseline-no-new-revision
+result: runtime-config-hardening-verified-local-runtime-preserved
+next safe stage: separate-production-secrets-tls-and-container-validation
 ```
 
-후보가 있으면 `next-revision-review-required-schema-differences-detected`로 중지하고 자동 생성하지 않습니다.
-
-이 명령은 revision 생성, autogenerate CLI, stamp, upgrade, downgrade, DB create/drop/restore, row write를 실행하지 않습니다.
+`blocked-or-failed`가 나오면 `.env`, Docker, DB, Alembic을 임의 변경하지 말고 전체 출력을 검토하세요.
 
 ========================
 다음 단계 안전 순서
 ========================
 
-1. v306 next-revision preflight 실제 결과 확인
-2. candidate operation 0개면 새 revision 생성하지 않음
-3. 후보가 있으면 table/column/index/FK/default/nullable 변경 의도 검토
-4. 기존 748개 row 영향과 data migration 필요 여부 확인
-5. autogenerate는 사용자 별도 승인 전 금지
-6. 향후 revision은 isolated migration DB에서 먼저 검토·왕복
-7. source 적용은 다시 별도 승인
+1. v308 actual strict + health 결과 확인
+2. local runtime/DB health 회귀 없음 확인
+3. 남은 운영 경고를 secret/TLS/image/reverse proxy로 분류
+4. production Compose를 실행하지 않고 정적 검증 준비
+5. worker 수와 pool/max_connections 계산
+6. 실제 운영 secret/TLS/container build는 별도 승인
+7. 전체 smoke 및 새 ZIP 후 다음 승인 경계 이동
 
 ========================
 절대 변경/실행 금지
 ========================
 
+- actual `.env`
+- production secret/TLS 실제 입력
+- production Compose build/up/pull/down
+- Docker container/volume 변경 또는 삭제
 - source/rehearsal stamp 재실행
-- 새 Alembic revision 생성/autogenerate
-- source/rehearsal/migration upgrade/downgrade
+- 새 revision/autogenerate/upgrade/downgrade
 - DB 생성/삭제/복원
-- Docker container/volume 삭제
-- `.env`
-- seed
-- 인증
-- 기존 API route path/response body
-- 실제 write 로직/Write Guard
+- seed/인증/API route/body/write
 - Preview/Apply request body
-- 게임 콘텐츠/밸런스 변경
-
-```txt
-python scripts/setup_dev_db.py --reset
-docker compose down -v
-python -m alembic revision --autogenerate
-python -m alembic upgrade head
-python -m alembic downgrade
-python -m alembic stamp head
-createdb
-dropdb
-pg_restore
-```
+- 게임 콘텐츠/밸런스
 
 ========================
-Contract/검증 원칙
+검증 원칙
 ========================
-
-새 Contract가 필요할 때는 실제 현재 환경 결과를 먼저 수집하고, 환경 차이를 확인한 뒤 등록하세요.
-Frontend/backend 목록, 반환 객체, parity, Admin ReadOnly 검사를 누락하지 마세요.
 
 코드나 구조를 건드렸다면 최소 확인:
 
@@ -271,7 +187,7 @@ Frontend/backend 목록, 반환 객체, parity, Admin ReadOnly 검사를 누락�
 - Vue 변경 시 `npm ci`와 `npm run build`
 - ZIP 무결성 및 제외 파일 검사
 
-작업 후에는 다음 5개를 포함해 답변하세요.
+작업 후 답변에는 다음을 포함하세요.
 
 1. 이번에 한 일
 2. 검증 완료한 것

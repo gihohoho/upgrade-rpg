@@ -1,9 +1,9 @@
-# Current Status — v306
+# Current Status — v308
 
-## 기준
+## 현재 기준
 
-- 최신 작업: `v306.postgres-next-revision-readonly-preflight`
-- 기준 ZIP: `rpg_v306_postgres_next_revision_readonly_preflight_ready.zip`
+- 최신 작업: `v308.runtime-config-hardening-ready`
+- 기준 ZIP: `rpg_v308_runtime_config_hardening_ready.zip`
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -12,53 +12,50 @@
 
 ```txt
 classification: alembic-managed-baseline-complete
-source rpg_game: public 23/749, application 22/748, revision v295_initial_schema
-rehearsal: 23/749, revision v295_initial_schema, v302 report verified
-migration: 23/1, revision v295_initial_schema, differences=0
-v304 source report: verified
-v305 completion check: postgres-baseline-completion-state-verified
+source rpg_game: 23/749
+application: 22/748
+current revision: v295_initial_schema
+restore rehearsal: 23/749 / verified
+migration test DB: 23/1 / differences=0
+v306 candidate operations: 0 / next revision required no
+v307 runtime readiness + live health: passed
+v307 production hardening warnings: 12
 ```
 
-## v306 준비 내용
+## v308 준비 내용
 
 ```txt
-tools/check_postgres_next_revision_preflight.py
-tools/smoke/backend/smoke_postgres_next_revision_preflight.py
-docs/current/POSTGRES_NEXT_REVISION_PREFLIGHT.md
+explicit pool policy: 5 options
+FastAPI shutdown: await engine.dispose()
+production unsafe defaults: fail closed
+backend Dockerfile: non-root / no automatic Alembic
+deploy/docker-compose.production.yml: separate review template
+local docker-compose.yml: preserved
+actual backend/.env: unchanged
 ```
-
-v306은 revision을 생성하지 않고 다음을 읽기 전용으로 확인합니다.
-
-- exact single Alembic base/head/revision file
-- approved model/env source snapshot 13 files
-- canonical schema 22/22, differences=0
-- read-only Alembic metadata comparison
-- type/server default/nullable/index/constraint candidate operations
-- PostgreSQL sequence ownership
 
 ## 다음 첫 작업
 
-실행 위치: `backend` 폴더  
-`.venv` 상태: 꺼져 있을 때
-
-```bash
-source .venv/Scripts/activate
-```
-
 실행 위치: 프로젝트 루트  
-`.venv` 상태: `backend/.venv` 켜짐
+`.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/check_postgres_next_revision_preflight.py --strict
+python tools/check_runtime_config_hardening.py --strict --require-health
 ```
 
-정상 변경 없음 기대 결과:
+정상 예상 분류:
 
 ```txt
-Alembic candidate operations: 0
-next revision required: no
-result: next-revision-not-required-current-schema-equivalent
-next safe stage: keep-single-baseline-no-new-revision
+result: runtime-config-hardening-verified-local-runtime-preserved
+next safe stage: separate-production-secrets-tls-and-container-validation
 ```
 
-후보가 발견되면 자동 생성하지 않고 `separate-schema-change-intent-review`로 중지합니다.
+## 계속 금지
+
+- 실제 `.env` 및 운영 secret 입력
+- production Compose build/up/pull
+- Docker container/volume 변경 또는 삭제
+- source/rehearsal stamp 재실행
+- revision/autogenerate/upgrade/downgrade
+- seed/인증/API body/route/write 변경
+- 게임 콘텐츠/밸런스 변경

@@ -20,7 +20,8 @@ def _install_db_import_stubs() -> None:
 
     def create_async_engine_stub(*args, **kwargs):  # type: ignore[no-untyped-def]
         class DummyEngine:
-            pass
+            async def dispose(self):  # type: ignore[no-untyped-def]
+                return None
 
         return DummyEngine()
 
@@ -64,6 +65,8 @@ def test_production_settings_do_not_append_local_dev_origins() -> None:
         _env_file=None,
         environment="production",
         debug=False,
+        jwt_secret_key="j" * 40,
+        admin_write_dev_key="a" * 40,
         CORS_ORIGINS="https://example.com",
     )
 

@@ -1,0 +1,72 @@
+# v308 production deployment template only.
+# Do not run this file until production secrets, TLS, image digest, and backup
+# approval are supplied through the deployment platform.
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:?Set an approved digest-pinned postgres:16-alpine image}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      TZ: Asia/Seoul
+    secrets:
+      - postgres_password
+    expose:
+      - "5432"
+    volumes:
+      - rpg_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - backend_internal
+
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    environment:
+      APP_NAME: ${APP_NAME:-Idle RPG Backend}
+      ENVIRONMENT: production
+      DEBUG: "false"
+      API_PREFIX: /api/v1
+      DATABASE_URL: ${DATABASE_URL:?Set the TLS-enabled production DATABASE_URL}
+      DB_POOL_PRE_PING: "true"
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-5}
+      DB_MAX_OVERFLOW: ${DB_MAX_OVERFLOW:-10}
+      DB_POOL_TIMEOUT_SECONDS: ${DB_POOL_TIMEOUT_SECONDS:-30}
+      DB_POOL_RECYCLE_SECONDS: ${DB_POOL_RECYCLE_SECONDS:-1800}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
+      ADMIN_WRITE_DEV_KEY: ${ADMIN_WRITE_DEV_KEY:?Set ADMIN_WRITE_DEV_KEY}
+      CORS_ORIGINS: ${CORS_ORIGINS:?Set production CORS_ORIGINS}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8000"
+    networks:
+      - backend_internal
+      - edge
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+secrets:
+  postgres_password:
+    file: ${POSTGRES_PASSWORD_FILE:?Set a host path containing the PostgreSQL password}
+
+volumes:
+  rpg_postgres_data:
+
+networks:
+  backend_internal:
+    internal: true
+  edge:

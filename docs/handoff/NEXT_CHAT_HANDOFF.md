@@ -1,12 +1,12 @@
-# NEXT CHAT HANDOFF — Upgrade RPG v306
+# NEXT CHAT HANDOFF — Upgrade RPG v308
 
 ## 기준 ZIP
 
-- `rpg_v306_postgres_next_revision_readonly_preflight_ready.zip`
+- `rpg_v308_runtime_config_hardening_ready.zip`
 
 ## 현재 버전
 
-- 최신 작업: `v306.postgres-next-revision-readonly-preflight`
+- 최신 작업: `v308.runtime-config-hardening-ready`
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -18,7 +18,7 @@ source rpg_game:
   public tables/rows 23/749
   application tables/rows 22/748
   current revision v295_initial_schema
-  runtime classification alembic-managed
+  classification alembic-managed-baseline-complete
   v304 execution report verified
 
 restore rehearsal rpg_game_restore_rehearsal_v290:
@@ -31,12 +31,6 @@ migration rpg_game_migration_empty_v290:
   public tables/rows 23/1
   current revision v295_initial_schema
   differences=0
-```
-
-프로젝트 분류:
-
-```txt
-alembic-managed-baseline-complete
 ```
 
 ## 고정 증거
@@ -62,30 +56,44 @@ first/second upgrade signatures: identical
 v301 source preflight: passed
 v302 rehearsal stamp: passed
 v303 rehearsal post-check: restore-rehearsal-stamp-current-state-verified
-v304 source stamp/post-check: source-baseline-stamp-current-state-verified
+v304 source post-check: source-baseline-stamp-current-state-verified
 v305 completion check: postgres-baseline-completion-state-verified
+v306 next revision preflight: next-revision-not-required-current-schema-equivalent
+v306 Alembic candidate operations: 0
+v307 strict + require-health: passed
+v307 exact runtime DB/driver: rpg_game / postgresql+asyncpg
+v307 Docker PostgreSQL: running/healthy
+v307 production hardening warnings: 12
 ```
 
-## v306 추가 내용
+## v308 추가 내용
 
 ```txt
-tools/check_postgres_next_revision_preflight.py
-tools/smoke/backend/smoke_postgres_next_revision_preflight.py
-docs/current/POSTGRES_NEXT_REVISION_PREFLIGHT.md
-docs/current/POSTGRES_NEXT_REVISION_READONLY_PLAN.md
+backend/app/core/config.py
+backend/app/db/session.py
+backend/app/main.py
+backend/.env.example
+backend/Dockerfile
+deploy/docker-compose.production.yml
+deploy/README.md
+tools/check_runtime_config_hardening.py
+tools/smoke/backend/smoke_runtime_config_hardening.py
+docs/current/POSTGRES_RUNTIME_CONFIG_HARDENING.md
+docs/current/POSTGRES_PRODUCTION_DEPLOYMENT_TEMPLATE.md
 ```
 
-v306 preflight는 다음을 읽기 전용으로 확인합니다.
+v308에서 보강한 경계:
 
-- v305 baseline completion 유지
-- Alembic graph single base/single head
-- exact reviewed revision file 1개
-- 승인 SQLAlchemy model/Alembic env source snapshot 13개
-- canonical schema 22/22, differences=0
-- PostgreSQL read-only transaction + SQL write guard
-- Alembic metadata candidate operation
-- type/server default/nullable/index/constraint 비교
-- integer PK sequence ownership과 unowned sequence
+- `pool_pre_ping`, pool size, overflow, timeout, recycle 명시
+- local 기본 pool: true / 5 / 10 / 30 / 1800
+- FastAPI lifespan 종료 시 `await engine.dispose()`
+- lifespan에는 create_all/Alembic/schema reset 없음
+- production에서 DEBUG=true, 로컬 기본 secret, 32자 미만 secret 차단
+- non-root FastAPI Dockerfile
+- Dockerfile command에 자동 Alembic 없음
+- 별도 production Compose template
+- production template에 Adminer와 PostgreSQL host port 없음
+- actual `backend/.env`와 local `docker-compose.yml` 미변경
 
 ## 다음 첫 작업
 
@@ -100,42 +108,43 @@ source .venv/Scripts/activate
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/check_postgres_next_revision_preflight.py --strict
+python tools/check_runtime_config_hardening.py --strict --require-health
 ```
 
-변경 없음 정상 기대 핵심:
+정상 기대 핵심:
 
 ```txt
-baseline completion: postgres-baseline-completion-state-verified
-Alembic graph heads/bases: ['v295_initial_schema']/['v295_initial_schema']
-approved model source snapshot: matched / 13 files
-SQLAlchemy metadata tables: 22
-canonical schema: structurally-equivalent / differences=0
-Alembic candidate operations: 0
-next revision required: no
-result: next-revision-not-required-current-schema-equivalent
-next safe stage: keep-single-baseline-no-new-revision
+explicit SQLAlchemy pool options: 5
+FastAPI shutdown engine.dispose lifecycle: True
+unsafe production defaults blocked: True
+safe production settings accepted: True
+production Compose: Adminer=False / PostgreSQL host port=False
+local docker-compose behavior preserved: True
+result: runtime-config-hardening-verified-local-runtime-preserved
+next safe stage: separate-production-secrets-tls-and-container-validation
 ```
-
-후보가 발견되면 `next-revision-review-required-schema-differences-detected`로 중지하고 autogenerate를 실행하지 않습니다.
 
 ## 다음 안전 순서
 
-1. v306 실제 결과 확인
-2. candidate operation 0개면 새 revision 생성 보류
-3. 후보가 있으면 schema change intent와 748개 row 영향 검토
-4. autogenerate는 별도 사용자 승인 전 금지
-5. 향후 revision은 isolated migration DB에서 먼저 검토·왕복
-6. source 적용은 다시 별도 승인
+1. v308 실제 strict + health 결과 확인
+2. local runtime과 DB health 회귀 없음 확인
+3. 남은 warning을 secret/TLS/image/reverse proxy로 분류
+4. production Compose는 실행하지 않고 정적 검증부터 보강
+5. 실제 운영 secret/TLS/Docker build는 별도 승인 전 금지
+6. worker/pool/max_connections 계산과 container health 설계
+7. 이후 isolated deployment candidate smoke로 이동
 
 ## 절대 변경/실행 금지
 
+- actual `.env`와 production secret
+- production Compose build/up/pull/down
+- Docker container/volume 변경 또는 삭제
 - source/rehearsal `stamp` 재실행
-- 새 Alembic revision 생성/autogenerate
+- 새 Alembic revision/autogenerate
 - source/rehearsal/migration `upgrade`/`downgrade`
 - DB 생성/삭제/복원
-- Docker container/volume 삭제
-- `.env`, seed, 인증
+- seed
+- 인증
 - 기존 API route path/response body
 - 실제 write 로직/Write Guard
 - Preview/Apply request body

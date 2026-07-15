@@ -60,6 +60,15 @@ def main() -> None:
         "tools/smoke/backend/smoke_postgres_source_baseline_stamp_guard.py",
         "tools/smoke/backend/smoke_postgres_baseline_completion_state.py",
         "tools/smoke/backend/smoke_postgres_next_revision_preflight.py",
+        "tools/check_postgres_deployment_runtime_readiness.py",
+        "tools/smoke/backend/smoke_postgres_deployment_runtime_readiness.py",
+        "tools/check_runtime_config_hardening.py",
+        "tools/smoke/backend/smoke_runtime_config_hardening.py",
+        "backend/Dockerfile",
+        "deploy/docker-compose.production.yml",
+        "deploy/README.md",
+        "docs/current/POSTGRES_RUNTIME_CONFIG_HARDENING.md",
+        "docs/current/POSTGRES_PRODUCTION_DEPLOYMENT_TEMPLATE.md",
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_CREATION.md",
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md",
         "docs/current/POSTGRES_MIGRATION_TEST_UPGRADE.md",
@@ -71,6 +80,8 @@ def main() -> None:
         "docs/current/POSTGRES_BASELINE_COMPLETION_STATE.md",
         "docs/current/POSTGRES_NEXT_REVISION_PREFLIGHT.md",
         "docs/current/POSTGRES_NEXT_REVISION_READONLY_PLAN.md",
+        "docs/current/POSTGRES_DEPLOYMENT_RUNTIME_READINESS.md",
+        "docs/current/POSTGRES_DEPLOYMENT_MIGRATION_RUNBOOK.md",
         "docs/current/review/v295_initial_schema.manual-review.json",
     ]
     for relative_path in required_files:
@@ -78,17 +89,16 @@ def main() -> None:
 
     assert_contains(
         "NEXT_CHAT_PROMPT.md",
-        "rpg_v306_postgres_next_revision_readonly_preflight_ready.zip",
-        "v306.postgres-next-revision-readonly-preflight",
+        "rpg_v308_runtime_config_hardening_ready.zip",
+        "v308.runtime-config-hardening-ready",
         "backend/.venv",
-        "check_postgres_next_revision_preflight.py --strict",
+        "check_runtime_config_hardening.py --strict --require-health",
         "v295_initial_schema",
         "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa",
         "rpg_game_restore_rehearsal_v290",
-        "first/second upgrade signatures: identical",
-        "restore-rehearsal-stamp-current-state-verified",
         "postgres-baseline-completion-state-verified",
         "next-revision-not-required-current-schema-equivalent",
+        "runtime-config-hardening-verified-local-runtime-preserved",
         "7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921",
     )
     assert_contains(
@@ -96,15 +106,16 @@ def main() -> None:
         "application tables/rows 22/748",
         "public tables/rows 23/749",
         "migration rpg_game_migration_empty_v290",
-        "v304 source stamp/post-check",
-        "check_postgres_next_revision_preflight.py",
+        "v304 source post-check",
+        "check_runtime_config_hardening.py",
         "alembic-managed-baseline-complete",
-        "Alembic metadata candidate operation",
+        "v307 Docker PostgreSQL: running/healthy",
+        "runtime-config-hardening-verified-local-runtime-preserved",
     )
     assert_contains(
         "README.md",
-        "v306.postgres-next-revision-readonly-preflight",
-        "check_postgres_next_revision_preflight.py",
+        "v308.runtime-config-hardening-ready",
+        "check_runtime_config_hardening.py",
         "v295_initial_schema",
         "alembic-managed-baseline-complete",
     )
@@ -190,6 +201,37 @@ def main() -> None:
         "autogenerate",
         "compare_metadata()",
         "별도 승인",
+    )
+    assert_contains(
+        "docs/current/POSTGRES_DEPLOYMENT_RUNTIME_READINESS.md",
+        "v307",
+        "postgresql+asyncpg",
+        "docker compose ps --format json",
+        "local-runtime-readiness-verified-production-hardening-required",
+        "비밀번호, JWT secret",
+    )
+    assert_contains(
+        "docs/current/POSTGRES_DEPLOYMENT_MIGRATION_RUNBOOK.md",
+        "v307",
+        "서버 시작 시 자동 migration",
+        "migration 전 source DB backup",
+        "isolated migration DB",
+        "별도 승인",
+    )
+    assert_contains(
+        "docs/current/POSTGRES_RUNTIME_CONFIG_HARDENING.md",
+        "v308",
+        "DB_POOL_PRE_PING",
+        "engine.dispose()",
+        "runtime-config-hardening-verified-local-runtime-preserved",
+    )
+    assert_contains(
+        "docs/current/POSTGRES_PRODUCTION_DEPLOYMENT_TEMPLATE.md",
+        "v308",
+        "Adminer",
+        "digest",
+        "TLS",
+        "자동 migration",
     )
     assert_contains(
         ".gitignore",

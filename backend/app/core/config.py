@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,6 +13,10 @@ LOCAL_DEV_CORS_ORIGINS = (
     "http://127.0.0.1:3000",
 )
 
+LOCAL_JWT_SECRET = "change-me-before-production"
+LOCAL_ADMIN_WRITE_KEY = "local-admin-dev-key"
+PRODUCTION_ENVIRONMENTS = {"prod", "production"}
+
 
 class Settings(BaseSettings):
     app_name: str = "Idle RPG Backend"
@@ -20,11 +24,21 @@ class Settings(BaseSettings):
     debug: bool = True
     api_prefix: str = "/api/v1"
     database_url: str = "postgresql+asyncpg://rpg_user:rpg_password@127.0.0.1:55432/rpg_game"
-    jwt_secret_key: str = "change-me-before-production"
+
+    # SQLAlchemy runtime pool defaults are deliberately conservative. Local
+    # development keeps the same single-engine behavior while production can
+    # override every value through environment variables without code edits.
+    db_pool_pre_ping: bool = True
+    db_pool_size: int = Field(default=5, ge=1, le=100)
+    db_max_overflow: int = Field(default=10, ge=0, le=200)
+    db_pool_timeout_seconds: int = Field(default=30, ge=1, le=300)
+    db_pool_recycle_seconds: int = Field(default=1800, ge=30, le=86400)
+
+    jwt_secret_key: str = LOCAL_JWT_SECRET
     access_token_expire_minutes: int = 1440
     # Local-only guard for dangerous admin write endpoints until real login/RBAC is added.
     # Read-only admin APIs do not require this key.
-    admin_write_dev_key: str = "local-admin-dev-key"
+    admin_write_dev_key: str = LOCAL_ADMIN_WRITE_KEY
 
     # pydantic-settings는 list[str] 환경변수를 JSON으로 먼저 파싱하려고 하므로,
     # 로컬 .env에서는 문자열로 받고 아래 프로퍼티에서 JSON/쉼표 형식을 모두 허용합니다.
@@ -34,6 +48,29 @@ class Settings(BaseSettings):
     )
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+    @model_validator(mode="after")
+    def validate_production_runtime_guard(self) -> "Settings":
+        """Fail closed when production is started with local unsafe defaults."""
+        environment = self.environment.strip().lower()
+        if environment not in PRODUCTION_ENVIRONMENTS:
+            return self
+
+        errors: list[str] = []
+        if self.debug:
+            errors.append("DEBUG must be false in production")
+        if self.jwt_secret_key == LOCAL_JWT_SECRET:
+            errors.append("JWT_SECRET_KEY must not use the local default in production")
+        if self.admin_write_dev_key == LOCAL_ADMIN_WRITE_KEY:
+            errors.append("ADMIN_WRITE_DEV_KEY must not use the local default in production")
+        if len(self.jwt_secret_key.strip()) < 32:
+            errors.append("JWT_SECRET_KEY must contain at least 32 characters in production")
+        if len(self.admin_write_dev_key.strip()) < 32:
+            errors.append("ADMIN_WRITE_DEV_KEY must contain at least 32 characters in production")
+
+        if errors:
+            raise ValueError("; ".join(errors))
+        return self
 
     @property
     def cors_origins(self) -> list[str]:

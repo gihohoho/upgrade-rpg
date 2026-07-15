@@ -1,39 +1,35 @@
-# Roadmap — v306
+# Roadmap — v308
 
 ## 완료
 
-- PostgreSQL schema equivalence differences=0
-- verified backup과 isolated restore rehearsal
-- 최초 revision `v295_initial_schema` 자동/수동 검토
-- isolated migration DB upgrade → downgrade base → upgrade 왕복
-- rehearsal/source baseline stamp 및 post-check
-- source/rehearsal application 22 tables / 748 rows digest 보존
-- v305 baseline completion state 실제 통과
+- Vue/FastAPI/PostgreSQL 기본 분리
+- PostgreSQL schema 22 tables / 748 application rows 검증
+- 최초 revision `v295_initial_schema` 생성·수동 검토
+- isolated upgrade → downgrade → upgrade 왕복
+- restore rehearsal/source baseline stamp 및 post-check
+- v305 baseline completion lock
+- v306 next revision preflight: candidate operation 0, 새 revision 불필요
+- v307 live runtime/DB health/Docker readiness 통과
 
-## 현재
+## 현재 단계
 
-- classification: `alembic-managed-baseline-complete`
-- source/rehearsal/migration 모두 `v295_initial_schema`
-- 검토된 revision 파일 1개
-- v306 next-revision read-only preflight 준비 완료
-- revision/autogenerate/upgrade/downgrade 미승인
+- v308 pool/lifecycle/production guard/배포 template 준비 완료
+- 실제 DB, `.env`, Docker 실행 상태 변경 없음
 
-## 다음 안전 순서
+## 다음 순서
 
-1. 기호님 PC에서 v306 preflight 실행
-2. single graph/model snapshot/canonical schema/sequence 확인
-3. Alembic candidate operation 0개면 새 revision 생성 보류
-4. 후보가 있으면 schema change intent review
-5. autogenerate는 별도 승인 전 금지
-6. 향후 revision은 isolated migration DB에서 검토·왕복
-7. source 적용은 다시 별도 승인
+1. 기호님 PC에서 v308 strict + health 실행
+2. local runtime/health 회귀 없음 확인
+3. 남은 운영 경고를 secret/TLS/image/reverse proxy로 재분류
+4. production Compose를 실행하지 않고 정적 검증 강화
+5. 운영 secret 입력 방법과 TLS 연결 옵션 설계
+6. worker 수·pool·PostgreSQL max connections 계산
+7. 별도 승인 후에만 container build 및 isolated deployment smoke 검토
 
-## 계속 금지
+## 계속 보류
 
-- source/rehearsal stamp 재실행
-- 새 revision/autogenerate
-- source/rehearsal/migration upgrade/downgrade
-- DB create/drop/restore
-- `.env`, seed, 인증, API body/route/write 변경
-- Docker volume 삭제
-- 게임 콘텐츠/밸런스 변경
+- 게임 콘텐츠 개발
+- 새 Alembic revision
+- source DB migration 실행
+- 실제 production secret/TLS/Docker 적용
+- Vue Preview/Apply/write/인증 연결

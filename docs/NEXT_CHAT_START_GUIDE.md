@@ -1,29 +1,28 @@
-# Next Chat Start Guide — v306
+# Next Chat Start Guide — v308
 
-## 기준
+## 첨부 ZIP
 
-- ZIP: `rpg_v306_postgres_next_revision_readonly_preflight_ready.zip`
-- backend virtualenv: `backend/.venv`
-- source DB: `rpg_game` — 23/749 / application 22/748 / `v295_initial_schema`
-- restore DB: `rpg_game_restore_rehearsal_v290` — 23/749 / `v295_initial_schema`
-- migration DB: `rpg_game_migration_empty_v290` — 23/1 / `v295_initial_schema`
-- classification: `alembic-managed-baseline-complete`
-- v305 completion check: passed
+- `rpg_v308_runtime_config_hardening_ready.zip`
 
-## 첫 실행
+## 시작 명령
 
 실행 위치: `backend` 폴더  
-`.venv` 상태: 꺼져 있을 때 Git Bash
+`.venv` 상태: 꺼져 있을 때
 
 ```bash
 source .venv/Scripts/activate
 ```
 
 실행 위치: 프로젝트 루트  
-`.venv` 상태: `backend/.venv`가 켜진 상태
+`.venv` 상태: 켜진 상태
 
 ```bash
-python tools/check_postgres_next_revision_preflight.py --strict
+python tools/check_runtime_config_hardening.py --strict --require-health
 ```
 
-이 명령은 revision 생성/autogenerate/upgrade/downgrade/stamp를 실행하지 않습니다.
+## 주의
+
+- 실제 DB/.env/Docker mutation 없음
+- production Compose는 검토 초안이며 실행 금지
+- source/rehearsal stamp 재실행 금지
+- 새 revision/autogenerate/upgrade/downgrade 금지

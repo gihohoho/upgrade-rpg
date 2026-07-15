@@ -19,7 +19,7 @@ RUNTIME_DOC = ROOT / "docs/current/POSTGRES_RUNTIME_READONLY_STATE.md"
 BASELINE_DOC = ROOT / "docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md"
 
 REQUIRED_REPORT_TEXT = [
-    "PostgreSQL / Alembic Readiness — v306",
+    "PostgreSQL / Alembic Readiness — v308",
     "SQLAlchemy model table 수 | 22개",
     "Alembic asyncpg-compatible online env | 있음",
     "Alembic versions 폴더 | 있음",
@@ -41,6 +41,10 @@ REQUIRED_REPORT_TEXT = [
     "tools/stamp_postgres_source_database.py",
     "tools/check_postgres_baseline_completion_state.py",
     "tools/check_postgres_next_revision_preflight.py",
+    "tools/check_postgres_deployment_runtime_readiness.py",
+    "tools/check_runtime_config_hardening.py",
+    "Stage F — 운영·배포 runtime readiness",
+    "runtime config hardening",
     "compare_metadata()",
     "sequence ownership",
     "alembic-managed-baseline-complete",

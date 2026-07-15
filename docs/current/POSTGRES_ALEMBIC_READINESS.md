@@ -1,4 +1,4 @@
-# PostgreSQL / Alembic Readiness — v306
+# PostgreSQL / Alembic Readiness — v308
 
 이 문서는 현재 프로젝트 파일을 기준으로 PostgreSQL과 Alembic 도입 준비 상태를 자동 분석한 결과입니다.
 
@@ -36,6 +36,10 @@
 - v304 source post-check는 23/749, application 22/748, revision `v295_initial_schema`, v304 report verified로 통과했습니다.
 - v305에서는 baseline 완료 상태를 읽기 전용 checker와 회귀 smoke로 고정했습니다.
 - v306에서는 단일 Alembic graph, 승인 model source snapshot, canonical schema comparison, read-only `compare_metadata()`와 sequence ownership을 함께 확인하며 새 revision 필요 여부만 판정합니다.
+- 사용자 PC에서 v306 preflight가 candidate operation 0개, 새 revision 불필요로 실제 통과했습니다.
+- v307에서는 exact runtime DB/driver, FastAPI startup mutation, DB health contract, Docker running/healthy, env key inventory, manual migration runbook을 읽기 전용으로 점검합니다.
+- 사용자 PC의 v307 `--require-health` 결과가 통과했고 production hardening warning 12개를 수집했습니다.
+- v308에서는 명시적 async pool 5개 옵션, shutdown `engine.dispose()`, production fail-closed guard, non-root FastAPI Dockerfile, 별도 운영 Compose 초안을 추가합니다.
 
 ## 현재 구조 요약
 
@@ -140,11 +144,16 @@ python -m pip install -e ".[dev]"
 - restore rehearsal stamp guard: `tools/stamp_postgres_restore_rehearsal_database.py`
 - source baseline stamp final guard: `tools/stamp_postgres_source_database.py`
 - baseline completion state lock: `tools/check_postgres_baseline_completion_state.py`
+- next revision read-only preflight: `tools/check_postgres_next_revision_preflight.py`
+- deployment/runtime readiness preflight: `tools/check_postgres_deployment_runtime_readiness.py`
+- runtime config hardening verification: `tools/check_runtime_config_hardening.py`
 
 ## 현재 차단 요소 / 실제 검증 필요 지점
 
 - 현재 로컬 스키마 생성은 Alembic이 아니라 `Base.metadata.create_all()`을 사용합니다.
 - `setup_dev_db.py --reset`은 `public` 스키마 전체를 삭제하는 고위험 경로입니다.
+- docker-compose.yml은 로컬 고정 DB 비밀번호를 사용하므로 운영 secret 분리가 필요합니다.
+- Adminer 8081 공개는 로컬 전용이며 운영 구성에서 분리해야 합니다.
 
 ## SQLite 의존성 점검
 
@@ -190,8 +199,12 @@ backend runtime/model/schema 경로에서 SQLite URL이나 SQLite 전용 타입�
 25. v304 source execution report verified와 rehearsal/migration 무변경 확인
 26. v305 completion checker로 세 DB, 두 실행 report, exact revision set을 읽기 전용 고정
 27. v306 next-revision preflight로 single head/model snapshot/canonical schema/Alembic candidate diff/sequence ownership 확인
-27. 다음 revision/autogenerate/upgrade/downgrade는 별도 read-only preflight 전까지 금지
-28. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
+28. 사용자 PC에서 candidate operation 0개와 새 revision 불필요를 실제 확인
+29. v307 deployment/runtime readiness로 exact runtime DB, startup mutation 부재, Docker health, env key, 운영 migration runbook 확인
+30. 사용자 PC에서 v307 `--require-health` 통과와 production hardening warning 12개 확인
+31. v308에서 pool/lifecycle/production guard와 별도 배포 template를 DB/.env/Docker mutation 없이 보강
+32. 다음 revision/autogenerate/upgrade/downgrade는 별도 승인 전까지 금지
+33. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
 
 ### Stage C — Alembic 실행 방식 검증
 
@@ -220,14 +233,25 @@ backend runtime/model/schema 경로에서 SQLite URL이나 SQLite 전용 타입�
 ### Stage E — 다음 revision 준비
 
 1. v306 next-revision read-only preflight 실제 결과 확인
-2. model/schema 변경 의도와 범위를 문서로 먼저 고정
-3. source/rehearsal/migration DB와 revision graph를 읽기 전용 재확인
+2. candidate operation 0개면 single baseline을 유지하고 새 revision을 만들지 않음
+3. model/schema 변경 의도가 생길 때만 별도 review 단계로 이동
 4. autogenerate 실행 전 별도 승인 경계 마련
 5. 생성되더라도 source가 아닌 isolated migration DB에서만 검토·왕복
 6. table/index/FK/JSONB/Numeric와 API 영향 비교
 7. 그 후에만 다음 migration 실행 여부를 별도 승인
 
 현재는 새 revision 생성, autogenerate, upgrade, downgrade가 모두 미승인입니다.
+
+### Stage F — 운영·배포 runtime readiness
+
+1. `tools/check_postgres_deployment_runtime_readiness.py --strict`로 exact runtime DB와 driver 확인
+2. FastAPI startup/lifespan에 자동 create_all/upgrade/stamp가 없는지 확인
+3. `GET /api/v1/health/db`가 SELECT 1 read-only 계약인지 확인
+4. Docker Compose PostgreSQL running/healthy, restart, healthcheck, named volume 확인
+5. `.env`는 값이 아니라 key inventory만 확인하고 secret은 출력하지 않음
+6. v308에서 pool, shutdown lifecycle, production config guard, FastAPI image와 별도 운영 Compose 초안을 보강
+7. 실제 운영 secret/TLS/image digest/reverse proxy 적용은 다음 별도 단계로 분리
+8. 운영 migration은 서버 시작과 분리하고 backup/isolated/별도 승인 원칙을 유지
 
 ## Rollback 원칙
 
@@ -303,7 +327,7 @@ python tools/restore_postgres_rehearsal_database.py --execute
 
 상세 전략은 `docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md`를 기준으로 합니다.
 
-## v306에서 변경하지 않은 것
+## v308에서 변경하지 않은 것
 
 - DB schema/data
 - Docker container/volume
@@ -318,10 +342,10 @@ python tools/restore_postgres_rehearsal_database.py --execute
 ## 다음 읽기 전용 체크포인트
 
 ```bash
-python tools/check_postgres_next_revision_preflight.py --strict
+python tools/check_runtime_config_hardening.py --strict --require-health
 ```
 
-통과 조건은 v305 완료 상태, exact single revision graph, approved model source snapshot, canonical differences=0, Alembic candidate operation 0개, sequence ownership 일치입니다. 통과해도 revision/autogenerate/upgrade/downgrade는 승인되지 않습니다.
+통과 조건은 v307 live runtime 상태 유지, 명시적 pool 옵션 5개, shutdown `engine.dispose()`, production unsafe default 차단, local Compose 보존, non-root Dockerfile과 별도 운영 Compose template 안전 경계입니다.
 
 ## v291-v293 backup / restore rehearsal 역사적 경계
 

@@ -1,3 +1,21 @@
+# v308 - FastAPI/PostgreSQL runtime config hardening
+
+- Recorded the user PC v307 `--strict --require-health` success with exact `rpg_game`, PostgreSQL 16.14, healthy Docker, and 12 production-hardening warnings.
+- Added five environment-backed SQLAlchemy async pool options while preserving local defaults.
+- Added FastAPI lifespan shutdown disposal with no startup migration or schema mutation.
+- Added a fail-closed production settings guard for DEBUG and local/default or short JWT/admin secrets.
+- Added a non-root FastAPI Dockerfile and a separate production Compose review template without Adminer or PostgreSQL host-port publication.
+- Added a read-only v308 verifier, dedicated smoke, readiness/current/handoff documentation, and a new handoff ZIP.
+- Did not edit the real `.env`, run Docker build/up/down, change DB schema/data, add revisions, alter API contracts, auth/write behavior, Vue, or game content.
+
+# v307 - PostgreSQL/FastAPI deployment runtime readiness
+
+- Added a read-only runtime readiness checker for exact `rpg_game`, `postgresql+asyncpg`, live revision, FastAPI startup mutation boundaries, Docker running/healthy state, env key inventory, and DB health contract.
+- Added a production-hardening warning classification for pool policy, engine disposal lifecycle, local secrets, published Adminer/PostgreSQL ports, image digest, TLS, and FastAPI container image.
+- Added a manual deployment migration runbook that keeps migrations out of server startup and requires backup, isolated rehearsal, and separate approval.
+- Added dedicated v307 smoke, core registration, readiness/current/handoff documentation, and a new handoff ZIP.
+- No `.env`, Docker container/volume, DB schema/data, Alembic revision/history, API route/body, auth, write logic, seed, Vue, or game content was changed.
+
 # v304 - PostgreSQL source baseline stamp final guard
 
 - Added an exact-source `rpg_game` baseline stamp guard with read-only pre/post inspection.

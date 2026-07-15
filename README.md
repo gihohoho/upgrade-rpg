@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v306.postgres-next-revision-readonly-preflight**
+현재 기준: **v308.runtime-config-hardening-ready**
 
 ## 현재 구조
 
@@ -18,36 +18,41 @@
 ```txt
 classification: alembic-managed-baseline-complete
 source rpg_game: 23 public tables / 749 rows / application 22 tables / 748 rows
-restore rehearsal: 23/749 / v295_initial_schema / report verified
-migration test DB: 23/1 / v295_initial_schema / differences=0
-initial revision SHA-256: 24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa
-backup SHA-256: b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481
+current revision: v295_initial_schema
+restore rehearsal: 23/749 / report verified
+migration test DB: 23/1 / differences=0
 source/rehearsal schema/data digest: identical
 v302 rehearsal execution report: verified
 v304 source execution report: verified
 v305 completion check: passed
+v306 next revision preflight: candidate operations 0 / next revision required no
+v307 runtime readiness --require-health: passed / production warnings 12
 ```
 
-## v306 핵심
+## v308 핵심
 
-새 revision을 생성하지 않고 실제 후보 schema 변경이 있는지만 읽기 전용으로 판단합니다.
+DB, 실제 `.env`, 실행 중인 Docker 자원을 변경하지 않고 runtime code/config와 배포 초안을 보강했습니다.
 
 ```txt
-tools/check_postgres_next_revision_preflight.py
-tools/smoke/backend/smoke_postgres_next_revision_preflight.py
-docs/current/POSTGRES_NEXT_REVISION_PREFLIGHT.md
+backend/app/core/config.py
+backend/app/db/session.py
+backend/app/main.py
+backend/.env.example
+backend/Dockerfile
+deploy/docker-compose.production.yml
+tools/check_runtime_config_hardening.py
+tools/smoke/backend/smoke_runtime_config_hardening.py
 ```
 
-검사 범위:
+적용 내용:
 
-- Alembic single base/single head
-- 승인 SQLAlchemy model/Alembic env source SHA-256
-- canonical schema differences=0
-- PostgreSQL read-only transaction 안의 Alembic `compare_metadata()`
-- type/server default/nullable/index/constraint 후보
-- integer PK sequence ownership과 unowned sequence
-
-새 revision/autogenerate/upgrade/downgrade/stamp는 별도 승인 전까지 금지합니다.
+- SQLAlchemy pool 5개 정책 명시
+- shutdown `engine.dispose()` lifecycle
+- production `DEBUG=true` 및 로컬 기본 secret 차단
+- non-root FastAPI Dockerfile
+- Adminer/PostgreSQL host port가 없는 별도 운영 Compose 초안
+- local `docker-compose.yml`과 실제 `.env` 유지
+- 자동 Alembic migration 없음
 
 ## 다음 실행
 
@@ -62,7 +67,7 @@ source .venv/Scripts/activate
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/check_postgres_next_revision_preflight.py --strict
+python tools/check_runtime_config_hardening.py --strict --require-health
 ```
 
 ## 서버 실행

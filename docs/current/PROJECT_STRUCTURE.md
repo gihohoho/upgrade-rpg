@@ -1,8 +1,8 @@
-# Project Structure — v306
+# Project Structure — v308
 
 현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
 
-v306에서는 완료된 baseline을 유지한 채 새 revision이 필요한지 읽기 전용으로 판단하는 preflight를 추가했습니다. single Alembic graph, 승인 model/env source hash, canonical schema differences, Alembic candidate operation, PostgreSQL sequence ownership을 함께 확인하며 revision/autogenerate/upgrade/downgrade는 계속 차단합니다.
+v308에서는 v307 live runtime 통과 상태를 유지하면서 SQLAlchemy pool, FastAPI shutdown lifecycle, production fail-closed guard, non-root Dockerfile과 별도 운영 Compose 초안을 보강합니다. 실제 `.env`, Docker 실행 상태, DB, Alembic history는 변경하지 않습니다.
 
 중요한 결론:
 
@@ -42,9 +42,61 @@ v306에서는 완료된 baseline을 유지한 채 새 revision이 필요한지 �
 | `src/` | legacy JS/CSS | 이동 금지, Vue 앱 `src/`와 구분 |
 | `frontend/vue-app/` | 새 Vue shell + 읽기 전용 API client 준비 | 실제 기능 대체 전 단계 |
 | `backend/` | FastAPI 백엔드 | 기존 route/body/DB/env/seed 유지 |
-| `tools/` | smoke/contract/검증/backup/restore/migration 도구 | v306 next-revision read-only preflight와 회귀 smoke 보강 |
-| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v306 기준 갱신 |
+| `tools/` | smoke/contract/검증/backup/restore/migration 도구 | v308 runtime config hardening checker와 회귀 smoke 보강 |
+| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v308 기준 갱신 |
 
+
+
+## v308 runtime config hardening
+
+추가/변경 위치:
+
+```txt
+backend/app/core/config.py
+backend/app/db/session.py
+backend/app/main.py
+backend/.env.example
+backend/Dockerfile
+deploy/docker-compose.production.yml
+tools/check_runtime_config_hardening.py
+tools/smoke/backend/smoke_runtime_config_hardening.py
+docs/current/POSTGRES_RUNTIME_CONFIG_HARDENING.md
+docs/current/POSTGRES_PRODUCTION_DEPLOYMENT_TEMPLATE.md
+```
+
+고정 경계:
+
+- explicit async pool options 5개
+- shutdown `await engine.dispose()`
+- production DEBUG/local secret fail-closed guard
+- local Compose와 실제 `.env` 유지
+- production template에서 Adminer/PostgreSQL host port 제외
+- Dockerfile/Compose command에 자동 Alembic 없음
+- DB schema/data와 API contract 미변경
+
+## v307 PostgreSQL/FastAPI deployment runtime readiness
+
+추가 위치:
+
+```txt
+tools/check_postgres_deployment_runtime_readiness.py
+tools/smoke/backend/smoke_postgres_deployment_runtime_readiness.py
+docs/current/POSTGRES_DEPLOYMENT_RUNTIME_READINESS.md
+docs/current/POSTGRES_DEPLOYMENT_MIGRATION_RUNBOOK.md
+```
+
+고정 경계:
+
+- v305 baseline completion과 v306 no-next-revision 결과가 선행 조건
+- runtime URL은 `postgresql+asyncpg` + exact `rpg_game`만 허용
+- rehearsal/migration DB runtime 연결 차단
+- FastAPI startup/lifespan의 `create_all`, `upgrade`, `stamp`, schema reset 차단
+- `GET /api/v1/health/db`는 `SELECT 1`, commit 없음, connection secret 비노출
+- live DB identity/revision은 PostgreSQL read-only transaction에서 확인
+- Docker 조회는 `compose ps/config`만 허용하고 start/stop/remove는 차단
+- `.env`는 key 이름만 확인하고 secret 값은 출력하지 않음
+- 로컬 안전 경계와 production hardening 경고를 분리
+- revision/autogenerate/stamp/upgrade/downgrade는 실행하지 않음
 
 ## v306 PostgreSQL next revision read-only preflight
 
