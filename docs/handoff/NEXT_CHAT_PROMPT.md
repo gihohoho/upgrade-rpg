@@ -11,7 +11,7 @@ ZIP을 기준으로 작업하지 않습니다. 현재 프로젝트 루트와 Git
 현재 고정값:
 
 ```txt
-latest: v318.github-actions-action-sha-candidates-reviewed
+latest: v319.github-connector-actions-settings-reviewed
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR namespace: gihohoho
 backend repository: ghcr.io/gihohoho/upgrade-rpg-backend
@@ -28,11 +28,14 @@ workflow/login/pull/build/push approved: no/no/no/no/no
 container up/down approved: no/no
 static workflow plan: present/verified
 workflow file/action SHA candidates reviewed/action SHAs approved/environment configured: no/yes/no/no
+GitHub connector access: gihohoho/upgrade-rpg only / verified
+repository Actions settings reviewed/changed: yes/no
+publish environment reviewed/configured: yes/no
 ```
 
 `gihohoho`는 기호가 직접 확인한 고정 namespace입니다. placeholder로 되돌리거나 다른 이름을 추측하지 마세요. repository 주소는 `ghcr.io/gihohoho/upgrade-rpg-backend`로 고정합니다. 실제 token, PAT, Docker credential은 파일·Git·채팅에 넣지 마세요.
 
-첫 작업은 읽기 전용 v318 검사입니다.
+첫 작업은 읽기 전용 v319 검사입니다.
 
 실행 위치: `backend` 폴더  
 `.venv` 상태: 꺼져 있을 때
@@ -54,11 +57,13 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 trigger: workflow_dispatch-only
 workflow file/creation approved: no/no
 action SHA candidates reviewed/approved: yes/no
-result: github-actions-action-sha-candidates-verified-workflow-not-created
-next safe stage: connect-github-app-review-repository-actions-settings-and-request-workflow-creation-approval
+result: github-connector-actions-settings-verified-workflow-not-created
+next safe stage: request-repository-actions-supply-chain-settings-change-approval
 ```
 
-검사가 통과하면 v318에서 고정한 action allowlist의 upstream 40자리 commit SHA 후보를 유지하고, GitHub repository Actions 설정과 `ghcr-production-publish` environment의 required reviewer/prevent self-review/main 제한을 읽기 전용으로 검토하세요. Codex GitHub 플러그인에는 아직 설치된 GitHub App 계정이 없으므로 `gihohoho/upgrade-rpg` repository 설치 접근 권한을 기호에게 다시 요청하세요.
+ChatGPT Codex Connector는 `gihohoho` 계정에 설치되었고 `upgrade-rpg` 저장소 하나만 허용된 상태로 실제 repository 조회까지 통과했습니다. repository Actions 설정은 읽기 전용으로 검토했으며 현재 모든 action 허용, full-length SHA 강제 꺼짐, 기본 `GITHUB_TOKEN` contents/packages read-only, Actions PR 생성·승인 꺼짐입니다. `ghcr-production-publish` environment는 아직 없습니다.
+
+검사가 통과하면 v318에서 고정한 9개 action SHA 후보를 유지하고, 외부 action 허용 범위를 그 repository들로 제한하며 full-length SHA 강제를 켜는 repository Actions settings 변경 승인을 기호에게 먼저 요청하세요. Environment 생성과 workflow 파일 생성은 각각 이후의 별도 승인 경계입니다. GitHub App 연결이나 repository 읽기 권한을 다시 요청할 필요는 없습니다.
 
 아직 `.github/workflows/` 파일을 만들거나 workflow를 실행하지 말고, Docker login/pull/build/push/up/down도 실행하지 마세요. workflow 파일 생성은 action SHA와 repository 설정 검토 결과를 보여준 뒤 기호에게 별도로 승인받습니다.
 

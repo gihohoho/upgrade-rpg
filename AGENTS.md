@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v318
+# Upgrade RPG Codex working rules — v319
 
 이 파일은 저장소 전체에 적용됩니다. Codex는 작업을 시작할 때 이 파일과 `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -16,7 +16,7 @@
 
 ## 현재 고정 상태
 
-- latest: `v318.github-actions-action-sha-candidates-reviewed`
+- latest: `v319.github-connector-actions-settings-reviewed`
 - GitHub remote: `https://github.com/gihohoho/upgrade-rpg.git`
 - GHCR namespace: `gihohoho`
 - backend image repository: `ghcr.io/gihohoho/upgrade-rpg-backend` (private)
@@ -27,6 +27,9 @@
 - Alembic current revision은 `v295_initial_schema`; 새 revision 필요 상태는 `no`입니다.
 - CI credential strategy: GitHub Actions `GITHUB_TOKEN` 우선 (`github-actions-github-token`)
 - workflow/login/pull/build/push approved: no/no/no/no/no
+- Codex GitHub App access: `gihohoho/upgrade-rpg` selected repository only, verified
+- repository Actions settings reviewed/changed: yes/no
+- `ghcr-production-publish` environment reviewed/configured: yes/no
 
 ## 안전 승인 경계
 
@@ -47,7 +50,7 @@ DB/env/seed/인증/API body/route/write/migration/Docker/secret/TLS 작업은 �
 
 ## 현재 허용된 다음 단계
 
-GitHub Actions 최소 permissions, `workflow_dispatch` 전용 trigger, SBOM/provenance/signature/vulnerability gate의 정적 계획과 action별 upstream 40자리 SHA 후보 검토는 v318에서 준비되었습니다. 다음 단계는 Codex GitHub App을 `gihohoho/upgrade-rpg`에 연결하고 repository Actions 설정과 publish environment를 읽기 전용으로 검토한 뒤 workflow 파일 생성 승인 여부를 사용자에게 묻는 것입니다. `.github/workflows/` 생성과 workflow 실행은 아직 승인되지 않았습니다.
+Codex GitHub App은 `gihohoho/upgrade-rpg` 저장소 하나에만 연결되었고 repository Actions 설정과 environment 존재 여부를 v319에서 읽기 전용으로 검토했습니다. 현재 Actions는 외부 action 전체 허용이며 full-length SHA 강제가 꺼져 있고, 기본 `GITHUB_TOKEN`은 contents/packages read-only이며, `ghcr-production-publish` environment는 없습니다. 다음 단계는 외부 action 허용 범위를 v318 allowlist로 제한하고 full-length SHA 강제를 켜는 repository Actions settings 변경 승인을 사용자에게 별도로 묻는 것입니다. Environment 생성과 `.github/workflows/` 생성·실행은 이후 각각 별도 승인 경계로 유지합니다.
 
 첫 검사는 프로젝트 루트에서 `backend/.venv`를 켠 상태로 실행합니다.
 
@@ -55,7 +58,7 @@ GitHub Actions 최소 permissions, `workflow_dispatch` 전용 trigger, SBOM/prov
 python tools/check_github_actions_ghcr_static_plan.py --strict
 ```
 
-정상 결과: `github-actions-action-sha-candidates-verified-workflow-not-created`
+정상 결과: `github-connector-actions-settings-verified-workflow-not-created`
 
 ## 변경과 검증
 

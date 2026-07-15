@@ -5,9 +5,9 @@ import hashlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v318.github-actions-action-sha-candidates-reviewed"
-READY_RESULT = "github-actions-action-sha-candidates-verified-workflow-not-created"
-NEXT_SAFE_STAGE = "connect-github-app-review-repository-actions-settings-and-request-workflow-creation-approval"
+VERSION = "v319.github-connector-actions-settings-reviewed"
+READY_RESULT = "github-connector-actions-settings-verified-workflow-not-created"
+NEXT_SAFE_STAGE = "request-repository-actions-supply-chain-settings-change-approval"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 REVISION_SHA256 = "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa"
@@ -83,7 +83,7 @@ def main() -> int:
         NEXT_SAFE_STAGE,
         "ZIP을 기준으로 작업하지 않습니다",
         "Codex가 프로젝트 루트에서 직접",
-        "repository 설치 접근 권한을 기호에게 다시 요청",
+        "`upgrade-rpg` 저장소 하나만 허용",
     )
     assert_contains(
         "NEXT_CHAT_HANDOFF.md",
@@ -93,7 +93,7 @@ def main() -> int:
         REPOSITORY,
         "workflow/login/pull/build/push approved: no/no/no/no/no",
         "handoff mode: current repository + Git `main` (ZIP 없음)",
-        "repository 설치 접근 권한이 아직 필요",
+        "GitHub App 연결과 repository 읽기 권한은 해결됨",
     )
     assert_contains(
         "deploy/backend-image-ghcr-policy.example.json",
@@ -108,7 +108,12 @@ def main() -> int:
         '"githubActionsStaticPlanVerified": true',
         '"actionShasResolved": true',
         '"actionShasApproved": false',
-        '"githubConnectorRepositoryAccess": false',
+        '"githubConnectorRepositoryAccess": true',
+        '"githubConnectorSelectedRepositoryOnly": true',
+        '"repositoryActionsSettingsReviewed": true',
+        '"repositoryActionsSettingsMutationApproved": false',
+        '"publishEnvironmentReviewed": true',
+        '"publishEnvironmentCreationApproved": false',
         '"imageBuildApproved": false',
     )
     assert_contains(
@@ -122,6 +127,10 @@ def main() -> int:
         '"id-token": "write"',
         '"resolvedActionShaCandidatesReviewed": true',
         '"resolvedActionShasApproved": false',
+        '"githubConnectorRepositoryAccess": true',
+        '"actionsSettingsReviewed": true',
+        '"publishEnvironmentReviewed": true',
+        '"publishEnvironmentConfigured": false',
         '"workflowCreationApproved": false',
         '"nextSafeStage": "' + NEXT_SAFE_STAGE + '"',
     )
@@ -185,7 +194,7 @@ def main() -> int:
     if actual_sha != REVISION_SHA256:
         raise AssertionError(f"reviewed revision SHA-256 differs: {actual_sha}")
 
-    print("OK: v318 Codex handoff and document structure are synchronized")
+    print("OK: v319 Codex handoff and document structure are synchronized")
     return 0
 
 

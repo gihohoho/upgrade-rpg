@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the v318 GitHub Actions/GHCR SHA review without creating or running a workflow."""
+"""Validate the v319 GitHub connector and Actions settings review without mutations."""
 from __future__ import annotations
 
 import argparse
@@ -8,10 +8,10 @@ from pathlib import Path
 import re
 from typing import Any
 
-TOOL_VERSION = "v318.github-actions-action-sha-candidates-reviewed"
-READY_RESULT = "github-actions-action-sha-candidates-verified-workflow-not-created"
+TOOL_VERSION = "v319.github-connector-actions-settings-reviewed"
+READY_RESULT = "github-connector-actions-settings-verified-workflow-not-created"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "connect-github-app-review-repository-actions-settings-and-request-workflow-creation-approval"
+NEXT_SAFE_STAGE = "request-repository-actions-supply-chain-settings-change-approval"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "gihohoho/upgrade-rpg"
 IMAGE_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
@@ -78,7 +78,7 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
     plan = _read_json(root / "deploy/github-actions-ghcr-static-plan.example.json")
     document = _read(root / "docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md")
 
-    _require(plan.get("schemaVersion") == TOOL_VERSION, "unexpected v318 schemaVersion")
+    _require(plan.get("schemaVersion") == TOOL_VERSION, "unexpected v319 schemaVersion")
     _require(_bool(plan, "reviewOnly") is True, "plan must remain review-only")
     _require(plan.get("githubRemote") == REMOTE, "GitHub remote changed")
     _require(plan.get("repository") == REPOSITORY, "GitHub repository changed")
@@ -95,6 +95,8 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
         "imageBuildApproved",
         "imagePushApproved",
         "registryMutationApproved",
+        "repositoryActionsSettingsMutationApproved",
+        "publishEnvironmentCreationApproved",
     ):
         _require(_bool(plan, key) is False, f"{key} must remain false")
 
@@ -219,15 +221,74 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
     _require(artifacts.get("secretsAllowed") is False, "artifact must not contain secrets")
     _require(artifacts.get("rawEnvironmentAllowed") is False, "artifact must not contain raw environment data")
 
+    review = plan.get("repositoryReview")
+    _require(isinstance(review, dict), "repositoryReview must be an object")
+    _require(review.get("reviewedOn") == "2026-07-15", "repository review date changed")
+    connector = review.get("githubConnector")
+    _require(isinstance(connector, dict), "githubConnector review must be an object")
+    _require(connector.get("installationOwner") == "gihohoho", "connector installation owner changed")
+    _require(
+        connector.get("repositorySelection") == "selected-repositories-only",
+        "connector must remain limited to selected repositories",
+    )
+    _require(
+        connector.get("selectedRepositories") == [REPOSITORY],
+        "connector repository selection changed",
+    )
+    _require(connector.get("repositoryAccessVerified") is True, "connector repository access is not verified")
+    _require(connector.get("visibility") == "private", "reviewed repository visibility changed")
+    _require(connector.get("defaultBranch") == "main", "reviewed repository default branch changed")
+
+    settings = review.get("actionsSettings")
+    _require(isinstance(settings, dict), "actionsSettings review must be an object")
+    _require(settings.get("reviewed") is True, "Actions settings review is missing")
+    _require(settings.get("allowedActions") == "all", "reviewed Actions allow policy changed")
+    _require(
+        settings.get("requireFullLengthCommitSha") is False,
+        "full-length action SHA setting changed before approval",
+    )
+    _require(settings.get("artifactRetentionDays") == 90, "reviewed artifact retention changed")
+    fork = settings.get("forkPullRequestWorkflows")
+    _require(isinstance(fork, dict), "fork workflow review must be an object")
+    _require(fork.get("runWorkflows") is True, "reviewed fork workflow setting changed")
+    _require(fork.get("sendWriteTokens") is False, "fork workflows must not receive write tokens")
+    _require(fork.get("sendSecretsAndVariables") is False, "fork workflows must not receive secrets")
+    _require(fork.get("requireApproval") is True, "fork workflows must require approval")
+    _require(
+        settings.get("defaultWorkflowPermissions") == "read-contents-and-packages",
+        "default GITHUB_TOKEN permissions changed",
+    )
+    _require(
+        settings.get("allowActionsCreateApprovePullRequests") is False,
+        "Actions must not create or approve pull requests by default",
+    )
+    _require(
+        settings.get("privateRepositoryReusableWorkflowAccess") == "not-accessible",
+        "private reusable workflow access changed",
+    )
+
+    publish_environment = review.get("publishEnvironment")
+    _require(isinstance(publish_environment, dict), "publishEnvironment review must be an object")
+    _require(publish_environment.get("reviewed") is True, "publish environment review is missing")
+    _require(publish_environment.get("name") == "ghcr-production-publish", "publish environment name changed")
+    _require(publish_environment.get("exists") is False, "publish environment was created before approval")
+    _require(publish_environment.get("configured") is False, "publish environment was configured before approval")
+
     setup = plan.get("requiredRepositorySetup")
     _require(isinstance(setup, dict), "requiredRepositorySetup must be an object")
     for key in (
         "githubConnectorRepositoryAccess",
+        "githubConnectorSelectedRepositoryOnly",
         "actionsSettingsReviewed",
+        "publishEnvironmentReviewed",
+    ):
+        _require(_bool(setup, key) is True, f"verified repository review must remain true: {key}")
+    for key in (
         "fullLengthActionShaPolicyEnabled",
+        "restrictedActionAllowlistEnabled",
         "publishEnvironmentConfigured",
     ):
-        _require(_bool(setup, key) is False, f"unverified repository setup must remain false: {key}")
+        _require(_bool(setup, key) is False, f"unapproved repository setup must remain false: {key}")
     _require(plan.get("nextSafeStage") == NEXT_SAFE_STAGE, "unexpected next safe stage")
 
     workflow_dir = root / ".github/workflows"
@@ -243,6 +304,9 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
         "HIGH,CRITICAL",
         "Sigstore keyless OIDC",
         CERTIFICATE_IDENTITY,
+        "selected-repositories-only",
+        "read-contents-and-packages",
+        "environment는 아직 존재하지 않습니다",
     ):
         _require(marker in document, f"static plan document is missing marker: {marker}")
     _require(re.search(r"40자리 commit SHA", document) is not None, "document is missing full SHA policy")
@@ -256,6 +320,9 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
         "workflowCreationApproved": False,
         "actionShaCandidatesReviewed": True,
         "actionShasApproved": False,
+        "githubConnectorRepositoryAccess": True,
+        "actionsSettingsReviewed": True,
+        "publishEnvironmentConfigured": False,
         "supplyChainGate": "fail-closed",
         "result": READY_RESULT,
         "nextSafeStage": NEXT_SAFE_STAGE,
@@ -274,6 +341,9 @@ def render(result: dict[str, Any]) -> str:
         "- post-push gates: digest, provenance, SBOM attestation, keyless signature, verification",
         "- workflow file/creation approved: no/no",
         "- action SHA candidates reviewed/approved: yes/no",
+        "- GitHub connector repository access: verified (upgrade-rpg only)",
+        "- repository Actions settings reviewed/changed: yes/no",
+        "- publish environment reviewed/configured: yes/no",
         f"- result: {result['result']}",
         f"- next safe stage: {result['nextSafeStage']}",
     ))

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the v318 Codex/GHCR handoff using repository files only."""
+"""Validate the v319 Codex/GHCR handoff using repository files only."""
 from __future__ import annotations
 
 import argparse
@@ -10,10 +10,10 @@ import re
 import subprocess
 from typing import Any
 
-TOOL_VERSION = "v318.github-actions-action-sha-candidates-reviewed"
-READY_RESULT = "github-actions-action-sha-candidates-verified-workflow-not-created"
+TOOL_VERSION = "v319.github-connector-actions-settings-reviewed"
+READY_RESULT = "github-connector-actions-settings-verified-workflow-not-created"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "connect-github-app-review-repository-actions-settings-and-request-workflow-creation-approval"
+NEXT_SAFE_STAGE = "request-repository-actions-supply-chain-settings-change-approval"
 EXPECTED_REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 EXPECTED_NAMESPACE = "gihohoho"
 EXPECTED_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
@@ -117,7 +117,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     handoff_prompt = _read(root / "docs/handoff/NEXT_CHAT_PROMPT.md")
     handoff_state = _read(root / "docs/handoff/NEXT_CHAT_HANDOFF.md")
 
-    _require(policy.get("schemaVersion") == TOOL_VERSION, "unexpected v318 schemaVersion")
+    _require(policy.get("schemaVersion") == TOOL_VERSION, "unexpected v319 schemaVersion")
     _require(_bool(policy, "reviewOnly") is True, "policy must remain review-only")
     _require(policy.get("githubRemote") == EXPECTED_REMOTE, "GitHub remote changed")
     _require(policy.get("registryProvider") == "github-container-registry", "registry provider must be GHCR")
@@ -151,11 +151,18 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "actualDockerCommandExecuted",
         "actualDatabaseAlembicMutationExecuted",
         "actionShasApproved",
-        "githubConnectorRepositoryAccess",
-        "repositoryActionsSettingsReviewed",
+        "repositoryActionsSettingsMutationApproved",
+        "publishEnvironmentCreationApproved",
         "publishEnvironmentConfigured",
     ):
         _require(_bool(policy, key) is False, f"{key} must remain false")
+    for key in (
+        "githubConnectorRepositoryAccess",
+        "githubConnectorSelectedRepositoryOnly",
+        "repositoryActionsSettingsReviewed",
+        "publishEnvironmentReviewed",
+    ):
+        _require(_bool(policy, key) is True, f"verified repository review must remain true: {key}")
     _require(_bool(policy, "actionShasResolved") is True, "action SHA candidates must remain resolved")
     _require(_bool(policy, "githubActionsStaticPlanPresent") is True, "GitHub Actions static plan must be present")
     _require(_bool(policy, "githubActionsStaticPlanVerified") is True, "GitHub Actions static plan must be verified")
@@ -169,6 +176,21 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require(isinstance(action_policy, dict), "static workflow action policy is missing")
     _require(action_policy.get("resolvedActionShaCandidatesReviewed") is True, "action SHA candidates are not reviewed")
     _require(action_policy.get("resolvedActionShasApproved") is False, "action SHA candidates must remain unapproved")
+    repository_review = actions_plan.get("repositoryReview")
+    _require(isinstance(repository_review, dict), "static workflow repository review is missing")
+    connector_review = repository_review.get("githubConnector")
+    _require(isinstance(connector_review, dict), "GitHub connector review is missing")
+    _require(connector_review.get("selectedRepositories") == ["gihohoho/upgrade-rpg"], "connector scope changed")
+    _require(connector_review.get("repositoryAccessVerified") is True, "connector access is not verified")
+    settings_review = repository_review.get("actionsSettings")
+    _require(isinstance(settings_review, dict), "Actions settings review is missing")
+    _require(settings_review.get("reviewed") is True, "Actions settings are not reviewed")
+    _require(settings_review.get("allowedActions") == "all", "reviewed Actions policy changed")
+    _require(settings_review.get("requireFullLengthCommitSha") is False, "unapproved SHA policy change detected")
+    environment_review = repository_review.get("publishEnvironment")
+    _require(isinstance(environment_review, dict), "publish environment review is missing")
+    _require(environment_review.get("reviewed") is True, "publish environment was not reviewed")
+    _require(environment_review.get("exists") is False, "publish environment exists before approval")
     _require(actions_plan.get("nextSafeStage") == NEXT_SAFE_STAGE, "static workflow plan next stage differs")
     _require("workflow_dispatch" in actions_plan_doc, "static workflow plan document is missing trigger policy")
     _require("packages: write" in actions_plan_doc, "static workflow plan document is missing package permission")
@@ -265,6 +287,9 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "workflowFilePresent": False,
         "actionShaCandidatesReviewed": True,
         "actionShasApproved": False,
+        "githubConnectorRepositoryAccess": True,
+        "repositoryActionsSettingsReviewed": True,
+        "publishEnvironmentConfigured": False,
         "packageSafetyMode": package_safety_mode,
         "result": READY_RESULT,
         "nextSafeStage": NEXT_SAFE_STAGE,
@@ -284,6 +309,9 @@ def render(result: dict[str, Any]) -> str:
         f"- forbidden path verification: {result['packageSafetyMode']}",
         "- GitHub Actions static plan/workflow present: verified/no",
         "- action SHA candidates reviewed/approved: yes/no",
+        "- GitHub connector repository access: verified (upgrade-rpg only)",
+        "- repository Actions settings reviewed/changed: yes/no",
+        "- publish environment reviewed/configured: yes/no",
         "- workflow/login/pull/build/push approved: no/no/no/no/no",
         "- workflow/login/pull/build/push executed: no/no/no/no/no",
         "- container/registry/DB/Alembic mutation executed: no/no/no/no",

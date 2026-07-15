@@ -1,4 +1,4 @@
-# GitHub Actions / GHCR static workflow plan — v318
+# GitHub Actions / GHCR static workflow plan — v319
 
 ## 목적과 현재 경계
 
@@ -6,14 +6,34 @@
 
 ```txt
 plan: review-only
-version: v318.github-actions-action-sha-candidates-reviewed
+version: v319.github-connector-actions-settings-reviewed
 workflow file present/approved: no/no
 workflow execution approved: no
 registry login/build/push approved: no/no/no
 target: linux/amd64
 credential: GitHub Actions GITHUB_TOKEN
-next: GitHub App 연결 + repository settings/environment 검토 + workflow file 생성 승인
+next: repository Actions supply-chain settings 변경 승인 요청
 ```
+
+## v319 GitHub 연결과 repository 설정 검토 결과
+
+2026-07-15에 ChatGPT Codex Connector 설치와 실제 repository 조회를 확인했습니다. 설치 범위는 `selected-repositories-only`이며 선택된 저장소는 `gihohoho/upgrade-rpg` 하나입니다. 다른 개인 저장소, 조직 저장소, 앞으로 만들 저장소는 선택하지 않았습니다.
+
+GitHub repository Actions 설정은 읽기 전용으로 다음과 같이 확인했습니다.
+
+| 항목 | 현재 값 | 변경 여부 |
+|---|---|---|
+| 허용 action | 모든 action과 reusable workflow | 변경 안 함 |
+| full-length action SHA 강제 | 꺼짐 | 변경 안 함 |
+| artifact/log 보관 | 90일 | 변경 안 함 |
+| fork workflow | 실행 켜짐, write token 꺼짐, secret/variable 전달 꺼짐, 승인 필요 켜짐 | 변경 안 함 |
+| 기본 `GITHUB_TOKEN` | `read-contents-and-packages` | 변경 안 함 |
+| Actions의 PR 생성·승인 | 꺼짐 | 변경 안 함 |
+| 다른 private repository의 Actions 구성요소 접근 | `not-accessible` | 변경 안 함 |
+
+`ghcr-production-publish` environment는 아직 존재하지 않습니다. 따라서 required reviewer, prevent self-review, `main` deployment branch 제한도 아직 구성되지 않았습니다. 이번 단계에서는 repository Actions 설정과 environment를 변경하거나 생성하지 않았습니다.
+
+다음 외부 변경 후보는 허용 action을 아래 v318 allowlist repository로 제한하고 repository의 full-length SHA 강제를 켜는 것입니다. 이 변경은 기호의 별도 승인을 받은 뒤에만 실행합니다. Environment 생성과 workflow 파일 생성은 그 뒤의 별도 승인 경계입니다.
 
 ## 안전한 trigger
 
@@ -100,9 +120,10 @@ https://github.com/gihohoho/upgrade-rpg/.github/workflows/publish-backend-ghcr.y
 
 ## 아직 필요한 권한과 사용자 확인
 
-- Codex GitHub 플러그인에 `gihohoho/upgrade-rpg` repository 접근 권한이 아직 필요합니다.
-- GitHub repository Actions 설정과 environment를 확인·변경할 권한이 필요합니다.
-- action별 upstream 40자리 SHA 후보 검토는 완료됐지만, 기호의 workflow 파일 생성 승인은 아직 필요합니다.
+- Codex GitHub 플러그인의 `gihohoho/upgrade-rpg` 단일 repository 연결과 읽기 권한은 해결됐습니다.
+- repository Actions settings 변경은 아직 승인되지 않았습니다.
+- `ghcr-production-publish` environment 생성은 아직 승인되지 않았습니다.
+- action별 upstream 40자리 SHA 후보 승인과 workflow 파일 생성 승인도 아직 필요합니다.
 - 필요한 extension, repository 권한, 설치 항목이 생기면 Codex가 기호에게 요청하고 해결되지 않으면 다음 작업에서도 다시 요청합니다.
 
 ## 공식 근거

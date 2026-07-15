@@ -1,3 +1,17 @@
+# v319.github-connector-actions-settings-reviewed
+
+- ChatGPT Codex Connector를 `gihohoho/upgrade-rpg` 저장소 하나에만 연결하고 Codex repository 조회를 검증.
+- GitHub Actions 설정과 environment를 읽기 전용으로 검토해 현재 모든 action 허용, full-length SHA 강제 꺼짐, read-only 기본 `GITHUB_TOKEN`, publish environment 부재를 기록.
+- 연결·검토 완료 상태와 아직 승인되지 않은 repository 설정/environment/workflow 변경을 분리한 v319 fail-closed 검사와 smoke 추가.
+- `.github/workflows/`, workflow 실행, Docker/registry/DB/Alembic mutation은 없음.
+
+# v318.github-actions-action-sha-candidates-reviewed
+
+- 9개 허용 action의 최신 정식 release tag와 upstream 40자리 commit SHA를 검토 후보로 고정.
+- 검토 후보와 사용자 승인값을 분리하고 workflow 생성·실행 승인 `false`를 유지하는 fail-closed 검사 추가.
+- Windows smoke 호환성 문제를 수정하고 전체 core smoke 통과.
+- `.github/workflows/`, workflow 실행, Docker/registry/DB/Alembic mutation은 없음.
+
 # v317.github-actions-ghcr-static-workflow-plan
 
 - GitHub Actions/GHCR publish의 `workflow_dispatch` only, exact main SHA, protected environment, concurrency 정적 정책 추가.

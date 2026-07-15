@@ -1,4 +1,4 @@
-# Backend image GHCR policy — v318
+# Backend image GHCR policy — v319
 
 ## 확정값
 
@@ -21,7 +21,7 @@ production reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:<approved-64-h
 - `.github/workflows/` 생성과 workflow 실행도 아직 승인되지 않았습니다.
 - 최소 permissions, `workflow_dispatch` only, SBOM/provenance/signature/vulnerability gate의 정적 plan은 검증 완료했습니다.
 - action별 최신 정식 release와 upstream 40자리 SHA 후보는 v318에서 검토·고정했습니다.
-- 이 SHA는 사용자 승인값이 아니며 repository Actions settings와 `ghcr-production-publish` environment는 아직 검토·설정되지 않았습니다.
+- 이 SHA는 사용자 승인값이 아닙니다. repository Actions settings는 읽기 전용 검토를 마쳤고 `ghcr-production-publish` environment는 존재하지 않음을 확인했습니다.
 - 최종 backend 이미지는 tag가 아니라 exact `sha256` digest로 production Compose에 넣습니다.
 
 ## 현재 차단 상태
@@ -33,10 +33,12 @@ workflow creation approved: no
 static workflow plan present/verified: yes/yes
 action SHA candidates reviewed: yes
 action SHAs approved: no
+GitHub connector repository access: verified, upgrade-rpg only
+repository Actions settings reviewed/changed: yes/no
 publish environment configured: no
 container start approved: no
 ```
 
 ## 다음 안전 단계
 
-Codex GitHub App을 `gihohoho/upgrade-rpg`에 연결한 뒤 repository Actions settings와 `ghcr-production-publish` environment를 읽기 전용으로 검토합니다. 실제 workflow 파일 생성은 SHA 후보와 repository 설정 결과를 보여준 뒤 별도 승인받습니다.
+외부 action 허용 범위를 v318에서 검토한 9개 repository로 제한하고 full-length SHA 강제를 켜는 repository Actions settings 변경 승인을 먼저 받습니다. `ghcr-production-publish` environment 생성과 실제 workflow 파일 생성은 이후 각각 별도 승인받습니다.

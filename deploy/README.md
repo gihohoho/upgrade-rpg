@@ -1,4 +1,4 @@
-# Production deployment review template — v318
+# Production deployment review template — v319
 
 `deploy/docker-compose.production.yml`은 로컬 `docker-compose.yml`을 대체하지 않는 운영 검토 template입니다. review sentinel 기반 `docker compose config`는 기호 PC에서 통과했지만 image login/pull/build/push 및 container 실행은 승인되지 않았습니다.
 
@@ -61,7 +61,7 @@ image pull/build/push approved: no/no/no
 ## 아직 결정·승인하지 않은 것
 
 - 검토한 action별 upstream 40자리 SHA 후보의 사용자 승인
-- repository Actions 설정과 publish environment 생성
+- repository action allowlist/full-length SHA 설정 변경과 publish environment 생성
 - `.github/workflows/` 파일 생성과 workflow 실행
 - 관리형 PostgreSQL 공급자/상품/region/private network
 - 실제 provider CA와 endpoint

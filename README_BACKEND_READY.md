@@ -1,4 +1,4 @@
-# Backend readiness — v318
+# Backend readiness — v319
 
 ## 완료
 
@@ -15,12 +15,14 @@
 - target platform: `linux/amd64`
 - production base image exact manifest digest 승인
 - 로컬 Dockerfile 보존 + `backend/Dockerfile.production` 분리
-- Codex용 `AGENTS.md`, v318 GitHub Actions/GHCR 정적 plan·action SHA 후보와 fail-closed 검사
+- Codex용 `AGENTS.md`, GitHub Actions/GHCR 정적 plan·action SHA 후보와 fail-closed 검사
+- ChatGPT Codex Connector의 `gihohoho/upgrade-rpg` 단일 repository 연결과 조회 검증
+- repository Actions settings와 publish environment 존재 여부 읽기 전용 검토
 
 ## 아직 미완료
 
-- GitHub Actions 최소 permissions와 안전 trigger 설계
-- SBOM/provenance/signature/vulnerability gate 설계
+- repository action allowlist와 full-length SHA 강제 설정 승인·적용
+- `ghcr-production-publish` environment 생성·보호 규칙 적용
 - `.github/workflows/` 생성 승인
 - 실제 backend image build digest
 - 관리형 PostgreSQL 공급자/상품/region/private network

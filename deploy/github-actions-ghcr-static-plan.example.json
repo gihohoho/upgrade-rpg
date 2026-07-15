@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v318.github-actions-action-sha-candidates-reviewed",
+  "schemaVersion": "v319.github-connector-actions-settings-reviewed",
   "reviewOnly": true,
   "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
   "repository": "gihohoho/upgrade-rpg",
@@ -15,6 +15,8 @@
   "imageBuildApproved": false,
   "imagePushApproved": false,
   "registryMutationApproved": false,
+  "repositoryActionsSettingsMutationApproved": false,
+  "publishEnvironmentCreationApproved": false,
   "triggerPolicy": {
     "allowedEvents": [
       "workflow_dispatch"
@@ -216,11 +218,48 @@
     "secretsAllowed": false,
     "rawEnvironmentAllowed": false
   },
+  "repositoryReview": {
+    "reviewedOn": "2026-07-15",
+    "githubConnector": {
+      "installationOwner": "gihohoho",
+      "repositorySelection": "selected-repositories-only",
+      "selectedRepositories": [
+        "gihohoho/upgrade-rpg"
+      ],
+      "repositoryAccessVerified": true,
+      "visibility": "private",
+      "defaultBranch": "main"
+    },
+    "actionsSettings": {
+      "reviewed": true,
+      "allowedActions": "all",
+      "requireFullLengthCommitSha": false,
+      "artifactRetentionDays": 90,
+      "forkPullRequestWorkflows": {
+        "runWorkflows": true,
+        "sendWriteTokens": false,
+        "sendSecretsAndVariables": false,
+        "requireApproval": true
+      },
+      "defaultWorkflowPermissions": "read-contents-and-packages",
+      "allowActionsCreateApprovePullRequests": false,
+      "privateRepositoryReusableWorkflowAccess": "not-accessible"
+    },
+    "publishEnvironment": {
+      "reviewed": true,
+      "name": "ghcr-production-publish",
+      "exists": false,
+      "configured": false
+    }
+  },
   "requiredRepositorySetup": {
-    "githubConnectorRepositoryAccess": false,
-    "actionsSettingsReviewed": false,
+    "githubConnectorRepositoryAccess": true,
+    "githubConnectorSelectedRepositoryOnly": true,
+    "actionsSettingsReviewed": true,
     "fullLengthActionShaPolicyEnabled": false,
+    "restrictedActionAllowlistEnabled": false,
+    "publishEnvironmentReviewed": true,
     "publishEnvironmentConfigured": false
   },
-  "nextSafeStage": "connect-github-app-review-repository-actions-settings-and-request-workflow-creation-approval"
+  "nextSafeStage": "request-repository-actions-supply-chain-settings-change-approval"
 }

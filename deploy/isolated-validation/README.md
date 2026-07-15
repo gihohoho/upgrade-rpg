@@ -1,4 +1,4 @@
-# Isolated production validation plan — v318
+# Isolated production validation plan — v319
 
 이 폴더는 승인 경계와 안전한 검사 도구만 보관합니다. 실제 production secret, CA, certificate, key, registry credential 또는 production env 파일을 두지 않습니다.
 
@@ -49,13 +49,15 @@ container/image/network/volume mutation executed: no
 
 선택 과정에서는 registry 또는 Docker mutation을 실행하지 않았습니다. `gihohoho`는 기호가 직접 확인한 고정 namespace입니다.
 
-## Stage 2C — 현재: credential/workflow 정적 계획
+## Stage 2C — 완료: credential/workflow 정적 계획과 repository 읽기 전용 검토
 
 - CI credential 우선안: GitHub Actions `GITHUB_TOKEN`
 - local credential/PAT: deferred
 - `.github/workflows/` 생성 승인: no
 - Docker login/pull/build/push 승인: no/no/no/no
-- 다음 단계: 최소 permissions, 안전 trigger, supply-chain gate를 문서와 fail-closed 검사로 설계
+- 최소 permissions, 안전 trigger, supply-chain gate, 9개 action SHA 후보 검토 완료
+- Codex GitHub App `gihohoho/upgrade-rpg` 단일 repository 연결과 Actions/environment 읽기 전용 검토 완료
+- 다음 단계: repository action allowlist/full-length SHA 설정 변경 승인 요청
 
 ## Stage 2D — 각각 별도 승인 필요: pull/build/push
 

@@ -16,9 +16,9 @@ REQUIRED = (
 
 
 def load_tool():
-    spec = importlib.util.spec_from_file_location("v318_github_actions_plan", TOOL)
+    spec = importlib.util.spec_from_file_location("v319_github_actions_plan", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v318 GitHub Actions static plan checker")
+        raise RuntimeError("cannot load v319 GitHub Actions static plan checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -44,7 +44,7 @@ def expect_blocked(module, temp: Path) -> None:
         module.inspect_static_workflow_plan(temp)
     except module.StaticWorkflowPlanError:
         return
-    raise AssertionError("unsafe v318 GitHub Actions plan fixture was not blocked")
+    raise AssertionError("unsafe v319 GitHub Actions plan fixture was not blocked")
 
 
 def main() -> int:
@@ -55,6 +55,9 @@ def main() -> int:
     assert result["workflowFilePresent"] is False
     assert result["actionShaCandidatesReviewed"] is True
     assert result["actionShasApproved"] is False
+    assert result["githubConnectorRepositoryAccess"] is True
+    assert result["actionsSettingsReviewed"] is True
+    assert result["publishEnvironmentConfigured"] is False
     assert result["supplyChainGate"] == "fail-closed"
 
     mutations = (
@@ -68,7 +71,15 @@ def main() -> int:
         lambda p: p["supplyChainGates"]["vulnerabilityGate"].update({"severity": ["CRITICAL"]}),
         lambda p: p["supplyChainGates"]["vulnerabilityGate"].update({"ignoreUnfixed": True}),
         lambda p: p["supplyChainGates"].update({"automaticDeployment": True}),
+        lambda p: p["repositoryReview"]["githubConnector"].update({"selectedRepositories": ["gihohoho/other"]}),
+        lambda p: p["repositoryReview"]["actionsSettings"].update({"allowedActions": "selected"}),
+        lambda p: p["repositoryReview"]["actionsSettings"].update({"requireFullLengthCommitSha": True}),
+        lambda p: p["repositoryReview"]["publishEnvironment"].update({"exists": True}),
+        lambda p: p["requiredRepositorySetup"].update({"githubConnectorRepositoryAccess": False}),
+        lambda p: p["requiredRepositorySetup"].update({"actionsSettingsReviewed": False}),
         lambda p: p["requiredRepositorySetup"].update({"publishEnvironmentConfigured": True}),
+        lambda p: p.update({"repositoryActionsSettingsMutationApproved": True}),
+        lambda p: p.update({"publishEnvironmentCreationApproved": True}),
         lambda p: p.update({"workflowCreationApproved": True}),
     )
     for mutation in mutations:
@@ -86,7 +97,7 @@ def main() -> int:
         workflow.write_text("name: unsafe-before-approval\n", encoding="utf-8")
         expect_blocked(module, temp)
 
-    print("OK: v318 GitHub Actions/GHCR action SHA review smoke passed")
+    print("OK: v319 GitHub connector/Actions settings review smoke passed")
     return 0
 
 
