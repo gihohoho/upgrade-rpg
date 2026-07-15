@@ -1,38 +1,30 @@
-# Roadmap — v311
+# Roadmap — v312
 
 ## 완료
 
-- Vue/FastAPI/PostgreSQL 기본 분리
-- PostgreSQL 22 application tables / 748 rows 구조·데이터 검증
-- 최초 revision `v295_initial_schema` 생성·수동 검토·왕복 migration 검증
-- restore rehearsal/source baseline stamp 및 post-check
-- baseline completion lock 및 next-revision candidate 0 확인
-- live runtime/DB health/Docker readiness 확인
-- SQLAlchemy pool, shutdown dispose, production fail-closed guard 적용
-- non-root FastAPI Dockerfile 및 별도 운영 Compose 초안
-- multiline engine URL binding 검사 오탐 AST 수정 및 사용자 PC 통과
-- 운영 secret/TLS/container 정적 template와 checker 검증
-- worker/pool/max_connections review 계산과 확장 시나리오
-- 관리형 PostgreSQL 우선 검토 및 bundled TLS 대안 경계
-- reverse proxy/HTTPS/network allowlist 계획
-- isolated container Stage 0~4 승인 계획
+- PostgreSQL/Alembic baseline 완성
+- runtime health/pool/lifecycle/production guard 검증
+- 관리형 PostgreSQL + provider CA verify-full 선택
+- 외부 reverse proxy HTTPS 선택
+- backend 1 replica / 1 worker 선택
+- backend-only production Compose와 immutable image 경계
+- config render-only 안전 wrapper와 smoke 준비
 
 ## 다음 순서
 
-1. v311 checker를 사용자 PC에서 실행
-2. 실제 예상 동시 사용자/트래픽과 replica 목표를 확인해 40 후보 재검토
-3. 관리형 PostgreSQL 또는 bundled PostgreSQL 운영 방향 승인
-4. reverse proxy 제품, DNS, HTTPS certificate 운영 방향 승인
-5. image digest 공급 source와 승인 기록 형식 확정
-6. 별도 승인 후 `docker compose ... config` render-only 검토
-7. config 결과 통과 후에만 pull/build 승인 검토
-8. isolated project name/resource 계획 통과 후에만 up/down 승인 검토
+1. 기호 PC에서 v312 selection checker 실행
+2. config render-only wrapper 실행 및 결과 수집
+3. render 결과의 backend-only/host-port 없음/digest/TLS/edge 계약 확인
+4. backend image registry/source/base image/digest 검토
+5. 별도 승인 후 pull 또는 build 중 하나를 작은 경계로 검증
+6. 관리형 PostgreSQL provider/region/private network/connection limit 선택
+7. reverse proxy 제품/DNS/certificate 운영 방식 선택
+8. isolated start와 cleanup은 각각 별도 승인
 
 ## 계속 보류
 
-- 실제 운영 secret/인증서/CA 입력
-- production Compose config/build/pull/up/down
-- PostgreSQL `max_connections` 실제 변경
-- 새 Alembic revision 또는 source migration
-- 게임 콘텐츠 개발
-- Vue Preview/Apply/write/인증 연결
+- 실제 production secret/CA/cert/key
+- Docker pull/build/up/down/resource 변경
+- managed DB 실제 연결
+- 새 Alembic revision과 DB mutation
+- 게임 콘텐츠와 Vue write/인증

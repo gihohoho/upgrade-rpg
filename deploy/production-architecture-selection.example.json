@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "v312.production-architecture-selection",
+  "reviewOnly": true,
+  "databaseMode": "managed-postgresql-selected",
+  "databaseTlsMode": "verify-full-with-provider-ca",
+  "publicEntrypoint": "external-reverse-proxy-https-selected",
+  "reverseProxyProduct": "deferred",
+  "backendReplicas": 1,
+  "uvicornWorkersPerReplica": 1,
+  "backendHostPortPublished": false,
+  "databaseContainerIncluded": false,
+  "databaseHostPortPublished": false,
+  "composeConfigRenderApproved": true,
+  "composeConfigRenderExecuted": false,
+  "imagePullBuildApproved": false,
+  "containerStartApproved": false,
+  "containerCleanupApproved": false,
+  "actualProductionValuesApplied": false
+}

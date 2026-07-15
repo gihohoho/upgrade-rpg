@@ -13,8 +13,11 @@
   "otherReservedConnections": 2,
   "safetyMarginPercent": 20,
   "postgresMaxConnectionsCandidate": 40,
-  "tlsDatabaseMode": "managed-postgresql-preferred",
-  "publicEntrypoint": "reverse-proxy-only",
+  "tlsDatabaseMode": "managed-postgresql-selected",
+  "publicEntrypoint": "external-reverse-proxy-https-selected",
   "isolatedContainerExecutionApproved": false,
-  "actualProductionValuesApplied": false
+  "actualProductionValuesApplied": false,
+  "composeConfigRenderApproved": true,
+  "composeConfigRenderExecuted": false,
+  "imagePullBuildApproved": false
 }

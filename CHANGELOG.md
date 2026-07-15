@@ -1,3 +1,12 @@
+# v312.production-managed-postgres-reverse-proxy-config-render-ready
+
+- 기호 승인에 따라 운영 기본 방향을 관리형 PostgreSQL + provider CA verify-full + 외부 reverse proxy HTTPS + backend 1 replica/1 worker로 확정.
+- production Compose에서 bundled PostgreSQL, Adminer, named DB volume, host ports, build를 제거하고 backend-only exact-digest image template로 전환.
+- `production-architecture-selection.example.json`, reverse proxy 경계 문서, v312 selection checker 추가.
+- 실제 `.env`/secret을 읽지 않고 정확히 `docker compose config`만 호출하는 confirmation-gated wrapper 추가.
+- Docker CLI가 없는 handoff 환경에서는 실제 config를 실행하지 않았고, fake Docker smoke로 config 외 명령 미호출과 임시 review 파일 정리를 검증.
+- image pull/build, container/network/volume mutation, managed DB 연결, Alembic/DB mutation은 계속 미승인.
+
 # v311.production-capacity-tls-network-isolated-plan
 
 - Added a review-only production capacity input and a read-only fail-closed checker.

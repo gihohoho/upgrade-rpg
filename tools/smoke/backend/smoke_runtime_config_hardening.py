@@ -130,7 +130,7 @@ def main() -> int:
 
     for path, markers in (
         (DOC, ("runtime config hardening — v308", "engine.dispose()", "DB_POOL_PRE_PING", "runtime-config-hardening-verified-local-runtime-preserved")),
-        (DEPLOY_DOC, ("운영 배포 template — v310", "Adminer", "digest", "TLS", "자동 migration")),
+        (DEPLOY_DOC, ("운영 배포 template — v312", "Adminer", "digest", "verify-full", "자동 Alembic")),
     ):
         text = path.read_text(encoding="utf-8")
         for marker in markers:

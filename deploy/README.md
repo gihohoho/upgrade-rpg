@@ -1,42 +1,65 @@
-# Production deployment review template — v311
+# Production deployment review template — v312
 
-`deploy/docker-compose.production.yml`은 실제 운영 실행 파일이 아니라 **정적 검토용 안전 초안**입니다. 현재 로컬 `docker-compose.yml`을 대체하지 않으며 자동 실행하지 않습니다.
+`deploy/docker-compose.production.yml`은 로컬 `docker-compose.yml`을 대체하지 않는 운영 검토 template입니다. 현재 승인 범위는 review sentinel을 사용한 `docker compose config`뿐입니다.
 
-## 포함된 안전 경계
+## 확정된 운영 방향
 
-- digest 입력이 필수인 PostgreSQL image placeholder
-- PostgreSQL password와 CA PEM을 Compose secret 파일로 분리
+- 관리형 PostgreSQL
+- provider CA를 이용한 TLS `verify-full`
+- 외부 reverse proxy HTTPS 진입점
+- backend 1 replica / Uvicorn 1 worker
+- pool 5 + overflow 10
+- PostgreSQL `max_connections` review 후보 40
+
+## 현재 production Compose
+
+- service는 `backend` 하나만 포함
+- bundled PostgreSQL/Adminer/named DB volume 없음
+- backend host `ports:` 없음, `8000`은 proxy network에만 expose
+- backend image는 approved registry의 exact digest 필수
 - `ENVIRONMENT=production`, `DEBUG=false`
-- JWT/Admin key/CORS/DATABASE_URL 필수 입력
-- Adminer 제외
-- PostgreSQL/FastAPI host `ports:` 미공개
-- backend non-root/read-only/no-new-privileges/tmpfs
-- backend `/api/v1/health` container healthcheck
-- FastAPI 시작 command에 자동 Alembic 없음
+- JWT/Admin key/CORS/DATABASE_URL/CA path 필수 입력
+- non-root Dockerfile, read-only filesystem, tmpfs, no-new-privileges
+- `/api/v1/health` container healthcheck
+- 자동 Alembic 없음
+- 사전에 생성한 external reverse proxy network 이름 필수
 
-## v311 review-only 계획
+## 관련 review-only 파일
 
-- `production-capacity-plan.example.json`: worker/pool/max_connections 계산 입력
-- 현재 application burst 15, recommended minimum 30, review 후보 40
-- 관리형 PostgreSQL 우선 검토, bundled PostgreSQL TLS는 별도 server certificate 설계 필요
-- reverse proxy/HTTPS 공개 진입점과 backend/DB 내부 network 분리
-- `isolated-validation/README.md`: config/build/run/cleanup 단계별 승인 경계
+- `production.env.example`: 실제 값 없는 운영 변수 inventory
+- `production-capacity-plan.example.json`: worker/pool/max_connections 계산과 승인 상태
+- `production-architecture-selection.example.json`: v312 운영 방향 선택값
+- `reverse-proxy/README.md`: reverse proxy/HTTPS 고정 계약과 제품 선택 전 확인사항
+- `isolated-validation/README.md`: config/pull/build/start/cleanup 승인 경계
+- `secrets/README.md`: 실제 secret을 Git/ZIP/build context에 넣지 않는 규칙
 
-## 예시 파일
+## 현재 승인된 명령 범위
 
-- `production.env.example`: 실제 값이 없는 변수 목록과 TLS URL 형태
-- `production-capacity-plan.example.json`: 실제 적용이 없는 숫자·선택 계획
-- `secrets/README.md`: 실제 secret 파일을 Git/ZIP에 넣지 않는 규칙
+```txt
+docker compose config: approved through the project safety wrapper
+Docker image pull/build: not approved
+Docker container/network/volume create/start/stop/remove: not approved
+managed DB connection/write: not approved
+```
 
-## 아직 승인되지 않은 것
+wrapper:
 
-- 실제 secret과 CA 파일 생성·입력
-- PostgreSQL server TLS 설정 또는 관리형 DB 연결
-- image digest 공급망 승인
-- reverse proxy/HTTPS 실제 설정
-- Docker Compose config render
-- Docker build/pull/up/down
-- container network 및 DB 연결 검증
-- PostgreSQL `max_connections` 실제 적용
+```txt
+python tools/render_production_compose_config.py --execute --confirm-stage v312-config-render-only
+```
 
-bundled PostgreSQL을 실제 운영에 사용할 경우 server certificate 설정을 별도로 설계해야 합니다. 관리형 TLS PostgreSQL을 사용할 경우에도 CA, hostname verification, connection limit, network allowlist를 별도로 검증해야 합니다.
+## 아직 결정하지 않은 것
+
+- 관리형 PostgreSQL 공급자/상품/region/private network
+- 실제 provider CA와 endpoint
+- backend image registry/source/digest
+- reverse proxy 제품, DNS, certificate 운영 방식
+- 실제 production secret 값
+
+## 계속 금지
+
+- 실제 production env/secret/CA/cert/key 생성·입력·커밋
+- Docker pull/build/up/down 또는 resource 변경
+- 실제 managed DB 연결
+- PostgreSQL `max_connections` 변경
+- 자동 migration 추가

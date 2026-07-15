@@ -1,6 +1,6 @@
 기호의 Upgrade RPG 프로젝트를 이어서 진행합니다.
 
-이번에 첨부하는 최신 ZIP `rpg_v311_production_capacity_tls_network_plan_handoff_ready.zip`을 반드시 기준으로 작업해주세요.
+이번에 첨부하는 최신 ZIP `rpg_v312_managed_postgres_reverse_proxy_config_render_ready.zip`을 반드시 기준으로 작업해주세요.
 
 ========================
 사용자/응답 방식
@@ -30,13 +30,13 @@ Git 명령은 프로젝트 루트에서 아래 형태의 한 줄 블록으로 �
 git status && git add . && git commit -m "..." && git push
 ```
 
-필요한 설치와 여러 단계 작업은 허용됩니다. 다만 DB/env/seed/인증/API body/route/write/migration/Docker container·volume/production secret·TLS는 작은 승인 경계로 진행하고 실제 결과를 확인한 뒤 다음 단계로 넘어가세요.
+필요한 설치와 여러 단계 작업은 허용됩니다. 다만 DB/env/seed/인증/API body/route/write/migration/Docker image·container·network·volume/production secret/TLS는 작은 승인 경계로 진행하고 실제 결과를 확인한 뒤 다음 단계로 넘어가세요.
 
 ========================
 현재 최신 기준
 ========================
 
-* 최신 작업: `v311.production-capacity-tls-network-isolated-plan`
+* 최신 작업: `v312.production-managed-postgres-reverse-proxy-config-render-ready`
 * readiness: `v250.backend-admin-rollback-snapshot`
 * backend splitStatus: `admin-schema-field-constraint-contract-v238`
 * backend virtualenv: `backend/.venv`
@@ -77,7 +77,7 @@ backup SHA-256: b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481
 
 `local-backups/`와 `local-review-artifacts/`는 기호 PC에만 있으며 Git/ZIP/채팅에 포함하지 않습니다.
 
-기존 source/rehearsal stamp는 완료됐으므로 다시 실행하지 않습니다. 새 revision/autogenerate/upgrade/downgrade도 승인되지 않았습니다.
+source/rehearsal stamp는 완료됐으므로 다시 실행하지 않습니다. 새 revision/autogenerate/upgrade/downgrade도 승인되지 않았습니다.
 
 ========================
 Runtime 실제 통과 상태
@@ -85,83 +85,55 @@ Runtime 실제 통과 상태
 
 ```txt
 v307 strict + require-health: passed
-Docker PostgreSQL: running=True / healthy=True
+local Docker PostgreSQL: running=True / healthy=True
 FastAPI live DB health GET: ok
 v308 pool/lifecycle/production guard/Dockerfile/production Compose: applied
 v309 AST runtime engine binding inspector: passed
-v310 production static validation: passed
 result: runtime-config-hardening-verified-local-runtime-preserved
 remaining production warnings: 9
 ```
 
-남은 경고:
-
-```txt
-environment-not-production
-debug-enabled
-jwt-local-default
-admin-write-local-default
-compose-local-password
-adminer-published
-postgres-host-port-published
-postgres-image-not-digest-pinned
-database-tls-not-configured
-```
-
-위 경고는 현재 로컬 개발 환경에서는 예상 상태입니다. 실제 로컬 `.env`나 `docker-compose.yml`을 운영값으로 바꾸지 마세요.
+남은 경고는 local 개발 환경에서 예상 상태입니다. 실제 local `.env`나 `docker-compose.yml`을 운영값으로 바꾸지 마세요.
 
 ========================
-v310 실제 통과 상태
+v312 운영 방향 확정
 ========================
 
-```txt
-required Compose placeholders: 9/9
-password/CA Compose secrets: True/True
-digest-pinned image placeholder: True
-TLS example verify-full/CA path: True/True
-actual secret values absent: True
-Adminer/host ports absent: True/True
-backend healthcheck/read-only/non-root: True/True/True
-result: production-static-validation-template-verified-runtime-application-blocked
-actual production secrets/TLS/container execution approved: no
-```
-
-========================
-v311 준비 및 완료 내용
-========================
-
-추가 파일:
+기호가 다음 방향을 승인했습니다.
 
 ```txt
-deploy/production-capacity-plan.example.json
-deploy/isolated-validation/README.md
-docs/current/POSTGRES_PRODUCTION_CAPACITY_TLS_NETWORK_PLAN.md
-tools/check_production_capacity_tls_network_plan.py
-tools/smoke/backend/smoke_production_capacity_tls_network_plan.py
-```
-
-현재 review-only 계산:
-
-```txt
+database mode: managed-postgresql-selected
+database TLS: verify-full-with-provider-ca
+public entrypoint: external-reverse-proxy-https-selected
 backend replicas/workers: 1/1
-SQLAlchemy engine count: 1
-pool steady/burst connections: 5/15
-non-application reserve/safety margin: 10/20%
-planned peak before safety: 25
-recommended/candidate max_connections: 30/40
-future 2-replica / 2x2-worker minimums: 50/90
-TLS database mode: managed-postgresql-preferred
-reverse proxy only / DB internal: True/True
-isolated container execution approved: no
+reverse proxy product: deferred
 ```
 
-`max_connections=40`은 실제 PostgreSQL에 적용된 값이 아니라 review 후보입니다.
+production Compose 현재 계약:
+
+```txt
+services: backend only
+bundled PostgreSQL/Adminer: absent
+host ports/build/named volumes: absent
+backend image: exact digest required
+provider CA: Compose secret required
+edge network: pre-created external network required
+ENVIRONMENT/DEBUG: production/false
+backend replicas/workers: 1/1
+```
+
+`max_connections` 계산은 application burst 15, reserve 10, recommended minimum 30, review 후보 40입니다. 실제 DB에 적용한 값이 아닙니다.
+
+config render approved: yes
+config render executed on user PC: no
+image pull/build/container start approved: no
+actual production values applied: no
+
+handoff ZIP 제작 환경에는 Docker CLI가 없어 실제 config render를 실행하지 못했습니다. config-only wrapper와 fake Docker smoke는 통과했습니다.
 
 ========================
-다음 첫 작업 — 읽기 전용 v311 검사
+다음 첫 작업 — v312 selection + config render-only
 ========================
-
-먼저 아래 명령의 실제 결과를 수집하세요. 이 명령은 프로젝트 파일만 읽으며 실제 env/secret, Docker, DB, Alembic을 건드리지 않습니다.
 
 실행 위치: `backend` 폴더
 `.venv` 상태: 꺼져 있을 때 Git Bash
@@ -174,26 +146,45 @@ source .venv/Scripts/activate
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/check_production_capacity_tls_network_plan.py --strict
+python tools/check_production_managed_postgres_reverse_proxy_selection.py --strict
 ```
 
 정상 기대 결과:
 
 ```txt
-recommended/candidate max_connections: 30/40
-future 2-replica / 2x2-worker minimums: 50/90
-TLS database mode: managed-postgresql-preferred
-reverse proxy only / DB internal: True/True
-actual Docker command executed: no
-actual DB/Alembic mutation executed: no
-isolated container execution approved: no
-result: production-capacity-tls-network-plan-verified-execution-blocked
-next safe stage: approve-provider-and-isolated-container-config-render-only
+database/TLS mode: managed-postgresql-selected / verify-full-with-provider-ca
+public entrypoint: external-reverse-proxy-https-selected
+backend replicas/workers: 1/1
+Compose services: backend
+required Compose placeholders: 7/7
+compose config render approved/executed: yes/no
+result: managed-postgresql-reverse-proxy-selection-verified-config-render-approved
+next safe stage: run-config-render-only-on-docker-capable-host
 ```
 
-검사가 통과해도 Docker 명령을 실행하지 마세요. 다음 단계는 실제 예상 트래픽/replica 목표, 관리형 PostgreSQL 또는 bundled TLS 선택, reverse proxy 제품/DNS/certificate 방향을 먼저 승인받는 것입니다.
+위 검사가 통과하면 같은 위치/가상환경에서 다음 명령을 실행하세요.
 
-그 뒤에도 첫 Docker 단계는 `compose config` render-only이며 별도 승인 없이는 실행하지 않습니다. build/pull/up/down은 각각 더 뒤의 별도 승인 경계입니다.
+```bash
+python tools/render_production_compose_config.py --execute --confirm-stage v312-config-render-only
+```
+
+이 wrapper는 실제 `.env`나 secret을 읽지 않고 임시 review sentinel만 사용해 정확히 `docker compose config`만 호출합니다. raw render는 저장하지 않습니다.
+
+정상 기대 결과:
+
+```txt
+rendered services: backend
+host ports/build/named volumes absent: True/True/True
+managed DB service absent / backend replicas: True/1
+digest/production guard/TLS/edge rendered: True/True/True/True
+image pull/build executed: no
+container/network/volume mutation executed: no
+DB/Alembic mutation executed: no
+result: production-compose-config-render-verified-no-runtime-mutation
+next safe stage: review-render-report-and-approve-backend-image-source-digest
+```
+
+결과를 그대로 수집하세요. config가 통과해도 pull/build/up/down을 실행하지 마세요.
 
 ========================
 절대 변경/실행 금지
@@ -203,9 +194,10 @@ next safe stage: approve-provider-and-isolated-container-config-render-only
 
 * 실제 `backend/.env`, production env, JWT/Admin secret
 * 실제 password/CA/cert/key 파일 생성·입력·커밋
-* `docker compose -f deploy/docker-compose.production.yml config/build/pull/up/down`
-* Docker container/volume 삭제 또는 변경
-* PostgreSQL `max_connections` 실제 변경
+* Docker image pull/build
+* Docker container/network/volume create/start/stop/remove
+* `docker compose ... up/down/run/start/stop/rm`
+* managed PostgreSQL 실제 연결/query/설정 변경
 * source/rehearsal stamp 재실행
 * 새 Alembic revision/autogenerate/upgrade/downgrade
 * DB 생성/삭제/복원/reset/seed

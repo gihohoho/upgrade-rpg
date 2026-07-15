@@ -1,15 +1,15 @@
 # Upgrade RPG
 
-현재 기준: **v311.production-capacity-tls-network-isolated-plan**
+현재 기준: **v312.production-managed-postgres-reverse-proxy-config-render-ready**
 
 ## 현재 구조
 
 - legacy 게임: `index.html`
 - legacy 관리자: `admin.html`
 - legacy JS/CSS: `src/`
-- Vue 앱: `frontend/vue-app/`
+- Vue GET read-only 앱: `frontend/vue-app/`
 - FastAPI: `backend/`
-- 운영 배포 검토 template: `deploy/`
+- 운영 배포 review template: `deploy/`
 - 실제 Python 가상환경: `backend/.venv`
 
 게임 콘텐츠, Vue write/인증, 새 Alembic revision은 계속 보류합니다.
@@ -23,24 +23,34 @@ current revision: v295_initial_schema
 next revision candidate operations: 0
 ```
 
-## Runtime
+## 운영 기본 방향
 
-- v307 live DB health와 Docker readiness 통과
-- v308 pool/lifecycle/production fail-closed/Dockerfile/Compose 적용
-- v309 AST engine binding 검사 사용자 PC 통과
-- v310 production secret/TLS/container 정적 template 검사 통과
-- 남은 운영 경고 9개는 local/production 분리 항목
+```txt
+managed PostgreSQL + provider CA verify-full
+external reverse proxy HTTPS
+backend 1 replica / 1 Uvicorn worker
+pool 5 + overflow 10
+max_connections review candidate 40
+```
 
-## v311 읽기 전용 검사
+production Compose에는 backend만 있으며 bundled PostgreSQL/Adminer/DB volume/host port/build는 없습니다.
+
+## 다음 첫 검사
 
 실행 위치: 프로젝트 루트  
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/check_production_capacity_tls_network_plan.py --strict
+python tools/check_production_managed_postgres_reverse_proxy_selection.py --strict
 ```
 
-현재 계산 기준은 backend 1 replica × 1 worker, pool 5 + overflow 10입니다. `max_connections` review 후보는 40이며 실제 DB에는 적용하지 않았습니다.
+그다음 승인된 config render-only:
+
+```bash
+python tools/render_production_compose_config.py --execute --confirm-stage v312-config-render-only
+```
+
+이 wrapper는 실제 `.env`나 secret을 읽지 않고 `docker compose config`만 실행합니다. pull/build/up/down은 계속 금지입니다.
 
 ## 기본 검증
 

@@ -128,6 +128,8 @@ python tools/smoke/backend/smoke_runtime_engine_source_binding_inspector.py
 python tools/smoke/backend/smoke_runtime_config_hardening.py
 python tools/smoke/backend/smoke_production_secrets_tls_container_static.py
 python tools/smoke/backend/smoke_production_capacity_tls_network_plan.py
+python tools/smoke/backend/smoke_production_managed_postgres_reverse_proxy_selection.py
+python tools/smoke/backend/smoke_production_compose_config_render.py
 python tools/smoke/game/smoke_next_chat_handoff.py
 python tools/smoke/contracts/smoke_backend_admin_preview_side_effect_contract.py
 python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contract.py

@@ -147,26 +147,28 @@ def inspect_static_hardening(root: Path) -> dict[str, Any]:
         },
         "productionCompose": {
             "exists": True,
-            "separateFromLocal": "production deployment" in production_compose.lower() and "template only" in production_compose.lower(),
+            "separateFromLocal": "production review template only" in production_compose.lower(),
             "productionEnvironment": "ENVIRONMENT: production" in production_compose,
             "debugFalse": 'DEBUG: "false"' in production_compose,
             "databaseUrlRequired": "DATABASE_URL:?" in production_compose,
-            "postgresPasswordSecret": "POSTGRES_PASSWORD_FILE" in production_compose
-            and "secrets:" in production_compose,
-            "postgresHostPortPublished": "ports:" in production_compose.split("backend:", 1)[0],
+            "managedPostgresServiceAbsent": "  postgres:" not in production_compose.lower(),
+            "postgresCaSecret": "POSTGRES_CA_FILE" in production_compose and "postgres_ca:" in production_compose,
+            "postgresHostPortPublished": "ports:" in production_compose,
             "adminerIncluded": "adminer:" in production_compose.lower(),
-            "digestPinRequired": "approved digest-pinned" in production_compose,
-            "tlsUrlRequired": "TLS-enabled production DATABASE_URL" in production_compose,
+            "digestPinRequired": "approved digest-pinned backend image" in production_compose,
+            "tlsUrlRequired": "managed PostgreSQL verify-full DATABASE_URL" in production_compose,
+            "externalEdgeNetwork": "external: true" in production_compose and "EDGE_NETWORK_NAME" in production_compose,
+            "singleReplica": "replicas: 1" in production_compose,
             "backendReadOnlyFilesystem": "read_only: true" in production_compose,
             "noNewPrivileges": "no-new-privileges:true" in production_compose,
             "automaticAlembic": "alembic" in production_compose.lower(),
         },
         "deploymentReadme": {
             "exists": True,
-            "separateApproval": "별도로 확정" in deployment_readme,
+            "separateApproval": "아직 결정하지 않은 것" in deployment_readme,
             "tlsDocumented": "TLS" in deployment_readme,
             "poolSizingDocumented": "pool" in deployment_readme,
-            "noAdminerHostPort": "Adminer host port" in deployment_readme,
+            "noAdminerHostPort": "Adminer" in deployment_readme and "host `ports:` 없음" in deployment_readme,
         },
         "localComposePreserved": all(
             marker in local_compose
@@ -288,11 +290,14 @@ def inspect_runtime_config_hardening(
     _require(production_compose["productionEnvironment"] is True, "production Compose does not force ENVIRONMENT=production")
     _require(production_compose["debugFalse"] is True, "production Compose does not force DEBUG=false")
     _require(production_compose["databaseUrlRequired"] is True, "production DATABASE_URL is not required")
-    _require(production_compose["postgresPasswordSecret"] is True, "PostgreSQL password secret boundary is missing")
+    _require(production_compose["managedPostgresServiceAbsent"] is True, "bundled PostgreSQL service must be absent")
+    _require(production_compose["postgresCaSecret"] is True, "managed PostgreSQL CA secret boundary is missing")
     _require(production_compose["postgresHostPortPublished"] is False, "production PostgreSQL host port is published")
     _require(production_compose["adminerIncluded"] is False, "production Compose includes Adminer")
-    _require(production_compose["digestPinRequired"] is True, "production PostgreSQL digest pin is not required")
-    _require(production_compose["tlsUrlRequired"] is True, "production TLS DATABASE_URL is not required")
+    _require(production_compose["digestPinRequired"] is True, "production backend image digest pin is not required")
+    _require(production_compose["tlsUrlRequired"] is True, "managed PostgreSQL verify-full DATABASE_URL is not required")
+    _require(production_compose["externalEdgeNetwork"] is True, "external reverse proxy edge network is missing")
+    _require(production_compose["singleReplica"] is True, "production backend replica count is not 1")
     _require(production_compose["backendReadOnlyFilesystem"] is True, "backend container filesystem is not read-only")
     _require(production_compose["noNewPrivileges"] is True, "backend container no-new-privileges is missing")
     _require(production_compose["automaticAlembic"] is False, "production Compose contains automatic Alembic")
@@ -349,7 +354,7 @@ def render_text(result: dict[str, Any]) -> str:
         f"- unsafe production defaults blocked: {settings['productionUnsafeDefaultsBlocked']}",
         f"- safe production settings accepted: {settings['productionSafeSettingsAccepted']}",
         f"- backend Dockerfile: non-root={static['backendDockerfile']['nonRootUser']} / automatic Alembic={static['backendDockerfile']['noAutomaticAlembic'] is False}",
-        f"- production Compose: separate template={static['productionCompose']['separateFromLocal']} / Adminer={static['productionCompose']['adminerIncluded']} / PostgreSQL host port={static['productionCompose']['postgresHostPortPublished']}",
+        f"- production Compose: separate template={static['productionCompose']['separateFromLocal']} / managed DB service absent={static['productionCompose']['managedPostgresServiceAbsent']} / host ports={static['productionCompose']['postgresHostPortPublished']}",
         f"- local docker-compose behavior preserved: {static['localComposePreserved']}",
         f"- live DB health required/confirmed: {result['healthRequired']}/{result['healthConfirmed']}",
         f"- remaining production warnings: {result['runtimeWarningCount']} / {result['remainingRuntimeWarningKeys']}",

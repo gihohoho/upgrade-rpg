@@ -16,9 +16,10 @@ from typing import Any
 TOOL_VERSION = "v311.production-capacity-tls-network-plan"
 READY_RESULT = "production-capacity-tls-network-plan-verified-execution-blocked"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "approve-provider-and-isolated-container-config-render-only"
+NEXT_SAFE_STAGE = "run-config-render-only-on-docker-capable-host"
 ALLOWED_TLS_MODES = {
     "managed-postgresql-preferred",
+    "managed-postgresql-selected",
     "bundled-postgresql-tls-deferred",
 }
 
@@ -148,7 +149,13 @@ def inspect_production_capacity_plan(root: Path) -> dict[str, Any]:
 
     tls_mode = plan.get("tlsDatabaseMode")
     _require(isinstance(tls_mode, str) and tls_mode in ALLOWED_TLS_MODES, "unsupported tlsDatabaseMode")
-    _require(plan.get("publicEntrypoint") == "reverse-proxy-only", "public entrypoint must remain reverse-proxy-only")
+    _require(
+        plan.get("publicEntrypoint") == "external-reverse-proxy-https-selected",
+        "public entrypoint must match the selected external reverse proxy HTTPS mode",
+    )
+    _require(_bool_value(plan, "composeConfigRenderApproved") is True, "Compose config render must be approved")
+    _require(_bool_value(plan, "composeConfigRenderExecuted") is False, "handoff plan must not claim config execution")
+    _require(_bool_value(plan, "imagePullBuildApproved") is False, "image pull/build must remain unapproved")
     _require(_bool_value(plan, "isolatedContainerExecutionApproved") is False, "isolated container execution must remain unapproved")
     _require(_bool_value(plan, "actualProductionValuesApplied") is False, "actual production values must remain unapplied")
 
@@ -158,7 +165,7 @@ def inspect_production_capacity_plan(root: Path) -> dict[str, Any]:
     )
     dockerfile_single_worker = "--workers" not in docker_cmd
     _require(dockerfile_single_worker and workers == 1, "capacity plan must match the current single-worker Dockerfile")
-    _require(replicas == 1 and "replicas:" not in compose, "capacity plan must match the current single backend replica template")
+    _require(replicas == 1 and "replicas: 1" in compose, "capacity plan must match the selected single backend replica template")
 
     pool_size_marker = f"DB_POOL_SIZE: ${{DB_POOL_SIZE:-{pool_size}}}"
     overflow_marker = f"DB_MAX_OVERFLOW: ${{DB_MAX_OVERFLOW:-{max_overflow}}}"
@@ -172,27 +179,25 @@ def inspect_production_capacity_plan(root: Path) -> dict[str, Any]:
         for marker in (
             'expose:\n      - "8000"',
             "- edge",
-            "edge:",
+            "external: true",
+            "EDGE_NETWORK_NAME",
         )
     ) and re.search(r"(?m)^\s+ports:\s*$", compose) is None
-    db_internal = all(
-        marker in compose
-        for marker in (
-            'expose:\n      - "5432"',
-            "backend_internal:",
-            "internal: true",
-        )
-    )
-    _require(reverse_proxy_only, "backend must remain proxy-only without host ports")
-    _require(db_internal, "PostgreSQL must remain on the internal network")
+    managed_database_boundary = all(
+        marker not in compose.lower()
+        for marker in ("  postgres:", "adminer", "postgres_password")
+    ) and re.search(r"(?m)^volumes:\s*$", compose) is None
+    _require(reverse_proxy_only, "backend must remain external-proxy-only without host ports")
+    _require(managed_database_boundary, "bundled PostgreSQL service/volume must remain absent")
 
     for marker in (
-        "managed-postgresql-preferred",
+        "managed-postgresql-selected",
         "bundled PostgreSQL TLS",
         "reverse proxy",
         "HTTPS `443`",
         "recommended minimum: 30",
         "review candidate max_connections: 40",
+        "config render approved: yes",
         "isolated container execution approved: no",
         NEXT_SAFE_STAGE,
     ):
@@ -200,18 +205,18 @@ def inspect_production_capacity_plan(root: Path) -> dict[str, Any]:
 
     for marker in (
         "Stage 0",
-        "Stage 1",
-        "config render only",
+        "Stage 1 — 승인됨: config render only",
+        "v312-config-render-only",
         "Stage 2",
         "Stage 3",
         "Stage 4",
-        "actual Docker command executed: no",
+        "actual Docker config command executed in handoff environment: no",
         "isolated container execution approved: no",
     ):
         _require(marker in isolated_doc, f"isolated validation plan is missing: {marker}")
 
     _require(
-        all(marker in deploy_readme for marker in ("worker/pool/max_connections", "reverse proxy/HTTPS", "Docker build/pull/up/down")),
+        all(marker in deploy_readme for marker in ("max_connections", "reverse proxy", "pull/build")),
         "deploy README must retain the production execution boundary",
     )
 
@@ -257,7 +262,9 @@ def inspect_production_capacity_plan(root: Path) -> dict[str, Any]:
         "twoReplicaTwoWorkerRecommendedMinimum": scenario_two_by_two["recommendedMinimum"],
         "tlsDatabaseMode": tls_mode,
         "reverseProxyOnly": reverse_proxy_only,
-        "databaseInternalNetwork": db_internal,
+        "managedDatabaseBoundary": managed_database_boundary,
+        "composeConfigRenderApproved": True,
+        "composeConfigRenderExecuted": False,
         "dockerfileSingleWorker": dockerfile_single_worker,
         "actualDockerCommandExecuted": False,
         "actualSecretOrCertificateCreated": False,
@@ -284,7 +291,8 @@ def render(result: dict[str, Any]) -> str:
             f"- candidate spare after planned peak: {result['candidateSpareAfterPlannedPeak']}",
             f"- future 2-replica / 2x2-worker minimums: {result['twoReplicaRecommendedMinimum']}/{result['twoReplicaTwoWorkerRecommendedMinimum']}",
             f"- TLS database mode: {result['tlsDatabaseMode']}",
-            f"- reverse proxy only / DB internal: {result['reverseProxyOnly']}/{result['databaseInternalNetwork']}",
+            f"- reverse proxy only / managed DB boundary: {result['reverseProxyOnly']}/{result['managedDatabaseBoundary']}",
+            "- compose config render approved/executed: yes/no",
             "- actual Docker command executed: no",
             "- actual secret/CA/cert/key created: no",
             "- actual DB/Alembic mutation executed: no",

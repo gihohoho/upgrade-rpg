@@ -56,43 +56,30 @@ def main() -> int:
     assert result["candidateSpareAfterPlannedPeak"] == 15
     assert result["twoReplicaRecommendedMinimum"] == 50
     assert result["twoReplicaTwoWorkerRecommendedMinimum"] == 90
-    assert result["tlsDatabaseMode"] == "managed-postgresql-preferred"
+    assert result["tlsDatabaseMode"] == "managed-postgresql-selected"
     assert result["reverseProxyOnly"] is True
-    assert result["databaseInternalNetwork"] is True
+    assert result["managedDatabaseBoundary"] is True
+    assert result["composeConfigRenderApproved"] is True
+    assert result["composeConfigRenderExecuted"] is False
     assert result["actualDockerCommandExecuted"] is False
     assert result["isolatedContainerExecutionApproved"] is False
 
-    # A max_connections candidate below the computed minimum must fail closed.
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp = Path(temp_dir)
-        copy_fixture(temp)
-        plan_path = temp / "deploy/production-capacity-plan.example.json"
-        plan = json.loads(plan_path.read_text(encoding="utf-8"))
-        plan["postgresMaxConnectionsCandidate"] = 20
-        plan_path.write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
-        expect_blocked(module, temp)
+    for key, value in (
+        ("postgresMaxConnectionsCandidate", 20),
+        ("isolatedContainerExecutionApproved", True),
+        ("imagePullBuildApproved", True),
+        ("tlsDatabaseMode", "disable-tls"),
+    ):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = Path(temp_dir)
+            copy_fixture(temp)
+            plan_path = temp / "deploy/production-capacity-plan.example.json"
+            plan = json.loads(plan_path.read_text(encoding="utf-8"))
+            plan[key] = value
+            plan_path.write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
+            expect_blocked(module, temp)
 
-    # Execution approval must never be enabled in the review template.
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp = Path(temp_dir)
-        copy_fixture(temp)
-        plan_path = temp / "deploy/production-capacity-plan.example.json"
-        plan = json.loads(plan_path.read_text(encoding="utf-8"))
-        plan["isolatedContainerExecutionApproved"] = True
-        plan_path.write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
-        expect_blocked(module, temp)
-
-    # An unknown TLS mode must fail closed.
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp = Path(temp_dir)
-        copy_fixture(temp)
-        plan_path = temp / "deploy/production-capacity-plan.example.json"
-        plan = json.loads(plan_path.read_text(encoding="utf-8"))
-        plan["tlsDatabaseMode"] = "disable-tls"
-        plan_path.write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
-        expect_blocked(module, temp)
-
-    print("OK: v311 production capacity/TLS/network plan smoke passed")
+    print("OK: v311/v312 production capacity/TLS/network plan smoke passed")
     return 0
 
 

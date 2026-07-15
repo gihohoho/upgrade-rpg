@@ -1,9 +1,9 @@
-# Current Status — v311
+# Current Status — v312
 
 ## 현재 기준
 
-- 최신 작업: `v311.production-capacity-tls-network-isolated-plan`
-- 기준 ZIP: `rpg_v311_production_capacity_tls_network_plan_handoff_ready.zip`
+- 최신 작업: `v312.production-managed-postgres-reverse-proxy-config-render-ready`
+- 기준 ZIP: `rpg_v312_managed_postgres_reverse_proxy_config_render_ready.zip`
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -14,9 +14,6 @@
 classification: alembic-managed-baseline-complete
 source rpg_game: public 23/749, application 22/748
 current revision: v295_initial_schema
-source/rehearsal application digest: identical
-v302 rehearsal report: verified
-v304 source report: verified
 v305 completion: passed
 v306 candidate operations: 0 / next revision required no
 ```
@@ -25,56 +22,46 @@ v306 candidate operations: 0 / next revision required no
 
 ```txt
 v307 strict + require-health: passed
-Docker PostgreSQL: running/healthy
+local Docker PostgreSQL: running/healthy
 FastAPI live DB health: ok
-v308 pool/lifecycle/production guard/Dockerfile/Compose template: applied
+v308 pool/lifecycle/production guard/Dockerfile/Compose: applied
 v309 runtime engine AST binding fix: passed
-v310 production static validation: passed
+v310 static validation baseline: passed
 remaining local-vs-production warnings: 9
 ```
 
-## v311 완료 상태
+## v312 확정과 변경
 
-- `deploy/production-capacity-plan.example.json` review-only 계산 입력 추가
-- 현재 1 replica × 1 worker × pool(5+10) 기준 application burst 15 계산
-- non-application reserve 10과 safety 20% 포함 recommended minimum 30 계산
-- PostgreSQL `max_connections` review 후보 40 고정, 실제 적용 없음
-- 2 replicas 후보 50, 2 replicas × 2 workers 후보 90 계산
-- 관리형 PostgreSQL 우선 검토, bundled PostgreSQL TLS 대안 조건 문서화
-- reverse proxy HTTPS 443 only, backend/PostgreSQL host port 비공개 경계 문서화
-- isolated container Stage 0~4 승인 경계 문서화
-- v311 읽기 전용 checker와 fail-closed smoke 추가
+- `managed-postgresql-selected`
+- `verify-full-with-provider-ca`
+- `external-reverse-proxy-https-selected`
+- backend replicas/workers `1/1`
+- production Compose service는 backend 하나
+- bundled PostgreSQL/Adminer/named volume/host ports/build 제거
+- exact digest `BACKEND_IMAGE`, provider CA, external edge network 필수
+- config render approved: yes
+- config render executed on user PC: no
+- image pull/build/container start approved: no
 
 ## 다음 첫 작업
 
 ```bash
-python tools/check_production_capacity_tls_network_plan.py --strict
+python tools/check_production_managed_postgres_reverse_proxy_selection.py --strict
+python tools/render_production_compose_config.py --execute --confirm-stage v312-config-render-only
 ```
 
-예상 결과:
-
-```txt
-recommended/candidate max_connections: 30/40
-TLS database mode: managed-postgresql-preferred
-result: production-capacity-tls-network-plan-verified-execution-blocked
-isolated container execution approved: no
-next safe stage: approve-provider-and-isolated-container-config-render-only
-```
+두 번째 명령은 Docker resource를 만들지 않고 config만 렌더링합니다. handoff 제작 환경에는 Docker CLI가 없어 실제 실행 결과는 아직 없습니다.
 
 ## 다음 승인 경계
 
-1. 실제 예상 사용자/트래픽과 backend replica 목표 검토
-2. 관리형 PostgreSQL 또는 bundled PostgreSQL 중 운영 방향 승인
-3. reverse proxy 제품/DNS/certificate 방향 승인
-4. 별도 승인 후 Docker `compose config`만 수행하는 render-only 단계
-5. build/pull/up/down은 다시 별도 승인
+config render가 통과한 뒤 backend image registry/source/digest 검토로 이동합니다. pull/build는 다시 별도 승인합니다.
 
 ## 계속 금지
 
-- 실제 production secret/CA/cert/key 입력
-- 실제 `.env` 수정
-- production Compose config/build/pull/up/down 실행
-- Docker container/volume 변경
-- stamp 재실행 또는 새 revision/autogenerate/upgrade/downgrade
-- DB 생성/삭제/복원/seed 또는 `max_connections` 적용
+- 실제 production env/secret/CA/cert/key 입력
+- image pull/build
+- container/network/volume create/start/stop/remove
+- managed DB 연결 또는 `max_connections` 적용
+- Alembic revision/autogenerate/stamp/upgrade/downgrade
+- DB create/drop/restore/reset/seed
 - 인증/API route/body/write 및 게임 콘텐츠 변경

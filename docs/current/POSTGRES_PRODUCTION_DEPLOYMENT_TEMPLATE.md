@@ -1,4 +1,4 @@
-# FastAPI/PostgreSQL 운영 배포 template — v310
+# FastAPI managed PostgreSQL 운영 배포 template — v312
 
 ## 파일
 
@@ -6,53 +6,51 @@
 backend/Dockerfile
 deploy/docker-compose.production.yml
 deploy/production.env.example
+deploy/production-capacity-plan.example.json
+deploy/production-architecture-selection.example.json
+deploy/reverse-proxy/README.md
+deploy/isolated-validation/README.md
 deploy/secrets/README.md
-deploy/README.md
 ```
-
-이 파일들은 정적 검토용 초안입니다. 현재 로컬 `docker-compose.yml`을 대체하지 않으며 자동 실행하지 않습니다.
 
 ## FastAPI image 경계
 
-- Python 3.11 slim 기반
+- Python 3.11 slim 기반 Dockerfile
 - non-root `app` 사용자
-- `.env`와 실제 secret 파일을 image에 복사하지 않음
-- Uvicorn만 시작
-- command/entrypoint에서 자동 migration 미실행
+- `.env`와 실제 secret을 image에 복사하지 않음
+- Uvicorn 1 worker
+- 자동 Alembic 없음
+- production Compose에서는 `build:` 대신 exact digest `BACKEND_IMAGE` 요구
 
-## 운영 Compose 경계
+## production Compose 경계
 
-- Adminer service 없음
-- PostgreSQL와 backend host `ports:` 공개 없음
-- PostgreSQL password와 CA PEM은 Compose secret 파일 사용
-- `POSTGRES_IMAGE`는 digest-pinned 값을 외부에서 필수 입력
-- `DATABASE_URL`은 TLS와 인증서 검증이 적용된 주소를 외부에서 필수 입력
-- `ENVIRONMENT=production`, `DEBUG=false` 강제
-- backend read-only filesystem, tmpfs, no-new-privileges 적용
-- backend `/api/v1/health` healthcheck 포함
-- 내부 PostgreSQL network 분리
+- backend service 하나만 포함
+- 관리형 PostgreSQL 사용, bundled PostgreSQL service/volume 없음
+- Adminer 없음
+- host `ports:` 없음
+- external reverse proxy network에 `8000`만 expose
+- provider CA는 Compose secret으로 mount
+- DATABASE_URL은 `verify-full` 요구
+- `ENVIRONMENT=production`, `DEBUG=false`
+- backend read-only/tmpfs/no-new-privileges
+- `/api/v1/health` healthcheck
+- replica 1
 
-## example의 역할
+## 승인 경계
 
-`deploy/production.env.example`은 실제 값이 없는 inventory입니다.
-
-- image digest: placeholder
-- password/CA: host path placeholder
-- JWT/Admin key: 32자 이상 별도 생성 placeholder
-- DB URL: `sslmode=verify-full`과 CA 경로 예시
-- CORS: 승인 origin placeholder
-
-실제 값으로 바꾼 파일은 Git과 전달 ZIP에 포함하지 않습니다.
-
-## 별도 승인 전 금지
+현재 허용:
 
 ```txt
-docker compose -f deploy/docker-compose.production.yml build/pull/up/down
-운영 secret 또는 인증서 생성·입력
-TLS PostgreSQL server 설정 변경
-운영 DB 연결
-DNS/reverse proxy 공개
-자동 migration 추가
+project wrapper를 통한 docker compose config render only
 ```
 
-bundled PostgreSQL service의 TLS server 설정은 아직 준비되지 않았습니다. 실제 적용 전 관리형 PostgreSQL 사용 여부 또는 별도 server certificate 설정을 확정해야 합니다.
+아직 금지:
+
+```txt
+실제 env/secret/CA 입력
+image pull/build
+container/network/volume create/start/stop/remove
+managed DB 연결
+DNS/reverse proxy 실제 공개
+Alembic/DB mutation
+```

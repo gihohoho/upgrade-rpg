@@ -47,29 +47,25 @@ def main() -> int:
         "docs/current/POSTGRES_RUNTIME_CONFIG_HARDENING.md",
         "docs/current/POSTGRES_PRODUCTION_DEPLOYMENT_TEMPLATE.md",
         "docs/current/POSTGRES_PRODUCTION_STATIC_VALIDATION.md",
-        "docs/archive/postgres-baseline/README.md",
-        "docs/archive/postgres-baseline/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md",
-        "docs/archive/postgres-baseline/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md",
-        "docs/archive/postgres-baseline/POSTGRES_MIGRATION_TEST_ROUNDTRIP.md",
-        "docs/archive/postgres-baseline/POSTGRES_SOURCE_BASELINE_STAMP_FINAL_GUARD.md",
-        "docs/archive/runtime-hardening/README.md",
-        "docs/archive/runtime-hardening/POSTGRES_RUNTIME_ENGINE_BINDING_INSPECTOR_FIX.md",
+        "docs/current/POSTGRES_PRODUCTION_CAPACITY_TLS_NETWORK_PLAN.md",
+        "docs/current/POSTGRES_PRODUCTION_MANAGED_DB_PROXY_SELECTION.md",
         "backend/alembic/versions/v295_initial_schema_initial_postgresql_schema.py",
         "backend/Dockerfile",
         "deploy/docker-compose.production.yml",
         "deploy/production.env.example",
-        "deploy/secrets/README.md",
-        "tools/check_postgres_baseline_completion_state.py",
-        "tools/check_postgres_next_revision_preflight.py",
-        "tools/check_postgres_deployment_runtime_readiness.py",
-        "tools/check_runtime_config_hardening.py",
-        "tools/check_production_secrets_tls_container_static.py",
-        "tools/smoke/backend/smoke_production_secrets_tls_container_static.py",
         "deploy/production-capacity-plan.example.json",
+        "deploy/production-architecture-selection.example.json",
+        "deploy/reverse-proxy/README.md",
         "deploy/isolated-validation/README.md",
-        "docs/current/POSTGRES_PRODUCTION_CAPACITY_TLS_NETWORK_PLAN.md",
+        "deploy/secrets/README.md",
+        "tools/check_production_secrets_tls_container_static.py",
         "tools/check_production_capacity_tls_network_plan.py",
+        "tools/check_production_managed_postgres_reverse_proxy_selection.py",
+        "tools/render_production_compose_config.py",
+        "tools/smoke/backend/smoke_production_secrets_tls_container_static.py",
         "tools/smoke/backend/smoke_production_capacity_tls_network_plan.py",
+        "tools/smoke/backend/smoke_production_managed_postgres_reverse_proxy_selection.py",
+        "tools/smoke/backend/smoke_production_compose_config_render.py",
     ]
     for relative_path in required_files:
         read_required(relative_path)
@@ -82,66 +78,90 @@ def main() -> int:
 
     assert_contains(
         "NEXT_CHAT_PROMPT.md",
-        "rpg_v311_production_capacity_tls_network_plan_handoff_ready.zip",
-        "v311.production-capacity-tls-network-isolated-plan",
+        "rpg_v312_managed_postgres_reverse_proxy_config_render_ready.zip",
+        "v312.production-managed-postgres-reverse-proxy-config-render-ready",
         "backend/.venv",
-        "check_production_capacity_tls_network_plan.py --strict",
-        "runtime-config-hardening-verified-local-runtime-preserved",
-        "remaining production warnings: 9",
-        "production-static-validation-template-verified-runtime-application-blocked",
-        "production-capacity-tls-network-plan-verified-execution-blocked",
-        "recommended/candidate max_connections: 30/40",
-        "isolated container execution approved: no",
+        "managed-postgresql-selected",
+        "external-reverse-proxy-https-selected",
+        "backend replicas/workers: 1/1",
+        "render_production_compose_config.py --execute --confirm-stage v312-config-render-only",
+        "production-compose-config-render-verified-no-runtime-mutation",
+        "pull/build/up/down을 실행하지 마세요",
     )
     assert_contains(
         "NEXT_CHAT_HANDOFF.md",
         "source rpg_game: public 23/749, application 22/748",
-        "v310 production static validation: passed",
-        "production-capacity-plan.example.json",
-        "recommended minimum `max_connections=30`, review 후보 `40`",
-        "check_production_capacity_tls_network_plan.py --strict",
+        "revision SHA-256: " + REVISION_SHA256,
+        "production Compose를 backend-only로 변경",
+        "config render approved: yes",
+        "config render executed on user PC: no",
+        "Docker CLI가 없어",
+        "review-render-report-and-approve-backend-image-source-digest",
     )
     assert_contains(
-        "docs/current/POSTGRES_PRODUCTION_CAPACITY_TLS_NETWORK_PLAN.md",
-        "v311",
-        "managed-postgresql-preferred",
-        "bundled PostgreSQL TLS",
-        "HTTPS `443`",
-        "recommended minimum: 30",
-        "review candidate max_connections: 40",
-        "production-capacity-tls-network-plan-verified-execution-blocked",
+        "deploy/production-architecture-selection.example.json",
+        '"schemaVersion": "v312.production-architecture-selection"',
+        '"databaseMode": "managed-postgresql-selected"',
+        '"publicEntrypoint": "external-reverse-proxy-https-selected"',
+        '"backendReplicas": 1',
+        '"uvicornWorkersPerReplica": 1',
+        '"composeConfigRenderApproved": true',
+        '"imagePullBuildApproved": false',
+        '"containerStartApproved": false',
     )
     assert_contains(
         "deploy/production-capacity-plan.example.json",
         '"schemaVersion": "v311.production-capacity-plan"',
         '"postgresMaxConnectionsCandidate": 40',
-        '"tlsDatabaseMode": "managed-postgresql-preferred"',
+        '"tlsDatabaseMode": "managed-postgresql-selected"',
+        '"composeConfigRenderApproved": true',
         '"isolatedContainerExecutionApproved": false',
     )
     assert_contains(
-        "deploy/isolated-validation/README.md",
-        "Stage 0",
-        "Stage 1",
-        "config render only",
-        "Stage 2",
-        "Stage 3",
-        "Stage 4",
-        "actual Docker command executed: no",
-    )
-    assert_contains(
         "deploy/docker-compose.production.yml",
-        "POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password",
+        "services:\n  backend:",
+        "image: ${BACKEND_IMAGE:?",
+        "DATABASE_URL: ${DATABASE_URL:?",
         "postgres_ca",
-        "/api/v1/health",
+        "external: true",
+        "replicas: 1",
         "read_only: true",
         "no-new-privileges:true",
     )
+    compose = read_required("deploy/docker-compose.production.yml")
+    for forbidden in ("  postgres:", "adminer:", "ports:", "build:", "volumes:"):
+        if forbidden in compose.lower():
+            raise AssertionError(f"production Compose contains forbidden current marker: {forbidden}")
+
     assert_contains(
         "deploy/production.env.example",
-        "postgres:16-alpine@sha256:<approved-64-hex-digest>",
+        "<approved-registry>/upgrade-rpg-backend@sha256:<approved-64-hex-digest>",
         "sslmode=verify-full",
         "sslrootcert=/run/secrets/postgres_ca.pem",
-        "<generate-a-random-secret-of-at-least-32-characters>",
+        "<pre-created-reverse-proxy-network-name>",
+    )
+    assert_contains(
+        "docs/current/POSTGRES_PRODUCTION_MANAGED_DB_PROXY_SELECTION.md",
+        "managed-postgresql-selected",
+        "external-reverse-proxy-https-selected",
+        "config render approved: yes",
+        "image pull/build approved: no",
+        "run-config-render-only-on-docker-capable-host",
+    )
+    assert_contains(
+        "deploy/isolated-validation/README.md",
+        "Stage 1 — 승인됨: config render only",
+        "v312-config-render-only",
+        "compose config render executed on user PC: no",
+        "container/image/network/volume mutation approved: no",
+    )
+    assert_contains(
+        "tools/run_smoke_core.sh",
+        "smoke_production_secrets_tls_container_static.py",
+        "smoke_production_capacity_tls_network_plan.py",
+        "smoke_production_managed_postgres_reverse_proxy_selection.py",
+        "smoke_production_compose_config_render.py",
+        "smoke_next_chat_handoff.py",
     )
     assert_contains(
         ".gitignore",
@@ -150,19 +170,13 @@ def main() -> int:
         "/deploy/production.env",
         "/deploy/secrets/*",
     )
-    assert_contains(
-        "tools/run_smoke_core.sh",
-        "smoke_production_secrets_tls_container_static.py",
-        "smoke_production_capacity_tls_network_plan.py",
-        "smoke_next_chat_handoff.py",
-    )
 
     revision = ROOT / "backend/alembic/versions/v295_initial_schema_initial_postgresql_schema.py"
     actual_sha = hashlib.sha256(revision.read_bytes()).hexdigest()
     if actual_sha != REVISION_SHA256:
         raise AssertionError(f"reviewed revision SHA-256 differs: {actual_sha}")
 
-    print("OK: v311 next-chat handoff and document structure are synchronized")
+    print("OK: v312 next-chat handoff and document structure are synchronized")
     return 0
 
 
