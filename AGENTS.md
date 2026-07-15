@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v317
+# Upgrade RPG Codex working rules — v318
 
 이 파일은 저장소 전체에 적용됩니다. Codex는 작업을 시작할 때 이 파일과 `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -16,7 +16,7 @@
 
 ## 현재 고정 상태
 
-- latest: `v317.github-actions-ghcr-static-workflow-plan`
+- latest: `v318.github-actions-action-sha-candidates-reviewed`
 - GitHub remote: `https://github.com/gihohoho/upgrade-rpg.git`
 - GHCR namespace: `gihohoho`
 - backend image repository: `ghcr.io/gihohoho/upgrade-rpg-backend` (private)
@@ -47,7 +47,7 @@ DB/env/seed/인증/API body/route/write/migration/Docker/secret/TLS 작업은 �
 
 ## 현재 허용된 다음 단계
 
-GitHub Actions 최소 permissions, `workflow_dispatch` 전용 trigger, SBOM/provenance/signature/vulnerability gate의 정적 계획은 v317에서 준비되었습니다. 다음 단계는 action별 upstream 40자리 SHA, repository Actions 설정, publish environment를 검토하고 workflow 파일 생성 승인 여부를 사용자에게 묻는 것입니다. `.github/workflows/` 생성과 workflow 실행은 아직 승인되지 않았습니다.
+GitHub Actions 최소 permissions, `workflow_dispatch` 전용 trigger, SBOM/provenance/signature/vulnerability gate의 정적 계획과 action별 upstream 40자리 SHA 후보 검토는 v318에서 준비되었습니다. 다음 단계는 Codex GitHub App을 `gihohoho/upgrade-rpg`에 연결하고 repository Actions 설정과 publish environment를 읽기 전용으로 검토한 뒤 workflow 파일 생성 승인 여부를 사용자에게 묻는 것입니다. `.github/workflows/` 생성과 workflow 실행은 아직 승인되지 않았습니다.
 
 첫 검사는 프로젝트 루트에서 `backend/.venv`를 켠 상태로 실행합니다.
 
@@ -55,7 +55,7 @@ GitHub Actions 최소 permissions, `workflow_dispatch` 전용 trigger, SBOM/prov
 python tools/check_github_actions_ghcr_static_plan.py --strict
 ```
 
-정상 결과: `github-actions-ghcr-static-plan-verified-workflow-not-created`
+정상 결과: `github-actions-action-sha-candidates-verified-workflow-not-created`
 
 ## 변경과 검증
 

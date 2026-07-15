@@ -1,4 +1,4 @@
-# Codex Next Chat Start Guide — v317
+# Codex Next Chat Start Guide — v318
 
 1. 현재 프로젝트 폴더와 Git `main` 최신 commit을 사용합니다. ZIP은 첨부하지 않습니다.
 2. 필요하면 루트 `NEXT_CHAT_PROMPT.md` 내용을 첫 메시지로 보냅니다.

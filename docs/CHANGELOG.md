@@ -1,3 +1,12 @@
+# v318.github-actions-action-sha-candidates-reviewed
+
+- 9개 허용 action의 2026-07-15 최신 정식 release tag와 upstream 40자리 commit SHA를 공식 GitHub 저장소에서 대조해 검토 후보로 고정.
+- 검토 후보와 사용자 승인값을 분리하고 `approvedSha: null`, workflow 생성·실행 승인 `false`를 유지하는 fail-closed 검사 추가.
+- Python 3.11.4와 `backend/.venv` 정상 상태를 확인하고 전체 core smoke를 끝까지 통과.
+- Windows cp949 실행 차단 안내, source stamp smoke의 실제 보고서 격리, 가짜 Docker Compose render smoke 실행 호환성 문제를 수정.
+- Codex GitHub 플러그인은 설치됐지만 GitHub App 설치 계정이 0개임을 확인했으며 `gihohoho/upgrade-rpg` 연결 요청을 계속 인계.
+- `.github/workflows/`, workflow 실행, Docker/registry/DB/Alembic mutation은 없음.
+
 # v317.github-actions-ghcr-static-workflow-plan
 
 - GitHub Actions/GHCR publish의 `workflow_dispatch` only, exact main SHA, protected environment, concurrency 정적 정책 추가.

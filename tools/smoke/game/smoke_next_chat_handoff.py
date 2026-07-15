@@ -5,9 +5,9 @@ import hashlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v317.github-actions-ghcr-static-workflow-plan"
-READY_RESULT = "github-actions-ghcr-static-plan-verified-workflow-not-created"
-NEXT_SAFE_STAGE = "review-action-shas-repository-settings-and-workflow-creation-approval"
+VERSION = "v318.github-actions-action-sha-candidates-reviewed"
+READY_RESULT = "github-actions-action-sha-candidates-verified-workflow-not-created"
+NEXT_SAFE_STAGE = "connect-github-app-review-repository-actions-settings-and-request-workflow-creation-approval"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 REVISION_SHA256 = "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa"
@@ -83,7 +83,7 @@ def main() -> int:
         NEXT_SAFE_STAGE,
         "ZIP을 기준으로 작업하지 않습니다",
         "Codex가 프로젝트 루트에서 직접",
-        "접근 권한이 없으면 기호에게 다시 요청",
+        "repository 설치 접근 권한을 기호에게 다시 요청",
     )
     assert_contains(
         "NEXT_CHAT_HANDOFF.md",
@@ -106,7 +106,9 @@ def main() -> int:
         '"githubActionsWorkflowCreationApproved": false',
         '"githubActionsStaticPlanPresent": true',
         '"githubActionsStaticPlanVerified": true',
+        '"actionShasResolved": true',
         '"actionShasApproved": false',
+        '"githubConnectorRepositoryAccess": false',
         '"imageBuildApproved": false',
     )
     assert_contains(
@@ -118,6 +120,7 @@ def main() -> int:
         '"packages": "write"',
         '"attestations": "write"',
         '"id-token": "write"',
+        '"resolvedActionShaCandidatesReviewed": true',
         '"resolvedActionShasApproved": false',
         '"workflowCreationApproved": false',
         '"nextSafeStage": "' + NEXT_SAFE_STAGE + '"',
@@ -182,7 +185,7 @@ def main() -> int:
     if actual_sha != REVISION_SHA256:
         raise AssertionError(f"reviewed revision SHA-256 differs: {actual_sha}")
 
-    print("OK: v317 Codex handoff and document structure are synchronized")
+    print("OK: v318 Codex handoff and document structure are synchronized")
     return 0
 
 

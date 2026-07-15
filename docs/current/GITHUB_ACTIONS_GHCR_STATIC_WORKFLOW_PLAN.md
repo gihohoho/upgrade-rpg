@@ -1,4 +1,4 @@
-# GitHub Actions / GHCR static workflow plan — v317
+# GitHub Actions / GHCR static workflow plan — v318
 
 ## 목적과 현재 경계
 
@@ -6,13 +6,13 @@
 
 ```txt
 plan: review-only
-version: v317.github-actions-ghcr-static-workflow-plan
+version: v318.github-actions-action-sha-candidates-reviewed
 workflow file present/approved: no/no
 workflow execution approved: no
 registry login/build/push approved: no/no/no
 target: linux/amd64
 credential: GitHub Actions GITHUB_TOKEN
-next: action SHA + repository settings + workflow file creation approval
+next: GitHub App 연결 + repository settings/environment 검토 + workflow file 생성 승인
 ```
 
 ## 안전한 trigger
@@ -42,10 +42,27 @@ next: action SHA + repository settings + workflow file creation approval
 ## action 공급망 규칙
 
 - 모든 `uses:`는 tag나 branch가 아니라 검토된 40자리 commit SHA로 고정합니다.
-- 현재 action SHA는 아직 검토·승인되지 않았으므로 계획 JSON의 `approvedSha`는 모두 `null`입니다.
-- SHA가 모두 실제 upstream repository commit인지 확인되고 기호가 workflow 파일 생성을 승인하기 전에는 `.github/workflows/`를 만들지 않습니다.
+- 2026-07-15에 각 공식 GitHub 저장소의 최신 정식 release tag와 실제 upstream commit을 대조했습니다.
+- 아래 값은 **검토 후보**이며 사용자 승인값이 아닙니다. 계획 JSON의 `approvedSha`는 계속 모두 `null`입니다.
+- 기호가 workflow 파일 생성을 별도로 승인하기 전에는 `.github/workflows/`를 만들지 않습니다.
 - 허용 후보는 `actions/checkout`, Docker 공식 actions, `aquasecurity/trivy-action`, `anchore/sbom-action`, `actions/attest`, `sigstore/cosign-installer`, `actions/upload-artifact`로 제한합니다.
 - repository Actions 설정에서도 가능하면 full-length SHA 강제와 허용 action 범위를 적용합니다.
+
+### v318 action SHA 검토 후보
+
+| repository | 정식 release | 검토한 40자리 commit SHA |
+|---|---|---|
+| [`actions/checkout`](https://github.com/actions/checkout/releases/tag/v7.0.0) | `v7.0.0` | `9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0` |
+| [`docker/setup-buildx-action`](https://github.com/docker/setup-buildx-action/releases/tag/v4.2.0) | `v4.2.0` | `bb05f3f5519dd87d3ba754cc423b652a5edd6d2c` |
+| [`docker/login-action`](https://github.com/docker/login-action/releases/tag/v4.4.0) | `v4.4.0` | `af1e73f918a031802d376d3c8bbc3fe56130a9b0` |
+| [`docker/build-push-action`](https://github.com/docker/build-push-action/releases/tag/v7.3.0) | `v7.3.0` | `53b7df96c91f9c12dcc8a07bcb9ccacbed38856a` |
+| [`aquasecurity/trivy-action`](https://github.com/aquasecurity/trivy-action/releases/tag/v0.36.0) | `v0.36.0` | `ed142fd0673e97e23eac54620cfb913e5ce36c25` |
+| [`anchore/sbom-action`](https://github.com/anchore/sbom-action/releases/tag/v0.24.0) | `v0.24.0` | `e22c389904149dbc22b58101806040fa8d37a610` |
+| [`actions/attest`](https://github.com/actions/attest/releases/tag/v4.1.1) | `v4.1.1` | `a1948c3f048ba23858d222213b7c278aabede763` |
+| [`sigstore/cosign-installer`](https://github.com/sigstore/cosign-installer/releases/tag/v4.1.2) | `v4.1.2` | `6f9f17788090df1f26f669e9d70d6ae9567deba6` |
+| [`actions/upload-artifact`](https://github.com/actions/upload-artifact/releases/tag/v7.0.1) | `v7.0.1` | `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` |
+
+정적 검사기는 repository, release, SHA, 공식 release URL, upstream tag commit 확인 상태를 모두 고정합니다. 어느 하나라도 바뀌거나 `approvedSha`가 사용자 승인 전에 채워지면 fail-closed로 실패합니다.
 
 ## pre-push fail-closed gate
 
@@ -85,7 +102,7 @@ https://github.com/gihohoho/upgrade-rpg/.github/workflows/publish-backend-ghcr.y
 
 - Codex GitHub 플러그인에 `gihohoho/upgrade-rpg` repository 접근 권한이 아직 필요합니다.
 - GitHub repository Actions 설정과 environment를 확인·변경할 권한이 필요합니다.
-- action별 upstream 40자리 SHA 검토와 기호의 workflow 파일 생성 승인이 필요합니다.
+- action별 upstream 40자리 SHA 후보 검토는 완료됐지만, 기호의 workflow 파일 생성 승인은 아직 필요합니다.
 - 필요한 extension, repository 권한, 설치 항목이 생기면 Codex가 기호에게 요청하고 해결되지 않으면 다음 작업에서도 다시 요청합니다.
 
 ## 공식 근거

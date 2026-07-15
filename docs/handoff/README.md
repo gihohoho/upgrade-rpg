@@ -1,4 +1,4 @@
-# Handoff Documents — v317
+# Handoff Documents — v318
 
 - 루트 `AGENTS.md`: Codex가 자동으로 읽을 저장소 작업 규칙
 - `NEXT_CHAT_PROMPT.md`: Codex 새 채팅 첫 메시지

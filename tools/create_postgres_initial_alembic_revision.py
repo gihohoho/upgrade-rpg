@@ -870,7 +870,7 @@ def render_workspace_inspection(state: dict[str, Any]) -> str:
 def render_plan() -> str:
     return "\n".join(
         [
-            "PostgreSQL first Alembic revision generation — execution guard",
+            "PostgreSQL first Alembic revision generation - execution guard",
             f"- source DB (read-only): {SOURCE_DATABASE}",
             f"- restored rehearsal DB (read-only): {RESTORE_REHEARSAL_DATABASE}",
             f"- migration DB recovery workspace: {MIGRATION_TEST_DATABASE}",

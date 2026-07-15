@@ -1,4 +1,4 @@
-# Current Documents — v317
+# Current Documents — v318
 
 현재 판단은 이 폴더와 루트 `AGENTS.md`를 우선합니다.
 

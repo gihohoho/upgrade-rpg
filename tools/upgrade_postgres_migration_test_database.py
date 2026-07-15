@@ -425,7 +425,7 @@ def main() -> int:
             print(render_inspection(inspect_readiness(root)))
             return 0
         if not args.execute:
-            print("PostgreSQL isolated migration test upgrade — execution guard")
+            print("PostgreSQL isolated migration test upgrade - execution guard")
             print(f"- target DB: {MIGRATION_TEST_DATABASE}")
             print(f"- approved revision: {REVISION_ID}")
             print("- --execute is required; no DB mutation was attempted.")

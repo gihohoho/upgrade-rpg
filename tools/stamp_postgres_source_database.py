@@ -704,7 +704,7 @@ def main() -> int:
             print(render_inspection(inspect_readiness(root)))
             return 0
         if not args.execute:
-            print("PostgreSQL source baseline stamp — final execution guard")
+            print("PostgreSQL source baseline stamp - final execution guard")
             print(f"- exact target DB: {SOURCE_DATABASE}")
             print(f"- exact revision: {REVISION_ID}")
             print(f"- exact backup SHA-256: {APPROVED_BACKUP_SHA256}")

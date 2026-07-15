@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
-import stat
 import sys
 import tempfile
 
@@ -36,7 +35,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as temp_dir:
         temp = Path(temp_dir)
         args_log = temp / "args.txt"
-        fake_docker = temp / "docker"
+        fake_docker = temp / "fake_docker.py"
         rendered = """name: rpg-prod-config-review-v312
 services:
   backend:
@@ -70,8 +69,11 @@ secrets:
             f"sys.stdout.write({rendered!r})\n",
             encoding="utf-8",
         )
-        fake_docker.chmod(fake_docker.stat().st_mode | stat.S_IXUSR)
-        result = module.execute_config_render(ROOT, docker_executable=str(fake_docker))
+        result = module.execute_config_render(
+            ROOT,
+            docker_executable=sys.executable,
+            docker_command_prefix=[sys.executable, str(fake_docker)],
+        )
         assert result["result"] == module.EXECUTED_RESULT
         assert result["dockerSubcommand"] == "compose config"
         assert result["reviewSentinelsOnly"] is True

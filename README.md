@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v317.github-actions-ghcr-static-workflow-plan**
+현재 기준: **v318.github-actions-action-sha-candidates-reviewed**
 
 Codex는 루트 `AGENTS.md`를 먼저 읽고, 현재 상태는 `docs/current/CURRENT_STATUS.md`에서 확인합니다.
 

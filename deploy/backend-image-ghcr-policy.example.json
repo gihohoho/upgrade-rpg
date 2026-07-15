@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v317.github-actions-ghcr-static-workflow-plan",
+  "schemaVersion": "v318.github-actions-action-sha-candidates-reviewed",
   "reviewOnly": true,
   "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
   "registryProvider": "github-container-registry",
@@ -24,8 +24,9 @@
   "githubActionsWorkflowCreationApproved": false,
   "githubActionsStaticPlanPresent": true,
   "githubActionsStaticPlanVerified": true,
-  "actionShasResolved": false,
+  "actionShasResolved": true,
   "actionShasApproved": false,
+  "githubConnectorRepositoryAccess": false,
   "repositoryActionsSettingsReviewed": false,
   "publishEnvironmentConfigured": false,
   "dockerLoginApproved": false,
@@ -36,5 +37,5 @@
   "actualRegistryMutationExecuted": false,
   "actualDockerCommandExecuted": false,
   "actualDatabaseAlembicMutationExecuted": false,
-  "nextSafeStage": "review-action-shas-repository-settings-and-workflow-creation-approval"
+  "nextSafeStage": "connect-github-app-review-repository-actions-settings-and-request-workflow-creation-approval"
 }

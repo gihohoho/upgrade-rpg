@@ -137,11 +137,16 @@ def _inspect_rendered_config(rendered: str) -> dict[str, Any]:
 
 
 def execute_config_render(
-    root: Path, *, docker_executable: str | None = None
+    root: Path,
+    *,
+    docker_executable: str | None = None,
+    docker_command_prefix: list[str] | None = None,
 ) -> dict[str, Any]:
     readiness = inspect_config_render_readiness(root, docker_executable=docker_executable)
     resolved_docker = docker_executable or shutil.which("docker")
     _require(resolved_docker is not None, "Docker CLI is unavailable; run this on the user's Docker-capable PC")
+    command_prefix = docker_command_prefix or [str(resolved_docker)]
+    _require(bool(command_prefix), "Docker command prefix is empty")
     compose_path = (root / "deploy/docker-compose.production.yml").resolve()
 
     with tempfile.TemporaryDirectory(prefix="rpg-v312-compose-render-") as temp_dir:
@@ -151,7 +156,7 @@ def execute_config_render(
         ca_path.write_text("review-only sentinel; not a certificate\n", encoding="utf-8")
         env_path.write_text("\n".join(_review_env_lines(ca_path)) + "\n", encoding="utf-8")
         command = [
-            str(resolved_docker),
+            *command_prefix,
             "compose",
             "--project-name",
             PROJECT_NAME,

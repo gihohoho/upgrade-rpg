@@ -572,7 +572,7 @@ def execute_restore(
 def render_plan() -> str:
     return "\n".join(
         [
-            "PostgreSQL restore rehearsal — execution guard",
+            "PostgreSQL restore rehearsal - execution guard",
             f"- source DB (must remain unchanged): {SOURCE_DATABASE}",
             f"- target DB (must already exist and be empty): {RESTORE_REHEARSAL_DATABASE}",
             f"- approved backup: {APPROVED_BACKUP_FILENAME}",

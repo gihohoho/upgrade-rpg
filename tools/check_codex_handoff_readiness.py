@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the v317 Codex/GHCR handoff using repository files only."""
+"""Validate the v318 Codex/GHCR handoff using repository files only."""
 from __future__ import annotations
 
 import argparse
@@ -10,10 +10,10 @@ import re
 import subprocess
 from typing import Any
 
-TOOL_VERSION = "v317.github-actions-ghcr-static-workflow-plan"
-READY_RESULT = "github-actions-ghcr-static-plan-verified-workflow-not-created"
+TOOL_VERSION = "v318.github-actions-action-sha-candidates-reviewed"
+READY_RESULT = "github-actions-action-sha-candidates-verified-workflow-not-created"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "review-action-shas-repository-settings-and-workflow-creation-approval"
+NEXT_SAFE_STAGE = "connect-github-app-review-repository-actions-settings-and-request-workflow-creation-approval"
 EXPECTED_REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 EXPECTED_NAMESPACE = "gihohoho"
 EXPECTED_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
@@ -117,7 +117,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     handoff_prompt = _read(root / "docs/handoff/NEXT_CHAT_PROMPT.md")
     handoff_state = _read(root / "docs/handoff/NEXT_CHAT_HANDOFF.md")
 
-    _require(policy.get("schemaVersion") == TOOL_VERSION, "unexpected v317 schemaVersion")
+    _require(policy.get("schemaVersion") == TOOL_VERSION, "unexpected v318 schemaVersion")
     _require(_bool(policy, "reviewOnly") is True, "policy must remain review-only")
     _require(policy.get("githubRemote") == EXPECTED_REMOTE, "GitHub remote changed")
     _require(policy.get("registryProvider") == "github-container-registry", "registry provider must be GHCR")
@@ -150,12 +150,13 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "actualRegistryMutationExecuted",
         "actualDockerCommandExecuted",
         "actualDatabaseAlembicMutationExecuted",
-        "actionShasResolved",
         "actionShasApproved",
+        "githubConnectorRepositoryAccess",
         "repositoryActionsSettingsReviewed",
         "publishEnvironmentConfigured",
     ):
         _require(_bool(policy, key) is False, f"{key} must remain false")
+    _require(_bool(policy, "actionShasResolved") is True, "action SHA candidates must remain resolved")
     _require(_bool(policy, "githubActionsStaticPlanPresent") is True, "GitHub Actions static plan must be present")
     _require(_bool(policy, "githubActionsStaticPlanVerified") is True, "GitHub Actions static plan must be verified")
     _require(policy.get("nextSafeStage") == NEXT_SAFE_STAGE, "unexpected next safe stage")
@@ -164,6 +165,10 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require(actions_plan.get("reviewOnly") is True, "static workflow plan must remain review-only")
     _require(actions_plan.get("workflowFilePresent") is False, "workflow file must remain absent")
     _require(actions_plan.get("workflowCreationApproved") is False, "workflow creation must remain unapproved")
+    action_policy = actions_plan.get("actionPolicy")
+    _require(isinstance(action_policy, dict), "static workflow action policy is missing")
+    _require(action_policy.get("resolvedActionShaCandidatesReviewed") is True, "action SHA candidates are not reviewed")
+    _require(action_policy.get("resolvedActionShasApproved") is False, "action SHA candidates must remain unapproved")
     _require(actions_plan.get("nextSafeStage") == NEXT_SAFE_STAGE, "static workflow plan next stage differs")
     _require("workflow_dispatch" in actions_plan_doc, "static workflow plan document is missing trigger policy")
     _require("packages: write" in actions_plan_doc, "static workflow plan document is missing package permission")
@@ -258,6 +263,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "runtimeMutationExecuted": False,
         "githubActionsStaticPlanVerified": True,
         "workflowFilePresent": False,
+        "actionShaCandidatesReviewed": True,
         "actionShasApproved": False,
         "packageSafetyMode": package_safety_mode,
         "result": READY_RESULT,
@@ -277,7 +283,7 @@ def render(result: dict[str, Any]) -> str:
         f"- credential strategy: {result['ciCredentialStrategy']} / local={result['localCredentialStrategy']}",
         f"- forbidden path verification: {result['packageSafetyMode']}",
         "- GitHub Actions static plan/workflow present: verified/no",
-        "- action SHAs approved: no",
+        "- action SHA candidates reviewed/approved: yes/no",
         "- workflow/login/pull/build/push approved: no/no/no/no/no",
         "- workflow/login/pull/build/push executed: no/no/no/no/no",
         "- container/registry/DB/Alembic mutation executed: no/no/no/no",

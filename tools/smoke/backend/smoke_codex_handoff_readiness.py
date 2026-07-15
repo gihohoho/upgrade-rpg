@@ -32,9 +32,9 @@ REQUIRED = (
 
 
 def load_tool():
-    spec = importlib.util.spec_from_file_location("v317_codex_handoff", TOOL)
+    spec = importlib.util.spec_from_file_location("v318_codex_handoff", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v317 Codex handoff checker")
+        raise RuntimeError("cannot load v318 Codex handoff checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -53,7 +53,7 @@ def expect_blocked(module, temp: Path) -> None:
         module.inspect_codex_handoff(temp)
     except module.CodexHandoffError:
         return
-    raise AssertionError("unsafe v317 Codex handoff fixture was not blocked")
+    raise AssertionError("unsafe v318 Codex handoff fixture was not blocked")
 
 
 def main() -> int:
@@ -70,6 +70,7 @@ def main() -> int:
     assert result["packageSafetyMode"] in {"git-index", "filesystem-absence"}
     assert result["githubActionsStaticPlanVerified"] is True
     assert result["workflowFilePresent"] is False
+    assert result["actionShaCandidatesReviewed"] is True
     assert result["actionShasApproved"] is False
 
     mutations = (
@@ -82,6 +83,9 @@ def main() -> int:
         ("localCredentialStrategy", "plaintext-file"),
         ("githubPatCreated", True),
         ("githubActionsWorkflowCreationApproved", True),
+        ("actionShasResolved", False),
+        ("actionShasApproved", True),
+        ("githubConnectorRepositoryAccess", True),
         ("dockerLoginApproved", True),
         ("imageBuildApproved", True),
         ("imagePushApproved", True),
@@ -125,7 +129,7 @@ def main() -> int:
         local_env.write_text("NOT_A_REAL_SECRET=fixture-only\n", encoding="utf-8")
         expect_blocked(module, temp)
 
-    print("OK: v317 Codex/GHCR static plan handoff smoke passed")
+    print("OK: v318 Codex/GHCR action SHA review handoff smoke passed")
     return 0
 
 

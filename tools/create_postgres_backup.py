@@ -418,7 +418,7 @@ def human_size(size: int) -> str:
 def render_plan() -> str:
     return "\n".join(
         [
-            "PostgreSQL backup creation — execution guard",
+            "PostgreSQL backup creation - execution guard",
             "- This command creates a local sensitive dump file only when --execute is supplied.",
             f"- source DB: {SOURCE_DATABASE}",
             f"- container: {POSTGRES_CONTAINER}",

@@ -1,4 +1,4 @@
-# Production secret / TLS / container static validation — current through v317
+# Production secret / TLS / container static validation — current through v318
 
 ## 현재 정적 계약
 

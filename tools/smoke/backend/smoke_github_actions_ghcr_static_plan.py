@@ -16,9 +16,9 @@ REQUIRED = (
 
 
 def load_tool():
-    spec = importlib.util.spec_from_file_location("v317_github_actions_plan", TOOL)
+    spec = importlib.util.spec_from_file_location("v318_github_actions_plan", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v317 GitHub Actions static plan checker")
+        raise RuntimeError("cannot load v318 GitHub Actions static plan checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -44,7 +44,7 @@ def expect_blocked(module, temp: Path) -> None:
         module.inspect_static_workflow_plan(temp)
     except module.StaticWorkflowPlanError:
         return
-    raise AssertionError("unsafe v317 GitHub Actions plan fixture was not blocked")
+    raise AssertionError("unsafe v318 GitHub Actions plan fixture was not blocked")
 
 
 def main() -> int:
@@ -53,6 +53,7 @@ def main() -> int:
     assert result["result"] == module.READY_RESULT
     assert result["trigger"] == "workflow_dispatch-only"
     assert result["workflowFilePresent"] is False
+    assert result["actionShaCandidatesReviewed"] is True
     assert result["actionShasApproved"] is False
     assert result["supplyChainGate"] == "fail-closed"
 
@@ -61,6 +62,8 @@ def main() -> int:
         lambda p: p["permissionsPolicy"]["buildScanJob"].update({"packages": "write"}),
         lambda p: p["permissionsPolicy"]["publishAttestSignJob"].update({"contents": "write"}),
         lambda p: p["actionPolicy"].update({"resolvedActionShasApproved": True}),
+        lambda p: p["actionPolicy"]["allowlist"][0].update({"reviewedSha": "0" * 40}),
+        lambda p: p["actionPolicy"]["allowlist"][0].update({"upstreamTagCommitVerified": False}),
         lambda p: p["actionPolicy"]["allowlist"][0].update({"approvedSha": "v6"}),
         lambda p: p["supplyChainGates"]["vulnerabilityGate"].update({"severity": ["CRITICAL"]}),
         lambda p: p["supplyChainGates"]["vulnerabilityGate"].update({"ignoreUnfixed": True}),
@@ -83,7 +86,7 @@ def main() -> int:
         workflow.write_text("name: unsafe-before-approval\n", encoding="utf-8")
         expect_blocked(module, temp)
 
-    print("OK: v317 GitHub Actions/GHCR static workflow plan smoke passed")
+    print("OK: v318 GitHub Actions/GHCR action SHA review smoke passed")
     return 0
 
 

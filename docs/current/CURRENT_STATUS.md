@@ -1,8 +1,8 @@
-# Current Status — v317
+# Current Status — v318
 
 ## 현재 기준
 
-- 최신 작업: `v317.github-actions-ghcr-static-workflow-plan`
+- 최신 작업: `v318.github-actions-action-sha-candidates-reviewed`
 - handoff: current repository + Git `main` (ZIP 기본 생성 안 함)
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
@@ -45,7 +45,7 @@ CI credential strategy: GitHub Actions GITHUB_TOKEN 우선
 local credential strategy: deferred
 workflow/login/pull/build/push approved: no/no/no/no/no
 GitHub Actions static plan present/verified: yes/yes
-workflow file/action SHAs/environment configured: no/no/no
+workflow file/action SHA candidates reviewed/action SHAs approved/environment configured: no/yes/no/no
 ```
 
 ## GitHub Actions / GHCR 정적 설계
@@ -58,6 +58,8 @@ publish permissions: contents read + packages/attestations/id-token write
 pre-push: local OCI + SPDX SBOM + Trivy HIGH/CRITICAL fail-closed
 post-push: exact digest + provenance + SBOM attestation + Sigstore keyless signature + verify
 automatic deploy/production reference update: no/no
+action SHA candidates: 9개 최신 정식 release tag와 upstream 40자리 commit 대조 완료
+action SHA approval: no
 ```
 
 Codex는 루트 `AGENTS.md`를 우선 읽습니다. 첫 검사는 `python tools/check_github_actions_ghcr_static_plan.py --strict`입니다.
@@ -74,14 +76,15 @@ Codex는 루트 `AGENTS.md`를 우선 읽습니다. 첫 검사는 `python tools/
 
 - Codex GitHub 플러그인의 `gihohoho/upgrade-rpg` repository 접근 권한 필요
 - 다음 단계에서 repository Actions settings/environment 읽기 권한 필요
-- 전체 backend core smoke를 다시 완료하려면 현재 Codex 계정의 Python 3.11/`backend/.venv` 복구 설치 권한 필요
+- Python 3.11.4와 `backend/.venv`는 정상 확인되어 추가 설치가 필요하지 않음
 - 해결되지 않은 요청은 다음 작업에서도 다시 요청
 
-## v317 검증
+## v318 검증
 
-- GitHub Actions static plan strict/fail-closed smoke 통과
+- GitHub Actions action SHA 후보 strict/fail-closed smoke 통과
 - Codex handoff strict/synchronization smoke와 docs index/archive smoke 통과
 - Python compileall, JavaScript 238개, Bash 3개, JSON 23개 통과
-- core dependency-free 앞 구간 통과; 전체 run은 깨진 `backend/.venv` 기반 Python 때문에 SQLAlchemy import에서 중단
+- `backend/.venv` 활성화 상태 전체 core smoke 통과
+- Windows cp949 실행 차단 안내, 실제 보고서와 smoke 격리, 가짜 Docker 실행 호환성 수정 및 전용 smoke 통과
 - Vue 변경 없음, Docker/registry/DB/Alembic mutation 없음
 - `.github/workflows/` 없음, workflow 실행 없음

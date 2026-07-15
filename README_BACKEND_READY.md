@@ -1,4 +1,4 @@
-# Backend readiness — v317
+# Backend readiness — v318
 
 ## 완료
 
@@ -15,7 +15,7 @@
 - target platform: `linux/amd64`
 - production base image exact manifest digest 승인
 - 로컬 Dockerfile 보존 + `backend/Dockerfile.production` 분리
-- Codex용 `AGENTS.md`, v317 GitHub Actions/GHCR 정적 plan과 fail-closed 검사
+- Codex용 `AGENTS.md`, v318 GitHub Actions/GHCR 정적 plan·action SHA 후보와 fail-closed 검사
 
 ## 아직 미완료
 

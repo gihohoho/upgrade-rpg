@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the v317 GitHub Actions/GHCR plan without creating or running a workflow."""
+"""Validate the v318 GitHub Actions/GHCR SHA review without creating or running a workflow."""
 from __future__ import annotations
 
 import argparse
@@ -8,10 +8,10 @@ from pathlib import Path
 import re
 from typing import Any
 
-TOOL_VERSION = "v317.github-actions-ghcr-static-workflow-plan"
-READY_RESULT = "github-actions-ghcr-static-plan-verified-workflow-not-created"
+TOOL_VERSION = "v318.github-actions-action-sha-candidates-reviewed"
+READY_RESULT = "github-actions-action-sha-candidates-verified-workflow-not-created"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "review-action-shas-repository-settings-and-workflow-creation-approval"
+NEXT_SAFE_STAGE = "connect-github-app-review-repository-actions-settings-and-request-workflow-creation-approval"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "gihohoho/upgrade-rpg"
 IMAGE_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
@@ -31,6 +31,17 @@ ALLOWED_ACTIONS = (
     "sigstore/cosign-installer",
     "actions/upload-artifact",
 )
+EXPECTED_ACTION_REVIEWS = {
+    "actions/checkout": ("v7.0.0", "9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0"),
+    "docker/setup-buildx-action": ("v4.2.0", "bb05f3f5519dd87d3ba754cc423b652a5edd6d2c"),
+    "docker/login-action": ("v4.4.0", "af1e73f918a031802d376d3c8bbc3fe56130a9b0"),
+    "docker/build-push-action": ("v7.3.0", "53b7df96c91f9c12dcc8a07bcb9ccacbed38856a"),
+    "aquasecurity/trivy-action": ("v0.36.0", "ed142fd0673e97e23eac54620cfb913e5ce36c25"),
+    "anchore/sbom-action": ("v0.24.0", "e22c389904149dbc22b58101806040fa8d37a610"),
+    "actions/attest": ("v4.1.1", "a1948c3f048ba23858d222213b7c278aabede763"),
+    "sigstore/cosign-installer": ("v4.1.2", "6f9f17788090df1f26f669e9d70d6ae9567deba6"),
+    "actions/upload-artifact": ("v7.0.1", "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"),
+}
 
 
 class StaticWorkflowPlanError(RuntimeError):
@@ -67,7 +78,7 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
     plan = _read_json(root / "deploy/github-actions-ghcr-static-plan.example.json")
     document = _read(root / "docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md")
 
-    _require(plan.get("schemaVersion") == TOOL_VERSION, "unexpected v317 schemaVersion")
+    _require(plan.get("schemaVersion") == TOOL_VERSION, "unexpected v318 schemaVersion")
     _require(_bool(plan, "reviewOnly") is True, "plan must remain review-only")
     _require(plan.get("githubRemote") == REMOTE, "GitHub remote changed")
     _require(plan.get("repository") == REPOSITORY, "GitHub repository changed")
@@ -137,13 +148,25 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
     _require(isinstance(action_policy, dict), "actionPolicy must be an object")
     _require(action_policy.get("requireFullLengthCommitSha") is True, "full action SHA pinning must be required")
     _require(action_policy.get("requiredShaPattern") == "^[0-9a-f]{40}$", "action SHA pattern changed")
-    _require(action_policy.get("resolvedActionShasApproved") is False, "unreviewed action SHAs must not be approved")
-    _require(action_policy.get("workflowCreationBlockedUntilResolved") is True, "workflow creation must remain blocked")
+    _require(action_policy.get("reviewedOn") == "2026-07-15", "action SHA review date changed")
+    _require(action_policy.get("resolvedActionShaCandidatesReviewed") is True, "action SHA candidates are not reviewed")
+    _require(action_policy.get("resolvedActionShasApproved") is False, "reviewed candidates must not be treated as approved")
+    _require(action_policy.get("workflowCreationBlockedUntilApproved") is True, "workflow creation must remain blocked")
     allowlist = action_policy.get("allowlist")
     _require(isinstance(allowlist, list), "action allowlist must be a list")
     repositories = tuple(item.get("repository") for item in allowlist if isinstance(item, dict))
     _require(repositories == ALLOWED_ACTIONS, "action allowlist or order changed")
     for item in allowlist:
+        repository = item.get("repository")
+        expected_release, expected_sha = EXPECTED_ACTION_REVIEWS[repository]
+        _require(item.get("reviewedRelease") == expected_release, f"reviewed release changed: {repository}")
+        _require(item.get("reviewedSha") == expected_sha, f"reviewed SHA changed: {repository}")
+        _require(re.fullmatch(r"[0-9a-f]{40}", expected_sha) is not None, f"reviewed SHA is not full length: {repository}")
+        _require(
+            item.get("releaseUrl") == f"https://github.com/{repository}/releases/tag/{expected_release}",
+            f"official release URL changed: {repository}",
+        )
+        _require(item.get("upstreamTagCommitVerified") is True, f"upstream tag commit is unverified: {repository}")
         _require(item.get("approvedSha") is None, f"action SHA was set before approval: {item.get('repository')}")
 
     gates = plan.get("supplyChainGates")
@@ -231,6 +254,7 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
         "trigger": "workflow_dispatch-only",
         "workflowFilePresent": False,
         "workflowCreationApproved": False,
+        "actionShaCandidatesReviewed": True,
         "actionShasApproved": False,
         "supplyChainGate": "fail-closed",
         "result": READY_RESULT,
@@ -249,7 +273,7 @@ def render(result: dict[str, Any]) -> str:
         "- pre-push gates: static checks, local OCI build, SPDX SBOM, HIGH/CRITICAL scan",
         "- post-push gates: digest, provenance, SBOM attestation, keyless signature, verification",
         "- workflow file/creation approved: no/no",
-        "- action SHAs approved: no",
+        "- action SHA candidates reviewed/approved: yes/no",
         f"- result: {result['result']}",
         f"- next safe stage: {result['nextSafeStage']}",
     ))

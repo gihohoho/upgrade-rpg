@@ -1,4 +1,4 @@
-# Managed PostgreSQL / reverse proxy HTTPS selection — current through v317
+# Managed PostgreSQL / reverse proxy HTTPS selection — current through v318
 
 ## 확정한 운영 기본 방향
 

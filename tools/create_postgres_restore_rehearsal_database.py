@@ -458,7 +458,7 @@ def execute_creation(
 def render_plan() -> str:
     return "\n".join(
         [
-            "PostgreSQL restore rehearsal database creation — execution guard",
+            "PostgreSQL restore rehearsal database creation - execution guard",
             f"- source DB (unchanged): {SOURCE_DATABASE}",
             f"- target DB (create only if absent): {RESTORE_REHEARSAL_DATABASE}",
             f"- owner: {SOURCE_DATABASE_USER}",

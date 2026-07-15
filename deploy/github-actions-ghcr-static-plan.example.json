@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v317.github-actions-ghcr-static-workflow-plan",
+  "schemaVersion": "v318.github-actions-action-sha-candidates-reviewed",
   "reviewOnly": true,
   "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
   "repository": "gihohoho/upgrade-rpg",
@@ -77,52 +77,90 @@
   "actionPolicy": {
     "requireFullLengthCommitSha": true,
     "requiredShaPattern": "^[0-9a-f]{40}$",
+    "reviewedOn": "2026-07-15",
+    "resolvedActionShaCandidatesReviewed": true,
     "resolvedActionShasApproved": false,
-    "workflowCreationBlockedUntilResolved": true,
+    "workflowCreationBlockedUntilApproved": true,
     "allowlist": [
       {
         "repository": "actions/checkout",
         "purpose": "source checkout",
+        "reviewedRelease": "v7.0.0",
+        "reviewedSha": "9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0",
+        "releaseUrl": "https://github.com/actions/checkout/releases/tag/v7.0.0",
+        "upstreamTagCommitVerified": true,
         "approvedSha": null
       },
       {
         "repository": "docker/setup-buildx-action",
         "purpose": "linux/amd64 BuildKit setup",
+        "reviewedRelease": "v4.2.0",
+        "reviewedSha": "bb05f3f5519dd87d3ba754cc423b652a5edd6d2c",
+        "releaseUrl": "https://github.com/docker/setup-buildx-action/releases/tag/v4.2.0",
+        "upstreamTagCommitVerified": true,
         "approvedSha": null
       },
       {
         "repository": "docker/login-action",
         "purpose": "GHCR login with GITHUB_TOKEN",
+        "reviewedRelease": "v4.4.0",
+        "reviewedSha": "af1e73f918a031802d376d3c8bbc3fe56130a9b0",
+        "releaseUrl": "https://github.com/docker/login-action/releases/tag/v4.4.0",
+        "upstreamTagCommitVerified": true,
         "approvedSha": null
       },
       {
         "repository": "docker/build-push-action",
         "purpose": "OCI build and later digest push",
+        "reviewedRelease": "v7.3.0",
+        "reviewedSha": "53b7df96c91f9c12dcc8a07bcb9ccacbed38856a",
+        "releaseUrl": "https://github.com/docker/build-push-action/releases/tag/v7.3.0",
+        "upstreamTagCommitVerified": true,
         "approvedSha": null
       },
       {
         "repository": "aquasecurity/trivy-action",
         "purpose": "HIGH and CRITICAL vulnerability gate",
+        "reviewedRelease": "v0.36.0",
+        "reviewedSha": "ed142fd0673e97e23eac54620cfb913e5ce36c25",
+        "releaseUrl": "https://github.com/aquasecurity/trivy-action/releases/tag/v0.36.0",
+        "upstreamTagCommitVerified": true,
         "approvedSha": null
       },
       {
         "repository": "anchore/sbom-action",
         "purpose": "SPDX JSON SBOM generation",
+        "reviewedRelease": "v0.24.0",
+        "reviewedSha": "e22c389904149dbc22b58101806040fa8d37a610",
+        "releaseUrl": "https://github.com/anchore/sbom-action/releases/tag/v0.24.0",
+        "upstreamTagCommitVerified": true,
         "approvedSha": null
       },
       {
         "repository": "actions/attest",
         "purpose": "build provenance and SBOM attestation",
+        "reviewedRelease": "v4.1.1",
+        "reviewedSha": "a1948c3f048ba23858d222213b7c278aabede763",
+        "releaseUrl": "https://github.com/actions/attest/releases/tag/v4.1.1",
+        "upstreamTagCommitVerified": true,
         "approvedSha": null
       },
       {
         "repository": "sigstore/cosign-installer",
         "purpose": "keyless image signature",
+        "reviewedRelease": "v4.1.2",
+        "reviewedSha": "6f9f17788090df1f26f669e9d70d6ae9567deba6",
+        "releaseUrl": "https://github.com/sigstore/cosign-installer/releases/tag/v4.1.2",
+        "upstreamTagCommitVerified": true,
         "approvedSha": null
       },
       {
         "repository": "actions/upload-artifact",
         "purpose": "non-secret SBOM and scan report retention",
+        "reviewedRelease": "v7.0.1",
+        "reviewedSha": "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+        "releaseUrl": "https://github.com/actions/upload-artifact/releases/tag/v7.0.1",
+        "upstreamTagCommitVerified": true,
         "approvedSha": null
       }
     ]
@@ -184,5 +222,5 @@
     "fullLengthActionShaPolicyEnabled": false,
     "publishEnvironmentConfigured": false
   },
-  "nextSafeStage": "review-action-shas-repository-settings-and-workflow-creation-approval"
+  "nextSafeStage": "connect-github-app-review-repository-actions-settings-and-request-workflow-creation-approval"
 }

@@ -11,7 +11,7 @@ ZIP을 기준으로 작업하지 않습니다. 현재 프로젝트 루트와 Git
 현재 고정값:
 
 ```txt
-latest: v317.github-actions-ghcr-static-workflow-plan
+latest: v318.github-actions-action-sha-candidates-reviewed
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR namespace: gihohoho
 backend repository: ghcr.io/gihohoho/upgrade-rpg-backend
@@ -27,12 +27,12 @@ local credential/PAT: deferred
 workflow/login/pull/build/push approved: no/no/no/no/no
 container up/down approved: no/no
 static workflow plan: present/verified
-workflow file/action SHAs/environment configured: no/no/no
+workflow file/action SHA candidates reviewed/action SHAs approved/environment configured: no/yes/no/no
 ```
 
 `gihohoho`는 기호가 직접 확인한 고정 namespace입니다. placeholder로 되돌리거나 다른 이름을 추측하지 마세요. repository 주소는 `ghcr.io/gihohoho/upgrade-rpg-backend`로 고정합니다. 실제 token, PAT, Docker credential은 파일·Git·채팅에 넣지 마세요.
 
-첫 작업은 읽기 전용 v317 검사입니다.
+첫 작업은 읽기 전용 v318 검사입니다.
 
 실행 위치: `backend` 폴더  
 `.venv` 상태: 꺼져 있을 때
@@ -53,12 +53,12 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 ```txt
 trigger: workflow_dispatch-only
 workflow file/creation approved: no/no
-action SHAs approved: no
-result: github-actions-ghcr-static-plan-verified-workflow-not-created
-next safe stage: review-action-shas-repository-settings-and-workflow-creation-approval
+action SHA candidates reviewed/approved: yes/no
+result: github-actions-action-sha-candidates-verified-workflow-not-created
+next safe stage: connect-github-app-review-repository-actions-settings-and-request-workflow-creation-approval
 ```
 
-검사가 통과하면 action allowlist의 upstream 40자리 commit SHA, GitHub repository Actions 설정, `ghcr-production-publish` environment의 required reviewer/prevent self-review/main 제한을 읽기 전용으로 검토하세요. Codex GitHub 플러그인에 `gihohoho/upgrade-rpg` 접근 권한이 없으면 기호에게 다시 요청하세요.
+검사가 통과하면 v318에서 고정한 action allowlist의 upstream 40자리 commit SHA 후보를 유지하고, GitHub repository Actions 설정과 `ghcr-production-publish` environment의 required reviewer/prevent self-review/main 제한을 읽기 전용으로 검토하세요. Codex GitHub 플러그인에는 아직 설치된 GitHub App 계정이 없으므로 `gihohoho/upgrade-rpg` repository 설치 접근 권한을 기호에게 다시 요청하세요.
 
 아직 `.github/workflows/` 파일을 만들거나 workflow를 실행하지 말고, Docker login/pull/build/push/up/down도 실행하지 마세요. workflow 파일 생성은 action SHA와 repository 설정 검토 결과를 보여준 뒤 기호에게 별도로 승인받습니다.
 

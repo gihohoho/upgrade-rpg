@@ -397,7 +397,9 @@ def main() -> None:
         return subprocess.CompletedProcess(command, 0, stdout=b"stamp ok\n")
 
     original_url = module.source_database_url
+    original_report_loader = module.load_source_stamp_report
     module.source_database_url = lambda root: "postgresql+psycopg://rpg_user:pw@localhost/rpg_game"
+    module.load_source_stamp_report = lambda root: None
     try:
         with tempfile.TemporaryDirectory(dir=ROOT) as temporary:
             report_path = Path(temporary) / "source-stamp-report.json"
@@ -414,6 +416,7 @@ def main() -> None:
                 raise AssertionError("v304 source execution report was not written")
     finally:
         module.source_database_url = original_url
+        module.load_source_stamp_report = original_report_loader
 
     if len(calls) != 1:
         raise AssertionError("v304 source guard did not execute exactly one command")

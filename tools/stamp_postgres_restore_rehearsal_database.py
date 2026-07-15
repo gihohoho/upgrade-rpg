@@ -898,7 +898,7 @@ def main() -> int:
             print(render_inspection(inspect_readiness(root)))
             return 0
         if not args.execute:
-            print("PostgreSQL restore rehearsal baseline stamp — execution guard")
+            print("PostgreSQL restore rehearsal baseline stamp - execution guard")
             print(f"- exact target DB: {RESTORE_REHEARSAL_DATABASE}")
             print(f"- exact revision: {REVISION_ID}")
             print("- --inspect is safe; --execute requires separate approval and exact confirmations.")

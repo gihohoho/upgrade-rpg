@@ -538,7 +538,7 @@ def execute_creation(
 def render_plan() -> str:
     return "\n".join(
         [
-            "PostgreSQL empty migration test database creation — execution guard",
+            "PostgreSQL empty migration test database creation - execution guard",
             f"- source DB (must remain unchanged): {SOURCE_DATABASE}",
             f"- verified rehearsal DB (must remain unchanged): {RESTORE_REHEARSAL_DATABASE}",
             f"- target DB (create only if absent): {MIGRATION_TEST_DATABASE}",
