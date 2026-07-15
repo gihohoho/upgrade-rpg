@@ -1,4 +1,4 @@
-# Project Structure — v319
+# Project Structure — v320
 
 ```txt
 .
@@ -6,6 +6,8 @@
 ├── NEXT_CHAT_PROMPT.md                    # Codex 새 채팅에 붙여넣을 프롬프트
 ├── NEXT_CHAT_HANDOFF.md                   # 현재 상태 요약
 ├── index.html / admin.html / src/         # legacy 게임·관리자
+├── .github/workflows/
+│   └── publish-backend-ghcr.yml           # 수동 실행, reviewer hard gate 상태
 ├── frontend/vue-app/                      # Vue GET read-only 앱
 ├── backend/
 │   ├── .venv/                             # 로컬 전용, ZIP/Git 제외
@@ -20,7 +22,8 @@
 │   └── isolated-validation/
 ├── docs/
 │   ├── current/                           # 현재 판단
-│   │   └── GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md
+│   │   ├── GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md
+│   │   └── SECURITY_ROTATION_AND_GITHUB_GATES.md
 │   ├── handoff/                           # 인수인계 mirror
 │   ├── contracts/
 │   └── archive/                           # 과거 단계 기록

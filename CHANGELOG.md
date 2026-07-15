@@ -1,3 +1,15 @@
+# v320.github-actions-ghcr-workflow-prepared-gated
+
+- GitHub Actions를 외부 action 8개 full-SHA allowlist와 full-length SHA 강제로 변경하고 `ghcr-production-publish` environment의 `main` rule을 구성.
+- `workflow_dispatch` 전용 backend GHCR workflow를 추가하되 source-controlled reviewer gate를 `false`로 고정해 GHCR login 전에 차단.
+- 루트 build context, checksum-pinned Trivy 0.70.0, pushed exact-digest 재검사, BuildKit provenance/SBOM 검사 후 Cosign sign/verify 순서로 공급망 흐름을 보강.
+- YAML AST로 exact trigger/job/permission/action/step을 검사하고 workflow 전체 소스와 파싱된 실행 의미를 별도 SHA-256으로 잠가 quoted trigger, 추가 write/secret 유출 step, `|| true`, SHA/checksum/gate 변조를 차단하는 smoke 추가.
+- action/run step별 잠금과 parsed secret 경로 allowlist를 더하고, 루트 Docker context에서 모든 `.env`/`*.env`/`.envrc` 파일을 제외해 미추적 secret 전송을 차단.
+- Python 범위 의존성, unpinned pip upgrade, mutable Dockerfile frontend 때문에 deterministic build lock은 아직 미완료이며 첫 게시 전에 별도 해결해야 함을 fail-closed 계획에 기록.
+- 실행 중인 개발 서버 재사용, GitHub 설정 권한, 숨김 파일/.env 작업 권한, 보안 회전 체크리스트를 지속 handoff 규칙에 반영.
+- GitHub Free/Pro/Team의 required reviewer는 공개 저장소에서만 지원되므로 비공개 저장소에 collaborator를 추가하는 것만으로는 해결되지 않음을 기록.
+- workflow, Docker build/push, registry, DB, Alembic 실행은 하지 않음. 다음 단계는 `github-enterprise-cloud-required-reviewer`, `owner-only-source-controlled-two-step`, `keep-publishing-disabled` 중 게시 승인 모델 선택이며, 선택 전에는 hard gate를 `false`로 유지.
+
 # v319.github-connector-actions-settings-reviewed
 
 - ChatGPT Codex Connector를 `gihohoho/upgrade-rpg` 저장소 하나에만 연결하고 Codex repository 조회를 검증.

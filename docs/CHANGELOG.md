@@ -1,3 +1,16 @@
+# v320.github-actions-ghcr-workflow-prepared-gated
+
+- repository Actions 설정을 외부 action 8개 full-SHA allowlist와 full-length SHA 강제로 바꾸고 기본 read-only `GITHUB_TOKEN` 정책을 유지.
+- `ghcr-production-publish` environment를 만들고 `main` branch rule을 적용했지만 required reviewer/prevent self-review는 미구성 상태로 기록. GitHub Free/Pro/Team의 required reviewer는 공개 저장소에서만 지원되므로 비공개 저장소에 collaborator를 추가하는 것만으로 해결되지 않음.
+- `.github/workflows/publish-backend-ghcr.yml`을 작성하고 source-controlled `PUBLISH_REVIEWER_GATE_READY="false"`를 첫 단계에 두어 repository/environment variable로 우회할 수 없게 차단.
+- production Dockerfile에 맞는 root build context, 공식 Trivy 0.70.0 asset SHA-256 검증, 로컬 및 pushed exact-digest HIGH/CRITICAL scan을 적용.
+- BuildKit mode=max provenance/SBOM을 exact digest에서 검사한 뒤에만 Cosign keyless sign/identity·issuer verify를 수행하도록 순서를 고정.
+- PyYAML duplicate-key 방지 loader, exact event/job/permission/action/step 검사와 workflow 소스·실행 의미 이중 SHA-256 잠금을 추가하고 quoted `push`, 추가 write/secret 유출 step, `|| true`, SHA/checksum/gate 변조 smoke를 통과.
+- action/run step별 잠금과 parsed secret 경로 allowlist를 추가하고, `.dockerignore`에서 모든 `.env`/`*.env`/`.envrc`를 root build context에서 제외하도록 강제.
+- 현재 범위형 Python dependency/build-system, unpinned pip upgrade, mutable Dockerfile frontend로 reproducible build가 보장되지 않음을 기록하고 첫 게시 전 필수 gate로 고정.
+- 개발 서버 재사용, GitHub/숨김 파일 권한과 보안 회전 checklist를 AGENTS/NEXT_CHAT/current 문서에 동기화.
+- workflow와 Docker/registry/DB/Alembic mutation은 실행하지 않음. 다음 단계는 `github-enterprise-cloud-required-reviewer`, `owner-only-source-controlled-two-step`, `keep-publishing-disabled` 중 게시 승인 모델 선택이며, 선택 전에는 source-controlled hard gate를 `false`로 유지.
+
 # v319.github-connector-actions-settings-reviewed
 
 - ChatGPT Codex Connector를 `gihohoho/upgrade-rpg` 저장소 하나에만 연결하고 Codex repository 조회를 검증.

@@ -11,6 +11,17 @@ build
 local-backups/
 local-review-artifacts/
 
+# Never send local environment files through the root Docker build context.
+.env
+.env.*
+**/.env
+**/.env.*
+backend/.env
+*.env
+*.env.*
+.envrc
+**/.envrc
+
 # Production secret material must be mounted by the deployment platform.
 deploy/production.env
 deploy/.env.production

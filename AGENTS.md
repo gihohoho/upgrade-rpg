@@ -1,22 +1,38 @@
-# Upgrade RPG Codex working rules — v319
+# Upgrade RPG Codex working rules — v320
 
 이 파일은 저장소 전체에 적용됩니다. Codex는 작업을 시작할 때 이 파일과 `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
 ## 사용자와 설명 방식
 
 - 사용자는 코딩을 거의 모르는 **기호**입니다. 항상 쉽고 자세한 한국어로 설명합니다.
-- 터미널 명령 바로 위에 **실행 위치**와 **Python `.venv` 상태**를 반드시 적습니다.
+- 터미널 명령 바로 위에 **실행 위치**, **Python `.venv` 상태**, **새 설치 여부**를 반드시 적습니다.
 - backend 가상환경은 프로젝트 루트가 아니라 `backend/.venv`입니다. Git Bash에서 `backend` 폴더에서 `source .venv/Scripts/activate`로 켭니다.
 - Vue/npm 명령은 `frontend/vue-app`에서 실행하며 Python `.venv`가 필요 없습니다.
-- 새 설치가 있으면 설치 항목과 이유를 알리고, 없으면 “새 설치 없음”이라고 명확히 적습니다.
-- 필요한 extension, repository/app 권한, 로컬 설치가 있으면 사용자에게 요청합니다. 해결되지 않으면 다음 작업에서도 다시 요청할 수 있으며 요청 상태를 `NEXT_CHAT_PROMPT.md`와 `NEXT_CHAT_HANDOFF.md`에 기록합니다.
+- 필요한 extension, GitHub/repository/app 권한, 로컬 설치가 있으면 기호에게 요청합니다. 해결되지 않으면 다음 작업에서도 다시 요청하고 `NEXT_CHAT_PROMPT.md`, `NEXT_CHAT_HANDOFF.md`에 계속 기록합니다.
 - 매 작업에서 root `NEXT_CHAT_PROMPT.md`, `NEXT_CHAT_HANDOFF.md`와 `docs/handoff/` mirror를 최신 상태로 갱신합니다.
-- 변경과 검증이 끝나면 Codex가 프로젝트 루트에서 `git status`, `git add .`, `git commit`, `git push`를 직접 실행합니다. 사용자에게 Git 한 줄 명령을 다시 제공하지 않습니다.
-- Codex 작업에서는 새 ZIP을 만들거나 제공하지 않습니다. 사용자가 별도로 요청한 경우에만 안전 제외 규칙을 적용해 생성합니다.
+- 변경과 검증이 끝나면 Codex가 프로젝트 루트에서 `git status`, `git add .`, `git commit`, `git push`를 직접 실행합니다. 기호에게 Git 한 줄 명령을 다시 제공하지 않습니다.
+- Codex 작업에서는 ZIP을 만들거나 제공하지 않습니다. 기호가 별도로 요청한 경우에만 secret·가상환경·node_modules 등을 제외해 만듭니다.
+
+## 개발 서버와 터미널의 계속 적용 권한
+
+- Codex는 VS Code/Codex 터미널을 자유롭게 사용하고 실행 중인 개발 서버를 재사용할 수 있습니다.
+- 백엔드 `127.0.0.1:8000`과 프론트엔드 `127.0.0.1:5173`이 정상이라면 작업마다 종료·재시작하지 않습니다.
+- 소스 변경은 Uvicorn `--reload`와 Vite HMR에 맡기고, 프로세스가 죽었거나 설정 변경 때문에 필요한 경우에만 재시작합니다.
+- 서버를 재시작하지 않은 작업은 완료 답변에 “서버 재시작 불필요”라고 명확히 적습니다.
+
+## GitHub와 보안 파일의 계속 적용 권한
+
+- 기호는 repository의 Actions, workflow, action SHA, environment, variables와 필요한 GitHub 설정을 Codex가 작업 목적 안에서 구성하도록 허용했습니다.
+- 숨김 파일과 `.env`도 필요한 경우 Codex가 점검·수정할 수 있습니다.
+- 이 권한은 실제 secret 값을 Git, 채팅, 로그, artifact에 노출하거나 커밋하는 권한이 아닙니다. secret은 최소 노출 원칙으로 처리하고 `.gitignore`와 Git index를 계속 검사합니다.
+- root Docker build context의 `.dockerignore`는 `.env`/`*.env`/`.envrc` 계열을 모두 제외하며 env 파일 재포함 규칙을 허용하지 않습니다.
+- `backend/Dockerfile.production.dockerignore`는 root `.dockerignore`를 우선 덮어쓸 수 있으므로 생성하지 않습니다.
+- 나중에 회전·폐기·재설정할 보안 항목은 `docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md`에 누적합니다.
+- 사용자 계정 선택, 추가 로그인, 결제/플랜 변경처럼 Codex가 정책상 또는 기술상 대신할 수 없는 일만 기호에게 요청합니다.
 
 ## 현재 고정 상태
 
-- latest: `v319.github-connector-actions-settings-reviewed`
+- latest: `v320.github-actions-ghcr-workflow-prepared-gated`
 - GitHub remote: `https://github.com/gihohoho/upgrade-rpg.git`
 - GHCR namespace: `gihohoho`
 - backend image repository: `ghcr.io/gihohoho/upgrade-rpg-backend` (private)
@@ -26,45 +42,48 @@
 - 게임 콘텐츠와 밸런스 개발은 계속 보류합니다.
 - Alembic current revision은 `v295_initial_schema`; 새 revision 필요 상태는 `no`입니다.
 - CI credential strategy: GitHub Actions `GITHUB_TOKEN` 우선 (`github-actions-github-token`)
-- workflow/login/pull/build/push approved: no/no/no/no/no
-- Codex GitHub App access: `gihohoho/upgrade-rpg` selected repository only, verified
-- repository Actions settings reviewed/changed: yes/no
-- `ghcr-production-publish` environment reviewed/configured: yes/no
+- workflow file/creation approved: yes/yes
+- workflow execution approved/executed: yes/no
+- CI workflow/login/build/push approved: yes/yes/yes/yes
+- CI login/build/push executed: no/no/no
+- repository Actions allowlist/full SHA enforcement: configured/configured
+- `ghcr-production-publish` environment/main-only: present/configured
+- required reviewer/prevent self-review: missing/missing
+- `PUBLISH_REVIEWER_GATE_READY`: source-controlled `"false"`; GHCR login 전에 fail-closed
+- deterministic dependency/toolchain lock: incomplete; 첫 게시 전 필수
+- GitHub Actions/environment 설정 증거: 2026-07-15 browser snapshot; gate 변경 직전 live 재확인 필수
 
-## 안전 승인 경계
+## 현재 안전 경계
 
-사용자 별도 승인 전에는 다음을 실행하거나 변경하지 않습니다.
+GitHub workflow 작성과 CI GHCR 작업은 사용자가 승인했습니다. 그러나 owner 외 collaborator가 0명이고 environment required reviewer UI를 구성할 수 없으며, Python dependency/build toolchain hash lock도 아직 없습니다. publish job은 source-controlled `PUBLISH_REVIEWER_GATE_READY`가 현재 리터럴 `"false"`로 고정되어 GHCR login 전에 실패해야 합니다. 게시 승인 모델과 재현성 lock을 모두 구성·검증하기 전에는 이 값을 바꾸거나 workflow를 실행하지 않습니다.
 
-- 실제 `backend/.env`, production env, JWT/Admin secret
-- 실제 registry token/PAT, Docker credential, CA/cert/key 생성·입력·커밋
-- `.github/workflows/` 생성, GitHub Actions settings/environment 변경, workflow 실행
-- `docker login`, `pull`, `build`, `push`, `compose up/down`
-- container/network/volume 생성·삭제·변경
+다음 항목은 이번 GitHub 권한 확대와 별개이므로 기호의 구체적인 작업 요청 전에는 변경·실행하지 않습니다.
+
 - DB 생성·삭제·복원·reset·seed·write
 - Alembic revision/autogenerate/stamp/upgrade/downgrade
 - 인증, API route path/response body, write logic/Write Guard
 - Vue Preview/Apply/write 연결
 - 게임 콘텐츠/장비/스킬/보스/드랍률/밸런스 변경
+- production container/network/volume 생성·삭제, Compose up/down
+- production image reference 자동 갱신 또는 자동 deploy
 
-DB/env/seed/인증/API body/route/write/migration/Docker/secret/TLS 작업은 작은 승인 경계로 나누고, 각 단계의 실제 결과를 확인한 뒤 다음 단계로 진행합니다.
+## 현재 다음 단계
 
-## 현재 허용된 다음 단계
-
-Codex GitHub App은 `gihohoho/upgrade-rpg` 저장소 하나에만 연결되었고 repository Actions 설정과 environment 존재 여부를 v319에서 읽기 전용으로 검토했습니다. 현재 Actions는 외부 action 전체 허용이며 full-length SHA 강제가 꺼져 있고, 기본 `GITHUB_TOKEN`은 contents/packages read-only이며, `ghcr-production-publish` environment는 없습니다. 다음 단계는 외부 action 허용 범위를 v318 allowlist로 제한하고 full-length SHA 강제를 켜는 repository Actions settings 변경 승인을 사용자에게 별도로 묻는 것입니다. Environment 생성과 `.github/workflows/` 생성·실행은 이후 각각 별도 승인 경계로 유지합니다.
-
-첫 검사는 프로젝트 루트에서 `backend/.venv`를 켠 상태로 실행합니다.
+워크플로 파일은 준비됐고 실행하지 않았습니다. 첫 검사는 프로젝트 루트에서 `backend/.venv`를 켠 상태로 실행합니다.
 
 ```bash
 python tools/check_github_actions_ghcr_static_plan.py --strict
+python tools/check_codex_handoff_readiness.py --strict
 ```
 
-정상 결과: `github-connector-actions-settings-verified-workflow-not-created`
+정상 결과: `github-actions-ghcr-workflow-prepared-publish-gated`
+
+그다음 안전 단계는 비공개 저장소의 게시 승인 모델을 기호가 선택하는 것입니다. GitHub Free/Pro/Team에서는 required reviewer가 공개 저장소에만 제공되므로 collaborator 추가만으로 해결되지 않습니다. `GitHub Enterprise Cloud required reviewer`, `owner-only source-controlled 2단계 승인`, `게시 계속 비활성화` 중 하나를 선택해야 합니다. 게시 허용 모델을 선택해도 dependency/toolchain 재현성 gate와 GitHub live 설정 재확인 전에는 gate를 바꾸거나 workflow를 실행하지 않습니다.
 
 ## 변경과 검증
 
 - 현재 판단 문서는 `docs/current/`를 우선합니다. 과거 단계 기록은 `docs/archive/`와 `deploy/review/`에 있습니다.
 - legacy 게임 `index.html`, 관리자 `admin.html`, `src/`는 Vue 이식 전까지 이동하거나 대규모 재작성하지 않습니다.
 - 코드나 구조를 바꾸면 관련 전용 smoke, `python -m compileall -q backend/app backend/scripts backend/alembic tools`, JavaScript 문법, `bash tools/run_smoke_core.sh`를 확인합니다.
-- Vue 변경 시 `frontend/vue-app`에서 Python `.venv` 없이 `npm ci`와 `npm run build`를 실행합니다.
-- ZIP은 기본 생성하지 않습니다. 사용자가 별도 요청하면 `.git`, `backend/.env`, `backend/.venv`, `node_modules`, `local-backups`, `local-review-artifacts`, 실제 secret/cert/token을 제외합니다.
-- 작업 완료 답변에는 ① 한 일 ② 검증 ③ 서버 재실행 필요 여부 ④ commit/push 결과 ⑤ 다음 추천 단계 ⑥ 필요한 extension/권한/설치 요청을 포함합니다.
+- Vue 변경 시에만 `frontend/vue-app`에서 Python `.venv` 없이 `npm ci`와 `npm run build`를 실행합니다.
+- 완료 답변에는 한 일, 검증, 서버 재시작 필요 여부, commit/push 결과, 다음 추천 단계, 필요한 extension/권한/설치 요청을 포함합니다.

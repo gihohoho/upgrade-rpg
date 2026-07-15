@@ -1,6 +1,6 @@
-# Production deployment review template — v319
+# Production deployment review template — v320
 
-`deploy/docker-compose.production.yml`은 로컬 `docker-compose.yml`을 대체하지 않는 운영 검토 template입니다. review sentinel 기반 `docker compose config`는 기호 PC에서 통과했지만 image login/pull/build/push 및 container 실행은 승인되지 않았습니다.
+`deploy/docker-compose.production.yml`은 로컬 `docker-compose.yml`을 대체하지 않는 운영 검토 template입니다. review sentinel 기반 `docker compose config`는 기호 PC에서 통과했습니다. CI image login/build/push는 승인됐지만 게시 승인 모델과 deterministic dependency/toolchain lock이 아직 준비되지 않아 hard gate로 차단했으며, workflow와 local Docker/container 실행은 하지 않았습니다.
 
 ## 확정된 운영 방향
 
@@ -46,23 +46,27 @@
 ```txt
 CI 우선안: GitHub Actions GITHUB_TOKEN
 local credential/PAT: deferred
-workflow creation approved: no
-docker login approved: no
-image pull/build/push approved: no/no/no
+workflow creation/execution approved: yes/yes
+workflow execution: no
+CI login/build/push approved: yes/yes/yes
+CI login/build/push executed: no/no/no
+local credential/Docker operations: deferred/not executed
 ```
 
 ## 정적 설계 완료
 
 - `workflow_dispatch` only + exact `main` SHA + protected environment
 - read-only validation/build-scan job과 write 권한이 격리된 publish job
-- full-length action SHA 필수(9개 검토 후보 고정, 사용자 승인 아직 안 됨)
-- SPDX SBOM, Trivy HIGH/CRITICAL, provenance, keyless signature, verification gate
+- full-length action SHA 필수(사용하는 외부 action 8개 repository 설정 완료)
+- SPDX SBOM, checksum-pinned Trivy HIGH/CRITICAL, pushed exact-digest 재검사
+- Docker BuildKit mode=max provenance/SBOM과 Cosign keyless signature/verification
+- source-controlled reviewer gate `false`, GHCR login 전 차단
 
 ## 아직 결정·승인하지 않은 것
 
-- 검토한 action별 upstream 40자리 SHA 후보의 사용자 승인
-- repository action allowlist/full-length SHA 설정 변경과 publish environment 생성
-- `.github/workflows/` 파일 생성과 workflow 실행
+- 비공개 저장소 게시 승인 모델: `github-enterprise-cloud-required-reviewer` / `owner-only-source-controlled-two-step` / `keep-publishing-disabled`
+- 선택한 승인 모델의 보호 절차, dependency/toolchain hash lock, GitHub live 설정 재확인
+- 위 조건을 모두 통과한 게시 허용 모델에서만 source-controlled gate 변경 및 workflow 첫 실행
 - 관리형 PostgreSQL 공급자/상품/region/private network
 - 실제 provider CA와 endpoint
 - reverse proxy 제품, DNS, certificate 운영 방식
@@ -71,8 +75,10 @@ image pull/build/push approved: no/no/no
 ## 계속 금지
 
 - 실제 production env/secret/CA/cert/key/registry credential 생성·입력·커밋
-- `.github/workflows/` 생성 또는 workflow 실행
+- 게시 승인 모델과 재현성 gate 구성·검증 및 GitHub live 재확인 전 source-controlled gate 변경 또는 workflow 실행
 - Docker login/pull/build/push/up/down 또는 resource 변경
 - 실제 managed DB 연결
 - PostgreSQL `max_connections` 변경
 - 자동 migration 추가
+
+GitHub Free/Pro/Team의 required reviewer는 공개 저장소에서만 지원됩니다. 따라서 이 비공개 저장소에 collaborator를 추가하는 것만으로는 required reviewer 보호가 생기지 않으며, 위 세 승인 모델 중 하나를 선택하기 전에는 source-controlled gate를 `false`로 유지합니다.

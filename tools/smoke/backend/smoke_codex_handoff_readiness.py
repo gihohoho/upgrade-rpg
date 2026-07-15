@@ -10,6 +10,8 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[3]
 TOOL = ROOT / "tools/check_codex_handoff_readiness.py"
 REQUIRED = (
+    ".dockerignore",
+    ".github/workflows/publish-backend-ghcr.yml",
     "AGENTS.md",
     "NEXT_CHAT_PROMPT.md",
     "NEXT_CHAT_HANDOFF.md",
@@ -25,16 +27,18 @@ REQUIRED = (
     "docs/current/CURRENT_STATUS.md",
     "docs/current/BACKEND_IMAGE_GHCR_POLICY.md",
     "docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md",
+    "docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md",
     "deploy/github-actions-ghcr-static-plan.example.json",
     "docs/handoff/NEXT_CHAT_PROMPT.md",
     "docs/handoff/NEXT_CHAT_HANDOFF.md",
+    "tools/check_github_actions_ghcr_static_plan.py",
 )
 
 
 def load_tool():
-    spec = importlib.util.spec_from_file_location("v319_codex_handoff", TOOL)
+    spec = importlib.util.spec_from_file_location("v320_codex_handoff", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v319 Codex handoff checker")
+        raise RuntimeError("cannot load v320 Codex handoff checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -42,10 +46,10 @@ def load_tool():
 
 def copy_fixture(temp: Path) -> None:
     for relative in REQUIRED:
-        src = ROOT / relative
-        dst = temp / relative
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, dst)
+        source = ROOT / relative
+        target = temp / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
 
 
 def expect_blocked(module, temp: Path) -> None:
@@ -53,7 +57,7 @@ def expect_blocked(module, temp: Path) -> None:
         module.inspect_codex_handoff(temp)
     except module.CodexHandoffError:
         return
-    raise AssertionError("unsafe v319 Codex handoff fixture was not blocked")
+    raise AssertionError("unsafe v320 Codex handoff fixture was not blocked")
 
 
 def main() -> int:
@@ -64,17 +68,23 @@ def main() -> int:
     assert result["repository"] == "ghcr.io/gihohoho/upgrade-rpg-backend"
     assert result["ciCredentialStrategy"] == "github-actions-github-token"
     assert result["localCredentialStrategy"] == "deferred"
-    assert result["workflowCreationApproved"] is False
-    assert result["imageBuildApproved"] is False
+    assert result["workflowCreationApproved"] is True
+    assert result["workflowExecutionApproved"] is True
+    assert result["workflowExecutionExecuted"] is False
+    assert result["ciRegistryMutationApproved"] is True
     assert result["runtimeMutationExecuted"] is False
     assert result["packageSafetyMode"] in {"git-index", "filesystem-absence"}
     assert result["githubActionsStaticPlanVerified"] is True
-    assert result["workflowFilePresent"] is False
-    assert result["actionShaCandidatesReviewed"] is True
-    assert result["actionShasApproved"] is False
-    assert result["githubConnectorRepositoryAccess"] is True
-    assert result["repositoryActionsSettingsReviewed"] is True
+    assert result["workflowFilePresent"] is True
+    assert result["workflowSourceSha256"] == "83393cb875cf43ce1bc30d245c100482818af96cd7b5417d81b9cb45ce62a993"
+    assert result["workflowSemanticSha256"] == "2f1b1baf3f7db363f2f175b98623ec97e59a785592ae32d023f4b5123f2bd4c0"
+    assert result["actionShasApproved"] is True
+    assert result["actionsSettingsConfigured"] is True
+    assert result["publishEnvironmentExists"] is True
     assert result["publishEnvironmentConfigured"] is False
+    assert result["publishGateReady"] is False
+    assert result["dockerBuildContextEnvExcluded"] is True
+    assert result["reproducibleBuildReady"] is False
 
     mutations = (
         ("namespace", "invented-account"),
@@ -85,18 +95,16 @@ def main() -> int:
         ("ciCredentialStrategy", "committed-pat"),
         ("localCredentialStrategy", "plaintext-file"),
         ("githubPatCreated", True),
-        ("githubActionsWorkflowCreationApproved", True),
-        ("actionShasResolved", False),
-        ("actionShasApproved", True),
+        ("githubActionsWorkflowPresent", False),
+        ("githubActionsWorkflowCreationApproved", False),
+        ("githubActionsWorkflowExecutionExecuted", True),
+        ("actionShasApproved", False),
         ("githubConnectorRepositoryAccess", False),
-        ("githubConnectorSelectedRepositoryOnly", False),
-        ("repositoryActionsSettingsReviewed", False),
-        ("repositoryActionsSettingsMutationApproved", True),
-        ("publishEnvironmentReviewed", False),
-        ("publishEnvironmentCreationApproved", True),
-        ("dockerLoginApproved", True),
-        ("imageBuildApproved", True),
-        ("imagePushApproved", True),
+        ("repositoryActionsSettingsMutationExecuted", False),
+        ("publishEnvironmentCreated", False),
+        ("publishEnvironmentRequiredReviewerConfigured", True),
+        ("sourceControlledPublishGateReady", True),
+        ("actualRegistryMutationExecuted", True),
     )
     for key, value in mutations:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -111,16 +119,8 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as temp_dir:
         temp = Path(temp_dir)
         copy_fixture(temp)
-        path = temp / "deploy/production.env.example"
-        path.write_text(path.read_text(encoding="utf-8").replace("gihohoho", "other"), encoding="utf-8")
-        expect_blocked(module, temp)
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp = Path(temp_dir)
-        copy_fixture(temp)
-        workflow = temp / ".github/workflows/publish.yml"
-        workflow.parent.mkdir(parents=True, exist_ok=True)
-        workflow.write_text("name: unsafe\n", encoding="utf-8")
+        workflow = temp / ".github/workflows/extra.yml"
+        workflow.write_text("name: unexpected\n", encoding="utf-8")
         expect_blocked(module, temp)
 
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -137,7 +137,7 @@ def main() -> int:
         local_env.write_text("NOT_A_REAL_SECRET=fixture-only\n", encoding="utf-8")
         expect_blocked(module, temp)
 
-    print("OK: v319 Codex/GHCR connector and Actions settings handoff smoke passed")
+    print("OK: v320 Codex/GHCR prepared-and-gated handoff smoke passed")
     return 0
 
 

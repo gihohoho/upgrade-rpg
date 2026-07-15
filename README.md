@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v319.github-connector-actions-settings-reviewed**
+현재 기준: **v320.github-actions-ghcr-workflow-prepared-gated**
 
 Codex는 루트 `AGENTS.md`를 먼저 읽고, 현재 상태는 `docs/current/CURRENT_STATUS.md`에서 확인합니다.
 
@@ -27,11 +27,11 @@ target: linux/amd64
 
 ## 첫 검사
 
-실행 위치: 프로젝트 루트  
+실행 위치: 프로젝트 루트
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-Docker login/pull/build/push/up/down과 실제 credential 입력은 아직 금지입니다.
+GitHub workflow는 준비됐지만 source-controlled reviewer gate가 `false`라 GHCR login 전에 실패합니다. 실제 credential을 저장소에 넣지 않으며 local Docker와 production resource 작업은 아직 실행하지 않았습니다.

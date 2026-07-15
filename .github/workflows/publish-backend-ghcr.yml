@@ -1,0 +1,360 @@
+name: Publish backend image candidate to GHCR
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: "main의 게시 대상 전체 40자리 커밋 SHA"
+        required: true
+        type: string
+      approval_reason:
+        description: "게시 후보를 만드는 이유(10자 이상, secret 입력 금지)"
+        required: true
+        type: string
+      confirm_publish:
+        description: "검증 후 GHCR 후보 게시 단계까지 진행"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ghcr-backend-publish
+  cancel-in-progress: false
+
+env:
+  IMAGE_REPOSITORY: ghcr.io/gihohoho/upgrade-rpg-backend
+  CERTIFICATE_IDENTITY: https://github.com/gihohoho/upgrade-rpg/.github/workflows/publish-backend-ghcr.yml@refs/heads/main
+  OIDC_ISSUER: https://token.actions.githubusercontent.com
+
+jobs:
+  validate:
+    name: Validate exact source and repository checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check manual approval inputs
+        env:
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          APPROVAL_REASON: ${{ inputs.approval_reason }}
+          CONFIRM_PUBLISH: ${{ inputs.confirm_publish }}
+          EXPECTED_GITHUB_SHA: ${{ github.sha }}
+          EXPECTED_GITHUB_REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os
+          import re
+
+          def require(condition: bool, message: str) -> None:
+              if not condition:
+                  raise SystemExit(message)
+
+          source = os.environ["SOURCE_COMMIT"]
+          reason = os.environ["APPROVAL_REASON"].strip()
+          require(os.environ["EXPECTED_GITHUB_REF"] == "refs/heads/main", "workflow must run from main")
+          require(re.fullmatch(r"[0-9a-f]{40}", source) is not None, "source_commit must be a lowercase full SHA")
+          require(source == os.environ["EXPECTED_GITHUB_SHA"], "source_commit must equal github.sha")
+          require(len(reason) >= 10, "approval_reason must contain at least 10 characters")
+          require(os.environ["CONFIRM_PUBLISH"] == "true", "confirm_publish must be true")
+          PY
+
+      - name: Check out exact source commit
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: ${{ inputs.source_commit }}
+          persist-credentials: false
+
+      - name: Verify checked out HEAD
+        env:
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+
+      - name: Set up Python 3.11.15
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: "3.11.15"
+
+      - name: Install backend validation dependencies
+        run: python -m pip install --disable-pip-version-check -e "./backend[dev]"
+
+      - name: Run fail-closed repository checks
+        run: |
+          set -euo pipefail
+          python tools/check_github_actions_ghcr_static_plan.py --strict
+          python tools/check_codex_handoff_readiness.py --strict
+          python -m compileall -q backend/app backend/scripts backend/alembic tools
+          bash tools/run_smoke_core.sh
+
+  build_scan:
+    name: Build locally, generate SBOM, and block vulnerabilities
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out exact source commit
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: ${{ inputs.source_commit }}
+          persist-credentials: false
+
+      - name: Set up Python 3.11.15
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: "3.11.15"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
+
+      - name: Build local linux/amd64 image without registry mutation
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a
+        with:
+          context: .
+          file: backend/Dockerfile.production
+          platforms: linux/amd64
+          load: true
+          push: false
+          tags: upgrade-rpg-backend:scan-${{ github.sha }}
+
+      - name: Generate local SPDX JSON SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
+        with:
+          image: upgrade-rpg-backend:scan-${{ github.sha }}
+          format: spdx-json
+          output-file: sbom.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+          dependency-snapshot: false
+
+      - name: Validate local SBOM structure
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("sbom.spdx.json").read_text(encoding="utf-8"))
+          if payload.get("SPDXID") != "SPDXRef-DOCUMENT":
+              raise SystemExit("SPDX document identifier is missing")
+          if not str(payload.get("spdxVersion", "")).startswith("SPDX-"):
+              raise SystemExit("SPDX version is missing")
+          if not isinstance(payload.get("packages"), list):
+              raise SystemExit("SPDX package list is missing")
+          PY
+
+      - name: Install checksum-pinned Trivy 0.70.0
+        env:
+          TRIVY_VERSION: "0.70.0"
+          TRIVY_SHA256: 8b4376d5d6befe5c24d503f10ff136d9e0c49f9127a4279fd110b727929a5aa9
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          bin_dir="$RUNNER_TEMP/trivy-bin"
+          mkdir -p "$bin_dir"
+          curl --fail --location --silent --show-error --retry 3 \
+            --output "$archive" \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          echo "$TRIVY_SHA256  $archive" | sha256sum --check --strict
+          tar -xzf "$archive" -C "$bin_dir" trivy
+          chmod 0755 "$bin_dir/trivy"
+          echo "$bin_dir" >> "$GITHUB_PATH"
+
+      - name: Block HIGH and CRITICAL vulnerabilities in local image
+        run: |
+          set -euo pipefail
+          trivy image \
+            --scanners vuln \
+            --pkg-types os,library \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed=false \
+            --format json \
+            --output trivy-results.json \
+            --exit-code 1 \
+            --timeout 10m \
+            "upgrade-rpg-backend:scan-${GITHUB_SHA}"
+
+      - name: Validate local Trivy JSON evidence
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("trivy-results.json").read_text(encoding="utf-8"))
+          if not isinstance(payload.get("Results"), list):
+              raise SystemExit("Trivy Results list is missing")
+          PY
+
+      - name: Retain non-secret review artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: backend-sbom-and-vulnerability-report-${{ github.sha }}
+          path: |
+            sbom.spdx.json
+            trivy-results.json
+          if-no-files-found: error
+          retention-days: 14
+
+  publish_sign_verify:
+    name: Publish, attest, sign, and verify exact digest
+    needs: build_scan
+    runs-on: ubuntu-latest
+    environment: ghcr-production-publish
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Enforce independent reviewer gate before registry access
+        env:
+          PUBLISH_REVIEWER_GATE_READY: "false"
+        run: |
+          set -euo pipefail
+          if [ "$PUBLISH_REVIEWER_GATE_READY" != "true" ]; then
+            echo "Publish blocked: independent environment reviewer gate is not ready."
+            exit 1
+          fi
+
+      - name: Check out exact source commit
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: ${{ inputs.source_commit }}
+          persist-credentials: false
+
+      - name: Set up Python 3.11.15
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: "3.11.15"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
+
+      - name: Install checksum-pinned Trivy 0.70.0
+        env:
+          TRIVY_VERSION: "0.70.0"
+          TRIVY_SHA256: 8b4376d5d6befe5c24d503f10ff136d9e0c49f9127a4279fd110b727929a5aa9
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          bin_dir="$RUNNER_TEMP/trivy-bin"
+          mkdir -p "$bin_dir"
+          curl --fail --location --silent --show-error --retry 3 \
+            --output "$archive" \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          echo "$TRIVY_SHA256  $archive" | sha256sum --check --strict
+          tar -xzf "$archive" -C "$bin_dir" trivy
+          chmod 0755 "$bin_dir/trivy"
+          echo "$bin_dir" >> "$GITHUB_PATH"
+
+      - name: Log in to GHCR with ephemeral GITHUB_TOKEN
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push digest candidate with BuildKit attestations
+        id: publish
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a
+        with:
+          context: .
+          file: backend/Dockerfile.production
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.IMAGE_REPOSITORY }}:unverified-sha-${{ github.sha }}
+          provenance: mode=max
+          sbom: true
+
+      - name: Inspect BuildKit provenance and SBOM on exact digest
+        env:
+          DIGEST: ${{ steps.publish.outputs.digest }}
+        run: |
+          set -euo pipefail
+          [[ "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          docker buildx imagetools inspect "$IMAGE_REPOSITORY@$DIGEST" --format '{{ json .Provenance }}' > registry-provenance.json
+          docker buildx imagetools inspect "$IMAGE_REPOSITORY@$DIGEST" --format '{{ json .SBOM }}' > registry-sbom.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          provenance = json.loads(Path("registry-provenance.json").read_text(encoding="utf-8"))
+          sbom = json.loads(Path("registry-sbom.json").read_text(encoding="utf-8"))
+          if not isinstance(provenance.get("SLSA"), dict):
+              raise SystemExit("SLSA provenance is missing")
+          if not provenance["SLSA"].get("buildType"):
+              raise SystemExit("SLSA buildType is missing")
+          if sbom.get("SPDX", {}).get("SPDXID") != "SPDXRef-DOCUMENT":
+              raise SystemExit("registry SPDX SBOM is missing")
+          PY
+
+      - name: Block vulnerabilities in exact pushed digest before signing
+        env:
+          DIGEST: ${{ steps.publish.outputs.digest }}
+        run: |
+          set -euo pipefail
+          [[ "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          trivy image \
+            --scanners vuln \
+            --pkg-types os,library \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed=false \
+            --format json \
+            --output published-trivy-results.json \
+            --exit-code 1 \
+            --timeout 10m \
+            "$IMAGE_REPOSITORY@$DIGEST"
+
+      - name: Validate exact-digest Trivy JSON evidence
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("published-trivy-results.json").read_text(encoding="utf-8"))
+          if not isinstance(payload.get("Results"), list):
+              raise SystemExit("exact-digest Trivy Results list is missing")
+          PY
+
+      - name: Set up Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6
+
+      - name: Sign exact digest with GitHub OIDC after all image gates
+        env:
+          DIGEST: ${{ steps.publish.outputs.digest }}
+        run: |
+          set -euo pipefail
+          [[ "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          cosign sign --yes "$IMAGE_REPOSITORY@$DIGEST"
+
+      - name: Verify Cosign certificate identity and issuer
+        env:
+          DIGEST: ${{ steps.publish.outputs.digest }}
+        run: |
+          set -euo pipefail
+          cosign verify \
+            --certificate-identity "$CERTIFICATE_IDENTITY" \
+            --certificate-oidc-issuer "$OIDC_ISSUER" \
+            "$IMAGE_REPOSITORY@$DIGEST" > cosign-verification.json
+
+      - name: Retain exact-digest verification artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: backend-published-digest-verification-${{ github.sha }}
+          path: |
+            registry-provenance.json
+            registry-sbom.json
+            published-trivy-results.json
+            cosign-verification.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Emit verified candidate digest
+        env:
+          DIGEST: ${{ steps.publish.outputs.digest }}
+        run: |
+          set -euo pipefail
+          echo "Verified candidate: $IMAGE_REPOSITORY@$DIGEST" >> "$GITHUB_STEP_SUMMARY"

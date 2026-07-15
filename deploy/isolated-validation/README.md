@@ -1,4 +1,4 @@
-# Isolated production validation plan — v319
+# Isolated production validation plan — v320
 
 이 폴더는 승인 경계와 안전한 검사 도구만 보관합니다. 실제 production secret, CA, certificate, key, registry credential 또는 production env 파일을 두지 않습니다.
 
@@ -49,17 +49,21 @@ container/image/network/volume mutation executed: no
 
 선택 과정에서는 registry 또는 Docker mutation을 실행하지 않았습니다. `gihohoho`는 기호가 직접 확인한 고정 namespace입니다.
 
-## Stage 2C — 완료: credential/workflow 정적 계획과 repository 읽기 전용 검토
+## Stage 2C — 완료: credential/workflow와 repository 보호 준비
 
 - CI credential 우선안: GitHub Actions `GITHUB_TOKEN`
 - local credential/PAT: deferred
-- `.github/workflows/` 생성 승인: no
-- Docker login/pull/build/push 승인: no/no/no/no
-- 최소 permissions, 안전 trigger, supply-chain gate, 9개 action SHA 후보 검토 완료
-- Codex GitHub App `gihohoho/upgrade-rpg` 단일 repository 연결과 Actions/environment 읽기 전용 검토 완료
-- 다음 단계: repository action allowlist/full-length SHA 설정 변경 승인 요청
+- `.github/workflows/publish-backend-ghcr.yml` 생성: yes
+- CI workflow/login/build/push 승인: yes/yes/yes/yes
+- 실제 workflow/login/build/push 실행: no/no/no/no
+- 최소 permissions, 안전 trigger, supply-chain gate, 8개 action full-SHA 설정 완료
+- Codex GitHub App `gihohoho/upgrade-rpg` 단일 repository 연결
+- `ghcr-production-publish`와 `main` rule 생성, required reviewer는 미구성
+- GitHub Free/Pro/Team의 required reviewer는 공개 저장소에서만 지원되어 비공개 저장소에 collaborator를 추가하는 것만으로는 해결되지 않음
+- source-controlled reviewer gate `false`, GHCR login 전 차단
+- 다음 단계: `github-enterprise-cloud-required-reviewer`, `owner-only-source-controlled-two-step`, `keep-publishing-disabled` 중 게시 승인 모델 선택 후 dependency/toolchain 재현성 gate 구성
 
-## Stage 2D — 각각 별도 승인 필요: pull/build/push
+## Stage 2D — 게시 승인 모델 구성·검증 뒤 실행 결과 확인: build/push/verify
 
 - base image pull
 - backend image build
@@ -68,6 +72,8 @@ container/image/network/volume mutation executed: no
 - pushed digest/signature 검증
 
 각 작업은 하나씩 실행하고 결과를 확인한 뒤 다음으로 이동합니다.
+
+승인 모델과 dependency/toolchain 재현성 gate를 구성·검증하고 GitHub 설정을 live 재확인하기 전에는 source-controlled gate를 `false`로 유지하고 workflow를 실행하지 않습니다. `keep-publishing-disabled`를 선택하면 Stage 2D는 진행하지 않습니다.
 
 ## Stage 3 — 별도 승인 필요: isolated start
 
