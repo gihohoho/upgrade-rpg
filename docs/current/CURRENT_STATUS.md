@@ -1,9 +1,9 @@
-# Current Status — v308
+# Current Status — v309
 
 ## 현재 기준
 
-- 최신 작업: `v308.runtime-config-hardening-ready`
-- 기준 ZIP: `rpg_v308_runtime_config_hardening_ready.zip`
+- 최신 작업: `v309.runtime-engine-source-binding-inspector-fix`
+- 기준 ZIP: `rpg_v309_runtime_engine_source_binding_inspector_fix_ready.zip`
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -22,7 +22,7 @@ v307 runtime readiness + live health: passed
 v307 production hardening warnings: 12
 ```
 
-## v308 준비 내용
+## v308 runtime hardening 상태
 
 ```txt
 explicit pool policy: 5 options
@@ -33,6 +33,13 @@ deploy/docker-compose.production.yml: separate review template
 local docker-compose.yml: preserved
 actual backend/.env: unchanged
 ```
+
+## v309 수정 내용
+
+- 실제 `session.py`는 계속 `create_async_engine(... settings.database_url ...)`을 사용합니다.
+- v308 실행 오류는 여러 줄 호출을 한 줄 문자열 검사로 판정한 검사기 오탐이었습니다.
+- v309는 Python AST 기반으로 runtime engine URL binding을 판정합니다.
+- DB, `.env`, Docker, Alembic, FastAPI runtime 설정은 변경하지 않았습니다.
 
 ## 다음 첫 작업
 

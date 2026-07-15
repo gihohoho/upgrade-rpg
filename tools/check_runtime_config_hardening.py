@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify v308 runtime hardening without mutating DB, .env, or Docker state.
+"""Verify v309 runtime hardening after the source-binding inspector fix.
 
 The checker reuses the v307 read-only live readiness inspection, then verifies
 that SQLAlchemy pool policy, FastAPI engine disposal, production fail-closed
@@ -23,7 +23,7 @@ from check_postgres_deployment_runtime_readiness import (
     inspect_deployment_runtime_readiness,
 )
 
-TOOL_VERSION = "v308.runtime-config-hardening-readonly-verification"
+TOOL_VERSION = "v309.runtime-config-hardening-source-binding-fix-readonly-verification"
 READY_RESULT = "runtime-config-hardening-verified-local-runtime-preserved"
 BLOCKED_RESULT = "blocked-or-failed"
 

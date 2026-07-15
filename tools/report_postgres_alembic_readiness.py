@@ -15,7 +15,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-PROJECT_VERSION = "v308"
+PROJECT_VERSION = "v309"
 REPORT_PATH = Path("docs/current/POSTGRES_ALEMBIC_READINESS.md")
 
 
@@ -176,6 +176,7 @@ def render(root: Path) -> str:
 - v307에서는 exact runtime DB/driver, FastAPI startup mutation, DB health contract, Docker running/healthy, env key inventory, manual migration runbook을 읽기 전용으로 점검합니다.
 - 사용자 PC의 v307 `--require-health` 결과가 통과했고 production hardening warning 12개를 수집했습니다.
 - v308에서는 명시적 async pool 5개 옵션, shutdown `engine.dispose()`, production fail-closed guard, non-root FastAPI Dockerfile, 별도 운영 Compose 초안을 추가합니다.
+- v309에서는 여러 줄 `create_async_engine(settings.database_url, ...)` 호출을 한 줄 문자열 검사로 오판하던 readiness 검사기를 Python AST 기반으로 수정합니다.
 
 ## 현재 구조 요약
 
@@ -312,8 +313,9 @@ backend runtime/model/schema 경로에서 SQLite URL이나 SQLite 전용 타입�
 29. v307 deployment/runtime readiness로 exact runtime DB, startup mutation 부재, Docker health, env key, 운영 migration runbook 확인
 30. 사용자 PC에서 v307 `--require-health` 통과와 production hardening warning 12개 확인
 31. v308에서 pool/lifecycle/production guard와 별도 배포 template를 DB/.env/Docker mutation 없이 보강
-32. 다음 revision/autogenerate/upgrade/downgrade는 별도 승인 전까지 금지
-33. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
+32. v309에서 multiline runtime engine URL binding 검사 오탐을 AST 기반으로 수정
+33. 다음 revision/autogenerate/upgrade/downgrade는 별도 승인 전까지 금지
+34. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
 
 ### Stage C — Alembic 실행 방식 검증
 

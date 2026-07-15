@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke checks for the v308 runtime configuration hardening boundary."""
+"""Smoke checks for the v309 runtime hardening inspector-fix boundary."""
 from __future__ import annotations
 
 import ast
@@ -23,9 +23,9 @@ def load_tool():  # type: ignore[no-untyped-def]
     tools_path = str(ROOT / "tools")
     if tools_path not in sys.path:
         sys.path.insert(0, tools_path)
-    spec = importlib.util.spec_from_file_location("v308_runtime_hardening", TOOL)
+    spec = importlib.util.spec_from_file_location("v309_runtime_hardening", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v308 tool")
+        raise RuntimeError("cannot load v309 tool")
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
@@ -62,7 +62,7 @@ def main() -> int:
     source = TOOL.read_text(encoding="utf-8")
     ast.parse(source, filename=str(TOOL))
     for marker in (
-        'TOOL_VERSION = "v308.runtime-config-hardening-readonly-verification"',
+        'TOOL_VERSION = "v309.runtime-config-hardening-source-binding-fix-readonly-verification"',
         'READY_RESULT = "runtime-config-hardening-verified-local-runtime-preserved"',
         "pool_pre_ping=settings.db_pool_pre_ping",
         "await engine.dispose()",
@@ -71,7 +71,7 @@ def main() -> int:
         "alembicCommandExecuted\": False",
     ):
         if marker not in source and marker not in (ROOT / "backend/app/db/session.py").read_text(encoding="utf-8") and marker not in (ROOT / "backend/app/main.py").read_text(encoding="utf-8"):
-            return fail(f"v308 marker missing: {marker}")
+            return fail(f"v309 marker missing: {marker}")
 
     for forbidden in (
         'docker compose up',
@@ -82,7 +82,7 @@ def main() -> int:
         'DROP SCHEMA IF EXISTS public CASCADE',
     ):
         if forbidden in source:
-            return fail(f"v308 checker contains forbidden mutation marker: {forbidden}")
+            return fail(f"v309 checker contains forbidden mutation marker: {forbidden}")
 
     tool = load_tool()
     static = tool.inspect_static_hardening(ROOT)
@@ -95,11 +95,11 @@ def main() -> int:
         settings_state=settings,
     )
     if result.get("result") != tool.READY_RESULT:
-        return fail(f"unexpected v308 result: {result.get('result')}")
+        return fail(f"unexpected v309 result: {result.get('result')}")
     if result.get("readOnly") is not True or result.get("mutationExecuted") is not False:
-        return fail("v308 checker must remain read-only and mutation-free")
+        return fail("v309 checker must remain read-only and mutation-free")
     if settings.get("poolPolicy") != tool.EXPECTED_POOL_POLICY:
-        return fail("local pool defaults differ from approved v308 values")
+        return fail("local pool defaults differ from approved v308/v309 values")
     if settings.get("productionUnsafeDefaultsBlocked") is not True:
         return fail("unsafe production defaults were not blocked")
     if static.get("localComposePreserved") is not True:
@@ -112,7 +112,7 @@ def main() -> int:
     serialized = json.dumps(result, ensure_ascii=False)
     for secret in ("rpg_password", "change-me-before-production", "local-admin-dev-key"):
         if secret in serialized:
-            return fail("v308 result exposed a local secret value")
+            return fail("v309 result exposed a local secret value")
 
     bad_static = dict(static)
     bad_static["engineDisposeLifecycle"] = False

@@ -1,4 +1,4 @@
-# Roadmap — v308
+# Roadmap — v309
 
 ## 완료
 
@@ -10,15 +10,17 @@
 - v305 baseline completion lock
 - v306 next revision preflight: candidate operation 0, 새 revision 불필요
 - v307 live runtime/DB health/Docker readiness 통과
+- v308 pool/lifecycle/production guard/배포 template 준비
+- v309 multiline runtime engine binding 검사 오탐 수정
 
 ## 현재 단계
 
-- v308 pool/lifecycle/production guard/배포 template 준비 완료
+- v309 strict + health 재검증
 - 실제 DB, `.env`, Docker 실행 상태 변경 없음
 
 ## 다음 순서
 
-1. 기호님 PC에서 v308 strict + health 실행
+1. 기호님 PC에서 v309 strict + health 실행
 2. local runtime/health 회귀 없음 확인
 3. 남은 운영 경고를 secret/TLS/image/reverse proxy로 재분류
 4. production Compose를 실행하지 않고 정적 검증 강화

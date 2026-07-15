@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v308.runtime-config-hardening-ready**
+현재 기준: **v309.runtime-engine-source-binding-inspector-fix**
 
 ## 현재 구조
 
@@ -29,22 +29,7 @@ v306 next revision preflight: candidate operations 0 / next revision required no
 v307 runtime readiness --require-health: passed / production warnings 12
 ```
 
-## v308 핵심
-
-DB, 실제 `.env`, 실행 중인 Docker 자원을 변경하지 않고 runtime code/config와 배포 초안을 보강했습니다.
-
-```txt
-backend/app/core/config.py
-backend/app/db/session.py
-backend/app/main.py
-backend/.env.example
-backend/Dockerfile
-deploy/docker-compose.production.yml
-tools/check_runtime_config_hardening.py
-tools/smoke/backend/smoke_runtime_config_hardening.py
-```
-
-적용 내용:
+## v308 runtime hardening
 
 - SQLAlchemy pool 5개 정책 명시
 - shutdown `engine.dispose()` lifecycle
@@ -53,6 +38,10 @@ tools/smoke/backend/smoke_runtime_config_hardening.py
 - Adminer/PostgreSQL host port가 없는 별도 운영 Compose 초안
 - local `docker-compose.yml`과 실제 `.env` 유지
 - 자동 Alembic migration 없음
+
+## v309 검사기 수정
+
+실제 engine은 계속 `settings.database_url`을 사용했습니다. v308 오류는 여러 줄 `create_async_engine()` 호출을 한 줄 문자열로만 찾던 검사기 오탐이며, v309에서 AST 기반 판정과 회귀 smoke로 수정했습니다.
 
 ## 다음 실행
 
@@ -68,20 +57,6 @@ source .venv/Scripts/activate
 
 ```bash
 python tools/check_runtime_config_hardening.py --strict --require-health
-```
-
-## 서버 실행
-
-FastAPI — 실행 위치: `backend`, `.venv` 켜짐
-
-```bash
-python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-Vue — 실행 위치: `frontend/vue-app`, Python `.venv` 불필요
-
-```bash
-npm run dev
 ```
 
 ## 검증

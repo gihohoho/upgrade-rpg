@@ -1,6 +1,8 @@
-# Project Structure — v308
+# Project Structure — v309
 
 현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
+
+v309에서는 v308 runtime 설정을 유지하면서 AST 기반 source-binding 검사와 회귀 smoke를 보강합니다. 실제 runtime/DB/.env/Docker/Alembic 동작은 변경하지 않습니다.
 
 v308에서는 v307 live runtime 통과 상태를 유지하면서 SQLAlchemy pool, FastAPI shutdown lifecycle, production fail-closed guard, non-root Dockerfile과 별도 운영 Compose 초안을 보강합니다. 실제 `.env`, Docker 실행 상태, DB, Alembic history는 변경하지 않습니다.
 
@@ -42,10 +44,31 @@ v308에서는 v307 live runtime 통과 상태를 유지하면서 SQLAlchemy pool
 | `src/` | legacy JS/CSS | 이동 금지, Vue 앱 `src/`와 구분 |
 | `frontend/vue-app/` | 새 Vue shell + 읽기 전용 API client 준비 | 실제 기능 대체 전 단계 |
 | `backend/` | FastAPI 백엔드 | 기존 route/body/DB/env/seed 유지 |
-| `tools/` | smoke/contract/검증/backup/restore/migration 도구 | v308 runtime config hardening checker와 회귀 smoke 보강 |
-| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v308 기준 갱신 |
+| `tools/` | smoke/contract/검증/backup/restore/migration 도구 | v309 AST runtime engine binding inspector와 회귀 smoke 보강 |
+| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v309 기준 갱신 |
 
 
+
+## v309 runtime engine source-binding inspector fix
+
+추가/변경 위치:
+
+```txt
+tools/check_postgres_deployment_runtime_readiness.py
+tools/check_runtime_config_hardening.py
+tools/smoke/backend/smoke_runtime_engine_source_binding_inspector.py
+tools/smoke/backend/smoke_postgres_deployment_runtime_readiness.py
+tools/run_smoke_core.sh
+docs/current/POSTGRES_RUNTIME_ENGINE_BINDING_INSPECTOR_FIX.md
+```
+
+고정 경계:
+
+- `create_async_engine()` 호출을 Python AST로 분석
+- positional/`url=`/`database_url=`의 정확한 `settings.database_url`만 허용
+- 줄바꿈과 pool keyword에 영향받지 않음
+- literal URL과 다른 settings 속성 차단
+- FastAPI runtime/pool/DB/.env/Docker/Alembic 동작 미변경
 
 ## v308 runtime config hardening
 

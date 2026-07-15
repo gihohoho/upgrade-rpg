@@ -64,11 +64,13 @@ def main() -> None:
         "tools/smoke/backend/smoke_postgres_deployment_runtime_readiness.py",
         "tools/check_runtime_config_hardening.py",
         "tools/smoke/backend/smoke_runtime_config_hardening.py",
+        "tools/smoke/backend/smoke_runtime_engine_source_binding_inspector.py",
         "backend/Dockerfile",
         "deploy/docker-compose.production.yml",
         "deploy/README.md",
         "docs/current/POSTGRES_RUNTIME_CONFIG_HARDENING.md",
         "docs/current/POSTGRES_PRODUCTION_DEPLOYMENT_TEMPLATE.md",
+        "docs/current/POSTGRES_RUNTIME_ENGINE_BINDING_INSPECTOR_FIX.md",
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_CREATION.md",
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md",
         "docs/current/POSTGRES_MIGRATION_TEST_UPGRADE.md",
@@ -89,8 +91,8 @@ def main() -> None:
 
     assert_contains(
         "NEXT_CHAT_PROMPT.md",
-        "rpg_v308_runtime_config_hardening_ready.zip",
-        "v308.runtime-config-hardening-ready",
+        "rpg_v309_runtime_engine_source_binding_inspector_fix_ready.zip",
+        "v309.runtime-engine-source-binding-inspector-fix",
         "backend/.venv",
         "check_runtime_config_hardening.py --strict --require-health",
         "v295_initial_schema",
@@ -114,7 +116,7 @@ def main() -> None:
     )
     assert_contains(
         "README.md",
-        "v308.runtime-config-hardening-ready",
+        "v309.runtime-engine-source-binding-inspector-fix",
         "check_runtime_config_hardening.py",
         "v295_initial_schema",
         "alembic-managed-baseline-complete",
@@ -232,6 +234,14 @@ def main() -> None:
         "digest",
         "TLS",
         "자동 migration",
+    )
+    assert_contains(
+        "docs/current/POSTGRES_RUNTIME_ENGINE_BINDING_INSPECTOR_FIX.md",
+        "v309",
+        "runtime engine bypasses settings.database_url",
+        "Python AST",
+        "settings.database_url",
+        "runtime-config-hardening-verified-local-runtime-preserved",
     )
     assert_contains(
         ".gitignore",

@@ -14,6 +14,7 @@ or runs Alembic stamp/upgrade/downgrade. Secret values are never printed.
 from __future__ import annotations
 
 import argparse
+import ast
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 import json
@@ -38,6 +39,7 @@ TOOL_VERSION = "v307.postgres-deployment-runtime-readiness-readonly"
 READY_RESULT = "local-runtime-readiness-verified-production-hardening-required"
 PRODUCTION_READY_RESULT = "deployment-runtime-readiness-verified"
 BLOCKED_RESULT = "blocked-or-failed"
+RUNTIME_ENGINE_BINDING_INSPECTOR = "v309.ast-create-async-engine-binding"
 
 REQUIRED_ENV_KEYS = {
     "APP_NAME",
@@ -100,6 +102,68 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def _is_settings_database_url(node: ast.AST) -> bool:
+    return (
+        isinstance(node, ast.Attribute)
+        and node.attr == "database_url"
+        and isinstance(node.value, ast.Name)
+        and node.value.id == "settings"
+    )
+
+
+def _create_async_engine_call_uses_settings_database_url(node: ast.AST) -> bool:
+    if not isinstance(node, ast.Call):
+        return False
+    function = node.func
+    is_create_async_engine = (
+        isinstance(function, ast.Name)
+        and function.id == "create_async_engine"
+    ) or (
+        isinstance(function, ast.Attribute)
+        and function.attr == "create_async_engine"
+    )
+    if not is_create_async_engine:
+        return False
+
+    candidates: list[ast.AST] = []
+    if node.args:
+        candidates.append(node.args[0])
+    candidates.extend(
+        keyword.value
+        for keyword in node.keywords
+        if keyword.arg in {"url", "database_url"}
+    )
+    return any(_is_settings_database_url(candidate) for candidate in candidates)
+
+
+def _call_uses_settings_database_url(source: str) -> bool:
+    """Detect the runtime ``engine`` binding independent of source formatting."""
+    try:
+        tree = ast.parse(source)
+    except SyntaxError as exc:
+        raise DeploymentRuntimeReadinessError(
+            f"runtime session source is not valid Python: {exc}"
+        ) from exc
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            binds_runtime_engine = any(
+                isinstance(target, ast.Name) and target.id == "engine"
+                for target in node.targets
+            )
+            if binds_runtime_engine and _create_async_engine_call_uses_settings_database_url(node.value):
+                return True
+        elif (
+            isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and node.target.id == "engine"
+            and node.value is not None
+            and _create_async_engine_call_uses_settings_database_url(node.value)
+        ):
+            return True
+    return False
+
+
 def _env_key_inventory(path: Path) -> dict[str, Any]:
     if not path.is_file():
         return {
@@ -160,7 +224,8 @@ def inspect_runtime_sources(root: Path) -> dict[str, Any]:
     }
 
     return {
-        "databaseUrlFromSettings": "create_async_engine(settings.database_url" in session_text,
+        "databaseUrlFromSettings": _call_uses_settings_database_url(session_text),
+        "databaseUrlBindingInspection": RUNTIME_ENGINE_BINDING_INSPECTOR,
         "asyncEngine": "create_async_engine" in session_text,
         "asyncSession": "AsyncSession" in session_text and "async_sessionmaker" in session_text,
         "sessionDependency": "async with AsyncSessionLocal() as session" in session_text,

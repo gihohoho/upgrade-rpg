@@ -203,6 +203,12 @@ def main() -> int:
             return fail(f"v307 checker contains forbidden execution marker: {marker}")
 
     tool = load_tool()
+    actual_sources = tool.inspect_runtime_sources(ROOT)
+    if actual_sources.get("databaseUrlFromSettings") is not True:
+        return fail("actual runtime engine must use settings.database_url")
+    if actual_sources.get("databaseUrlBindingInspection") != tool.RUNTIME_ENGINE_BINDING_INSPECTOR:
+        return fail("runtime engine binding inspector must use the v309 AST contract")
+
     fixture = ready_fixture()
     result = tool.inspect_deployment_runtime_readiness(ROOT, **fixture)
     if result.get("result") != tool.READY_RESULT:

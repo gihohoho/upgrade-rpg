@@ -123,3 +123,7 @@ row write
 
 v307에서 경고였던 명시적 pool 정책, `engine.dispose()` lifecycle, FastAPI Dockerfile 부재는 v308에서 보강했습니다.
 로컬 secret, 로컬 Compose 공개 포트, 운영 TLS/digest/secret 실제 입력은 아직 별도 승인 대상입니다.
+
+## v309 검사기 오탐 수정
+
+`create_async_engine()`의 여러 줄 호출을 한 줄 문자열로만 검사하던 v307 정적 판정을 Python AST 기반으로 교체했습니다. 실제 runtime은 계속 `settings.database_url`을 사용하며, DB·`.env`·Docker·Alembic·pool 동작은 변경하지 않았습니다. 전용 회귀 smoke는 여러 줄/keyword 호출을 허용하고 literal 또는 다른 settings 속성은 차단합니다.

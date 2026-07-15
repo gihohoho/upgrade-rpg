@@ -77,3 +77,7 @@ next safe stage: separate-production-secrets-tls-and-container-validation
 - API route path/response body 미변경
 - seed/auth/write/game content 미변경
 - Docker build/up/down/restart/remove 미실행
+
+## v309 검사기 오탐 수정
+
+`create_async_engine()`의 여러 줄 호출을 한 줄 문자열로만 검사하던 v307 정적 판정을 Python AST 기반으로 교체했습니다. 실제 runtime은 계속 `settings.database_url`을 사용하며, DB·`.env`·Docker·Alembic·pool 동작은 변경하지 않았습니다. 전용 회귀 smoke는 여러 줄/keyword 호출을 허용하고 literal 또는 다른 settings 속성은 차단합니다.

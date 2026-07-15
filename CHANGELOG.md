@@ -1,3 +1,10 @@
+# v309 - Runtime engine source-binding inspector fix
+
+- Fixed a false positive where the readiness checker only recognized a single-line `create_async_engine(settings.database_url...)` call.
+- Replaced the brittle string match with Python AST inspection of positional and `url=`/`database_url=` arguments.
+- Added a dedicated multiline regression smoke and wired it into the core smoke runner.
+- Kept FastAPI runtime, pool policy, DB, `.env`, Docker, Alembic history, API contracts, and game content unchanged.
+
 # v308 - FastAPI/PostgreSQL runtime config hardening
 
 - Recorded the user PC v307 `--strict --require-health` success with exact `rpg_game`, PostgreSQL 16.14, healthy Docker, and 12 production-hardening warnings.
