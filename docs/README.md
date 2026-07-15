@@ -1,18 +1,21 @@
-# Current Documents — v309
+# Current Documents — v311
 
-- 최신 작업: `v309.runtime-engine-source-binding-inspector-fix`
+- 최신 작업: `v311.production-capacity-tls-network-isolated-plan`
 - PostgreSQL baseline: 완료
-- 다음 revision: 현재 불필요
-- 현재 단계: runtime engine source-binding inspector 재검증
+- 다음 Alembic revision: 현재 불필요
+- 로컬 runtime/health: 정상
+- v310 production static validation: 통과
+- 현재 단계: 운영 용량·TLS 선택·network·isolated container 실행 전 계획
 
-## 우선 문서
+## 먼저 볼 문서
 
 - `CURRENT_STATUS.md`
-- `PROJECT_STRUCTURE.md`
 - `ROADMAP.md`
-- `POSTGRES_RUNTIME_ENGINE_BINDING_INSPECTOR_FIX.md`
-- `POSTGRES_DEPLOYMENT_RUNTIME_READINESS.md`
+- `PROJECT_STRUCTURE.md`
+- `POSTGRES_PRODUCTION_CAPACITY_TLS_NETWORK_PLAN.md`
+- `POSTGRES_PRODUCTION_STATIC_VALIDATION.md`
 - `POSTGRES_RUNTIME_CONFIG_HARDENING.md`
 - `POSTGRES_PRODUCTION_DEPLOYMENT_TEMPLATE.md`
+- `POSTGRES_DEPLOYMENT_MIGRATION_RUNBOOK.md`
 
-v309는 실제 runtime 설정을 바꾸지 않고, 여러 줄 `create_async_engine(settings.database_url, ...)` 호출을 정확히 인식하도록 검사기만 수정합니다.
+완료된 PostgreSQL baseline 단계별 기록은 `docs/archive/postgres-baseline/`에 보관합니다. v309 검사기 오탐 수정 기록은 `docs/archive/runtime-hardening/`에 보관합니다.

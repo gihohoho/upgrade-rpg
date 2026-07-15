@@ -1,45 +1,28 @@
-# Backend Ready — v309
+# Backend readiness — v311
 
-현재 안정 readiness: `v250.backend-admin-rollback-snapshot`  
-Backend splitStatus: `admin-schema-field-constraint-contract-v238`  
-현재 프로젝트 작업 버전: `v309.runtime-engine-source-binding-inspector-fix`
+## 완료
 
-## 핵심 보장
+- FastAPI + PostgreSQL async runtime
+- Alembic baseline `v295_initial_schema`
+- source/rehearsal baseline stamp 검증
+- next revision candidate 0
+- live DB health 및 Docker PostgreSQL healthy 확인
+- explicit SQLAlchemy pool + shutdown `engine.dispose()`
+- production unsafe local defaults fail-closed
+- non-root Dockerfile와 별도 production Compose template
+- production secret/TLS/container 정적 checker 통과
+- worker/pool/max_connections 계산 계획과 확장 시나리오
+- 관리형 PostgreSQL 우선 검토와 bundled TLS 대안 경계
+- reverse proxy/HTTPS/network allowlist 계획
+- isolated container Stage 0~4 승인 경계
 
-- 관리자 runtime route/OpenAPI/request/response/schema 계약 유지
-- backend/frontend contract parity 유지
-- apply route Write Guard 유지
-- 기존 route path/API response body/write 의미 유지
-- 실제 backend virtualenv: `backend/.venv`
+## 아직 미완료
 
-## PostgreSQL / Alembic 상태
+- 실제 운영 DB/provider와 reverse proxy 제품 확정
+- 실제 운영 secret/CA/TLS server 설정
+- image digest 실제 승인
+- Docker Compose config render 검증
+- isolated production container build/run 검증
+- 실제 배포
 
-- baseline classification `alembic-managed-baseline-complete`
-- source/rehearsal application 22 tables / 748 rows 보존
-- source current revision `v295_initial_schema`
-- v302/v304 실행 보고서 `verified`
-- v305 completion state 실제 통과
-- v306 candidate operation 0개 / 새 revision 불필요 실제 통과
-- v307 deployment/runtime read-only checker 준비 완료
-- v308 runtime hardening 적용 완료
-- v309 runtime engine source-binding AST 검사기 오탐 수정
-- 새 revision/autogenerate/upgrade/downgrade/stamp는 미승인
-
-## v307에서 확인할 항목
-
-- runtime URL exact `rpg_game` + `postgresql+asyncpg`
-- FastAPI startup DB mutation 없음
-- Docker PostgreSQL running/healthy
-- DB health read-only contract
-- `.env` key inventory와 production hardening warnings
-- manual migration runbook 경계
-
-## 검증
-
-실행 위치: 프로젝트 루트  
-`.venv` 상태: `backend/.venv`가 켜진 상태 권장
-
-```bash
-python -m compileall -q backend/app backend/scripts backend/alembic tools
-bash tools/run_smoke_core.sh
-```
+현재 FastAPI startup command에는 Alembic migration이 포함되지 않습니다. v311의 `max_connections=40`은 review 후보이며 실제 DB 설정이 아닙니다.

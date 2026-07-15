@@ -10,8 +10,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 TOOL = ROOT / "tools/check_postgres_runtime_readonly_state.py"
-STATE_DOC = ROOT / "docs/current/POSTGRES_RUNTIME_READONLY_STATE.md"
-STRATEGY_DOC = ROOT / "docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md"
+STATE_DOC = ROOT / "docs/archive/postgres-baseline/POSTGRES_RUNTIME_READONLY_STATE.md"
+STRATEGY_DOC = ROOT / "docs/archive/postgres-baseline/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md"
 
 
 def fail(message: str) -> int:

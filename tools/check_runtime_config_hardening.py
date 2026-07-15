@@ -147,7 +147,7 @@ def inspect_static_hardening(root: Path) -> dict[str, Any]:
         },
         "productionCompose": {
             "exists": True,
-            "separateFromLocal": "v308 production deployment template only" in production_compose,
+            "separateFromLocal": "production deployment" in production_compose.lower() and "template only" in production_compose.lower(),
             "productionEnvironment": "ENVIRONMENT: production" in production_compose,
             "debugFalse": 'DEBUG: "false"' in production_compose,
             "databaseUrlRequired": "DATABASE_URL:?" in production_compose,

@@ -37,3 +37,9 @@ build/
 /local-backups/
 # Local schema-only review bundles; inspect before committing generated migrations
 /local-review-artifacts/
+
+# Production deployment material (examples only are committed)
+/deploy/production.env
+/deploy/.env.production
+/deploy/secrets/*
+!/deploy/secrets/README.md

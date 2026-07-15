@@ -10,3 +10,9 @@ build
 *.zip
 local-backups/
 local-review-artifacts/
+
+# Production secret material must be mounted by the deployment platform.
+deploy/production.env
+deploy/.env.production
+deploy/secrets/*
+!deploy/secrets/README.md

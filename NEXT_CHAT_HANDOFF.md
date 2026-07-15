@@ -1,78 +1,49 @@
-# NEXT CHAT HANDOFF — Upgrade RPG v309
+# NEXT CHAT HANDOFF — Upgrade RPG v311
 
 ## 기준 ZIP
 
-- `rpg_v309_runtime_engine_source_binding_inspector_fix_ready.zip`
+- `rpg_v311_production_capacity_tls_network_plan_handoff_ready.zip`
 
-## 현재 버전
+## 현재 기준
 
-- 최신 작업: `v309.runtime-engine-source-binding-inspector-fix`
+- 최신 작업: `v311.production-capacity-tls-network-isolated-plan`
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
 
-## 실제 DB 상태
+## 실제 완료 상태
 
 ```txt
-source rpg_game:
-  public tables/rows 23/749
-  application tables/rows 22/748
-  current revision v295_initial_schema
-  v304 source post-check source-baseline-stamp-current-state-verified
-restore rehearsal rpg_game_restore_rehearsal_v290:
-  public tables/rows 23/749
-  application tables/rows 22/748
-  v302 report verified
-migration rpg_game_migration_empty_v290:
-  public tables/rows 23/1
-  differences=0
 classification: alembic-managed-baseline-complete
-v306 candidate operations: 0
-v307 strict + require-health: passed
-v307 Docker PostgreSQL: running/healthy
+source rpg_game: public 23/749, application 22/748
+current revision: v295_initial_schema
+rehearsal: 23/749 / v302 report verified
+migration DB: 23/1 / differences=0
+v306 candidate operations: 0 / next revision required no
+v307 live DB health and Docker readiness: passed
+v308 pool/lifecycle/production guard/Dockerfile/Compose: applied
+v309 runtime engine AST inspector: user PC passed
+v310 production static validation: passed
+remaining production warnings: 9
 ```
 
-## v308 적용 상태
+## v311 변경
 
-```txt
-pool policy: pre_ping/size/overflow/timeout/recycle
-shutdown: await engine.dispose()
-production unsafe defaults: fail closed
-backend Dockerfile: non-root / no automatic Alembic
-production Compose: no Adminer / no PostgreSQL host port
-actual backend/.env and local docker-compose.yml: unchanged
-```
-
-## 사용자 PC에서 발생한 v308 검사 결과
-
-```txt
-result: blocked-or-failed
-reason: DeploymentRuntimeReadinessError: runtime engine bypasses settings.database_url
-```
-
-원인: 실제 `backend/app/db/session.py`는 계속 `settings.database_url`을 사용했지만, 검사기가 `create_async_engine(settings.database_url`이 한 줄에 붙어 있는 경우만 찾았습니다. v308 pool 옵션으로 호출이 여러 줄이 되면서 오탐이 발생했습니다.
-
-## v309 수정
-
-```txt
-AST-based create_async_engine binding inspection
-multiline positional settings.database_url: allowed
-url=settings.database_url: allowed
-literal URL / other settings attribute: blocked
-runtime/DB/.env/Docker/Alembic mutation: none
-```
-
-추가 파일:
-
-```txt
-tools/smoke/backend/smoke_runtime_engine_source_binding_inspector.py
-docs/current/POSTGRES_RUNTIME_ENGINE_BINDING_INSPECTOR_FIX.md
-```
+- `deploy/production-capacity-plan.example.json` review-only 계산 입력 추가
+- 현재 1 replica × 1 worker, pool 5 + overflow 10 확인
+- application steady/burst 5/15 계산
+- non-application reserve 10, safety margin 20% 계산
+- recommended minimum `max_connections=30`, review 후보 `40`
+- 확장 시 2 replicas 최소 50, 2 replicas × 2 workers 최소 90 계산
+- 관리형 PostgreSQL 우선 검토, bundled PostgreSQL TLS 대안 경계 문서화
+- reverse proxy HTTPS 443 only와 backend/PostgreSQL 내부 network 경계 문서화
+- isolated container config/build/run/cleanup Stage 0~4 승인 경계 문서화
+- `tools/check_production_capacity_tls_network_plan.py`와 전용 smoke 추가
 
 ## 다음 첫 작업
 
 실행 위치: `backend` 폴더  
-`.venv` 상태: 꺼져 있을 때 Git Bash
+`.venv` 상태: 꺼져 있을 때
 
 ```bash
 source .venv/Scripts/activate
@@ -82,31 +53,39 @@ source .venv/Scripts/activate
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/check_runtime_config_hardening.py --strict --require-health
+python tools/check_production_capacity_tls_network_plan.py --strict
 ```
 
-정상 기대:
+정상 결과:
 
 ```txt
-result: runtime-config-hardening-verified-local-runtime-preserved
-next safe stage: separate-production-secrets-tls-and-container-validation
+recommended/candidate max_connections: 30/40
+future 2-replica / 2x2-worker minimums: 50/90
+TLS database mode: managed-postgresql-preferred
+reverse proxy only / DB internal: True/True
+isolated container execution approved: no
+result: production-capacity-tls-network-plan-verified-execution-blocked
+next safe stage: approve-provider-and-isolated-container-config-render-only
 ```
 
 ## 다음 안전 순서
 
-1. v309 strict + health 결과 확인
-2. 남은 production warnings 재수집
-3. production secret/TLS/image/reverse proxy 정적 검증 준비
-4. worker/pool/max_connections 계산
-5. 실제 production Compose/build/secret 입력은 별도 승인
+1. 실제 예상 사용자/트래픽과 replica 목표 검토
+2. 관리형 PostgreSQL 또는 bundled PostgreSQL 운영 방향 승인
+3. reverse proxy 제품, DNS, HTTPS certificate 운영 방향 승인
+4. image digest source와 승인 기록 형식 확정
+5. 별도 승인 후 Docker `compose config` render-only 단계
+6. render 결과 통과 후에만 pull/build 별도 승인
+7. isolated project/resource 검토 후에만 up/down 별도 승인
 
-## 절대 변경/실행 금지
+## 계속 금지
 
-- actual `.env`와 production secret
-- production Compose build/up/pull/down
-- Docker container/volume 변경 또는 삭제
-- source/rehearsal `stamp` 재실행
-- 새 Alembic revision/autogenerate/upgrade/downgrade
-- DB 생성/삭제/복원
-- seed/인증/API route/body/write
-- 게임 콘텐츠/밸런스 변경
+- 실제 production env/secret/CA/cert/key 입력
+- production Compose config/build/pull/up/down
+- Docker container/volume 변경
+- PostgreSQL `max_connections` 실제 변경
+- source/rehearsal stamp 재실행
+- Alembic revision/autogenerate/upgrade/downgrade
+- DB create/drop/restore/reset/seed
+- 인증/API route/body/write 변경
+- 게임 콘텐츠와 Vue write 연결

@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 TOOL = ROOT / "tools/check_postgres_schema_equivalence.py"
-DOC = ROOT / "docs/current/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md"
+DOC = ROOT / "docs/archive/postgres-baseline/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md"
 
 
 def fail(message: str) -> int:

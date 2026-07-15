@@ -127,3 +127,9 @@ v307에서 경고였던 명시적 pool 정책, `engine.dispose()` lifecycle, Fas
 ## v309 검사기 오탐 수정
 
 `create_async_engine()`의 여러 줄 호출을 한 줄 문자열로만 검사하던 v307 정적 판정을 Python AST 기반으로 교체했습니다. 실제 runtime은 계속 `settings.database_url`을 사용하며, DB·`.env`·Docker·Alembic·pool 동작은 변경하지 않았습니다. 전용 회귀 smoke는 여러 줄/keyword 호출을 허용하고 literal 또는 다른 settings 속성은 차단합니다.
+
+## 사용자 PC 실제 완료 상태
+
+v307 `--strict --require-health`가 실제 통과했고, v308/v309 보강 후 runtime hardening 검사도 통과했습니다. 현재 로컬 runtime은 유지하며 남은 9개 경고는 production secret/TLS/digest/로컬 공개 포트 분리 항목입니다.
+
+v310에서는 실제 Docker 명령이나 secret 입력 없이 production template만 정적으로 검증합니다.

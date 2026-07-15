@@ -1,4 +1,4 @@
-# v308 production deployment template only.
+# v310 production deployment static-validation template only.
 # Do not run this file until production secrets, TLS, image digest, and backup
 # approval are supplied through the deployment platform.
 services:
@@ -50,6 +50,14 @@ services:
         condition: service_healthy
     expose:
       - "8000"
+    secrets:
+      - postgres_ca
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=3).read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     networks:
       - backend_internal
       - edge
@@ -62,6 +70,8 @@ services:
 secrets:
   postgres_password:
     file: ${POSTGRES_PASSWORD_FILE:?Set a host path containing the PostgreSQL password}
+  postgres_ca:
+    file: ${POSTGRES_CA_FILE:?Set a host path containing the approved PostgreSQL CA PEM}
 
 volumes:
   rpg_postgres_data:

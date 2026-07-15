@@ -1,3 +1,23 @@
+# v311.production-capacity-tls-network-isolated-plan
+
+- Added a review-only production capacity input and a read-only fail-closed checker.
+- Calculated the current 1 replica × 1 worker SQLAlchemy steady/burst connections as 5/15.
+- Added 10 non-application reserve connections and 20% safety margin, producing minimum 30 and review candidate 40.
+- Added scale scenarios: 2 replicas require minimum 50; 2 replicas × 2 workers require minimum 90.
+- Recorded managed PostgreSQL as the preferred review path and documented bundled PostgreSQL TLS requirements as an unapproved alternative.
+- Documented reverse proxy HTTPS-only, backend/PostgreSQL internal-network, image digest approval, and isolated config/build/run/cleanup stages.
+- Added dedicated smoke, core registration, synchronized current/handoff documents, and no Docker/DB/env/Alembic mutation.
+
+# v310.production-secrets-tls-container-static-validation-preflight
+
+- 운영 secret/TLS/container template 정적 checker와 smoke 추가
+- production variable placeholder inventory 및 password/CA Compose secret 경계 추가
+- backend container healthcheck 추가
+- 실제 deployment env/secret 파일 Git·Docker context 제외
+- 완료된 PostgreSQL baseline 문서를 archive로 이동해 docs/current 정리
+- v309 사용자 PC strict + health 통과 상태를 handoff에 반영
+- 실제 DB/.env/Docker/Alembic mutation 없음
+
 # v309 - Runtime engine source-binding inspector fix
 
 - Fixed a false positive where the readiness checker only recognized a single-line `create_async_engine(settings.database_url...)` call.
@@ -178,7 +198,7 @@
 # v288 - PostgreSQL schema equivalence read-only preflight
 
 - Added `tools/check_postgres_schema_equivalence.py` to compare live PostgreSQL tables, columns, types, nullability, PK, FK, unique constraints, indexes, and check constraints with SQLAlchemy metadata.
-- Added `docs/current/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md` and a dedicated core smoke.
+- Added `docs/archive/postgres-baseline/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md` and a dedicated core smoke.
 - Kept DB schema/data, Docker resources, env, seed, revisions, migration apply/stamp, API contracts, auth, and write behavior unchanged.
 
 # v287 - Windows subprocess decode fix and baseline strategy confirmation
@@ -213,7 +233,7 @@
 # v283 - PostgreSQL/Alembic prerequisite checker
 
 - Added `tools/check_postgres_alembic_prerequisites.py`, a read-only local checker for Python, virtualenv, Docker, Compose, SQLAlchemy, Alembic, asyncpg, psycopg, and required project files.
-- Added `docs/current/POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md` with exact install locations, `.venv` states, and dangerous commands that remain forbidden.
+- Added `docs/archive/postgres-baseline/POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md` with exact install locations, `.venv` states, and dangerous commands that remain forbidden.
 - The checker never connects to the DB, starts Docker, changes `.env`, or runs migrations.
 
 # v282 - PostgreSQL/Alembic readiness report

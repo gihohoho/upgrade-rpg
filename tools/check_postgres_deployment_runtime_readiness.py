@@ -493,8 +493,8 @@ def inspect_operations_policy(root: Path) -> dict[str, Any]:
     required_docs = [
         root / "docs/current/POSTGRES_BASELINE_COMPLETION_STATE.md",
         root / "docs/current/POSTGRES_NEXT_REVISION_PREFLIGHT.md",
-        root / "docs/current/POSTGRES_BACKUP_CREATION.md",
-        root / "docs/current/POSTGRES_RESTORE_REHEARSAL.md",
+        root / "docs/archive/postgres-baseline/POSTGRES_BACKUP_CREATION.md",
+        root / "docs/archive/postgres-baseline/POSTGRES_RESTORE_REHEARSAL.md",
         root / "docs/current/POSTGRES_DEPLOYMENT_MIGRATION_RUNBOOK.md",
     ]
     missing = [path.relative_to(root).as_posix() for path in required_docs if not path.is_file()]

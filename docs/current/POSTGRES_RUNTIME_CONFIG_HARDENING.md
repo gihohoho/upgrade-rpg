@@ -81,3 +81,14 @@ next safe stage: separate-production-secrets-tls-and-container-validation
 ## v309 검사기 오탐 수정
 
 `create_async_engine()`의 여러 줄 호출을 한 줄 문자열로만 검사하던 v307 정적 판정을 Python AST 기반으로 교체했습니다. 실제 runtime은 계속 `settings.database_url`을 사용하며, DB·`.env`·Docker·Alembic·pool 동작은 변경하지 않았습니다. 전용 회귀 smoke는 여러 줄/keyword 호출을 허용하고 literal 또는 다른 settings 속성은 차단합니다.
+
+## 사용자 PC 실제 결과와 v310 전환
+
+v309 수정 ZIP 기준 `--strict --require-health`가 사용자 PC에서 통과했습니다.
+
+```txt
+result: runtime-config-hardening-verified-local-runtime-preserved
+remaining production warnings: 9
+```
+
+다음 단계는 실제 값을 입력하지 않는 `tools/check_production_secrets_tls_container_static.py --strict` 정적 검사입니다.

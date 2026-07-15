@@ -15,7 +15,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-PROJECT_VERSION = "v309"
+PROJECT_VERSION = "v310"
 REPORT_PATH = Path("docs/current/POSTGRES_ALEMBIC_READINESS.md")
 
 
@@ -176,7 +176,8 @@ def render(root: Path) -> str:
 - v307에서는 exact runtime DB/driver, FastAPI startup mutation, DB health contract, Docker running/healthy, env key inventory, manual migration runbook을 읽기 전용으로 점검합니다.
 - 사용자 PC의 v307 `--require-health` 결과가 통과했고 production hardening warning 12개를 수집했습니다.
 - v308에서는 명시적 async pool 5개 옵션, shutdown `engine.dispose()`, production fail-closed guard, non-root FastAPI Dockerfile, 별도 운영 Compose 초안을 추가합니다.
-- v309에서는 여러 줄 `create_async_engine(settings.database_url, ...)` 호출을 한 줄 문자열 검사로 오판하던 readiness 검사기를 Python AST 기반으로 수정합니다.
+- v309에서는 여러 줄 `create_async_engine(settings.database_url, ...)` 호출을 Python AST 기반으로 검증하도록 수정했고 사용자 PC에서 통과했습니다.
+- v310에서는 production secret/TLS/image/container template을 실제 값과 실행 없이 정적으로 검증하는 checker를 추가합니다.
 
 ## 현재 구조 요약
 
@@ -249,7 +250,7 @@ python -m pip install -e ".[dev]"
 - isolated target restore 및 검증: `tools/restore_postgres_rehearsal_database.py`
 - empty migration test DB 생성: `tools/create_postgres_migration_test_database.py`
 - 최초 revision 생성·자동 검토: `tools/create_postgres_initial_alembic_revision.py`
-- 최초 revision 수동 검토: `docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md`
+- 최초 revision 수동 검토: `docs/archive/postgres-baseline/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md`
 - isolated migration DB upgrade guard: `tools/upgrade_postgres_migration_test_database.py`
 - isolated migration DB downgrade guard: `tools/downgrade_postgres_migration_test_database.py`
 - isolated migration round-trip re-upgrade guard: `tools/reupgrade_postgres_migration_test_database.py`
@@ -314,6 +315,7 @@ backend runtime/model/schema 경로에서 SQLite URL이나 SQLite 전용 타입�
 30. 사용자 PC에서 v307 `--require-health` 통과와 production hardening warning 12개 확인
 31. v308에서 pool/lifecycle/production guard와 별도 배포 template를 DB/.env/Docker mutation 없이 보강
 32. v309에서 multiline runtime engine URL binding 검사 오탐을 AST 기반으로 수정
+33. v310에서 production secret/TLS/image/container template 정적 검증 경계 추가
 33. 다음 revision/autogenerate/upgrade/downgrade는 별도 승인 전까지 금지
 34. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
 
@@ -436,9 +438,9 @@ python tools/create_postgres_restore_rehearsal_database.py --execute
 python tools/restore_postgres_rehearsal_database.py --execute
 ```
 
-상세 전략은 `docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md`를 기준으로 합니다.
+완료된 baseline 전략 기록은 `docs/archive/postgres-baseline/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md`에 보관합니다.
 
-## v308에서 변경하지 않은 것
+## v310에서 변경하지 않은 것
 
 - DB schema/data
 - Docker container/volume
@@ -453,10 +455,10 @@ python tools/restore_postgres_rehearsal_database.py --execute
 ## 다음 읽기 전용 체크포인트
 
 ```bash
-python tools/check_runtime_config_hardening.py --strict --require-health
+python tools/check_production_secrets_tls_container_static.py --strict
 ```
 
-통과 조건은 v307 live runtime 상태 유지, 명시적 pool 옵션 5개, shutdown `engine.dispose()`, production unsafe default 차단, local Compose 보존, non-root Dockerfile과 별도 운영 Compose template 안전 경계입니다.
+통과 조건은 production 필수 placeholder, password/CA Compose secret, digest image placeholder, TLS verify-full 예시, Adminer/host port 부재, backend healthcheck/read-only/non-root 경계입니다.
 
 ## v291-v293 backup / restore rehearsal 역사적 경계
 

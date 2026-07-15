@@ -1,68 +1,48 @@
 # Upgrade RPG
 
-현재 기준: **v309.runtime-engine-source-binding-inspector-fix**
+현재 기준: **v311.production-capacity-tls-network-isolated-plan**
 
 ## 현재 구조
 
-- 실제 게임 화면: 루트 `index.html`
-- 실제 관리자 화면: 루트 `admin.html`
-- legacy JS/CSS: 루트 `src/`
-- 새 Vue 앱: `frontend/vue-app/`
-- FastAPI 백엔드: `backend/`
+- legacy 게임: `index.html`
+- legacy 관리자: `admin.html`
+- legacy JS/CSS: `src/`
+- Vue 앱: `frontend/vue-app/`
+- FastAPI: `backend/`
+- 운영 배포 검토 template: `deploy/`
 - 실제 Python 가상환경: `backend/.venv`
 
-게임 콘텐츠 개발과 Vue write/인증 확대는 계속 보류합니다.
+게임 콘텐츠, Vue write/인증, 새 Alembic revision은 계속 보류합니다.
 
-## PostgreSQL / Alembic 실제 상태
+## PostgreSQL/Alembic
 
 ```txt
 classification: alembic-managed-baseline-complete
-source rpg_game: 23 public tables / 749 rows / application 22 tables / 748 rows
+source: public 23/749, application 22/748
 current revision: v295_initial_schema
-restore rehearsal: 23/749 / report verified
-migration test DB: 23/1 / differences=0
-source/rehearsal schema/data digest: identical
-v302 rehearsal execution report: verified
-v304 source execution report: verified
-v305 completion check: passed
-v306 next revision preflight: candidate operations 0 / next revision required no
-v307 runtime readiness --require-health: passed / production warnings 12
+next revision candidate operations: 0
 ```
 
-## v308 runtime hardening
+## Runtime
 
-- SQLAlchemy pool 5개 정책 명시
-- shutdown `engine.dispose()` lifecycle
-- production `DEBUG=true` 및 로컬 기본 secret 차단
-- non-root FastAPI Dockerfile
-- Adminer/PostgreSQL host port가 없는 별도 운영 Compose 초안
-- local `docker-compose.yml`과 실제 `.env` 유지
-- 자동 Alembic migration 없음
+- v307 live DB health와 Docker readiness 통과
+- v308 pool/lifecycle/production fail-closed/Dockerfile/Compose 적용
+- v309 AST engine binding 검사 사용자 PC 통과
+- v310 production secret/TLS/container 정적 template 검사 통과
+- 남은 운영 경고 9개는 local/production 분리 항목
 
-## v309 검사기 수정
-
-실제 engine은 계속 `settings.database_url`을 사용했습니다. v308 오류는 여러 줄 `create_async_engine()` 호출을 한 줄 문자열로만 찾던 검사기 오탐이며, v309에서 AST 기반 판정과 회귀 smoke로 수정했습니다.
-
-## 다음 실행
-
-실행 위치: `backend` 폴더  
-`.venv` 상태: 꺼져 있을 때 Git Bash
-
-```bash
-source .venv/Scripts/activate
-```
+## v311 읽기 전용 검사
 
 실행 위치: 프로젝트 루트  
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/check_runtime_config_hardening.py --strict --require-health
+python tools/check_production_capacity_tls_network_plan.py --strict
 ```
 
-## 검증
+현재 계산 기준은 backend 1 replica × 1 worker, pool 5 + overflow 10입니다. `max_connections` review 후보는 40이며 실제 DB에는 적용하지 않았습니다.
 
-실행 위치: 프로젝트 루트  
-`.venv` 상태: `backend/.venv`가 켜진 상태 권장
+## 기본 검증
 
 ```bash
 python -m compileall -q backend/app backend/scripts backend/alembic tools

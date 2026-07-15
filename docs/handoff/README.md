@@ -1,17 +1,7 @@
-# Handoff package — v308
+# Handoff 문서
 
-## 기준 ZIP
+- 루트 `NEXT_CHAT_PROMPT.md`: 새 채팅에 그대로 붙여넣는 프롬프트
+- 루트 `NEXT_CHAT_HANDOFF.md`: 현재 상태 요약
+- 이 폴더의 두 파일은 루트 사본과 항상 동일해야 합니다.
 
-```txt
-rpg_v308_runtime_config_hardening_ready.zip
-```
-
-## 첫 실행
-
-```bash
-python tools/check_runtime_config_hardening.py --strict --require-health
-```
-
-v307 live runtime 통과 상태를 유지한 채 explicit pool, engine disposal, production fail-closed guard, non-root Dockerfile, 별도 production Compose 안전 경계를 확인합니다.
-
-실제 `.env`, Docker build/up/down, DB, Alembic history는 별도 승인 전 변경하지 않습니다.
+현재 기준 ZIP: `rpg_v311_production_capacity_tls_network_plan_handoff_ready.zip`

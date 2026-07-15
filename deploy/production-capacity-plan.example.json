@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "v311.production-capacity-plan",
+  "reviewOnly": true,
+  "backendReplicas": 1,
+  "uvicornWorkersPerReplica": 1,
+  "dbPoolSizePerWorker": 5,
+  "dbMaxOverflowPerWorker": 10,
+  "backgroundWorkerProcesses": 0,
+  "backgroundWorkerPoolSize": 0,
+  "migrationConnections": 1,
+  "monitoringConnections": 2,
+  "adminEmergencyConnections": 5,
+  "otherReservedConnections": 2,
+  "safetyMarginPercent": 20,
+  "postgresMaxConnectionsCandidate": 40,
+  "tlsDatabaseMode": "managed-postgresql-preferred",
+  "publicEntrypoint": "reverse-proxy-only",
+  "isolatedContainerExecutionApproved": false,
+  "actualProductionValuesApplied": false
+}

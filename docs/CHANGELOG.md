@@ -1,3 +1,9 @@
+# v310 문서/인수인계 정리
+
+- current/archive 문서 구조 정리
+- production secret/TLS/container static validation 준비
+- 자세한 변경은 루트 `CHANGELOG.md`의 v310 항목 참조
+
 # v308 - FastAPI/PostgreSQL runtime config hardening
 
 - Recorded the user PC v307 `--strict --require-health` success with exact `rpg_game`, PostgreSQL 16.14, healthy Docker, and 12 production-hardening warnings.
@@ -131,7 +137,7 @@
 # v288 - PostgreSQL schema equivalence read-only preflight
 
 - Added `tools/check_postgres_schema_equivalence.py` to compare live PostgreSQL tables, columns, types, nullability, PK, FK, unique constraints, indexes, and check constraints with SQLAlchemy metadata.
-- Added `docs/current/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md` and a dedicated core smoke.
+- Added `docs/archive/postgres-baseline/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md` and a dedicated core smoke.
 - Kept DB schema/data, Docker resources, env, seed, revisions, migration apply/stamp, API contracts, auth, and write behavior unchanged.
 
 # v287 - Windows subprocess decode fix and baseline strategy confirmation
@@ -166,7 +172,7 @@
 # v283 - PostgreSQL/Alembic prerequisite checker
 
 - Added `tools/check_postgres_alembic_prerequisites.py`, a read-only local checker for Python, virtualenv, Docker, Compose, SQLAlchemy, Alembic, asyncpg, psycopg, and required project files.
-- Added `docs/current/POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md` with exact install locations, `.venv` states, and dangerous commands that remain forbidden.
+- Added `docs/archive/postgres-baseline/POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md` with exact install locations, `.venv` states, and dangerous commands that remain forbidden.
 - The checker never connects to the DB, starts Docker, changes `.env`, or runs migrations.
 
 # v282 - PostgreSQL/Alembic readiness report
