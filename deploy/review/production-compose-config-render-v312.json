@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "v312.production-compose-config-render-evidence",
+  "recordedFromUserOutput": true,
+  "reviewOnlySentinelsUsed": true,
+  "rawRenderPersisted": false,
+  "dockerProject": "rpg-prod-config-review-v312",
+  "dockerSubcommand": "compose config",
+  "renderedServices": [
+    "backend"
+  ],
+  "hostPortsAbsent": true,
+  "buildAbsent": true,
+  "namedVolumesAbsent": true,
+  "managedDatabaseServiceAbsent": true,
+  "backendReplicas": 1,
+  "digestReferenceRendered": true,
+  "productionGuardRendered": true,
+  "tlsVerifyFullProviderCaRendered": true,
+  "externalEdgeNetworkRendered": true,
+  "imagePullBuildExecuted": false,
+  "containerNetworkVolumeMutationExecuted": false,
+  "databaseAlembicMutationExecuted": false,
+  "result": "production-compose-config-render-verified-no-runtime-mutation",
+  "nextSafeStage": "review-render-report-and-approve-backend-image-source-digest"
+}

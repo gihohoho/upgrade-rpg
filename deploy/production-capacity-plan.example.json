@@ -18,6 +18,7 @@
   "isolatedContainerExecutionApproved": false,
   "actualProductionValuesApplied": false,
   "composeConfigRenderApproved": true,
-  "composeConfigRenderExecuted": false,
-  "imagePullBuildApproved": false
+  "composeConfigRenderExecuted": true,
+  "imagePullBuildApproved": false,
+  "composeConfigRenderEvidence": "deploy/review/production-compose-config-render-v312.json"
 }

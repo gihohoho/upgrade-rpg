@@ -15,7 +15,7 @@ from typing import Any
 TOOL_VERSION = "v312.production-secrets-tls-container-static-managed-db"
 READY_RESULT = "production-static-validation-managed-db-template-verified-runtime-application-blocked"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "run-config-render-only-on-docker-capable-host"
+NEXT_SAFE_STAGE = "select-registry-repository-platform-and-base-image-digest"
 
 
 class ProductionStaticValidationError(RuntimeError):
@@ -114,7 +114,7 @@ def inspect_production_static_templates(root: Path) -> dict[str, Any]:
         ),
         "backendDigestPlaceholder": bool(
             re.fullmatch(
-                r"<approved-registry>/upgrade-rpg-backend@sha256:<approved-64-hex-digest>",
+                r"<approved-registry>/<approved-namespace>/upgrade-rpg-backend@sha256:<approved-64-hex-digest>",
                 env_inventory.get("BACKEND_IMAGE", ""),
             )
         ),

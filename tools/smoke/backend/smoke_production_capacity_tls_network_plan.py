@@ -60,12 +60,13 @@ def main() -> int:
     assert result["reverseProxyOnly"] is True
     assert result["managedDatabaseBoundary"] is True
     assert result["composeConfigRenderApproved"] is True
-    assert result["composeConfigRenderExecuted"] is False
+    assert result["composeConfigRenderExecuted"] is True
     assert result["actualDockerCommandExecuted"] is False
     assert result["isolatedContainerExecutionApproved"] is False
 
     for key, value in (
         ("postgresMaxConnectionsCandidate", 20),
+        ("composeConfigRenderExecuted", False),
         ("isolatedContainerExecutionApproved", True),
         ("imagePullBuildApproved", True),
         ("tlsDatabaseMode", "disable-tls"),
@@ -79,7 +80,7 @@ def main() -> int:
             plan_path.write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
             expect_blocked(module, temp)
 
-    print("OK: v311/v312 production capacity/TLS/network plan smoke passed")
+    print("OK: v311-v313 production capacity/TLS/network plan smoke passed")
     return 0
 
 

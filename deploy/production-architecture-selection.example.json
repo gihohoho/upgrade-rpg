@@ -11,9 +11,10 @@
   "databaseContainerIncluded": false,
   "databaseHostPortPublished": false,
   "composeConfigRenderApproved": true,
-  "composeConfigRenderExecuted": false,
+  "composeConfigRenderExecuted": true,
   "imagePullBuildApproved": false,
   "containerStartApproved": false,
   "containerCleanupApproved": false,
-  "actualProductionValuesApplied": false
+  "actualProductionValuesApplied": false,
+  "composeConfigRenderEvidence": "deploy/review/production-compose-config-render-v312.json"
 }

@@ -1,3 +1,12 @@
+# v313.backend-image-source-digest-policy
+
+- 기호 PC에서 통과한 v312 Compose config render-only 안전 요약을 `deploy/review/production-compose-config-render-v312.json`에 기록했습니다.
+- architecture/capacity plan의 config render 상태를 approved/executed `yes/yes`로 동기화했습니다.
+- production backend image를 registry/namespace/repository + exact SHA-256 digest 형식으로 고정했습니다.
+- source Git commit, target platform, base image digest, SBOM, provenance, signature, vulnerability review 게이트를 추가했습니다.
+- 현재 `python:3.11-slim`은 mutable tag이므로 base image digest 승인 전 build가 차단됩니다.
+- registry credential, Docker pull/build/push, container/network/volume, DB, Alembic mutation은 실행하지 않았습니다.
+
 # v312.production-managed-postgres-reverse-proxy-config-render-ready
 
 - 기호 승인에 따라 운영 기본 방향을 관리형 PostgreSQL + provider CA verify-full + 외부 reverse proxy HTTPS + backend 1 replica/1 worker로 확정.

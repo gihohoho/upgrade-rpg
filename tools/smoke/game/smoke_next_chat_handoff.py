@@ -40,14 +40,7 @@ def main() -> int:
         "docs/current/CURRENT_STATUS.md",
         "docs/current/PROJECT_STRUCTURE.md",
         "docs/current/ROADMAP.md",
-        "docs/current/POSTGRES_ALEMBIC_READINESS.md",
-        "docs/current/POSTGRES_BASELINE_COMPLETION_STATE.md",
-        "docs/current/POSTGRES_NEXT_REVISION_PREFLIGHT.md",
-        "docs/current/POSTGRES_DEPLOYMENT_RUNTIME_READINESS.md",
-        "docs/current/POSTGRES_RUNTIME_CONFIG_HARDENING.md",
-        "docs/current/POSTGRES_PRODUCTION_DEPLOYMENT_TEMPLATE.md",
-        "docs/current/POSTGRES_PRODUCTION_STATIC_VALIDATION.md",
-        "docs/current/POSTGRES_PRODUCTION_CAPACITY_TLS_NETWORK_PLAN.md",
+        "docs/current/BACKEND_IMAGE_SOURCE_DIGEST_POLICY.md",
         "docs/current/POSTGRES_PRODUCTION_MANAGED_DB_PROXY_SELECTION.md",
         "backend/alembic/versions/v295_initial_schema_initial_postgresql_schema.py",
         "backend/Dockerfile",
@@ -55,6 +48,8 @@ def main() -> int:
         "deploy/production.env.example",
         "deploy/production-capacity-plan.example.json",
         "deploy/production-architecture-selection.example.json",
+        "deploy/backend-image-source-digest-policy.example.json",
+        "deploy/review/production-compose-config-render-v312.json",
         "deploy/reverse-proxy/README.md",
         "deploy/isolated-validation/README.md",
         "deploy/secrets/README.md",
@@ -62,10 +57,8 @@ def main() -> int:
         "tools/check_production_capacity_tls_network_plan.py",
         "tools/check_production_managed_postgres_reverse_proxy_selection.py",
         "tools/render_production_compose_config.py",
-        "tools/smoke/backend/smoke_production_secrets_tls_container_static.py",
-        "tools/smoke/backend/smoke_production_capacity_tls_network_plan.py",
-        "tools/smoke/backend/smoke_production_managed_postgres_reverse_proxy_selection.py",
-        "tools/smoke/backend/smoke_production_compose_config_render.py",
+        "tools/check_backend_image_source_digest_policy.py",
+        "tools/smoke/backend/smoke_backend_image_source_digest_policy.py",
     ]
     for relative_path in required_files:
         read_required(relative_path)
@@ -78,25 +71,25 @@ def main() -> int:
 
     assert_contains(
         "NEXT_CHAT_PROMPT.md",
-        "rpg_v312_managed_postgres_reverse_proxy_config_render_ready.zip",
-        "v312.production-managed-postgres-reverse-proxy-config-render-ready",
+        "rpg_v313_backend_image_source_digest_policy_handoff_ready.zip",
+        "v313.backend-image-source-digest-policy",
         "backend/.venv",
         "managed-postgresql-selected",
         "external-reverse-proxy-https-selected",
         "backend replicas/workers: 1/1",
-        "render_production_compose_config.py --execute --confirm-stage v312-config-render-only",
         "production-compose-config-render-verified-no-runtime-mutation",
-        "pull/build/up/down을 실행하지 마세요",
+        "check_backend_image_source_digest_policy.py --strict",
+        "backend-image-source-digest-policy-verified-provider-and-build-blocked",
+        "Docker image pull/build/push",
     )
     assert_contains(
         "NEXT_CHAT_HANDOFF.md",
         "source rpg_game: public 23/749, application 22/748",
         "revision SHA-256: " + REVISION_SHA256,
-        "production Compose를 backend-only로 변경",
-        "config render approved: yes",
-        "config render executed on user PC: no",
-        "Docker CLI가 없어",
-        "review-render-report-and-approve-backend-image-source-digest",
+        "config render approved/executed: yes/yes",
+        "production reference mode: digest-only",
+        "pull/build/push approved: no/no/no",
+        "select-registry-repository-platform-and-base-image-digest",
     )
     assert_contains(
         "deploy/production-architecture-selection.example.json",
@@ -106,16 +99,39 @@ def main() -> int:
         '"backendReplicas": 1',
         '"uvicornWorkersPerReplica": 1',
         '"composeConfigRenderApproved": true',
+        '"composeConfigRenderExecuted": true',
         '"imagePullBuildApproved": false',
         '"containerStartApproved": false',
+        '"composeConfigRenderEvidence": "deploy/review/production-compose-config-render-v312.json"',
     )
     assert_contains(
         "deploy/production-capacity-plan.example.json",
         '"schemaVersion": "v311.production-capacity-plan"',
         '"postgresMaxConnectionsCandidate": 40',
         '"tlsDatabaseMode": "managed-postgresql-selected"',
-        '"composeConfigRenderApproved": true',
+        '"composeConfigRenderExecuted": true',
         '"isolatedContainerExecutionApproved": false',
+    )
+    assert_contains(
+        "deploy/backend-image-source-digest-policy.example.json",
+        '"schemaVersion": "v313.backend-image-source-digest-policy"',
+        '"registryProvider": "deferred"',
+        '"productionReferenceMode": "digest-only"',
+        '"targetPlatform": "deferred"',
+        '"currentBaseImageReference": "python:3.11-slim"',
+        '"baseImageDigestApproved": false',
+        '"imagePullApproved": false',
+        '"imageBuildApproved": false',
+        '"imagePushApproved": false',
+    )
+    assert_contains(
+        "deploy/review/production-compose-config-render-v312.json",
+        '"recordedFromUserOutput": true',
+        '"renderedServices": [',
+        '"hostPortsAbsent": true',
+        '"buildAbsent": true',
+        '"imagePullBuildExecuted": false',
+        '"result": "production-compose-config-render-verified-no-runtime-mutation"',
     )
     assert_contains(
         "deploy/docker-compose.production.yml",
@@ -135,25 +151,26 @@ def main() -> int:
 
     assert_contains(
         "deploy/production.env.example",
-        "<approved-registry>/upgrade-rpg-backend@sha256:<approved-64-hex-digest>",
+        "<approved-registry>/<approved-namespace>/upgrade-rpg-backend@sha256:<approved-64-hex-digest>",
         "sslmode=verify-full",
         "sslrootcert=/run/secrets/postgres_ca.pem",
         "<pre-created-reverse-proxy-network-name>",
     )
     assert_contains(
-        "docs/current/POSTGRES_PRODUCTION_MANAGED_DB_PROXY_SELECTION.md",
-        "managed-postgresql-selected",
-        "external-reverse-proxy-https-selected",
-        "config render approved: yes",
-        "image pull/build approved: no",
-        "run-config-render-only-on-docker-capable-host",
+        "docs/current/BACKEND_IMAGE_SOURCE_DIGEST_POLICY.md",
+        "digest-only",
+        "registry provider: deferred",
+        "target platform: deferred",
+        "base image digest approved: no",
+        "image pull/build/push approved: no/no/no",
+        "select-registry-repository-platform-and-base-image-digest",
     )
     assert_contains(
         "deploy/isolated-validation/README.md",
-        "Stage 1 — 승인됨: config render only",
-        "v312-config-render-only",
-        "compose config render executed on user PC: no",
-        "container/image/network/volume mutation approved: no",
+        "Stage 1 — 완료: config render only",
+        "Stage 2A — 완료: image source/digest policy",
+        "pull/build/push approved: no/no/no",
+        "actual Docker config command executed on user PC: yes (config only)",
     )
     assert_contains(
         "tools/run_smoke_core.sh",
@@ -161,6 +178,7 @@ def main() -> int:
         "smoke_production_capacity_tls_network_plan.py",
         "smoke_production_managed_postgres_reverse_proxy_selection.py",
         "smoke_production_compose_config_render.py",
+        "smoke_backend_image_source_digest_policy.py",
         "smoke_next_chat_handoff.py",
     )
     assert_contains(
@@ -176,7 +194,7 @@ def main() -> int:
     if actual_sha != REVISION_SHA256:
         raise AssertionError(f"reviewed revision SHA-256 differs: {actual_sha}")
 
-    print("OK: v312 next-chat handoff and document structure are synchronized")
+    print("OK: v313 next-chat handoff and document structure are synchronized")
     return 0
 
 

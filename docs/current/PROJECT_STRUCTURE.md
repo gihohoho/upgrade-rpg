@@ -1,23 +1,27 @@
-# Project Structure — v312
+# Project Structure — v313
 
 ```txt
 .
 ├── index.html
 ├── admin.html
-├── src/                              # legacy JS/CSS
-├── frontend/vue-app/                 # Vue GET read-only 앱
-├── backend/                          # FastAPI/SQLAlchemy/Alembic
+├── src/                                   # legacy JS/CSS
+├── frontend/vue-app/                      # Vue GET read-only 앱
+├── backend/                               # FastAPI/SQLAlchemy/Alembic
 ├── deploy/
-│   ├── docker-compose.production.yml # backend-only review template
+│   ├── docker-compose.production.yml      # backend-only review template
 │   ├── production.env.example
 │   ├── production-capacity-plan.example.json
 │   ├── production-architecture-selection.example.json
+│   ├── backend-image-source-digest-policy.example.json
+│   ├── review/
+│   │   └── production-compose-config-render-v312.json
 │   ├── reverse-proxy/README.md
 │   ├── isolated-validation/README.md
 │   └── secrets/README.md
 ├── tools/
 │   ├── check_production_managed_postgres_reverse_proxy_selection.py
 │   ├── render_production_compose_config.py
+│   ├── check_backend_image_source_digest_policy.py
 │   └── smoke/
 ├── docs/
 │   ├── current/
@@ -52,6 +56,7 @@ tools/check_production_secrets_tls_container_static.py
 tools/check_production_capacity_tls_network_plan.py
 tools/check_production_managed_postgres_reverse_proxy_selection.py
 tools/render_production_compose_config.py
+tools/check_backend_image_source_digest_policy.py
 ```
 
-마지막 도구의 execute 경로만 Docker `compose config`를 호출하며, pull/build/up/down은 호출하지 않습니다.
+config render는 기호 PC에서 완료됐습니다. 현재 새 checker는 repository 파일만 읽으며 pull/build/push를 호출하지 않습니다.

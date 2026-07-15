@@ -13,9 +13,9 @@ import re
 from typing import Any
 
 TOOL_VERSION = "v312.production-managed-postgres-reverse-proxy-selection"
-READY_RESULT = "managed-postgresql-reverse-proxy-selection-verified-config-render-approved"
+READY_RESULT = "managed-postgresql-reverse-proxy-selection-verified-config-render-complete"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "run-config-render-only-on-docker-capable-host"
+NEXT_SAFE_STAGE = "review-render-report-and-approve-backend-image-source-digest"
 
 
 class ProductionArchitectureSelectionError(RuntimeError):
@@ -90,6 +90,7 @@ def inspect_production_architecture_selection(root: Path) -> dict[str, Any]:
     )
     proxy_doc = _read(root / "deploy/reverse-proxy/README.md")
     isolated_doc = _read(root / "deploy/isolated-validation/README.md")
+    evidence = _read_json(root / "deploy/review/production-compose-config-render-v312.json")
 
     _require(
         selection.get("schemaVersion") == "v312.production-architecture-selection",
@@ -116,7 +117,8 @@ def inspect_production_architecture_selection(root: Path) -> dict[str, Any]:
     _require(_bool_value(selection, "databaseContainerIncluded") is False, "bundled PostgreSQL must be absent")
     _require(_bool_value(selection, "databaseHostPortPublished") is False, "database host port must remain unpublished")
     _require(_bool_value(selection, "composeConfigRenderApproved") is True, "config render must be approved")
-    _require(_bool_value(selection, "composeConfigRenderExecuted") is False, "handoff template must not claim user-PC execution")
+    _require(_bool_value(selection, "composeConfigRenderExecuted") is True, "user-PC config render completion must be recorded")
+    _require(selection.get("composeConfigRenderEvidence") == "deploy/review/production-compose-config-render-v312.json", "selection evidence path is missing")
     for key in (
         "imagePullBuildApproved",
         "containerStartApproved",
@@ -137,10 +139,24 @@ def inspect_production_architecture_selection(root: Path) -> dict[str, Any]:
     _require(capacity.get("backendReplicas") == 1, "capacity replica count differs")
     _require(capacity.get("uvicornWorkersPerReplica") == 1, "capacity worker count differs")
     _require(capacity.get("composeConfigRenderApproved") is True, "capacity plan must approve config render")
-    _require(capacity.get("composeConfigRenderExecuted") is False, "capacity plan must not claim config execution")
+    _require(capacity.get("composeConfigRenderExecuted") is True, "capacity plan must record completed config render")
+    _require(capacity.get("composeConfigRenderEvidence") == "deploy/review/production-compose-config-render-v312.json", "capacity evidence path is missing")
     _require(capacity.get("imagePullBuildApproved") is False, "capacity plan must block image pull/build")
     _require(capacity.get("isolatedContainerExecutionApproved") is False, "capacity plan must block container execution")
     _require(capacity.get("actualProductionValuesApplied") is False, "capacity plan must keep production values unapplied")
+
+    _require(evidence.get("schemaVersion") == "v312.production-compose-config-render-evidence", "unexpected config render evidence schemaVersion")
+    _require(evidence.get("recordedFromUserOutput") is True, "config render evidence must come from user output")
+    _require(evidence.get("reviewOnlySentinelsUsed") is True, "config render must use review-only sentinels")
+    _require(evidence.get("rawRenderPersisted") is False, "raw render must not be persisted")
+    _require(evidence.get("dockerSubcommand") == "compose config", "only compose config evidence is accepted")
+    _require(evidence.get("renderedServices") == ["backend"], "config render services must be backend-only")
+    for key in ("hostPortsAbsent", "buildAbsent", "namedVolumesAbsent", "managedDatabaseServiceAbsent", "digestReferenceRendered", "productionGuardRendered", "tlsVerifyFullProviderCaRendered", "externalEdgeNetworkRendered"):
+        _require(evidence.get(key) is True, f"config render evidence failed: {key}")
+    _require(evidence.get("backendReplicas") == 1, "rendered backend replicas must be 1")
+    for key in ("imagePullBuildExecuted", "containerNetworkVolumeMutationExecuted", "databaseAlembicMutationExecuted"):
+        _require(evidence.get(key) is False, f"unexpected config render mutation: {key}")
+    _require(evidence.get("result") == "production-compose-config-render-verified-no-runtime-mutation", "unexpected config render result")
 
     services = _compose_service_names(compose)
     _require(services == ["backend"], f"production Compose services must be backend-only: {services}")
@@ -170,7 +186,7 @@ def inspect_production_architecture_selection(root: Path) -> dict[str, Any]:
     _require(
         bool(
             re.fullmatch(
-                r"<approved-registry>/upgrade-rpg-backend@sha256:<approved-64-hex-digest>",
+                r"<approved-registry>/<approved-namespace>/upgrade-rpg-backend@sha256:<approved-64-hex-digest>",
                 env_inventory.get("BACKEND_IMAGE", ""),
             )
         ),
@@ -208,6 +224,7 @@ def inspect_production_architecture_selection(root: Path) -> dict[str, Any]:
         "external-reverse-proxy-https-selected",
         "backend 1 replica / 1 worker",
         "config render approved: yes",
+        "config render executed on user PC: yes",
         "image pull/build approved: no",
         NEXT_SAFE_STAGE,
     ):
@@ -215,9 +232,9 @@ def inspect_production_architecture_selection(root: Path) -> dict[str, Any]:
     for marker in ("HTTPS `443`", "http://backend:8000", "제품은 아직 고정하지 않습니다"):
         _require(marker in proxy_doc, f"reverse proxy document is missing: {marker}")
     for marker in (
-        "Stage 1 — 승인됨: config render only",
+        "Stage 1 — 완료: config render only",
         "v312-config-render-only",
-        "container/image/network/volume mutation approved: no",
+        "container/image/network/volume mutation executed: no",
     ):
         _require(marker in isolated_doc, f"isolated validation document is missing: {marker}")
 
@@ -251,7 +268,7 @@ def inspect_production_architecture_selection(root: Path) -> dict[str, Any]:
         "tlsVerifyFullProviderCa": True,
         "externalEdgeNetwork": True,
         "composeConfigRenderApproved": True,
-        "composeConfigRenderExecuted": False,
+        "composeConfigRenderExecuted": True,
         "imagePullBuildApproved": False,
         "containerStartApproved": False,
         "actualProductionValuesApplied": False,
@@ -275,7 +292,7 @@ def render(result: dict[str, Any]) -> str:
             f"- required Compose placeholders: {result['requiredComposeValueCount']}/7",
             f"- managed DB container/host ports absent: {result['managedDatabaseContainerAbsent']}/{result['hostPortsAbsent']}",
             f"- backend digest/TLS provider CA/edge network: {result['backendImageDigestRequired']}/{result['tlsVerifyFullProviderCa']}/{result['externalEdgeNetwork']}",
-            "- compose config render approved/executed: yes/no",
+            "- compose config render approved/executed: yes/yes",
             "- image pull/build/container start approved: no/no",
             "- actual production values applied: no",
             f"- result: {result['result']}",

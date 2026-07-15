@@ -16,7 +16,7 @@ from typing import Any
 TOOL_VERSION = "v311.production-capacity-tls-network-plan"
 READY_RESULT = "production-capacity-tls-network-plan-verified-execution-blocked"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "run-config-render-only-on-docker-capable-host"
+NEXT_SAFE_STAGE = "select-registry-repository-platform-and-base-image-digest"
 ALLOWED_TLS_MODES = {
     "managed-postgresql-preferred",
     "managed-postgresql-selected",
@@ -154,7 +154,8 @@ def inspect_production_capacity_plan(root: Path) -> dict[str, Any]:
         "public entrypoint must match the selected external reverse proxy HTTPS mode",
     )
     _require(_bool_value(plan, "composeConfigRenderApproved") is True, "Compose config render must be approved")
-    _require(_bool_value(plan, "composeConfigRenderExecuted") is False, "handoff plan must not claim config execution")
+    _require(_bool_value(plan, "composeConfigRenderExecuted") is True, "completed config render must be recorded")
+    _require(plan.get("composeConfigRenderEvidence") == "deploy/review/production-compose-config-render-v312.json", "config render evidence path is missing")
     _require(_bool_value(plan, "imagePullBuildApproved") is False, "image pull/build must remain unapproved")
     _require(_bool_value(plan, "isolatedContainerExecutionApproved") is False, "isolated container execution must remain unapproved")
     _require(_bool_value(plan, "actualProductionValuesApplied") is False, "actual production values must remain unapplied")
@@ -205,12 +206,12 @@ def inspect_production_capacity_plan(root: Path) -> dict[str, Any]:
 
     for marker in (
         "Stage 0",
-        "Stage 1 — 승인됨: config render only",
+        "Stage 1 — 완료: config render only",
         "v312-config-render-only",
         "Stage 2",
         "Stage 3",
         "Stage 4",
-        "actual Docker config command executed in handoff environment: no",
+        "actual Docker config command executed on user PC: yes (config only)",
         "isolated container execution approved: no",
     ):
         _require(marker in isolated_doc, f"isolated validation plan is missing: {marker}")
@@ -264,7 +265,7 @@ def inspect_production_capacity_plan(root: Path) -> dict[str, Any]:
         "reverseProxyOnly": reverse_proxy_only,
         "managedDatabaseBoundary": managed_database_boundary,
         "composeConfigRenderApproved": True,
-        "composeConfigRenderExecuted": False,
+        "composeConfigRenderExecuted": True,
         "dockerfileSingleWorker": dockerfile_single_worker,
         "actualDockerCommandExecuted": False,
         "actualSecretOrCertificateCreated": False,
@@ -292,7 +293,7 @@ def render(result: dict[str, Any]) -> str:
             f"- future 2-replica / 2x2-worker minimums: {result['twoReplicaRecommendedMinimum']}/{result['twoReplicaTwoWorkerRecommendedMinimum']}",
             f"- TLS database mode: {result['tlsDatabaseMode']}",
             f"- reverse proxy only / managed DB boundary: {result['reverseProxyOnly']}/{result['managedDatabaseBoundary']}",
-            "- compose config render approved/executed: yes/no",
+            "- compose config render approved/executed: yes/yes",
             "- actual Docker command executed: no",
             "- actual secret/CA/cert/key created: no",
             "- actual DB/Alembic mutation executed: no",

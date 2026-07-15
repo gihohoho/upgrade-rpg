@@ -17,6 +17,7 @@ REQUIRED_FILES = (
     "docs/current/POSTGRES_PRODUCTION_MANAGED_DB_PROXY_SELECTION.md",
     "deploy/reverse-proxy/README.md",
     "deploy/isolated-validation/README.md",
+    "deploy/review/production-compose-config-render-v312.json",
 )
 
 
@@ -57,7 +58,7 @@ def main() -> int:
     assert result["composeServices"] == ["backend"]
     assert result["requiredComposeValueCount"] == 7
     assert result["composeConfigRenderApproved"] is True
-    assert result["composeConfigRenderExecuted"] is False
+    assert result["composeConfigRenderExecuted"] is True
     assert result["imagePullBuildApproved"] is False
     assert result["containerStartApproved"] is False
     assert result["actualMutationExecuted"] is False
@@ -66,6 +67,7 @@ def main() -> int:
         ("databaseMode", "bundled-postgresql"),
         ("backendReplicas", 2),
         ("composeConfigRenderApproved", False),
+        ("composeConfigRenderExecuted", False),
         ("imagePullBuildApproved", True),
         ("containerStartApproved", True),
     ):

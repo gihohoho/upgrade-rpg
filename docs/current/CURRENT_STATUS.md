@@ -1,9 +1,9 @@
-# Current Status — v312
+# Current Status — v313
 
 ## 현재 기준
 
-- 최신 작업: `v312.production-managed-postgres-reverse-proxy-config-render-ready`
-- 기준 ZIP: `rpg_v312_managed_postgres_reverse_proxy_config_render_ready.zip`
+- 최신 작업: `v313.backend-image-source-digest-policy`
+- 기준 ZIP: `rpg_v313_backend_image_source_digest_policy_handoff_ready.zip`
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -30,36 +30,58 @@ v310 static validation baseline: passed
 remaining local-vs-production warnings: 9
 ```
 
-## v312 확정과 변경
+## 운영 방향
 
-- `managed-postgresql-selected`
-- `verify-full-with-provider-ca`
-- `external-reverse-proxy-https-selected`
-- backend replicas/workers `1/1`
-- production Compose service는 backend 하나
-- bundled PostgreSQL/Adminer/named volume/host ports/build 제거
-- exact digest `BACKEND_IMAGE`, provider CA, external edge network 필수
-- config render approved: yes
-- config render executed on user PC: no
-- image pull/build/container start approved: no
-
-## 다음 첫 작업
-
-```bash
-python tools/check_production_managed_postgres_reverse_proxy_selection.py --strict
-python tools/render_production_compose_config.py --execute --confirm-stage v312-config-render-only
+```txt
+database: managed-postgresql-selected
+TLS: verify-full-with-provider-ca
+public entrypoint: external-reverse-proxy-https-selected
+backend replicas/workers: 1/1
+max_connections review candidate: 40
 ```
 
-두 번째 명령은 Docker resource를 만들지 않고 config만 렌더링합니다. handoff 제작 환경에는 Docker CLI가 없어 실제 실행 결과는 아직 없습니다.
+## v312 실제 완료 증거
+
+기호 PC에서 review sentinel 기반 Compose config render-only가 통과했습니다.
+
+```txt
+rendered services: backend
+host ports/build/named volumes absent: True/True/True
+managed DB service absent / backend replicas: True/1
+digest/production guard/TLS/edge rendered: True/True/True/True
+image pull/build executed: no
+container/network/volume mutation executed: no
+DB/Alembic mutation executed: no
+```
+
+민감정보 없는 요약만 `deploy/review/production-compose-config-render-v312.json`에 기록했으며 raw render는 저장하지 않았습니다.
+
+## v313 이미지 정책
+
+- production backend image는 `digest-only`
+- repository 형식: `<approved-registry>/<approved-namespace>/upgrade-rpg-backend`
+- registry provider: deferred
+- target platform: deferred
+- Git commit 40자리 SHA 기록 필수
+- base image exact digest 승인 전 build 차단
+- SBOM/provenance/signature/vulnerability review 필수
+- image pull/build/push approved: no/no/no
+- container start approved: no
+
+현재 Dockerfile base image `python:3.11-slim`은 mutable tag이므로 production build 승인을 충족하지 않습니다.
 
 ## 다음 승인 경계
 
-config render가 통과한 뒤 backend image registry/source/digest 검토로 이동합니다. pull/build는 다시 별도 승인합니다.
+```txt
+select-registry-repository-platform-and-base-image-digest
+```
+
+registry provider, namespace/repository, target platform, base image exact digest를 먼저 선택합니다. 선택 단계에서도 Docker pull/build/push는 실행하지 않습니다.
 
 ## 계속 금지
 
-- 실제 production env/secret/CA/cert/key 입력
-- image pull/build
+- 실제 production env/secret/CA/cert/key/registry credential 입력
+- Docker image pull/build/push
 - container/network/volume create/start/stop/remove
 - managed DB 연결 또는 `max_connections` 적용
 - Alembic revision/autogenerate/stamp/upgrade/downgrade

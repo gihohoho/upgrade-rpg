@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v312.production-managed-postgres-reverse-proxy-config-render-ready**
+현재 기준: **v313.backend-image-source-digest-policy**
 
 ## 현재 구조
 
@@ -33,7 +33,17 @@ pool 5 + overflow 10
 max_connections review candidate 40
 ```
 
-production Compose에는 backend만 있으며 bundled PostgreSQL/Adminer/DB volume/host port/build는 없습니다.
+기호 PC에서 backend-only production Compose의 config render-only 검사가 통과했습니다.
+
+## 이미지 정책
+
+```txt
+production reference: digest-only
+registry provider: deferred
+target platform: deferred
+base image digest approved: no
+pull/build/push approved: no/no/no
+```
 
 ## 다음 첫 검사
 
@@ -41,16 +51,10 @@ production Compose에는 backend만 있으며 bundled PostgreSQL/Adminer/DB volu
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/check_production_managed_postgres_reverse_proxy_selection.py --strict
+python tools/check_backend_image_source_digest_policy.py --strict
 ```
 
-그다음 승인된 config render-only:
-
-```bash
-python tools/render_production_compose_config.py --execute --confirm-stage v312-config-render-only
-```
-
-이 wrapper는 실제 `.env`나 secret을 읽지 않고 `docker compose config`만 실행합니다. pull/build/up/down은 계속 금지입니다.
+이 검사는 파일만 읽습니다. Docker pull/build/push/up/down은 계속 금지입니다.
 
 ## 기본 검증
 
