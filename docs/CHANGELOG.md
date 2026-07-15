@@ -1,3 +1,13 @@
+# v317.github-actions-ghcr-static-workflow-plan
+
+- GitHub Actions/GHCR publish의 `workflow_dispatch` only, exact main SHA, protected environment, concurrency 정적 정책 추가.
+- validate/build-scan job은 `contents: read`, publish/attest/sign job만 `packages`, `attestations`, `id-token` write를 받도록 최소 permissions 설계.
+- local OCI, SPDX JSON SBOM, Trivy HIGH/CRITICAL, provenance, SBOM attestation, Sigstore keyless signature와 verification을 fail-closed gate로 고정.
+- 모든 action은 검토된 40자리 commit SHA가 필요하며 실제 SHA가 미승인인 동안 workflow 생성을 차단.
+- ZIP/Git 명령 안내를 중단하고 Codex가 NEXT_CHAT 갱신과 add/commit/push를 직접 수행하는 협업 규칙 반영.
+- 필요한 extension/repository 권한/설치는 사용자에게 요청하고 해결되지 않으면 다음 작업에서도 다시 요청하도록 인계 규칙 반영.
+- `.github/workflows/`, workflow 실행, Docker/registry/DB/Alembic mutation은 없음.
+
 # v316.codex-handoff-audit-fix
 
 - v315 커밋의 strict checker와 실제 추적 파일을 대조해 superseded 활성 파일 정리 누락을 수정.

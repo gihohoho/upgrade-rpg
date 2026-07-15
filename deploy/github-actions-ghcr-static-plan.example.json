@@ -1,0 +1,188 @@
+{
+  "schemaVersion": "v317.github-actions-ghcr-static-workflow-plan",
+  "reviewOnly": true,
+  "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
+  "repository": "gihohoho/upgrade-rpg",
+  "defaultBranch": "main",
+  "registry": "ghcr.io",
+  "imageRepository": "ghcr.io/gihohoho/upgrade-rpg-backend",
+  "targetPlatform": "linux/amd64",
+  "workflowPathPlanned": ".github/workflows/publish-backend-ghcr.yml",
+  "workflowFilePresent": false,
+  "workflowCreationApproved": false,
+  "workflowExecutionApproved": false,
+  "registryLoginApproved": false,
+  "imageBuildApproved": false,
+  "imagePushApproved": false,
+  "registryMutationApproved": false,
+  "triggerPolicy": {
+    "allowedEvents": [
+      "workflow_dispatch"
+    ],
+    "forbiddenEvents": [
+      "push",
+      "pull_request",
+      "pull_request_target",
+      "schedule",
+      "release",
+      "repository_dispatch",
+      "workflow_run"
+    ],
+    "requiredRef": "refs/heads/main",
+    "sourceCommitInput": {
+      "required": true,
+      "pattern": "^[0-9a-f]{40}$",
+      "mustEqualGithubSha": true
+    },
+    "approvalReasonInputRequired": true,
+    "environment": {
+      "name": "ghcr-production-publish",
+      "requiredReviewers": true,
+      "preventSelfReview": true,
+      "deploymentBranch": "main",
+      "configured": false
+    },
+    "concurrency": {
+      "group": "ghcr-backend-publish",
+      "cancelInProgress": false
+    }
+  },
+  "permissionsPolicy": {
+    "workflowDefault": {
+      "contents": "read"
+    },
+    "validateJob": {
+      "contents": "read"
+    },
+    "buildScanJob": {
+      "contents": "read"
+    },
+    "publishAttestSignJob": {
+      "contents": "read",
+      "packages": "write",
+      "attestations": "write",
+      "id-token": "write"
+    },
+    "forbiddenWritePermissions": [
+      "actions",
+      "checks",
+      "contents",
+      "deployments",
+      "issues",
+      "pull-requests",
+      "security-events",
+      "statuses"
+    ]
+  },
+  "actionPolicy": {
+    "requireFullLengthCommitSha": true,
+    "requiredShaPattern": "^[0-9a-f]{40}$",
+    "resolvedActionShasApproved": false,
+    "workflowCreationBlockedUntilResolved": true,
+    "allowlist": [
+      {
+        "repository": "actions/checkout",
+        "purpose": "source checkout",
+        "approvedSha": null
+      },
+      {
+        "repository": "docker/setup-buildx-action",
+        "purpose": "linux/amd64 BuildKit setup",
+        "approvedSha": null
+      },
+      {
+        "repository": "docker/login-action",
+        "purpose": "GHCR login with GITHUB_TOKEN",
+        "approvedSha": null
+      },
+      {
+        "repository": "docker/build-push-action",
+        "purpose": "OCI build and later digest push",
+        "approvedSha": null
+      },
+      {
+        "repository": "aquasecurity/trivy-action",
+        "purpose": "HIGH and CRITICAL vulnerability gate",
+        "approvedSha": null
+      },
+      {
+        "repository": "anchore/sbom-action",
+        "purpose": "SPDX JSON SBOM generation",
+        "approvedSha": null
+      },
+      {
+        "repository": "actions/attest",
+        "purpose": "build provenance and SBOM attestation",
+        "approvedSha": null
+      },
+      {
+        "repository": "sigstore/cosign-installer",
+        "purpose": "keyless image signature",
+        "approvedSha": null
+      },
+      {
+        "repository": "actions/upload-artifact",
+        "purpose": "non-secret SBOM and scan report retention",
+        "approvedSha": null
+      }
+    ]
+  },
+  "supplyChainGates": {
+    "failurePolicy": "fail-closed",
+    "prePushOrder": [
+      "repository-static-checks",
+      "build-local-oci-linux-amd64",
+      "generate-spdx-json-sbom",
+      "validate-sbom-subject",
+      "scan-high-critical-vulnerabilities"
+    ],
+    "vulnerabilityGate": {
+      "scanner": "trivy",
+      "severity": [
+        "HIGH",
+        "CRITICAL"
+      ],
+      "exitCodeOnFinding": 1,
+      "ignoreUnfixed": false,
+      "allowIgnoreFile": false,
+      "allowInlineExceptions": false
+    },
+    "postPushOrder": [
+      "capture-exact-registry-digest",
+      "attest-build-provenance",
+      "attest-spdx-sbom",
+      "cosign-keyless-sign-digest",
+      "verify-provenance-and-sbom-attestations",
+      "verify-cosign-identity-and-issuer",
+      "emit-reviewed-candidate-digest"
+    ],
+    "attestationVerification": {
+      "subjectMustEqualPushedDigest": true,
+      "repository": "gihohoho/upgrade-rpg",
+      "signerWorkflow": ".github/workflows/publish-backend-ghcr.yml"
+    },
+    "signatureVerification": {
+      "mode": "sigstore-keyless-oidc",
+      "oidcIssuer": "https://token.actions.githubusercontent.com",
+      "certificateIdentity": "https://github.com/gihohoho/upgrade-rpg/.github/workflows/publish-backend-ghcr.yml@refs/heads/main",
+      "subjectMustEqualPushedDigest": true
+    },
+    "automaticDeployment": false,
+    "productionReferenceUpdate": false,
+    "candidateDigestReleasedOnlyAfterAllGates": true
+  },
+  "artifactPolicy": {
+    "sbomFormat": "spdx-json",
+    "scanReportFormat": "json",
+    "retentionDays": 14,
+    "secretsAllowed": false,
+    "rawEnvironmentAllowed": false
+  },
+  "requiredRepositorySetup": {
+    "githubConnectorRepositoryAccess": false,
+    "actionsSettingsReviewed": false,
+    "fullLengthActionShaPolicyEnabled": false,
+    "publishEnvironmentConfigured": false
+  },
+  "nextSafeStage": "review-action-shas-repository-settings-and-workflow-creation-approval"
+}

@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v316
+# Upgrade RPG Codex working rules — v317
 
 이 파일은 저장소 전체에 적용됩니다. Codex는 작업을 시작할 때 이 파일과 `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -9,11 +9,14 @@
 - backend 가상환경은 프로젝트 루트가 아니라 `backend/.venv`입니다. Git Bash에서 `backend` 폴더에서 `source .venv/Scripts/activate`로 켭니다.
 - Vue/npm 명령은 `frontend/vue-app`에서 실행하며 Python `.venv`가 필요 없습니다.
 - 새 설치가 있으면 설치 항목과 이유를 알리고, 없으면 “새 설치 없음”이라고 명확히 적습니다.
-- Git 명령은 프로젝트 루트에서 다음 형태의 한 줄 블록으로 제공합니다: `git status && git add . && git commit -m "..." && git push`.
+- 필요한 extension, repository/app 권한, 로컬 설치가 있으면 사용자에게 요청합니다. 해결되지 않으면 다음 작업에서도 다시 요청할 수 있으며 요청 상태를 `NEXT_CHAT_PROMPT.md`와 `NEXT_CHAT_HANDOFF.md`에 기록합니다.
+- 매 작업에서 root `NEXT_CHAT_PROMPT.md`, `NEXT_CHAT_HANDOFF.md`와 `docs/handoff/` mirror를 최신 상태로 갱신합니다.
+- 변경과 검증이 끝나면 Codex가 프로젝트 루트에서 `git status`, `git add .`, `git commit`, `git push`를 직접 실행합니다. 사용자에게 Git 한 줄 명령을 다시 제공하지 않습니다.
+- Codex 작업에서는 새 ZIP을 만들거나 제공하지 않습니다. 사용자가 별도로 요청한 경우에만 안전 제외 규칙을 적용해 생성합니다.
 
 ## 현재 고정 상태
 
-- latest: `v316.codex-handoff-audit-fix`
+- latest: `v317.github-actions-ghcr-static-workflow-plan`
 - GitHub remote: `https://github.com/gihohoho/upgrade-rpg.git`
 - GHCR namespace: `gihohoho`
 - backend image repository: `ghcr.io/gihohoho/upgrade-rpg-backend` (private)
@@ -31,6 +34,7 @@
 
 - 실제 `backend/.env`, production env, JWT/Admin secret
 - 실제 registry token/PAT, Docker credential, CA/cert/key 생성·입력·커밋
+- `.github/workflows/` 생성, GitHub Actions settings/environment 변경, workflow 실행
 - `docker login`, `pull`, `build`, `push`, `compose up/down`
 - container/network/volume 생성·삭제·변경
 - DB 생성·삭제·복원·reset·seed·write
@@ -43,15 +47,15 @@ DB/env/seed/인증/API body/route/write/migration/Docker/secret/TLS 작업은 �
 
 ## 현재 허용된 다음 단계
 
-현재는 파일 읽기, 정적 검사, 문서·검사기 개선만 허용됩니다. 다음 단계는 GitHub Actions의 최소 권한과 GHCR workflow를 **설계 문서로만** 준비하는 것입니다. `.github/workflows/` 생성과 workflow 실행은 아직 승인되지 않았습니다.
+GitHub Actions 최소 permissions, `workflow_dispatch` 전용 trigger, SBOM/provenance/signature/vulnerability gate의 정적 계획은 v317에서 준비되었습니다. 다음 단계는 action별 upstream 40자리 SHA, repository Actions 설정, publish environment를 검토하고 workflow 파일 생성 승인 여부를 사용자에게 묻는 것입니다. `.github/workflows/` 생성과 workflow 실행은 아직 승인되지 않았습니다.
 
 첫 검사는 프로젝트 루트에서 `backend/.venv`를 켠 상태로 실행합니다.
 
 ```bash
-python tools/check_codex_handoff_readiness.py --strict
+python tools/check_github_actions_ghcr_static_plan.py --strict
 ```
 
-정상 결과: `codex-ghcr-namespace-handoff-verified-workflow-plan-only`
+정상 결과: `github-actions-ghcr-static-plan-verified-workflow-not-created`
 
 ## 변경과 검증
 
@@ -59,5 +63,5 @@ python tools/check_codex_handoff_readiness.py --strict
 - legacy 게임 `index.html`, 관리자 `admin.html`, `src/`는 Vue 이식 전까지 이동하거나 대규모 재작성하지 않습니다.
 - 코드나 구조를 바꾸면 관련 전용 smoke, `python -m compileall -q backend/app backend/scripts backend/alembic tools`, JavaScript 문법, `bash tools/run_smoke_core.sh`를 확인합니다.
 - Vue 변경 시 `frontend/vue-app`에서 Python `.venv` 없이 `npm ci`와 `npm run build`를 실행합니다.
-- ZIP에는 `.git`, `backend/.env`, `backend/.venv`, `node_modules`, `local-backups`, `local-review-artifacts`, 실제 secret/cert/token을 넣지 않습니다.
-- 작업 완료 답변에는 ① 한 일 ② 검증 ③ 서버 재실행 명령 ④ Git 한 줄 명령 ⑤ 다음 추천 단계 ⑥ 코드/문서 변경 시 새 ZIP을 포함합니다.
+- ZIP은 기본 생성하지 않습니다. 사용자가 별도 요청하면 `.git`, `backend/.env`, `backend/.venv`, `node_modules`, `local-backups`, `local-review-artifacts`, 실제 secret/cert/token을 제외합니다.
+- 작업 완료 답변에는 ① 한 일 ② 검증 ③ 서버 재실행 필요 여부 ④ commit/push 결과 ⑤ 다음 추천 단계 ⑥ 필요한 extension/권한/설치 요청을 포함합니다.

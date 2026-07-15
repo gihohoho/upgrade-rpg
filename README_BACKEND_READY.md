@@ -1,4 +1,4 @@
-# Backend readiness — v316
+# Backend readiness — v317
 
 ## 완료
 
@@ -15,7 +15,7 @@
 - target platform: `linux/amd64`
 - production base image exact manifest digest 승인
 - 로컬 Dockerfile 보존 + `backend/Dockerfile.production` 분리
-- Codex용 `AGENTS.md`와 v316 읽기 전용 handoff 검사
+- Codex용 `AGENTS.md`, v317 GitHub Actions/GHCR 정적 plan과 fail-closed 검사
 
 ## 아직 미완료
 
@@ -29,4 +29,4 @@
 - image login/pull/build/push와 isolated container start
 - 실제 배포
 
-CI credential 우선안은 GitHub Actions `GITHUB_TOKEN`입니다. 실제 token/PAT/credential은 저장소·ZIP·채팅에 넣지 않으며, local credential은 아직 deferred입니다.
+CI credential 우선안은 GitHub Actions `GITHUB_TOKEN`입니다. 실제 token/PAT/credential은 저장소·채팅에 넣지 않으며, local credential은 아직 deferred입니다.

@@ -15,22 +15,22 @@
 
 | 대상 | 존재 | 참조 수 | 참조 파일 수 | 판단 |
 | --- | --- | --- | --- | --- |
-| `admin.html` | O | 262 | 136 | 절대 이동 금지 |
-| `index.html` | O | 133 | 64 | 절대 이동 금지 |
-| `src/` | O | 1505 | 306 | 절대 이동 금지 |
-| `src/api/` | O | 1042 | 271 | Vue 이식 후보이지만 현 위치 유지 |
-| `src/api/admin/` | O | 580 | 217 | Vue 관리자 이식 후보이지만 현 위치 유지 |
-| `src/data/` | O | 64 | 23 | DB seed 준비 전 이동 금지 |
-| `src/rules/` | O | 25 | 11 | 콘텐츠 개발 보류, 현 위치 유지 |
-| `src/state/` | O | 12 | 10 | Vue store 후보, 현 위치 유지 |
-| `src/systems/` | O | 49 | 19 | domain module 후보, 현 위치 유지 |
-| `src/ui/` | O | 14 | 11 | Vue component 대체 후보, 현 위치 유지 |
-| `src/styles/` | O | 19 | 9 | Vue CSS 분해 후보, 현 위치 유지 |
-| `backend/app/api/routes/` | O | 527 | 118 | route path/contract 보호 |
-| `backend/app/services/` | O | 389 | 150 | service contract 보호 |
-| `backend/seeds/` | O | 21 | 10 | 사용자 승인 전 변경 금지 |
-| `tools/run_smoke_core.sh` | O | 115 | 103 | 검증 기준 유지 |
-| `tools/smoke/` | O | 384 | 164 | 경로 의존성 기준 |
+| `admin.html` | O | 369 | 169 | 절대 이동 금지 |
+| `index.html` | O | 211 | 103 | 절대 이동 금지 |
+| `src/` | O | 2284 | 422 | 절대 이동 금지 |
+| `src/api/` | O | 1319 | 341 | Vue 이식 후보이지만 현 위치 유지 |
+| `src/api/admin/` | O | 742 | 261 | Vue 관리자 이식 후보이지만 현 위치 유지 |
+| `src/data/` | O | 166 | 54 | DB seed 준비 전 이동 금지 |
+| `src/rules/` | O | 68 | 28 | 콘텐츠 개발 보류, 현 위치 유지 |
+| `src/state/` | O | 36 | 26 | Vue store 후보, 현 위치 유지 |
+| `src/systems/` | O | 134 | 52 | domain module 후보, 현 위치 유지 |
+| `src/ui/` | O | 42 | 28 | Vue component 대체 후보, 현 위치 유지 |
+| `src/styles/` | O | 54 | 20 | Vue CSS 분해 후보, 현 위치 유지 |
+| `backend/app/api/routes/` | O | 845 | 155 | route path/contract 보호 |
+| `backend/app/services/` | O | 568 | 180 | service contract 보호 |
+| `backend/seeds/` | O | 65 | 22 | 사용자 승인 전 변경 금지 |
+| `tools/run_smoke_core.sh` | O | 160 | 136 | 검증 기준 유지 |
+| `tools/smoke/` | O | 690 | 259 | 경로 의존성 기준 |
 
 ## 참조 파일 예시
 
@@ -38,22 +38,22 @@
 
 | 대상 | 참조 파일 예시 |
 |---|---|
-| `admin.html` | `AGENTS.md`<br>`CHANGELOG.md`<br>`README.md`<br>`admin.html`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_LAYOUT_NAVIGATION_SHELL.md`<br>`docs/ADMIN_LAYOUT_SHELL_SPLIT.md` |
-| `index.html` | `AGENTS.md`<br>`CHANGELOG.md`<br>`README.md`<br>`admin.html`<br>`docs/CHANGELOG.md`<br>`docs/archive/stage-notes/ADMIN_PAGE_URL_HELPER.md`<br>`docs/archive/stage-notes/ADMIN_READONLY_PAGE.md`<br>`docs/archive/stage-notes/CODE_MAP.md` |
-| `src/` | `AGENTS.md`<br>`CHANGELOG.md`<br>`README.md`<br>`admin.html`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md` |
-| `src/api/` | `CHANGELOG.md`<br>`admin.html`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT_CONTRACT.md` |
-| `src/api/admin/` | `CHANGELOG.md`<br>`admin.html`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT_CONTRACT.md` |
-| `src/data/` | `docs/MASTER_DATA_PARITY_CHECKER.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/FRONTEND_MASTER_DATA_BRIDGE.md`<br>`docs/archive/stage-notes/SEED_EXTRACTION.md`<br>`docs/archive/stage-notes/SKILL_DAMAGE_TEXT_FIX.md`<br>`docs/archive/stage-notes/SKILL_STRUCTURE_READY.md` |
-| `src/rules/` | `docs/archive/stage-notes/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`index.html`<br>`src/rules/README.md`<br>`src/state/STATE_SPLIT_READY.md`<br>`tools/extract_seed_data.js` |
-| `src/state/` | `docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/SKILL_STRUCTURE_READY.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`frontend/vue-app/src/stores/README.md`<br>`index.html`<br>`tools/extract_seed_data.js`<br>`tools/report_legacy_path_dependencies.py` |
+| `admin.html` | `admin.html`<br>`AGENTS.md`<br>`CHANGELOG.md`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_LAYOUT_NAVIGATION_SHELL.md`<br>`docs/ADMIN_LAYOUT_SHELL_SPLIT.md`<br>`docs/ADMIN_MASTER_DATA_CATALOG.md` |
+| `index.html` | `admin.html`<br>`AGENTS.md`<br>`CHANGELOG.md`<br>`docs/ADMIN_PAGE_URL_HELPER.md`<br>`docs/ADMIN_READONLY_PAGE.md`<br>`docs/archive/stage-notes/ADMIN_PAGE_URL_HELPER.md`<br>`docs/archive/stage-notes/ADMIN_READONLY_PAGE.md`<br>`docs/archive/stage-notes/CODE_MAP.md` |
+| `src/` | `admin.html`<br>`AGENTS.md`<br>`CHANGELOG.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT.md` |
+| `src/api/` | `admin.html`<br>`CHANGELOG.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT_CONTRACT.md` |
+| `src/api/admin/` | `admin.html`<br>`CHANGELOG.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT_CONTRACT.md` |
+| `src/data/` | `docs/archive/stage-notes/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/FRONTEND_MASTER_DATA_BRIDGE.md`<br>`docs/archive/stage-notes/SEED_EXTRACTION.md`<br>`docs/archive/stage-notes/SKILL_DAMAGE_TEXT_FIX.md`<br>`docs/archive/stage-notes/SKILL_STRUCTURE_READY.md`<br>`docs/BACKEND_SPLIT_CHECKLIST.md` |
+| `src/rules/` | `docs/archive/stage-notes/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/CODE_MAP.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`index.html` |
+| `src/state/` | `docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/SKILL_STRUCTURE_READY.md`<br>`docs/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/CODE_MAP.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`docs/SKILL_STRUCTURE_READY.md`<br>`frontend/vue-app/src/stores/README.md` |
 | `src/systems/` | `docs/archive/stage-notes/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/DAMAGE_TEXT_POSITION_FIX.md`<br>`docs/archive/stage-notes/EQUIP_SKILL_BOSS_RESULT_STAGE3.md`<br>`docs/archive/stage-notes/KILL_REWARD_RESULT_STAGE2.md`<br>`docs/archive/stage-notes/SEED_EXTRACTION.md`<br>`docs/archive/stage-notes/SKILL_STRUCTURE_READY.md` |
-| `src/ui/` | `docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/EQUIP_SKILL_BOSS_RESULT_STAGE3.md`<br>`docs/archive/stage-notes/MASTER_DATA_FIELD_ZONE_ASSET_FALLBACK.md`<br>`docs/archive/stage-notes/SKILL_STRUCTURE_READY.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`index.html`<br>`tools/report_legacy_path_dependencies.py`<br>`tools/smoke/frontend/smoke_action_results.js` |
-| `src/styles/` | `docs/archive/stage-notes/CSS_AUDIT.md`<br>`docs/archive/stage-notes/CSS_MERGE_REPORT.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`index.html`<br>`tools/report_legacy_path_dependencies.py`<br>`tools/smoke/frontend/smoke_vue_admin_readonly_catalog_panel.py`<br>`tools/smoke/frontend/smoke_vue_admin_readonly_relations_panel.py`<br>`tools/smoke/frontend/smoke_vue_readonly_api_status_panel.py` |
-| `backend/app/api/routes/` | `CHANGELOG.md`<br>`backend/app/api/routes/admin_openapi_route_contract.py`<br>`backend/app/api/routes/admin_request_metadata_contract.py`<br>`backend/app/api/routes/admin_response_metadata_contract.py`<br>`backend/app/api/routes/admin_route_map_contract.py`<br>`backend/app/api/routes/admin_route_module_import_contract.py`<br>`backend/app/api/routes/admin_route_operation_contract.py`<br>`backend/app/api/routes/admin_route_services.py` |
-| `backend/app/services/` | `CHANGELOG.md`<br>`backend/app/api/routes/admin_preview_side_effect_contract.py`<br>`backend/app/api/routes/admin_route_error_helpers.py`<br>`backend/app/api/routes/admin_service_mutation_boundary_contract.py`<br>`backend/app/services/admin/README.md`<br>`backend/app/services/admin/admin_shared_utils.py`<br>`backend/app/services/admin_service.py`<br>`backend/app/services/admin_service_facade_contract.py` |
-| `backend/seeds/` | `backend/seeds/README.md`<br>`docs/CHANGELOG.md`<br>`docs/LOCAL_DEV_SETUP.md`<br>`docs/MASTER_DATA_PARITY_CHECKER.md`<br>`docs/archive/stage-notes/SEED_EXTRACTION.md`<br>`docs/archive/stage-notes/SEED_IMPORT.md`<br>`tools/extract_seed_data.js`<br>`tools/report_legacy_path_dependencies.py` |
-| `tools/run_smoke_core.sh` | `AGENTS.md`<br>`CHANGELOG.md`<br>`NEXT_CHAT_PROMPT.md`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_GUIDE.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md` |
-| `tools/smoke/` | `CHANGELOG.md`<br>`backend/README.md`<br>`backend/seeds/README.md`<br>`docs/ADMIN_BOOTSTRAP_BINDINGS_READINESS.md`<br>`docs/ADMIN_CATALOG_COMPACT_HELP_UX.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_GUIDE.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md` |
+| `src/ui/` | `docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/EQUIP_SKILL_BOSS_RESULT_STAGE3.md`<br>`docs/archive/stage-notes/MASTER_DATA_FIELD_ZONE_ASSET_FALLBACK.md`<br>`docs/archive/stage-notes/SKILL_STRUCTURE_READY.md`<br>`docs/CODE_MAP.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`docs/EQUIP_SKILL_BOSS_RESULT_STAGE3.md`<br>`docs/MASTER_DATA_FIELD_ZONE_ASSET_FALLBACK.md` |
+| `src/styles/` | `docs/archive/stage-notes/CSS_AUDIT.md`<br>`docs/archive/stage-notes/CSS_MERGE_REPORT.md`<br>`docs/CSS_AUDIT.md`<br>`docs/CSS_MERGE_REPORT.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`index.html`<br>`local-backups/docs/archive/stage-notes/CSS_AUDIT.md`<br>`local-backups/docs/archive/stage-notes/CSS_MERGE_REPORT.md` |
+| `backend/app/api/routes/` | `backend/app/api/routes/admin_openapi_route_contract.py`<br>`backend/app/api/routes/admin_request_metadata_contract.py`<br>`backend/app/api/routes/admin_response_metadata_contract.py`<br>`backend/app/api/routes/admin_route_map_contract.py`<br>`backend/app/api/routes/admin_route_module_import_contract.py`<br>`backend/app/api/routes/admin_route_operation_contract.py`<br>`backend/app/api/routes/admin_route_services.py`<br>`backend/app/api/routes/admin_runtime_route_contract.py` |
+| `backend/app/services/` | `backend/app/api/routes/admin_preview_side_effect_contract.py`<br>`backend/app/api/routes/admin_route_error_helpers.py`<br>`backend/app/api/routes/admin_service_mutation_boundary_contract.py`<br>`backend/app/services/admin/admin_shared_utils.py`<br>`backend/app/services/admin/README.md`<br>`backend/app/services/admin_service.py`<br>`backend/app/services/admin_service_facade_contract.py`<br>`backend/app/services/admin_service_legacy_markers.py` |
+| `backend/seeds/` | `backend/seeds/README.md`<br>`docs/archive/stage-notes/SEED_EXTRACTION.md`<br>`docs/archive/stage-notes/SEED_IMPORT.md`<br>`docs/CHANGELOG.md`<br>`docs/LOCAL_DEV_SETUP.md`<br>`docs/MASTER_DATA_PARITY_CHECKER.md`<br>`docs/SEED_EXTRACTION.md`<br>`docs/SEED_IMPORT.md` |
+| `tools/run_smoke_core.sh` | `AGENTS.md`<br>`CHANGELOG.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_GUIDE.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md`<br>`docs/ADMIN_FIELD_HELP_SPLIT.md` |
+| `tools/smoke/` | `backend/README.md`<br>`backend/seeds/README.md`<br>`CHANGELOG.md`<br>`docs/ADMIN_BOOTSTRAP_BINDINGS_READINESS.md`<br>`docs/ADMIN_CATALOG_COMPACT_HELP_UX.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_GUIDE.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md` |
 
 ## HTML 진입점 직접 로드 관계
 
@@ -239,14 +239,15 @@
 | 116 | `python tools/smoke/backend/smoke_production_capacity_tls_network_plan.py` |
 | 117 | `python tools/smoke/backend/smoke_production_managed_postgres_reverse_proxy_selection.py` |
 | 118 | `python tools/smoke/backend/smoke_production_compose_config_render.py` |
-| 119 | `python tools/smoke/backend/smoke_codex_handoff_readiness.py` |
-| 120 | `python tools/smoke/game/smoke_next_chat_handoff.py` |
-| 121 | `python tools/smoke/contracts/smoke_backend_admin_preview_side_effect_contract.py` |
-| 122 | `python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contract.py` |
-| 123 | `python tools/smoke/contracts/smoke_backend_admin_diff_engine_contract.py` |
-| 124 | `python tools/smoke/contracts/smoke_backend_admin_change_log_shared_diff.py` |
-| 125 | `python tools/smoke/contracts/smoke_backend_admin_rollback_snapshot_contract.py` |
-| 126 | `python tools/smoke/contracts/smoke_backend_admin_rollback_preview_snapshot.py` |
+| 119 | `python tools/smoke/backend/smoke_github_actions_ghcr_static_plan.py` |
+| 120 | `python tools/smoke/backend/smoke_codex_handoff_readiness.py` |
+| 121 | `python tools/smoke/game/smoke_next_chat_handoff.py` |
+| 122 | `python tools/smoke/contracts/smoke_backend_admin_preview_side_effect_contract.py` |
+| 123 | `python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contract.py` |
+| 124 | `python tools/smoke/contracts/smoke_backend_admin_diff_engine_contract.py` |
+| 125 | `python tools/smoke/contracts/smoke_backend_admin_change_log_shared_diff.py` |
+| 126 | `python tools/smoke/contracts/smoke_backend_admin_rollback_snapshot_contract.py` |
+| 127 | `python tools/smoke/contracts/smoke_backend_admin_rollback_preview_snapshot.py` |
 
 ## smoke 내부에서 많이 발견된 경로 문자열
 

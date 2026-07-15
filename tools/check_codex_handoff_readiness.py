@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the v316 Codex/GHCR handoff using repository files only."""
+"""Validate the v317 Codex/GHCR handoff using repository files only."""
 from __future__ import annotations
 
 import argparse
@@ -10,10 +10,10 @@ import re
 import subprocess
 from typing import Any
 
-TOOL_VERSION = "v316.codex-handoff-audit-fix"
-READY_RESULT = "codex-ghcr-namespace-handoff-verified-workflow-plan-only"
+TOOL_VERSION = "v317.github-actions-ghcr-static-workflow-plan"
+READY_RESULT = "github-actions-ghcr-static-plan-verified-workflow-not-created"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "review-github-actions-permissions-and-static-workflow-plan"
+NEXT_SAFE_STAGE = "review-action-shas-repository-settings-and-workflow-creation-approval"
 EXPECTED_REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 EXPECTED_NAMESPACE = "gihohoho"
 EXPECTED_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
@@ -111,11 +111,13 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     handoff = _read(root / "NEXT_CHAT_HANDOFF.md")
     current = _read(root / "docs/current/CURRENT_STATUS.md")
     ghcr_doc = _read(root / "docs/current/BACKEND_IMAGE_GHCR_POLICY.md")
+    actions_plan = _read_json(root / "deploy/github-actions-ghcr-static-plan.example.json")
+    actions_plan_doc = _read(root / "docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md")
     docs_index = _read(root / "docs/README.md")
     handoff_prompt = _read(root / "docs/handoff/NEXT_CHAT_PROMPT.md")
     handoff_state = _read(root / "docs/handoff/NEXT_CHAT_HANDOFF.md")
 
-    _require(policy.get("schemaVersion") == TOOL_VERSION, "unexpected v316 schemaVersion")
+    _require(policy.get("schemaVersion") == TOOL_VERSION, "unexpected v317 schemaVersion")
     _require(_bool(policy, "reviewOnly") is True, "policy must remain review-only")
     _require(policy.get("githubRemote") == EXPECTED_REMOTE, "GitHub remote changed")
     _require(policy.get("registryProvider") == "github-container-registry", "registry provider must be GHCR")
@@ -148,9 +150,24 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "actualRegistryMutationExecuted",
         "actualDockerCommandExecuted",
         "actualDatabaseAlembicMutationExecuted",
+        "actionShasResolved",
+        "actionShasApproved",
+        "repositoryActionsSettingsReviewed",
+        "publishEnvironmentConfigured",
     ):
         _require(_bool(policy, key) is False, f"{key} must remain false")
+    _require(_bool(policy, "githubActionsStaticPlanPresent") is True, "GitHub Actions static plan must be present")
+    _require(_bool(policy, "githubActionsStaticPlanVerified") is True, "GitHub Actions static plan must be verified")
     _require(policy.get("nextSafeStage") == NEXT_SAFE_STAGE, "unexpected next safe stage")
+
+    _require(actions_plan.get("schemaVersion") == TOOL_VERSION, "static workflow plan version differs")
+    _require(actions_plan.get("reviewOnly") is True, "static workflow plan must remain review-only")
+    _require(actions_plan.get("workflowFilePresent") is False, "workflow file must remain absent")
+    _require(actions_plan.get("workflowCreationApproved") is False, "workflow creation must remain unapproved")
+    _require(actions_plan.get("nextSafeStage") == NEXT_SAFE_STAGE, "static workflow plan next stage differs")
+    _require("workflow_dispatch" in actions_plan_doc, "static workflow plan document is missing trigger policy")
+    _require("packages: write" in actions_plan_doc, "static workflow plan document is missing package permission")
+    _require("Sigstore keyless OIDC" in actions_plan_doc, "static workflow plan document is missing signature policy")
 
     env = _env_inventory(env_example)
     _require(env.get("BACKEND_IMAGE") == EXPECTED_REFERENCE, "production env repository/reference differs")
@@ -182,7 +199,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
             _require(marker in text, f"{path} is missing marker: {marker}")
         _require("GITHUB_TOKEN" in text or "github-actions-github-token" in text, f"{path} is missing CI credential strategy")
         _require("workflow/login/pull/build/push approved: no" in text, f"{path} is missing workflow/build approval boundary")
-    _require("check_codex_handoff_readiness.py --strict" in agents, "AGENTS.md is missing first checker")
+    _require("check_github_actions_ghcr_static_plan.py --strict" in agents, "AGENTS.md is missing first checker")
     _require(READY_RESULT in prompt, "prompt is missing expected result")
     _require(NEXT_SAFE_STAGE in prompt, "prompt is missing next safe stage")
     _require(EXPECTED_REPOSITORY in ghcr_doc, "GHCR policy doc is missing repository")
@@ -239,6 +256,9 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "imageBuildApproved": False,
         "imagePushApproved": False,
         "runtimeMutationExecuted": False,
+        "githubActionsStaticPlanVerified": True,
+        "workflowFilePresent": False,
+        "actionShasApproved": False,
         "packageSafetyMode": package_safety_mode,
         "result": READY_RESULT,
         "nextSafeStage": NEXT_SAFE_STAGE,
@@ -256,6 +276,8 @@ def render(result: dict[str, Any]) -> str:
         f"- base image digest approved: {result['baseImageDigestApproved']}",
         f"- credential strategy: {result['ciCredentialStrategy']} / local={result['localCredentialStrategy']}",
         f"- forbidden path verification: {result['packageSafetyMode']}",
+        "- GitHub Actions static plan/workflow present: verified/no",
+        "- action SHAs approved: no",
         "- workflow/login/pull/build/push approved: no/no/no/no/no",
         "- workflow/login/pull/build/push executed: no/no/no/no/no",
         "- container/registry/DB/Alembic mutation executed: no/no/no/no",

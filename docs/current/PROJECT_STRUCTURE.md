@@ -1,4 +1,4 @@
-# Project Structure — v316
+# Project Structure — v317
 
 ```txt
 .
@@ -13,17 +13,20 @@
 │   └── Dockerfile.production              # exact base digest/non-root
 ├── deploy/
 │   ├── backend-image-ghcr-policy.example.json
+│   ├── github-actions-ghcr-static-plan.example.json
 │   ├── docker-compose.production.yml
 │   ├── production.env.example
 │   ├── review/                            # 완료된 정적 review 증거
 │   └── isolated-validation/
 ├── docs/
 │   ├── current/                           # 현재 판단
+│   │   └── GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md
 │   ├── handoff/                           # 인수인계 mirror
 │   ├── contracts/
 │   └── archive/                           # 과거 단계 기록
 └── tools/
     ├── check_codex_handoff_readiness.py
+    ├── check_github_actions_ghcr_static_plan.py
     └── smoke/
 ```
 

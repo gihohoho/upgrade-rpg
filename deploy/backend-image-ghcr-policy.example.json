@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v316.codex-handoff-audit-fix",
+  "schemaVersion": "v317.github-actions-ghcr-static-workflow-plan",
   "reviewOnly": true,
   "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
   "registryProvider": "github-container-registry",
@@ -22,6 +22,12 @@
   "githubPatCreated": false,
   "githubActionsWorkflowPresent": false,
   "githubActionsWorkflowCreationApproved": false,
+  "githubActionsStaticPlanPresent": true,
+  "githubActionsStaticPlanVerified": true,
+  "actionShasResolved": false,
+  "actionShasApproved": false,
+  "repositoryActionsSettingsReviewed": false,
+  "publishEnvironmentConfigured": false,
   "dockerLoginApproved": false,
   "imagePullApproved": false,
   "imageBuildApproved": false,
@@ -30,5 +36,5 @@
   "actualRegistryMutationExecuted": false,
   "actualDockerCommandExecuted": false,
   "actualDatabaseAlembicMutationExecuted": false,
-  "nextSafeStage": "review-github-actions-permissions-and-static-workflow-plan"
+  "nextSafeStage": "review-action-shas-repository-settings-and-workflow-creation-approval"
 }

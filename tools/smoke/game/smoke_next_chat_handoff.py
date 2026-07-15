@@ -5,8 +5,9 @@ import hashlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v316.codex-handoff-audit-fix"
-ZIP_NAME = "rpg_v316_codex_handoff_audit_fix.zip"
+VERSION = "v317.github-actions-ghcr-static-workflow-plan"
+READY_RESULT = "github-actions-ghcr-static-plan-verified-workflow-not-created"
+NEXT_SAFE_STAGE = "review-action-shas-repository-settings-and-workflow-creation-approval"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 REVISION_SHA256 = "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa"
@@ -46,11 +47,15 @@ def main() -> int:
         "docs/current/PROJECT_STRUCTURE.md",
         "docs/current/ROADMAP.md",
         "docs/current/BACKEND_IMAGE_GHCR_POLICY.md",
+        "docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md",
         "docs/handoff/NEXT_CHAT_PROMPT.md",
         "docs/handoff/NEXT_CHAT_HANDOFF.md",
         "deploy/backend-image-ghcr-policy.example.json",
+        "deploy/github-actions-ghcr-static-plan.example.json",
         "tools/check_codex_handoff_readiness.py",
+        "tools/check_github_actions_ghcr_static_plan.py",
         "tools/smoke/backend/smoke_codex_handoff_readiness.py",
+        "tools/smoke/backend/smoke_github_actions_ghcr_static_plan.py",
     )
     for relative in required:
         read(relative)
@@ -64,26 +69,31 @@ def main() -> int:
         REMOTE,
         REPOSITORY,
         "github-actions-github-token",
-        "check_codex_handoff_readiness.py --strict",
+        "check_github_actions_ghcr_static_plan.py --strict",
+        "git commit",
+        "Git 한 줄 명령을 다시 제공하지 않습니다",
     )
     assert_contains(
         "NEXT_CHAT_PROMPT.md",
-        ZIP_NAME,
         VERSION,
         REMOTE,
         REPOSITORY,
         "gihohoho`는 기호가 직접 확인한 고정 namespace",
-        "codex-ghcr-namespace-handoff-verified-workflow-plan-only",
-        "review-github-actions-permissions-and-static-workflow-plan",
+        READY_RESULT,
+        NEXT_SAFE_STAGE,
+        "ZIP을 기준으로 작업하지 않습니다",
+        "Codex가 프로젝트 루트에서 직접",
+        "접근 권한이 없으면 기호에게 다시 요청",
     )
     assert_contains(
         "NEXT_CHAT_HANDOFF.md",
-        ZIP_NAME,
         VERSION,
         "source rpg_game: public 23/749, application 22/748",
         "revision SHA-256: " + REVISION_SHA256,
         REPOSITORY,
         "workflow/login/pull/build/push approved: no/no/no/no/no",
+        "handoff mode: current repository + Git `main` (ZIP 없음)",
+        "repository 설치 접근 권한이 아직 필요",
     )
     assert_contains(
         "deploy/backend-image-ghcr-policy.example.json",
@@ -94,7 +104,23 @@ def main() -> int:
         '"repositoryIdentity": "' + REPOSITORY + '"',
         '"ciCredentialStrategy": "github-actions-github-token"',
         '"githubActionsWorkflowCreationApproved": false',
+        '"githubActionsStaticPlanPresent": true',
+        '"githubActionsStaticPlanVerified": true',
+        '"actionShasApproved": false',
         '"imageBuildApproved": false',
+    )
+    assert_contains(
+        "deploy/github-actions-ghcr-static-plan.example.json",
+        '"schemaVersion": "' + VERSION + '"',
+        '"allowedEvents"',
+        '"workflow_dispatch"',
+        '"contents": "read"',
+        '"packages": "write"',
+        '"attestations": "write"',
+        '"id-token": "write"',
+        '"resolvedActionShasApproved": false',
+        '"workflowCreationApproved": false',
+        '"nextSafeStage": "' + NEXT_SAFE_STAGE + '"',
     )
     assert_contains(
         "deploy/production.env.example",
@@ -108,10 +134,25 @@ def main() -> int:
         REPOSITORY,
         "GITHUB_TOKEN",
         "workflow creation approved: no",
+        "static workflow plan present/verified: yes/yes",
+        "action SHAs approved: no",
+    )
+    assert_contains(
+        "docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md",
+        VERSION,
+        "workflow_dispatch",
+        "pull_request_target",
+        "contents: read",
+        "packages: write",
+        "attestations: write",
+        "id-token: write",
+        "HIGH,CRITICAL",
+        "Sigstore keyless OIDC",
     )
     assert_contains(
         "tools/run_smoke_core.sh",
         "smoke_codex_handoff_readiness.py",
+        "smoke_github_actions_ghcr_static_plan.py",
         "smoke_next_chat_handoff.py",
         "smoke_docs_index_archive.js",
     )
@@ -141,7 +182,7 @@ def main() -> int:
     if actual_sha != REVISION_SHA256:
         raise AssertionError(f"reviewed revision SHA-256 differs: {actual_sha}")
 
-    print("OK: v316 Codex handoff and document structure are synchronized")
+    print("OK: v317 Codex handoff and document structure are synchronized")
     return 0
 
 

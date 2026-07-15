@@ -1,9 +1,9 @@
-# Current Status — v316
+# Current Status — v317
 
 ## 현재 기준
 
-- 최신 작업: `v316.codex-handoff-audit-fix`
-- 기준 ZIP: `rpg_v316_codex_handoff_audit_fix.zip`
+- 최신 작업: `v317.github-actions-ghcr-static-workflow-plan`
+- handoff: current repository + Git `main` (ZIP 기본 생성 안 함)
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -44,9 +44,23 @@ base image digest approved: yes
 CI credential strategy: GitHub Actions GITHUB_TOKEN 우선
 local credential strategy: deferred
 workflow/login/pull/build/push approved: no/no/no/no/no
+GitHub Actions static plan present/verified: yes/yes
+workflow file/action SHAs/environment configured: no/no/no
 ```
 
-Codex는 루트 `AGENTS.md`를 우선 읽습니다. 첫 검사는 `python tools/check_codex_handoff_readiness.py --strict`입니다.
+## GitHub Actions / GHCR 정적 설계
+
+```txt
+trigger: workflow_dispatch only
+ref/source: refs/heads/main / exact 40-char github.sha
+default/validate/build-scan permissions: contents read only
+publish permissions: contents read + packages/attestations/id-token write
+pre-push: local OCI + SPDX SBOM + Trivy HIGH/CRITICAL fail-closed
+post-push: exact digest + provenance + SBOM attestation + Sigstore keyless signature + verify
+automatic deploy/production reference update: no/no
+```
+
+Codex는 루트 `AGENTS.md`를 우선 읽습니다. 첫 검사는 `python tools/check_github_actions_ghcr_static_plan.py --strict`입니다.
 
 ## 계속 보류
 
@@ -56,10 +70,18 @@ Codex는 루트 `AGENTS.md`를 우선 읽습니다. 첫 검사는 `python tools/
 - Vue write/인증 연결
 - 게임 콘텐츠와 밸런스 개발
 
-## v316 검증
+## 필요한 권한/설치
 
-- strict checker와 fail-closed smoke 통과 (`git-index` workspace / `filesystem-absence` ZIP)
-- Python/JavaScript/Bash/JSON 문법 통과
-- 관련 v316 전용 smoke와 정적 구간 통과; 전체 core는 깨진 `backend/.venv` 기반 Python 때문에 SQLAlchemy import에서 중단
+- Codex GitHub 플러그인의 `gihohoho/upgrade-rpg` repository 접근 권한 필요
+- 다음 단계에서 repository Actions settings/environment 읽기 권한 필요
+- 전체 backend core smoke를 다시 완료하려면 현재 Codex 계정의 Python 3.11/`backend/.venv` 복구 설치 권한 필요
+- 해결되지 않은 요청은 다음 작업에서도 다시 요청
+
+## v317 검증
+
+- GitHub Actions static plan strict/fail-closed smoke 통과
+- Codex handoff strict/synchronization smoke와 docs index/archive smoke 통과
+- Python compileall, JavaScript 238개, Bash 3개, JSON 23개 통과
+- core dependency-free 앞 구간 통과; 전체 run은 깨진 `backend/.venv` 기반 Python 때문에 SQLAlchemy import에서 중단
 - Vue 변경 없음, Docker/registry/DB/Alembic mutation 없음
-- v315에서 남은 superseded 활성 파일과 실행되지 않는 옛 smoke 제거
+- `.github/workflows/` 없음, workflow 실행 없음

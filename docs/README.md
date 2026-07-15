@@ -5,6 +5,7 @@
 - `current/`: 현재 판단 문서. 가장 먼저 확인합니다.
 - `handoff/`: 다음 채팅/Codex 인수인계 문서입니다.
 - `contracts/`: 관리자·backend 계약 정의입니다.
+- `current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md`: workflow 생성 전 GitHub Actions/GHCR 보안 계획입니다.
 
 ## 보관 문서
 

@@ -1,4 +1,4 @@
-# Production deployment review template — v316
+# Production deployment review template — v317
 
 `deploy/docker-compose.production.yml`은 로컬 `docker-compose.yml`을 대체하지 않는 운영 검토 template입니다. review sentinel 기반 `docker compose config`는 기호 PC에서 통과했지만 image login/pull/build/push 및 container 실행은 승인되지 않았습니다.
 
@@ -35,6 +35,7 @@
 - `production-capacity-plan.example.json`: worker/pool/max_connections 계산과 승인 상태
 - `production-architecture-selection.example.json`: 운영 방향과 config render 완료 상태
 - `backend-image-ghcr-policy.example.json`: GHCR namespace, digest-only, credential/workflow 승인 경계
+- `github-actions-ghcr-static-plan.example.json`: 최소 permissions, 수동 trigger, SBOM/provenance/signature/vulnerability gate
 - `review/`: 완료된 v312~v314 정적 review 증거
 - `reverse-proxy/README.md`: reverse proxy/HTTPS 고정 계약과 제품 선택 전 확인사항
 - `isolated-validation/README.md`: config/login/pull/build/push/start/cleanup 승인 경계
@@ -50,10 +51,18 @@ docker login approved: no
 image pull/build/push approved: no/no/no
 ```
 
-## 아직 결정하지 않은 것
+## 정적 설계 완료
 
-- GitHub Actions 최소 permissions와 trigger
-- SBOM/provenance/signature/vulnerability gate의 구체 도구
+- `workflow_dispatch` only + exact `main` SHA + protected environment
+- read-only validation/build-scan job과 write 권한이 격리된 publish job
+- full-length action SHA 필수(실제 SHA 검토/승인은 아직 안 됨)
+- SPDX SBOM, Trivy HIGH/CRITICAL, provenance, keyless signature, verification gate
+
+## 아직 결정·승인하지 않은 것
+
+- action별 실제 upstream 40자리 SHA
+- repository Actions 설정과 publish environment 생성
+- `.github/workflows/` 파일 생성과 workflow 실행
 - 관리형 PostgreSQL 공급자/상품/region/private network
 - 실제 provider CA와 endpoint
 - reverse proxy 제품, DNS, certificate 운영 방식

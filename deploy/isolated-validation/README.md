@@ -1,4 +1,4 @@
-# Isolated production validation plan — v316
+# Isolated production validation plan — v317
 
 이 폴더는 승인 경계와 안전한 검사 도구만 보관합니다. 실제 production secret, CA, certificate, key, registry credential 또는 production env 파일을 두지 않습니다.
 

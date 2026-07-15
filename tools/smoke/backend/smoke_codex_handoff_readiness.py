@@ -24,15 +24,17 @@ REQUIRED = (
     "docs/README.md",
     "docs/current/CURRENT_STATUS.md",
     "docs/current/BACKEND_IMAGE_GHCR_POLICY.md",
+    "docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md",
+    "deploy/github-actions-ghcr-static-plan.example.json",
     "docs/handoff/NEXT_CHAT_PROMPT.md",
     "docs/handoff/NEXT_CHAT_HANDOFF.md",
 )
 
 
 def load_tool():
-    spec = importlib.util.spec_from_file_location("v316_codex_handoff", TOOL)
+    spec = importlib.util.spec_from_file_location("v317_codex_handoff", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v316 Codex handoff checker")
+        raise RuntimeError("cannot load v317 Codex handoff checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -51,7 +53,7 @@ def expect_blocked(module, temp: Path) -> None:
         module.inspect_codex_handoff(temp)
     except module.CodexHandoffError:
         return
-    raise AssertionError("unsafe v316 Codex handoff fixture was not blocked")
+    raise AssertionError("unsafe v317 Codex handoff fixture was not blocked")
 
 
 def main() -> int:
@@ -66,6 +68,9 @@ def main() -> int:
     assert result["imageBuildApproved"] is False
     assert result["runtimeMutationExecuted"] is False
     assert result["packageSafetyMode"] in {"git-index", "filesystem-absence"}
+    assert result["githubActionsStaticPlanVerified"] is True
+    assert result["workflowFilePresent"] is False
+    assert result["actionShasApproved"] is False
 
     mutations = (
         ("namespace", "invented-account"),
@@ -120,7 +125,7 @@ def main() -> int:
         local_env.write_text("NOT_A_REAL_SECRET=fixture-only\n", encoding="utf-8")
         expect_blocked(module, temp)
 
-    print("OK: v316 Codex/GHCR namespace handoff smoke passed")
+    print("OK: v317 Codex/GHCR static plan handoff smoke passed")
     return 0
 
 
