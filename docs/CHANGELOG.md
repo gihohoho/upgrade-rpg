@@ -1,3 +1,13 @@
+# v315.codex-ghcr-namespace-handoff-ready
+
+- GitHub/GHCR namespace를 사용자 확인값 `gihohoho`로 고정.
+- backend repository를 `ghcr.io/gihohoho/upgrade-rpg-backend`로 고정.
+- Codex용 루트 `AGENTS.md`, v315 prompt/handoff, read-only checker/smoke 추가.
+- CI credential 우선안을 GitHub Actions `GITHUB_TOKEN`, local credential/PAT는 deferred로 기록.
+- v313/v314 이미지 정책 문서와 JSON을 archive/review로 이동하고 superseded checker를 정리.
+- `docs/` 루트의 archive 중복 사본을 제거하고 현재/보관 문서 인덱스를 단일화.
+- 실제 workflow, token, Docker login/pull/build/push, DB/Alembic mutation은 실행하지 않음.
+
 # v310 문서/인수인계 정리
 
 - current/archive 문서 구조 정리
@@ -1176,4 +1186,3 @@
 - Added `tools/smoke/backend/smoke_backend_local_cors.py` and included it in `tools/run_smoke_core.sh`.
 - Added `docs/current/LOCAL_DEV_CORS.md`.
 - Did not change `.env`, DB, seed, auth, route paths, API response body, write logic, Write Guard, Preview/Apply request bodies, or game content.
-

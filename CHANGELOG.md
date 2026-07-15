@@ -1,3 +1,22 @@
+# v315.codex-ghcr-namespace-handoff-ready
+
+- GitHub/GHCR namespace를 사용자 확인값 `gihohoho`로 고정.
+- backend repository를 `ghcr.io/gihohoho/upgrade-rpg-backend`로 고정.
+- Codex용 루트 `AGENTS.md`, v315 prompt/handoff, read-only checker/smoke 추가.
+- CI credential 우선안을 GitHub Actions `GITHUB_TOKEN`, local credential/PAT는 deferred로 기록.
+- v313/v314 이미지 정책 문서와 JSON을 archive/review로 이동하고 superseded checker를 정리.
+- `docs/` 루트의 archive 중복 사본을 제거하고 현재/보관 문서 인덱스를 단일화.
+- 실제 workflow, token, Docker login/pull/build/push, DB/Alembic mutation은 실행하지 않음.
+
+# v314.ghcr-amd64-base-image-selection
+
+- Selected GitHub Container Registry (`ghcr.io`) with private `upgrade-rpg-backend` repository naming.
+- Kept `<github-account-or-organization>` unresolved and fail-closed; no account or organization name was invented.
+- Selected `linux/amd64` as the production target platform.
+- Added `backend/Dockerfile.production` pinned to `python:3.11.15-slim-bookworm@sha256:28255a3ace7eb4c48bc1b57b90af29e1bc82b4fd6c60614a8e3dce61b87ff941` while preserving the local Dockerfile.
+- Added v314 selection JSON, read-only checker, fail-closed smoke, current documentation, and handoff synchronization.
+- Did not run registry login, Docker pull/build/push, container/network/volume mutation, DB connection, or Alembic mutation.
+
 # v313.backend-image-source-digest-policy
 
 - 기호 PC에서 통과한 v312 Compose config render-only 안전 요약을 `deploy/review/production-compose-config-render-v312.json`에 기록했습니다.

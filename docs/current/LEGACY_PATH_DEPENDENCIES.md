@@ -15,22 +15,22 @@
 
 | 대상 | 존재 | 참조 수 | 참조 파일 수 | 판단 |
 | --- | --- | --- | --- | --- |
-| `admin.html` | O | 288 | 142 | 절대 이동 금지 |
-| `index.html` | O | 155 | 73 | 절대 이동 금지 |
-| `src/` | O | 1650 | 325 | 절대 이동 금지 |
-| `src/api/` | O | 1072 | 282 | Vue 이식 후보이지만 현 위치 유지 |
-| `src/api/admin/` | O | 587 | 221 | Vue 관리자 이식 후보이지만 현 위치 유지 |
-| `src/data/` | O | 91 | 32 | DB seed 준비 전 이동 금지 |
-| `src/rules/` | O | 36 | 16 | 콘텐츠 개발 보류, 현 위치 유지 |
-| `src/state/` | O | 19 | 15 | Vue store 후보, 현 위치 유지 |
-| `src/systems/` | O | 74 | 30 | domain module 후보, 현 위치 유지 |
-| `src/ui/` | O | 23 | 17 | Vue component 대체 후보, 현 위치 유지 |
-| `src/styles/` | O | 30 | 13 | Vue CSS 분해 후보, 현 위치 유지 |
-| `backend/app/api/routes/` | O | 531 | 121 | route path/contract 보호 |
-| `backend/app/services/` | O | 393 | 152 | service contract 보호 |
-| `backend/seeds/` | O | 32 | 12 | 사용자 승인 전 변경 금지 |
-| `tools/run_smoke_core.sh` | O | 117 | 105 | 검증 기준 유지 |
-| `tools/smoke/` | O | 395 | 178 | 경로 의존성 기준 |
+| `admin.html` | O | 262 | 136 | 절대 이동 금지 |
+| `index.html` | O | 133 | 64 | 절대 이동 금지 |
+| `src/` | O | 1505 | 306 | 절대 이동 금지 |
+| `src/api/` | O | 1042 | 271 | Vue 이식 후보이지만 현 위치 유지 |
+| `src/api/admin/` | O | 580 | 217 | Vue 관리자 이식 후보이지만 현 위치 유지 |
+| `src/data/` | O | 64 | 23 | DB seed 준비 전 이동 금지 |
+| `src/rules/` | O | 25 | 11 | 콘텐츠 개발 보류, 현 위치 유지 |
+| `src/state/` | O | 12 | 10 | Vue store 후보, 현 위치 유지 |
+| `src/systems/` | O | 49 | 19 | domain module 후보, 현 위치 유지 |
+| `src/ui/` | O | 14 | 11 | Vue component 대체 후보, 현 위치 유지 |
+| `src/styles/` | O | 19 | 9 | Vue CSS 분해 후보, 현 위치 유지 |
+| `backend/app/api/routes/` | O | 527 | 118 | route path/contract 보호 |
+| `backend/app/services/` | O | 389 | 150 | service contract 보호 |
+| `backend/seeds/` | O | 21 | 10 | 사용자 승인 전 변경 금지 |
+| `tools/run_smoke_core.sh` | O | 115 | 103 | 검증 기준 유지 |
+| `tools/smoke/` | O | 384 | 164 | 경로 의존성 기준 |
 
 ## 참조 파일 예시
 
@@ -38,22 +38,22 @@
 
 | 대상 | 참조 파일 예시 |
 |---|---|
-| `admin.html` | `CHANGELOG.md`<br>`NEXT_CHAT_PROMPT.md`<br>`README.md`<br>`admin.html`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_LAYOUT_NAVIGATION_SHELL.md`<br>`docs/ADMIN_LAYOUT_SHELL_SPLIT.md` |
-| `index.html` | `CHANGELOG.md`<br>`NEXT_CHAT_PROMPT.md`<br>`README.md`<br>`admin.html`<br>`docs/ADMIN_PAGE_URL_HELPER.md`<br>`docs/ADMIN_READONLY_PAGE.md`<br>`docs/CHANGELOG.md`<br>`docs/CODE_MAP.md` |
-| `src/` | `CHANGELOG.md`<br>`NEXT_CHAT_PROMPT.md`<br>`README.md`<br>`admin.html`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md` |
+| `admin.html` | `AGENTS.md`<br>`CHANGELOG.md`<br>`README.md`<br>`admin.html`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_LAYOUT_NAVIGATION_SHELL.md`<br>`docs/ADMIN_LAYOUT_SHELL_SPLIT.md` |
+| `index.html` | `AGENTS.md`<br>`CHANGELOG.md`<br>`README.md`<br>`admin.html`<br>`docs/CHANGELOG.md`<br>`docs/archive/stage-notes/ADMIN_PAGE_URL_HELPER.md`<br>`docs/archive/stage-notes/ADMIN_READONLY_PAGE.md`<br>`docs/archive/stage-notes/CODE_MAP.md` |
+| `src/` | `AGENTS.md`<br>`CHANGELOG.md`<br>`README.md`<br>`admin.html`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md` |
 | `src/api/` | `CHANGELOG.md`<br>`admin.html`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT_CONTRACT.md` |
 | `src/api/admin/` | `CHANGELOG.md`<br>`admin.html`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT_CONTRACT.md` |
-| `src/data/` | `docs/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/CODE_MAP.md`<br>`docs/FRONTEND_MASTER_DATA_BRIDGE.md`<br>`docs/MASTER_DATA_PARITY_CHECKER.md`<br>`docs/PROJECT_STRUCTURE.md`<br>`docs/SEED_EXTRACTION.md`<br>`docs/SKILL_DAMAGE_TEXT_FIX.md` |
-| `src/rules/` | `docs/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/CODE_MAP.md`<br>`docs/PROJECT_STRUCTURE.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/current/PROJECT_STRUCTURE.md` |
-| `src/state/` | `docs/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/CODE_MAP.md`<br>`docs/PROJECT_STRUCTURE.md`<br>`docs/SKILL_STRUCTURE_READY.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/SKILL_STRUCTURE_READY.md`<br>`docs/current/PROJECT_STRUCTURE.md` |
-| `src/systems/` | `docs/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/CODE_MAP.md`<br>`docs/DAMAGE_TEXT_POSITION_FIX.md`<br>`docs/EQUIP_SKILL_BOSS_RESULT_STAGE3.md`<br>`docs/KILL_REWARD_RESULT_STAGE2.md`<br>`docs/PROJECT_STRUCTURE.md`<br>`docs/SEED_EXTRACTION.md` |
-| `src/ui/` | `docs/CODE_MAP.md`<br>`docs/EQUIP_SKILL_BOSS_RESULT_STAGE3.md`<br>`docs/MASTER_DATA_FIELD_ZONE_ASSET_FALLBACK.md`<br>`docs/PROJECT_STRUCTURE.md`<br>`docs/SKILL_STRUCTURE_READY.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/EQUIP_SKILL_BOSS_RESULT_STAGE3.md`<br>`docs/archive/stage-notes/MASTER_DATA_FIELD_ZONE_ASSET_FALLBACK.md` |
-| `src/styles/` | `docs/CSS_AUDIT.md`<br>`docs/CSS_MERGE_REPORT.md`<br>`docs/PROJECT_STRUCTURE.md`<br>`docs/archive/stage-notes/CSS_AUDIT.md`<br>`docs/archive/stage-notes/CSS_MERGE_REPORT.md`<br>`docs/current/PROJECT_STRUCTURE.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`index.html` |
+| `src/data/` | `docs/MASTER_DATA_PARITY_CHECKER.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/FRONTEND_MASTER_DATA_BRIDGE.md`<br>`docs/archive/stage-notes/SEED_EXTRACTION.md`<br>`docs/archive/stage-notes/SKILL_DAMAGE_TEXT_FIX.md`<br>`docs/archive/stage-notes/SKILL_STRUCTURE_READY.md` |
+| `src/rules/` | `docs/archive/stage-notes/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`index.html`<br>`src/rules/README.md`<br>`src/state/STATE_SPLIT_READY.md`<br>`tools/extract_seed_data.js` |
+| `src/state/` | `docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/SKILL_STRUCTURE_READY.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`frontend/vue-app/src/stores/README.md`<br>`index.html`<br>`tools/extract_seed_data.js`<br>`tools/report_legacy_path_dependencies.py` |
+| `src/systems/` | `docs/archive/stage-notes/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/DAMAGE_TEXT_POSITION_FIX.md`<br>`docs/archive/stage-notes/EQUIP_SKILL_BOSS_RESULT_STAGE3.md`<br>`docs/archive/stage-notes/KILL_REWARD_RESULT_STAGE2.md`<br>`docs/archive/stage-notes/SEED_EXTRACTION.md`<br>`docs/archive/stage-notes/SKILL_STRUCTURE_READY.md` |
+| `src/ui/` | `docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/EQUIP_SKILL_BOSS_RESULT_STAGE3.md`<br>`docs/archive/stage-notes/MASTER_DATA_FIELD_ZONE_ASSET_FALLBACK.md`<br>`docs/archive/stage-notes/SKILL_STRUCTURE_READY.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`index.html`<br>`tools/report_legacy_path_dependencies.py`<br>`tools/smoke/frontend/smoke_action_results.js` |
+| `src/styles/` | `docs/archive/stage-notes/CSS_AUDIT.md`<br>`docs/archive/stage-notes/CSS_MERGE_REPORT.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`index.html`<br>`tools/report_legacy_path_dependencies.py`<br>`tools/smoke/frontend/smoke_vue_admin_readonly_catalog_panel.py`<br>`tools/smoke/frontend/smoke_vue_admin_readonly_relations_panel.py`<br>`tools/smoke/frontend/smoke_vue_readonly_api_status_panel.py` |
 | `backend/app/api/routes/` | `CHANGELOG.md`<br>`backend/app/api/routes/admin_openapi_route_contract.py`<br>`backend/app/api/routes/admin_request_metadata_contract.py`<br>`backend/app/api/routes/admin_response_metadata_contract.py`<br>`backend/app/api/routes/admin_route_map_contract.py`<br>`backend/app/api/routes/admin_route_module_import_contract.py`<br>`backend/app/api/routes/admin_route_operation_contract.py`<br>`backend/app/api/routes/admin_route_services.py` |
 | `backend/app/services/` | `CHANGELOG.md`<br>`backend/app/api/routes/admin_preview_side_effect_contract.py`<br>`backend/app/api/routes/admin_route_error_helpers.py`<br>`backend/app/api/routes/admin_service_mutation_boundary_contract.py`<br>`backend/app/services/admin/README.md`<br>`backend/app/services/admin/admin_shared_utils.py`<br>`backend/app/services/admin_service.py`<br>`backend/app/services/admin_service_facade_contract.py` |
-| `backend/seeds/` | `backend/seeds/README.md`<br>`docs/CHANGELOG.md`<br>`docs/LOCAL_DEV_SETUP.md`<br>`docs/MASTER_DATA_PARITY_CHECKER.md`<br>`docs/SEED_EXTRACTION.md`<br>`docs/SEED_IMPORT.md`<br>`docs/archive/stage-notes/SEED_EXTRACTION.md`<br>`docs/archive/stage-notes/SEED_IMPORT.md` |
-| `tools/run_smoke_core.sh` | `CHANGELOG.md`<br>`NEXT_CHAT_PROMPT.md`<br>`README_BACKEND_READY.md`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_GUIDE.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md` |
-| `tools/smoke/` | `CHANGELOG.md`<br>`NEXT_CHAT_PROMPT.md`<br>`backend/README.md`<br>`backend/seeds/README.md`<br>`docs/ADMIN_BOOTSTRAP_BINDINGS_READINESS.md`<br>`docs/ADMIN_CATALOG_COMPACT_HELP_UX.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_GUIDE.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md` |
+| `backend/seeds/` | `backend/seeds/README.md`<br>`docs/CHANGELOG.md`<br>`docs/LOCAL_DEV_SETUP.md`<br>`docs/MASTER_DATA_PARITY_CHECKER.md`<br>`docs/archive/stage-notes/SEED_EXTRACTION.md`<br>`docs/archive/stage-notes/SEED_IMPORT.md`<br>`tools/extract_seed_data.js`<br>`tools/report_legacy_path_dependencies.py` |
+| `tools/run_smoke_core.sh` | `AGENTS.md`<br>`CHANGELOG.md`<br>`NEXT_CHAT_PROMPT.md`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_GUIDE.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md` |
+| `tools/smoke/` | `CHANGELOG.md`<br>`backend/README.md`<br>`backend/seeds/README.md`<br>`docs/ADMIN_BOOTSTRAP_BINDINGS_READINESS.md`<br>`docs/ADMIN_CATALOG_COMPACT_HELP_UX.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_GUIDE.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md` |
 
 ## HTML 진입점 직접 로드 관계
 
@@ -121,108 +121,132 @@
 
 | 순서 | 명령 |
 | --- | --- |
-| 1 | `node tools/smoke/frontend/smoke_admin_edit_stale_guard.js` |
-| 2 | `node tools/smoke/frontend/smoke_admin_write_dev_key_guard.js` |
-| 3 | `node tools/smoke/frontend/smoke_admin_guarded_edit_apply.js` |
-| 4 | `node tools/smoke/frontend/smoke_admin_change_log_rollback.js` |
-| 5 | `node tools/smoke/frontend/smoke_admin_rollback_snapshot_preview.js` |
-| 6 | `node tools/smoke/frontend/smoke_admin_preview_result_summary.js` |
-| 7 | `node tools/smoke/frontend/smoke_admin_preview_browser_verification.js` |
-| 8 | `node tools/smoke/frontend/smoke_admin_preview_live_api_render_check.js` |
-| 9 | `node tools/smoke/frontend/smoke_admin_workspace_navigation.js` |
-| 10 | `node tools/smoke/frontend/smoke_admin_catalog_help_compact_ux.js` |
-| 11 | `node tools/smoke/frontend/smoke_admin_practical_ux_bundle.js` |
-| 12 | `node tools/smoke/frontend/smoke_admin_create_blueprint_readonly.js` |
-| 13 | `node tools/smoke/frontend/smoke_admin_create_draft_preview.js` |
-| 14 | `node tools/smoke/frontend/smoke_admin_create_apply_limited.js` |
-| 15 | `node tools/smoke/frontend/smoke_admin_create_apply_fieldzones.js` |
-| 16 | `node tools/smoke/frontend/smoke_admin_create_apply_bosses.js` |
-| 17 | `node tools/smoke/frontend/smoke_admin_create_apply_skills_droptables.js` |
-| 18 | `node tools/smoke/frontend/smoke_admin_create_apply_items_dropitems.js` |
-| 19 | `node tools/smoke/frontend/smoke_admin_create_apply_level_links.js` |
-| 20 | `node tools/smoke/frontend/smoke_admin_create_lifecycle_guide.js` |
-| 21 | `node tools/smoke/frontend/smoke_admin_create_lifecycle_guard_helper.js` |
-| 22 | `node tools/smoke/frontend/smoke_admin_create_lifecycle_result_summary.js` |
-| 23 | `node tools/smoke/frontend/smoke_admin_create_lifecycle_batch_check.js` |
-| 24 | `node tools/smoke/frontend/smoke_admin_js_split_readiness.js` |
-| 25 | `node tools/smoke/frontend/smoke_admin_layout_shell_split.js` |
-| 26 | `node tools/smoke/frontend/smoke_admin_change_log_split_contract.js` |
-| 27 | `node tools/smoke/frontend/smoke_admin_change_logs_split.js` |
-| 28 | `node tools/smoke/frontend/smoke_admin_create_lifecycle_split_contract.js` |
-| 29 | `node tools/smoke/frontend/smoke_admin_create_lifecycle_split.js` |
-| 30 | `node tools/smoke/frontend/smoke_admin_edit_draft_split_contract.js` |
-| 31 | `node tools/smoke/frontend/smoke_admin_edit_draft_split.js` |
-| 32 | `node tools/smoke/frontend/smoke_admin_master_catalog_split.js` |
-| 33 | `node tools/smoke/frontend/smoke_admin_overview_snapshots_split.js` |
-| 34 | `node tools/smoke/frontend/smoke_admin_field_help_split.js` |
-| 35 | `node tools/smoke/frontend/smoke_admin_settings_helpers_split.js` |
-| 36 | `node tools/smoke/frontend/smoke_admin_bootstrap_bindings_readiness.js` |
-| 37 | `node tools/smoke/frontend/smoke_admin_thin_entry_cleanup.js` |
-| 38 | `node tools/smoke/frontend/smoke_admin_create_delete_rollback.js` |
-| 39 | `node tools/smoke/frontend/smoke_admin_create_delete_restore.js` |
-| 40 | `node tools/smoke/frontend/smoke_admin_layout_navigation_shell.js` |
-| 41 | `node tools/smoke/frontend/smoke_admin_post_edit_api_verify.js` |
-| 42 | `node tools/smoke/frontend/smoke_admin_master_api_verify.js` |
-| 43 | `node tools/smoke/game/smoke_runtime_stacked_enhance_space_guard.js` |
-| 44 | `node tools/smoke/game/smoke_runtime_stackable_items.js` |
-| 45 | `node tools/smoke/game/smoke_save_data_integrity_verify.js` |
-| 46 | `node tools/smoke/game/smoke_save_data_restore_reload_lock.js` |
-| 47 | `node tools/smoke/game/smoke_save_data_restore_guard.js` |
-| 48 | `python tools/smoke/frontend/smoke_admin_change_log_filter_binding.py` |
-| 49 | `python tools/smoke/frontend/smoke_admin_change_logs_schema_guard.py` |
-| 50 | `python tools/smoke/frontend/smoke_admin_readonly_api_structure.py` |
-| 51 | `python tools/smoke/contracts/smoke_backend_admin_service_split_contract.py` |
-| 52 | `python tools/smoke/contracts/smoke_backend_admin_overview_snapshots_service_split.py` |
-| 53 | `python tools/smoke/contracts/smoke_backend_admin_master_catalog_service_split.py` |
-| 54 | `python tools/smoke/contracts/smoke_backend_admin_create_lifecycle_service_split.py` |
-| 55 | `python tools/smoke/contracts/smoke_backend_admin_change_log_service_split.py` |
-| 56 | `python tools/smoke/contracts/smoke_backend_admin_edit_draft_service_split.py` |
-| 57 | `python tools/smoke/contracts/smoke_backend_admin_shared_utils_service_split.py` |
-| 58 | `python tools/smoke/contracts/smoke_backend_admin_config_readiness_service_split.py` |
-| 59 | `python tools/smoke/contracts/smoke_backend_admin_route_response_helper.py` |
-| 60 | `python tools/smoke/contracts/smoke_backend_admin_route_params_error_helpers.py` |
-| 61 | `python tools/smoke/contracts/smoke_backend_admin_route_response_data_meta_helpers.py` |
-| 62 | `python tools/smoke/contracts/smoke_backend_admin_route_module_split.py` |
-| 63 | `python tools/smoke/contracts/smoke_backend_admin_overview_route_module_split.py` |
-| 64 | `python tools/smoke/contracts/smoke_backend_admin_route_map_contract.py` |
-| 65 | `python tools/smoke/contracts/smoke_backend_admin_route_module_import_contract.py` |
-| 66 | `python tools/smoke/contracts/smoke_backend_admin_runtime_route_contract.py` |
-| 67 | `python tools/smoke/contracts/smoke_backend_admin_route_operation_contract.py` |
-| 68 | `python tools/smoke/contracts/smoke_backend_admin_openapi_route_contract.py` |
-| 69 | `python tools/smoke/contracts/smoke_backend_admin_response_metadata_contract.py` |
-| 70 | `python tools/smoke/contracts/smoke_backend_admin_request_metadata_contract.py` |
-| 71 | `python tools/smoke/contracts/smoke_backend_admin_schema_model_contract.py` |
-| 72 | `python tools/smoke/contracts/smoke_backend_admin_schema_field_constraint_contract.py` |
-| 73 | `python tools/smoke/contracts/smoke_backend_admin_request_payload_validation_contract.py` |
-| 74 | `python tools/smoke/contracts/smoke_backend_admin_validation_error_compatibility_contract.py` |
-| 75 | `python tools/smoke/contracts/smoke_backend_admin_request_content_negotiation_contract.py` |
-| 76 | `python tools/smoke/contracts/smoke_backend_admin_request_media_size_boundary_contract.py` |
-| 77 | `python tools/smoke/contracts/smoke_backend_admin_request_header_encoding_contract.py` |
-| 78 | `python tools/smoke/contracts/smoke_backend_admin_request_transport_header_observation_contract.py` |
-| 79 | `python tools/smoke/contracts/smoke_backend_admin_write_replay_safety_contract.py` |
-| 80 | `python tools/smoke/contracts/smoke_admin_frontend_schema_contract_readiness.py` |
-| 81 | `python tools/smoke/contracts/smoke_backend_admin_route_service_legacy_cleanup.py` |
-| 82 | `python tools/smoke/contracts/smoke_backend_admin_service_facade_contract.py` |
-| 83 | `python tools/smoke/frontend/smoke_admin_create_blueprint_api_structure.py` |
-| 84 | `python tools/smoke/game/smoke_save_snapshot_integrity_api_structure.py` |
-| 85 | `python tools/smoke/game/smoke_save_snapshot_api_structure.py` |
-| 86 | `python tools/smoke/contracts/smoke_admin_contract_registry_sync.py` |
-| 87 | `python tools/smoke/contracts/smoke_backend_admin_preview_integration.py` |
-| 88 | `python tools/smoke/backend/smoke_backend_packaging_contract.py` |
-| 89 | `python tools/smoke/backend/smoke_backend_local_cors.py` |
-| 90 | `python tools/smoke/backend/smoke_backend_route_map_report.py` |
-| 91 | `python tools/smoke/backend/smoke_postgres_alembic_readiness.py` |
-| 92 | `python tools/smoke/backend/smoke_backend_alembic_async_env.py` |
-| 93 | `python tools/smoke/backend/smoke_postgres_runtime_readonly_state.py` |
-| 94 | `python tools/smoke/backend/smoke_windows_subprocess_decode.py` |
-| 95 | `python tools/smoke/backend/smoke_postgres_schema_equivalence.py` |
-| 96 | `python tools/smoke/game/smoke_next_chat_handoff.py` |
-| 97 | `python tools/smoke/contracts/smoke_backend_admin_preview_side_effect_contract.py` |
-| 98 | `python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contract.py` |
-| 99 | `python tools/smoke/contracts/smoke_backend_admin_diff_engine_contract.py` |
-| 100 | `python tools/smoke/contracts/smoke_backend_admin_change_log_shared_diff.py` |
-| 101 | `python tools/smoke/contracts/smoke_backend_admin_rollback_snapshot_contract.py` |
-| 102 | `python tools/smoke/contracts/smoke_backend_admin_rollback_preview_snapshot.py` |
+| 1 | `node tools/smoke_docs_index_archive.js` |
+| 2 | `node tools/smoke/frontend/smoke_admin_edit_stale_guard.js` |
+| 3 | `node tools/smoke/frontend/smoke_admin_write_dev_key_guard.js` |
+| 4 | `node tools/smoke/frontend/smoke_admin_guarded_edit_apply.js` |
+| 5 | `node tools/smoke/frontend/smoke_admin_change_log_rollback.js` |
+| 6 | `node tools/smoke/frontend/smoke_admin_rollback_snapshot_preview.js` |
+| 7 | `node tools/smoke/frontend/smoke_admin_preview_result_summary.js` |
+| 8 | `node tools/smoke/frontend/smoke_admin_preview_browser_verification.js` |
+| 9 | `node tools/smoke/frontend/smoke_admin_preview_live_api_render_check.js` |
+| 10 | `node tools/smoke/frontend/smoke_admin_workspace_navigation.js` |
+| 11 | `node tools/smoke/frontend/smoke_admin_catalog_help_compact_ux.js` |
+| 12 | `node tools/smoke/frontend/smoke_admin_practical_ux_bundle.js` |
+| 13 | `node tools/smoke/frontend/smoke_admin_create_blueprint_readonly.js` |
+| 14 | `node tools/smoke/frontend/smoke_admin_create_draft_preview.js` |
+| 15 | `node tools/smoke/frontend/smoke_admin_create_apply_limited.js` |
+| 16 | `node tools/smoke/frontend/smoke_admin_create_apply_fieldzones.js` |
+| 17 | `node tools/smoke/frontend/smoke_admin_create_apply_bosses.js` |
+| 18 | `node tools/smoke/frontend/smoke_admin_create_apply_skills_droptables.js` |
+| 19 | `node tools/smoke/frontend/smoke_admin_create_apply_items_dropitems.js` |
+| 20 | `node tools/smoke/frontend/smoke_admin_create_apply_level_links.js` |
+| 21 | `node tools/smoke/frontend/smoke_admin_create_lifecycle_guide.js` |
+| 22 | `node tools/smoke/frontend/smoke_admin_create_lifecycle_guard_helper.js` |
+| 23 | `node tools/smoke/frontend/smoke_admin_create_lifecycle_result_summary.js` |
+| 24 | `node tools/smoke/frontend/smoke_admin_create_lifecycle_batch_check.js` |
+| 25 | `node tools/smoke/frontend/smoke_admin_js_split_readiness.js` |
+| 26 | `node tools/smoke/frontend/smoke_admin_layout_shell_split.js` |
+| 27 | `node tools/smoke/frontend/smoke_admin_change_log_split_contract.js` |
+| 28 | `node tools/smoke/frontend/smoke_admin_change_logs_split.js` |
+| 29 | `node tools/smoke/frontend/smoke_admin_create_lifecycle_split_contract.js` |
+| 30 | `node tools/smoke/frontend/smoke_admin_create_lifecycle_split.js` |
+| 31 | `node tools/smoke/frontend/smoke_admin_edit_draft_split_contract.js` |
+| 32 | `node tools/smoke/frontend/smoke_admin_edit_draft_split.js` |
+| 33 | `node tools/smoke/frontend/smoke_admin_master_catalog_split.js` |
+| 34 | `node tools/smoke/frontend/smoke_admin_overview_snapshots_split.js` |
+| 35 | `node tools/smoke/frontend/smoke_admin_field_help_split.js` |
+| 36 | `node tools/smoke/frontend/smoke_admin_settings_helpers_split.js` |
+| 37 | `node tools/smoke/frontend/smoke_admin_bootstrap_bindings_readiness.js` |
+| 38 | `node tools/smoke/frontend/smoke_admin_thin_entry_cleanup.js` |
+| 39 | `node tools/smoke/frontend/smoke_admin_create_delete_rollback.js` |
+| 40 | `node tools/smoke/frontend/smoke_admin_create_delete_restore.js` |
+| 41 | `node tools/smoke/frontend/smoke_admin_layout_navigation_shell.js` |
+| 42 | `node tools/smoke/frontend/smoke_admin_post_edit_api_verify.js` |
+| 43 | `node tools/smoke/frontend/smoke_admin_master_api_verify.js` |
+| 44 | `node tools/smoke/game/smoke_runtime_stacked_enhance_space_guard.js` |
+| 45 | `node tools/smoke/game/smoke_runtime_stackable_items.js` |
+| 46 | `node tools/smoke/game/smoke_save_data_integrity_verify.js` |
+| 47 | `node tools/smoke/game/smoke_save_data_restore_reload_lock.js` |
+| 48 | `node tools/smoke/game/smoke_save_data_restore_guard.js` |
+| 49 | `python tools/smoke/frontend/smoke_admin_change_log_filter_binding.py` |
+| 50 | `python tools/smoke/frontend/smoke_admin_change_logs_schema_guard.py` |
+| 51 | `python tools/smoke/frontend/smoke_admin_readonly_api_structure.py` |
+| 52 | `python tools/smoke/contracts/smoke_backend_admin_service_split_contract.py` |
+| 53 | `python tools/smoke/contracts/smoke_backend_admin_overview_snapshots_service_split.py` |
+| 54 | `python tools/smoke/contracts/smoke_backend_admin_master_catalog_service_split.py` |
+| 55 | `python tools/smoke/contracts/smoke_backend_admin_create_lifecycle_service_split.py` |
+| 56 | `python tools/smoke/contracts/smoke_backend_admin_change_log_service_split.py` |
+| 57 | `python tools/smoke/contracts/smoke_backend_admin_edit_draft_service_split.py` |
+| 58 | `python tools/smoke/contracts/smoke_backend_admin_shared_utils_service_split.py` |
+| 59 | `python tools/smoke/contracts/smoke_backend_admin_config_readiness_service_split.py` |
+| 60 | `python tools/smoke/contracts/smoke_backend_admin_route_response_helper.py` |
+| 61 | `python tools/smoke/contracts/smoke_backend_admin_route_params_error_helpers.py` |
+| 62 | `python tools/smoke/contracts/smoke_backend_admin_route_response_data_meta_helpers.py` |
+| 63 | `python tools/smoke/contracts/smoke_backend_admin_route_module_split.py` |
+| 64 | `python tools/smoke/contracts/smoke_backend_admin_overview_route_module_split.py` |
+| 65 | `python tools/smoke/contracts/smoke_backend_admin_route_map_contract.py` |
+| 66 | `python tools/smoke/contracts/smoke_backend_admin_route_module_import_contract.py` |
+| 67 | `python tools/smoke/contracts/smoke_backend_admin_runtime_route_contract.py` |
+| 68 | `python tools/smoke/contracts/smoke_backend_admin_route_operation_contract.py` |
+| 69 | `python tools/smoke/contracts/smoke_backend_admin_openapi_route_contract.py` |
+| 70 | `python tools/smoke/contracts/smoke_backend_admin_response_metadata_contract.py` |
+| 71 | `python tools/smoke/contracts/smoke_backend_admin_request_metadata_contract.py` |
+| 72 | `python tools/smoke/contracts/smoke_backend_admin_schema_model_contract.py` |
+| 73 | `python tools/smoke/contracts/smoke_backend_admin_schema_field_constraint_contract.py` |
+| 74 | `python tools/smoke/contracts/smoke_backend_admin_request_payload_validation_contract.py` |
+| 75 | `python tools/smoke/contracts/smoke_backend_admin_validation_error_compatibility_contract.py` |
+| 76 | `python tools/smoke/contracts/smoke_backend_admin_request_content_negotiation_contract.py` |
+| 77 | `python tools/smoke/contracts/smoke_backend_admin_request_media_size_boundary_contract.py` |
+| 78 | `python tools/smoke/contracts/smoke_backend_admin_request_header_encoding_contract.py` |
+| 79 | `python tools/smoke/contracts/smoke_backend_admin_request_transport_header_observation_contract.py` |
+| 80 | `python tools/smoke/contracts/smoke_backend_admin_write_replay_safety_contract.py` |
+| 81 | `python tools/smoke/contracts/smoke_admin_frontend_schema_contract_readiness.py` |
+| 82 | `python tools/smoke/contracts/smoke_backend_admin_route_service_legacy_cleanup.py` |
+| 83 | `python tools/smoke/contracts/smoke_backend_admin_service_facade_contract.py` |
+| 84 | `python tools/smoke/frontend/smoke_admin_create_blueprint_api_structure.py` |
+| 85 | `python tools/smoke/game/smoke_save_snapshot_integrity_api_structure.py` |
+| 86 | `python tools/smoke/game/smoke_save_snapshot_api_structure.py` |
+| 87 | `python tools/smoke/contracts/smoke_admin_contract_registry_sync.py` |
+| 88 | `python tools/smoke/contracts/smoke_backend_admin_preview_integration.py` |
+| 89 | `python tools/smoke/backend/smoke_backend_packaging_contract.py` |
+| 90 | `python tools/smoke/backend/smoke_backend_local_cors.py` |
+| 91 | `python tools/smoke/backend/smoke_backend_route_map_report.py` |
+| 92 | `python tools/smoke/backend/smoke_postgres_alembic_readiness.py` |
+| 93 | `python tools/smoke/backend/smoke_backend_alembic_async_env.py` |
+| 94 | `python tools/smoke/backend/smoke_postgres_runtime_readonly_state.py` |
+| 95 | `python tools/smoke/backend/smoke_windows_subprocess_decode.py` |
+| 96 | `python tools/smoke/backend/smoke_postgres_schema_equivalence.py` |
+| 97 | `python tools/smoke/backend/smoke_postgres_backup_restore_preflight.py` |
+| 98 | `python tools/smoke/backend/smoke_postgres_backup_creation.py` |
+| 99 | `python tools/smoke/backend/smoke_postgres_restore_rehearsal_database_creation.py` |
+| 100 | `python tools/smoke/backend/smoke_postgres_restore_rehearsal.py` |
+| 101 | `python tools/smoke/backend/smoke_postgres_migration_test_database_creation.py` |
+| 102 | `python tools/smoke/backend/smoke_postgres_initial_alembic_revision_creation.py` |
+| 103 | `python tools/smoke/backend/smoke_postgres_initial_alembic_revision_manual_review.py` |
+| 104 | `python tools/smoke/backend/smoke_postgres_migration_test_database_upgrade.py` |
+| 105 | `python tools/smoke/backend/smoke_postgres_migration_test_database_downgrade.py` |
+| 106 | `python tools/smoke/backend/smoke_postgres_migration_test_database_roundtrip.py` |
+| 107 | `python tools/smoke/backend/smoke_postgres_source_baseline_stamp_preflight.py` |
+| 108 | `python tools/smoke/backend/smoke_postgres_restore_rehearsal_stamp_guard.py` |
+| 109 | `python tools/smoke/backend/smoke_postgres_source_baseline_stamp_guard.py` |
+| 110 | `python tools/smoke/backend/smoke_postgres_baseline_completion_state.py` |
+| 111 | `python tools/smoke/backend/smoke_postgres_next_revision_preflight.py` |
+| 112 | `python tools/smoke/backend/smoke_postgres_deployment_runtime_readiness.py` |
+| 113 | `python tools/smoke/backend/smoke_runtime_engine_source_binding_inspector.py` |
+| 114 | `python tools/smoke/backend/smoke_runtime_config_hardening.py` |
+| 115 | `python tools/smoke/backend/smoke_production_secrets_tls_container_static.py` |
+| 116 | `python tools/smoke/backend/smoke_production_capacity_tls_network_plan.py` |
+| 117 | `python tools/smoke/backend/smoke_production_managed_postgres_reverse_proxy_selection.py` |
+| 118 | `python tools/smoke/backend/smoke_production_compose_config_render.py` |
+| 119 | `python tools/smoke/backend/smoke_codex_handoff_readiness.py` |
+| 120 | `python tools/smoke/game/smoke_next_chat_handoff.py` |
+| 121 | `python tools/smoke/contracts/smoke_backend_admin_preview_side_effect_contract.py` |
+| 122 | `python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contract.py` |
+| 123 | `python tools/smoke/contracts/smoke_backend_admin_diff_engine_contract.py` |
+| 124 | `python tools/smoke/contracts/smoke_backend_admin_change_log_shared_diff.py` |
+| 125 | `python tools/smoke/contracts/smoke_backend_admin_rollback_snapshot_contract.py` |
+| 126 | `python tools/smoke/contracts/smoke_backend_admin_rollback_preview_snapshot.py` |
 
 ## smoke 내부에서 많이 발견된 경로 문자열
 
@@ -233,7 +257,7 @@
 | `index.html` | 46 |
 | `src/api/save-data-dev-badge.js` | 44 |
 | `src/api/game-api-client.js` | 41 |
-| `tools/run_smoke_core.sh` | 37 |
+| `tools/run_smoke_core.sh` | 38 |
 | `backend/app/services/admin_service_legacy_markers.py` | 37 |
 | `src/api/save-data-restore-guard.js` | 32 |
 | `backend/app/api/routes/admin_master_data_routes.py` | 24 |
@@ -267,7 +291,7 @@
 | `backend/app/services/admin/admin_change_log_service.py` | 6 |
 | `backend/app/api/routes/admin_response_meta_helpers.py` | 6 |
 | `src/components/AdminMasterDetailPanel.vue` | 6 |
-| `src/systems/item-system.js` | 5 |
+| `backend/Dockerfile` | 5 |
 
 ## Vue 앱 생성 위치 결정
 

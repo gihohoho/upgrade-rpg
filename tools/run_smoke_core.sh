@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+node tools/smoke_docs_index_archive.js
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
@@ -130,7 +132,7 @@ python tools/smoke/backend/smoke_production_secrets_tls_container_static.py
 python tools/smoke/backend/smoke_production_capacity_tls_network_plan.py
 python tools/smoke/backend/smoke_production_managed_postgres_reverse_proxy_selection.py
 python tools/smoke/backend/smoke_production_compose_config_render.py
-python tools/smoke/backend/smoke_backend_image_source_digest_policy.py
+python tools/smoke/backend/smoke_codex_handoff_readiness.py
 python tools/smoke/game/smoke_next_chat_handoff.py
 python tools/smoke/contracts/smoke_backend_admin_preview_side_effect_contract.py
 python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contract.py

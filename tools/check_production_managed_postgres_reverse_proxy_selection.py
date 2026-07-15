@@ -186,7 +186,7 @@ def inspect_production_architecture_selection(root: Path) -> dict[str, Any]:
     _require(
         bool(
             re.fullmatch(
-                r"<approved-registry>/<approved-namespace>/upgrade-rpg-backend@sha256:<approved-64-hex-digest>",
+                r"ghcr\.io/gihohoho/upgrade-rpg-backend@sha256:<approved-64-hex-digest>",
                 env_inventory.get("BACKEND_IMAGE", ""),
             )
         ),

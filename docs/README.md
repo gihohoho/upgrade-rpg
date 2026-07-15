@@ -1,20 +1,16 @@
-# Current Documents — v313
+# Docs Index
 
-- 최신 작업: `v313.backend-image-source-digest-policy`
-- PostgreSQL/Alembic baseline: 완료
-- 운영 선택: 관리형 PostgreSQL + 외부 reverse proxy HTTPS + backend 1/1
-- Compose config render-only: 기호 PC 실제 통과
-- 현재 이미지 정책: digest-only, provider/platform/base digest 선택 전 pull/build/push 차단
+## 지금 자주 보는 문서
 
-## 먼저 볼 문서
+- `current/`: 현재 판단 문서. 가장 먼저 확인합니다.
+- `handoff/`: 다음 채팅/Codex 인수인계 문서입니다.
+- `contracts/`: 관리자·backend 계약 정의입니다.
 
-- `CURRENT_STATUS.md`
-- `BACKEND_IMAGE_SOURCE_DIGEST_POLICY.md`
-- `POSTGRES_PRODUCTION_MANAGED_DB_PROXY_SELECTION.md`
-- `POSTGRES_PRODUCTION_CAPACITY_TLS_NETWORK_PLAN.md`
-- `POSTGRES_PRODUCTION_STATIC_VALIDATION.md`
-- `POSTGRES_PRODUCTION_DEPLOYMENT_TEMPLATE.md`
-- `ROADMAP.md`
-- `PROJECT_STRUCTURE.md`
+## 보관 문서
 
-완료된 PostgreSQL baseline 단계는 `docs/archive/postgres-baseline/`에 보관합니다.
+- `docs/archive/stage-notes/`: 과거 기능 단계 기록
+- `docs/archive/postgres-baseline/`: 완료된 PostgreSQL/Alembic baseline 기록
+- `docs/archive/runtime-hardening/`: 완료된 runtime hardening 기록
+- `docs/archive/production-deployment/`: 완료된 운영 배포 준비 단계 기록
+
+루트 `docs/`에 있던 archive와 동일한 중복 사본은 제거했습니다. 과거 기록은 삭제하지 않고 archive에 보존합니다.

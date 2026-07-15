@@ -1,4 +1,4 @@
-# Managed PostgreSQL / reverse proxy HTTPS selection — v313 status
+# Managed PostgreSQL / reverse proxy HTTPS selection — current through v315
 
 ## 확정한 운영 기본 방향
 
@@ -78,7 +78,7 @@ result: production-compose-config-render-verified-no-runtime-mutation
 production Compose는 `build:`를 사용하지 않고 digest-pinned `BACKEND_IMAGE`를 요구합니다.
 
 ```txt
-<approved-registry>/<approved-namespace>/upgrade-rpg-backend@sha256:<approved-64-hex-digest>
+ghcr.io/gihohoho/upgrade-rpg-backend@sha256:<approved-64-hex-digest>
 ```
 
 registry, namespace, target platform, base image digest는 아직 선택하지 않았습니다. 따라서 pull/build/push는 실행하지 않습니다.
@@ -89,7 +89,7 @@ registry, namespace, target platform, base image digest는 아직 선택하지 �
 review-render-report-and-approve-backend-image-source-digest
 ```
 
-구체적인 image 정책과 다음 선택 항목은 `BACKEND_IMAGE_SOURCE_DIGEST_POLICY.md`를 따릅니다.
+현재 이미지와 credential 판단은 `BACKEND_IMAGE_GHCR_POLICY.md`를 우선합니다.
 
 ## 계속 차단
 

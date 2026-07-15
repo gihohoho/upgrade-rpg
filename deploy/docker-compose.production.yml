@@ -1,4 +1,4 @@
-# v312 managed PostgreSQL + external reverse proxy production review template only.
+# v315 managed PostgreSQL + external reverse proxy production review template only.
 # This file is approved for `docker compose config` rendering with review-only
 # sentinel values. Do not pull/build/start containers or use real production
 # secrets until each later approval boundary is explicitly granted.

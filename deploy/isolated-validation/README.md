@@ -1,4 +1,4 @@
-# Isolated production validation plan — v313
+# Isolated production validation plan — v315
 
 이 폴더는 승인 경계와 안전한 검사 도구만 보관합니다. 실제 production secret, CA, certificate, key, registry credential 또는 production env 파일을 두지 않습니다.
 
@@ -33,32 +33,31 @@ container/image/network/volume mutation executed: no
 ## Stage 2A — 완료: image source/digest policy
 
 - production image는 digest-only
-- registry provider와 target platform은 아직 deferred
 - source commit, base image digest, backend image digest 기록 필수
 - SBOM/provenance/signature/vulnerability review 필수
-- 현재 base image `python:3.11-slim`은 mutable tag이므로 build 차단
+- 실제 image build/push는 실행하지 않음
 
-현재 상태:
+## Stage 2B — 완료: GHCR/platform/base digest/namespace 선택
 
-```txt
-pull/build/push approved: no/no/no
-registry credential applied: no
-actual image digest applied: no
-```
+- registry provider: GitHub Container Registry (`ghcr.io`)
+- namespace: `gihohoho`
+- repository: `ghcr.io/gihohoho/upgrade-rpg-backend`
+- repository visibility: private
+- target platform: `linux/amd64`
+- production Dockerfile base: `python:3.11.15-slim-bookworm@sha256:28255a3ace7eb4c48bc1b57b90af29e1bc82b4fd6c60614a8e3dce61b87ff941`
+- local `backend/Dockerfile`은 보존
 
-## Stage 2B — 별도 승인 필요: registry/repository/platform/base digest 선택
+선택 과정에서는 registry 또는 Docker mutation을 실행하지 않았습니다. `gihohoho`는 기호가 직접 확인한 고정 namespace입니다.
 
-먼저 다음을 문서로 확정합니다.
+## Stage 2C — 현재: credential/workflow 정적 계획
 
-- registry provider
-- namespace/repository
-- target platform
-- base image exact digest
-- credential 보관 방식
+- CI credential 우선안: GitHub Actions `GITHUB_TOKEN`
+- local credential/PAT: deferred
+- `.github/workflows/` 생성 승인: no
+- Docker login/pull/build/push 승인: no/no/no/no
+- 다음 단계: 최소 permissions, 안전 trigger, supply-chain gate를 문서와 fail-closed 검사로 설계
 
-선택만으로 Docker 명령을 실행하지 않습니다.
-
-## Stage 2C — 각각 별도 승인 필요: pull/build/push
+## Stage 2D — 각각 별도 승인 필요: pull/build/push
 
 - base image pull
 - backend image build

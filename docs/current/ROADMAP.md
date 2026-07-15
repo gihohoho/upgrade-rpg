@@ -1,36 +1,24 @@
-# Roadmap — v313
+# Roadmap — v315
 
-## 완료
+## 현재 완료
 
-- PostgreSQL/Alembic baseline 완성
-- runtime health/pool/lifecycle/production guard 검증
-- 관리형 PostgreSQL + provider CA verify-full 선택
-- 외부 reverse proxy HTTPS 선택
-- backend 1 replica / 1 worker 선택
-- backend-only production Compose와 immutable image 경계
-- 기호 PC에서 config render-only 통과
-- config render 안전 요약 증거 기록
-- digest-only backend image 정책과 공급망 검증 게이트 추가
+- PostgreSQL/Alembic baseline
+- runtime pool/lifecycle hardening
+- managed PostgreSQL + reverse proxy HTTPS + backend 1/1 선택
+- Compose config render-only 실제 통과
+- GHCR/private/linux-amd64/base digest 선택
+- GitHub namespace `gihohoho` 확정
+- Codex용 `AGENTS.md`와 안전 인수인계 준비
 
-## 다음 순서
+## 다음 승인 순서
 
-1. v313 image policy 정적 검사
-2. registry provider 선택
-3. namespace/repository 이름 선택
-4. production target platform 선택
-5. `python:3.11-slim` base image exact digest 검토
-6. 별도 승인 후 base image pull
-7. 별도 승인 후 backend image build
-8. SBOM/provenance/vulnerability 결과 검토
-9. 별도 승인 후 registry push와 digest/signature 검증
-10. 관리형 PostgreSQL provider/region/private network/connection limit 선택
-11. reverse proxy 제품/DNS/certificate 운영 방식 선택
-12. isolated start와 cleanup을 각각 별도 승인
+1. GitHub Actions 최소 permissions와 trigger를 정적 문서로 설계
+2. SBOM/provenance/signature/vulnerability gate 설계
+3. workflow 파일 생성 여부 별도 승인
+4. workflow 정적 검증
+5. base image pull 별도 승인
+6. backend image build 별도 승인
+7. GHCR push와 pushed digest 확인 별도 승인
+8. isolated container 실행 별도 승인
 
-## 계속 보류
-
-- 실제 production secret/CA/cert/key/registry credential
-- Docker pull/build/push/up/down/resource 변경
-- managed DB 실제 연결
-- 새 Alembic revision과 DB mutation
-- 게임 콘텐츠와 Vue write/인증
+현재는 1~2의 **설계 문서와 검사기만** 허용됩니다.

@@ -114,7 +114,7 @@ def inspect_production_static_templates(root: Path) -> dict[str, Any]:
         ),
         "backendDigestPlaceholder": bool(
             re.fullmatch(
-                r"<approved-registry>/<approved-namespace>/upgrade-rpg-backend@sha256:<approved-64-hex-digest>",
+                r"ghcr\.io/gihohoho/upgrade-rpg-backend@sha256:<approved-64-hex-digest>",
                 env_inventory.get("BACKEND_IMAGE", ""),
             )
         ),

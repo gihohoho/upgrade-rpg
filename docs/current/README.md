@@ -1,20 +1,12 @@
-# Current Documents — v313
+# Current Documents — v315
 
-- 최신 작업: `v313.backend-image-source-digest-policy`
-- PostgreSQL/Alembic baseline: 완료
-- 운영 선택: 관리형 PostgreSQL + 외부 reverse proxy HTTPS + backend 1/1
-- Compose config render-only: 기호 PC 실제 통과
-- 현재 이미지 정책: digest-only, provider/platform/base digest 선택 전 pull/build/push 차단
+현재 판단은 이 폴더와 루트 `AGENTS.md`를 우선합니다.
 
-## 먼저 볼 문서
+- `CURRENT_STATUS.md`: 현재 완료 상태와 금지 경계
+- `BACKEND_IMAGE_GHCR_POLICY.md`: `gihohoho` namespace와 credential 정책
+- `POSTGRES_PRODUCTION_MANAGED_DB_PROXY_SELECTION.md`: 관리형 DB/reverse proxy 선택
+- `POSTGRES_PRODUCTION_CAPACITY_TLS_NETWORK_PLAN.md`: pool/max_connections/TLS/network 계산
+- `ROADMAP.md`: 다음 승인 순서
+- `PROJECT_STRUCTURE.md`: 현재 폴더 구조
 
-- `CURRENT_STATUS.md`
-- `BACKEND_IMAGE_SOURCE_DIGEST_POLICY.md`
-- `POSTGRES_PRODUCTION_MANAGED_DB_PROXY_SELECTION.md`
-- `POSTGRES_PRODUCTION_CAPACITY_TLS_NETWORK_PLAN.md`
-- `POSTGRES_PRODUCTION_STATIC_VALIDATION.md`
-- `POSTGRES_PRODUCTION_DEPLOYMENT_TEMPLATE.md`
-- `ROADMAP.md`
-- `PROJECT_STRUCTURE.md`
-
-완료된 PostgreSQL baseline 단계는 `docs/archive/postgres-baseline/`에 보관합니다.
+완료된 과거 단계는 `docs/archive/`, 배포 review JSON은 `deploy/review/`에 있습니다.
