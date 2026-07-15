@@ -1,3 +1,11 @@
+# v316.codex-handoff-audit-fix
+
+- v315 커밋의 strict checker와 실제 추적 파일을 대조해 superseded 활성 파일 정리 누락을 수정.
+- 보관본이 있는 v313 문서/정책/checker와 더 이상 실행되지 않는 v313 smoke를 활성 경로에서 제거.
+- 로컬 작업 폴더에서는 금지 경로의 Git 추적 여부만 확인하고, 추출된 ZIP에서는 금지 경로의 실제 존재를 계속 차단하도록 검사 모드를 분리.
+- ZIP 모드에 `backend/.env` fixture를 추가해 secret 경로 검사가 fail-closed로 유지됨을 검증.
+- 실제 `.env` 내용, workflow, token/PAT, Docker, registry, DB, Alembic은 읽거나 변경·실행하지 않음.
+
 # v315.codex-ghcr-namespace-handoff-ready
 
 - GitHub/GHCR namespace를 사용자 확인값 `gihohoho`로 고정.

@@ -1,9 +1,9 @@
-# Upgrade RPG Codex handoff — v315
+# Upgrade RPG Codex handoff — v316
 
 ## 기준
 
-- ZIP: `rpg_v315_codex_ghcr_namespace_handoff_ready.zip`
-- latest: `v315.codex-ghcr-namespace-handoff-ready`
+- ZIP: `rpg_v316_codex_handoff_audit_fix.zip`
+- latest: `v316.codex-handoff-audit-fix`
 - Codex 규칙: `AGENTS.md`
 - backend virtualenv: `backend/.venv`
 - readiness: `v250.backend-admin-rollback-snapshot`
@@ -41,10 +41,10 @@ workflow/login/pull/build/push approved: no/no/no/no/no
 
 `gihohoho`는 사용자 확인 완료 값이며 앞으로 고정합니다.
 
-## v315 검증 완료
+## v316 검증 완료
 
 ```txt
-Codex handoff strict checker: passed
+Codex handoff strict checker: passed (workspace `git-index`, ZIP `filesystem-absence`)
 Codex/GHCR fail-closed smoke: passed
 handoff/document synchronization: passed
 docs index/archive smoke: passed
@@ -52,9 +52,10 @@ Python compileall: passed
 JavaScript node --check: passed
 Bash syntax: passed
 JSON parse: passed
-core smoke: 전체 명령을 환경 제한 때문에 구간별 실행, 모두 passed
+core smoke: 관련 전용/정적 구간 passed; 전체 run은 깨진 `backend/.venv` 기반 Python 때문에 SQLAlchemy import에서 중단
 Vue files changed: no (npm ci/build not required)
 Docker/registry/DB/Alembic mutation: none
+v315 superseded active files and dead smoke: removed
 ```
 
 ## 다음 첫 작업

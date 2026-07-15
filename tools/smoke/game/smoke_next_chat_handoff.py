@@ -5,8 +5,8 @@ import hashlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v315.codex-ghcr-namespace-handoff-ready"
-ZIP_NAME = "rpg_v315_codex_ghcr_namespace_handoff_ready.zip"
+VERSION = "v316.codex-handoff-audit-fix"
+ZIP_NAME = "rpg_v316_codex_handoff_audit_fix.zip"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 REVISION_SHA256 = "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa"
@@ -141,7 +141,7 @@ def main() -> int:
     if actual_sha != REVISION_SHA256:
         raise AssertionError(f"reviewed revision SHA-256 differs: {actual_sha}")
 
-    print("OK: v315 Codex handoff and document structure are synchronized")
+    print("OK: v316 Codex handoff and document structure are synchronized")
     return 0
 
 

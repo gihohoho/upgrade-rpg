@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v315.codex-ghcr-namespace-handoff-ready",
+  "schemaVersion": "v316.codex-handoff-audit-fix",
   "reviewOnly": true,
   "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
   "registryProvider": "github-container-registry",

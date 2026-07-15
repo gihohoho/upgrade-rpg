@@ -1,4 +1,4 @@
-# Backend image GHCR policy — v315
+# Backend image GHCR policy — v316
 
 ## 확정값
 

@@ -1,4 +1,4 @@
-# Next Steps — v315
+# Next Steps — v316
 
 1. `python tools/check_codex_handoff_readiness.py --strict`
 2. GitHub Actions 최소 `permissions`와 안전한 trigger를 정적 문서로 설계

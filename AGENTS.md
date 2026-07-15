@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v315
+# Upgrade RPG Codex working rules — v316
 
 이 파일은 저장소 전체에 적용됩니다. Codex는 작업을 시작할 때 이 파일과 `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -13,7 +13,7 @@
 
 ## 현재 고정 상태
 
-- latest: `v315.codex-ghcr-namespace-handoff-ready`
+- latest: `v316.codex-handoff-audit-fix`
 - GitHub remote: `https://github.com/gihohoho/upgrade-rpg.git`
 - GHCR namespace: `gihohoho`
 - backend image repository: `ghcr.io/gihohoho/upgrade-rpg-backend` (private)

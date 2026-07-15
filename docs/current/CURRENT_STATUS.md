@@ -1,9 +1,9 @@
-# Current Status — v315
+# Current Status — v316
 
 ## 현재 기준
 
-- 최신 작업: `v315.codex-ghcr-namespace-handoff-ready`
-- 기준 ZIP: `rpg_v315_codex_ghcr_namespace_handoff_ready.zip`
+- 최신 작업: `v316.codex-handoff-audit-fix`
+- 기준 ZIP: `rpg_v316_codex_handoff_audit_fix.zip`
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -56,9 +56,10 @@ Codex는 루트 `AGENTS.md`를 우선 읽습니다. 첫 검사는 `python tools/
 - Vue write/인증 연결
 - 게임 콘텐츠와 밸런스 개발
 
-## v315 검증
+## v316 검증
 
-- v315 strict checker와 fail-closed smoke 통과
+- strict checker와 fail-closed smoke 통과 (`git-index` workspace / `filesystem-absence` ZIP)
 - Python/JavaScript/Bash/JSON 문법 통과
-- 기존 core smoke 전체 명령을 구간별로 실행해 모두 통과
+- 관련 v316 전용 smoke와 정적 구간 통과; 전체 core는 깨진 `backend/.venv` 기반 Python 때문에 SQLAlchemy import에서 중단
 - Vue 변경 없음, Docker/registry/DB/Alembic mutation 없음
+- v315에서 남은 superseded 활성 파일과 실행되지 않는 옛 smoke 제거

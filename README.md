@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v315.codex-ghcr-namespace-handoff-ready**
+현재 기준: **v316.codex-handoff-audit-fix**
 
 Codex는 루트 `AGENTS.md`를 먼저 읽고, 현재 상태는 `docs/current/CURRENT_STATUS.md`에서 확인합니다.
 

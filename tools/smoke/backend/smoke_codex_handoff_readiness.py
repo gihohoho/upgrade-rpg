@@ -30,9 +30,9 @@ REQUIRED = (
 
 
 def load_tool():
-    spec = importlib.util.spec_from_file_location("v315_codex_handoff", TOOL)
+    spec = importlib.util.spec_from_file_location("v316_codex_handoff", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v315 Codex handoff checker")
+        raise RuntimeError("cannot load v316 Codex handoff checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -51,7 +51,7 @@ def expect_blocked(module, temp: Path) -> None:
         module.inspect_codex_handoff(temp)
     except module.CodexHandoffError:
         return
-    raise AssertionError("unsafe v315 Codex handoff fixture was not blocked")
+    raise AssertionError("unsafe v316 Codex handoff fixture was not blocked")
 
 
 def main() -> int:
@@ -65,6 +65,7 @@ def main() -> int:
     assert result["workflowCreationApproved"] is False
     assert result["imageBuildApproved"] is False
     assert result["runtimeMutationExecuted"] is False
+    assert result["packageSafetyMode"] in {"git-index", "filesystem-absence"}
 
     mutations = (
         ("namespace", "invented-account"),
@@ -112,7 +113,14 @@ def main() -> int:
         secret.write_text("not-a-real-token", encoding="utf-8")
         expect_blocked(module, temp)
 
-    print("OK: v315 Codex/GHCR namespace handoff smoke passed")
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp = Path(temp_dir)
+        copy_fixture(temp)
+        local_env = temp / "backend/.env"
+        local_env.write_text("NOT_A_REAL_SECRET=fixture-only\n", encoding="utf-8")
+        expect_blocked(module, temp)
+
+    print("OK: v316 Codex/GHCR namespace handoff smoke passed")
     return 0
 
 

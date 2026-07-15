@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the v315 Codex/GHCR handoff using repository files only."""
+"""Validate the v316 Codex/GHCR handoff using repository files only."""
 from __future__ import annotations
 
 import argparse
@@ -7,9 +7,10 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import subprocess
 from typing import Any
 
-TOOL_VERSION = "v315.codex-ghcr-namespace-handoff-ready"
+TOOL_VERSION = "v316.codex-handoff-audit-fix"
 READY_RESULT = "codex-ghcr-namespace-handoff-verified-workflow-plan-only"
 BLOCKED_RESULT = "blocked-or-failed"
 NEXT_SAFE_STAGE = "review-github-actions-permissions-and-static-workflow-plan"
@@ -69,6 +70,36 @@ def _first_from(text: str) -> str:
     raise CodexHandoffError("Dockerfile FROM image is missing")
 
 
+def _verify_forbidden_handoff_paths(root: Path, forbidden_paths: tuple[Path, ...]) -> str:
+    """Keep local ignored files usable while remaining fail-closed for extracted ZIPs."""
+    if (root / ".git").exists():
+        relative_paths = [path.relative_to(root).as_posix() for path in forbidden_paths]
+        completed = subprocess.run(
+            (
+                "git",
+                "-c",
+                f"safe.directory={root.resolve().as_posix()}",
+                "-C",
+                str(root),
+                "ls-files",
+                "--",
+                *relative_paths,
+            ),
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        _require(completed.returncode == 0, "cannot verify forbidden paths against the Git index")
+        tracked = tuple(line.strip() for line in completed.stdout.splitlines() if line.strip())
+        _require(not tracked, f"local or secret path is tracked by Git: {', '.join(tracked)}")
+        return "git-index"
+
+    for path in forbidden_paths:
+        _require(not path.exists(), f"local or secret path must not be present in handoff ZIP: {path.relative_to(root)}")
+    return "filesystem-absence"
+
+
 def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     policy = _read_json(root / "deploy/backend-image-ghcr-policy.example.json")
     env_example = _read(root / "deploy/production.env.example")
@@ -84,7 +115,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     handoff_prompt = _read(root / "docs/handoff/NEXT_CHAT_PROMPT.md")
     handoff_state = _read(root / "docs/handoff/NEXT_CHAT_HANDOFF.md")
 
-    _require(policy.get("schemaVersion") == TOOL_VERSION, "unexpected v315 schemaVersion")
+    _require(policy.get("schemaVersion") == TOOL_VERSION, "unexpected v316 schemaVersion")
     _require(_bool(policy, "reviewOnly") is True, "policy must remain review-only")
     _require(policy.get("githubRemote") == EXPECTED_REMOTE, "GitHub remote changed")
     _require(policy.get("registryProvider") == "github-container-registry", "registry provider must be GHCR")
@@ -174,8 +205,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         root / "local-backups",
         root / "local-review-artifacts",
     )
-    for path in forbidden_paths:
-        _require(not path.exists(), f"local or secret path must not be present in handoff ZIP: {path.relative_to(root)}")
+    package_safety_mode = _verify_forbidden_handoff_paths(root, forbidden_paths)
 
     # Superseded current files should be archived, not duplicated.
     for path in (
@@ -209,6 +239,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "imageBuildApproved": False,
         "imagePushApproved": False,
         "runtimeMutationExecuted": False,
+        "packageSafetyMode": package_safety_mode,
         "result": READY_RESULT,
         "nextSafeStage": NEXT_SAFE_STAGE,
     }
@@ -224,6 +255,7 @@ def render(result: dict[str, Any]) -> str:
         f"- visibility/target: {result['repositoryVisibility']} / {result['targetPlatform']}",
         f"- base image digest approved: {result['baseImageDigestApproved']}",
         f"- credential strategy: {result['ciCredentialStrategy']} / local={result['localCredentialStrategy']}",
+        f"- forbidden path verification: {result['packageSafetyMode']}",
         "- workflow/login/pull/build/push approved: no/no/no/no/no",
         "- workflow/login/pull/build/push executed: no/no/no/no/no",
         "- container/registry/DB/Alembic mutation executed: no/no/no/no",

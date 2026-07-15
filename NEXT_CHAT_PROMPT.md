@@ -1,13 +1,13 @@
 기호의 Upgrade RPG 프로젝트를 Codex에서 이어서 진행합니다.
 
-이번에 첨부하는 최신 ZIP `rpg_v315_codex_ghcr_namespace_handoff_ready.zip`을 반드시 기준으로 작업해주세요. 압축을 푼 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 가장 먼저 읽고 그 규칙을 계속 지켜주세요.
+이번에 첨부하는 최신 ZIP `rpg_v316_codex_handoff_audit_fix.zip`을 반드시 기준으로 작업해주세요. 압축을 푼 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 가장 먼저 읽고 그 규칙을 계속 지켜주세요.
 
 사용자는 코딩을 거의 모르는 기호입니다. 항상 한국어로 쉽고 자세하게 설명하고, 모든 터미널 명령 바로 위에 실행 위치와 Python `.venv` 상태를 적어주세요. backend 가상환경은 `backend/.venv`이고 Git Bash에서 `backend` 폴더에서 `source .venv/Scripts/activate`로 켭니다. Vue/npm은 `frontend/vue-app`에서 실행하며 Python `.venv`가 필요 없습니다. 새 설치가 없으면 없다고 명확히 알려주세요. Git 명령은 프로젝트 루트에서 `git status && git add . && git commit -m "..." && git push` 형태의 한 줄 블록으로 주세요.
 
 현재 고정값:
 
 ```txt
-latest: v315.codex-ghcr-namespace-handoff-ready
+latest: v316.codex-handoff-audit-fix
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR namespace: gihohoho
 backend repository: ghcr.io/gihohoho/upgrade-rpg-backend
@@ -25,7 +25,7 @@ workflow/login/pull/build/push/up/down approved: no
 
 `gihohoho`는 기호가 직접 확인한 고정 namespace입니다. placeholder로 되돌리거나 다른 이름을 추측하지 마세요. repository 주소는 `ghcr.io/gihohoho/upgrade-rpg-backend`로 고정합니다. 실제 token, PAT, Docker credential은 파일·Git·ZIP·채팅에 넣지 마세요.
 
-첫 작업은 읽기 전용 v315 검사입니다.
+첫 작업은 읽기 전용 v316 검사입니다.
 
 실행 위치: `backend` 폴더  
 `.venv` 상태: 꺼져 있을 때

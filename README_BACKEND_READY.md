@@ -1,4 +1,4 @@
-# Backend readiness — v315
+# Backend readiness — v316
 
 ## 완료
 
@@ -15,7 +15,7 @@
 - target platform: `linux/amd64`
 - production base image exact manifest digest 승인
 - 로컬 Dockerfile 보존 + `backend/Dockerfile.production` 분리
-- Codex용 `AGENTS.md`와 v315 읽기 전용 handoff 검사
+- Codex용 `AGENTS.md`와 v316 읽기 전용 handoff 검사
 
 ## 아직 미완료
 

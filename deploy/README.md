@@ -1,4 +1,4 @@
-# Production deployment review template — v315
+# Production deployment review template — v316
 
 `deploy/docker-compose.production.yml`은 로컬 `docker-compose.yml`을 대체하지 않는 운영 검토 template입니다. review sentinel 기반 `docker compose config`는 기호 PC에서 통과했지만 image login/pull/build/push 및 container 실행은 승인되지 않았습니다.
 
