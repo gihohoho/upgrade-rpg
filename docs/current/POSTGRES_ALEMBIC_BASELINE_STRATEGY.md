@@ -165,3 +165,21 @@ v302는 원본보다 먼저 `rpg_game_restore_rehearsal_v290`에서만 stamp 동
 - 성공 시 허용되는 유일한 추가는 `alembic_version` 1 table / revision row 1개
 
 현재는 `--inspect` 읽기 전용 결과만 수집합니다. 실제 rehearsal stamp는 별도 사용자 승인 전 실행하지 않습니다.
+
+
+## v305 baseline 완료 확정
+
+문서 앞부분의 `existing-schema-without-alembic-baseline`은 최초 전략을 정할 당시의 분류입니다. 사용자 승인 경계를 따라 rehearsal과 source에서 baseline stamp 및 post-check가 모두 완료됐습니다.
+
+```txt
+current classification: alembic-managed-baseline-complete
+source: 23/749 / application 22/748 / v295_initial_schema
+rehearsal: 23/749 / application 22/748 / v295_initial_schema
+migration: 23/1 / v295_initial_schema
+source/rehearsal application digests: identical
+v302/v304 execution reports: verified
+```
+
+`tools/check_postgres_baseline_completion_state.py --strict`가 이 완료 상태를 읽기 전용으로 고정합니다.
+
+다음 단계는 새 revision 생성이 아니라 **다음 revision 필요 여부를 확인하는 read-only preflight**입니다. 기존 stamp 재실행과 autogenerate/upgrade/downgrade는 별도 승인 전까지 금지합니다.

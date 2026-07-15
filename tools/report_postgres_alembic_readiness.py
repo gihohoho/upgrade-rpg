@@ -15,7 +15,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-PROJECT_VERSION = "v302"
+PROJECT_VERSION = "v306"
 REPORT_PATH = Path("docs/current/POSTGRES_ALEMBIC_READINESS.md")
 
 
@@ -138,7 +138,7 @@ def render(root: Path) -> str:
 - v284에서 사용자 실제 `MissingGreenlet` 결과를 근거로 Alembic online 경로를 async engine 방식으로 수정했습니다.
 - 기호 컴퓨터에서 `alembic history`, `heads`, `current`가 모두 정상 완료되고 PostgreSQL 연결이 확인되었습니다.
 - 기호 컴퓨터의 실제 runtime 점검에서 모델/DB 테이블 22개, 전체 row 748개, `alembic_version` 없음, DB health 정상 결과가 확인되었습니다.
-- 현재 분류는 `existing-schema-without-alembic-baseline`이며 기존 데이터 보존형 전략으로 확정되었습니다.
+- 사용자 PC의 v304 source post-check 결과로 현재 분류는 `alembic-managed-baseline-complete`로 전환되었습니다.
 - v287에서 Windows Docker 출력의 UTF-8/cp949 혼합 decode 오류를 보완했습니다.
 - v288에서는 columns/types/nullability/PK/FK/unique/index/check 구조를 읽기 전용으로 비교합니다.
 - v289에서는 PostgreSQL `FLOAT` alias를 정규화해 `DOUBLE PRECISION` reflection false positive를 제거합니다.
@@ -157,7 +157,11 @@ def render(root: Path) -> str:
 - v301에서는 source 22 tables / 748 rows / no Alembic, exact backup/revision, restore evidence, v300 round-trip head를 한 번에 읽기 전용으로 재검사하는 source baseline stamp preflight를 추가합니다.
 - 사용자 PC에서 v301 preflight가 `ready-for-separate-restore-rehearsal-stamp-approval`로 실제 통과했습니다.
 - v302에서는 exact restore rehearsal DB만 대상으로 고정하고, 22개 application table 구조와 전체 748개 row-content SHA-256을 stamp 전후 비교하는 guard를 추가합니다.
-- 실제 rehearsal `stamp head` 실행은 여전히 별도 사용자 승인 전 금지입니다.
+- 사용자 승인 후 restore rehearsal `stamp head`와 source `stamp head`가 각각 실행·검증되었습니다.
+- v303 rehearsal post-check는 23/749, application 22/748, digest preserved, v302 report verified로 통과했습니다.
+- v304 source post-check는 23/749, application 22/748, revision `v295_initial_schema`, v304 report verified로 통과했습니다.
+- v305에서는 baseline 완료 상태를 읽기 전용 checker와 회귀 smoke로 고정했습니다.
+- v306에서는 단일 Alembic graph, 승인 model source snapshot, canonical schema comparison, read-only `compare_metadata()`와 sequence ownership을 함께 확인하며 새 revision 필요 여부만 판정합니다.
 
 ## 현재 구조 요약
 
@@ -236,6 +240,8 @@ python -m pip install -e ".[dev]"
 - isolated migration round-trip re-upgrade guard: `tools/reupgrade_postgres_migration_test_database.py`
 - source baseline stamp read-only preflight: `tools/check_postgres_source_baseline_stamp_preflight.py`
 - restore rehearsal stamp guard: `tools/stamp_postgres_restore_rehearsal_database.py`
+- source baseline stamp final guard: `tools/stamp_postgres_source_database.py`
+- baseline completion state lock: `tools/check_postgres_baseline_completion_state.py`
 
 ## 현재 차단 요소 / 실제 검증 필요 지점
 
@@ -280,8 +286,13 @@ backend runtime/model/schema 경로에서 SQLite URL이나 SQLite 전용 타입�
 20. v302에서 `tools/stamp_postgres_restore_rehearsal_database.py --inspect`로 exact target/revision과 schema/data content signatures를 읽기 전용 수집
 21. 사용자 별도 승인 후에만 restore rehearsal DB에 `stamp head` 실행
 22. stamp 성공 조건은 application schema/data signatures 동일 + `alembic_version` 1 table/1 row 추가뿐
-23. 원본 `rpg_game`에는 restore하거나 revision을 적용하지 않음
-24. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
+23. 사용자 PC에서 rehearsal post-check와 v302 report verified 확인
+24. v304 exact source guard를 별도 승인 후 1회 실행하고 source 23/749, application 22/748, revision `v295_initial_schema` 확인
+25. v304 source execution report verified와 rehearsal/migration 무변경 확인
+26. v305 completion checker로 세 DB, 두 실행 report, exact revision set을 읽기 전용 고정
+27. v306 next-revision preflight로 single head/model snapshot/canonical schema/Alembic candidate diff/sequence ownership 확인
+27. 다음 revision/autogenerate/upgrade/downgrade는 별도 read-only preflight 전까지 금지
+28. `docker compose down -v`는 데이터 전체 삭제이므로 승인 전 금지
 
 ### Stage C — Alembic 실행 방식 검증
 
@@ -292,28 +303,32 @@ backend runtime/model/schema 경로에서 SQLite URL이나 SQLite 전용 타입�
 5. `current`가 DB 연결 오류를 내면 container/URL 상태를 확인하되 schema는 변경하지 않음
 6. 이 단계에서도 revision 생성, upgrade, downgrade, stamp는 실행하지 않음
 
-### Stage D — baseline 전략 선택
+### Stage D — baseline 전략 및 완료 상태
 
-실제 DB 상태 수집 결과, 현재 프로젝트는 다음으로 확정되었습니다.
+초기 수집 시점에는 `existing-schema-without-alembic-baseline`이었습니다. backup, restore rehearsal, empty migration DB 왕복, exact digest 비교를 거쳐 source와 rehearsal에 baseline stamp가 완료되었습니다.
 
-- `existing-schema-without-alembic-baseline`
-- 모델/실제 테이블 22개 일치
-- 전체 row 748개 보존 필요
-- `alembic_version` 없음
+현재 확정 상태:
 
-다만 table 개수 일치만으로 stamp하지 않고 상세 schema 동등성을 먼저 확인합니다.
+- classification: `alembic-managed-baseline-complete`
+- source/rehearsal: 23 public tables / 749 rows
+- application: 22 tables / 748 rows preserved
+- current revision: `v295_initial_schema`
+- source/rehearsal application digest identical
+- v302/v304 execution reports verified
 
-`alembic stamp head`는 migration을 실행하지 않고 이력만 기록하므로, schema가 정확히 일치한다고 검증하기 전에는 사용하면 안 됩니다.
+이전 `stamp head`는 완료됐으며 재실행하지 않습니다.
 
-### Stage E — 사용자 승인 후 첫 migration
+### Stage E — 다음 revision 준비
 
-1. DB 백업
-2. 첫 revision 생성
-3. 생성된 migration 파일 수동 검토
-4. 임시 빈 DB에서 upgrade/downgrade 왕복
-5. table/index/FK/JSONB/Numeric 비교
-6. smoke 및 `/health/db` 확인
-7. 그 후에만 실제 개발 DB 적용
+1. v306 next-revision read-only preflight 실제 결과 확인
+2. model/schema 변경 의도와 범위를 문서로 먼저 고정
+3. source/rehearsal/migration DB와 revision graph를 읽기 전용 재확인
+4. autogenerate 실행 전 별도 승인 경계 마련
+5. 생성되더라도 source가 아닌 isolated migration DB에서만 검토·왕복
+6. table/index/FK/JSONB/Numeric와 API 영향 비교
+7. 그 후에만 다음 migration 실행 여부를 별도 승인
+
+현재는 새 revision 생성, autogenerate, upgrade, downgrade가 모두 미승인입니다.
 
 ## Rollback 원칙
 
@@ -389,29 +404,27 @@ python tools/restore_postgres_rehearsal_database.py --execute
 
 상세 전략은 `docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md`를 기준으로 합니다.
 
-## 이번 단계에서 변경하지 않은 것
+## v306에서 변경하지 않은 것
 
-- DB schema
-- Docker volume
+- DB schema/data
+- Docker container/volume
 - `.env`
 - seed
-- 원본 DB Alembic revision 생성
-- 원본 DB migration 적용/rollback/stamp
+- 새 Alembic revision 생성/autogenerate
+- upgrade/downgrade/stamp 재실행
 - API route path/response body
 - 인증/Write Guard/write 로직
 - 게임 콘텐츠
 
-## 다음 승인 전 체크포인트
+## 다음 읽기 전용 체크포인트
 
-아래 결과를 기호 컴퓨터에서 확인한 뒤 다음 단계로 갑니다.
+```bash
+python tools/check_postgres_next_revision_preflight.py --strict
+```
 
-- `python tools/check_postgres_schema_equivalence.py` 결과
-- 상세 column/type/nullability/PK/FK/unique/index/check 차이 여부
-- DB backup 생성 위치와 파일명
-- backup restore 리허설 대상 임시 DB
-- 별도 빈 DB 최초 revision upgrade/downgrade 검증 계획
+통과 조건은 v305 완료 상태, exact single revision graph, approved model source snapshot, canonical differences=0, Alembic candidate operation 0개, sequence ownership 일치입니다. 통과해도 revision/autogenerate/upgrade/downgrade는 승인되지 않습니다.
 
-## v291-v293 backup / restore rehearsal 경계
+## v291-v293 backup / restore rehearsal 역사적 경계
 
 - backup 폴더: `local-backups/postgres/`
 - 실제 verified backup: `rpg_game_20260714_130403_KST_v290.custom.dump`
@@ -423,7 +436,7 @@ python tools/restore_postgres_rehearsal_database.py --execute
 - v293은 `pg_restore --single-transaction --exit-on-error`로 exact backup을 target에만 복원
 - restore 후 target 22 tables / 748 rows / table별 counts / schema differences=0 검증
 - empty migration test DB: `rpg_game_migration_empty_v290`
-- target drop과 Alembic mutation은 아직 별도 사용자 승인 전 실행 금지
+- 이 구간의 restore/migration 준비는 완료됐습니다. 현재는 DB drop/restore와 기존 stamp 재실행이 금지됩니다.
 """
 
 

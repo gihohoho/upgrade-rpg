@@ -128,3 +128,14 @@ python tools/check_postgres_source_baseline_stamp_preflight.py --strict
 ```
 
 이 도구는 verified backup, restore rehearsal, reviewed revision, isolated migration 왕복 결과와 현재 source schema/data를 읽기 전용으로 대조합니다. `stamp`, `upgrade`, `downgrade`, DB 생성·삭제·복원, `.env` 변경, row write를 실행하지 않습니다. 통과 후 다음 단계도 원본 DB가 아니라 restore rehearsal DB stamp 검증부터 별도 승인으로 진행합니다.
+
+## PostgreSQL baseline 완료 상태 읽기 전용 확인
+
+실행 위치: 프로젝트 루트  
+`.venv` 상태: `backend/.venv`가 켜진 상태
+
+```bash
+python tools/check_postgres_baseline_completion_state.py --strict
+```
+
+이 도구는 source/rehearsal/migration DB, v302/v304 실행 보고서, application digest, exact revision 파일 집합을 읽기 전용으로 확인합니다. stamp 재실행, revision 생성, autogenerate, upgrade, downgrade, DB create/drop/restore, row write를 실행하지 않습니다.

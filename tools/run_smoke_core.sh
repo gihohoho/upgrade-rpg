@@ -121,6 +121,8 @@ python tools/smoke/backend/smoke_postgres_migration_test_database_roundtrip.py
 python tools/smoke/backend/smoke_postgres_source_baseline_stamp_preflight.py
 python tools/smoke/backend/smoke_postgres_restore_rehearsal_stamp_guard.py
 python tools/smoke/backend/smoke_postgres_source_baseline_stamp_guard.py
+python tools/smoke/backend/smoke_postgres_baseline_completion_state.py
+python tools/smoke/backend/smoke_postgres_next_revision_preflight.py
 python tools/smoke/game/smoke_next_chat_handoff.py
 python tools/smoke/contracts/smoke_backend_admin_preview_side_effect_contract.py
 python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contract.py

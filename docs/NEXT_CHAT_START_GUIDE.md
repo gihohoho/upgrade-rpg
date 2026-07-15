@@ -1,16 +1,14 @@
-# Next Chat Start Guide — v304
+# Next Chat Start Guide — v306
 
 ## 기준
 
-- ZIP: `rpg_v304_postgres_source_baseline_stamp_final_guard_ready.zip`
+- ZIP: `rpg_v306_postgres_next_revision_readonly_preflight_ready.zip`
 - backend virtualenv: `backend/.venv`
-- source DB: `rpg_game` — 22/748 / no Alembic
-- restore DB: `rpg_game_restore_rehearsal_v290` — 23/749 / `v295_initial_schema` / report verified
+- source DB: `rpg_game` — 23/749 / application 22/748 / `v295_initial_schema`
+- restore DB: `rpg_game_restore_rehearsal_v290` — 23/749 / `v295_initial_schema`
 - migration DB: `rpg_game_migration_empty_v290` — 23/1 / `v295_initial_schema`
-- revision SHA-256: `24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa`
-- backup SHA-256: `b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481`
-- approved schema digest: `7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921`
-- approved data digest: `ecb19e57283dc6b780426339bfc46f2bac14da63a618249808f30132508f9244`
+- classification: `alembic-managed-baseline-complete`
+- v305 completion check: passed
 
 ## 첫 실행
 
@@ -25,7 +23,7 @@ source .venv/Scripts/activate
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/stamp_postgres_source_database.py --inspect
+python tools/check_postgres_next_revision_preflight.py --strict
 ```
 
-이 명령은 읽기 전용입니다. 통과해도 source `--execute`는 별도 승인 전까지 실행하지 않습니다.
+이 명령은 revision 생성/autogenerate/upgrade/downgrade/stamp를 실행하지 않습니다.

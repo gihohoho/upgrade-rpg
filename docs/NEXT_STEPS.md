@@ -1,44 +1,38 @@
-# Next Steps — v304
+# Next Steps — v306
 
-## 완료
-
-- PostgreSQL schema equivalence differences=0
-- verified backup과 isolated restore rehearsal
-- 최초 revision `v295_initial_schema` 자동/수동 검토
-- isolated migration DB upgrade → downgrade base → upgrade 왕복 검증
-- v301 source preflight 통과
-- v302 restore rehearsal stamp 통과
-- v303 restore rehearsal post-check 및 v302 report 검증 통과
-
-## 현재 읽기 전용 단계
+## 지금 실행
 
 ```bash
-python tools/stamp_postgres_source_database.py --inspect
+python tools/check_postgres_next_revision_preflight.py --strict
 ```
 
-성공 기준:
+## 결과 A — 후보 operation 0개
 
 ```txt
-result: ready-for-separate-source-baseline-stamp-execution-approval
-target: rpg_game
-revision: v295_initial_schema
-source application tables/rows: 22/748
-source/rehearsal schema/data digest: identical
-backup/revision/rehearsal report/migration endpoint: verified
-no mutation executed
+next-revision-not-required-current-schema-equivalent
 ```
 
-## 그다음 별도 승인
+- 새 revision을 만들지 않습니다.
+- `v295_initial_schema` single baseline을 유지합니다.
+- DB 구조 변경 요구가 생길 때까지 Alembic mutation 단계는 멈춥니다.
 
-1. 기호님이 v304 `--inspect` 전체 결과 공유
-2. exact source target/revision/backup SHA/rehearsal result 재확인
-3. 실제 source `stamp head` 실행 여부 별도 승인
-4. 실행 후 source application schema/data digest 동일 확인
-5. `alembic_version` 1 table/1 row와 revision만 추가 확인
-6. rehearsal/migration DB 무변경 확인
-7. source post-check와 v304 local execution report 검증
-8. 그 뒤 Alembic 운영 기준 문서화 및 다음 DB 단계 검토
+## 결과 B — 후보 operation 존재
+
+```txt
+next-revision-review-required-schema-differences-detected
+```
+
+- autogenerate를 실행하지 않습니다.
+- table/column/index/FK/default/nullable별 의도를 먼저 검토합니다.
+- 기존 748개 row 영향과 data migration 필요 여부를 문서화합니다.
+- 별도 승인 후 isolated migration workspace 설계로 이동합니다.
 
 ## 계속 금지
 
-승인 없는 source stamp, source upgrade/downgrade, rehearsal stamp 재실행, migration DB 추가 변경, DB create/drop/restore, Docker volume 삭제, `.env`, seed, 인증, API body/route/write guard, 게임 콘텐츠 변경.
+- source/rehearsal stamp 재실행
+- 새 revision/autogenerate
+- source/rehearsal/migration upgrade/downgrade
+- DB create/drop/restore
+- `.env`, seed, 인증, API route/body/write 변경
+- Docker volume 삭제
+- 게임 콘텐츠/밸런스 변경

@@ -1,10 +1,10 @@
-# PostgreSQL source baseline stamp final guard — v304
+# PostgreSQL source baseline stamp final guard and post-check — v304
 
-## 목적
+## 목적과 완료 상태
 
-원본 PostgreSQL DB `rpg_game`에 Alembic baseline을 기록하기 전에 마지막 읽기 전용 안전 검사를 수행합니다.
+v304는 원본 PostgreSQL DB `rpg_game`의 baseline stamp를 exact target/revision/backup/rehearsal 경계로 제한하고, 실행 전후 application schema/data를 비교하기 위해 준비됐습니다.
 
-이번 v304 준비 단계는 원본 DB를 변경하지 않습니다. 실제 source `stamp head`는 기호님의 별도 명시 승인 전까지 실행하지 않습니다.
+사용자 별도 승인 후 source baseline stamp가 정확히 한 번 실행됐고, 읽기 전용 post-check와 로컬 execution report 검증까지 완료됐습니다.
 
 ## 정확히 고정된 경계
 
@@ -17,19 +17,6 @@ backup SHA-256: b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481
 required rehearsal result: restore-rehearsal-stamp-current-state-verified
 ```
 
-## 읽기 전용 inspect가 확인하는 것
-
-- `.env`의 실제 source DB 이름이 정확히 `rpg_game`인지
-- source가 아직 22 application tables / 748 rows / no Alembic인지
-- source schema가 SQLAlchemy model과 `differences=0`인지
-- source application schema/data digest가 v302 승인값과 같은지
-- 검증된 backup 파일, manifest, source snapshot, v293 restore report가 모두 유지되는지
-- revision 파일과 SHA-256, 자동/수동 검토 결과가 유지되는지
-- restore rehearsal DB가 23 public tables / 749 rows / revision `v295_initial_schema`인지
-- v302 rehearsal 실행 보고서가 `verified`인지
-- migration DB가 v300 왕복 검증 endpoint와 동일한지
-- source와 rehearsal의 22개 application table 전체 구조/행 digest가 같은지
-
 승인 application digest:
 
 ```txt
@@ -37,42 +24,23 @@ schema: 7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921
 data: ecb19e57283dc6b780426339bfc46f2bac14da63a618249808f30132508f9244
 ```
 
-## inspect 명령
+## 실행 전에 검증했던 것
 
-실행 위치: `backend` 폴더  
-`.venv` 상태: 꺼져 있을 때 Git Bash
+- `.env`의 source DB가 정확히 `rpg_game`인지
+- source가 22 application tables / 748 rows / no Alembic인지
+- source schema differences가 0인지
+- verified backup, revision, manual review가 유지되는지
+- rehearsal이 23/749, `v295_initial_schema`, v302 report verified인지
+- migration DB가 v300 왕복 endpoint인지
+- source/rehearsal application integrity가 정확히 같은지
 
-```bash
-source .venv/Scripts/activate
-```
-
-실행 위치: 프로젝트 루트  
-`.venv` 상태: `backend/.venv`가 켜진 상태
-
-```bash
-python tools/stamp_postgres_source_database.py --inspect
-```
-
-정상 기대 핵심:
+사전 성공 결과:
 
 ```txt
-lifecycle state: pre-stamp
-exact target DB: rpg_game
-exact revision: v295_initial_schema
-source public tables/rows: 22/748
-source current revision: []
-source application tables/rows: 22/748
-source application schema digest: 7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921
-source application data digest: ecb19e57283dc6b780426339bfc46f2bac14da63a618249808f30132508f9244
-rehearsal post-stamp: verified / 23/749
-migration test current revision: ['v295_initial_schema']
-source/rehearsal application digests identical: yes
 result: ready-for-separate-source-baseline-stamp-execution-approval
 ```
 
-## 향후 실제 실행 경계
-
-v304에는 향후 별도 승인 후 사용할 실행 경로가 있지만, 다음 네 확인값이 모두 정확히 일치해야만 열립니다.
+## 실제 실행에 사용된 승인 경계
 
 ```txt
 --confirm-target rpg_game
@@ -81,7 +49,7 @@ v304에는 향후 별도 승인 후 사용할 실행 경로가 있지만, 다음
 --confirm-rehearsal-result restore-rehearsal-stamp-current-state-verified
 ```
 
-실제 실행이 승인되더라도 허용되는 변화는 아래뿐입니다.
+허용된 변화는 다음뿐이었습니다.
 
 ```txt
 source application tables/rows: 22/748 그대로
@@ -93,17 +61,44 @@ restore rehearsal DB: 무변경
 migration DB: 무변경
 ```
 
-## 실패 대응
+## 사용자 PC 실제 post-check 결과
 
-실제 source stamp 단계에서 `blocked-or-failed`가 발생하면 같은 실행 명령을 자동 재시도하지 않습니다. stamp 자체는 성공했지만 post-check나 로컬 보고서 저장에서 실패했을 수 있기 때문입니다.
+```txt
+lifecycle state: post-stamp
+source public tables/rows: 23/749
+source application tables/rows: 22/748
+source current revision: ['v295_initial_schema']
+source/rehearsal application digests identical: yes
+v304 execution report: verified
+result: source-baseline-stamp-current-state-verified
+```
 
-그 경우 `--inspect`만 다시 실행해 pre/post 상태를 읽기 전용으로 분류합니다.
+기존 application 22개 table / 748 rows와 schema/data digest는 보존됐습니다.
 
-## 이번 v304에서 실행하지 않은 것
+## 현재 사용 방법
 
-- 원본 `rpg_game` stamp/upgrade/downgrade
-- rehearsal/migration DB mutation
+읽기 전용 post-check는 여전히 사용할 수 있습니다.
+
+실행 위치: 프로젝트 루트  
+`.venv` 상태: `backend/.venv`가 켜진 상태
+
+```bash
+python tools/stamp_postgres_source_database.py --inspect
+```
+
+하지만 source stamp는 완료됐으므로 `--execute`를 다시 실행하지 않습니다.
+
+현재 baseline 전체 완료 상태는 v305 도구로 확인합니다.
+
+```bash
+python tools/check_postgres_baseline_completion_state.py --strict
+```
+
+## 계속 금지
+
+- source/rehearsal stamp 재실행
+- 새 revision/autogenerate
+- source/rehearsal/migration upgrade/downgrade
 - DB create/drop/restore
-- 새 revision 생성
-- `.env`, Docker volume, seed, 인증, API/write 로직 변경
+- `.env`, Docker volume, seed, 인증, API/write 변경
 - 게임 콘텐츠/밸런스 변경

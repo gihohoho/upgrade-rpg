@@ -48,6 +48,8 @@ def main() -> None:
         "tools/check_postgres_source_baseline_stamp_preflight.py",
         "tools/stamp_postgres_restore_rehearsal_database.py",
         "tools/stamp_postgres_source_database.py",
+        "tools/check_postgres_baseline_completion_state.py",
+        "tools/check_postgres_next_revision_preflight.py",
         "tools/smoke/backend/smoke_postgres_initial_alembic_revision_creation.py",
         "tools/smoke/backend/smoke_postgres_initial_alembic_revision_manual_review.py",
         "tools/smoke/backend/smoke_postgres_migration_test_database_upgrade.py",
@@ -56,6 +58,8 @@ def main() -> None:
         "tools/smoke/backend/smoke_postgres_source_baseline_stamp_preflight.py",
         "tools/smoke/backend/smoke_postgres_restore_rehearsal_stamp_guard.py",
         "tools/smoke/backend/smoke_postgres_source_baseline_stamp_guard.py",
+        "tools/smoke/backend/smoke_postgres_baseline_completion_state.py",
+        "tools/smoke/backend/smoke_postgres_next_revision_preflight.py",
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_CREATION.md",
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md",
         "docs/current/POSTGRES_MIGRATION_TEST_UPGRADE.md",
@@ -64,6 +68,9 @@ def main() -> None:
         "docs/current/POSTGRES_SOURCE_BASELINE_STAMP_PREFLIGHT.md",
         "docs/current/POSTGRES_RESTORE_REHEARSAL_STAMP_GUARD.md",
         "docs/current/POSTGRES_SOURCE_BASELINE_STAMP_FINAL_GUARD.md",
+        "docs/current/POSTGRES_BASELINE_COMPLETION_STATE.md",
+        "docs/current/POSTGRES_NEXT_REVISION_PREFLIGHT.md",
+        "docs/current/POSTGRES_NEXT_REVISION_READONLY_PLAN.md",
         "docs/current/review/v295_initial_schema.manual-review.json",
     ]
     for relative_path in required_files:
@@ -71,33 +78,35 @@ def main() -> None:
 
     assert_contains(
         "NEXT_CHAT_PROMPT.md",
-        "rpg_v304_postgres_source_baseline_stamp_final_guard_ready.zip",
-        "v304.postgres-source-baseline-stamp-final-guard",
+        "rpg_v306_postgres_next_revision_readonly_preflight_ready.zip",
+        "v306.postgres-next-revision-readonly-preflight",
         "backend/.venv",
-        "stamp_postgres_source_database.py --inspect",
+        "check_postgres_next_revision_preflight.py --strict",
         "v295_initial_schema",
         "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa",
         "rpg_game_restore_rehearsal_v290",
         "first/second upgrade signatures: identical",
         "restore-rehearsal-stamp-current-state-verified",
-        "ready-for-separate-source-baseline-stamp-execution-approval",
+        "postgres-baseline-completion-state-verified",
+        "next-revision-not-required-current-schema-equivalent",
         "7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921",
     )
     assert_contains(
         "NEXT_CHAT_HANDOFF.md",
-        "22 application tables / 748 rows",
+        "application tables/rows 22/748",
         "public tables/rows 23/749",
-        "migration current revision v295_initial_schema",
-        "v303 post-check passed",
-        "stamp_postgres_source_database.py",
-        "source stamp 실제 실행 미승인",
+        "migration rpg_game_migration_empty_v290",
+        "v304 source stamp/post-check",
+        "check_postgres_next_revision_preflight.py",
+        "alembic-managed-baseline-complete",
+        "Alembic metadata candidate operation",
     )
     assert_contains(
         "README.md",
-        "v304.postgres-source-baseline-stamp-final-guard",
-        "stamp_postgres_source_database.py",
+        "v306.postgres-next-revision-readonly-preflight",
+        "check_postgres_next_revision_preflight.py",
         "v295_initial_schema",
-        "v303 post-check verified",
+        "alembic-managed-baseline-complete",
     )
     assert_contains(
         "docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md",
@@ -154,10 +163,33 @@ def main() -> None:
         "docs/current/POSTGRES_SOURCE_BASELINE_STAMP_FINAL_GUARD.md",
         "v304",
         "rpg_game",
-        "ready-for-separate-source-baseline-stamp-execution-approval",
+        "source-baseline-stamp-current-state-verified",
         "b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481",
         "restore-rehearsal-stamp-current-state-verified",
-        "별도 명시 승인",
+        "source stamp는 완료됐으므로 `--execute`를 다시 실행하지 않습니다",
+    )
+    assert_contains(
+        "docs/current/POSTGRES_BASELINE_COMPLETION_STATE.md",
+        "v305",
+        "alembic-managed-baseline-complete",
+        "postgres-baseline-completion-state-verified",
+        "v304 source execution report",
+        "새 Alembic revision 생성",
+    )
+    assert_contains(
+        "docs/current/POSTGRES_NEXT_REVISION_PREFLIGHT.md",
+        "v306",
+        "compare_metadata()",
+        "read-only transaction",
+        "next-revision-not-required-current-schema-equivalent",
+        "sequence ownership",
+    )
+    assert_contains(
+        "docs/current/POSTGRES_NEXT_REVISION_READONLY_PLAN.md",
+        "v306",
+        "autogenerate",
+        "compare_metadata()",
+        "별도 승인",
     )
     assert_contains(
         ".gitignore",

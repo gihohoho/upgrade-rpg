@@ -1,8 +1,8 @@
-# Project Structure — v304
+# Project Structure — v306
 
 현재 ZIP 기준 프로젝트 구조 점검 문서입니다.
 
-v304에서는 검증 완료된 restore rehearsal 결과를 전제로 원본 `rpg_game` baseline stamp 직전 상태를 읽기 전용으로 확인하는 final guard를 추가했습니다. source/rehearsal application schema와 전체 row digest, verified backup, revision, v302 report, migration endpoint를 한 번에 검증하며 실제 source stamp는 별도 승인 전까지 차단합니다.
+v306에서는 완료된 baseline을 유지한 채 새 revision이 필요한지 읽기 전용으로 판단하는 preflight를 추가했습니다. single Alembic graph, 승인 model/env source hash, canonical schema differences, Alembic candidate operation, PostgreSQL sequence ownership을 함께 확인하며 revision/autogenerate/upgrade/downgrade는 계속 차단합니다.
 
 중요한 결론:
 
@@ -42,32 +42,32 @@ v304에서는 검증 완료된 restore rehearsal 결과를 전제로 원본 `rpg
 | `src/` | legacy JS/CSS | 이동 금지, Vue 앱 `src/`와 구분 |
 | `frontend/vue-app/` | 새 Vue shell + 읽기 전용 API client 준비 | 실제 기능 대체 전 단계 |
 | `backend/` | FastAPI 백엔드 | 기존 route/body/DB/env/seed 유지 |
-| `tools/` | smoke/contract/검증/backup/restore/migration 도구 | v304 source baseline stamp final guard와 exact-target smoke 보강 |
-| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v304 기준 갱신 |
+| `tools/` | smoke/contract/검증/backup/restore/migration 도구 | v306 next-revision read-only preflight와 회귀 smoke 보강 |
+| `docs/` | 현재 상태/전환 계획/DB 준비/인수인계 문서 | v306 기준 갱신 |
 
 
-## v304 source baseline stamp final guard
+## v306 PostgreSQL next revision read-only preflight
 
 추가 위치:
 
 ```txt
-tools/stamp_postgres_source_database.py
-tools/smoke/backend/smoke_postgres_source_baseline_stamp_guard.py
-docs/current/POSTGRES_SOURCE_BASELINE_STAMP_FINAL_GUARD.md
+tools/check_postgres_next_revision_preflight.py
+tools/smoke/backend/smoke_postgres_next_revision_preflight.py
+docs/current/POSTGRES_NEXT_REVISION_PREFLIGHT.md
+docs/current/POSTGRES_NEXT_REVISION_READONLY_PLAN.md
 ```
 
 고정 경계:
 
-- target DB: `rpg_game`
-- revision: `v295_initial_schema`
-- backup SHA-256와 v302 rehearsal success result exact 확인
-- source/rehearsal application 22 tables / 748 rows 전체 schema/data digest exact 비교
-- migration DB verified v300 endpoint 확인
-- `--inspect`: 읽기 전용 pre/post-source-stamp 자동 분류
-- future execute: target/revision/backup/rehearsal 네 confirmation 모두 필요
-- 허용 변화: source `alembic_version` 1 table / 1 row만
-- source actual stamp는 별도 사용자 승인 전 금지
-- rehearsal stamp 재실행과 migration 추가 변경 금지
+- v305 completion state `postgres-baseline-completion-state-verified` 필요
+- Alembic graph는 `v295_initial_schema` single base/single head만 허용
+- 승인 model/env source snapshot 13개 파일 SHA-256 고정
+- canonical schema는 22/22 tables, differences=0 필요
+- Alembic metadata 비교는 PostgreSQL read-only transaction과 SQL write guard 안에서만 수행
+- type/server default/nullable/index/constraint 후보와 sequence ownership 확인
+- candidate operation 0개면 새 revision을 만들지 않음
+- 후보가 있으면 별도 schema-change intent review에서 정지
+- revision/autogenerate/upgrade/downgrade/stamp는 실행하지 않음
 
 ## `frontend/vue-app/` 역할
 

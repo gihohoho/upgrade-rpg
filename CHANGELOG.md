@@ -1,3 +1,20 @@
+# v306 - PostgreSQL next revision read-only preflight
+
+- Recorded the user PC v305 completion result as `postgres-baseline-completion-state-verified`.
+- Added a read-only next-revision preflight that verifies the single Alembic graph, approved model/env source hashes, canonical schema equivalence, Alembic metadata candidate operations, and PostgreSQL sequence ownership.
+- Runs metadata comparison inside a PostgreSQL read-only transaction with an SQL statement guard; no revision file or Alembic mutation command is executed.
+- Returns either no-new-revision-required or separate-schema-change-intent-review and never auto-approves autogenerate/upgrade/downgrade.
+- Added dedicated smoke, core registration, readiness/current/handoff documentation, and v306 ZIP handoff.
+- Did not change DB schema/data, `.env`, Docker resources, seed, auth, API routes/bodies, Write Guard, Vue write integration, or game content.
+
+# v305 - PostgreSQL baseline completion state lock
+
+- Confirmed the user PC v304 source post-check result: source 23/749, application 22/748, current `v295_initial_schema`, v304 execution report verified.
+- Added `tools/check_postgres_baseline_completion_state.py`, a read-only completion checker for source/rehearsal/migration state, v302/v304 reports, application digests, and the exact single-revision set.
+- Added a regression smoke that blocks legacy pre-stamp classification, missing reports, changed migration endpoint, and unapproved extra revisions.
+- Updated current/readiness/handoff documents to `alembic-managed-baseline-complete`.
+- Added a separate next-revision read-only plan; no revision generation, autogenerate, upgrade, downgrade, stamp retry, DB create/drop/restore, `.env`, seed, auth, API, or game-content change was performed.
+
 # v304 - PostgreSQL source baseline stamp final guard
 
 - Added an exact-source `rpg_game` baseline stamp guard with read-only pre/post inspection.

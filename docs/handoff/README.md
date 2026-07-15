@@ -1,10 +1,15 @@
-# Handoff package — v304
+# Handoff package — v306
 
-현재 전달 기준:
+기준 ZIP:
 
 ```txt
-rpg_v304_postgres_source_baseline_stamp_final_guard_ready.zip
+rpg_v306_postgres_next_revision_readonly_preflight_ready.zip
 ```
 
-첫 작업은 `tools/stamp_postgres_source_database.py --inspect`로 원본 source stamp 직전 상태를 읽기 전용 검증하는 것입니다.
-원본 source `--execute`와 rehearsal stamp 재실행은 별도 승인 전까지 금지합니다.
+첫 읽기 전용 확인:
+
+```bash
+python tools/check_postgres_next_revision_preflight.py --strict
+```
+
+기존 baseline stamp는 source와 rehearsal 모두 완료됐으므로 재실행하지 않습니다. v306은 next revision 필요 여부만 판단하며 revision/autogenerate/upgrade/downgrade를 실행하지 않습니다.

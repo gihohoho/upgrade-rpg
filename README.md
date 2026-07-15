@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-현재 기준: **v304.postgres-source-baseline-stamp-final-guard**
+현재 기준: **v306.postgres-next-revision-readonly-preflight**
 
 ## 현재 구조
 
@@ -16,29 +16,38 @@
 ## PostgreSQL / Alembic 실제 상태
 
 ```txt
-source rpg_game: 22 tables / 748 rows / differences=0 / alembic_version 없음
-restore rehearsal: 23 public tables / 749 rows / v295_initial_schema / v303 post-check verified
-migration test DB: 23 public tables / 1 row / v295_initial_schema / differences=0
+classification: alembic-managed-baseline-complete
+source rpg_game: 23 public tables / 749 rows / application 22 tables / 748 rows
+restore rehearsal: 23/749 / v295_initial_schema / report verified
+migration test DB: 23/1 / v295_initial_schema / differences=0
 initial revision SHA-256: 24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa
 backup SHA-256: b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481
-round-trip: upgrade -> downgrade base -> upgrade verified
-first/second upgrade signatures: identical
-v301 source preflight: passed
-v302 rehearsal stamp: passed
-v303 rehearsal post-check: passed / report verified
+source/rehearsal schema/data digest: identical
+v302 rehearsal execution report: verified
+v304 source execution report: verified
+v305 completion check: passed
 ```
 
-## v304 핵심
+## v306 핵심
 
-원본 source stamp 전용 최종 guard를 별도 도구로 추가했습니다.
+새 revision을 생성하지 않고 실제 후보 schema 변경이 있는지만 읽기 전용으로 판단합니다.
 
 ```txt
-tools/stamp_postgres_source_database.py
-tools/smoke/backend/smoke_postgres_source_baseline_stamp_guard.py
-docs/current/POSTGRES_SOURCE_BASELINE_STAMP_FINAL_GUARD.md
+tools/check_postgres_next_revision_preflight.py
+tools/smoke/backend/smoke_postgres_next_revision_preflight.py
+docs/current/POSTGRES_NEXT_REVISION_PREFLIGHT.md
 ```
 
-`--inspect`는 완전한 읽기 전용이며 source, backup, revision, verified rehearsal, migration endpoint와 22개 application table 전체 schema/data digest를 함께 검증합니다.
+검사 범위:
+
+- Alembic single base/single head
+- 승인 SQLAlchemy model/Alembic env source SHA-256
+- canonical schema differences=0
+- PostgreSQL read-only transaction 안의 Alembic `compare_metadata()`
+- type/server default/nullable/index/constraint 후보
+- integer PK sequence ownership과 unowned sequence
+
+새 revision/autogenerate/upgrade/downgrade/stamp는 별도 승인 전까지 금지합니다.
 
 ## 다음 실행
 
@@ -53,10 +62,8 @@ source .venv/Scripts/activate
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/stamp_postgres_source_database.py --inspect
+python tools/check_postgres_next_revision_preflight.py --strict
 ```
-
-원본 source stamp 실제 실행은 별도 승인 전까지 금지합니다.
 
 ## 서버 실행
 

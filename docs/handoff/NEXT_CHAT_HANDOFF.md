@@ -1,12 +1,12 @@
-# NEXT CHAT HANDOFF — Upgrade RPG v304
+# NEXT CHAT HANDOFF — Upgrade RPG v306
 
 ## 기준 ZIP
 
-- `rpg_v304_postgres_source_baseline_stamp_final_guard_ready.zip`
+- `rpg_v306_postgres_next_revision_readonly_preflight_ready.zip`
 
 ## 현재 버전
 
-- 최신 작업: `v304.postgres-source-baseline-stamp-final-guard`
+- 최신 작업: `v306.postgres-next-revision-readonly-preflight`
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
@@ -15,23 +15,28 @@
 
 ```txt
 source rpg_game:
-  22 application tables / 748 rows
-  schema differences=0
-  alembic_version 없음 / current revision 없음
-  source stamp 실제 실행 미승인
+  public tables/rows 23/749
+  application tables/rows 22/748
+  current revision v295_initial_schema
+  runtime classification alembic-managed
+  v304 execution report verified
 
 restore rehearsal rpg_game_restore_rehearsal_v290:
   public tables/rows 23/749
   application tables/rows 22/748
   current revision v295_initial_schema
-  v303 post-check passed
   v302 execution report verified
 
 migration rpg_game_migration_empty_v290:
-  public tables 23
-  total rows 1
-  migration current revision v295_initial_schema
+  public tables/rows 23/1
+  current revision v295_initial_schema
   differences=0
+```
+
+프로젝트 분류:
+
+```txt
+alembic-managed-baseline-complete
 ```
 
 ## 고정 증거
@@ -53,39 +58,34 @@ data digest: ecb19e57283dc6b780426339bfc46f2bac14da63a618249808f30132508f9244
 v298 first upgrade: passed
 v299 downgrade base: passed
 v300 second upgrade: passed
-upgrade -> downgrade base -> upgrade verified
 first/second upgrade signatures: identical
-v301 source baseline preflight: passed
-v302 rehearsal pre-stamp inspect: passed
+v301 source preflight: passed
 v302 rehearsal stamp: passed
-v303 rehearsal post-check: passed
-v303 result: restore-rehearsal-stamp-current-state-verified
-v302 execution report: verified
+v303 rehearsal post-check: restore-rehearsal-stamp-current-state-verified
+v304 source stamp/post-check: source-baseline-stamp-current-state-verified
+v305 completion check: postgres-baseline-completion-state-verified
 ```
 
-## v304 추가 내용
-
-추가 파일:
+## v306 추가 내용
 
 ```txt
-tools/stamp_postgres_source_database.py
-tools/smoke/backend/smoke_postgres_source_baseline_stamp_guard.py
-docs/current/POSTGRES_SOURCE_BASELINE_STAMP_FINAL_GUARD.md
+tools/check_postgres_next_revision_preflight.py
+tools/smoke/backend/smoke_postgres_next_revision_preflight.py
+docs/current/POSTGRES_NEXT_REVISION_PREFLIGHT.md
+docs/current/POSTGRES_NEXT_REVISION_READONLY_PLAN.md
 ```
 
-읽기 전용 `--inspect`는 다음을 동시에 확인합니다.
+v306 preflight는 다음을 읽기 전용으로 확인합니다.
 
-- exact source target `rpg_game`
-- exact revision/SHA-256
-- verified backup/SHA-256
-- source 22 tables / 748 rows / no Alembic
-- source schema differences=0
-- source application schema/data digest exact match
-- rehearsal 23/749 / revision / v302 report verified
-- migration DB verified v300 endpoint
-- source/rehearsal application integrity exact equality
-
-실행 경로는 향후 별도 승인 후에만 사용하며 target, revision, backup SHA, rehearsal result 네 confirmation이 모두 정확해야 합니다.
+- v305 baseline completion 유지
+- Alembic graph single base/single head
+- exact reviewed revision file 1개
+- 승인 SQLAlchemy model/Alembic env source snapshot 13개
+- canonical schema 22/22, differences=0
+- PostgreSQL read-only transaction + SQL write guard
+- Alembic metadata candidate operation
+- type/server default/nullable/index/constraint 비교
+- integer PK sequence ownership과 unowned sequence
 
 ## 다음 첫 작업
 
@@ -100,47 +100,39 @@ source .venv/Scripts/activate
 `.venv` 상태: `backend/.venv`가 켜진 상태
 
 ```bash
-python tools/stamp_postgres_source_database.py --inspect
+python tools/check_postgres_next_revision_preflight.py --strict
 ```
 
-정상 기대 핵심:
+변경 없음 정상 기대 핵심:
 
 ```txt
-lifecycle state: pre-stamp
-exact target DB: rpg_game
-exact revision: v295_initial_schema
-source public tables/rows: 22/748
-source current revision: []
-source application tables/rows: 22/748
-source application schema digest: 7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921
-source application data digest: ecb19e57283dc6b780426339bfc46f2bac14da63a618249808f30132508f9244
-rehearsal post-stamp: verified / 23/749
-migration test current revision: ['v295_initial_schema']
-source/rehearsal application digests identical: yes
-result: ready-for-separate-source-baseline-stamp-execution-approval
+baseline completion: postgres-baseline-completion-state-verified
+Alembic graph heads/bases: ['v295_initial_schema']/['v295_initial_schema']
+approved model source snapshot: matched / 13 files
+SQLAlchemy metadata tables: 22
+canonical schema: structurally-equivalent / differences=0
+Alembic candidate operations: 0
+next revision required: no
+result: next-revision-not-required-current-schema-equivalent
+next safe stage: keep-single-baseline-no-new-revision
 ```
 
-통과해도 source `--execute`는 실행하지 않습니다. 전체 결과를 확인한 뒤 실제 source stamp는 다시 별도 명시 승인을 받습니다.
+후보가 발견되면 `next-revision-review-required-schema-differences-detected`로 중지하고 autogenerate를 실행하지 않습니다.
 
 ## 다음 안전 순서
 
-1. v304 `--inspect` 실제 결과 확인
-2. source/rehearsal digests, backup, revision, reports 재확인
-3. source stamp 실제 실행 여부 별도 명시 승인
-4. 승인 후 exact confirmation flags가 포함된 명령 1회 실행
-5. 실패 시 자동 재시도 금지, `--inspect`로 post-state 확인
-6. source 23/749, revision, application digest 보존 확인
-7. rehearsal/migration DB 무변경 확인
-8. v304 source execution report 검증
-9. Alembic baseline 운영 완료 문서화
+1. v306 실제 결과 확인
+2. candidate operation 0개면 새 revision 생성 보류
+3. 후보가 있으면 schema change intent와 748개 row 영향 검토
+4. autogenerate는 별도 사용자 승인 전 금지
+5. 향후 revision은 isolated migration DB에서 먼저 검토·왕복
+6. source 적용은 다시 별도 승인
 
 ## 절대 변경/실행 금지
 
-- 사용자 별도 승인 전 source `--execute`
-- source `upgrade`/`downgrade`
-- rehearsal stamp 재실행
-- migration test DB 추가 변경
-- 새 Alembic revision 생성
+- source/rehearsal `stamp` 재실행
+- 새 Alembic revision 생성/autogenerate
+- source/rehearsal/migration `upgrade`/`downgrade`
 - DB 생성/삭제/복원
 - Docker container/volume 삭제
 - `.env`, seed, 인증

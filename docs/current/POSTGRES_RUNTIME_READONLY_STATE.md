@@ -99,3 +99,26 @@ python -m alembic upgrade head
 python -m alembic downgrade
 python -m alembic stamp head
 ```
+
+
+## v305 현재 상태 갱신
+
+위의 `existing-schema-without-alembic-baseline`은 v287 당시의 실제 수집 결과입니다. 이후 backup/restore/migration 왕복과 rehearsal/source stamp 검증을 완료했습니다.
+
+현재 상태:
+
+```txt
+classification: alembic-managed-baseline-complete
+source public tables/rows: 23/749
+source application tables/rows: 22/748
+current revision: v295_initial_schema
+v304 execution report: verified
+```
+
+현재 읽기 전용 완료 상태는 다음 도구로 확인합니다.
+
+```bash
+python tools/check_postgres_baseline_completion_state.py --strict
+```
+
+기존 `stamp head`는 완료됐으므로 재실행하지 않습니다. 새 revision/autogenerate/upgrade/downgrade는 별도 승인 전까지 계속 금지합니다.
