@@ -1,12 +1,12 @@
 {
   "schemaVersion": "v322.owner-only-publish-lifecycle",
-  "state": "preparation-closed",
-  "publishReviewerGateReady": false,
+  "state": "authorization-open",
+  "publishReviewerGateReady": true,
   "priorApprovedPreparationSha": "f4788acf5455b07169320bd29f43ddf92ff1d5ad",
-  "approvedPreparationSha": null,
+  "approvedPreparationSha": "350bbd085f1cf636810d75ddcbb5321e0791256c",
   "ownerApproval": {
-    "recorded": false,
-    "recordedAtUtc": null,
+    "recorded": true,
+    "recordedAtUtc": "2026-07-20T04:03:32Z",
     "evidence": "exact-40-character-sha-user-message"
   },
   "githubLiveSettings": {
