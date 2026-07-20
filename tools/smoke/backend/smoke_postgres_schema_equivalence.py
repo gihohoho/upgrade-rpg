@@ -51,6 +51,7 @@ def main() -> int:
         'inspector.get_check_constraints',
         'postgresql-float-aliases.v1',
         'FLOAT\\((\\d+)\\)',
+        '"--skip-database"',
     ):
         if marker not in source:
             return fail(f"schema checker missing marker: {marker}")
@@ -70,7 +71,7 @@ def main() -> int:
             return fail(f"schema checker contains mutation marker: {forbidden}")
 
     run = subprocess.run(
-        [sys.executable, str(TOOL), "--json"],
+        [sys.executable, str(TOOL), "--json", "--skip-database"],
         cwd=ROOT,
         text=True,
         stdout=subprocess.PIPE,
@@ -89,6 +90,7 @@ def main() -> int:
         "structurally-equivalent",
         "review-required",
         "connection-failed",
+        "skipped",
     }:
         return fail("schema checker classification is invalid")
 

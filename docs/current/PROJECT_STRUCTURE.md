@@ -1,4 +1,4 @@
-# Project Structure — v320
+# Project Structure — v321
 
 ```txt
 .
@@ -11,8 +11,9 @@
 ├── frontend/vue-app/                      # Vue GET read-only 앱
 ├── backend/
 │   ├── .venv/                             # 로컬 전용, ZIP/Git 제외
+│   ├── requirements/                      # Linux/amd64 exact pin + wheel SHA-256 locks
 │   ├── Dockerfile                         # 로컬 호환
-│   └── Dockerfile.production              # exact base digest/non-root
+│   └── Dockerfile.production              # exact base/frontend digest + hash-locked install
 ├── deploy/
 │   ├── backend-image-ghcr-policy.example.json
 │   ├── github-actions-ghcr-static-plan.example.json
@@ -30,6 +31,7 @@
 └── tools/
     ├── check_codex_handoff_readiness.py
     ├── check_github_actions_ghcr_static_plan.py
+    ├── generate_backend_linux_dependency_locks.py
     └── smoke/
 ```
 

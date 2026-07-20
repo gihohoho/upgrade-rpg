@@ -13,7 +13,7 @@ Codex는 VS Code/Codex 터미널을 자유롭게 사용하고 이미 실행 중�
 현재 고정값:
 
 ```txt
-latest: v320.github-actions-ghcr-workflow-prepared-gated
+latest: v321.owner-only-reproducibility-locked-publish-gated
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR namespace: gihohoho
 backend repository: ghcr.io/gihohoho/upgrade-rpg-backend
@@ -33,14 +33,16 @@ CI login/build/push executed: no/no/no
 repository Actions allowlist/full SHA enforcement: configured/configured
 publish environment/main-only: present/configured
 required reviewer/prevent self-review: missing/missing
+publish approval model: owner-only-source-controlled-two-step
 PUBLISH_REVIEWER_GATE_READY: source-controlled false
-deterministic dependency/toolchain lock: incomplete (required before first publish)
+dependency/frontend input lock: complete (exact versions + SHA-256)
+exact preparation SHA approval: pending
 GitHub settings evidence: 2026-07-15 browser snapshot; live recheck required before gate change
 ```
 
 `gihohoho`는 기호가 직접 확인한 고정 namespace입니다. placeholder로 되돌리거나 다른 이름을 추측하지 마세요. repository 주소는 `ghcr.io/gihohoho/upgrade-rpg-backend`로 고정합니다. 실제 token, PAT, Docker credential, production secret 값은 파일·Git·채팅에 넣지 마세요.
 
-첫 작업은 읽기 전용 v320 검사입니다.
+첫 작업은 읽기 전용 v321 검사입니다.
 
 실행 위치: `backend` 폴더
 Python `.venv` 상태: 꺼져 있을 때
@@ -62,8 +64,8 @@ python tools/check_codex_handoff_readiness.py --strict
 정상 기대 결과:
 
 ```txt
-result: github-actions-ghcr-workflow-prepared-publish-gated
-next safe stage: choose-private-repository-publish-approval-model
+result: github-actions-ghcr-owner-only-reproducibility-ready-publish-gated
+next safe stage: review-and-approve-exact-preparation-sha
 ```
 
 `.github/workflows/publish-backend-ghcr.yml`은 이미 준비됐고 `workflow_dispatch` 전용입니다. `main`과 40자리 source SHA, 확인 입력, 정적 검사, 로컬 OCI build, SPDX SBOM, checksum-pinned Trivy `HIGH,CRITICAL`, push된 exact digest 재검사, Docker BuildKit provenance/SBOM, Sigstore Cosign keyless 서명·검증을 fail-closed로 설계했습니다.
@@ -72,9 +74,9 @@ next safe stage: choose-private-repository-publish-approval-model
 
 action/run step별 잠금과 parsed secret 경로 allowlist도 유지하세요. root Docker build context에서 `.env`/`*.env`/`.envrc`를 제외하는 `.dockerignore` 규칙을 약화하거나 env 파일을 재포함하지 마세요.
 
-현재 dependency/toolchain은 완전히 hash-locked되지 않아 동일 source SHA의 deterministic build를 보장하지 않습니다. 게시 허용 모델을 선택해도 Python application/build requirement lock, pinned pip, immutable Dockerfile frontend를 구성·검증하고 GitHub Actions/environment 설정을 live 재확인하기 전에는 gate를 바꾸거나 workflow를 실행하지 마세요.
+Python application/build dependency는 CPython 3.11 Linux/amd64 exact version과 선택 wheel SHA-256으로 잠겼습니다. pip `26.1.2`, `setuptools 80.10.2`, `wheel 0.46.3`, Dockerfile frontend exact digest도 고정됐고 source distribution은 금지됩니다. byte-for-byte 동일 image를 보장한다고 과장하지 말고 실제 결과 digest의 SBOM/Trivy/provenance/Cosign 검증을 계속 유지하세요.
 
-현재 `ghcr-production-publish`에 required reviewer와 prevent self-review가 없습니다. GitHub 공식 정책상 Free/Pro/Team의 required reviewer는 공개 저장소에서만 제공되므로, 현재 비공개 저장소에서는 collaborator를 추가하는 것만으로 해결되지 않습니다. source-controlled `PUBLISH_REVIEWER_GATE_READY`는 리터럴 `"false"`로 고정되어 GHCR login 전에 실패하며 repository/environment variable로 우회할 수 없습니다. 기호가 `GitHub Enterprise Cloud required reviewer`, `owner-only source-controlled 2단계 승인`, `게시 계속 비활성화` 중 하나를 선택하기 전에는 이 값을 바꾸거나 workflow를 실행하지 마세요.
+현재 `ghcr-production-publish`에 required reviewer와 prevent self-review가 없습니다. 기호는 이 잔여 위험을 알고 2026-07-20에 `owner-only-source-controlled-two-step`을 선택했습니다. source-controlled `PUBLISH_REVIEWER_GATE_READY`는 리터럴 `"false"`로 고정되어 GHCR login 전에 실패하며 repository/environment variable로 우회할 수 없습니다. v321 preparation commit의 정확한 40자 SHA와 범위를 기호가 명시적으로 승인하기 전에는 이 값을 바꾸거나 workflow를 실행하지 마세요. 승인 뒤에도 GitHub 설정을 live 재확인하고 별도 authorization commit에서만 gate를 열며, 한 번의 실행 뒤 성공·실패와 관계없이 즉시 다시 닫으세요.
 
 DB write/restore/reset/seed, Alembic revision/autogenerate/stamp/upgrade/downgrade, 인증/API route·response body/write logic, Vue Preview/Apply/write, 게임 콘텐츠·밸런스, production container/network/volume, Compose up/down, 자동 deploy와 production image reference 갱신은 구체적인 다음 요청 전에는 변경하거나 실행하지 마세요.
 

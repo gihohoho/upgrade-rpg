@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v320
+# Upgrade RPG Codex working rules — v321
 
 이 파일은 저장소 전체에 적용됩니다. Codex는 작업을 시작할 때 이 파일과 `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -32,7 +32,7 @@
 
 ## 현재 고정 상태
 
-- latest: `v320.github-actions-ghcr-workflow-prepared-gated`
+- latest: `v321.owner-only-reproducibility-locked-publish-gated`
 - GitHub remote: `https://github.com/gihohoho/upgrade-rpg.git`
 - GHCR namespace: `gihohoho`
 - backend image repository: `ghcr.io/gihohoho/upgrade-rpg-backend` (private)
@@ -49,13 +49,16 @@
 - repository Actions allowlist/full SHA enforcement: configured/configured
 - `ghcr-production-publish` environment/main-only: present/configured
 - required reviewer/prevent self-review: missing/missing
+- publish approval model: `owner-only-source-controlled-two-step` (기호가 2026-07-20 선택)
 - `PUBLISH_REVIEWER_GATE_READY`: source-controlled `"false"`; GHCR login 전에 fail-closed
-- deterministic dependency/toolchain lock: incomplete; 첫 게시 전 필수
+- dependency/frontend input lock: complete (exact version + SHA-256, binary wheel only)
+- byte-for-byte deterministic image: 보장한다고 주장하지 않음
+- exact preparation SHA approval: pending
 - GitHub Actions/environment 설정 증거: 2026-07-15 browser snapshot; gate 변경 직전 live 재확인 필수
 
 ## 현재 안전 경계
 
-GitHub workflow 작성과 CI GHCR 작업은 사용자가 승인했습니다. 그러나 owner 외 collaborator가 0명이고 environment required reviewer UI를 구성할 수 없으며, Python dependency/build toolchain hash lock도 아직 없습니다. publish job은 source-controlled `PUBLISH_REVIEWER_GATE_READY`가 현재 리터럴 `"false"`로 고정되어 GHCR login 전에 실패해야 합니다. 게시 승인 모델과 재현성 lock을 모두 구성·검증하기 전에는 이 값을 바꾸거나 workflow를 실행하지 않습니다.
+GitHub workflow 작성과 CI GHCR 작업은 사용자가 승인했습니다. 기호는 비공개 개인 저장소의 native required reviewer가 없다는 위험을 이해하고 `owner-only-source-controlled-two-step`을 선택했습니다. Python application/build dependency, pip, Dockerfile frontend 입력은 exact version과 SHA-256으로 잠겼습니다. 다만 publish job은 source-controlled `PUBLISH_REVIEWER_GATE_READY`가 현재 리터럴 `"false"`로 고정되어 GHCR login 전에 실패해야 합니다. 기호가 준비 commit의 정확한 40자 SHA를 별도로 승인하고, GitHub live 설정을 재확인하고, 별도 authorization commit을 검토하기 전에는 이 값을 바꾸거나 workflow를 실행하지 않습니다. authorization을 열었다면 성공·실패와 관계없이 한 번의 실행 뒤 즉시 다시 닫아야 합니다.
 
 다음 항목은 이번 GitHub 권한 확대와 별개이므로 기호의 구체적인 작업 요청 전에는 변경·실행하지 않습니다.
 
@@ -76,9 +79,9 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-정상 결과: `github-actions-ghcr-workflow-prepared-publish-gated`
+정상 결과: `github-actions-ghcr-owner-only-reproducibility-ready-publish-gated`
 
-그다음 안전 단계는 비공개 저장소의 게시 승인 모델을 기호가 선택하는 것입니다. GitHub Free/Pro/Team에서는 required reviewer가 공개 저장소에만 제공되므로 collaborator 추가만으로 해결되지 않습니다. `GitHub Enterprise Cloud required reviewer`, `owner-only source-controlled 2단계 승인`, `게시 계속 비활성화` 중 하나를 선택해야 합니다. 게시 허용 모델을 선택해도 dependency/toolchain 재현성 gate와 GitHub live 설정 재확인 전에는 gate를 바꾸거나 workflow를 실행하지 않습니다.
+그다음 안전 단계는 현재 v321 준비 commit이 push된 뒤 Codex가 정확한 40자 commit SHA와 검토 범위를 기호에게 설명하고, 기호가 그 SHA를 명시적으로 승인하는 것입니다. 승인을 받기 전에는 gate를 바꾸지 않습니다. 승인 뒤에도 GitHub Actions allowlist/full SHA/environment main-only 설정을 live 재확인한 다음, gate 변경만 다루는 별도 authorization commit과 한 번의 수동 실행을 준비합니다. 실행 성공·실패 후에는 별도 commit으로 gate를 즉시 `false`로 되돌립니다.
 
 ## 변경과 검증
 

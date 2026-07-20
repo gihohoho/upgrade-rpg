@@ -1,15 +1,15 @@
-# Upgrade RPG Codex handoff — v320
+# Upgrade RPG Codex handoff — v321
 
 ## 기준
 
 - handoff mode: current repository + Git `main` (ZIP 없음)
-- latest: `v320.github-actions-ghcr-workflow-prepared-gated`
+- latest: `v321.owner-only-reproducibility-locked-publish-gated`
 - Codex 규칙: `AGENTS.md`
 - backend virtualenv: `backend/.venv`
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - change delivery: Codex가 검증 후 직접 add/commit/push
-- 개발 서버: backend `127.0.0.1:8000` PID 32476, frontend `127.0.0.1:5173` PID 12064, HTTP 200 확인 후 계속 재사용
+- 개발 서버: 2026-07-20 확인 시 backend `127.0.0.1:8000`, frontend `127.0.0.1:5173` 모두 꺼짐; 이번 정적 작업에는 재시작 불필요
 
 ## 계속 적용되는 기호의 권한
 
@@ -52,7 +52,7 @@ local credential strategy: deferred
 
 `gihohoho`는 기호가 직접 확인한 고정 namespace입니다.
 
-## v320 GitHub repository 설정
+## v321 GitHub repository 설정
 
 ```txt
 GitHub App/Connector scope: gihohoho/upgrade-rpg selected repository only
@@ -73,22 +73,24 @@ environment branch rule: main only
 environment secrets/variables: 0/0
 owner 외 collaborators: 0
 required reviewer/prevent self-review: missing/missing
+publish approval model: owner-only-source-controlled-two-step
 PUBLISH_REVIEWER_GATE_READY: source-controlled false
-deterministic dependency/toolchain lock: incomplete (required before first publish)
+dependency/frontend input lock: complete (exact versions + SHA-256)
+exact preparation SHA approval: pending
 GitHub settings evidence: 2026-07-15 browser snapshot; live recheck required before gate change
 publish allowed now: no
 ```
 
 repository Actions 설정은 실제 변경됐고, 승인한 8개 외부 action만 전체 SHA로 허용합니다. `ghcr-production-publish` environment도 만들고 `main` branch rule을 적용했습니다.
 
-## v320 workflow
+## v321 workflow와 dependency 잠금
 
 파일: `.github/workflows/publish-backend-ghcr.yml`
 
 ```txt
 trigger: workflow_dispatch only
-reviewed workflow source SHA-256: 83393cb875cf43ce1bc30d245c100482818af96cd7b5417d81b9cb45ce62a993
-reviewed workflow semantic SHA-256: 2f1b1baf3f7db363f2f175b98623ec97e59a785592ae32d023f4b5123f2bd4c0
+reviewed workflow source SHA-256: 9c3384f5f8d879320d41b04833a63842744e55c14cd12743c9aea0a3a74e8c5a
+reviewed workflow semantic SHA-256: 9a7af533b42854977897b26fe0aae364667f9be65a7d9dfab4c51a2bf1c31652
 required ref/source: refs/heads/main / exact 40-char github.sha
 required inputs: source_commit, approval_reason, confirm_publish
 default/validate/build-scan permissions: contents read only
@@ -96,7 +98,8 @@ publish permissions: contents read + packages write + id-token write
 pre-push: static checks -> local OCI -> SPDX SBOM -> checksum-pinned HIGH/CRITICAL Trivy gate
 post-push: exact digest -> Docker BuildKit mode=max provenance/SBOM -> inspect -> exact-digest Trivy -> Cosign keyless sign/verify
 root Docker context env files: excluded by enforced .dockerignore patterns
-deterministic dependency/toolchain lock: incomplete; first publish blocked until resolved
+dependency/frontend input lock: exact pins + selected Linux wheel SHA-256 + immutable frontend digest
+byte-for-byte deterministic image claim: no
 automatic deploy/production reference update: no/no
 ```
 
@@ -114,27 +117,30 @@ publish job의 첫 단계는 source-controlled `PUBLISH_REVIEWER_GATE_READY`가 
 - `docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md`
 - `tools/check_github_actions_ghcr_static_plan.py`
 - `tools/check_codex_handoff_readiness.py`
+- `tools/generate_backend_linux_dependency_locks.py`
+- `backend/requirements/`
 
-## v320 검증 기준
+## v321 검증 기준
 
 ```txt
+backend dependency lock static check + Linux/amd64 53-wheel SHA-256 download verification: passed
 GitHub Actions/GHCR strict checker: passed
 GitHub Actions fail-closed mutation smoke: passed
 workflow source + semantic lock bypass audit (extra secret step / || true / step reorder): blocked
 per-step lock / parsed secret path / Docker env-context mutation smoke: passed
 Codex handoff strict/synchronization smoke: passed
 Python compileall / JavaScript / Bash / JSON syntax: passed
-full core smoke: passed (101.6s with backend/.venv)
+full core smoke: passed (177.3s with backend/.venv; Codex process의 DEBUG=release만 자식 smoke에서 unset)
 Vue files changed: no (npm ci/build not required)
 workflow/Docker/registry/DB/Alembic execution: none
-backend/frontend reused without restart: HTTP 200/200
+backend/frontend: both stopped; this static task did not require restart
 ```
 
 정상 결과:
 
 ```txt
-result: github-actions-ghcr-workflow-prepared-publish-gated
-next safe stage: choose-private-repository-publish-approval-model
+result: github-actions-ghcr-owner-only-reproducibility-ready-publish-gated
+next safe stage: review-and-approve-exact-preparation-sha
 ```
 
 ## 필요한 extension/권한/설치/사용자 작업
@@ -143,9 +149,10 @@ next safe stage: choose-private-repository-publish-approval-model
 - GitHub Connector와 브라우저 repository 접근: 해결됨
 - 로컬 `gh` CLI의 저장된 기존 계정 token은 401로 만료됐지만 현재 작업은 로그인된 GitHub 브라우저/Connector로 처리되어 막히지 않음
 - GitHub Free/Pro/Team의 required reviewer는 공개 저장소 전용이어서 현재 비공개 저장소에서는 collaborator 추가만으로 해결되지 않음
-- 기호가 `Enterprise Cloud required reviewer`, `owner-only source-controlled 2단계 승인`, `게시 계속 비활성화` 중 하나를 선택해야 함
-- 승인 모델을 선택하기 전에는 source-controlled `PUBLISH_REVIEWER_GATE_READY`를 바꾸지 않음
-- 게시 허용 모델을 선택해도 dependency/toolchain hash lock과 GitHub live 설정 재확인 전에는 gate를 바꾸지 않음
+- 기호가 `owner-only-source-controlled-two-step`을 선택했고 dependency/frontend 입력 잠금도 완료함
+- 이 작업의 preparation commit 40자 SHA를 기호가 명시 승인하기 전에는 gate를 바꾸지 않음
+- 승인 뒤에도 GitHub live 설정 재확인과 별도 authorization commit 전에는 gate를 바꾸지 않음
+- authorization당 workflow 한 번 실행 후 성공·실패와 관계없이 즉시 gate를 다시 닫음
 
 ## 다음 첫 작업
 
@@ -156,7 +163,7 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-검사가 통과하면 기호에게 비공개 저장소 게시 승인 모델을 선택해달라고 요청합니다. Enterprise Cloud를 선택한 경우에만 collaborator/required reviewer/prevent self-review를 구성합니다. owner-only 모델을 선택하면 독립 reviewer가 없다는 위험을 문서로 승인받습니다. 어느 게시 허용 모델이든 dependency/toolchain hash lock과 GitHub live 설정 재확인까지 끝난 별도 commit에서만 gate 변경을 검토합니다. 게시 비활성화를 선택하면 현재 hard gate를 유지합니다.
+검사가 통과하면 현재 `main`의 정확한 40자 preparation commit SHA와 변경 범위를 기호에게 제시하고 명시 승인을 요청합니다. 승인 전에는 gate를 바꾸지 않습니다. 승인 뒤 GitHub Actions allowlist/full SHA와 environment main-only 설정을 live 재확인한 다음 별도 authorization commit에서만 gate 변경을 검토합니다. workflow는 authorization당 한 번만 실행하고 성공·실패와 관계없이 gate를 즉시 `false`로 되돌립니다.
 
 ## 계속 별도 요청이 필요한 범위
 

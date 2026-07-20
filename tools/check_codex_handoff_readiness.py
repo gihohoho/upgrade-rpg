@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the v320 Codex/GHCR handoff using repository files only."""
+"""Validate the v321 owner-only and reproducibility-locked GHCR handoff."""
 from __future__ import annotations
 
 import argparse
@@ -11,10 +11,10 @@ import re
 import subprocess
 from typing import Any
 
-TOOL_VERSION = "v320.github-actions-ghcr-workflow-prepared-gated"
-READY_RESULT = "github-actions-ghcr-workflow-prepared-publish-gated"
+TOOL_VERSION = "v321.owner-only-reproducibility-locked-publish-gated"
+READY_RESULT = "github-actions-ghcr-owner-only-reproducibility-ready-publish-gated"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "choose-private-repository-publish-approval-model"
+NEXT_SAFE_STAGE = "review-and-approve-exact-preparation-sha"
 EXPECTED_REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 EXPECTED_NAMESPACE = "gihohoho"
 EXPECTED_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
@@ -102,8 +102,8 @@ def _verify_forbidden_handoff_paths(root: Path, forbidden_paths: tuple[Path, ...
 
 def _inspect_actions_workflow(root: Path) -> dict[str, Any]:
     tool = root / "tools/check_github_actions_ghcr_static_plan.py"
-    spec = importlib.util.spec_from_file_location("v320_github_actions_plan_for_handoff", tool)
-    _require(spec is not None and spec.loader is not None, "cannot load v320 GitHub Actions checker")
+    spec = importlib.util.spec_from_file_location("v321_github_actions_plan_for_handoff", tool)
+    _require(spec is not None and spec.loader is not None, "cannot load v321 GitHub Actions checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     try:
@@ -131,9 +131,13 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     handoff_state = _read(root / "docs/handoff/NEXT_CHAT_HANDOFF.md")
     actions_result = _inspect_actions_workflow(root)
 
-    _require(policy.get("schemaVersion") == TOOL_VERSION, "unexpected v320 schemaVersion")
+    _require(policy.get("schemaVersion") == TOOL_VERSION, "unexpected v321 schemaVersion")
     _require(_bool(policy, "preparedOnly") is True, "policy must remain prepared-only")
-    _require(policy.get("publishApprovalModel") == "undecided", "publish approval model must remain undecided")
+    _require(
+        policy.get("publishApprovalModel") == "owner-only-source-controlled-two-step",
+        "owner-only publish approval model changed",
+    )
+    _require(policy.get("ownerOnlyApprovalPhase") == "preparation-gated", "owner-only phase changed")
     _require(policy.get("githubRemote") == EXPECTED_REMOTE, "GitHub remote changed")
     _require(policy.get("registryProvider") == "github-container-registry", "registry provider must be GHCR")
     _require(policy.get("registryHost") == "ghcr.io", "registry host must be ghcr.io")
@@ -171,8 +175,9 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "ciDockerLoginApproved",
         "ciImageBuildApproved",
         "ciImagePushApproved",
+        "dependencyAndFrontendInputsLocked",
     ):
-        _require(_bool(policy, key) is True, f"completed/approved v320 state must remain true: {key}")
+        _require(_bool(policy, key) is True, f"completed/approved v321 state must remain true: {key}")
     for key in (
         "longLivedCredentialInRepository",
         "registryCredentialFileInRepository",
@@ -191,8 +196,9 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "actualRegistryMutationExecuted",
         "actualDockerCommandExecuted",
         "actualDatabaseAlembicMutationExecuted",
+        "exactPreparationShaApproved",
     ):
-        _require(_bool(policy, key) is False, f"blocked/unexecuted v320 state must remain false: {key}")
+        _require(_bool(policy, key) is False, f"blocked/unexecuted v321 state must remain false: {key}")
     _require(policy.get("nextSafeStage") == NEXT_SAFE_STAGE, "unexpected next safe stage")
 
     env = _env_inventory(env_example)
@@ -320,10 +326,11 @@ def render(result: dict[str, Any]) -> str:
         "- CI login/build/push approved/executed: yes/yes/yes / no/no/no",
         "- recorded publish environment/main-only: present/configured (2026-07-15 browser snapshot)",
         "- native required reviewer/current private plan: missing/unavailable",
-        "- publish approval model: undecided",
+        "- publish approval model: owner-only-source-controlled-two-step (preparation gated)",
         "- PUBLISH_REVIEWER_GATE_READY: source-controlled false (fail-closed before GHCR login)",
         "- root Docker context env files/re-includes: excluded/forbidden",
-        "- deterministic dependency/toolchain lock: incomplete (required before first publish)",
+        "- dependency/frontend inputs: exact versions + SHA-256 locks ready",
+        "- exact preparation SHA approval: pending",
         "- container/registry/DB/Alembic mutation executed: no/no/no/no",
         f"- result: {result['result']}",
         f"- next safe stage: {result['nextSafeStage']}",

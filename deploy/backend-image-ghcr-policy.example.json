@@ -1,7 +1,10 @@
 {
-  "schemaVersion": "v320.github-actions-ghcr-workflow-prepared-gated",
+  "schemaVersion": "v321.owner-only-reproducibility-locked-publish-gated",
   "preparedOnly": true,
-  "publishApprovalModel": "undecided",
+  "publishApprovalModel": "owner-only-source-controlled-two-step",
+  "ownerOnlyApprovalPhase": "preparation-gated",
+  "exactPreparationShaApproved": false,
+  "dependencyAndFrontendInputsLocked": true,
   "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
   "registryProvider": "github-container-registry",
   "registryHost": "ghcr.io",
@@ -54,5 +57,5 @@
   "actualRegistryMutationExecuted": false,
   "actualDockerCommandExecuted": false,
   "actualDatabaseAlembicMutationExecuted": false,
-  "nextSafeStage": "choose-private-repository-publish-approval-model"
+  "nextSafeStage": "review-and-approve-exact-preparation-sha"
 }

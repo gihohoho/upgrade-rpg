@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the v320 fail-closed GitHub Actions/GHCR workflow and repository state."""
+"""Validate the v321 owner-only, reproducibility-locked GHCR workflow plan."""
 from __future__ import annotations
 
 import argparse
@@ -11,16 +11,29 @@ from typing import Any
 
 import yaml
 
-TOOL_VERSION = "v320.github-actions-ghcr-workflow-prepared-gated"
-READY_RESULT = "github-actions-ghcr-workflow-prepared-publish-gated"
+TOOL_VERSION = "v321.owner-only-reproducibility-locked-publish-gated"
+READY_RESULT = "github-actions-ghcr-owner-only-reproducibility-ready-publish-gated"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "choose-private-repository-publish-approval-model"
+NEXT_SAFE_STAGE = "review-and-approve-exact-preparation-sha"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "gihohoho/upgrade-rpg"
 IMAGE_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 WORKFLOW_PATH = ".github/workflows/publish-backend-ghcr.yml"
-EXPECTED_WORKFLOW_SHA256 = "83393cb875cf43ce1bc30d245c100482818af96cd7b5417d81b9cb45ce62a993"
-EXPECTED_WORKFLOW_SEMANTIC_SHA256 = "2f1b1baf3f7db363f2f175b98623ec97e59a785592ae32d023f4b5123f2bd4c0"
+EXPECTED_WORKFLOW_SHA256 = "9c3384f5f8d879320d41b04833a63842744e55c14cd12743c9aea0a3a74e8c5a"
+EXPECTED_WORKFLOW_SEMANTIC_SHA256 = "9a7af533b42854977897b26fe0aae364667f9be65a7d9dfab4c51a2bf1c31652"
+DOCKERFILE_FRONTEND = "docker/dockerfile:1.21.0@sha256:27f9262d43452075f3c410287a2c43f5ef1bf7ec2bb06e8c9eeb1b8d453087bc"
+LOCK_SHA256 = {
+    "backend/requirements/pip-bootstrap.lock": "bcc097cb08562a39c235ad52c7183a7e2ae9b80010463cc404ff772881ced4f7",
+    "backend/requirements/runtime-linux-amd64-py311.lock": "863fc3dca235aaf692f4a065e4449e198bba9b5317ab29af57bc7e301b57a42c",
+    "backend/requirements/dev-linux-amd64-py311.lock": "5c5b025a96621f02b3667899db43f1e1f02e3fa55b50b615d95304e7f242844b",
+}
+REPRODUCIBILITY_INPUT_SHA256 = {
+    "backend/requirements/pip-bootstrap.in": "9df44a3db13ef551bf575949d553b8d14044635b91c09e85dc6d3ea97f50d225",
+    "backend/requirements/runtime.in": "9eeff8d010a3f18711d82e68effa3874c15f63b99a1f65988106cc46719727ce",
+    "backend/requirements/dev.in": "6404277a75ce651735fcea3f89b5eee548cfd58ee197faed27b03333d587e2fe",
+    "backend/pyproject.toml": "1c10a732138522f00b87c5fdc8fc866affc9dbbe87f3bca81af94354d35f864b",
+    "backend/Dockerfile.production": "2ccd445b3b73f52825d8696d241d34a180c513dde2bebabbae3e0a833624af5e",
+}
 CERTIFICATE_IDENTITY = (
     "https://github.com/gihohoho/upgrade-rpg/"
     ".github/workflows/publish-backend-ghcr.yml@refs/heads/main"
@@ -66,13 +79,13 @@ EXPECTED_ACTION_STEP_SHA256 = {
 EXPECTED_RUN_STEP_SHA256 = {
     "validate:Check manual approval inputs": "f6d30e12218c4d7cbfbc97d02d9bf548bba332d3e678e424c7b48be585531925",
     "validate:Verify checked out HEAD": "e131362a607c6353e49b1d526ce1b93c183006631417271fcfbaf480f9206a50",
-    "validate:Install backend validation dependencies": "ad041a150de40f8672a3cce585cd896a2681ba93931e5622fcb306fc5bb5b0b8",
-    "validate:Run fail-closed repository checks": "6a780c2ee0926e8cd2b9f51f74a4e781b8d97f61ce74b8f2cb81dc723c50d832",
+    "validate:Install backend validation dependencies": "e75e80748c907e5d04bdc2a0848b74e7361d1c5aed31238ea67fe614902d5021",
+    "validate:Run fail-closed repository checks": "c631016c987bd4a949e2c208cfcf561b23738f7ee44c5262ef436d4f8c74f446",
     "build_scan:Validate local SBOM structure": "f0209099c473f80e08077f73bfdc6d7d9d8c40d238611d52cb36ccc4e2febac9",
     "build_scan:Install checksum-pinned Trivy 0.70.0": "22c99c3087798ff0a62797f773e206e248ab473954b770ba8b2acffbd8b74d64",
     "build_scan:Block HIGH and CRITICAL vulnerabilities in local image": "d1272d7f19a1a8d3d54449ec9be5914ba44dbfc99ccfe995f58460cdbaeac5e5",
     "build_scan:Validate local Trivy JSON evidence": "219c442ec7a7d2017acc6606bb28d4a291275ff11de145ab139e9d2c14ce3986",
-    "publish_sign_verify:Enforce independent reviewer gate before registry access": "0f042027e9b0f32c7599d341828ae94c751a0b3554bc96500a3c5cdf28a4c8da",
+    "publish_sign_verify:Enforce owner-only two-step authorization gate before registry access": "67b96f08c975ba3f8b6f851db91c8213bbe5464ba0e2c6e724727e4a62d2a5a3",
     "publish_sign_verify:Install checksum-pinned Trivy 0.70.0": "22c99c3087798ff0a62797f773e206e248ab473954b770ba8b2acffbd8b74d64",
     "publish_sign_verify:Inspect BuildKit provenance and SBOM on exact digest": "8395f1bd48b56880b4aca84f78c0d5a213db86b8cf90be10e353f8b59dfeb1a2",
     "publish_sign_verify:Block vulnerabilities in exact pushed digest before signing": "cb62951efdd38437c05e4f4c76c5cfe60bee7686f3915711e12e81d2d2f0adf6",
@@ -99,7 +112,7 @@ EXPECTED_RUN_STEP_ENV = {
     },
     "build_scan:Block HIGH and CRITICAL vulnerabilities in local image": None,
     "build_scan:Validate local Trivy JSON evidence": None,
-    "publish_sign_verify:Enforce independent reviewer gate before registry access": {
+    "publish_sign_verify:Enforce owner-only two-step authorization gate before registry access": {
         "PUBLISH_REVIEWER_GATE_READY": "false",
     },
     "publish_sign_verify:Install checksum-pinned Trivy 0.70.0": {
@@ -233,6 +246,38 @@ def _verify_dockerignore(dockerignore: str) -> None:
     )
 
 
+def _verify_reproducibility_files(root: Path) -> None:
+    for relative, expected in {**LOCK_SHA256, **REPRODUCIBILITY_INPUT_SHA256}.items():
+        path = root / relative
+        _require(path.is_file(), f"reproducibility input is missing: {relative}")
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        _require(actual == expected, f"reproducibility input SHA-256 changed: {relative}")
+
+    dockerfile = _read(root / "backend/Dockerfile.production")
+    _require(
+        dockerfile.splitlines()[0] == f"# syntax={DOCKERFILE_FRONTEND}",
+        "Dockerfile frontend must remain version-and-digest pinned",
+    )
+    for marker in (
+        "backend/requirements/pip-bootstrap.lock",
+        "backend/requirements/runtime-linux-amd64-py311.lock",
+        "--require-hashes",
+        "--only-binary=:all:",
+        "--no-index",
+        "--platform manylinux_2_17_x86_64",
+        "--python-version 3.11",
+    ):
+        _require(marker in dockerfile, f"production Dockerfile lock marker is missing: {marker}")
+    _require("pip install --upgrade pip" not in dockerfile, "mutable pip upgrade is forbidden")
+    _require("python -m pip install ." not in dockerfile, "production install must use the runtime hash lock")
+
+    pyproject = _read(root / "backend/pyproject.toml")
+    _require(
+        'requires = ["setuptools==80.10.2", "wheel==0.46.3"]' in pyproject,
+        "Python build-system requirements must remain exact-pinned",
+    )
+
+
 def _load_workflow(workflow: str) -> dict[str, Any]:
     try:
         payload = yaml.load(workflow, Loader=GitHubActionsLoader)
@@ -359,7 +404,7 @@ def _verify_workflow(workflow: str) -> None:
             "Retain non-secret review artifacts",
         ],
         "publish_sign_verify": [
-            "Enforce independent reviewer gate before registry access",
+            "Enforce owner-only two-step authorization gate before registry access",
             "Check out exact source commit",
             "Set up Python 3.11.15",
             "Set up Docker Buildx",
@@ -518,14 +563,14 @@ def _verify_workflow(workflow: str) -> None:
         ):
             _require(marker in scan_run, f"Trivy scan marker is missing in {step_name}: {marker}")
 
-    _require(publish_steps[0].get("name") == "Enforce independent reviewer gate before registry access", "publish gate must be first")
+    _require(publish_steps[0].get("name") == "Enforce owner-only two-step authorization gate before registry access", "publish gate must be first")
     gate = publish_steps[0]
     _require(gate.get("env") == {"PUBLISH_REVIEWER_GATE_READY": "false"}, "publish gate must remain source-controlled false")
     _require("vars." not in workflow, "repository/environment vars must not control the reviewer gate")
 
     publish_names = [step["name"] for step in publish_steps]
     ordered_names = (
-        "Enforce independent reviewer gate before registry access",
+        "Enforce owner-only two-step authorization gate before registry access",
         "Log in to GHCR with ephemeral GITHUB_TOKEN",
         "Build and push digest candidate with BuildKit attestations",
         "Inspect BuildKit provenance and SBOM on exact digest",
@@ -558,6 +603,11 @@ def _verify_workflow(workflow: str) -> None:
         "refs/heads/main",
         "persist-credentials: false",
         "python-version: \"3.11.15\"",
+        "backend/requirements/pip-bootstrap.lock",
+        "backend/requirements/dev-linux-amd64-py311.lock",
+        "--require-hashes",
+        "--only-binary=:all:",
+        "python tools/generate_backend_linux_dependency_locks.py --check",
         "python tools/check_github_actions_ghcr_static_plan.py --strict",
         "python tools/check_codex_handoff_readiness.py --strict",
         "bash tools/run_smoke_core.sh",
@@ -593,10 +643,14 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
     document = _read(root / "docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md")
     workflow = _read(root / WORKFLOW_PATH)
     dockerignore = _read(root / ".dockerignore")
+    gitattributes = _read(root / ".gitattributes")
 
-    _require(plan.get("schemaVersion") == TOOL_VERSION, "unexpected v320 schemaVersion")
+    _require(plan.get("schemaVersion") == TOOL_VERSION, "unexpected v321 schemaVersion")
     _require(_bool(plan, "preparedOnly") is True, "stage must remain prepared-only")
-    _require(plan.get("publishApprovalModel") == "undecided", "publish approval model must remain undecided")
+    _require(
+        plan.get("publishApprovalModel") == "owner-only-source-controlled-two-step",
+        "owner-only publish approval model changed",
+    )
     _require(plan.get("publishApprovalModelOptions") == [
         "github-enterprise-cloud-required-reviewer",
         "owner-only-source-controlled-two-step",
@@ -608,6 +662,8 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
     _require(plan.get("registry") == "ghcr.io", "registry must remain GHCR")
     _require(plan.get("imageRepository") == IMAGE_REPOSITORY, "image repository changed")
     _require(plan.get("targetPlatform") == "linux/amd64", "target platform changed")
+    _require(plan.get("repositoryTextLineEnding") == "lf", "repository text line-ending policy changed")
+    _require("* text=auto eol=lf" in gitattributes.splitlines(), "repository text files must remain LF-normalized")
     _require(plan.get("workflowPath") == WORKFLOW_PATH, "workflow path changed")
     _require(
         plan.get("workflowSourceSha256") == EXPECTED_WORKFLOW_SHA256,
@@ -639,6 +695,7 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
         "backend/Dockerfile.production.dockerignore would override the reviewed root .dockerignore",
     )
     _verify_dockerignore(dockerignore)
+    _verify_reproducibility_files(root)
     for key in (
         "workflowFilePresent",
         "workflowCreationApproved",
@@ -648,13 +705,29 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
         "imagePushApproved",
         "registryMutationApproved",
     ):
-        _require(_bool(plan, key) is True, f"approved v320 state must remain true: {key}")
+        _require(_bool(plan, key) is True, f"approved v321 state must remain true: {key}")
     for key in (
         "workflowExecutionExecuted",
         "publishExecutionAllowedNow",
         "registryMutationExecuted",
     ):
-        _require(_bool(plan, key) is False, f"blocked/unexecuted v320 state must remain false: {key}")
+        _require(_bool(plan, key) is False, f"blocked/unexecuted v321 state must remain false: {key}")
+
+    owner_policy = plan.get("ownerOnlyApprovalPolicy")
+    _require(isinstance(owner_policy, dict), "owner-only approval policy is missing")
+    _require(owner_policy.get("selectedOn") == "2026-07-20", "owner-only selection date changed")
+    _require(owner_policy.get("phase") == "preparation-gated", "owner-only phase must remain gated")
+    for key in (
+        "riskAcceptedByOwner",
+        "exactPreparationShaApprovalRequired",
+        "separateAuthorizationCommitRequired",
+        "oneWorkflowRunPerAuthorization",
+        "gateRecloseRequiredAfterEveryAttempt",
+        "liveGitHubSettingsRecheckRequiredBeforeAuthorization",
+    ):
+        _require(owner_policy.get(key) is True, f"owner-only safety rule must remain true: {key}")
+    for key in ("exactPreparationShaApproved", "authorizationCommitCreated", "workflowRunExecuted"):
+        _require(owner_policy.get(key) is False, f"owner-only future step must remain false: {key}")
 
     trigger = plan.get("triggerPolicy")
     _require(isinstance(trigger, dict), "triggerPolicy must be an object")
@@ -743,16 +816,28 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
     _require(gates.get("failurePolicy") == "fail-closed", "supply-chain gates must fail closed")
     reproducibility = gates.get("reproducibilityGate")
     _require(isinstance(reproducibility, dict), "reproducibilityGate must be an object")
-    _require(reproducibility.get("status") == "incomplete", "reproducibility status must remain incomplete")
+    _require(reproducibility.get("status") == "dependency-and-frontend-inputs-locked", "reproducibility lock status changed")
     _require(reproducibility.get("pythonRuntimeImageDigestPinned") is True, "Python runtime image digest is not pinned")
     for key in (
         "pythonBuildSystemRequirementsHashLocked",
         "pythonApplicationDependenciesHashLocked",
         "pipUpgradePinned",
         "dockerfileFrontendDigestPinned",
-        "sameSourceDeterministicBuildGuaranteed",
     ):
-        _require(reproducibility.get(key) is False, f"unverified reproducibility claim changed: {key}")
+        _require(reproducibility.get(key) is True, f"reproducibility input is not locked: {key}")
+    _require(
+        reproducibility.get("sameSourceDeterministicBuildGuaranteed") is False,
+        "byte-for-byte deterministic build must not be overclaimed",
+    )
+    _require(reproducibility.get("pinnedPipVersion") == "26.1.2", "pinned pip version changed")
+    _require(reproducibility.get("dockerfileFrontend") == DOCKERFILE_FRONTEND, "Dockerfile frontend lock changed")
+    _require(reproducibility.get("lockSha256") == LOCK_SHA256, "dependency lock SHA-256 map changed")
+    _require(
+        reproducibility.get("inputSha256") == REPRODUCIBILITY_INPUT_SHA256,
+        "reproducibility input SHA-256 map changed",
+    )
+    _require(reproducibility.get("binaryWheelOnly") is True, "source distributions must remain forbidden")
+    _require(reproducibility.get("hashCheckingRequired") is True, "pip hash checking must remain required")
     _require(reproducibility.get("requiredBeforeFirstPublish") is True, "reproducibility must block first publish")
     vulnerability = gates.get("vulnerabilityGate")
     _require(isinstance(vulnerability, dict), "vulnerabilityGate must be an object")
@@ -881,7 +966,7 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
         "publishEnvironmentConfigured": False,
         "publishGateReady": False,
         "dockerBuildContextEnvExcluded": True,
-        "reproducibleBuildReady": False,
+        "reproducibleBuildReady": True,
         "supplyChainGate": "fail-closed",
         "result": READY_RESULT,
         "nextSafeStage": NEXT_SAFE_STAGE,
@@ -905,10 +990,11 @@ def render(result: dict[str, Any]) -> str:
         "- post-push gates: exact digest, BuildKit provenance/SBOM, exact-digest Trivy, Cosign sign/verify",
         "- recorded environment/main-only: present/configured (2026-07-15 browser snapshot)",
         "- native required reviewer/current private plan: missing/unavailable",
-        "- publish approval model: undecided",
+        "- publish approval model: owner-only-source-controlled-two-step (preparation gated)",
         "- PUBLISH_REVIEWER_GATE_READY: source-controlled false (fail-closed before GHCR login)",
         "- root Docker context env files/re-includes: excluded/forbidden",
-        "- deterministic dependency/toolchain lock: incomplete (required before first publish)",
+        "- dependency/frontend inputs: exact versions + SHA-256 locks ready",
+        "- byte-for-byte deterministic image claim: no (not overclaimed)",
         "- workflow/registry mutation executed: no/no",
         f"- result: {result['result']}",
         f"- next safe stage: {result['nextSafeStage']}",

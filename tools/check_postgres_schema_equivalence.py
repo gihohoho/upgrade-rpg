@@ -315,10 +315,27 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true", help="Print machine-readable JSON")
     parser.add_argument("--strict", action="store_true", help="Return 1 for connection failure or differences")
+    parser.add_argument(
+        "--skip-database",
+        action="store_true",
+        help="Skip live database inspection (for offline/static smoke environments)",
+    )
     args = parser.parse_args()
 
     root = Path(__file__).resolve().parents[1]
-    payload = collect(root)
+    payload = (
+        {
+            "readOnly": True,
+            "schemaChanged": False,
+            "connected": False,
+            "classification": "skipped",
+            "differenceCount": None,
+            "differences": [],
+            "error": "Database inspection was explicitly skipped.",
+        }
+        if args.skip_database
+        else collect(root)
+    )
     print(json.dumps(payload, ensure_ascii=False, indent=2) if args.json else render_text(payload))
     failed = not payload.get("connected") or payload.get("differenceCount") not in (0, None)
     return 1 if args.strict and failed else 0

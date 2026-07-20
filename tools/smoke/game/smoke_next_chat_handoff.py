@@ -5,9 +5,9 @@ import hashlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v320.github-actions-ghcr-workflow-prepared-gated"
-READY_RESULT = "github-actions-ghcr-workflow-prepared-publish-gated"
-NEXT_SAFE_STAGE = "choose-private-repository-publish-approval-model"
+VERSION = "v321.owner-only-reproducibility-locked-publish-gated"
+READY_RESULT = "github-actions-ghcr-owner-only-reproducibility-ready-publish-gated"
+NEXT_SAFE_STAGE = "review-and-approve-exact-preparation-sha"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 REVISION_SHA256 = "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa"
@@ -64,6 +64,10 @@ def main() -> int:
         "deploy/github-actions-ghcr-static-plan.example.json",
         "tools/check_codex_handoff_readiness.py",
         "tools/check_github_actions_ghcr_static_plan.py",
+        "tools/generate_backend_linux_dependency_locks.py",
+        "backend/requirements/pip-bootstrap.lock",
+        "backend/requirements/runtime-linux-amd64-py311.lock",
+        "backend/requirements/dev-linux-amd64-py311.lock",
         "tools/smoke/backend/smoke_codex_handoff_readiness.py",
         "tools/smoke/backend/smoke_github_actions_ghcr_static_plan.py",
     )
@@ -129,6 +133,7 @@ def main() -> int:
         '"publishEnvironmentMainOnly": true',
         '"publishEnvironmentRequiredReviewerConfigured": false',
         '"sourceControlledPublishGateReady": false',
+        '"dependencyAndFrontendInputsLocked": true',
         '"ciImagePushApproved": true',
         '"actualRegistryMutationExecuted": false',
     )
@@ -150,6 +155,8 @@ def main() -> int:
         '"repositoryAllowlistConfigured": true',
         '"sourceControlledGateValue": false',
         '"sourceControlledPublishGateReady": false',
+        '"publishApprovalModel": "owner-only-source-controlled-two-step"',
+        '"status": "dependency-and-frontend-inputs-locked"',
         TRIVY_SHA256,
         '"registryMutationExecuted": false',
         '"nextSafeStage": "' + NEXT_SAFE_STAGE + '"',
@@ -166,6 +173,9 @@ def main() -> int:
         "context: .",
         "file: backend/Dockerfile.production",
         "PUBLISH_REVIEWER_GATE_READY: \"false\"",
+        "Enforce owner-only two-step authorization gate before registry access",
+        "backend/requirements/dev-linux-amd64-py311.lock",
+        "--require-hashes",
         "--severity HIGH,CRITICAL",
         "--ignore-unfixed=false",
         TRIVY_SHA256,
@@ -232,7 +242,7 @@ def main() -> int:
     if actual_sha != REVISION_SHA256:
         raise AssertionError(f"reviewed revision SHA-256 differs: {actual_sha}")
 
-    print("OK: v320 Codex handoff and document structure are synchronized")
+    print("OK: v321 Codex handoff and document structure are synchronized")
     return 0
 
 

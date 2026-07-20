@@ -206,13 +206,24 @@ def inspect_database(root: Path, include_counts: bool) -> dict[str, Any]:
         }
 
 
-def collect(root: Path, health_url: str, health_timeout: float, include_counts: bool) -> dict[str, Any]:
+def collect(
+    root: Path,
+    health_url: str,
+    health_timeout: float,
+    include_counts: bool,
+    include_docker: bool = True,
+    include_database: bool = True,
+) -> dict[str, Any]:
     docker_commands = [
         ["docker", "compose", "ps"],
         ["docker", "compose", "ls"],
         ["docker", "volume", "ls", "--format", "{{.Name}}"],
     ]
-    docker = [asdict(run_readonly_command(root, command)) for command in docker_commands]
+    docker = (
+        [asdict(run_readonly_command(root, command)) for command in docker_commands]
+        if include_docker
+        else []
+    )
     matching_volumes: list[dict[str, Any]] = []
     volume_names = docker[-1]["output"].splitlines() if docker and docker[-1]["ok"] else []
     for name in sorted(item.strip() for item in volume_names if "rpg_postgres_data" in item):
@@ -220,7 +231,15 @@ def collect(root: Path, health_url: str, health_timeout: float, include_counts: 
             asdict(run_readonly_command(root, ["docker", "volume", "inspect", name]))
         )
 
-    database = inspect_database(root, include_counts=include_counts)
+    database = (
+        inspect_database(root, include_counts=include_counts)
+        if include_database
+        else {
+            "connected": False,
+            "classification": "skipped",
+            "recommendation": "Database inspection was explicitly skipped.",
+        }
+    )
     health = asdict(fetch_health(health_url, health_timeout))
     return {
         "readOnly": True,
@@ -291,6 +310,16 @@ def main() -> int:
     parser.add_argument("--strict", action="store_true", help="Return 1 when DB connection or schema comparison fails")
     parser.add_argument("--skip-counts", action="store_true", help="Skip exact SELECT COUNT(*) per table")
     parser.add_argument(
+        "--skip-docker",
+        action="store_true",
+        help="Skip read-only Docker inventory (for offline/static smoke environments)",
+    )
+    parser.add_argument(
+        "--skip-database",
+        action="store_true",
+        help="Skip read-only database inspection (for offline/static smoke environments)",
+    )
+    parser.add_argument(
         "--health-url",
         default="http://127.0.0.1:8000/api/v1/health/db",
         help="FastAPI read-only DB health endpoint",
@@ -304,6 +333,8 @@ def main() -> int:
         health_url=args.health_url,
         health_timeout=args.health_timeout,
         include_counts=not args.skip_counts,
+        include_docker=not args.skip_docker,
+        include_database=not args.skip_database,
     )
     if args.json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))

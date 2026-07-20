@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[3]
 TOOL = ROOT / "tools/check_codex_handoff_readiness.py"
 REQUIRED = (
     ".dockerignore",
+    ".gitattributes",
     ".github/workflows/publish-backend-ghcr.yml",
     "AGENTS.md",
     "NEXT_CHAT_PROMPT.md",
@@ -18,6 +19,13 @@ REQUIRED = (
     "README.md",
     "backend/Dockerfile",
     "backend/Dockerfile.production",
+    "backend/pyproject.toml",
+    "backend/requirements/pip-bootstrap.in",
+    "backend/requirements/pip-bootstrap.lock",
+    "backend/requirements/runtime.in",
+    "backend/requirements/runtime-linux-amd64-py311.lock",
+    "backend/requirements/dev.in",
+    "backend/requirements/dev-linux-amd64-py311.lock",
     "backend/alembic/versions/v295_initial_schema_initial_postgresql_schema.py",
     "deploy/backend-image-ghcr-policy.example.json",
     "deploy/docker-compose.production.yml",
@@ -32,13 +40,14 @@ REQUIRED = (
     "docs/handoff/NEXT_CHAT_PROMPT.md",
     "docs/handoff/NEXT_CHAT_HANDOFF.md",
     "tools/check_github_actions_ghcr_static_plan.py",
+    "tools/generate_backend_linux_dependency_locks.py",
 )
 
 
 def load_tool():
-    spec = importlib.util.spec_from_file_location("v320_codex_handoff", TOOL)
+    spec = importlib.util.spec_from_file_location("v321_codex_handoff", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v320 Codex handoff checker")
+        raise RuntimeError("cannot load v321 Codex handoff checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -57,7 +66,7 @@ def expect_blocked(module, temp: Path) -> None:
         module.inspect_codex_handoff(temp)
     except module.CodexHandoffError:
         return
-    raise AssertionError("unsafe v320 Codex handoff fixture was not blocked")
+    raise AssertionError("unsafe v321 Codex handoff fixture was not blocked")
 
 
 def main() -> int:
@@ -76,15 +85,15 @@ def main() -> int:
     assert result["packageSafetyMode"] in {"git-index", "filesystem-absence"}
     assert result["githubActionsStaticPlanVerified"] is True
     assert result["workflowFilePresent"] is True
-    assert result["workflowSourceSha256"] == "83393cb875cf43ce1bc30d245c100482818af96cd7b5417d81b9cb45ce62a993"
-    assert result["workflowSemanticSha256"] == "2f1b1baf3f7db363f2f175b98623ec97e59a785592ae32d023f4b5123f2bd4c0"
+    assert result["workflowSourceSha256"] == "9c3384f5f8d879320d41b04833a63842744e55c14cd12743c9aea0a3a74e8c5a"
+    assert result["workflowSemanticSha256"] == "9a7af533b42854977897b26fe0aae364667f9be65a7d9dfab4c51a2bf1c31652"
     assert result["actionShasApproved"] is True
     assert result["actionsSettingsConfigured"] is True
     assert result["publishEnvironmentExists"] is True
     assert result["publishEnvironmentConfigured"] is False
     assert result["publishGateReady"] is False
     assert result["dockerBuildContextEnvExcluded"] is True
-    assert result["reproducibleBuildReady"] is False
+    assert result["reproducibleBuildReady"] is True
 
     mutations = (
         ("namespace", "invented-account"),
@@ -137,7 +146,7 @@ def main() -> int:
         local_env.write_text("NOT_A_REAL_SECRET=fixture-only\n", encoding="utf-8")
         expect_blocked(module, temp)
 
-    print("OK: v320 Codex/GHCR prepared-and-gated handoff smoke passed")
+    print("OK: v321 Codex/GHCR owner-only reproducibility-locked handoff smoke passed")
     return 0
 
 

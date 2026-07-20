@@ -1,4 +1,4 @@
-# Roadmap — v320
+# Roadmap — v321
 
 ## 현재 완료
 
@@ -15,17 +15,17 @@
 - 로컬 OCI + SPDX SBOM + checksum-pinned Trivy HIGH/CRITICAL gate
 - pushed exact digest 재검사 + BuildKit mode=max provenance/SBOM + Cosign keyless sign/verify 설계
 - source-controlled `PUBLISH_REVIEWER_GATE_READY="false"` hard gate
+- `owner-only-source-controlled-two-step` 게시 승인 모델 선택
+- Linux/amd64 Python dependency/build-system/pip/frontend exact version + SHA-256 잠금
 - 개발 서버 재사용, GitHub 작업, 숨김 파일/.env 권한을 handoff 규칙에 반영
 
 ## 다음 순서
 
-1. 기호가 `github-enterprise-cloud-required-reviewer`, `owner-only-source-controlled-two-step`, `keep-publishing-disabled` 중 비공개 저장소 게시 승인 모델 하나를 선택
-2. 선택한 모델에 필요한 보호 절차를 별도로 설계·구성
-3. environment `main` rule과 선택한 승인 절차를 화면·정적 검사로 다시 확인
-4. Python application/build dependency hash lock, pinned pip, immutable Dockerfile frontend로 재현성 gate 구성·검증
-5. 게시 승인 모델과 재현성 gate가 모두 검증된 경우에만 별도 검토 commit으로 source-controlled gate 변경을 검토
+1. v321 preparation commit의 정확한 40자 SHA와 변경 범위를 기호가 명시 승인
+2. environment `main` rule과 Actions allowlist/full SHA를 live 재확인
+3. 별도 authorization commit에서만 source-controlled gate 변경을 검토
 6. gate 변경이 승인·검증된 경우에만 `workflow_dispatch`를 한 번 수동 실행하고 validate/build/SBOM/Trivy 결과를 단계별 확인
 7. exact digest provenance/SBOM/Trivy/Cosign 검증이 모두 통과한 경우에만 후보 digest 기록
 8. production reference 변경 없이 isolated container 검증을 별도 단계로 진행
 
-GitHub Free/Pro/Team의 required reviewer는 공개 저장소에서만 지원되므로, 비공개 저장소에 collaborator를 추가하는 것만으로는 1번을 해결할 수 없습니다. 현재는 승인 모델 선택이 필요하며, 게시를 허용하는 모델이어도 4번 재현성 gate까지 끝나기 전에는 gate를 `false`로 유지하고 workflow를 실행하지 않습니다. `keep-publishing-disabled`를 선택하면 게시 단계는 진행하지 않습니다.
+GitHub Free/Pro/Team의 required reviewer는 공개 저장소에서만 지원되므로 owner-only 모델은 독립 reviewer와 동등하지 않습니다. 정확한 preparation SHA 승인과 GitHub live 재확인 전에는 gate를 `false`로 유지하고 workflow를 실행하지 않습니다. 실행 후에는 성공·실패와 관계없이 즉시 gate를 닫습니다.

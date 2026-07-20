@@ -38,6 +38,8 @@ def main() -> int:
         'schema-drift',
         'empty-database',
         'method="GET"',
+        '"--skip-docker"',
+        '"--skip-database"',
     ]
     for marker in required_markers:
         if marker not in source:
@@ -61,7 +63,16 @@ def main() -> int:
             return fail(f"runtime checker contains mutation marker: {marker}")
 
     run = subprocess.run(
-        [sys.executable, str(TOOL), "--json", "--skip-counts", "--health-timeout", "0.1"],
+        [
+            sys.executable,
+            str(TOOL),
+            "--json",
+            "--skip-counts",
+            "--skip-docker",
+            "--skip-database",
+            "--health-timeout",
+            "0.1",
+        ],
         cwd=ROOT,
         text=True,
         stdout=subprocess.PIPE,

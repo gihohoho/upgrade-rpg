@@ -18,7 +18,15 @@ with PYPROJECT.open("rb") as fh:
 
 build_system = data.get("build-system", {})
 assert build_system.get("build-backend") == "setuptools.build_meta", build_system
-assert "setuptools>=68" in build_system.get("requires", []), build_system
+assert build_system.get("requires") == ["setuptools==80.10.2", "wheel==0.46.3"], build_system
+for lock_name in (
+    "pip-bootstrap.lock",
+    "runtime-linux-amd64-py311.lock",
+    "dev-linux-amd64-py311.lock",
+):
+    lock = ROOT / "backend" / "requirements" / lock_name
+    assert lock.is_file(), f"missing dependency lock: {lock}"
+    assert "--hash=sha256:" in lock.read_text(encoding="utf-8"), lock
 
 find_config = data.get("tool", {}).get("setuptools", {}).get("packages", {}).get("find", {})
 assert find_config.get("where") == ["."], find_config

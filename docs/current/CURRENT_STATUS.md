@@ -1,8 +1,8 @@
-# Current Status — v320
+# Current Status — v321
 
 ## 현재 기준
 
-- 최신 작업: `v320.github-actions-ghcr-workflow-prepared-gated`
+- 최신 작업: `v321.owner-only-reproducibility-locked-publish-gated`
 - handoff: current repository + Git `main` (ZIP 기본 생성 없음)
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
@@ -51,12 +51,14 @@ CI login/build/push executed: no/no/no
 repository Actions allowlist/full SHA: configured/configured
 publish environment/main-only: present/configured
 required reviewer/prevent self-review: missing/missing
+publish approval model: owner-only-source-controlled-two-step
 PUBLISH_REVIEWER_GATE_READY: source-controlled false
-deterministic dependency/toolchain lock: incomplete
+dependency/frontend input lock: complete (exact versions + SHA-256)
+exact preparation SHA approval: pending
 GitHub repository settings evidence: 2026-07-15 browser snapshot (not live API check)
 ```
 
-## v320 GitHub 설정 결과
+## v321 GitHub 설정과 공급망 잠금 결과
 
 - Codex GitHub 연결은 `gihohoho/upgrade-rpg` selected repository 하나로 제한되어 있습니다.
 - 외부 action은 승인한 8개 repository의 전체 40자리 SHA만 허용합니다.
@@ -66,7 +68,7 @@ GitHub repository settings evidence: 2026-07-15 browser snapshot (not live API c
 - environment secret과 variable은 0개입니다.
 - 위 repository 설정은 2026-07-15 브라우저에서 확인한 snapshot입니다. 로컬 strict checker는 GitHub API를 실시간 조회하지 않으므로 gate 변경 직전에 live 설정을 다시 확인해야 합니다.
 - workflow publish job의 첫 단계가 `PUBLISH_REVIEWER_GATE_READY=true`를 확인하며, 현재 파일에 리터럴 `"false"`로 고정되어 GHCR login 전에 실패합니다. repository/environment variable로 우회할 수 없습니다.
-- workflow 전체 UTF-8 소스는 SHA-256 `83393cb875cf43ce1bc30d245c100482818af96cd7b5417d81b9cb45ce62a993`, 파싱된 실행 의미 구조는 SHA-256 `2f1b1baf3f7db363f2f175b98623ec97e59a785592ae32d023f4b5123f2bd4c0`으로 정적 검사기에 고정되어, step 추가·삭제·재배열이나 shell 본문 변조가 별도 검토 없이 통과하지 않습니다.
+- workflow 전체 UTF-8 소스는 SHA-256 `9c3384f5f8d879320d41b04833a63842744e55c14cd12743c9aea0a3a74e8c5a`, 파싱된 실행 의미 구조는 SHA-256 `9a7af533b42854977897b26fe0aae364667f9be65a7d9dfab4c51a2bf1c31652`로 정적 검사기에 고정되어, step 추가·삭제·재배열이나 shell 본문 변조가 별도 검토 없이 통과하지 않습니다.
 - action/run step별 해시와 exact env/key, parsed secret 경로 allowlist도 별도로 검사합니다. 유일한 secret 표현식 허용 위치는 GHCR login의 `${{ secrets.GITHUB_TOKEN }}` password입니다.
 - root Docker build context에서 `.env`, `.env.*`, `*.env`, `*.env.*`, `.envrc`를 모두 제외하며, env 파일 재포함 규칙을 금지합니다.
 
@@ -76,7 +78,7 @@ GitHub repository settings evidence: 2026-07-15 browser snapshot (not live API c
 
 개인 비공개 저장소에서는 GitHub Artifact Attestations API를 사용할 수 없어 `actions/attest`와 `attestations: write`는 사용하지 않습니다.
 
-동일 source SHA가 항상 동일 image를 만든다는 재현성은 아직 보장되지 않습니다. `backend/pyproject.toml`의 범위 dependency/build-system, Dockerfile의 unpinned `pip install --upgrade pip`, mutable `docker/dockerfile:1` frontend를 hash-locked 입력으로 바꾸는 별도 검토가 첫 게시 전에 필요합니다. 현재 hard gate는 이 조건이 해결되기 전에도 계속 `false`여야 합니다.
+Python application/build dependency는 CPython 3.11 Linux/amd64용 exact version과 선택 wheel SHA-256으로 잠겼습니다. pip는 `26.1.2`, build-system은 `setuptools 80.10.2`와 `wheel 0.46.3`, Dockerfile frontend는 `docker/dockerfile:1.21.0@sha256:27f9262d43452075f3c410287a2c43f5ef1bf7ec2bb06e8c9eeb1b8d453087bc`로 고정했습니다. source distribution은 금지하고 `--require-hashes` 다운로드 검증을 사용합니다. 다만 파일 timestamp와 builder 구현까지 포함한 byte-for-byte 동일 image를 보장한다고 과장하지는 않습니다.
 
 ## 계속 적용되는 작업 권한
 
@@ -88,11 +90,11 @@ GitHub repository settings evidence: 2026-07-15 browser snapshot (not live API c
 
 ## 현재 차단과 다음 단계
 
-workflow와 CI registry 작업은 승인되었지만 아직 실행하지 않았습니다. GitHub Free/Pro/Team에서 required reviewer는 공개 저장소에만 제공되므로 현재 비공개 저장소에서는 collaborator 추가만으로 환경 승인을 구성할 수 없습니다. 다음 단계는 기호가 `Enterprise Cloud required reviewer`, `owner-only source-controlled 2단계 승인`, `게시 계속 비활성화` 중 하나를 선택하는 것입니다. 게시를 허용하는 모델을 선택해도 dependency/toolchain hash lock을 별도로 구성·검증해야 하며, 두 조건이 모두 끝나기 전에는 gate를 바꾸거나 workflow를 실행하지 않습니다.
+기호는 2026-07-20에 `owner-only-source-controlled-two-step`을 선택했고 dependency/frontend 입력 잠금도 완료됐습니다. workflow와 CI registry 작업은 아직 실행하지 않았습니다. 다음 단계는 이 v321 준비 작업을 commit·push한 뒤 Codex가 정확한 40자 preparation SHA와 범위를 제시하고, 기호가 그 SHA를 명시적으로 승인하는 것입니다. 그 승인 전에는 gate를 바꾸지 않습니다. 승인 뒤에도 GitHub Actions allowlist/full SHA와 environment main-only 설정을 live 재확인하고, 별도 authorization commit에서만 gate를 열어 한 번 실행한 뒤 성공·실패와 관계없이 즉시 다시 닫습니다.
 
 정상 strict 결과:
 
 ```txt
-result: github-actions-ghcr-workflow-prepared-publish-gated
-next safe stage: choose-private-repository-publish-approval-model
+result: github-actions-ghcr-owner-only-reproducibility-ready-publish-gated
+next safe stage: review-and-approve-exact-preparation-sha
 ```

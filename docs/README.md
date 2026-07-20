@@ -6,6 +6,7 @@
 - `handoff/`: 다음 채팅/Codex 인수인계 문서입니다.
 - `contracts/`: 관리자·backend 계약 정의입니다.
 - `current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md`: 준비된 reviewer-gated GitHub Actions/GHCR workflow 보안 계획입니다.
+- `../backend/requirements/README.md`: backend dependency/frontend 입력 잠금과 재생성 방법입니다.
 - `current/SECURITY_ROTATION_AND_GITHUB_GATES.md`: 보안 권한, 차단 조건, 나중 회전할 항목입니다.
 
 ## 보관 문서

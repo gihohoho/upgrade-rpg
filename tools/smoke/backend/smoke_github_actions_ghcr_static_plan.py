@@ -12,16 +12,25 @@ ROOT = Path(__file__).resolve().parents[3]
 TOOL = ROOT / "tools/check_github_actions_ghcr_static_plan.py"
 REQUIRED = (
     ".dockerignore",
+    ".gitattributes",
     ".github/workflows/publish-backend-ghcr.yml",
     "deploy/github-actions-ghcr-static-plan.example.json",
     "docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md",
+    "backend/Dockerfile.production",
+    "backend/pyproject.toml",
+    "backend/requirements/pip-bootstrap.in",
+    "backend/requirements/pip-bootstrap.lock",
+    "backend/requirements/runtime.in",
+    "backend/requirements/runtime-linux-amd64-py311.lock",
+    "backend/requirements/dev.in",
+    "backend/requirements/dev-linux-amd64-py311.lock",
 )
 
 
 def load_tool():
-    spec = importlib.util.spec_from_file_location("v320_github_actions_plan", TOOL)
+    spec = importlib.util.spec_from_file_location("v321_github_actions_plan", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v320 GitHub Actions workflow checker")
+        raise RuntimeError("cannot load v321 GitHub Actions workflow checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -55,7 +64,7 @@ def expect_blocked(module, temp: Path, label: str = "unknown mutation") -> None:
         module.inspect_static_workflow_plan(temp)
     except module.StaticWorkflowPlanError:
         return
-    raise AssertionError(f"unsafe v320 GitHub Actions workflow fixture was not blocked: {label}")
+    raise AssertionError(f"unsafe v321 GitHub Actions workflow fixture was not blocked: {label}")
 
 
 def expect_semantically_blocked(module, temp: Path, label: str) -> None:
@@ -145,7 +154,7 @@ def main() -> int:
     assert result["publishEnvironmentConfigured"] is False
     assert result["publishGateReady"] is False
     assert result["dockerBuildContextEnvExcluded"] is True
-    assert result["reproducibleBuildReady"] is False
+    assert result["reproducibleBuildReady"] is True
     assert result["supplyChainGate"] == "fail-closed"
 
     plan_mutations = (
@@ -273,7 +282,7 @@ def main() -> int:
             )
             expect_secret_expression_blocked(module, temp, expression, emit_step_key)
 
-    print("OK: v320 GitHub Actions/GHCR fail-closed workflow smoke passed")
+    print("OK: v321 GitHub Actions/GHCR fail-closed workflow smoke passed")
     return 0
 
 

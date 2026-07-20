@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.21.0@sha256:27f9262d43452075f3c410287a2c43f5ef1bf7ec2bb06e8c9eeb1b8d453087bc
 FROM python:3.11.15-slim-bookworm@sha256:28255a3ace7eb4c48bc1b57b90af29e1bc82b4fd6c60614a8e3dce61b87ff941 AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -9,13 +9,50 @@ WORKDIR /app
 
 RUN addgroup --system app && adduser --system --ingroup app app
 
-COPY backend/pyproject.toml /app/pyproject.toml
+COPY backend/requirements/pip-bootstrap.lock /tmp/requirements/pip-bootstrap.lock
+COPY backend/requirements/runtime-linux-amd64-py311.lock /tmp/requirements/runtime.lock
+
+RUN set -eux; \
+    mkdir -p /tmp/pip-wheels /tmp/runtime-wheels; \
+    python -m pip download \
+      --dest /tmp/pip-wheels \
+      --require-hashes \
+      --only-binary=:all: \
+      --platform any \
+      --python-version 3 \
+      --implementation py \
+      --abi none \
+      -r /tmp/requirements/pip-bootstrap.lock; \
+    python -m pip install \
+      --no-index \
+      --find-links=/tmp/pip-wheels \
+      --require-hashes \
+      --only-binary=:all: \
+      -r /tmp/requirements/pip-bootstrap.lock; \
+    python -m pip download \
+      --dest /tmp/runtime-wheels \
+      --require-hashes \
+      --only-binary=:all: \
+      --platform manylinux_2_17_x86_64 \
+      --platform manylinux2014_x86_64 \
+      --platform any \
+      --python-version 3.11 \
+      --implementation cp \
+      --abi cp311 \
+      --abi abi3 \
+      --abi none \
+      -r /tmp/requirements/runtime.lock; \
+    python -m pip install \
+      --no-index \
+      --find-links=/tmp/runtime-wheels \
+      --require-hashes \
+      --only-binary=:all: \
+      -r /tmp/requirements/runtime.lock; \
+    rm -rf /tmp/pip-wheels /tmp/runtime-wheels /tmp/requirements
+
 COPY backend/app /app/app
 COPY backend/alembic.ini /app/alembic.ini
 COPY backend/alembic /app/alembic
-
-RUN python -m pip install --upgrade pip \
-    && python -m pip install .
 
 USER app
 EXPOSE 8000
