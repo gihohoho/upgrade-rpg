@@ -1,8 +1,18 @@
 {
-  "schemaVersion": "v321.owner-only-reproducibility-locked-publish-gated",
+  "schemaVersion": "v322.owner-only-single-run-lifecycle-hardened-publish-gated",
   "preparedOnly": true,
   "publishApprovalModel": "owner-only-source-controlled-two-step",
-  "ownerOnlyApprovalPhase": "preparation-gated",
+  "ownerOnlyApprovalPhase": "preparation-closed",
+  "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
+  "publishLifecycleState": "preparation-closed",
+  "publishLifecycleSupportedStates": [
+    "preparation-closed",
+    "authorization-open",
+    "authorization-closed-awaiting-evidence",
+    "attempt-recorded"
+  ],
+  "priorApprovedPreparationSha": "f4788acf5455b07169320bd29f43ddf92ff1d5ad",
+  "priorExactPreparationShaApproved": true,
   "exactPreparationShaApproved": false,
   "dependencyAndFrontendInputsLocked": true,
   "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
@@ -57,5 +67,5 @@
   "actualRegistryMutationExecuted": false,
   "actualDockerCommandExecuted": false,
   "actualDatabaseAlembicMutationExecuted": false,
-  "nextSafeStage": "review-and-approve-exact-preparation-sha"
+  "nextSafeStage": "review-and-approve-exact-preparation-fix-sha"
 }

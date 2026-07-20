@@ -6,6 +6,7 @@ import importlib.util
 import json
 from pathlib import Path
 import shutil
+import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -15,6 +16,7 @@ REQUIRED = (
     ".gitattributes",
     ".github/workflows/publish-backend-ghcr.yml",
     "deploy/github-actions-ghcr-static-plan.example.json",
+    "deploy/github-actions-ghcr-publish-lifecycle.json",
     "docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md",
     "backend/Dockerfile.production",
     "backend/pyproject.toml",
@@ -24,13 +26,14 @@ REQUIRED = (
     "backend/requirements/runtime-linux-amd64-py311.lock",
     "backend/requirements/dev.in",
     "backend/requirements/dev-linux-amd64-py311.lock",
+    "tools/run_smoke_core.sh",
 )
 
 
 def load_tool():
-    spec = importlib.util.spec_from_file_location("v321_github_actions_plan", TOOL)
+    spec = importlib.util.spec_from_file_location("v322_github_actions_plan", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v321 GitHub Actions workflow checker")
+        raise RuntimeError("cannot load v322 GitHub Actions workflow checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -51,6 +54,13 @@ def mutate_plan(temp: Path, callback) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def mutate_lifecycle(temp: Path, callback) -> None:
+    path = temp / "deploy/github-actions-ghcr-publish-lifecycle.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    callback(payload)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 def mutate_workflow(temp: Path, old: str, new: str) -> None:
     path = temp / ".github/workflows/publish-backend-ghcr.yml"
     text = path.read_text(encoding="utf-8")
@@ -59,12 +69,79 @@ def mutate_workflow(temp: Path, old: str, new: str) -> None:
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
 
 
+def mutate_text(temp: Path, relative: str, old: str, new: str) -> None:
+    path = temp / relative
+    text = path.read_text(encoding="utf-8")
+    if old not in text:
+        raise AssertionError(f"text fixture marker missing in {relative}: {old}")
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
+def git(temp: Path, *args: str) -> str:
+    return subprocess.run(
+        ("git", "-C", str(temp), *args),
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    ).stdout.strip()
+
+
+def commit_all(temp: Path, message: str) -> str:
+    git(temp, "add", ".")
+    git(temp, "commit", "-m", message)
+    return git(temp, "rev-parse", "HEAD")
+
+
+def create_closed_authorization_sequence(module, temp: Path) -> tuple[str, str, str]:
+    copy_fixture(temp)
+    git(temp, "init")
+    git(temp, "config", "user.name", "Upgrade RPG smoke")
+    git(temp, "config", "user.email", "smoke@example.invalid")
+    preparation = commit_all(temp, "preparation closed")
+    mutate_lifecycle(temp, lambda p: (
+        p.update({
+            "state": "authorization-open",
+            "publishReviewerGateReady": True,
+            "approvedPreparationSha": preparation,
+        }),
+        p["ownerApproval"].update({
+            "recorded": True,
+            "recordedAtUtc": "2026-07-20T04:00:00Z",
+        }),
+    ))
+    authorization = commit_all(temp, "authorization open")
+    opened = module.inspect_static_workflow_plan(temp)
+    assert opened["result"] == module.AUTHORIZATION_OPEN_RESULT
+    assert opened["publishGateReady"] is True
+
+    mutate_lifecycle(temp, lambda p: (
+        p.update({"state": "authorization-closed-awaiting-evidence", "publishReviewerGateReady": False}),
+        p["closure"].update({
+            "authorizationSourceSha": authorization,
+            "closureCommitSha": None,
+            "preparedAtUtc": "2026-07-20T04:05:00Z",
+        }),
+        p["observedAttempt"].update({
+            "runId": 123456,
+            "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/123456",
+            "runAttempt": 1,
+            "status": "queued",
+        }),
+    ))
+    closure = commit_all(temp, "authorization closed")
+    closed = module.inspect_static_workflow_plan(temp)
+    assert closed["result"] == module.AUTHORIZATION_CLOSED_RESULT
+    assert closed["publishGateReady"] is False
+    return preparation, authorization, closure
+
+
 def expect_blocked(module, temp: Path, label: str = "unknown mutation") -> None:
     try:
         module.inspect_static_workflow_plan(temp)
     except module.StaticWorkflowPlanError:
         return
-    raise AssertionError(f"unsafe v321 GitHub Actions workflow fixture was not blocked: {label}")
+    raise AssertionError(f"unsafe v322 GitHub Actions workflow fixture was not blocked: {label}")
 
 
 def expect_semantically_blocked(module, temp: Path, label: str) -> None:
@@ -152,10 +229,19 @@ def main() -> int:
     assert result["actionsSettingsConfigured"] is True
     assert result["publishEnvironmentExists"] is True
     assert result["publishEnvironmentConfigured"] is False
+    assert result["publishLifecycleState"] == "preparation-closed"
     assert result["publishGateReady"] is False
+    assert result["approvedPreparationSha"] is None
     assert result["dockerBuildContextEnvExcluded"] is True
     assert result["reproducibleBuildReady"] is True
     assert result["supplyChainGate"] == "fail-closed"
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp = Path(temp_dir)
+        copy_fixture(temp)
+        fixture_result = module.inspect_static_workflow_plan(temp)
+        assert fixture_result["publishLifecycleState"] == "preparation-closed"
+        assert fixture_result["publishGateReady"] is False
 
     plan_mutations = (
         lambda p: p["triggerPolicy"]["allowedEvents"].append("push"),
@@ -177,12 +263,20 @@ def main() -> int:
         lambda p: p["repositoryReview"]["actionsSettings"].update({"allowedActions": "all"}),
         lambda p: p["repositoryReview"].update({"liveRecheckRequiredBeforeGateChange": False}),
         lambda p: p["repositoryReview"]["publishEnvironment"].update({"variablesCount": 1}),
-        lambda p: p["requiredRepositorySetup"].update({"sourceControlledPublishGateReady": True}),
-        lambda p: p["triggerPolicy"]["environment"].update({"sourceControlledGateValue": True}),
+        lambda p: p["requiredRepositorySetup"].update({"sourceControlledLifecyclePolicyReady": False}),
+        lambda p: p["triggerPolicy"]["environment"].update({"gateValueDerivedFromLifecycleState": False}),
         lambda p: p["supplyChainGates"]["vulnerabilityGate"].update({"assetSha256": "0" * 64}),
-        lambda p: p.update({"workflowExecutionExecuted": True}),
-        lambda p: p.update({"registryMutationExecuted": True}),
-        lambda p: p.update({"publishExecutionAllowedNow": True}),
+        lambda p: p["ownerOnlyApprovalPolicy"].update({"runAttemptMustEqual": 2}),
+        lambda p: p["ownerOnlyApprovalPolicy"].update({"singleDispatchApiCheckRequired": False}),
+        lambda p: p["ownerOnlyApprovalPolicy"].update({"authorizationChangedPaths": ["README.md"]}),
+        lambda p: p["ownerOnlyApprovalPolicy"].update({"allowedLifecycleStates": ["preparation-closed"]}),
+        lambda p: p["transientAuthorizationSmokePolicy"].update({"enabledValue": "2"}),
+        lambda p: p["transientAuthorizationSmokePolicy"].update({"allOtherCoreSmokesRemainRequired": False}),
+        lambda p: p["transientAuthorizationSmokePolicy"]["skippedClosedRootSmokes"].append("python unsafe.py"),
+        lambda p: p["attemptEvidencePolicy"].update({"codeWorkflowCheckerChangesAllowed": True}),
+        lambda p: p["attemptEvidencePolicy"]["firstRecordChangedPathAllowlist"].append("tools/check_github_actions_ghcr_static_plan.py"),
+        lambda p: p["repositoryReview"]["actionsSettings"]["forkPullRequestWorkflows"].update({"sendWriteTokens": True}),
+        lambda p: p["repositoryReview"]["actionsSettings"]["forkPullRequestWorkflows"].update({"sendSecretsAndVariables": True}),
     )
     for index, mutation in enumerate(plan_mutations, start=1):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -190,6 +284,106 @@ def main() -> int:
             copy_fixture(temp)
             mutate_plan(temp, mutation)
             expect_blocked(module, temp, f"plan mutation {index}")
+
+    lifecycle_mutations = (
+        lambda p: p.update({"unexpectedSecret": "must-not-be-accepted"}),
+        lambda p: p.update({"publishReviewerGateReady": True}),
+        lambda p: p.update({"state": "unknown-state"}),
+        lambda p: p.update({"priorApprovedPreparationSha": "0" * 40}),
+        lambda p: p["ownerApproval"].update({"recorded": True}),
+        lambda p: p["ownerApproval"].update({"unexpected": "blocked"}),
+        lambda p: p["githubLiveSettings"].update({"recheckedAtUtc": "2026-07-20"}),
+        lambda p: p["githubLiveSettings"].update({"forkWriteTokensEnabled": True}),
+        lambda p: p["githubLiveSettings"].update({"forkSecretsEnabled": True}),
+        lambda p: p["authorizationPolicy"].update({"workflowRunAttemptMustEqual": 2}),
+        lambda p: p["authorizationPolicy"].update({"singleDispatchApiCheckRequired": False}),
+        lambda p: p["authorizationPolicy"].update({"authorizationChangedPaths": ["README.md"]}),
+        lambda p: p["observedAttempt"].update({"status": "completed"}),
+    )
+    for index, mutation in enumerate(lifecycle_mutations, start=1):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = Path(temp_dir)
+            copy_fixture(temp)
+            mutate_lifecycle(temp, mutation)
+            expect_blocked(module, temp, f"lifecycle mutation {index}")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp = Path(temp_dir)
+        copy_fixture(temp)
+        mutate_lifecycle(temp, lambda p: (
+            p.update({
+                "state": "authorization-open",
+                "publishReviewerGateReady": True,
+                "approvedPreparationSha": module.PRIOR_APPROVED_PREPARATION_SHA,
+            }),
+            p["ownerApproval"].update({
+                "recorded": True,
+                "recordedAtUtc": "2026-07-20T04:00:00Z",
+            }),
+        ))
+        expect_blocked(module, temp, "authorization-open fixture without Git history")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp = Path(temp_dir)
+        preparation, authorization, closure = create_closed_authorization_sequence(module, temp)
+        mutate_lifecycle(temp, lambda p: (
+            p.update({"state": "attempt-recorded"}),
+            p["closure"].update({"closureCommitSha": closure}),
+            p["observedAttempt"].update({
+                "status": "completed",
+                "conclusion": "success",
+                "imageDigest": "sha256:" + "a" * 64,
+                "signatureVerified": True,
+            }),
+        ))
+        record = commit_all(temp, "record completed attempt")
+        recorded = module.inspect_static_workflow_plan(temp)
+        assert recorded["result"] == module.ATTEMPT_RECORDED_RESULT
+        assert recorded["publishLifecycleState"] == "attempt-recorded"
+        assert recorded["publishGateReady"] is False
+        assert recorded["approvedPreparationSha"] == preparation
+        assert recorded["attemptRecordCommitSha"] == record
+        stable_path = temp / "README.md"
+        stable_path.write_text("stable post-record state\n", encoding="utf-8")
+        commit_all(temp, "normal post-record documentation")
+        stable = module.inspect_static_workflow_plan(temp)
+        assert stable["result"] == module.ATTEMPT_RECORDED_RESULT
+        assert stable["attemptRecordCommitSha"] == record
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp = Path(temp_dir)
+        _, _, closure = create_closed_authorization_sequence(module, temp)
+        mutate_lifecycle(temp, lambda p: (
+            p.update({"state": "attempt-recorded"}),
+            p["closure"].update({"closureCommitSha": closure}),
+            p["observedAttempt"].update({
+                "status": "completed",
+                "conclusion": "success",
+                "imageDigest": None,
+                "signatureVerified": False,
+            }),
+        ))
+        commit_all(temp, "invalid successful attempt evidence")
+        expect_blocked(module, temp, "success without digest and verified signature")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp = Path(temp_dir)
+        _, _, closure = create_closed_authorization_sequence(module, temp)
+        mutate_lifecycle(temp, lambda p: (
+            p.update({"state": "attempt-recorded"}),
+            p["closure"].update({"closureCommitSha": closure}),
+            p["observedAttempt"].update({
+                "status": "completed",
+                "conclusion": "failure",
+                "imageDigest": None,
+                "signatureVerified": False,
+            }),
+        ))
+        unsafe = temp / "backend/app/unsafe-evidence-change.py"
+        unsafe.parent.mkdir(parents=True, exist_ok=True)
+        unsafe.write_text("raise RuntimeError('unsafe')\n", encoding="utf-8")
+        commit_all(temp, "attempt evidence with unsafe code change")
+        expect_blocked(module, temp, "attempt evidence changed code outside allowlist")
 
     workflow_mutations = (
         ("  workflow_dispatch:\n", "  push:\n"),
@@ -211,9 +405,28 @@ def main() -> int:
         ("context: .", "context: backend"),
         ("provenance: mode=max", "provenance: mode=min"),
         ("sbom: true", "sbom: false"),
+        ('  DOCKER_BUILD_RECORD_UPLOAD: "false"\n', '  DOCKER_BUILD_RECORD_UPLOAD: "true"\n'),
+        ('  DOCKER_BUILD_RECORD_UPLOAD: "false"\n', ""),
         (
-            'PUBLISH_REVIEWER_GATE_READY: "false"',
-            "PUBLISH_REVIEWER_GATE_READY: ${{ vars.PUBLISH_REVIEWER_GATE_READY }}",
+            'require(os.environ["EXPECTED_RUN_ATTEMPT"] == "1", "workflow re-runs are forbidden")',
+            'require(True, "workflow re-runs are forbidden")',
+        ),
+        ("actions/workflows/", "actions/runs/"),
+        (
+            "if: ${{ always() && steps.publish.outputs.digest != '' }}",
+            "if: ${{ steps.publish.outputs.digest != '' }}",
+        ),
+        (
+            "SKIP_GHCR_HANDOFF_SMOKES=1 bash tools/run_smoke_core.sh",
+            "bash tools/run_smoke_core.sh",
+        ),
+        (
+            "SKIP_GHCR_HANDOFF_SMOKES=1 bash tools/run_smoke_core.sh",
+            "SKIP_GHCR_HANDOFF_SMOKES=2 bash tools/run_smoke_core.sh",
+        ),
+        (
+            "python tools/check_github_actions_ghcr_static_plan.py --strict\n",
+            "",
         ),
         ("password: ${{ secrets.GITHUB_TOKEN }}", "password: ${{ secrets.GHCR_PAT }}"),
         ("tags: ${{ env.IMAGE_REPOSITORY }}:unverified-sha-${{ github.sha }}", "tags: ${{ env.IMAGE_REPOSITORY }}:latest"),
@@ -238,6 +451,27 @@ def main() -> int:
             expect_blocked(module, temp, f"workflow mutation {old!r} -> {new!r}")
             expect_semantically_blocked(module, temp, f"workflow mutation {old!r} -> {new!r}")
             expect_structurally_blocked(module, temp, f"workflow mutation {old!r} -> {new!r}")
+
+    smoke_core_mutations = (
+        (
+            'if [[ "${SKIP_GHCR_HANDOFF_SMOKES:-0}" != "1" ]]; then',
+            'if [[ "${SKIP_GHCR_HANDOFF_SMOKES:-0}" != "2" ]]; then',
+        ),
+        (
+            'if [[ "${SKIP_GHCR_HANDOFF_SMOKES:-0}" != "1" ]]; then',
+            'if [[ "${SKIP_ALL_SMOKES:-0}" != "1" ]]; then',
+        ),
+        (
+            "  python tools/smoke/game/smoke_next_chat_handoff.py\nfi",
+            "  python tools/smoke/game/smoke_next_chat_handoff.py\n  python unsafe.py\nfi",
+        ),
+    )
+    for old, new in smoke_core_mutations:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = Path(temp_dir)
+            copy_fixture(temp)
+            mutate_text(temp, "tools/run_smoke_core.sh", old, new)
+            expect_blocked(module, temp, f"core smoke skip mutation {old!r} -> {new!r}")
 
     dockerignore_mutations = (
         ("**/.env\n", ""),
@@ -282,7 +516,7 @@ def main() -> int:
             )
             expect_secret_expression_blocked(module, temp, expression, emit_step_key)
 
-    print("OK: v321 GitHub Actions/GHCR fail-closed workflow smoke passed")
+    print("OK: v322 GitHub Actions/GHCR lifecycle fail-closed workflow smoke passed")
     return 0
 
 

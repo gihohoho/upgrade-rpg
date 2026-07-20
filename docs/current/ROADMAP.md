@@ -1,4 +1,4 @@
-# Roadmap — v321
+# Roadmap — v322
 
 ## 현재 완료
 
@@ -8,24 +8,46 @@
 - GHCR private/linux-amd64/base digest와 namespace `gihohoho` 확정
 - Codex GitHub Connector를 `gihohoho/upgrade-rpg` 하나로 제한
 - repository Actions 외부 action 8개 full-SHA allowlist와 full-length SHA 강제
-- 기본 `GITHUB_TOKEN` read-only와 fork write token/secret 차단
-- `ghcr-production-publish` environment 생성과 `main` 전용 branch rule
-- `workflow_dispatch` 전용 workflow 파일 작성
-- YAML AST 기반 exact event/job/permission/action/gate 정적 검사
-- 로컬 OCI + SPDX SBOM + checksum-pinned Trivy HIGH/CRITICAL gate
-- pushed exact digest 재검사 + BuildKit mode=max provenance/SBOM + Cosign keyless sign/verify 설계
-- source-controlled `PUBLISH_REVIEWER_GATE_READY="false"` hard gate
-- `owner-only-source-controlled-two-step` 게시 승인 모델 선택
+- 기본 `GITHUB_TOKEN` read-only, PR 승인 차단, fork write token/secret 차단
+- `ghcr-production-publish` environment와 `main` 전용 branch rule
+- `workflow_dispatch` 전용 GHCR 후보 workflow
 - Linux/amd64 Python dependency/build-system/pip/frontend exact version + SHA-256 잠금
-- 개발 서버 재사용, GitHub 작업, 숨김 파일/.env 권한을 handoff 규칙에 반영
+- local OCI + SPDX SBOM + checksum-pinned Trivy HIGH/CRITICAL gate
+- pushed exact digest provenance/SBOM/Trivy + Cosign keyless sign/verify
+- `owner-only-source-controlled-two-step` 게시 승인 모델 선택
+- v321 exact SHA 승인 이력 보존
+- v322 source-controlled lifecycle gate 기본 closed
+- authorization direct-parent + lifecycle-only 변경 강제
+- repository owner + `run_attempt=1` + Actions API single-dispatch 방어
+- run 접수 직후 immediate closure(C에서는 `closureCommitSha=null`)와 R evidence commit의 parent closure SHA 기록 절차
+- 종료 뒤 `attempt-recorded` evidence commit과 non-success conclusion의 registry mutation/signature job·step 증거 분리
+- Docker build record 자동 artifact 비활성화
+- post-push failure digest/partial evidence 보존 설계
+- authorization-open에서 closed root 전용 세 handoff smoke만 제외하고 앱·백엔드 전체 core smoke를 유지하는 `SKIP_GHCR_HANDOFF_SMOKES=1` 실행 계약
+- 2026-07-20 GitHub live 재확인 및 fork write token/secret drift 복원
+
+## 현재 단계
+
+```txt
+latest: v322.owner-only-single-run-lifecycle-hardened-publish-gated
+result: github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated
+lifecycle: preparation-closed
+workflow/login/build/push executed: no/no/no/no
+next safe stage: review-and-approve-exact-preparation-fix-sha
+```
 
 ## 다음 순서
 
-1. v321 preparation commit의 정확한 40자 SHA와 변경 범위를 기호가 명시 승인
-2. environment `main` rule과 Actions allowlist/full SHA를 live 재확인
-3. 별도 authorization commit에서만 source-controlled gate 변경을 검토
-6. gate 변경이 승인·검증된 경우에만 `workflow_dispatch`를 한 번 수동 실행하고 validate/build/SBOM/Trivy 결과를 단계별 확인
-7. exact digest provenance/SBOM/Trivy/Cosign 검증이 모두 통과한 경우에만 후보 digest 기록
-8. production reference 변경 없이 isolated container 검증을 별도 단계로 진행
+1. v322 전용 smoke, compileall, JavaScript 문법, 전체 core smoke 통과
+2. preparation-fix commit을 `main`에 push
+3. 정확한 새 40자 SHA와 변경 범위를 기호에게 제시하고 명시 승인 대기
+4. 승인 직후 GitHub Actions allowlist/full SHA/fork 정책/environment main-only를 live 재확인
+5. 승인 SHA의 direct child에서 lifecycle JSON만 `authorization-open`으로 변경
+6. 정적 검사와 push 뒤 workflow를 정확히 한 번 dispatch
+7. run ID 접수 즉시 closure commit으로 lifecycle gate를 닫아 `authorization-closed-awaiting-evidence`로 전이
+8. run 결과와 digest/부분 증거를 확인하고 별도 `attempt-recorded` evidence commit으로 실제 결과 기록
+9. `review-recorded-workflow-attempt-evidence`에서 conclusion과 registry mutation/signature 증거 검토
+10. 모든 검증이 끝난 exact digest만 후보로 기록
+11. production reference 변경 없이 isolated container 검증은 별도 승인 단계로 진행
 
-GitHub Free/Pro/Team의 required reviewer는 공개 저장소에서만 지원되므로 owner-only 모델은 독립 reviewer와 동등하지 않습니다. 정확한 preparation SHA 승인과 GitHub live 재확인 전에는 gate를 `false`로 유지하고 workflow를 실행하지 않습니다. 실행 후에는 성공·실패와 관계없이 즉시 gate를 닫습니다.
+현재는 2번 전입니다. `f4788acf...` 과거 승인을 새 SHA에 재사용하지 않습니다. native required reviewer가 없으므로 owner-only 모델은 독립 reviewer와 동등하지 않습니다. 새 승인 전에는 workflow를 실행하지 않습니다.

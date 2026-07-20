@@ -5,9 +5,9 @@ import hashlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v321.owner-only-reproducibility-locked-publish-gated"
-READY_RESULT = "github-actions-ghcr-owner-only-reproducibility-ready-publish-gated"
-NEXT_SAFE_STAGE = "review-and-approve-exact-preparation-sha"
+VERSION = "v322.owner-only-single-run-lifecycle-hardened-publish-gated"
+READY_RESULT = "github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated"
+NEXT_SAFE_STAGE = "review-and-approve-exact-preparation-fix-sha"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 REVISION_SHA256 = "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa"
@@ -40,6 +40,27 @@ def assert_same(left: str, right: str) -> None:
         raise AssertionError(f"handoff mirror differs: {left} != {right}")
 
 
+def assert_exact_transient_handoff_smoke_skip_scope() -> None:
+    script = read("tools/run_smoke_core.sh")
+    opener = 'if [[ "${SKIP_GHCR_HANDOFF_SMOKES:-0}" != "1" ]]; then'
+    if script.count("SKIP_GHCR_HANDOFF_SMOKES") != 1:
+        raise AssertionError("SKIP_GHCR_HANDOFF_SMOKES must have exactly one guarded scope")
+    lines = [line.strip() for line in script.splitlines()]
+    try:
+        start = lines.index(opener)
+        end = lines.index("fi", start + 1)
+    except ValueError as exc:
+        raise AssertionError("closed-root handoff smoke skip guard is incomplete") from exc
+    guarded = lines[start + 1:end]
+    expected = [
+        "python tools/smoke/backend/smoke_github_actions_ghcr_static_plan.py",
+        "python tools/smoke/backend/smoke_codex_handoff_readiness.py",
+        "python tools/smoke/game/smoke_next_chat_handoff.py",
+    ]
+    if guarded != expected:
+        raise AssertionError(f"transient lifecycle skip scope must contain exactly three closed-root smokes: {guarded!r}")
+
+
 def main() -> int:
     required = (
         ".github/workflows/publish-backend-ghcr.yml",
@@ -62,6 +83,7 @@ def main() -> int:
         "docs/handoff/NEXT_CHAT_HANDOFF.md",
         "deploy/backend-image-ghcr-policy.example.json",
         "deploy/github-actions-ghcr-static-plan.example.json",
+        "deploy/github-actions-ghcr-publish-lifecycle.json",
         "tools/check_codex_handoff_readiness.py",
         "tools/check_github_actions_ghcr_static_plan.py",
         "tools/generate_backend_linux_dependency_locks.py",
@@ -76,6 +98,7 @@ def main() -> int:
 
     assert_same("NEXT_CHAT_PROMPT.md", "docs/handoff/NEXT_CHAT_PROMPT.md")
     assert_same("NEXT_CHAT_HANDOFF.md", "docs/handoff/NEXT_CHAT_HANDOFF.md")
+    assert_exact_transient_handoff_smoke_skip_scope()
 
     assert_contains(
         "AGENTS.md",
@@ -85,7 +108,8 @@ def main() -> int:
         "github-actions-github-token",
         "실행 중인 개발 서버를 재사용",
         "숨김 파일과 `.env`",
-        "PUBLISH_REVIEWER_GATE_READY",
+        "deploy/github-actions-ghcr-publish-lifecycle.json",
+        "source-controlled lifecycle gate",
         "check_github_actions_ghcr_static_plan.py --strict",
         "git commit",
         "Git 한 줄 명령을 다시 제공하지 않습니다",
@@ -98,23 +122,39 @@ def main() -> int:
         "`gihohoho`는 기호가 직접 확인한 고정 namespace",
         READY_RESULT,
         NEXT_SAFE_STAGE,
-        "ZIP을 기준으로 작업하지 않습니다",
+        "ZIP은 기준으로 작업하지 않습니다",
         "Codex가 프로젝트 루트에서 직접",
         "필요한 extension, 권한, 설치",
-        "source-controlled `PUBLISH_REVIEWER_GATE_READY`",
+        "deploy/github-actions-ghcr-publish-lifecycle.json",
+        "source-controlled lifecycle gate",
+        "run_attempt=1",
+        "single dispatch",
+        "immediate closure",
+        "closureCommitSha",
+        "attempt-recorded",
+        "review-recorded-workflow-attempt-evidence",
     )
     assert_contains(
         "NEXT_CHAT_HANDOFF.md",
         VERSION,
-        "source rpg_game: public 23/749, application 22/748",
+        "source DB: rpg_game",
+        "source public tables/rows: 23/749",
+        "source application tables/rows: 22/748",
         "revision SHA-256: " + REVISION_SHA256,
         REPOSITORY,
         "workflow file/creation approved: yes/yes",
         "workflow execution approved/executed: yes/no",
         "CI login/build/push executed: no/no/no",
-        "handoff mode: current repository + Git `main` (ZIP 없음)",
-        "GitHub App 연결과 repository 읽기 권한은 해결됨",
-        "source-controlled false",
+        "기준: 현재 repository + Git `main`; ZIP은 기본 생성하지 않음",
+        "2026-07-20 GitHub live 재확인",
+        "preparation-closed",
+        "source-controlled lifecycle gate",
+        "run_attempt=1",
+        "single dispatch",
+        "immediate closure",
+        "closureCommitSha",
+        "attempt-recorded",
+        "review-recorded-workflow-attempt-evidence",
     )
     assert_contains(
         "deploy/backend-image-ghcr-policy.example.json",
@@ -133,6 +173,13 @@ def main() -> int:
         '"publishEnvironmentMainOnly": true',
         '"publishEnvironmentRequiredReviewerConfigured": false',
         '"sourceControlledPublishGateReady": false',
+        '"ownerOnlyApprovalPhase": "preparation-closed"',
+        '"publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json"',
+        '"publishLifecycleState": "preparation-closed"',
+        '"publishLifecycleSupportedStates"',
+        '"attempt-recorded"',
+        '"priorApprovedPreparationSha": "f4788acf5455b07169320bd29f43ddf92ff1d5ad"',
+        '"priorExactPreparationShaApproved": true',
         '"dependencyAndFrontendInputsLocked": true',
         '"ciImagePushApproved": true',
         '"actualRegistryMutationExecuted": false',
@@ -140,11 +187,16 @@ def main() -> int:
     assert_contains(
         "deploy/github-actions-ghcr-static-plan.example.json",
         '"schemaVersion": "' + VERSION + '"',
+        '"staticPolicyOnly": true',
         '"workflowFilePresent": true',
         '"workflowCreationApproved": true',
         '"workflowExecutionApproved": true',
-        '"workflowExecutionExecuted": false',
-        '"publishExecutionAllowedNow": false',
+        '"workflowExecutionEvidenceTrackedInLifecycle": true',
+        '"publishExecutionAuthorizationTrackedInLifecycle": true',
+        '"publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json"',
+        '"publishLifecycleSchemaVersion": "v322.owner-only-publish-lifecycle"',
+        '"allowedLifecycleStates"',
+        '"attempt-recorded"',
         '"allowedEvents"',
         '"workflow_dispatch"',
         '"contents": "read"',
@@ -153,13 +205,19 @@ def main() -> int:
         '"githubArtifactAttestationsPermission": "not-requested"',
         '"resolvedActionShasApproved": true',
         '"repositoryAllowlistConfigured": true',
-        '"sourceControlledGateValue": false',
-        '"sourceControlledPublishGateReady": false',
+        '"runAttemptMustEqual": 1',
+        '"repositoryOwnerActorRequired": true',
+        '"singleDispatchApiCheckRequired": true',
+        '"closureCommitImmediatelyAfterRunAccepted": true',
+        '"sourceControlledGate": "deploy/github-actions-ghcr-publish-lifecycle.json#publishReviewerGateReady"',
+        '"gateValueDerivedFromLifecycleState": true',
+        '"gateChangeRequiresSinglePathCommit": true',
         '"publishApprovalModel": "owner-only-source-controlled-two-step"',
         '"status": "dependency-and-frontend-inputs-locked"',
         TRIVY_SHA256,
-        '"registryMutationExecuted": false',
-        '"nextSafeStage": "' + NEXT_SAFE_STAGE + '"',
+        '"registryMutationEvidenceTrackedInLifecycle": true',
+        '"sourceControlledLifecyclePolicyReady": true',
+        '"nextSafeStagePolicy": "follow-source-controlled-publish-lifecycle-state"',
     )
     assert_not_contains(
         "deploy/github-actions-ghcr-static-plan.example.json",
@@ -172,7 +230,12 @@ def main() -> int:
         "permissions:\n  contents: read",
         "context: .",
         "file: backend/Dockerfile.production",
-        "PUBLISH_REVIEWER_GATE_READY: \"false\"",
+        "approved_preparation_commit:",
+        "PUBLISH_LIFECYCLE_PATH: deploy/github-actions-ghcr-publish-lifecycle.json",
+        'require(os.environ["EXPECTED_RUN_ATTEMPT"] == "1", "workflow re-runs are forbidden")',
+        "Require exactly one first-attempt dispatch for this authorization",
+        'require(len(runs) <= 1, "more than one dispatch exists for this authorization commit")',
+        'require(current.get("state") == "authorization-open", "publish lifecycle is not authorization-open")',
         "Enforce owner-only two-step authorization gate before registry access",
         "backend/requirements/dev-linux-amd64-py311.lock",
         "--require-hashes",
@@ -185,6 +248,9 @@ def main() -> int:
         "sbom: true",
         "cosign sign --yes",
         "cosign verify",
+        "python tools/check_github_actions_ghcr_static_plan.py --strict\n"
+        "          python -m compileall -q backend/app backend/scripts backend/alembic tools\n"
+        "          SKIP_GHCR_HANDOFF_SMOKES=1 bash tools/run_smoke_core.sh",
     )
     assert_not_contains(
         ".github/workflows/publish-backend-ghcr.yml",
@@ -196,12 +262,30 @@ def main() -> int:
         ":latest",
     )
     assert_contains(
+        "deploy/github-actions-ghcr-publish-lifecycle.json",
+        '"schemaVersion": "v322.owner-only-publish-lifecycle"',
+        '"state": "preparation-closed"',
+        '"publishReviewerGateReady": false',
+        '"priorApprovedPreparationSha": "f4788acf5455b07169320bd29f43ddf92ff1d5ad"',
+        '"approvedPreparationSha": null',
+        '"closureCommitSha": null',
+        '"recorded": false',
+        '"workflowRunAttemptMustEqual": 1',
+        '"singleDispatchApiCheckRequired": true',
+        '"rerunForbidden": true',
+        '"immediateClosureAfterRunAccepted": true',
+        '"status": "not-dispatched"',
+    )
+    assert_contains(
         "docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md",
-        "실제 secret 값은 이 문서에 적지 않습니다",
+        "실제 secret 값은 적지 않습니다",
         "required reviewer",
         "source-controlled gate",
-        "Trivy `0.70.0`",
-        "로컬 `gh` CLI",
+        "deploy/github-actions-ghcr-publish-lifecycle.json",
+        "`run_attempt=1`; rerun 금지",
+        "single dispatch",
+        "immediate closure commit",
+        "partial evidence는 성공 또는 배포 승인 증거가 아닙니다",
     )
     assert_contains(
         "deploy/production.env.example",
@@ -242,7 +326,7 @@ def main() -> int:
     if actual_sha != REVISION_SHA256:
         raise AssertionError(f"reviewed revision SHA-256 differs: {actual_sha}")
 
-    print("OK: v321 Codex handoff and document structure are synchronized")
+    print("OK: v322 Codex handoff and owner-only lifecycle documents are synchronized")
     return 0
 
 

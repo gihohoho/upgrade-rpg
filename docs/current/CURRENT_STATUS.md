@@ -1,13 +1,17 @@
-# Current Status — v321
+# Current Status — v322
 
 ## 현재 기준
 
-- 최신 작업: `v321.owner-only-reproducibility-locked-publish-gated`
-- handoff: current repository + Git `main` (ZIP 기본 생성 없음)
+- 최신 작업: `v322.owner-only-single-run-lifecycle-hardened-publish-gated`
+- strict result: `github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated`
+- next safe stage: `review-and-approve-exact-preparation-fix-sha`
+- workflow source/semantic SHA-256: `8b3bde807cb241e14104272a13f1e4c5a857753716e5a2a7e13b710df55ae61e` / `f91419160e34e1ea5c16342b8d346e9b295d502131980eeb084b2da9aa2683fa`
+- handoff: current repository + Git `main`; ZIP 기본 생성 없음
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
 - backend virtualenv: `backend/.venv`
-- 개발 서버: 정상 프로세스가 있으면 `127.0.0.1:8000`, `127.0.0.1:5173` 계속 재사용
+- 개발 서버: 마지막 확인 기준 중지 상태; 이번 정적 변경에는 서버 재시작 불필요
+- 새 설치/extension/추가 권한: 현재 없음
 
 ## 고정 PostgreSQL/Alembic 상태
 
@@ -33,7 +37,7 @@ max_connections review candidate: 40
 Compose config render: 기호 PC 통과
 ```
 
-## GHCR와 GitHub Actions
+## GitHub Actions / GHCR
 
 ```txt
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
@@ -50,51 +54,78 @@ CI workflow/login/build/push approved: yes/yes/yes/yes
 CI login/build/push executed: no/no/no
 repository Actions allowlist/full SHA: configured/configured
 publish environment/main-only: present/configured
+environment secrets/variables: 0/0
 required reviewer/prevent self-review: missing/missing
 publish approval model: owner-only-source-controlled-two-step
-PUBLISH_REVIEWER_GATE_READY: source-controlled false
-dependency/frontend input lock: complete (exact versions + SHA-256)
-exact preparation SHA approval: pending
-GitHub repository settings evidence: 2026-07-15 browser snapshot (not live API check)
+source-controlled lifecycle gate: preparation-closed / publishReviewerGateReady=false
+dependency/frontend input lock: complete
+run_attempt=1: required
+single dispatch: required by Actions API
+immediate closure: required after run acceptance
+exact preparation-fix SHA approval: pending
 ```
 
-## v321 GitHub 설정과 공급망 잠금 결과
+아직 workflow run, GHCR login, image build, push, sign은 한 번도 실행하지 않았습니다. production image reference와 자동 deploy도 바꾸지 않았습니다.
 
-- Codex GitHub 연결은 `gihohoho/upgrade-rpg` selected repository 하나로 제한되어 있습니다.
-- 외부 action은 승인한 8개 repository의 전체 40자리 SHA만 허용합니다.
-- 기본 `GITHUB_TOKEN`은 contents/packages read-only이고 Actions의 PR 생성·승인은 꺼져 있습니다.
-- `ghcr-production-publish` environment는 존재하며 deployment branch는 `main`만 허용합니다.
-- owner 외 collaborator는 0명이고 required reviewer/prevent self-review 설정 UI가 없어 보호가 미완성입니다.
-- environment secret과 variable은 0개입니다.
-- 위 repository 설정은 2026-07-15 브라우저에서 확인한 snapshot입니다. 로컬 strict checker는 GitHub API를 실시간 조회하지 않으므로 gate 변경 직전에 live 설정을 다시 확인해야 합니다.
-- workflow publish job의 첫 단계가 `PUBLISH_REVIEWER_GATE_READY=true`를 확인하며, 현재 파일에 리터럴 `"false"`로 고정되어 GHCR login 전에 실패합니다. repository/environment variable로 우회할 수 없습니다.
-- workflow 전체 UTF-8 소스는 SHA-256 `9c3384f5f8d879320d41b04833a63842744e55c14cd12743c9aea0a3a74e8c5a`, 파싱된 실행 의미 구조는 SHA-256 `9a7af533b42854977897b26fe0aae364667f9be65a7d9dfab4c51a2bf1c31652`로 정적 검사기에 고정되어, step 추가·삭제·재배열이나 shell 본문 변조가 별도 검토 없이 통과하지 않습니다.
-- action/run step별 해시와 exact env/key, parsed secret 경로 allowlist도 별도로 검사합니다. 유일한 secret 표현식 허용 위치는 GHCR login의 `${{ secrets.GITHUB_TOKEN }}` password입니다.
-- root Docker build context에서 `.env`, `.env.*`, `*.env`, `*.env.*`, `.envrc`를 모두 제외하며, env 파일 재포함 규칙을 금지합니다.
+## v321 승인 이후 발견한 감사 문제
 
-## 공급망 workflow
+기호는 `f4788acf5455b07169320bd29f43ddf92ff1d5ad`를 정확히 승인했습니다. 이 승인은 역사적 prior approval로 유효하게 기록하지만, 실행 전 추가 감사에서 아래 결함을 찾아 새 v322 preparation-fix SHA 승인이 필요합니다.
 
-`.github/workflows/publish-backend-ghcr.yml`은 `workflow_dispatch` 전용입니다. 40자리 source SHA와 `main`, 확인 입력을 검사한 뒤 정적 검사, 로컬 OCI build, SPDX SBOM, checksum-pinned Trivy `HIGH,CRITICAL` gate를 거칩니다. 게시가 허용된 이후에도 push된 exact digest를 다시 Trivy로 검사하고 Docker BuildKit `mode=max` provenance/SBOM을 검사한 뒤에만 Sigstore Cosign keyless 서명과 identity/issuer 검증을 수행합니다.
+1. checker가 gate `true` authorization 상태를 허용하지 않아 합법적인 실행 준비 commit이 CI에서 실패할 수 있었습니다.
+2. `run_attempt=1`, 동일 SHA rerun 금지, API 기반 single dispatch 방어가 없었습니다.
+3. authorization commit의 direct-parent 승인 SHA 연결과 변경 경로 제한이 없었습니다.
+4. Docker build record가 정적 계획에 없는 artifact를 만들 수 있었습니다.
+5. image push 뒤 실패할 경우 digest와 부분 증거를 남기지 못했습니다.
 
-개인 비공개 저장소에서는 GitHub Artifact Attestations API를 사용할 수 없어 `actions/attest`와 `attestations: write`는 사용하지 않습니다.
+`f4788acf...` 이후 workflow와 checker가 보안상 중요한 범위로 바뀌므로 과거 승인을 새 commit에 자동 이전하지 않습니다.
 
-Python application/build dependency는 CPython 3.11 Linux/amd64용 exact version과 선택 wheel SHA-256으로 잠겼습니다. pip는 `26.1.2`, build-system은 `setuptools 80.10.2`와 `wheel 0.46.3`, Dockerfile frontend는 `docker/dockerfile:1.21.0@sha256:27f9262d43452075f3c410287a2c43f5ef1bf7ec2bb06e8c9eeb1b8d453087bc`로 고정했습니다. source distribution은 금지하고 `--require-hashes` 다운로드 검증을 사용합니다. 다만 파일 timestamp와 builder 구현까지 포함한 byte-for-byte 동일 image를 보장한다고 과장하지는 않습니다.
+## v322 lifecycle 결과
 
-## 계속 적용되는 작업 권한
+- 새 파일: `deploy/github-actions-ghcr-publish-lifecycle.json`
+- 현재 lifecycle: `preparation-closed`
+- 현재 gate: `publishReviewerGateReady=false`
+- 과거 승인: `priorApprovedPreparationSha=f4788acf5455b07169320bd29f43ddf92ff1d5ad`
+- 새 승인 대상: 아직 commit 전이므로 `approvedPreparationSha=null`
+- authorization commit: 새 승인 SHA의 direct child, lifecycle 파일 하나만 변경
+- 실행자: repository owner만 허용
+- rerun: `run_attempt=1`이 아니면 차단
+- 중복 실행: GitHub Actions API로 같은 authorization SHA의 single dispatch만 허용
+- closure: run ID가 접수되면 결과를 기다리기 전에 immediate closure commit으로 gate를 닫고 `authorization-closed-awaiting-evidence`로 전이; C commit의 `closureCommitSha=null`
+- evidence: run 종료 뒤 별도 `attempt-recorded` commit에서 부모 C commit SHA를 `closureCommitSha`에 넣고 run ID/URL/status/conclusion/digest/signature 실제 결과 기록; next `review-recorded-workflow-attempt-evidence`
+- non-success conclusion: `registryMutationExecuted=false`나 `signatureVerified=false`와 동의어가 아님; 각 job/step, digest, artifact로 실제 결과 확인
+- Docker build record: `DOCKER_BUILD_RECORD_UPLOAD=false`
+- post-push failure: digest가 생겼으면 존재하는 partial evidence artifact를 14일 보존; 검증 완료 후보로 표기 금지
+- authorization-open CI smoke: 정적 checker를 직접 먼저 실행하고 `SKIP_GHCR_HANDOFF_SMOKES=1`로 closed 전용 handoff smoke 세 개만 제외; 앱·백엔드 전체 smoke는 유지
 
-- Codex는 실행 중인 개발 서버를 재사용하고 VS Code/Codex 터미널을 사용할 수 있습니다.
-- GitHub Actions/workflow/SHA/environment/variable 설정은 Codex가 목적 범위 안에서 처리합니다.
-- 숨김 파일과 `.env`는 필요한 경우 다룰 수 있지만 실제 secret은 Git·로그·채팅·artifact에 노출하지 않습니다.
-- 나중에 바꿀 보안 항목은 `docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md`에 기록합니다.
-- 필요한 extension, 권한, 설치 또는 사용자 계정 작업은 계속 요청합니다.
+## 2026-07-20 GitHub live 설정
 
-## 현재 차단과 다음 단계
+- 외부 action allowlist 8개와 full-length SHA 강제 확인
+- GitHub-owned/verified creator blanket allow 꺼짐 확인
+- 기본 `GITHUB_TOKEN` contents/packages read-only, PR create/approve 꺼짐 확인
+- 점검 중 발견한 fork write token 및 fork secret 전달 drift를 둘 다 `false`로 복원
+- `ghcr-production-publish` 존재, `main` only, secrets/variables 0/0 확인
+- native required reviewer/prevent self-review는 비공개 개인 저장소 제약으로 계속 없음
+- 기록 시각: `2026-07-20T03:04:15Z`; authorization 시점에 4시간 이내 live 재확인 필요
 
-기호는 2026-07-20에 `owner-only-source-controlled-two-step`을 선택했고 dependency/frontend 입력 잠금도 완료됐습니다. workflow와 CI registry 작업은 아직 실행하지 않았습니다. 다음 단계는 이 v321 준비 작업을 commit·push한 뒤 Codex가 정확한 40자 preparation SHA와 범위를 제시하고, 기호가 그 SHA를 명시적으로 승인하는 것입니다. 그 승인 전에는 gate를 바꾸지 않습니다. 승인 뒤에도 GitHub Actions allowlist/full SHA와 environment main-only 설정을 live 재확인하고, 별도 authorization commit에서만 gate를 열어 한 번 실행한 뒤 성공·실패와 관계없이 즉시 다시 닫습니다.
+## 공급망 잠금
+
+- Python application/build dependency: CPython 3.11 Linux/amd64 exact versions + 선택 wheel SHA-256, binary-only
+- pip `26.1.2`, setuptools `80.10.2`, wheel `0.46.3`
+- Dockerfile frontend: exact digest
+- action: 검토한 외부 action 8개 전체 40자리 SHA
+- Trivy: 공식 `0.70.0` Linux asset checksum 검증
+- local OCI/SBOM/Trivy → pushed digest provenance/SBOM/Trivy → Cosign keyless sign/verify 순서
+- byte-for-byte 동일 image를 보장한다고 주장하지 않음
+
+## 현재 안전 경계
+
+현재 lifecycle은 P `preparation-closed`로 닫혀 있어 registry 접근 전 fail-closed입니다. 이후 지원 전이는 A `authorization-open` → C `authorization-closed-awaiting-evidence` → R `attempt-recorded`입니다. v322 준비 수정 commit을 검증·push한 뒤 기호가 그 새 정확한 40자 SHA를 별도 메시지로 승인해야 합니다. 이전 `f4788acf...` 승인을 재사용하지 않습니다. 새 승인 전에는 authorization을 열거나 workflow를 실행하지 않습니다.
+
+DB/Alembic mutation, 인증·write API, Vue Preview/Apply/write, 게임 콘텐츠·밸런스, production container/network/volume, Compose up/down, production reference 갱신과 자동 deploy는 이번 범위 밖입니다.
 
 정상 strict 결과:
 
 ```txt
-result: github-actions-ghcr-owner-only-reproducibility-ready-publish-gated
-next safe stage: review-and-approve-exact-preparation-sha
+result: github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated
+next safe stage: review-and-approve-exact-preparation-fix-sha
 ```

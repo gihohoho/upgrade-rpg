@@ -1,19 +1,21 @@
 기호의 Upgrade RPG 프로젝트를 Codex에서 이어서 진행합니다.
 
-ZIP을 기준으로 작업하지 않습니다. 현재 프로젝트 루트의 Git `main` 최신 commit을 기준으로 하고, `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 가장 먼저 읽어 계속 지켜주세요.
+ZIP은 기준으로 작업하지 않습니다. 현재 프로젝트 루트의 Git `main` 최신 commit을 기준으로 하고, `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 가장 먼저 읽어 계속 지켜주세요.
 
 사용자는 코딩을 거의 모르는 기호입니다. 항상 한국어로 쉽고 자세하게 설명하고, 모든 터미널 명령 바로 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. backend 가상환경은 `backend/.venv`이고 Git Bash에서 `backend` 폴더에서 `source .venv/Scripts/activate`로 켭니다. Vue/npm은 `frontend/vue-app`에서 Python `.venv` 없이 실행합니다.
 
-Codex는 VS Code/Codex 터미널을 자유롭게 사용하고 이미 실행 중인 백엔드 `127.0.0.1:8000`과 프론트엔드 `127.0.0.1:5173` 서버를 재사용할 수 있습니다. 정상 서버를 작업마다 종료·재시작하지 말고, 프로세스가 죽었거나 설정상 꼭 필요한 경우에만 재시작해주세요.
+Codex는 VS Code/Codex 터미널을 자유롭게 사용하고 정상인 백엔드 `127.0.0.1:8000`과 프론트엔드 `127.0.0.1:5173` 서버를 재사용할 수 있습니다. 프로세스가 죽었거나 설정 때문에 꼭 필요한 경우에만 재시작하세요.
 
-기호는 GitHub Actions, workflow, action SHA, environment, variables와 필요한 repository 설정을 Codex가 작업 목적 안에서 처리하는 것을 계속 허용했습니다. 숨김 파일과 `.env`도 필요하면 점검·수정할 수 있습니다. 다만 실제 secret 값은 Git, 파일 예제, 로그, 채팅, artifact에 노출하거나 커밋하지 말고, 나중에 회전·폐기·재설정할 항목은 `docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md`에 계속 적어주세요. 필요한 extension, 권한, 설치 또는 사용자만 할 수 있는 계정 작업이 생기면 기호에게 요청하고, 해결되지 않으면 다음 handoff에도 반복해서 기록해주세요.
+GitHub Actions, workflow, action SHA, environment, variables와 필요한 repository 설정은 작업 목적 안에서 Codex가 처리할 수 있습니다. 숨김 파일과 `.env`도 필요한 경우 점검·수정할 수 있지만 실제 secret, token, PAT, Docker credential, production `.env`, CA/cert/key는 Git·채팅·로그·artifact에 노출하거나 커밋하지 마세요. 나중에 회전하거나 재설정할 보안 항목은 `docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md`에 기록하세요.
 
-코드나 문서를 바꾸고 검증이 끝나면 Codex가 프로젝트 루트에서 직접 `git status`, `git add .`, `git commit`, `git push`까지 합니다. 기호에게 Git 한 줄 명령을 주지 않고 ZIP도 만들지 않습니다. root `NEXT_CHAT_PROMPT.md`, `NEXT_CHAT_HANDOFF.md`와 `docs/handoff/` mirror는 매 작업마다 갱신합니다.
+필요한 extension, 권한, 설치 또는 사용자만 할 수 있는 계정 작업이 있으면 기호에게 요청하고, 해결 전에는 다음 handoff에도 반복 기록하세요. 변경과 검증 후에는 Codex가 프로젝트 루트에서 직접 git status/add/commit/push까지 합니다. 기호에게 Git 명령을 제공하지 않고 ZIP도 만들지 않습니다. root `NEXT_CHAT_PROMPT.md`, `NEXT_CHAT_HANDOFF.md`와 `docs/handoff/` mirror는 매 작업마다 바이트 단위로 같게 갱신합니다.
 
 현재 고정값:
 
 ```txt
-latest: v321.owner-only-reproducibility-locked-publish-gated
+latest: v322.owner-only-single-run-lifecycle-hardened-publish-gated
+strict result: github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated
+next safe stage: review-and-approve-exact-preparation-fix-sha
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR namespace: gihohoho
 backend repository: ghcr.io/gihohoho/upgrade-rpg-backend
@@ -34,15 +36,34 @@ repository Actions allowlist/full SHA enforcement: configured/configured
 publish environment/main-only: present/configured
 required reviewer/prevent self-review: missing/missing
 publish approval model: owner-only-source-controlled-two-step
-PUBLISH_REVIEWER_GATE_READY: source-controlled false
+source-controlled lifecycle gate: preparation-closed / publishReviewerGateReady=false
 dependency/frontend input lock: complete (exact versions + SHA-256)
-exact preparation SHA approval: pending
-GitHub settings evidence: 2026-07-15 browser snapshot; live recheck required before gate change
+workflow source SHA-256: 8b3bde807cb241e14104272a13f1e4c5a857753716e5a2a7e13b710df55ae61e
+workflow semantic SHA-256: f91419160e34e1ea5c16342b8d346e9b295d502131980eeb084b2da9aa2683fa
+run_attempt=1: required
+single dispatch: required by GitHub Actions API check
+immediate closure: required immediately after a run is accepted
+exact preparation-fix SHA approval: pending
 ```
 
-`gihohoho`는 기호가 직접 확인한 고정 namespace입니다. placeholder로 되돌리거나 다른 이름을 추측하지 마세요. repository 주소는 `ghcr.io/gihohoho/upgrade-rpg-backend`로 고정합니다. 실제 token, PAT, Docker credential, production secret 값은 파일·Git·채팅에 넣지 마세요.
+`gihohoho`는 기호가 직접 확인한 고정 namespace입니다. placeholder로 되돌리거나 다른 이름을 추측하지 마세요. repository 주소는 `ghcr.io/gihohoho/upgrade-rpg-backend`로 고정합니다.
 
-첫 작업은 읽기 전용 v321 검사입니다.
+중요한 감사 이력:
+
+- 기호는 `f4788acf5455b07169320bd29f43ddf92ff1d5ad` 준비 commit을 정확히 승인했습니다.
+- 그러나 승인 후 실행 전 감사에서 checker의 open gate 불허, rerun 방어 없음, authorization-parent 연결 없음, 계획 밖 Docker build record artifact, post-push 실패 증거 미보존을 발견했습니다.
+- 따라서 그 승인은 역사적 `priorApprovedPreparationSha`로만 보존합니다. 아직 workflow, GHCR login/build/push는 한 번도 실행하지 않았습니다.
+- v322는 `deploy/github-actions-ghcr-publish-lifecycle.json`을 기본 closed인 source-controlled lifecycle gate로 사용합니다.
+- authorization commit은 승인받은 새 preparation commit의 직접 자식이어야 하며 lifecycle JSON 하나만 변경할 수 있습니다.
+- workflow는 repository owner, `run_attempt=1`, API에서 확인한 single dispatch만 허용하고 rerun을 금지합니다.
+- run이 접수되면 결론을 기다리며 gate를 열어 두지 말고 immediate closure commit을 먼저 push해 `authorization-closed-awaiting-evidence`로 전이합니다. 이 commit에서는 자기 SHA를 기록할 수 없어 `closureCommitSha=null`입니다.
+- run 종료 뒤 별도 evidence commit에서 부모 closure commit의 정확한 SHA를 `closureCommitSha`에 넣고 run ID/URL/conclusion과 실제 digest/signature 결과를 `attempt-recorded`로 기록한 뒤 `review-recorded-workflow-attempt-evidence`로 갑니다. 전체 failure·취소·시간 초과 결론만으로 `registryMutationExecuted=false` 또는 `signatureVerified=false`라고 단정하지 말고 job/step 증거를 각각 확인하세요.
+- `DOCKER_BUILD_RECORD_UPLOAD=false`로 계획 밖 build record artifact를 끕니다.
+- push 뒤 실패해도 digest가 생겼다면 가능한 partial evidence를 보존하지만, 모든 gate와 Cosign 검증이 끝나기 전에는 검증 완료 후보로 취급하지 않습니다.
+
+2026-07-20 GitHub live 재확인에서 allowlist/full SHA/default read-only/environment main-only/secrets·variables 0/0을 확인했습니다. 점검 중 켜져 있던 fork write token과 fork secret 전달은 모두 `false`로 복원했습니다. native required reviewer와 prevent self-review는 비공개 개인 저장소 제약으로 계속 없습니다. authorization 직전에는 4시간 이내 live 상태를 다시 확인해야 합니다.
+
+첫 작업은 읽기 전용 v322 검사입니다.
 
 실행 위치: `backend` 폴더
 Python `.venv` 상태: 꺼져 있을 때
@@ -64,20 +85,12 @@ python tools/check_codex_handoff_readiness.py --strict
 정상 기대 결과:
 
 ```txt
-result: github-actions-ghcr-owner-only-reproducibility-ready-publish-gated
-next safe stage: review-and-approve-exact-preparation-sha
+result: github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated
+next safe stage: review-and-approve-exact-preparation-fix-sha
 ```
 
-`.github/workflows/publish-backend-ghcr.yml`은 이미 준비됐고 `workflow_dispatch` 전용입니다. `main`과 40자리 source SHA, 확인 입력, 정적 검사, 로컬 OCI build, SPDX SBOM, checksum-pinned Trivy `HIGH,CRITICAL`, push된 exact digest 재검사, Docker BuildKit provenance/SBOM, Sigstore Cosign keyless 서명·검증을 fail-closed로 설계했습니다.
+검사가 통과하면 v322 준비 수정 commit을 push하고, 정확한 새 40자 SHA와 변경 범위를 기호에게 제시해 명시 승인을 받으세요. 이전 `f4788acf...` 승인을 새 SHA에 재사용하지 마세요. 새 승인 전에는 lifecycle을 `authorization-open`으로 바꾸거나 workflow를 실행하지 마세요.
 
-정적 검사기는 workflow 전체 UTF-8 소스와 파싱된 실행 의미 구조를 별도 SHA-256으로 잠그고 exact step 순서를 확인합니다. `|| true`, 추가 secret 전송 step, step 삭제·재배열 같은 우회를 통과시키지 마세요. 의도적인 workflow 변경은 별도 보안 검토와 두 승인 해시 갱신을 함께 해야 합니다.
+사용자 별도 작업 요청 전에는 DB write/restore/reset/seed, Alembic revision/autogenerate/stamp/upgrade/downgrade, 인증/API route·response body/write logic, Vue Preview/Apply/write, 게임 콘텐츠·밸런스, production container/network/volume, Compose up/down, 자동 deploy/production image reference를 변경하거나 실행하지 마세요.
 
-action/run step별 잠금과 parsed secret 경로 allowlist도 유지하세요. root Docker build context에서 `.env`/`*.env`/`.envrc`를 제외하는 `.dockerignore` 규칙을 약화하거나 env 파일을 재포함하지 마세요.
-
-Python application/build dependency는 CPython 3.11 Linux/amd64 exact version과 선택 wheel SHA-256으로 잠겼습니다. pip `26.1.2`, `setuptools 80.10.2`, `wheel 0.46.3`, Dockerfile frontend exact digest도 고정됐고 source distribution은 금지됩니다. byte-for-byte 동일 image를 보장한다고 과장하지 말고 실제 결과 digest의 SBOM/Trivy/provenance/Cosign 검증을 계속 유지하세요.
-
-현재 `ghcr-production-publish`에 required reviewer와 prevent self-review가 없습니다. 기호는 이 잔여 위험을 알고 2026-07-20에 `owner-only-source-controlled-two-step`을 선택했습니다. source-controlled `PUBLISH_REVIEWER_GATE_READY`는 리터럴 `"false"`로 고정되어 GHCR login 전에 실패하며 repository/environment variable로 우회할 수 없습니다. v321 preparation commit의 정확한 40자 SHA와 범위를 기호가 명시적으로 승인하기 전에는 이 값을 바꾸거나 workflow를 실행하지 마세요. 승인 뒤에도 GitHub 설정을 live 재확인하고 별도 authorization commit에서만 gate를 열며, 한 번의 실행 뒤 성공·실패와 관계없이 즉시 다시 닫으세요.
-
-DB write/restore/reset/seed, Alembic revision/autogenerate/stamp/upgrade/downgrade, 인증/API route·response body/write logic, Vue Preview/Apply/write, 게임 콘텐츠·밸런스, production container/network/volume, Compose up/down, 자동 deploy와 production image reference 갱신은 구체적인 다음 요청 전에는 변경하거나 실행하지 마세요.
-
-코드나 구조를 변경했다면 관련 smoke, `python -m compileall -q backend/app backend/scripts backend/alembic tools`, JavaScript 문법, `bash tools/run_smoke_core.sh`를 검증합니다. Vue 변경 시에만 `frontend/vue-app`에서 Python `.venv` 없이 `npm ci`와 `npm run build`를 실행합니다. 작업 후에는 NEXT_CHAT 문서와 mirror를 갱신하고 Codex가 직접 commit/push한 뒤, 한 일·검증·서버 재시작 필요 여부·Git 결과·다음 단계·필요한 extension/권한/설치를 알려주세요.
+코드나 구조를 변경했다면 관련 smoke, Python compileall, JavaScript 문법, `bash tools/run_smoke_core.sh`를 검증하세요. authorization-open workflow에서는 정적 checker를 먼저 직접 실행하고 `SKIP_GHCR_HANDOFF_SMOKES=1 bash tools/run_smoke_core.sh`를 사용합니다. 이 플래그는 closed root 전용 handoff smoke 세 개만 건너뛰며 앱·백엔드 전체 smoke는 계속 실행합니다. Vue 변경 시에만 `frontend/vue-app`에서 Python `.venv` 없이 `npm ci`와 `npm run build`를 실행하세요. 현재 정적 workflow/문서 작업은 서버 재시작이 필요 없고 새 설치도 없습니다. 완료 시 한 일, 검증, 서버 재시작 여부, commit/push 결과, 다음 단계, 필요한 extension/권한/설치를 알려주세요.

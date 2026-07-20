@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v321.owner-only-reproducibility-locked-publish-gated",
-  "preparedOnly": true,
+  "schemaVersion": "v322.owner-only-single-run-lifecycle-hardened-publish-gated",
+  "staticPolicyOnly": true,
   "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
   "repository": "gihohoho/upgrade-rpg",
   "defaultBranch": "main",
@@ -9,13 +9,15 @@
   "targetPlatform": "linux/amd64",
   "repositoryTextLineEnding": "lf",
   "workflowPath": ".github/workflows/publish-backend-ghcr.yml",
-  "workflowSourceSha256": "9c3384f5f8d879320d41b04833a63842744e55c14cd12743c9aea0a3a74e8c5a",
-  "workflowSemanticSha256": "9a7af533b42854977897b26fe0aae364667f9be65a7d9dfab4c51a2bf1c31652",
+  "workflowSourceSha256": "8b3bde807cb241e14104272a13f1e4c5a857753716e5a2a7e13b710df55ae61e",
+  "workflowSemanticSha256": "f91419160e34e1ea5c16342b8d346e9b295d502131980eeb084b2da9aa2683fa",
+  "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
+  "publishLifecycleSchemaVersion": "v322.owner-only-publish-lifecycle",
   "workflowFilePresent": true,
   "workflowCreationApproved": true,
   "workflowExecutionApproved": true,
-  "workflowExecutionExecuted": false,
-  "publishExecutionAllowedNow": false,
+  "workflowExecutionEvidenceTrackedInLifecycle": true,
+  "publishExecutionAuthorizationTrackedInLifecycle": true,
   "publishApprovalModel": "owner-only-source-controlled-two-step",
   "publishApprovalModelOptions": [
     "github-enterprise-cloud-required-reviewer",
@@ -24,22 +26,69 @@
   ],
   "ownerOnlyApprovalPolicy": {
     "selectedOn": "2026-07-20",
-    "phase": "preparation-gated",
+    "phase": "single-run-lifecycle-hardened",
     "riskAcceptedByOwner": true,
     "exactPreparationShaApprovalRequired": true,
-    "exactPreparationShaApproved": false,
     "separateAuthorizationCommitRequired": true,
-    "authorizationCommitCreated": false,
     "oneWorkflowRunPerAuthorization": true,
+    "runAttemptMustEqual": 1,
+    "repositoryOwnerActorRequired": true,
+    "singleDispatchApiCheckRequired": true,
     "gateRecloseRequiredAfterEveryAttempt": true,
+    "closureCommitImmediatelyAfterRunAccepted": true,
     "liveGitHubSettingsRecheckRequiredBeforeAuthorization": true,
-    "workflowRunExecuted": false
+    "authorizationChangedPaths": [
+      "deploy/github-actions-ghcr-publish-lifecycle.json"
+    ],
+    "allowedLifecycleStates": [
+      "preparation-closed",
+      "authorization-open",
+      "authorization-closed-awaiting-evidence",
+      "attempt-recorded"
+    ]
+  },
+  "transientAuthorizationSmokePolicy": {
+    "environmentVariable": "SKIP_GHCR_HANDOFF_SMOKES",
+    "enabledValue": "1",
+    "workflowCommand": "SKIP_GHCR_HANDOFF_SMOKES=1 bash tools/run_smoke_core.sh",
+    "directStaticStrictCommand": "python tools/check_github_actions_ghcr_static_plan.py --strict",
+    "directStaticStrictMustPrecedeCoreSmoke": true,
+    "skippedClosedRootSmokes": [
+      "python tools/smoke/backend/smoke_github_actions_ghcr_static_plan.py",
+      "python tools/smoke/backend/smoke_codex_handoff_readiness.py",
+      "python tools/smoke/game/smoke_next_chat_handoff.py"
+    ],
+    "allOtherCoreSmokesRemainRequired": true
+  },
+  "attemptEvidencePolicy": {
+    "state": "attempt-recorded",
+    "gateMustRemainClosed": true,
+    "closureCommitShaMustReferenceDirectParentClosure": true,
+    "lifecyclePathRequiredInFirstRecordCommit": true,
+    "firstRecordChangedPathAllowlist": [
+      "AGENTS.md",
+      "NEXT_CHAT_HANDOFF.md",
+      "NEXT_CHAT_PROMPT.md",
+      "deploy/github-actions-ghcr-publish-lifecycle.json",
+      "docs/CHANGELOG.md",
+      "docs/NEXT_STEPS.md",
+      "docs/current/BACKEND_IMAGE_GHCR_POLICY.md",
+      "docs/current/CURRENT_STATUS.md",
+      "docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md",
+      "docs/current/ROADMAP.md",
+      "docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md",
+      "docs/handoff/NEXT_CHAT_HANDOFF.md",
+      "docs/handoff/NEXT_CHAT_PROMPT.md"
+    ],
+    "codeWorkflowCheckerChangesAllowed": false,
+    "stableRecordedStateAllowedAfterFirstRecordCommit": true,
+    "successRequiresDigestAndVerifiedSignature": true
   },
   "registryLoginApproved": true,
   "imageBuildApproved": true,
   "imagePushApproved": true,
   "registryMutationApproved": true,
-  "registryMutationExecuted": false,
+  "registryMutationEvidenceTrackedInLifecycle": true,
   "triggerPolicy": {
     "allowedEvents": [
       "workflow_dispatch"
@@ -58,6 +107,11 @@
       "required": true,
       "pattern": "^[0-9a-f]{40}$",
       "mustEqualGithubSha": true
+    },
+    "approvedPreparationCommitInput": {
+      "required": true,
+      "pattern": "^[0-9a-f]{40}$",
+      "mustBeDirectParentOfSourceCommit": true
     },
     "approvalReasonInput": {
       "required": true,
@@ -82,9 +136,9 @@
       "privateRepositoryReviewerGateRequiresEnterpriseCloud": true,
       "configurationUiAvailable": false,
       "configured": false,
-      "sourceControlledGate": "PUBLISH_REVIEWER_GATE_READY",
-      "sourceControlledGateValue": false,
-      "gateChangeRequiresReviewedCommit": true,
+      "sourceControlledGate": "deploy/github-actions-ghcr-publish-lifecycle.json#publishReviewerGateReady",
+      "gateValueDerivedFromLifecycleState": true,
+      "gateChangeRequiresSinglePathCommit": true,
       "gateRunsBeforeRegistryLogin": true
     },
     "concurrency": {
@@ -97,6 +151,7 @@
       "contents": "read"
     },
     "validateJob": {
+      "actions": "read",
       "contents": "read"
     },
     "buildScanJob": {
@@ -122,7 +177,7 @@
   "actionPolicy": {
     "requireFullLengthCommitSha": true,
     "requiredShaPattern": "^[0-9a-f]{40}$",
-    "reviewedOn": "2026-07-15",
+    "reviewedOn": "2026-07-20",
     "resolvedActionShaCandidatesReviewed": true,
     "resolvedActionShasApproved": true,
     "repositoryAllowlistConfigured": true,
@@ -302,8 +357,9 @@
     "rawEnvironmentAllowed": false
   },
   "repositoryReview": {
-    "reviewedOn": "2026-07-15",
-    "verificationMode": "interactive-browser-snapshot",
+    "reviewedOn": "2026-07-20",
+    "recheckedAtUtc": "2026-07-20T03:04:15Z",
+    "verificationMode": "interactive-browser-live-recheck",
     "liveRecheckRequiredBeforeGateChange": true,
     "githubConnector": {
       "installationOwner": "gihohoho",
@@ -363,8 +419,8 @@
     "publishEnvironmentRequiredReviewerConfigured": false,
     "publishEnvironmentPreventSelfReviewConfigured": false,
     "publishEnvironmentReviewerAvailableForCurrentPlan": false,
-    "sourceControlledPublishGateReady": false,
+    "sourceControlledLifecyclePolicyReady": true,
     "publishEnvironmentConfigured": false
   },
-  "nextSafeStage": "review-and-approve-exact-preparation-sha"
+  "nextSafeStagePolicy": "follow-source-controlled-publish-lifecycle-state"
 }

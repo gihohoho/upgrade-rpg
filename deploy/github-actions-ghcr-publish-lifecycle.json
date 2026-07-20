@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "v322.owner-only-publish-lifecycle",
+  "state": "preparation-closed",
+  "publishReviewerGateReady": false,
+  "priorApprovedPreparationSha": "f4788acf5455b07169320bd29f43ddf92ff1d5ad",
+  "approvedPreparationSha": null,
+  "ownerApproval": {
+    "recorded": false,
+    "recordedAtUtc": null,
+    "evidence": "exact-40-character-sha-user-message"
+  },
+  "githubLiveSettings": {
+    "recheckedAtUtc": "2026-07-20T03:04:15Z",
+    "actionsAllowlistMatchesPlan": true,
+    "fullLengthActionShaRequired": true,
+    "githubOwnedActionsBlanketAllowed": false,
+    "verifiedCreatorsBlanketAllowed": false,
+    "forkWriteTokensEnabled": false,
+    "forkSecretsEnabled": false,
+    "defaultWorkflowPermissions": "read-contents-and-packages",
+    "actionsCanApprovePullRequests": false,
+    "environmentExists": true,
+    "environmentMainOnly": true,
+    "environmentSecretsCount": 0,
+    "environmentVariablesCount": 0,
+    "nativeRequiredReviewerConfigured": false,
+    "preventSelfReviewConfigured": false
+  },
+  "authorizationPolicy": {
+    "authorizationCommitMustBeDirectChild": true,
+    "authorizationChangedPaths": [
+      "deploy/github-actions-ghcr-publish-lifecycle.json"
+    ],
+    "workflowRunAttemptMustEqual": 1,
+    "singleDispatchApiCheckRequired": true,
+    "rerunForbidden": true,
+    "immediateClosureAfterRunAccepted": true
+  },
+  "closure": {
+    "authorizationSourceSha": null,
+    "closureCommitSha": null,
+    "preparedAtUtc": null
+  },
+  "observedAttempt": {
+    "runId": null,
+    "runUrl": null,
+    "runAttempt": null,
+    "status": "not-dispatched",
+    "conclusion": null,
+    "imageDigest": null,
+    "signatureVerified": false
+  }
+}

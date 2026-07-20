@@ -1,3 +1,26 @@
+# v322.owner-only-single-run-lifecycle-hardened-publish-gated
+
+- 기호가 `f4788acf5455b07169320bd29f43ddf92ff1d5ad` 준비 commit을 정확히 승인했지만, 실행 전 재감사에서 open gate를 허용하지 않는 checker, rerun/중복 dispatch 방어 부재, authorization-parent 연결 부재, 계획 밖 Docker build record artifact, post-push 실패 증거 미보존을 발견.
+- 과거 승인은 `priorApprovedPreparationSha` 이력으로만 보존하고, 보안 계약이 바뀐 v322 preparation-fix commit의 새 exact 40-character SHA를 다시 승인받도록 fail-closed 상태 유지.
+- 기본 closed인 `deploy/github-actions-ghcr-publish-lifecycle.json`을 추가하고 authorization commit은 승인 preparation의 direct child이면서 lifecycle 파일 하나만 바꾸도록 설계.
+- repository owner, `run_attempt=1`, GitHub Actions API의 single dispatch 검증을 추가하고 workflow rerun을 금지.
+- run ID 접수 직후 성공·실패를 기다리지 않고 별도 closure commit으로 gate를 닫는 immediate closure 절차를 고정.
+- `DOCKER_BUILD_RECORD_UPLOAD=false`로 계획 밖 Docker build record artifact를 끄고, image push 뒤 실패해도 존재하는 digest/provenance/SBOM/Trivy/Cosign 부분 증거를 14일 보존하도록 변경. 부분 증거는 verified candidate로 취급하지 않음.
+- authorization-open lifecycle을 closed root 전용 handoff smoke가 오탐으로 거부하지 않도록 정적 checker는 직접 실행하고 `SKIP_GHCR_HANDOFF_SMOKES=1 bash tools/run_smoke_core.sh`를 사용. 이 플래그는 closed 전용 세 smoke만 제외하며 앱·백엔드 전체 core smoke는 유지.
+- lifecycle을 P `preparation-closed` → A `authorization-open` → C `authorization-closed-awaiting-evidence` → R `attempt-recorded` 네 상태로 보강. run 접수 즉시 C로 닫되 자기 SHA는 쓸 수 없어 `closureCommitSha=null`을 유지하고, 종료 뒤 별도 R evidence commit이 부모 C commit SHA와 run ID/URL/conclusion/digest/signature 실제 결과를 기록. non-success conclusion만으로 registry mutation/signature 미실행을 단정하지 않고 job/step 증거를 각각 확인하도록 고정.
+- 2026-07-20 repository 설정을 live 재확인하고 drift로 켜져 있던 fork write token과 fork secret 전달을 모두 `false`로 복원. allowlist/full SHA/default read-only/environment main-only/secrets·variables 0/0을 재확인.
+- native required reviewer/prevent self-review는 비공개 개인 저장소 제약으로 계속 없으며 owner-only 모델이 독립 reviewer와 동등하지 않음을 유지.
+- workflow, GHCR login/build/push, production reference 변경, Docker/DB/Alembic mutation은 실행하지 않음. 다음 단계는 `review-and-approve-exact-preparation-fix-sha`.
+
+# v321.owner-only-reproducibility-locked-publish-gated
+
+- 기호가 비공개 개인 저장소의 잔여 위험을 이해하고 `owner-only-source-controlled-two-step` 승인 모델을 선택.
+- CPython 3.11 Linux/amd64 application/build dependency, pip `26.1.2`, setuptools `80.10.2`, wheel `0.46.3`, Dockerfile frontend를 exact version과 SHA-256으로 잠금.
+- source distribution을 금지하고 선택 wheel hash를 검증하는 dependency lock 생성기와 smoke를 추가.
+- byte-for-byte deterministic image를 보장한다고 과장하지 않고 exact digest/SBOM/Trivy/provenance/Cosign 검증을 유지.
+- preparation 상태에서 publish gate를 `false`로 두고 정확한 40자 SHA를 기호가 별도 승인한 뒤만 authorization을 검토하도록 문서화.
+- workflow와 GHCR registry mutation은 실행하지 않음.
+
 # v320.github-actions-ghcr-workflow-prepared-gated
 
 - repository Actions 설정을 외부 action 8개 full-SHA allowlist와 full-length SHA 강제로 바꾸고 기본 read-only `GITHUB_TOKEN` 정책을 유지.

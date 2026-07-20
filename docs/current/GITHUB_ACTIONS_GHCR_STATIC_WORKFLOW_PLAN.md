@@ -1,43 +1,76 @@
-# GitHub Actions / GHCR workflow plan — v321
+# GitHub Actions / GHCR workflow plan — v322
 
 ```txt
-version: v321.owner-only-reproducibility-locked-publish-gated
+version: v322.owner-only-single-run-lifecycle-hardened-publish-gated
+result: github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated
 repository: gihohoho/upgrade-rpg
 image: ghcr.io/gihohoho/upgrade-rpg-backend
 workflow: .github/workflows/publish-backend-ghcr.yml
+lifecycle: deploy/github-actions-ghcr-publish-lifecycle.json
+workflow source SHA-256: 8b3bde807cb241e14104272a13f1e4c5a857753716e5a2a7e13b710df55ae61e
+workflow semantic SHA-256: f91419160e34e1ea5c16342b8d346e9b295d502131980eeb084b2da9aa2683fa
+workflow file creation: complete
 workflow 파일 생성: 완료
-workflow 실행: 하지 않음
-registry mutation: 하지 않음
+workflow execution: not executed
+registry login/build/push: not executed
+next safe stage: review-and-approve-exact-preparation-fix-sha
 ```
 
-## GitHub repository 설정 결과
+정적 문서 잠금 표식: `workflow_dispatch`, `pull_request_target` 금지, `contents: read`, `actions: read`, `packages: write`, `id-token: write`, Docker BuildKit, `HIGH,CRITICAL`, Sigstore Cosign keyless, `approved_preparation_commit`, `DOCKER_BUILD_RECORD_UPLOAD`, required reviewer 제약.
 
-아래 설정은 2026-07-15 로그인된 GitHub 브라우저에서 확인한 snapshot입니다. 로컬 strict checker는 GitHub API를 실시간 조회하지 않으므로 이후 설정이 바뀌어도 자동으로 알 수 없습니다. source-controlled gate 변경 직전에 Actions policy와 environment/main rule을 화면 또는 API로 다시 확인해야 합니다.
+## v322가 필요한 이유
 
-- Actions는 `gihohoho` 소유 action과 명시한 외부 action 8개만 허용합니다.
-- 모든 외부 action은 검토한 40자리 commit SHA로만 실행할 수 있습니다.
-- “Allow actions created by GitHub”와 “Marketplace verified creators” 포괄 허용은 꺼져 있습니다.
-- 기본 `GITHUB_TOKEN`은 contents/packages read-only이며 Actions의 PR 생성·승인은 꺼져 있습니다.
-- fork workflow에는 write token과 secret을 보내지 않습니다.
-- `ghcr-production-publish` environment를 만들었고 deployment branch는 `main`만 허용합니다.
-- environment secret과 variable은 현재 0개입니다.
+기호는 v321 준비 commit `f4788acf5455b07169320bd29f43ddf92ff1d5ad`를 정확히 승인했습니다. 이 human checkpoint는 선택한 `owner-only-source-controlled-two-step` 모델의 핵심이어서 필요했습니다. 그러나 실행 직전 추가 감사에서 다음 문제를 발견했습니다.
 
-## 트리거와 입력
+1. v321 checker가 `PUBLISH_REVIEWER_GATE_READY=false`만 허용해 authorization에서 gate를 열면 CI가 실패했습니다.
+2. 같은 authorization SHA의 rerun 또는 여러 dispatch를 차단하지 않았습니다.
+3. authorization commit과 승인한 preparation commit의 직접 parent 연결 및 변경 파일 제한이 없었습니다.
+4. Docker build action이 계획에 없는 build record artifact를 자동 생성할 수 있었습니다.
+5. image push 이후 단계가 실패하면 이미 생성된 digest와 부분 증거가 보존되지 않았습니다.
 
-허용 trigger는 `workflow_dispatch` 하나뿐입니다. `push`, `pull_request`, `pull_request_target`, `schedule`, `release`, `repository_dispatch`, `workflow_run`은 금지합니다.
+따라서 `f4788acf...` 승인은 역사적 `priorApprovedPreparationSha`로만 보존합니다. 보안 계약과 workflow가 바뀐 v322 preparation-fix commit의 정확한 새 SHA는 다시 승인받습니다. 현재는 아무 workflow도 실행하지 않았고 registry mutation도 없습니다.
 
-수동 실행 시 다음 세 입력을 모두 검사합니다.
+## 2026-07-20 GitHub live 설정
 
-- `source_commit`: 소문자 40자리 SHA이며 `github.sha`와 같아야 함
-- `approval_reason`: 앞뒤 공백 제거 후 10자 이상이며 로그에 출력하지 않음
-- `confirm_publish`: 기본값 `false`, 실행하려면 명시적으로 `true`
+로그인된 repository 설정을 live 재확인하고 다음 상태로 맞췄습니다.
 
-실행 ref는 `refs/heads/main`이어야 하고 checkout 후 `git rev-parse HEAD`도 입력 SHA와 같아야 합니다.
+- 허용 action: `gihohoho` 소유 action + 아래 명시한 외부 action 8개만
+- 외부 action full-length SHA 강제: 켜짐
+- GitHub-owned action blanket allow: 꺼짐
+- verified creator blanket allow: 꺼짐
+- 기본 `GITHUB_TOKEN`: contents/packages read-only
+- Actions의 PR 생성·승인: 꺼짐
+- 점검 중 켜져 있던 fork write token과 fork secret 전달: 모두 `false`로 복원
+- `ghcr-production-publish`: 존재, deployment branch `main` only
+- environment secrets/variables: 0/0
+- native required reviewer/prevent self-review: 없음
+
+live 기록 시각은 `2026-07-20T03:04:15Z`입니다. authorization workflow는 이 기록이 실행 시점 기준 4시간을 넘으면 거부합니다. 따라서 새 SHA 승인 뒤 gate 변경 직전에 다시 확인합니다.
+
+## trigger와 입력
+
+trigger는 `workflow_dispatch` 하나뿐입니다. `push`, `pull_request`, `pull_request_target`, `schedule`, `release`, `repository_dispatch`, `workflow_run`은 허용하지 않습니다.
+
+수동 입력:
+
+- `source_commit`: authorization commit의 소문자 40자리 SHA이며 `github.sha`와 같아야 함
+- `approved_preparation_commit`: 기호가 별도 메시지로 승인한 직전 preparation-fix commit의 소문자 40자리 SHA
+- `approval_reason`: 공백 제거 후 10자 이상, secret 입력 금지
+- `confirm_publish`: 명시적 `true`
+
+실행 ref는 `refs/heads/main`이어야 하고 실행 actor와 repository owner가 같아야 합니다.
 
 ## 최소 permissions
 
 ```yaml
-workflow default / validate / build_scan:
+workflow default:
+  contents: read
+
+validate:
+  actions: read
+  contents: read
+
+build_scan:
   contents: read
 
 publish_sign_verify:
@@ -46,7 +79,7 @@ publish_sign_verify:
   id-token: write
 ```
 
-`actions`, `checks`, `contents`, `deployments`, `issues`, `pull-requests`, `security-events`, `statuses`의 write 권한은 주지 않습니다. 현재 저장소에서는 GitHub Artifact Attestations API를 사용할 수 없으므로 `attestations: write`와 `actions/attest`도 사용하지 않습니다.
+`actions: read`는 동일 authorization SHA의 workflow run 목록을 GitHub API로 확인할 때만 사용합니다. `checks`, `deployments`, `issues`, `pull-requests`, `security-events`, `statuses` write는 주지 않습니다. 현재 private repository에서 Artifact Attestations API를 사용하지 않으므로 `attestations: write`도 주지 않습니다.
 
 ## full-SHA action allowlist
 
@@ -61,55 +94,119 @@ sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6
 actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
 ```
 
-## fail-closed 공급망 순서
+## source-controlled lifecycle
+
+gate는 workflow 문자열 하나가 아니라 `deploy/github-actions-ghcr-publish-lifecycle.json`의 상태 전이로 관리합니다.
+
+### 1. preparation-closed
+
+```txt
+state: preparation-closed
+publishReviewerGateReady: false
+approvedPreparationSha: null
+ownerApproval.recorded: false
+observedAttempt.status: not-dispatched
+```
+
+현재 상태입니다. `priorApprovedPreparationSha`에는 `f4788acf...`가 역사적 증거로만 있고 새 authorization 권한을 주지 않습니다.
+
+### 2. authorization-open
+
+새 v322 preparation-fix SHA를 기호가 명시 승인한 뒤에만 만들 수 있습니다.
+
+- authorization commit은 승인 preparation commit의 direct child
+- 변경 경로는 lifecycle JSON 한 파일만
+- `approvedPreparationSha`는 사용자 입력과 정확히 같음
+- `ownerApproval.recorded=true` 및 UTC 시각 기록
+- live GitHub 설정 증거는 4시간 이내
+- `state=authorization-open`, `publishReviewerGateReady=true`
+
+workflow와 정적 checker가 closed/open 두 상태를 모두 명시적으로 이해합니다. open은 임의 편집이 아니라 위 전이를 모두 만족할 때만 합법입니다.
+
+### 3. single-run 검증
+
+- `github.run_attempt`은 반드시 `1`
+- rerun은 어떤 이유로도 허용하지 않음
+- `actions: read` API로 같은 workflow, head SHA, main branch의 `workflow_dispatch`가 하나 이하인지 조회
+- 보이는 run이 하나면 현재 run ID, actor, `run_attempt=1`과 일치해야 함
+- API 오류, 두 개 이상 run, 다른 run ID는 fail-closed
+
+### 4. immediate closure와 authorization-closed-awaiting-evidence
+
+dispatch 뒤 GitHub가 run ID를 접수하면 실행 결론을 기다리며 open gate를 남겨 두지 않습니다. 별도 closure commit으로 lifecycle을 즉시 `authorization-closed-awaiting-evidence`로 전이하고 gate를 `false`로 되돌립니다. 이 C commit은 자기 SHA를 스스로 기록할 수 없으므로 `closureCommitSha=null`이어야 합니다. 실행 성공·실패·취소에 관계없이 닫습니다. run은 authorization commit의 snapshot을 사용하므로 main의 closure commit이 이미 접수된 run의 코드를 바꾸지는 않습니다.
+
+closure와 최종 결과 기록은 authorization SHA, run ID/URL, run attempt, status/conclusion, 가능한 image digest와 signature 확인 여부를 남기되 actual secret은 저장하지 않습니다.
+
+### 5. attempt-recorded
+
+run이 종료되면 immediate closure commit을 다시 고치는 대신 별도 evidence commit에서 `attempt-recorded`로 전이합니다. 이 R commit이 direct parent인 C commit의 정확한 SHA를 `closureCommitSha`에 기록하고, run ID/URL, `run_attempt=1`, 실제 status/conclusion, 확인 가능한 exact image digest, signature 검증 여부를 함께 기록합니다. 지원 lifecycle은 P `preparation-closed` → A `authorization-open` → C `authorization-closed-awaiting-evidence` → R `attempt-recorded` 네 상태이며 R의 next stage는 `review-recorded-workflow-attempt-evidence`입니다.
+
+허용되는 완료 conclusion은 `success`, `failure`, `neutral`, `cancelled`, `skipped`, `timed_out`, `action_required`, `stale`, `startup_failure`이며 실제 관찰값을 보존합니다. non-success conclusion은 `registryMutationExecuted=false`나 `signatureVerified=false`를 뜻하지 않습니다. image push 또는 signature verify 뒤 artifact upload/final summary에서 실패했을 수 있으므로 각 job/step conclusion, digest output과 partial evidence artifact를 별도로 확인해 기록합니다. signature 검증까지 끝나고 전체 evidence가 확인된 digest만 verified candidate가 될 수 있습니다.
+
+## fail-closed build/publish 순서
 
 게시 전:
 
-1. 저장소 정적 검사, Python compileall, 전체 core smoke
-2. registry에 올리지 않는 로컬 `linux/amd64` OCI build
-3. SPDX JSON SBOM 생성과 구조 검사
-4. 공식 Trivy `0.70.0` Linux 64-bit asset를 SHA-256 `8b4376d5d6befe5c24d503f10ff136d9e0c49f9127a4279fd110b727929a5aa9`로 검증
-5. Trivy `HIGH,CRITICAL`, `ignore-unfixed: false`, `exit-code: 1`
+1. exact source, owner, input, first attempt, unique dispatch 확인
+2. authorization direct parent와 lifecycle-only diff 확인
+3. repository 정적 검사, Python compileall, 전체 core smoke
+4. registry에 올리지 않는 로컬 `linux/amd64` OCI build
+5. SPDX JSON SBOM 생성과 구조 검사
+6. 공식 Trivy `0.70.0` Linux asset을 SHA-256 `8b4376d5d6befe5c24d503f10ff136d9e0c49f9127a4279fd110b727929a5aa9`로 검증
+7. local image HIGH/CRITICAL vulnerability gate (`ignore-unfixed=false`, `exit-code=1`)
 
-게시 후:
+3번에서 authorization-open lifecycle은 정상 상태이지만 root handoff 문서는 준비 commit 기준 closed 상태이므로, closed 전용 smoke를 그대로 다시 실행하면 오탐 실패합니다. workflow는 정적 checker를 `python tools/check_github_actions_ghcr_static_plan.py --strict`로 먼저 직접 실행하고, 이어서 `SKIP_GHCR_HANDOFF_SMOKES=1 bash tools/run_smoke_core.sh`를 실행합니다. `tools/run_smoke_core.sh`는 이 플래그일 때 아래 세 개만 건너뜁니다.
 
-1. `sha256:` exact digest 확보
-2. Docker BuildKit `provenance: mode=max`와 `sbom: true`
-3. exact digest에서 provenance와 SBOM을 `docker buildx imagetools inspect`로 다시 읽어 검사
-4. registry에 push된 exact digest 자체를 Trivy로 다시 검사
-5. 위 검사가 모두 통과한 뒤 Sigstore Cosign keyless OIDC로 exact digest 서명
-6. 고정 workflow identity와 GitHub OIDC issuer로 서명 검증
-7. 모든 검사가 끝난 digest만 후보로 출력
+- `tools/smoke/backend/smoke_github_actions_ghcr_static_plan.py`
+- `tools/smoke/backend/smoke_codex_handoff_readiness.py`
+- `tools/smoke/game/smoke_next_chat_handoff.py`
 
-자동 deploy와 production image reference 갱신은 하지 않습니다. artifact는 secret과 raw environment를 포함하지 않으며 14일만 보관합니다.
+이 세 smoke는 모두 closed root/handoff 상태를 검증하는 용도입니다. application, backend, game의 나머지 core smoke는 전부 계속 실행하므로 보안·기능 검증 범위를 줄이는 우회가 아닙니다.
 
-## 잠긴 dependency/frontend 입력
+게시 단계:
 
-운영과 CI의 Python 입력은 `backend/requirements/`에 고정했습니다. `runtime.in`과 `dev.in`은 사람이 검토하는 exact direct version이고, `runtime-linux-amd64-py311.lock`과 `dev-linux-amd64-py311.lock`은 전체 전이 의존성과 선택 Linux/amd64 wheel SHA-256을 담습니다. `pip-bootstrap.lock`은 pip `26.1.2` 자체를 먼저 고정합니다.
+1. publish job 첫 단계에서 같은 direct-parent/lifecycle gate를 다시 확인
+2. ephemeral `GITHUB_TOKEN`으로 GHCR login
+3. `linux/amd64` image push와 BuildKit `provenance: mode=max`, `sbom: true`
+4. exact `sha256:` digest 기록
+5. registry exact digest의 provenance와 SPDX SBOM 확인
+6. exact digest HIGH/CRITICAL Trivy 재검사
+7. 모든 image gate 통과 후 Cosign keyless OIDC sign
+8. 고정 workflow identity와 GitHub OIDC issuer로 signature verify
+9. 모든 검사가 끝난 digest만 verified candidate로 summary에 출력
 
-설치는 고정 대상 플랫폼으로 `pip download --require-hashes --only-binary=:all:`을 먼저 수행하고, 그 임시 wheel 폴더에서 `--no-index --require-hashes`로 설치합니다. build-system은 `setuptools==80.10.2`, `wheel==0.46.3`으로 고정했습니다. Dockerfile frontend는 `docker/dockerfile:1.21.0@sha256:27f9262d43452075f3c410287a2c43f5ef1bf7ec2bb06e8c9eeb1b8d453087bc`입니다. `tools/generate_backend_linux_dependency_locks.py --check`와 정적 checker가 파일 형식과 모든 입력 SHA-256을 검사합니다.
+production reference 자동 갱신과 deploy는 하지 않습니다.
 
-이 잠금은 dependency와 frontend 입력의 무단 변경 및 다른 배포 파일 선택을 차단합니다. 파일 timestamp나 builder 내부 구현까지 포함해 동일 source가 byte-for-byte 동일 image를 만든다고 주장하지는 않습니다. 실제 결과는 계속 exact digest, SBOM, Trivy, provenance, Cosign으로 검증합니다.
+## artifact와 post-push 실패 증거
 
-raw workflow와 lock SHA-256이 Windows `core.autocrlf`에 따라 달라지지 않도록 root `.gitattributes`에서 저장소 텍스트를 `eol=lf`로 고정하고 정적 검사합니다.
+- `DOCKER_BUILD_RECORD_UPLOAD="false"`로 `docker/build-push-action`의 자동 build record artifact를 끕니다.
+- 계획한 SBOM/Trivy artifact만 14일 보존합니다.
+- publish step에서 digest가 만들어졌다면 후속 실패 시에도 `if: always()` evidence upload를 실행합니다.
+- 존재하는 파일만 부분 증거가 될 수 있으며 digest, provenance, SBOM, Trivy, Cosign 결과 중 실패 지점 뒤의 파일은 없을 수 있습니다.
+- partial evidence artifact가 있다고 성공으로 처리하지 않습니다. Cosign 검증까지 끝나고 final summary가 나온 경우만 verified candidate입니다.
 
-검사기는 workflow 전체 UTF-8 소스를 SHA-256 `9c3384f5f8d879320d41b04833a63842744e55c14cd12743c9aea0a3a74e8c5a`, 파싱된 실행 의미 구조를 SHA-256 `9a7af533b42854977897b26fe0aae364667f9be65a7d9dfab4c51a2bf1c31652`로 각각 잠그고 각 job의 step 이름·개수·순서도 정확히 확인합니다. 따라서 검사 명령 뒤 `|| true`를 붙이거나 secret 전송 step을 추가하는 등, marker만 남겨 둔 우회도 fail-closed로 차단합니다. smoke는 변조된 소스 해시를 일부러 승인한 상황에서도 의미 구조 잠금이 차단하는지 따로 검증합니다. 의도적인 workflow 수정은 별도 보안 검토와 함께 두 승인 해시를 갱신해야 합니다.
+## dependency/frontend 입력 잠금
 
-두 전역 해시를 모두 의도적으로 갱신하는 작업에도 대비해 action step 전체, run step 본문·env·허용 키를 개별 잠금으로 다시 검사합니다. secret/token 표현식은 파싱된 YAML 경로 기준으로 GHCR login password의 `${{ secrets.GITHUB_TOKEN }}` 하나만 허용합니다. root build context `.`에는 실제 env 파일이 전송되지 않도록 `.dockerignore`의 `.env`, `.env.*`, `**/.env`, `**/.env.*`, `backend/.env`, `*.env`, `*.env.*`, `.envrc`, `**/.envrc`를 필수로 검사합니다. Docker secret 안내 문서용 `!deploy/secrets/README.md`만 negation으로 허용하고 `!backend/**`, `!**/*` 같은 모든 broad 재포함 규칙은 금지합니다. root 정책을 우선 덮어쓰는 `backend/Dockerfile.production.dockerignore` 파일도 금지합니다.
+- CPython 3.11 Linux/amd64 application/build dependency: exact version + 선택 wheel SHA-256, binary-only
+- pip `26.1.2`
+- setuptools `80.10.2`
+- wheel `0.46.3`
+- Dockerfile frontend: `docker/dockerfile:1.21.0@sha256:27f9262d43452075f3c410287a2c43f5ef1bf7ec2bb06e8c9eeb1b8d453087bc`
 
-## 선택된 owner-only 2단계 승인
+이 잠금은 알려진 dependency/frontend 입력을 고정하지만 timestamp, builder 구현 등 모든 원인을 없애 byte-for-byte 같은 image를 보장한다고 주장하지 않습니다. 실제 결과는 exact digest와 SBOM/Trivy/provenance/Cosign으로 확인합니다.
 
-저장소에는 owner 외 collaborator가 0명이고, GitHub environment 화면에도 required reviewer와 prevent self-review 설정이 나타나지 않아 두 보호를 구성하지 못했습니다. 더 중요한 원인은 GitHub Free/Pro/Team의 required reviewer가 공개 저장소에서만 지원된다는 점입니다. 따라서 현재 비공개 저장소에 collaborator를 추가하는 것만으로는 이 차단을 해결할 수 없습니다.
+## secret 및 build context
 
-그래서 publish job의 첫 단계에서, GHCR login보다 먼저 source-controlled `PUBLISH_REVIEWER_GATE_READY` 값이 정확히 `true`인지 확인합니다. 현재 workflow 파일에는 리터럴 `"false"`로 고정되어 있어 repository/environment variable로 우회할 수 없고, workflow가 수동 실행되더라도 publish job은 registry 접근 전에 실패합니다.
+- GHCR login password 경로는 `${{ secrets.GITHUB_TOKEN }}` 하나만 허용합니다.
+- 실제 secret 값을 파일, Git, 로그, 채팅, artifact에 넣지 않습니다.
+- root `.dockerignore`는 `.env`, `.env.*`, `**/.env`, `**/.env.*`, `*.env`, `*.env.*`, `.envrc`, `**/.envrc`를 모두 제외합니다.
+- env 파일 broad re-include와 `backend/Dockerfile.production.dockerignore`를 금지합니다.
 
-기호는 2026-07-20에 `owner-only-source-controlled-two-step`을 선택했습니다. 독립 reviewer가 없다는 위험을 source-controlled 절차로 줄이되, native required reviewer와 같은 수준의 독립 승인을 제공한다고 표현하지 않습니다.
+## 현재와 다음 단계
 
-1. preparation commit에서는 dependency/frontend 잠금과 전체 검증을 끝내고 gate를 `false`로 유지한 채 push합니다.
-2. Codex가 정확한 40자 preparation SHA와 변경 범위를 제시하고 기호가 그 SHA를 명시적으로 승인합니다.
-3. 승인 뒤 GitHub Actions allowlist/full SHA와 environment main-only 설정을 live 재확인합니다.
-4. 별도 authorization commit에서만 source-controlled gate를 열고 정확한 실행 SHA를 다시 검토합니다.
-5. 수동 workflow는 authorization당 한 번만 실행합니다.
-6. 성공·실패·취소와 관계없이 별도 commit으로 gate를 즉시 `false`로 되돌립니다.
+현재 lifecycle은 closed이고 workflow/login/build/push는 미실행입니다. v322 전체 검증과 preparation-fix commit/push 뒤 정확한 새 40자 SHA를 기호에게 제시합니다. 기호의 새 명시 승인 전에는 authorization-open이나 workflow dispatch를 하지 않습니다.
 
-현재는 1단계 준비 상태이며 정확한 preparation SHA 승인은 아직 없습니다. 따라서 gate는 계속 `false`이고 workflow를 실행하지 않습니다.
+```txt
+result: github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated
+next safe stage: review-and-approve-exact-preparation-fix-sha
+```
