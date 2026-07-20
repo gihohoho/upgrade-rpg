@@ -1,3 +1,11 @@
+# v323.first-owner-only-publish-attempt-recorded-failed-pre-registry
+
+- 기호가 정확히 승인한 preparation SHA `350bbd085f1cf636810d75ddcbb5321e0791256c`의 direct-child authorization commit `32e5102877851ace06e1c0ed3bcb48310b8d65b6`을 만들고 workflow를 정확히 한 번 dispatch.
+- run `29716038891` 접수 직후 closure commit `362f5f1901d234b5b86f2a7cefdabd28ac61f896`으로 gate를 즉시 닫고 rerun하지 않음.
+- validate job의 dependency 설치에서 bootstrap pip download `--python-version 3`과 `pip==26.1.2`의 Python `>=3.10` 조건 불일치로 failure 확인.
+- build/publish jobs는 skipped; GHCR login/build/push, artifact, digest, signature는 발생하지 않음.
+- lifecycle을 `attempt-recorded`로 종결하고 focused fix 후보를 `--python-version 3.11`로 기록. 수정 구현 전 별도 사용자 승인이 필요.
+
 # v322.owner-only-single-run-lifecycle-hardened-publish-gated
 
 - 기호가 `f4788acf5455b07169320bd29f43ddf92ff1d5ad` 준비 commit을 정확히 승인했지만, 실행 전 재감사에서 open gate를 허용하지 않는 checker, rerun/중복 dispatch 방어 부재, authorization-parent 연결 부재, 계획 밖 Docker build record artifact, post-push 실패 증거 미보존을 발견.

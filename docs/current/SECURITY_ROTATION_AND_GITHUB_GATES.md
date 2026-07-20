@@ -1,4 +1,4 @@
-# Security rotation and GitHub gates — v322
+# Security rotation and GitHub gates — v323
 
 이 문서는 기호가 허용한 GitHub·숨김 파일·`.env` 작업 범위와 나중에 재확인하거나 교체할 보안 항목을 기록합니다. 실제 secret 값은 적지 않습니다.
 
@@ -49,12 +49,14 @@ private personal repository에서는 native required reviewer를 구성하지 �
 
 ```txt
 file: deploy/github-actions-ghcr-publish-lifecycle.json
-state: preparation-closed
+state: attempt-recorded
 publishReviewerGateReady: false
-approvedPreparationSha: null
-ownerApproval.recorded: false
-workflow run: not dispatched
+approvedPreparationSha: 350bbd085f1cf636810d75ddcbb5321e0791256c
+ownerApproval.recorded: true
+workflow run: 29716038891 completed/failure
 ```
+
+첫 실행은 dependency 설치에서 실패해 build와 publish jobs가 skipped됐습니다. GHCR login/build/push, artifact, digest, signature는 발생하지 않았으며 동일 실행의 rerun은 금지합니다. 로컬 `gh` keyring의 `konghjin`, `gihohoho` 토큰은 2026-07-20 확인 시 만료 상태였지만 연결된 GitHub 앱으로 로그를 안전하게 조회해 이번 작업에는 재로그인이 필요하지 않았습니다. 향후 `gh` 전용 작업이 꼭 필요할 때만 기호에게 `gh auth login`을 요청합니다.
 
 새 SHA 승인 뒤에도 다음 조건이 모두 맞아야 authorization을 열 수 있습니다.
 

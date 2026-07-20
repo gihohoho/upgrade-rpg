@@ -1,8 +1,9 @@
-# GitHub Actions / GHCR workflow plan — v322
+# GitHub Actions / GHCR workflow plan — v323
 
 ```txt
-version: v322.owner-only-single-run-lifecycle-hardened-publish-gated
-result: github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated
+version: v323.first-owner-only-publish-attempt-recorded-failed-pre-registry
+base plan version: v322.owner-only-single-run-lifecycle-hardened-publish-gated
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
 repository: gihohoho/upgrade-rpg
 image: ghcr.io/gihohoho/upgrade-rpg-backend
 workflow: .github/workflows/publish-backend-ghcr.yml
@@ -11,12 +12,16 @@ workflow source SHA-256: 8b3bde807cb241e14104272a13f1e4c5a857753716e5a2a7e13b710
 workflow semantic SHA-256: f91419160e34e1ea5c16342b8d346e9b295d502131980eeb084b2da9aa2683fa
 workflow file creation: complete
 workflow 파일 생성: 완료
-workflow execution: not executed
+workflow execution: run 29716038891 completed/failure
 registry login/build/push: not executed
-next safe stage: review-and-approve-exact-preparation-fix-sha
+next safe stage: review-failed-attempt-and-approve-focused-bootstrap-fix
 ```
 
 정적 문서 잠금 표식: `workflow_dispatch`, `pull_request_target` 금지, `contents: read`, `actions: read`, `packages: write`, `id-token: write`, Docker BuildKit, `HIGH,CRITICAL`, Sigstore Cosign keyless, `approved_preparation_commit`, `DOCKER_BUILD_RECORD_UPLOAD`, required reviewer 제약.
+
+## 첫 실행 결과와 focused fix 후보
+
+run `29716038891`은 validate job의 `Install backend validation dependencies`에서 실패했습니다. bootstrap pip wheel 다운로드가 `--python-version 3`을 사용해 Python `>=3.10`을 요구하는 `pip==26.1.2`를 제외한 것이 직접 원인입니다. build/publish jobs는 모두 skipped였고 GHCR login/build/push, artifact, digest, signature는 발생하지 않았습니다. lifecycle은 `attempt-recorded`와 gate `false`로 닫혔으며 rerun하지 않습니다. focused fix 후보는 해당 bootstrap download 인자만 `--python-version 3.11`로 바꾸고 workflow source/semantic hash, checker와 정책 문서를 함께 갱신하는 것입니다.
 
 ## v322가 필요한 이유
 

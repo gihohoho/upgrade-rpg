@@ -1,4 +1,4 @@
-# Upgrade RPG Codex handoff — v322
+# Upgrade RPG Codex handoff — v323
 
 ## 먼저 읽을 것
 
@@ -10,9 +10,9 @@
 
 ## 현재 기준
 
-- latest: `v322.owner-only-single-run-lifecycle-hardened-publish-gated`
-- strict result: `github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated`
-- next safe stage: `review-and-approve-exact-preparation-fix-sha`
+- latest: `v323.first-owner-only-publish-attempt-recorded-failed-pre-registry`
+- strict result: `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`
+- next safe stage: `review-failed-attempt-and-approve-focused-bootstrap-fix`
 - workflow source/semantic SHA-256: `8b3bde807cb241e14104272a13f1e4c5a857753716e5a2a7e13b710df55ae61e` / `f91419160e34e1ea5c16342b8d346e9b295d502131980eeb084b2da9aa2683fa`
 - 기준: 현재 repository + Git `main`; ZIP은 기본 생성하지 않음
 - 사용자: 코딩을 거의 모르는 기호, 한국어로 쉽고 자세하게 설명
@@ -56,7 +56,7 @@ DB write/restore/reset/seed와 Alembic revision/autogenerate/stamp/upgrade/downg
 
 ```txt
 workflow file/creation approved: yes/yes
-workflow execution approved/executed: yes/no
+workflow execution approved/executed: yes/yes
 CI workflow/login/build/push approved: yes/yes/yes/yes
 CI login/build/push executed: no/no/no
 CI credential strategy: github-actions-github-token
@@ -66,11 +66,11 @@ publish environment/main-only: present/configured
 environment secrets/variables: 0/0
 required reviewer/prevent self-review: missing/missing
 publish approval model: owner-only-source-controlled-two-step
-source-controlled lifecycle gate: preparation-closed / publishReviewerGateReady=false
+source-controlled lifecycle gate: attempt-recorded / publishReviewerGateReady=false
 run_attempt=1: required
 single dispatch: required
 immediate closure: required
-exact preparation-fix SHA approval: pending
+exact preparation-fix SHA approval: 350bbd085f1cf636810d75ddcbb5321e0791256c approved and consumed
 ```
 
 native required reviewer가 없는 비공개 개인 저장소이므로 이 owner-only 절차는 독립 reviewer와 동등하지 않습니다. 기호가 이 잔여 위험을 이해하고 2026-07-20에 선택했습니다.
@@ -95,16 +95,31 @@ f4788acf5455b07169320bd29f43ddf92ff1d5ad
 
 ## v322 lifecycle 안전 계약
 
-새 source-controlled lifecycle gate는 `deploy/github-actions-ghcr-publish-lifecycle.json`입니다. 현재 값은 다음처럼 닫혀 있습니다.
+source-controlled lifecycle gate는 `deploy/github-actions-ghcr-publish-lifecycle.json`입니다. 첫 실행 결과까지 기록한 현재 값은 다음처럼 닫혀 있습니다.
 
 ```txt
 schemaVersion: v322.owner-only-publish-lifecycle
-state: preparation-closed
+state: attempt-recorded
 publishReviewerGateReady: false
-approvedPreparationSha: null
-ownerApproval.recorded: false
-observedAttempt.status: not-dispatched
+approvedPreparationSha: 350bbd085f1cf636810d75ddcbb5321e0791256c
+ownerApproval.recorded: true
+closure.authorizationSourceSha: 32e5102877851ace06e1c0ed3bcb48310b8d65b6
+closure.closureCommitSha: 362f5f1901d234b5b86f2a7cefdabd28ac61f896
+observedAttempt.runId: 29716038891
+observedAttempt.status/conclusion: completed/failure
+observedAttempt.imageDigest/signatureVerified: null/false
 ```
+
+## 2026-07-20 첫 owner-only 게시 시도
+
+- run URL: `https://github.com/gihohoho/upgrade-rpg/actions/runs/29716038891`
+- validate job의 `Install backend validation dependencies`에서 16초 만에 실패
+- bootstrap pip download의 `--python-version 3` 때문에 Python `>=3.10` 조건인 `pip==26.1.2`를 찾지 못함
+- build와 publish jobs는 `skipped`; GHCR login/build/push는 실행되지 않음
+- artifact 0개, image digest 없음, signature 미검증
+- rerun은 하지 않았고 금지 상태 유지
+- focused fix 후보는 workflow의 해당 값만 `--python-version 3.11`로 바꾸는 것
+- `github:gh-fix-ci` 절차상 코드 수정 전 기호의 명시 승인이 필요함
 
 새 preparation-fix SHA가 승인된 뒤의 authorization contract:
 
@@ -186,24 +201,21 @@ python tools/check_codex_handoff_readiness.py --strict
 정상 기대 결과:
 
 ```txt
-result: github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated
-next safe stage: review-and-approve-exact-preparation-fix-sha
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-recorded-workflow-attempt-evidence
 ```
 
 코드/구조 변경이므로 관련 전용 smoke, compileall, JavaScript 문법, `bash tools/run_smoke_core.sh`까지 통과해야 합니다. 단, authorization-open CI에서는 위의 closed 전용 세 smoke만 플래그로 건너뜁니다. Vue 변경이 없으므로 `npm ci`/`npm run build`는 불필요합니다.
 
 ## 다음 안전 단계
 
-1. v322 변경 전체 검증
-2. 준비 수정 commit을 `main`에 commit/push
-3. 새 exact 40-character preparation-fix SHA와 변경 범위를 기호에게 제시
-4. 기호의 새 SHA 명시 승인 대기
-5. 승인 후 GitHub live 설정을 다시 확인
-6. lifecycle JSON만 바꾸는 direct-child authorization commit을 만들고 검증·push
-7. 정확히 한 번 dispatch하고 run ID 접수 즉시 closure commit으로 gate 닫기
-8. run 결과를 모니터링하고 성공/실패 및 부분 증거를 `attempt-recorded` evidence commit으로 기록
+1. 실패 실행 증거와 lifecycle `attempt-recorded` 상태 검토
+2. 기호가 bootstrap `--python-version 3` → `3.11` focused fix를 명시 승인
+3. workflow·정적 checker·정책 hash·문서를 함께 고친 새 preparation commit 준비 및 검증
+4. 그 새 exact 40-character preparation SHA를 기호가 별도 승인
+5. 승인 뒤 새 A → C → R 1회 lifecycle 실행
 
-현재는 4번 전 단계입니다. 새 SHA 승인 없이 lifecycle을 열거나 workflow를 실행하지 않습니다.
+동일 run의 rerun은 금지합니다. focused fix 승인과 이후 새 preparation SHA 승인은 서로 다른 승인 지점입니다.
 
 ## 계속 금지되는 범위
 

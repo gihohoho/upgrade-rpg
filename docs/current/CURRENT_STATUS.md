@@ -1,10 +1,10 @@
-# Current Status — v322
+# Current Status — v323
 
 ## 현재 기준
 
-- 최신 작업: `v322.owner-only-single-run-lifecycle-hardened-publish-gated`
-- strict result: `github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated`
-- next safe stage: `review-and-approve-exact-preparation-fix-sha`
+- 최신 작업: `v323.first-owner-only-publish-attempt-recorded-failed-pre-registry`
+- strict result: `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`
+- next safe stage: `review-failed-attempt-and-approve-focused-bootstrap-fix`
 - workflow source/semantic SHA-256: `8b3bde807cb241e14104272a13f1e4c5a857753716e5a2a7e13b710df55ae61e` / `f91419160e34e1ea5c16342b8d346e9b295d502131980eeb084b2da9aa2683fa`
 - handoff: current repository + Git `main`; ZIP 기본 생성 없음
 - readiness: `v250.backend-admin-rollback-snapshot`
@@ -49,7 +49,7 @@ base image digest approved: yes
 CI credential strategy: github-actions-github-token
 local credential strategy: deferred
 workflow file/creation approved: yes/yes
-workflow execution approved/executed: yes/no
+workflow execution approved/executed: yes/yes
 CI workflow/login/build/push approved: yes/yes/yes/yes
 CI login/build/push executed: no/no/no
 repository Actions allowlist/full SHA: configured/configured
@@ -57,15 +57,30 @@ publish environment/main-only: present/configured
 environment secrets/variables: 0/0
 required reviewer/prevent self-review: missing/missing
 publish approval model: owner-only-source-controlled-two-step
-source-controlled lifecycle gate: preparation-closed / publishReviewerGateReady=false
+source-controlled lifecycle gate: attempt-recorded / publishReviewerGateReady=false
 dependency/frontend input lock: complete
 run_attempt=1: required
 single dispatch: required by Actions API
 immediate closure: required after run acceptance
-exact preparation-fix SHA approval: pending
+exact preparation-fix SHA approval: 350bbd085f1cf636810d75ddcbb5321e0791256c approved and consumed
 ```
 
-아직 workflow run, GHCR login, image build, push, sign은 한 번도 실행하지 않았습니다. production image reference와 자동 deploy도 바꾸지 않았습니다.
+workflow run은 정확히 한 번 실행됐지만 dependency 설치에서 실패했습니다. GHCR login, image build, push, sign은 실행되지 않았고 production image reference와 자동 deploy도 바꾸지 않았습니다.
+
+## 2026-07-20 첫 게시 시도 증거
+
+- 준비 SHA: `350bbd085f1cf636810d75ddcbb5321e0791256c`
+- authorization SHA: `32e5102877851ace06e1c0ed3bcb48310b8d65b6`
+- immediate closure SHA: `362f5f1901d234b5b86f2a7cefdabd28ac61f896`
+- run: `29716038891` / `https://github.com/gihohoho/upgrade-rpg/actions/runs/29716038891`
+- 상태/결론: `completed` / `failure`, 총 16초
+- 실패 단계: `Install backend validation dependencies`
+- 로그 원인: bootstrap pip wheel 다운로드가 `--python-version 3`을 사용해 Python `>=3.10`을 요구하는 `pip==26.1.2`를 후보에서 제외
+- build/publish jobs: 둘 다 `skipped`
+- artifact/image digest/signature: 0개 / 없음 / 미검증
+- GHCR login/build/push: 실행되지 않음
+- rerun: 실행하지 않았고 정책상 금지
+- focused fix 후보: `.github/workflows/publish-backend-ghcr.yml`의 bootstrap pip download 값을 `--python-version 3.11`로 변경
 
 ## v321 승인 이후 발견한 감사 문제
 
@@ -119,13 +134,13 @@ exact preparation-fix SHA approval: pending
 
 ## 현재 안전 경계
 
-현재 lifecycle은 P `preparation-closed`로 닫혀 있어 registry 접근 전 fail-closed입니다. 이후 지원 전이는 A `authorization-open` → C `authorization-closed-awaiting-evidence` → R `attempt-recorded`입니다. v322 준비 수정 commit을 검증·push한 뒤 기호가 그 새 정확한 40자 SHA를 별도 메시지로 승인해야 합니다. 이전 `f4788acf...` 승인을 재사용하지 않습니다. 새 승인 전에는 authorization을 열거나 workflow를 실행하지 않습니다.
+현재 lifecycle은 R `attempt-recorded`이고 gate는 `false`입니다. 첫 실행은 registry 접근 전 실패했으며 동일 실행의 rerun은 금지합니다. focused bootstrap fix를 별도 preparation commit으로 만든 뒤 그 새 정확한 40자 SHA를 기호가 승인해야 새 A → C → R lifecycle을 시작할 수 있습니다. 과거 승인을 재사용하지 않습니다.
 
 DB/Alembic mutation, 인증·write API, Vue Preview/Apply/write, 게임 콘텐츠·밸런스, production container/network/volume, Compose up/down, production reference 갱신과 자동 deploy는 이번 범위 밖입니다.
 
 정상 strict 결과:
 
 ```txt
-result: github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated
-next safe stage: review-and-approve-exact-preparation-fix-sha
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-recorded-workflow-attempt-evidence
 ```

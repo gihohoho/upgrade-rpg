@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v322
+# Upgrade RPG Codex working rules — v323
 
 이 파일은 저장소 전체에 적용됩니다. Codex는 작업을 시작할 때 이 파일과 `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -32,9 +32,9 @@
 
 ## 현재 고정 상태
 
-- latest: `v322.owner-only-single-run-lifecycle-hardened-publish-gated`
-- strict result: `github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated`
-- next safe stage: `review-and-approve-exact-preparation-fix-sha`
+- latest: `v323.first-owner-only-publish-attempt-recorded-failed-pre-registry`
+- strict result: `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`
+- next safe stage: `review-failed-attempt-and-approve-focused-bootstrap-fix`
 - GitHub remote: `https://github.com/gihohoho/upgrade-rpg.git`
 - GHCR namespace: `gihohoho`
 - backend image repository: `ghcr.io/gihohoho/upgrade-rpg-backend` (private)
@@ -45,18 +45,18 @@
 - Alembic current revision은 `v295_initial_schema`; 새 revision 필요 상태는 `no`입니다.
 - CI credential strategy: GitHub Actions `GITHUB_TOKEN` 우선 (`github-actions-github-token`)
 - workflow file/creation approved: yes/yes
-- workflow execution approved/executed: yes/no
+- workflow execution approved/executed: yes/yes
 - CI workflow/login/build/push approved: yes/yes/yes/yes
 - CI login/build/push executed: no/no/no
 - repository Actions allowlist/full SHA enforcement: configured/configured
 - `ghcr-production-publish` environment/main-only: present/configured
 - required reviewer/prevent self-review: missing/missing
 - publish approval model: `owner-only-source-controlled-two-step` (기호가 2026-07-20 선택)
-- source-controlled lifecycle gate: `preparation-closed` / `publishReviewerGateReady=false`
+- source-controlled lifecycle gate: `attempt-recorded` / `publishReviewerGateReady=false`
 - dependency/frontend input lock: complete (exact version + SHA-256, binary wheel only)
 - byte-for-byte deterministic image: 보장한다고 주장하지 않음
-- exact preparation-fix SHA approval: pending
-- workflow run/login/build/push: 아직 한 번도 실행하지 않음
+- exact preparation-fix SHA approval: `350bbd085f1cf636810d75ddcbb5321e0791256c` approved and consumed
+- workflow run/login/build/push: one failed run / no / no / no
 - reviewed workflow source/semantic SHA-256: `8b3bde807cb241e14104272a13f1e4c5a857753716e5a2a7e13b710df55ae61e` / `f91419160e34e1ea5c16342b8d346e9b295d502131980eeb084b2da9aa2683fa`
 
 ## v321 승인과 v322 감사 결과
@@ -82,9 +82,21 @@ v322는 `deploy/github-actions-ghcr-publish-lifecycle.json`을 source-controlled
 
 live 증거는 authorization 실행 시점 기준 4시간 이내여야 하므로 새 SHA 승인 후 gate를 열기 직전에 다시 확인합니다.
 
+## 2026-07-20 첫 owner-only 게시 시도 결과
+
+- authorization commit: `32e5102877851ace06e1c0ed3bcb48310b8d65b6`
+- immediate closure commit: `362f5f1901d234b5b86f2a7cefdabd28ac61f896`
+- GitHub Actions run: `29716038891` / `https://github.com/gihohoho/upgrade-rpg/actions/runs/29716038891`
+- 결론: `failure`; `Install backend validation dependencies` 단계에서 종료
+- 원인: bootstrap pip wheel 다운로드의 `--python-version 3`이 `pip==26.1.2`의 Python `>=3.10` 조건과 맞지 않아 배포 후보를 찾지 못함
+- 미실행: repository checks 이후 단계, Docker build, SBOM/Trivy, GHCR login/push, provenance, Cosign
+- artifact/image digest/signature: 0개 / 없음 / 미검증
+- rerun: 금지되며 실행하지 않음
+- 수정 후보: workflow의 bootstrap pip download만 `--python-version 3.11`로 고치고 새 preparation SHA를 다시 승인받아 새 1회 lifecycle을 시작
+
 ## 현재 안전 경계
 
-현재 lifecycle은 닫혀 있고 workflow/로그인/build/push는 실행하지 않았습니다. `f4788acf...` 승인을 새 v322 commit 승인으로 재사용하지 않습니다. v322 준비 수정 commit을 검증·push하고 기호가 새 정확한 40자 SHA를 별도 메시지로 승인하기 전에는 authorization lifecycle을 열거나 workflow를 실행하지 않습니다.
+현재 lifecycle은 `attempt-recorded`이고 gate는 닫혀 있습니다. 첫 실행은 registry 접근 전에 실패했으며 login/build/push는 실행되지 않았습니다. 동일 실행의 rerun은 금지합니다. bootstrap 수정은 실패 원인과 직접 관련된 focused fix로 별도 preparation commit을 만든 뒤, 그 새 정확한 40자 SHA를 기호가 승인해야만 새 authorization을 열 수 있습니다.
 
 다음 항목은 이번 GitHub 권한 확대와 별개이므로 기호의 구체적인 작업 요청 전에는 변경·실행하지 않습니다.
 
@@ -105,7 +117,7 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-정상 결과는 `github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated`, 다음 안전 단계는 `review-and-approve-exact-preparation-fix-sha`입니다. 검증 후 v322 준비 수정 commit을 push하고 정확한 새 40자 SHA와 범위를 기호에게 제시합니다. 그 SHA를 기호가 승인한 뒤 live 설정을 다시 확인하고, lifecycle 파일만 변경하는 별도 authorization commit을 만들 수 있습니다.
+현재 정상 결과는 `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`, 다음 안전 단계는 `review-recorded-workflow-attempt-evidence`입니다. 실패 증거 검토 뒤 bootstrap `--python-version 3`을 `3.11`로 바꾸는 focused fix는 사용자 승인을 받아 별도 preparation commit으로 준비합니다. 그 새 SHA의 별도 승인 전에는 새 workflow를 실행하지 않습니다.
 
 ## 변경과 검증
 
