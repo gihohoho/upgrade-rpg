@@ -1,4 +1,4 @@
-# Security rotation and GitHub gates — v324
+# Security rotation and GitHub gates — v325
 
 이 문서는 기호가 허용한 GitHub·숨김 파일·`.env` 작업 범위와 나중에 재확인하거나 교체할 보안 항목을 기록합니다. 실제 secret 값은 적지 않습니다.
 
@@ -10,7 +10,7 @@
 - root Docker context의 env 계열을 `.dockerignore`로 제외하고, 우선순위를 덮을 수 있는 `backend/Dockerfile.production.dockerignore`를 만들지 않습니다.
 - 사용자 계정 선택, 재로그인, 결제/플랜처럼 Codex가 대신할 수 없는 작업만 기호에게 요청합니다.
 
-## 2026-07-20 live GitHub 보호 상태
+## 2026-07-22 live GitHub 보호 상태
 
 ```txt
 Actions allowlist: gihohoho + 명시한 외부 action 8개
@@ -26,7 +26,7 @@ deployment branch: main only
 environment secrets/variables: 0/0
 native required reviewer: unavailable/not configured
 prevent self-review: unavailable/not configured
-live evidence UTC: 2026-07-20T03:04:15Z
+live evidence UTC: 2026-07-21T23:34:53Z
 ```
 
 재확인 중 fork workflow에 write token과 secret을 보내는 설정이 켜진 drift를 발견했고 둘 다 `false`로 복원했습니다. 이는 secret 값을 읽거나 새로 만든 작업이 아니라 repository 정책을 다시 닫은 작업입니다.
@@ -49,16 +49,19 @@ private personal repository에서는 native required reviewer를 구성하지 �
 
 ```txt
 file: deploy/github-actions-ghcr-publish-lifecycle.json
-state: preparation-closed
+state: attempt-recorded
 publishReviewerGateReady: false
 priorApprovedPreparationSha: 350bbd085f1cf636810d75ddcbb5321e0791256c
 priorAttemptEvidence.recordCommitSha: 1f12ea59eb54385337557e9754f86731ec53d253
-approvedPreparationSha: null
-ownerApproval.recorded: false
-workflow run: prior 29716038891 completed/failure; retry not dispatched
+approvedPreparationSha: 2f77ebf0f60a39c936509df26f903995f0c62967
+ownerApproval.recorded: true
+authorization/closure: 7e69555b8b653c406b322fb5c8f23e550751d72c / 5479e6b14826b3a0f2b6d0c3beb0e2142ca22c94
+workflow run: prior 29716038891 completed/failure; current 29877813770 completed/failure
 ```
 
 첫 실행은 dependency 설치에서 실패해 build와 publish jobs가 skipped됐습니다. GHCR login/build/push, artifact, digest, signature는 발생하지 않았으며 동일 실행의 rerun은 금지합니다. 로컬 `gh` keyring의 `konghjin`, `gihohoho` 토큰은 2026-07-20 확인 시 만료 상태였지만 연결된 GitHub 앱으로 로그를 안전하게 조회해 이번 작업에는 재로그인이 필요하지 않았습니다. 향후 `gh` 전용 작업이 꼭 필요할 때만 기호에게 `gh auth login`을 요청합니다.
+
+두 번째 run `29877813770`은 validation을 통과한 뒤 `backend/Dockerfile.production`의 남은 bootstrap `--python-version 3` 때문에 로컬 image build에서 실패했습니다. publish job은 skipped됐고 GHCR login/push, digest, signature, registry mutation은 없었습니다. artifact도 0개였으며 같은 run의 rerun은 금지합니다.
 
 새 SHA 승인 뒤에도 다음 조건이 모두 맞아야 authorization을 열 수 있습니다.
 
@@ -87,11 +90,11 @@ authorization-open CI는 closed root 전용 handoff smoke가 lifecycle 전이를
 
 ## 사용자에게 지금 필요한 작업
 
-현재 필요한 설치, extension, 추가 GitHub 권한은 없습니다. v322 preparation-fix commit이 검증·push되면 Codex가 새 정확한 40자 SHA와 변경 범위를 제시합니다. 기호가 그 SHA를 별도 메시지로 승인하는 인간 checkpoint만 필요합니다. 그 전에는 workflow/login/build/push를 실행하지 않습니다.
+현재 필요한 설치, extension, 추가 GitHub 권한은 없습니다. 다음 단계에는 Dockerfile bootstrap target 한 곳을 `3.11`로 바꾸는 focused fix에 대한 기호의 승인이 필요합니다. 수정·검증·push 뒤에는 새 정확한 preparation SHA를 다시 별도 승인받아야 합니다.
 
 ## 나중에 회전·폐기·재설정할 항목
 
-이번 v322 작업에서는 실제 secret, PAT, registry credential, production `.env`, CA/cert/key를 생성하거나 읽지 않았으므로 즉시 회전할 값은 없습니다.
+이번 v325 작업에서는 실제 secret, PAT, registry credential, production `.env`, CA/cert/key를 생성하거나 읽지 않았으므로 즉시 회전할 값은 없습니다.
 
 - [ ] owner-only 모델의 잔여 위험과 계정/environment 보호를 주기적으로 재검토
 - [ ] authorization 직전 Actions allowlist/full SHA와 environment main-only를 live 재확인
@@ -109,4 +112,4 @@ authorization-open CI는 closed root 전용 handoff smoke가 lifecycle 전이를
 
 ## 로컬 GitHub CLI 상태
 
-브라우저 기반 GitHub 연결은 정상입니다. 로컬 `gh` CLI에 저장된 예전 token은 이전 확인에서 401이었으므로 필요 시에만 기호에게 재인증을 요청합니다. 현재 v322 preparation-fix 단계에는 새 로그인이나 설치가 필요 없습니다.
+브라우저 기반 GitHub 연결은 정상입니다. 로컬 `gh` CLI에 저장된 예전 token은 이번 확인에서도 만료 상태였으므로 필요 시에만 기호에게 재인증을 요청합니다. 현재 v325 evidence 검토 단계에는 새 로그인이나 설치가 필요 없습니다.

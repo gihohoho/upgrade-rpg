@@ -1,4 +1,4 @@
-# Backend image GHCR policy — v324
+# Backend image GHCR policy — v325
 
 ## 확정값
 
@@ -18,7 +18,7 @@ production reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:<approved-64-h
 - CI는 실행 중에만 제공되는 ephemeral `GITHUB_TOKEN`을 사용합니다.
 - actual token 값은 파일, Git, 채팅, 로그, artifact에 기록하지 않습니다.
 - local credential/PAT 전략은 deferred이며 장기 Docker credential을 만들지 않았습니다.
-- workflow는 한 번 실행됐지만 dependency 설치에서 실패했고 CI login/build/push는 실행되지 않았습니다.
+- workflow는 두 번 실행됐습니다. 두 번째 run은 validation을 통과했지만 로컬 image build에서 실패했고 CI login/push는 실행되지 않았습니다.
 - repository는 명시한 외부 action 8개와 full-length SHA만 허용합니다.
 - 기본 `GITHUB_TOKEN`은 read-only이며 publish job만 `packages: write`, `id-token: write`를 받습니다.
 - `ghcr-production-publish` environment는 `main`만 허용하고 secrets/variables는 0/0입니다.
@@ -27,18 +27,18 @@ production reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:<approved-64-h
 ## 현재 실행 상태
 
 ```txt
-version: v324.bootstrap-fixed-retry-preparation-publish-gated
+version: v325.second-owner-only-attempt-recorded-failed-pre-registry-image-build
 workflow file/creation approved: yes/yes
 workflow execution approved/executed: yes/yes
 CI registry login/build/push approved: yes/yes/yes
-CI registry login/build/push executed: no/no/no
+CI registry login/build/push executed: no/yes/no (build attempted and failed)
 publish environment/main-only: yes/yes
 required reviewer/prevent self-review: no/no
 publish approval model: owner-only-source-controlled-two-step
-lifecycle state/gate: retry preparation-closed/false
+lifecycle state/gate: attempt-recorded/false
 dependency/frontend input lock: complete
 prior preparation SHA: 350bbd085f1cf636810d75ddcbb5321e0791256c consumed
-new bootstrap-fix preparation SHA approval: pending
+bootstrap-fix preparation SHA: 2f77ebf0f60a39c936509df26f903995f0c62967 consumed
 container start approved/executed: no/no
 ```
 
@@ -46,7 +46,8 @@ container start approved/executed: no/no
 
 - v321 `f4788acf5455b07169320bd29f43ddf92ff1d5ad` 승인은 감사 이력으로만 보존합니다.
 - 첫 실패 evidence commit `1f12ea59eb54385337557e9754f86731ec53d253`를 `priorAttemptEvidence`로 보존합니다.
-- v324 bootstrap-fix preparation commit의 새 SHA를 기호가 승인하기 전에는 lifecycle을 열지 않습니다.
+- 두 번째 run `29877813770`과 closure `5479e6b14826b3a0f2b6d0c3beb0e2142ca22c94`를 현재 `attempt-recorded` evidence로 보존합니다.
+- 두 번째 run은 Dockerfile bootstrap target 문제로 로컬 build에서 실패했고 publish job은 skipped됐습니다.
 - authorization commit은 승인 preparation의 direct child이고 lifecycle JSON만 바꿔야 합니다.
 - repository owner, `run_attempt=1`, GitHub API의 single dispatch만 허용합니다.
 - run이 접수되면 즉시 closure commit으로 gate를 닫아 `authorization-closed-awaiting-evidence`로 전이합니다. 이 C commit은 `closureCommitSha=null`이며 rerun은 금지합니다.
@@ -69,4 +70,4 @@ container start approved/executed: no/no
 
 ## 다음 안전 단계
 
-정적 검사와 전체 smoke를 통과한 v324 bootstrap-fix preparation commit을 push한 뒤 새 정확한 40자 SHA와 범위를 기호에게 제시합니다. 새 명시 승인 전에는 workflow dispatch, GHCR login/build/push를 실행하지 않습니다.
+run `29877813770`의 evidence를 검토합니다. 기호가 승인하면 `backend/Dockerfile.production`의 bootstrap `--python-version 3` 한 곳만 `3.11`로 수정해 새 preparation을 준비합니다. 그 새 정확한 SHA의 별도 승인 전에는 다음 workflow나 GHCR login/push를 실행하지 않습니다.

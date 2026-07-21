@@ -13,9 +13,9 @@ GitHub Actions, workflow, action SHA, environment, variables와 필요한 reposi
 현재 고정값:
 
 ```txt
-latest: v324.bootstrap-fixed-retry-preparation-publish-gated
-strict result: github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated
-next safe stage: review-and-approve-exact-bootstrap-fix-preparation-sha
+latest: v325.second-owner-only-attempt-recorded-failed-pre-registry-image-build
+strict result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-recorded-workflow-attempt-evidence
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR namespace: gihohoho
 backend repository: ghcr.io/gihohoho/upgrade-rpg-backend
@@ -31,12 +31,12 @@ local credential/PAT: deferred
 workflow file/creation approved: yes/yes
 workflow execution approved/executed: yes/yes
 CI workflow/login/build/push approved: yes/yes/yes/yes
-CI login/build/push executed: no/no/no
+CI login/build/push executed: no/yes/no (build attempted and failed)
 repository Actions allowlist/full SHA enforcement: configured/configured
 publish environment/main-only: present/configured
 required reviewer/prevent self-review: missing/missing
 publish approval model: owner-only-source-controlled-two-step
-source-controlled lifecycle gate: preparation-closed / publishReviewerGateReady=false
+source-controlled lifecycle gate: attempt-recorded / publishReviewerGateReady=false
 dependency/frontend input lock: complete (exact versions + SHA-256)
 workflow source SHA-256: 245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd
 workflow semantic SHA-256: e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c
@@ -44,7 +44,7 @@ run_attempt=1: required
 single dispatch: required by GitHub Actions API check
 immediate closure: required immediately after a run is accepted
 prior preparation SHA: 350bbd085f1cf636810d75ddcbb5321e0791256c approved and consumed
-new bootstrap-fix preparation SHA approval: pending
+bootstrap-fix preparation SHA: 2f77ebf0f60a39c936509df26f903995f0c62967 approved and consumed
 ```
 
 `gihohoho`는 기호가 직접 확인한 고정 namespace입니다. placeholder로 되돌리거나 다른 이름을 추측하지 마세요. repository 주소는 `ghcr.io/gihohoho/upgrade-rpg-backend`로 고정합니다.
@@ -53,7 +53,7 @@ new bootstrap-fix preparation SHA approval: pending
 
 - 기호는 `f4788acf5455b07169320bd29f43ddf92ff1d5ad` 준비 commit을 정확히 승인했습니다.
 - 그러나 승인 후 실행 전 감사에서 checker의 open gate 불허, rerun 방어 없음, authorization-parent 연결 없음, 계획 밖 Docker build record artifact, post-push 실패 증거 미보존을 발견했습니다.
-- 따라서 그 승인은 역사적 `priorApprovedPreparationSha`로만 보존합니다. 아직 workflow, GHCR login/build/push는 한 번도 실행하지 않았습니다.
+- 따라서 그 승인은 역사적 `priorApprovedPreparationSha`로만 보존합니다. workflow는 두 번 실행됐지만 GHCR login/push는 아직 한 번도 실행되지 않았습니다.
 - v322는 `deploy/github-actions-ghcr-publish-lifecycle.json`을 기본 closed인 source-controlled lifecycle gate로 사용합니다.
 - authorization commit은 승인받은 새 preparation commit의 직접 자식이어야 하며 lifecycle JSON 하나만 변경할 수 있습니다.
 - workflow는 repository owner, `run_attempt=1`, API에서 확인한 single dispatch만 허용하고 rerun을 금지합니다.
@@ -70,11 +70,23 @@ new bootstrap-fix preparation SHA approval: pending
 - build/publish jobs는 skipped, GHCR login/build/push 미실행, artifact 0개, digest 없음, signature 미검증
 - 기호가 focused fix를 승인해 workflow의 해당 값을 `--python-version 3.11`로 수정 완료
 - 첫 실패는 `priorAttemptEvidence.recordCommitSha=1f12ea59eb54385337557e9754f86731ec53d253`로 보존
-- lifecycle은 새 `preparation-closed`, gate는 `false`; 새 SHA 승인 전 실행 금지
+- 첫 실패는 `priorAttemptEvidence`에 보존
 
-2026-07-20 GitHub live 재확인에서 allowlist/full SHA/default read-only/environment main-only/secrets·variables 0/0을 확인했습니다. 점검 중 켜져 있던 fork write token과 fork secret 전달은 모두 `false`로 복원했습니다. native required reviewer와 prevent self-review는 비공개 개인 저장소 제약으로 계속 없습니다. authorization 직전에는 4시간 이내 live 상태를 다시 확인해야 합니다.
+2026-07-22 두 번째 실행 결과:
 
-첫 작업은 읽기 전용 v324 검사입니다.
+- preparation `2f77ebf0f60a39c936509df26f903995f0c62967`, authorization `7e69555b8b653c406b322fb5c8f23e550751d72c`, closure `5479e6b14826b3a0f2b6d0c3beb0e2142ca22c94`
+- run `29877813770`: `https://github.com/gihohoho/upgrade-rpg/actions/runs/29877813770`
+- workflow bootstrap dependency와 repository checks는 통과
+- `Build local linux/amd64 image without registry mutation`에서 실패
+- 원인: `backend/Dockerfile.production:22`의 bootstrap pip download에 `--python-version 3`이 남아 `pip==26.1.2`를 찾지 못함
+- SBOM/Trivy와 publish job은 미실행 또는 skipped, GHCR login/push 미실행
+- artifact 0개, digest 없음, signature 미검증, registry mutation 없음
+- lifecycle은 `attempt-recorded`, gate는 `false`; 동일 run rerun 금지
+- 다음 focused fix 후보는 Dockerfile bootstrap target 한 곳을 `3.11`로 수정하는 것이며 아직 적용 승인 전
+
+2026-07-22 GitHub live 재확인에서 allowlist/full SHA/default read-only/environment main-only/secrets·variables 0/0을 확인했습니다. fork write token과 fork secret 전달은 모두 `false`였습니다. native required reviewer와 prevent self-review는 비공개 개인 저장소 제약으로 계속 없습니다. 다음 authorization 직전에도 4시간 이내 live 상태를 다시 확인해야 합니다.
+
+첫 작업은 읽기 전용 v325 evidence 검사입니다.
 
 실행 위치: `backend` 폴더
 Python `.venv` 상태: 꺼져 있을 때
@@ -96,11 +108,11 @@ python tools/check_codex_handoff_readiness.py --strict
 정상 기대 결과:
 
 ```txt
-result: github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated
-next safe stage: review-and-approve-exact-bootstrap-fix-preparation-sha
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-recorded-workflow-attempt-evidence
 ```
 
-v324 preparation을 검증·push한 뒤 그 새 40자 preparation SHA를 기호에게 제시하고 별도 승인을 받으세요. 승인 뒤 GitHub live 설정을 재확인해 authorization의 `recheckedAtUtc`만 더 새로운 시각으로 갱신하고, 동일 run을 rerun하지 마세요.
+run `29877813770`의 recorded evidence와 registry 미변경 사실을 먼저 검토하세요. 기호가 focused fix를 승인하기 전에는 `backend/Dockerfile.production`을 수정하지 마세요. 승인되면 bootstrap target 한 곳만 `3`에서 `3.11`로 바꾸고 새 preparation을 검증·push한 뒤 그 새 40자 SHA를 다시 별도 승인받으세요. 동일 run을 rerun하지 마세요.
 
 사용자 별도 작업 요청 전에는 DB write/restore/reset/seed, Alembic revision/autogenerate/stamp/upgrade/downgrade, 인증/API route·response body/write logic, Vue Preview/Apply/write, 게임 콘텐츠·밸런스, production container/network/volume, Compose up/down, 자동 deploy/production image reference를 변경하거나 실행하지 마세요.
 

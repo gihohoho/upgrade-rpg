@@ -1,3 +1,12 @@
+# v325.second-owner-only-attempt-recorded-failed-pre-registry-image-build
+
+- 기호가 승인한 preparation `2f77ebf0f60a39c936509df26f903995f0c62967`의 direct-child authorization `7e69555b8b653c406b322fb5c8f23e550751d72c`을 만들고 workflow를 정확히 한 번 dispatch.
+- run `29877813770` 접수 직후 closure `5479e6b14826b3a0f2b6d0c3beb0e2142ca22c94`으로 gate를 닫고 rerun하지 않음.
+- 이전 실패 지점인 workflow bootstrap dependency와 repository checks 통과.
+- `backend/Dockerfile.production:22`의 남은 bootstrap `--python-version 3` 때문에 local linux/amd64 image build에서 `pip==26.1.2`를 찾지 못해 failure.
+- SBOM/Trivy와 publish job은 미실행 또는 skipped; GHCR login/push, artifact, digest, signature, registry mutation 없음.
+- 다음 focused fix 후보는 Dockerfile bootstrap target 한 곳을 `3.11`로 바꾸는 것이며 아직 사용자 승인 전.
+
 # v324.bootstrap-fixed-retry-preparation-publish-gated
 
 - 기호가 승인한 focused fix로 workflow bootstrap wheel 대상 Python을 `3`에서 `3.11`로 수정.

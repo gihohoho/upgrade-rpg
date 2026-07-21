@@ -1,9 +1,9 @@
-# GitHub Actions / GHCR workflow plan — v324
+# GitHub Actions / GHCR workflow plan — v325
 
 ```txt
-version: v324.bootstrap-fixed-retry-preparation-publish-gated
+version: v325.second-owner-only-attempt-recorded-failed-pre-registry-image-build
 base plan version: v322.owner-only-single-run-lifecycle-hardened-publish-gated
-result: github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
 repository: gihohoho/upgrade-rpg
 image: ghcr.io/gihohoho/upgrade-rpg-backend
 workflow: .github/workflows/publish-backend-ghcr.yml
@@ -12,9 +12,9 @@ workflow source SHA-256: 245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6f
 workflow semantic SHA-256: e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c
 workflow file creation: complete
 workflow 파일 생성: 완료
-workflow execution: run 29716038891 completed/failure
-registry login/build/push: not executed
-next safe stage: review-and-approve-exact-bootstrap-fix-preparation-sha
+workflow execution: runs 29716038891 and 29877813770 completed/failure
+registry login/build/push: no/attempted-failed/no
+next safe stage: review-recorded-workflow-attempt-evidence
 ```
 
 정적 문서 잠금 표식: `workflow_dispatch`, `pull_request_target` 금지, `contents: read`, `actions: read`, `packages: write`, `id-token: write`, Docker BuildKit, `HIGH,CRITICAL`, Sigstore Cosign keyless, `approved_preparation_commit`, `DOCKER_BUILD_RECORD_UPLOAD`, required reviewer 제약.
@@ -22,6 +22,10 @@ next safe stage: review-and-approve-exact-bootstrap-fix-preparation-sha
 ## 첫 실행 결과와 focused fix 후보
 
 run `29716038891`은 validate job의 `Install backend validation dependencies`에서 실패했습니다. bootstrap pip wheel 다운로드가 `--python-version 3`을 사용해 Python `>=3.10`을 요구하는 `pip==26.1.2`를 제외한 것이 직접 원인입니다. 기호의 focused fix 승인 뒤 해당 값을 `--python-version 3.11`로 수정하고 workflow source/semantic hash, checker와 정책 문서를 함께 갱신했습니다. 첫 실패는 `priorAttemptEvidence.recordCommitSha=1f12ea59eb54385337557e9754f86731ec53d253`로 보존하며 새 preparation gate는 `false`입니다.
+
+## 두 번째 실행 결과와 focused fix 후보
+
+run `29877813770`은 workflow bootstrap과 repository checks를 통과한 뒤 `Build local linux/amd64 image without registry mutation`에서 실패했습니다. 직접 원인은 `backend/Dockerfile.production:22`에 같은 bootstrap target `--python-version 3`이 남아 있던 것입니다. SBOM/Trivy와 publish job은 미실행 또는 skipped였고 artifact/digest는 없으며 GHCR login/push와 registry mutation도 없었습니다. 다음 후보는 Dockerfile의 해당 한 곳만 `3.11`로 고치는 focused fix이며 아직 사용자 승인 전입니다.
 
 ## v322가 필요한 이유
 
@@ -209,9 +213,9 @@ production reference 자동 갱신과 deploy는 하지 않습니다.
 
 ## 현재와 다음 단계
 
-현재 retry lifecycle은 `preparation-closed`이고 gate는 `false`입니다. 첫 workflow는 dependency 설치에서 실패했고 login/build/push는 미실행입니다. v324 전체 검증과 bootstrap-fix preparation commit/push 뒤 정확한 새 40자 SHA를 기호에게 제시합니다. 기호의 새 명시 승인 전에는 authorization-open이나 workflow dispatch를 하지 않습니다.
+현재 lifecycle은 `attempt-recorded`이고 gate는 `false`입니다. 두 번째 workflow는 로컬 image build에서 실패했고 login/push는 미실행입니다. evidence 검토와 Dockerfile focused fix 승인 전에는 새 preparation이나 workflow dispatch를 하지 않습니다.
 
 ```txt
-result: github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated
-next safe stage: review-and-approve-exact-bootstrap-fix-preparation-sha
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-recorded-workflow-attempt-evidence
 ```

@@ -1,4 +1,4 @@
-# Roadmap — v324
+# Roadmap — v325
 
 ## 현재 완료
 
@@ -27,29 +27,27 @@
 - 2026-07-20 GitHub live 재확인 및 fork write token/secret drift 복원
 - 첫 owner-only run `29716038891`을 접수하고 즉시 gate 폐쇄·evidence 기록; dependency 설치 실패로 registry mutation 없음
 - bootstrap pip 대상 Python을 `3.11`로 수정하고 첫 실패를 `priorAttemptEvidence`로 보존한 retry preparation
+- 두 번째 owner-only run `29877813770` 접수, immediate closure와 evidence 기록
+- workflow bootstrap/repository checks 통과 후 Dockerfile bootstrap target 문제로 로컬 image build 실패; registry mutation 없음
 
 ## 현재 단계
 
 ```txt
-latest: v324.bootstrap-fixed-retry-preparation-publish-gated
-result: github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated
-lifecycle: preparation-closed
-workflow/login/build/push executed: yes/no/no/no
-next safe stage: review-and-approve-exact-bootstrap-fix-preparation-sha
+latest: v325.second-owner-only-attempt-recorded-failed-pre-registry-image-build
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+lifecycle: attempt-recorded
+workflow/login/build/push executed: yes/no/attempted-failed/no
+next safe stage: review-recorded-workflow-attempt-evidence
 ```
 
 ## 다음 순서
 
-1. v324 전용 smoke, compileall, JavaScript 문법, 전체 core smoke 통과
-2. bootstrap-fix retry preparation commit을 `main`에 push
-3. 정확한 새 40자 SHA와 변경 범위를 기호에게 제시하고 명시 승인 대기
-4. 승인 직후 GitHub Actions allowlist/full SHA/fork 정책/environment main-only를 live 재확인
-5. 승인 SHA의 direct child에서 lifecycle JSON만 `authorization-open`으로 변경
-6. 정적 검사와 push 뒤 workflow를 정확히 한 번 dispatch
-7. run ID 접수 즉시 closure commit으로 lifecycle gate를 닫아 `authorization-closed-awaiting-evidence`로 전이
-8. run 결과와 digest/부분 증거를 확인하고 별도 `attempt-recorded` evidence commit으로 실제 결과 기록
-9. `review-recorded-workflow-attempt-evidence`에서 conclusion과 registry mutation/signature 증거 검토
-10. 모든 검증이 끝난 exact digest만 후보로 기록
-11. production reference 변경 없이 isolated container 검증은 별도 승인 단계로 진행
+1. run `29877813770`의 conclusion과 registry mutation/signature 증거 검토
+2. 기호의 승인 뒤 Dockerfile bootstrap target 한 곳을 `3.11`로 수정
+3. 새 retry preparation을 검증·commit·push하고 정확한 40자 SHA 승인 대기
+4. 승인 직후 GitHub live 보호 상태 재확인
+5. 새 A → C → R single-dispatch lifecycle 실행
+6. 모든 검증이 끝난 exact digest만 후보로 기록
+7. production reference 변경 없이 isolated container 검증은 별도 승인 단계로 진행
 
-현재는 1번 진행 중입니다. 기존 `350bbd...` 승인을 새 SHA에 재사용하지 않습니다. native required reviewer가 없으므로 owner-only 모델은 독립 reviewer와 동등하지 않습니다. 새 승인 전에는 workflow를 실행하지 않습니다.
+현재는 1번 완료 후 focused fix 승인을 기다리는 단계입니다. 기존 승인을 새 SHA에 재사용하지 않습니다. native required reviewer가 없으므로 owner-only 모델은 독립 reviewer와 동등하지 않습니다. 새 승인 전에는 다음 workflow를 실행하지 않습니다.

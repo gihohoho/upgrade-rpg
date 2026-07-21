@@ -1,6 +1,6 @@
 {
   "schemaVersion": "v324.owner-only-publish-lifecycle",
-  "state": "authorization-closed-awaiting-evidence",
+  "state": "attempt-recorded",
   "publishReviewerGateReady": false,
   "priorApprovedPreparationSha": "350bbd085f1cf636810d75ddcbb5321e0791256c",
   "priorAttemptEvidence": {
@@ -50,15 +50,15 @@
   },
   "closure": {
     "authorizationSourceSha": "7e69555b8b653c406b322fb5c8f23e550751d72c",
-    "closureCommitSha": null,
+    "closureCommitSha": "5479e6b14826b3a0f2b6d0c3beb0e2142ca22c94",
     "preparedAtUtc": "2026-07-21T23:40:06Z"
   },
   "observedAttempt": {
     "runId": 29877813770,
     "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29877813770",
     "runAttempt": 1,
-    "status": "queued",
-    "conclusion": null,
+    "status": "completed",
+    "conclusion": "failure",
     "imageDigest": null,
     "signatureVerified": false
   }

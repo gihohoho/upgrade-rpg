@@ -1,10 +1,10 @@
-# Current Status — v324
+# Current Status — v325
 
 ## 현재 기준
 
-- 최신 작업: `v324.bootstrap-fixed-retry-preparation-publish-gated`
-- strict result: `github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated`
-- next safe stage: `review-and-approve-exact-bootstrap-fix-preparation-sha`
+- 최신 작업: `v325.second-owner-only-attempt-recorded-failed-pre-registry-image-build`
+- strict result: `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`
+- next safe stage: `review-recorded-workflow-attempt-evidence`
 - workflow source/semantic SHA-256: `245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd` / `e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c`
 - handoff: current repository + Git `main`; ZIP 기본 생성 없음
 - readiness: `v250.backend-admin-rollback-snapshot`
@@ -51,22 +51,22 @@ local credential strategy: deferred
 workflow file/creation approved: yes/yes
 workflow execution approved/executed: yes/yes
 CI workflow/login/build/push approved: yes/yes/yes/yes
-CI login/build/push executed: no/no/no
+CI login/build/push executed: no/yes/no (build attempted and failed)
 repository Actions allowlist/full SHA: configured/configured
 publish environment/main-only: present/configured
 environment secrets/variables: 0/0
 required reviewer/prevent self-review: missing/missing
 publish approval model: owner-only-source-controlled-two-step
-source-controlled lifecycle gate: preparation-closed / publishReviewerGateReady=false
+source-controlled lifecycle gate: attempt-recorded / publishReviewerGateReady=false
 dependency/frontend input lock: complete
 run_attempt=1: required
 single dispatch: required by Actions API
 immediate closure: required after run acceptance
 prior preparation SHA: 350bbd085f1cf636810d75ddcbb5321e0791256c approved and consumed
-new bootstrap-fix preparation SHA approval: pending
+bootstrap-fix preparation SHA: 2f77ebf0f60a39c936509df26f903995f0c62967 approved and consumed
 ```
 
-workflow run은 정확히 한 번 실행됐지만 dependency 설치에서 실패했습니다. GHCR login, image build, push, sign은 실행되지 않았고 production image reference와 자동 deploy도 바꾸지 않았습니다.
+workflow run은 두 번 실행됐고 둘 다 실패했습니다. 두 번째 run은 workflow bootstrap을 통과한 뒤 로컬 image build에서 실패했습니다. GHCR login/push/sign은 실행되지 않았고 production image reference와 자동 deploy도 바꾸지 않았습니다.
 
 ## 2026-07-20 첫 게시 시도 증거
 
@@ -85,6 +85,23 @@ workflow run은 정확히 한 번 실행됐지만 dependency 설치에서 실패
 - focused fix 승인/적용: 기호가 승인했고 `--python-version 3.11`로 적용 완료
 - 실행 상태 요약: workflow 실행 `yes`, registry mutation `no`로 동적 표시하도록 checker 수정
 - retry preparation: 첫 실패 evidence commit `1f12ea59eb54385337557e9754f86731ec53d253`를 `priorAttemptEvidence`로 보존
+
+## 2026-07-22 두 번째 게시 시도 증거
+
+- 준비 SHA: `2f77ebf0f60a39c936509df26f903995f0c62967`
+- authorization SHA: `7e69555b8b653c406b322fb5c8f23e550751d72c`
+- immediate closure SHA: `5479e6b14826b3a0f2b6d0c3beb0e2142ca22c94`
+- run: `29877813770` / `https://github.com/gihohoho/upgrade-rpg/actions/runs/29877813770`
+- 상태/결론: `completed` / `failure`
+- 통과: manual input, single-dispatch, source authorization, Python 3.11 setup, backend validation dependency, repository checks
+- 실패 단계: `Build local linux/amd64 image without registry mutation`
+- 로그 원인: `backend/Dockerfile.production:22`의 bootstrap pip download가 여전히 `--python-version 3`을 사용해 `pip==26.1.2`를 찾지 못함
+- SBOM/Trivy 및 publish job: 미실행 / 전체 `skipped`
+- GHCR login/push, digest, signature: 미실행 / 없음 / 미검증
+- artifact: 0개; build 실패로 SBOM/Trivy 파일이 없어 보존 단계도 후속 실패
+- registry mutation: 없음
+- rerun: 실행하지 않았고 정책상 금지
+- focused fix 후보: Dockerfile bootstrap target만 `--python-version 3.11`로 변경
 
 ## v321 승인 이후 발견한 감사 문제
 
@@ -116,7 +133,7 @@ workflow run은 정확히 한 번 실행됐지만 dependency 설치에서 실패
 - post-push failure: digest가 생겼으면 존재하는 partial evidence artifact를 14일 보존; 검증 완료 후보로 표기 금지
 - authorization-open CI smoke: 정적 checker를 직접 먼저 실행하고 `SKIP_GHCR_HANDOFF_SMOKES=1`로 closed 전용 handoff smoke 세 개만 제외; 앱·백엔드 전체 smoke는 유지
 
-## 2026-07-20 GitHub live 설정
+## 2026-07-22 GitHub live 설정
 
 - 외부 action allowlist 8개와 full-length SHA 강제 확인
 - GitHub-owned/verified creator blanket allow 꺼짐 확인
@@ -124,7 +141,7 @@ workflow run은 정확히 한 번 실행됐지만 dependency 설치에서 실패
 - 점검 중 발견한 fork write token 및 fork secret 전달 drift를 둘 다 `false`로 복원
 - `ghcr-production-publish` 존재, `main` only, secrets/variables 0/0 확인
 - native required reviewer/prevent self-review는 비공개 개인 저장소 제약으로 계속 없음
-- 기록 시각: `2026-07-20T03:04:15Z`; authorization 시점에 4시간 이내 live 재확인 필요
+- 기록 시각: `2026-07-21T23:34:53Z`; authorization 직전 재확인 완료
 
 ## 공급망 잠금
 
@@ -138,13 +155,13 @@ workflow run은 정확히 한 번 실행됐지만 dependency 설치에서 실패
 
 ## 현재 안전 경계
 
-현재 lifecycle은 새 P `preparation-closed`이고 gate는 `false`입니다. 첫 실행은 registry 접근 전 실패했고 그 증거는 `priorAttemptEvidence`에 보존됩니다. 동일 실행의 rerun은 금지합니다. v324 preparation commit의 새 정확한 40자 SHA를 기호가 승인해야 새 A → C → R lifecycle을 시작할 수 있습니다. 과거 승인을 재사용하지 않습니다.
+현재 lifecycle은 R `attempt-recorded`이고 gate는 `false`입니다. 첫 실행은 `priorAttemptEvidence`, 두 번째 실행은 현재 `observedAttempt`에 보존됩니다. 두 run 모두 registry mutation 전에 실패했으며 rerun은 금지합니다. 다음 Dockerfile focused fix는 별도 승인 후 새 preparation commit으로 만들고, 그 새 정확한 SHA를 다시 승인받아야 합니다.
 
 DB/Alembic mutation, 인증·write API, Vue Preview/Apply/write, 게임 콘텐츠·밸런스, production container/network/volume, Compose up/down, production reference 갱신과 자동 deploy는 이번 범위 밖입니다.
 
 정상 strict 결과:
 
 ```txt
-result: github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated
-next safe stage: review-and-approve-exact-bootstrap-fix-preparation-sha
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-recorded-workflow-attempt-evidence
 ```
