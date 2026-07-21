@@ -150,7 +150,7 @@ observedAttempt.runId/status/conclusion: 29877813770/completed/failure
 
 authorization commit이 workflow 자체나 application/dependency를 바꾸면 ancestry/path 검사가 실패합니다. run 접수 전에 main이 이동하거나 같은 SHA로 두 번째 dispatch가 있으면 실패합니다.
 
-## 2026-07-20 GitHub live 재확인
+## 2026-07-22 GitHub live 재확인
 
 로그인된 GitHub 화면에서 다음을 재확인했습니다.
 

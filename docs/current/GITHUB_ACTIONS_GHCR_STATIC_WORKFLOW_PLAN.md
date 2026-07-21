@@ -2,6 +2,7 @@
 
 ```txt
 version: v325.second-owner-only-attempt-recorded-failed-pre-registry-image-build
+preparation version: v324.bootstrap-fixed-retry-preparation-publish-gated
 base plan version: v322.owner-only-single-run-lifecycle-hardened-publish-gated
 result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
 repository: gihohoho/upgrade-rpg

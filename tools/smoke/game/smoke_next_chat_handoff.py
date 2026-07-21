@@ -5,9 +5,10 @@ import hashlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v324.bootstrap-fixed-retry-preparation-publish-gated"
-READY_RESULT = "github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated"
-NEXT_SAFE_STAGE = "review-and-approve-exact-bootstrap-fix-preparation-sha"
+VERSION = "v325.second-owner-only-attempt-recorded-failed-pre-registry-image-build"
+STATIC_PLAN_VERSION = "v324.bootstrap-fixed-retry-preparation-publish-gated"
+READY_RESULT = "github-actions-ghcr-owner-only-attempt-recorded-publish-gated"
+NEXT_SAFE_STAGE = "review-recorded-workflow-attempt-evidence"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 REVISION_SHA256 = "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa"
@@ -144,10 +145,10 @@ def main() -> int:
         REPOSITORY,
         "workflow file/creation approved: yes/yes",
         "workflow execution approved/executed: yes/yes",
-        "CI login/build/push executed: no/no/no",
+        "CI login/build/push executed: no/yes/no",
         "기준: 현재 repository + Git `main`; ZIP은 기본 생성하지 않음",
-        "2026-07-20 GitHub live 재확인",
-        "preparation-closed",
+        "2026-07-22 GitHub live 재확인",
+        "attempt-recorded",
         "source-controlled lifecycle gate",
         "run_attempt=1",
         "single dispatch",
@@ -173,9 +174,9 @@ def main() -> int:
         '"publishEnvironmentMainOnly": true',
         '"publishEnvironmentRequiredReviewerConfigured": false',
         '"sourceControlledPublishGateReady": false',
-        '"ownerOnlyApprovalPhase": "retry-preparation-closed"',
+        '"ownerOnlyApprovalPhase": "attempt-recorded-review"',
         '"publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json"',
-        '"publishLifecycleState": "preparation-closed"',
+        '"publishLifecycleState": "attempt-recorded"',
         '"publishLifecycleSupportedStates"',
         '"attempt-recorded"',
         '"priorApprovedPreparationSha": "350bbd085f1cf636810d75ddcbb5321e0791256c"',
@@ -187,7 +188,7 @@ def main() -> int:
     )
     assert_contains(
         "deploy/github-actions-ghcr-static-plan.example.json",
-        '"schemaVersion": "' + VERSION + '"',
+        '"schemaVersion": "' + STATIC_PLAN_VERSION + '"',
         '"staticPolicyOnly": true',
         '"workflowFilePresent": true',
         '"workflowCreationApproved": true',
@@ -265,18 +266,20 @@ def main() -> int:
     assert_contains(
         "deploy/github-actions-ghcr-publish-lifecycle.json",
         '"schemaVersion": "v324.owner-only-publish-lifecycle"',
-        '"state": "preparation-closed"',
+        '"state": "attempt-recorded"',
         '"publishReviewerGateReady": false',
         '"priorApprovedPreparationSha": "350bbd085f1cf636810d75ddcbb5321e0791256c"',
         '"priorAttemptEvidence"',
-        '"approvedPreparationSha": null',
-        '"closureCommitSha": null',
-        '"recorded": false',
+        '"approvedPreparationSha": "2f77ebf0f60a39c936509df26f903995f0c62967"',
+        '"closureCommitSha": "5479e6b14826b3a0f2b6d0c3beb0e2142ca22c94"',
+        '"recorded": true',
         '"workflowRunAttemptMustEqual": 1',
         '"singleDispatchApiCheckRequired": true',
         '"rerunForbidden": true',
         '"immediateClosureAfterRunAccepted": true',
-        '"status": "not-dispatched"',
+        '"status": "completed"',
+        '"runId": 29877813770',
+        '"conclusion": "failure"',
     )
     assert_contains(
         "docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md",
@@ -328,7 +331,7 @@ def main() -> int:
     if actual_sha != REVISION_SHA256:
         raise AssertionError(f"reviewed revision SHA-256 differs: {actual_sha}")
 
-    print("OK: v324 Codex handoff and owner-only retry-preparation documents are synchronized")
+    print("OK: v325 Codex handoff and owner-only recorded-attempt documents are synchronized")
     return 0
 
 
