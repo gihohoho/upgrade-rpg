@@ -1,12 +1,24 @@
 {
-  "schemaVersion": "v322.owner-only-publish-lifecycle",
-  "state": "attempt-recorded",
+  "schemaVersion": "v324.owner-only-publish-lifecycle",
+  "state": "preparation-closed",
   "publishReviewerGateReady": false,
-  "priorApprovedPreparationSha": "f4788acf5455b07169320bd29f43ddf92ff1d5ad",
-  "approvedPreparationSha": "350bbd085f1cf636810d75ddcbb5321e0791256c",
+  "priorApprovedPreparationSha": "350bbd085f1cf636810d75ddcbb5321e0791256c",
+  "priorAttemptEvidence": {
+    "preparationSha": "350bbd085f1cf636810d75ddcbb5321e0791256c",
+    "authorizationSha": "32e5102877851ace06e1c0ed3bcb48310b8d65b6",
+    "closureSha": "362f5f1901d234b5b86f2a7cefdabd28ac61f896",
+    "recordCommitSha": "1f12ea59eb54385337557e9754f86731ec53d253",
+    "runId": 29716038891,
+    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29716038891",
+    "conclusion": "failure",
+    "registryLoginExecuted": false,
+    "imageBuildExecuted": false,
+    "imagePushExecuted": false
+  },
+  "approvedPreparationSha": null,
   "ownerApproval": {
-    "recorded": true,
-    "recordedAtUtc": "2026-07-20T04:03:32Z",
+    "recorded": false,
+    "recordedAtUtc": null,
     "evidence": "exact-40-character-sha-user-message"
   },
   "githubLiveSettings": {
@@ -37,16 +49,16 @@
     "immediateClosureAfterRunAccepted": true
   },
   "closure": {
-    "authorizationSourceSha": "32e5102877851ace06e1c0ed3bcb48310b8d65b6",
-    "closureCommitSha": "362f5f1901d234b5b86f2a7cefdabd28ac61f896",
-    "preparedAtUtc": "2026-07-20T04:05:07Z"
+    "authorizationSourceSha": null,
+    "closureCommitSha": null,
+    "preparedAtUtc": null
   },
   "observedAttempt": {
-    "runId": 29716038891,
-    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29716038891",
-    "runAttempt": 1,
-    "status": "completed",
-    "conclusion": "failure",
+    "runId": null,
+    "runUrl": null,
+    "runAttempt": null,
+    "status": "not-dispatched",
+    "conclusion": null,
     "imageDigest": null,
     "signatureVerified": false
   }

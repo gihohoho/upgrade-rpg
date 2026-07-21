@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v323
+# Upgrade RPG Codex working rules — v324
 
 이 파일은 저장소 전체에 적용됩니다. Codex는 작업을 시작할 때 이 파일과 `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -32,9 +32,9 @@
 
 ## 현재 고정 상태
 
-- latest: `v323.first-owner-only-publish-attempt-recorded-failed-pre-registry`
-- strict result: `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`
-- next safe stage: `review-failed-attempt-and-approve-focused-bootstrap-fix`
+- latest: `v324.bootstrap-fixed-retry-preparation-publish-gated`
+- strict result: `github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated`
+- next safe stage: `review-and-approve-exact-bootstrap-fix-preparation-sha`
 - GitHub remote: `https://github.com/gihohoho/upgrade-rpg.git`
 - GHCR namespace: `gihohoho`
 - backend image repository: `ghcr.io/gihohoho/upgrade-rpg-backend` (private)
@@ -52,12 +52,12 @@
 - `ghcr-production-publish` environment/main-only: present/configured
 - required reviewer/prevent self-review: missing/missing
 - publish approval model: `owner-only-source-controlled-two-step` (기호가 2026-07-20 선택)
-- source-controlled lifecycle gate: `attempt-recorded` / `publishReviewerGateReady=false`
+- source-controlled lifecycle gate: `preparation-closed` / `publishReviewerGateReady=false`
 - dependency/frontend input lock: complete (exact version + SHA-256, binary wheel only)
 - byte-for-byte deterministic image: 보장한다고 주장하지 않음
-- exact preparation-fix SHA approval: `350bbd085f1cf636810d75ddcbb5321e0791256c` approved and consumed
+- prior preparation SHA: `350bbd085f1cf636810d75ddcbb5321e0791256c` approved and consumed; new bootstrap-fix preparation SHA approval pending
 - workflow run/login/build/push: one failed run / no / no / no
-- reviewed workflow source/semantic SHA-256: `8b3bde807cb241e14104272a13f1e4c5a857753716e5a2a7e13b710df55ae61e` / `f91419160e34e1ea5c16342b8d346e9b295d502131980eeb084b2da9aa2683fa`
+- reviewed workflow source/semantic SHA-256: `245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd` / `e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c`
 
 ## v321 승인과 v322 감사 결과
 
@@ -92,11 +92,12 @@ live 증거는 authorization 실행 시점 기준 4시간 이내여야 하므로
 - 미실행: repository checks 이후 단계, Docker build, SBOM/Trivy, GHCR login/push, provenance, Cosign
 - artifact/image digest/signature: 0개 / 없음 / 미검증
 - rerun: 금지되며 실행하지 않음
-- 수정 후보: workflow의 bootstrap pip download만 `--python-version 3.11`로 고치고 새 preparation SHA를 다시 승인받아 새 1회 lifecycle을 시작
+- focused fix: 기호가 승인했으며 workflow bootstrap pip download를 `--python-version 3.11`로 수정 완료
+- retry preparation: `priorAttemptEvidence.recordCommitSha=1f12ea59eb54385337557e9754f86731ec53d253`로 첫 실패를 보존하고 새 gate는 `false`
 
 ## 현재 안전 경계
 
-현재 lifecycle은 `attempt-recorded`이고 gate는 닫혀 있습니다. 첫 실행은 registry 접근 전에 실패했으며 login/build/push는 실행되지 않았습니다. 동일 실행의 rerun은 금지합니다. bootstrap 수정은 실패 원인과 직접 관련된 focused fix로 별도 preparation commit을 만든 뒤, 그 새 정확한 40자 SHA를 기호가 승인해야만 새 authorization을 열 수 있습니다.
+현재 lifecycle은 새 `preparation-closed`이고 gate는 닫혀 있습니다. 첫 실행 증거는 `priorAttemptEvidence`에 보존됩니다. 동일 실행의 rerun은 금지하며, v324 preparation commit의 새 정확한 40자 SHA를 기호가 승인해야만 새 authorization을 열 수 있습니다. authorization에서는 설정 값은 유지하고 live 재확인 시각만 더 새로운 값으로 갱신해야 합니다.
 
 다음 항목은 이번 GitHub 권한 확대와 별개이므로 기호의 구체적인 작업 요청 전에는 변경·실행하지 않습니다.
 
@@ -117,7 +118,7 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-현재 정상 결과는 `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`, 다음 안전 단계는 `review-recorded-workflow-attempt-evidence`입니다. 실패 증거 검토 뒤 bootstrap `--python-version 3`을 `3.11`로 바꾸는 focused fix는 사용자 승인을 받아 별도 preparation commit으로 준비합니다. 그 새 SHA의 별도 승인 전에는 새 workflow를 실행하지 않습니다.
+현재 정상 결과는 `github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated`, 다음 안전 단계는 `review-and-approve-exact-bootstrap-fix-preparation-sha`입니다. 검증·push한 v324 preparation의 새 정확한 40자 SHA를 기호가 별도 승인하기 전에는 새 workflow를 실행하지 않습니다.
 
 ## 변경과 검증
 

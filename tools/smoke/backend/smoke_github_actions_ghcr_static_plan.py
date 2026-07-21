@@ -31,9 +31,9 @@ REQUIRED = (
 
 
 def load_tool():
-    spec = importlib.util.spec_from_file_location("v322_github_actions_plan", TOOL)
+    spec = importlib.util.spec_from_file_location("v324_github_actions_plan", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v322 GitHub Actions workflow checker")
+        raise RuntimeError("cannot load v324 GitHub Actions workflow checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -109,6 +109,7 @@ def create_closed_authorization_sequence(module, temp: Path) -> tuple[str, str, 
             "recorded": True,
             "recordedAtUtc": "2026-07-20T04:00:00Z",
         }),
+        p["githubLiveSettings"].update({"recheckedAtUtc": "2026-07-20T04:00:00Z"}),
     ))
     authorization = commit_all(temp, "authorization open")
     opened = module.inspect_static_workflow_plan(temp)
@@ -141,7 +142,7 @@ def expect_blocked(module, temp: Path, label: str = "unknown mutation") -> None:
         module.inspect_static_workflow_plan(temp)
     except module.StaticWorkflowPlanError:
         return
-    raise AssertionError(f"unsafe v322 GitHub Actions workflow fixture was not blocked: {label}")
+    raise AssertionError(f"unsafe v324 GitHub Actions workflow fixture was not blocked: {label}")
 
 
 def expect_semantically_blocked(module, temp: Path, label: str) -> None:
@@ -224,7 +225,7 @@ def main() -> int:
     assert result["workflowSemanticSha256"] == module.EXPECTED_WORKFLOW_SEMANTIC_SHA256
     assert result["workflowCreationApproved"] is True
     assert result["workflowExecutionApproved"] is True
-    assert result["workflowExecutionExecuted"] is False
+    assert result["workflowExecutionExecuted"] is True
     assert result["actionShasApproved"] is True
     assert result["actionsSettingsConfigured"] is True
     assert result["publishEnvironmentExists"] is True
@@ -274,6 +275,7 @@ def main() -> int:
         lambda p: p["transientAuthorizationSmokePolicy"].update({"allOtherCoreSmokesRemainRequired": False}),
         lambda p: p["transientAuthorizationSmokePolicy"]["skippedClosedRootSmokes"].append("python unsafe.py"),
         lambda p: p["attemptEvidencePolicy"].update({"codeWorkflowCheckerChangesAllowed": True}),
+        lambda p: p["attemptEvidencePolicy"].update({"nextPreparationPreservesPriorAttemptEvidence": False}),
         lambda p: p["attemptEvidencePolicy"]["firstRecordChangedPathAllowlist"].append("tools/check_github_actions_ghcr_static_plan.py"),
         lambda p: p["repositoryReview"]["actionsSettings"]["forkPullRequestWorkflows"].update({"sendWriteTokens": True}),
         lambda p: p["repositoryReview"]["actionsSettings"]["forkPullRequestWorkflows"].update({"sendSecretsAndVariables": True}),
@@ -290,6 +292,7 @@ def main() -> int:
         lambda p: p.update({"publishReviewerGateReady": True}),
         lambda p: p.update({"state": "unknown-state"}),
         lambda p: p.update({"priorApprovedPreparationSha": "0" * 40}),
+        lambda p: p["priorAttemptEvidence"].update({"runId": 1}),
         lambda p: p["ownerApproval"].update({"recorded": True}),
         lambda p: p["ownerApproval"].update({"unexpected": "blocked"}),
         lambda p: p["githubLiveSettings"].update({"recheckedAtUtc": "2026-07-20"}),
@@ -397,6 +400,7 @@ def main() -> int:
             "actions/checkout@v7",
         ),
         ("--severity HIGH,CRITICAL", "--severity CRITICAL"),
+        ("--python-version 3.11", "--python-version 3"),
         ("--ignore-unfixed=false", "--ignore-unfixed=true"),
         (
             "TRIVY_SHA256: 8b4376d5d6befe5c24d503f10ff136d9e0c49f9127a4279fd110b727929a5aa9",
@@ -516,7 +520,7 @@ def main() -> int:
             )
             expect_secret_expression_blocked(module, temp, expression, emit_step_key)
 
-    print("OK: v322 GitHub Actions/GHCR lifecycle fail-closed workflow smoke passed")
+    print("OK: v324 GitHub Actions/GHCR retry-preparation fail-closed workflow smoke passed")
     return 0
 
 

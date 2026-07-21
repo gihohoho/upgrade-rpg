@@ -47,9 +47,9 @@ REQUIRED = (
 
 
 def load_tool():
-    spec = importlib.util.spec_from_file_location("v322_codex_handoff", TOOL)
+    spec = importlib.util.spec_from_file_location("v324_codex_handoff", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v322 Codex handoff checker")
+        raise RuntimeError("cannot load v324 Codex handoff checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -68,7 +68,7 @@ def expect_blocked(module, temp: Path) -> None:
         module.inspect_codex_handoff(temp)
     except module.CodexHandoffError:
         return
-    raise AssertionError("unsafe v322 Codex handoff fixture was not blocked")
+    raise AssertionError("unsafe v324 Codex handoff fixture was not blocked")
 
 
 def main() -> int:
@@ -81,7 +81,7 @@ def main() -> int:
     assert result["localCredentialStrategy"] == "deferred"
     assert result["workflowCreationApproved"] is True
     assert result["workflowExecutionApproved"] is True
-    assert result["workflowExecutionExecuted"] is False
+    assert result["workflowExecutionExecuted"] is True
     assert result["ciRegistryMutationApproved"] is True
     assert result["runtimeMutationExecuted"] is False
     assert result["packageSafetyMode"] in {"git-index", "filesystem-absence"}
@@ -101,7 +101,7 @@ def main() -> int:
         "authorization-closed-awaiting-evidence",
         "attempt-recorded",
     ]
-    assert result["priorApprovedPreparationSha"] == "f4788acf5455b07169320bd29f43ddf92ff1d5ad"
+    assert result["priorApprovedPreparationSha"] == "350bbd085f1cf636810d75ddcbb5321e0791256c"
     assert result["approvedPreparationSha"] is None
     assert result["ownerApprovalRecorded"] is False
     assert result["workflowRunAttemptMustEqual"] == 1
@@ -196,7 +196,7 @@ def main() -> int:
         local_env.write_text("NOT_A_REAL_SECRET=fixture-only\n", encoding="utf-8")
         expect_blocked(module, temp)
 
-    print("OK: v322 Codex/GHCR owner-only single-run lifecycle handoff smoke passed")
+    print("OK: v324 Codex/GHCR retry-preparation lifecycle handoff smoke passed")
     return 0
 
 

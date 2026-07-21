@@ -1,4 +1,4 @@
-# Roadmap — v322
+# Roadmap — v324
 
 ## 현재 완료
 
@@ -25,21 +25,23 @@
 - post-push failure digest/partial evidence 보존 설계
 - authorization-open에서 closed root 전용 세 handoff smoke만 제외하고 앱·백엔드 전체 core smoke를 유지하는 `SKIP_GHCR_HANDOFF_SMOKES=1` 실행 계약
 - 2026-07-20 GitHub live 재확인 및 fork write token/secret drift 복원
+- 첫 owner-only run `29716038891`을 접수하고 즉시 gate 폐쇄·evidence 기록; dependency 설치 실패로 registry mutation 없음
+- bootstrap pip 대상 Python을 `3.11`로 수정하고 첫 실패를 `priorAttemptEvidence`로 보존한 retry preparation
 
 ## 현재 단계
 
 ```txt
-latest: v322.owner-only-single-run-lifecycle-hardened-publish-gated
-result: github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated
+latest: v324.bootstrap-fixed-retry-preparation-publish-gated
+result: github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated
 lifecycle: preparation-closed
-workflow/login/build/push executed: no/no/no/no
-next safe stage: review-and-approve-exact-preparation-fix-sha
+workflow/login/build/push executed: yes/no/no/no
+next safe stage: review-and-approve-exact-bootstrap-fix-preparation-sha
 ```
 
 ## 다음 순서
 
-1. v322 전용 smoke, compileall, JavaScript 문법, 전체 core smoke 통과
-2. preparation-fix commit을 `main`에 push
+1. v324 전용 smoke, compileall, JavaScript 문법, 전체 core smoke 통과
+2. bootstrap-fix retry preparation commit을 `main`에 push
 3. 정확한 새 40자 SHA와 변경 범위를 기호에게 제시하고 명시 승인 대기
 4. 승인 직후 GitHub Actions allowlist/full SHA/fork 정책/environment main-only를 live 재확인
 5. 승인 SHA의 direct child에서 lifecycle JSON만 `authorization-open`으로 변경
@@ -50,4 +52,4 @@ next safe stage: review-and-approve-exact-preparation-fix-sha
 10. 모든 검증이 끝난 exact digest만 후보로 기록
 11. production reference 변경 없이 isolated container 검증은 별도 승인 단계로 진행
 
-현재는 2번 전입니다. `f4788acf...` 과거 승인을 새 SHA에 재사용하지 않습니다. native required reviewer가 없으므로 owner-only 모델은 독립 reviewer와 동등하지 않습니다. 새 승인 전에는 workflow를 실행하지 않습니다.
+현재는 1번 진행 중입니다. 기존 `350bbd...` 승인을 새 SHA에 재사용하지 않습니다. native required reviewer가 없으므로 owner-only 모델은 독립 reviewer와 동등하지 않습니다. 새 승인 전에는 workflow를 실행하지 않습니다.

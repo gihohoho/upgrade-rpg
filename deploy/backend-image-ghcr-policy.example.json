@@ -1,8 +1,8 @@
 {
-  "schemaVersion": "v322.owner-only-single-run-lifecycle-hardened-publish-gated",
+  "schemaVersion": "v324.bootstrap-fixed-retry-preparation-publish-gated",
   "preparedOnly": true,
   "publishApprovalModel": "owner-only-source-controlled-two-step",
-  "ownerOnlyApprovalPhase": "preparation-closed",
+  "ownerOnlyApprovalPhase": "retry-preparation-closed",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
   "publishLifecycleState": "preparation-closed",
   "publishLifecycleSupportedStates": [
@@ -11,7 +11,15 @@
     "authorization-closed-awaiting-evidence",
     "attempt-recorded"
   ],
-  "priorApprovedPreparationSha": "f4788acf5455b07169320bd29f43ddf92ff1d5ad",
+  "priorApprovedPreparationSha": "350bbd085f1cf636810d75ddcbb5321e0791256c",
+  "priorAttemptEvidence": {
+    "recordCommitSha": "1f12ea59eb54385337557e9754f86731ec53d253",
+    "runId": 29716038891,
+    "conclusion": "failure",
+    "registryLoginExecuted": false,
+    "imageBuildExecuted": false,
+    "imagePushExecuted": false
+  },
   "priorExactPreparationShaApproved": true,
   "exactPreparationShaApproved": false,
   "dependencyAndFrontendInputsLocked": true,
@@ -37,7 +45,7 @@
   "githubActionsWorkflowPresent": true,
   "githubActionsWorkflowCreationApproved": true,
   "githubActionsWorkflowExecutionApproved": true,
-  "githubActionsWorkflowExecutionExecuted": false,
+  "githubActionsWorkflowExecutionExecuted": true,
   "githubActionsStaticPlanPresent": true,
   "githubActionsStaticPlanVerified": true,
   "actionShasResolved": true,
@@ -67,5 +75,5 @@
   "actualRegistryMutationExecuted": false,
   "actualDockerCommandExecuted": false,
   "actualDatabaseAlembicMutationExecuted": false,
-  "nextSafeStage": "review-and-approve-exact-preparation-fix-sha"
+  "nextSafeStage": "review-and-approve-exact-bootstrap-fix-preparation-sha"
 }

@@ -250,7 +250,7 @@ jobs:
             --require-hashes \
             --only-binary=:all: \
             --platform any \
-            --python-version 3 \
+            --python-version 3.11 \
             --implementation py \
             --abi none \
             -r backend/requirements/pip-bootstrap.lock

@@ -5,9 +5,9 @@ import hashlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v322.owner-only-single-run-lifecycle-hardened-publish-gated"
-READY_RESULT = "github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated"
-NEXT_SAFE_STAGE = "review-and-approve-exact-preparation-fix-sha"
+VERSION = "v324.bootstrap-fixed-retry-preparation-publish-gated"
+READY_RESULT = "github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated"
+NEXT_SAFE_STAGE = "review-and-approve-exact-bootstrap-fix-preparation-sha"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 REVISION_SHA256 = "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa"
@@ -143,7 +143,7 @@ def main() -> int:
         "revision SHA-256: " + REVISION_SHA256,
         REPOSITORY,
         "workflow file/creation approved: yes/yes",
-        "workflow execution approved/executed: yes/no",
+        "workflow execution approved/executed: yes/yes",
         "CI login/build/push executed: no/no/no",
         "기준: 현재 repository + Git `main`; ZIP은 기본 생성하지 않음",
         "2026-07-20 GitHub live 재확인",
@@ -166,19 +166,20 @@ def main() -> int:
         '"githubActionsWorkflowPresent": true',
         '"githubActionsWorkflowCreationApproved": true',
         '"githubActionsWorkflowExecutionApproved": true',
-        '"githubActionsWorkflowExecutionExecuted": false',
+        '"githubActionsWorkflowExecutionExecuted": true',
         '"actionShasApproved": true',
         '"repositoryActionsSettingsMutationExecuted": true',
         '"publishEnvironmentCreated": true',
         '"publishEnvironmentMainOnly": true',
         '"publishEnvironmentRequiredReviewerConfigured": false',
         '"sourceControlledPublishGateReady": false',
-        '"ownerOnlyApprovalPhase": "preparation-closed"',
+        '"ownerOnlyApprovalPhase": "retry-preparation-closed"',
         '"publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json"',
         '"publishLifecycleState": "preparation-closed"',
         '"publishLifecycleSupportedStates"',
         '"attempt-recorded"',
-        '"priorApprovedPreparationSha": "f4788acf5455b07169320bd29f43ddf92ff1d5ad"',
+        '"priorApprovedPreparationSha": "350bbd085f1cf636810d75ddcbb5321e0791256c"',
+        '"priorAttemptEvidence"',
         '"priorExactPreparationShaApproved": true',
         '"dependencyAndFrontendInputsLocked": true',
         '"ciImagePushApproved": true',
@@ -194,7 +195,7 @@ def main() -> int:
         '"workflowExecutionEvidenceTrackedInLifecycle": true',
         '"publishExecutionAuthorizationTrackedInLifecycle": true',
         '"publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json"',
-        '"publishLifecycleSchemaVersion": "v322.owner-only-publish-lifecycle"',
+        '"publishLifecycleSchemaVersion": "v324.owner-only-publish-lifecycle"',
         '"allowedLifecycleStates"',
         '"attempt-recorded"',
         '"allowedEvents"',
@@ -263,10 +264,11 @@ def main() -> int:
     )
     assert_contains(
         "deploy/github-actions-ghcr-publish-lifecycle.json",
-        '"schemaVersion": "v322.owner-only-publish-lifecycle"',
+        '"schemaVersion": "v324.owner-only-publish-lifecycle"',
         '"state": "preparation-closed"',
         '"publishReviewerGateReady": false',
-        '"priorApprovedPreparationSha": "f4788acf5455b07169320bd29f43ddf92ff1d5ad"',
+        '"priorApprovedPreparationSha": "350bbd085f1cf636810d75ddcbb5321e0791256c"',
+        '"priorAttemptEvidence"',
         '"approvedPreparationSha": null',
         '"closureCommitSha": null',
         '"recorded": false',
@@ -326,7 +328,7 @@ def main() -> int:
     if actual_sha != REVISION_SHA256:
         raise AssertionError(f"reviewed revision SHA-256 differs: {actual_sha}")
 
-    print("OK: v322 Codex handoff and owner-only lifecycle documents are synchronized")
+    print("OK: v324 Codex handoff and owner-only retry-preparation documents are synchronized")
     return 0
 
 

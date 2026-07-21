@@ -1,27 +1,27 @@
-# GitHub Actions / GHCR workflow plan — v323
+# GitHub Actions / GHCR workflow plan — v324
 
 ```txt
-version: v323.first-owner-only-publish-attempt-recorded-failed-pre-registry
+version: v324.bootstrap-fixed-retry-preparation-publish-gated
 base plan version: v322.owner-only-single-run-lifecycle-hardened-publish-gated
-result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+result: github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated
 repository: gihohoho/upgrade-rpg
 image: ghcr.io/gihohoho/upgrade-rpg-backend
 workflow: .github/workflows/publish-backend-ghcr.yml
 lifecycle: deploy/github-actions-ghcr-publish-lifecycle.json
-workflow source SHA-256: 8b3bde807cb241e14104272a13f1e4c5a857753716e5a2a7e13b710df55ae61e
-workflow semantic SHA-256: f91419160e34e1ea5c16342b8d346e9b295d502131980eeb084b2da9aa2683fa
+workflow source SHA-256: 245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd
+workflow semantic SHA-256: e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c
 workflow file creation: complete
 workflow 파일 생성: 완료
 workflow execution: run 29716038891 completed/failure
 registry login/build/push: not executed
-next safe stage: review-failed-attempt-and-approve-focused-bootstrap-fix
+next safe stage: review-and-approve-exact-bootstrap-fix-preparation-sha
 ```
 
 정적 문서 잠금 표식: `workflow_dispatch`, `pull_request_target` 금지, `contents: read`, `actions: read`, `packages: write`, `id-token: write`, Docker BuildKit, `HIGH,CRITICAL`, Sigstore Cosign keyless, `approved_preparation_commit`, `DOCKER_BUILD_RECORD_UPLOAD`, required reviewer 제약.
 
 ## 첫 실행 결과와 focused fix 후보
 
-run `29716038891`은 validate job의 `Install backend validation dependencies`에서 실패했습니다. bootstrap pip wheel 다운로드가 `--python-version 3`을 사용해 Python `>=3.10`을 요구하는 `pip==26.1.2`를 제외한 것이 직접 원인입니다. build/publish jobs는 모두 skipped였고 GHCR login/build/push, artifact, digest, signature는 발생하지 않았습니다. lifecycle은 `attempt-recorded`와 gate `false`로 닫혔으며 rerun하지 않습니다. focused fix 후보는 해당 bootstrap download 인자만 `--python-version 3.11`로 바꾸고 workflow source/semantic hash, checker와 정책 문서를 함께 갱신하는 것입니다.
+run `29716038891`은 validate job의 `Install backend validation dependencies`에서 실패했습니다. bootstrap pip wheel 다운로드가 `--python-version 3`을 사용해 Python `>=3.10`을 요구하는 `pip==26.1.2`를 제외한 것이 직접 원인입니다. 기호의 focused fix 승인 뒤 해당 값을 `--python-version 3.11`로 수정하고 workflow source/semantic hash, checker와 정책 문서를 함께 갱신했습니다. 첫 실패는 `priorAttemptEvidence.recordCommitSha=1f12ea59eb54385337557e9754f86731ec53d253`로 보존하며 새 preparation gate는 `false`입니다.
 
 ## v322가 필요한 이유
 
@@ -209,9 +209,9 @@ production reference 자동 갱신과 deploy는 하지 않습니다.
 
 ## 현재와 다음 단계
 
-현재 lifecycle은 closed이고 workflow/login/build/push는 미실행입니다. v322 전체 검증과 preparation-fix commit/push 뒤 정확한 새 40자 SHA를 기호에게 제시합니다. 기호의 새 명시 승인 전에는 authorization-open이나 workflow dispatch를 하지 않습니다.
+현재 retry lifecycle은 `preparation-closed`이고 gate는 `false`입니다. 첫 workflow는 dependency 설치에서 실패했고 login/build/push는 미실행입니다. v324 전체 검증과 bootstrap-fix preparation commit/push 뒤 정확한 새 40자 SHA를 기호에게 제시합니다. 기호의 새 명시 승인 전에는 authorization-open이나 workflow dispatch를 하지 않습니다.
 
 ```txt
-result: github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated
-next safe stage: review-and-approve-exact-preparation-fix-sha
+result: github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated
+next safe stage: review-and-approve-exact-bootstrap-fix-preparation-sha
 ```

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v322.owner-only-single-run-lifecycle-hardened-publish-gated",
+  "schemaVersion": "v324.bootstrap-fixed-retry-preparation-publish-gated",
   "staticPolicyOnly": true,
   "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
   "repository": "gihohoho/upgrade-rpg",
@@ -9,10 +9,10 @@
   "targetPlatform": "linux/amd64",
   "repositoryTextLineEnding": "lf",
   "workflowPath": ".github/workflows/publish-backend-ghcr.yml",
-  "workflowSourceSha256": "8b3bde807cb241e14104272a13f1e4c5a857753716e5a2a7e13b710df55ae61e",
-  "workflowSemanticSha256": "f91419160e34e1ea5c16342b8d346e9b295d502131980eeb084b2da9aa2683fa",
+  "workflowSourceSha256": "245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd",
+  "workflowSemanticSha256": "e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
-  "publishLifecycleSchemaVersion": "v322.owner-only-publish-lifecycle",
+  "publishLifecycleSchemaVersion": "v324.owner-only-publish-lifecycle",
   "workflowFilePresent": true,
   "workflowCreationApproved": true,
   "workflowExecutionApproved": true,
@@ -26,7 +26,7 @@
   ],
   "ownerOnlyApprovalPolicy": {
     "selectedOn": "2026-07-20",
-    "phase": "single-run-lifecycle-hardened",
+    "phase": "bootstrap-fixed-retry-preparation",
     "riskAcceptedByOwner": true,
     "exactPreparationShaApprovalRequired": true,
     "separateAuthorizationCommitRequired": true,
@@ -82,6 +82,7 @@
     ],
     "codeWorkflowCheckerChangesAllowed": false,
     "stableRecordedStateAllowedAfterFirstRecordCommit": true,
+    "nextPreparationPreservesPriorAttemptEvidence": true,
     "successRequiresDigestAndVerifiedSignature": true
   },
   "registryLoginApproved": true,

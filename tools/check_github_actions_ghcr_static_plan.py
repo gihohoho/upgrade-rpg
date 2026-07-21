@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the v322 owner-only, single-run GHCR publish lifecycle policy."""
+"""Validate the v324 owner-only, repeatable single-run GHCR publish lifecycle policy."""
 from __future__ import annotations
 
 import argparse
@@ -13,15 +13,15 @@ from typing import Any
 
 import yaml
 
-TOOL_VERSION = "v322.owner-only-single-run-lifecycle-hardened-publish-gated"
-READY_RESULT = "github-actions-ghcr-owner-only-single-run-lifecycle-ready-publish-gated"
+TOOL_VERSION = "v324.bootstrap-fixed-retry-preparation-publish-gated"
+READY_RESULT = "github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated"
 AUTHORIZATION_OPEN_RESULT = "github-actions-ghcr-owner-only-authorization-open"
 AUTHORIZATION_CLOSED_RESULT = (
     "github-actions-ghcr-owner-only-authorization-closed-awaiting-evidence"
 )
 ATTEMPT_RECORDED_RESULT = "github-actions-ghcr-owner-only-attempt-recorded-publish-gated"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "review-and-approve-exact-preparation-fix-sha"
+NEXT_SAFE_STAGE = "review-and-approve-exact-bootstrap-fix-preparation-sha"
 AUTHORIZATION_OPEN_NEXT_SAFE_STAGE = "dispatch-one-owner-approved-workflow-run"
 AUTHORIZATION_CLOSED_NEXT_SAFE_STAGE = "record-workflow-run-evidence"
 ATTEMPT_RECORDED_NEXT_SAFE_STAGE = "review-recorded-workflow-attempt-evidence"
@@ -30,10 +30,22 @@ REPOSITORY = "gihohoho/upgrade-rpg"
 IMAGE_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 WORKFLOW_PATH = ".github/workflows/publish-backend-ghcr.yml"
 LIFECYCLE_PATH = "deploy/github-actions-ghcr-publish-lifecycle.json"
-LIFECYCLE_SCHEMA_VERSION = "v322.owner-only-publish-lifecycle"
-PRIOR_APPROVED_PREPARATION_SHA = "f4788acf5455b07169320bd29f43ddf92ff1d5ad"
-EXPECTED_WORKFLOW_SHA256 = "8b3bde807cb241e14104272a13f1e4c5a857753716e5a2a7e13b710df55ae61e"
-EXPECTED_WORKFLOW_SEMANTIC_SHA256 = "f91419160e34e1ea5c16342b8d346e9b295d502131980eeb084b2da9aa2683fa"
+LIFECYCLE_SCHEMA_VERSION = "v324.owner-only-publish-lifecycle"
+PRIOR_APPROVED_PREPARATION_SHA = "350bbd085f1cf636810d75ddcbb5321e0791256c"
+PRIOR_ATTEMPT_EVIDENCE = {
+    "preparationSha": PRIOR_APPROVED_PREPARATION_SHA,
+    "authorizationSha": "32e5102877851ace06e1c0ed3bcb48310b8d65b6",
+    "closureSha": "362f5f1901d234b5b86f2a7cefdabd28ac61f896",
+    "recordCommitSha": "1f12ea59eb54385337557e9754f86731ec53d253",
+    "runId": 29716038891,
+    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29716038891",
+    "conclusion": "failure",
+    "registryLoginExecuted": False,
+    "imageBuildExecuted": False,
+    "imagePushExecuted": False,
+}
+EXPECTED_WORKFLOW_SHA256 = "245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd"
+EXPECTED_WORKFLOW_SEMANTIC_SHA256 = "e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c"
 SMOKE_CORE_PATH = "tools/run_smoke_core.sh"
 TRANSIENT_SMOKE_SKIP_VARIABLE = "SKIP_GHCR_HANDOFF_SMOKES"
 TRANSIENT_SMOKE_SKIP_COMMAND = "SKIP_GHCR_HANDOFF_SMOKES=1 bash tools/run_smoke_core.sh"
@@ -117,7 +129,7 @@ EXPECTED_RUN_STEP_SHA256 = {
     "validate:Check manual approval inputs": "baecf21094a45363d43ec715dcd49e5ef85792dd32531ae08c9821c5a0ddfadc",
     "validate:Require exactly one first-attempt dispatch for this authorization": "859d94c81dc38f0a8b9f95ac5381775adb37e9d8bd08052c5daed72f1d6b2242",
     "validate:Verify source-controlled authorization transition": "fb300d83e2ad2836f5c906006ffd5e5a8d445af4284cd10491d1ce480e918424",
-    "validate:Install backend validation dependencies": "e75e80748c907e5d04bdc2a0848b74e7361d1c5aed31238ea67fe614902d5021",
+    "validate:Install backend validation dependencies": "a1f8712efd41e02e0005138d9f6a3a7f1a0f9273445ee541769f204a2ee8d3c3",
     "validate:Run fail-closed repository checks": "97a9a7e2755fb6d8917f104d08c4a5c4971288b5dfd906c1bf63b995a77ce8d6",
     "build_scan:Validate local SBOM structure": "f0209099c473f80e08077f73bfdc6d7d9d8c40d238611d52cb36ccc4e2febac9",
     "build_scan:Install checksum-pinned Trivy 0.70.0": "22c99c3087798ff0a62797f773e206e248ab473954b770ba8b2acffbd8b74d64",
@@ -408,12 +420,29 @@ def _require_live_settings(lifecycle: dict[str, Any]) -> None:
         _require(settings.get(key) == expected, f"GitHub live setting differs: {key}")
 
 
+def _require_refreshed_live_settings(parent: dict[str, Any], current: dict[str, Any]) -> None:
+    parent_settings = parent.get("githubLiveSettings")
+    current_settings = current.get("githubLiveSettings")
+    _require(isinstance(parent_settings, dict), "preparation live-settings evidence is missing")
+    _require(isinstance(current_settings, dict), "authorization live-settings evidence is missing")
+    parent_without_time = {key: value for key, value in parent_settings.items() if key != "recheckedAtUtc"}
+    current_without_time = {key: value for key, value in current_settings.items() if key != "recheckedAtUtc"}
+    _require(
+        parent_without_time == current_without_time,
+        "authorization may refresh only the live-settings recheck timestamp",
+    )
+    parent_time = _utc_timestamp(parent_settings.get("recheckedAtUtc"), "preparation live-settings timestamp")
+    current_time = _utc_timestamp(current_settings.get("recheckedAtUtc"), "authorization live-settings timestamp")
+    _require(current_time > parent_time, "authorization must contain a newer live-settings recheck timestamp")
+
+
 def _require_lifecycle_shape(lifecycle: dict[str, Any]) -> None:
     _require(set(lifecycle) == {
         "schemaVersion",
         "state",
         "publishReviewerGateReady",
         "priorApprovedPreparationSha",
+        "priorAttemptEvidence",
         "approvedPreparationSha",
         "ownerApproval",
         "githubLiveSettings",
@@ -425,6 +454,10 @@ def _require_lifecycle_shape(lifecycle: dict[str, Any]) -> None:
     _require(
         lifecycle.get("priorApprovedPreparationSha") == PRIOR_APPROVED_PREPARATION_SHA,
         "prior owner-approved preparation SHA changed",
+    )
+    _require(
+        lifecycle.get("priorAttemptEvidence") == PRIOR_ATTEMPT_EVIDENCE,
+        "prior workflow attempt evidence changed",
     )
     owner = lifecycle.get("ownerApproval")
     _require(isinstance(owner, dict), "owner approval record is missing")
@@ -517,9 +550,10 @@ def _verify_lifecycle(root: Path, lifecycle: dict[str, Any]) -> dict[str, Any]:
         _require(parent.get("publishReviewerGateReady") is False, "authorization parent gate must be false")
         _require(parent.get("approvedPreparationSha") is None, "authorization parent must not self-authorize")
         _require(
-            parent.get("githubLiveSettings") == lifecycle.get("githubLiveSettings"),
-            "authorization must preserve the preparation live-settings evidence",
+            parent.get("priorAttemptEvidence") == lifecycle.get("priorAttemptEvidence"),
+            "authorization changed prior attempt evidence",
         )
+        _require_refreshed_live_settings(parent, lifecycle)
         _require(
             closure == {
                 "authorizationSourceSha": None,
@@ -557,6 +591,10 @@ def _verify_lifecycle(root: Path, lifecycle: dict[str, Any]) -> dict[str, Any]:
         _require(parent.get("publishReviewerGateReady") is True, "closure parent gate must be true")
         _require(parent.get("approvedPreparationSha") == preparation, "closure changed approved preparation SHA")
         _require(parent.get("ownerApproval") == owner, "closure changed owner approval evidence")
+        _require(
+            parent.get("priorAttemptEvidence") == lifecycle.get("priorAttemptEvidence"),
+            "closure changed prior attempt evidence",
+        )
         _require(
             parent.get("githubLiveSettings") == lifecycle.get("githubLiveSettings"),
             "closure changed GitHub live-settings evidence",
@@ -611,6 +649,10 @@ def _verify_lifecycle(root: Path, lifecycle: dict[str, Any]) -> dict[str, Any]:
         _require(closed.get("publishReviewerGateReady") is False, "attempt evidence parent gate must be false")
         _require(closed.get("approvedPreparationSha") == preparation, "attempt evidence changed preparation SHA")
         _require(closed.get("ownerApproval") == owner, "attempt evidence changed owner approval")
+        _require(
+            closed.get("priorAttemptEvidence") == lifecycle.get("priorAttemptEvidence"),
+            "attempt evidence changed prior attempt evidence",
+        )
         _require(
             closed.get("githubLiveSettings") == lifecycle.get("githubLiveSettings"),
             "attempt evidence changed GitHub live-settings evidence",
@@ -1288,7 +1330,7 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
     dockerignore = _read(root / ".dockerignore")
     gitattributes = _read(root / ".gitattributes")
 
-    _require(plan.get("schemaVersion") == TOOL_VERSION, "unexpected v322 schemaVersion")
+    _require(plan.get("schemaVersion") == TOOL_VERSION, "unexpected v324 schemaVersion")
     _require(_bool(plan, "staticPolicyOnly") is True, "plan must remain state-independent policy")
     _require(
         plan.get("publishApprovalModel") == "owner-only-source-controlled-two-step",
@@ -1356,13 +1398,13 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
         "registryMutationApproved",
         "registryMutationEvidenceTrackedInLifecycle",
     ):
-        _require(_bool(plan, key) is True, f"approved v322 policy must remain true: {key}")
+        _require(_bool(plan, key) is True, f"approved v324 policy must remain true: {key}")
 
     owner_policy = plan.get("ownerOnlyApprovalPolicy")
     _require(isinstance(owner_policy, dict), "owner-only approval policy is missing")
     _require(owner_policy.get("selectedOn") == "2026-07-20", "owner-only selection date changed")
     _require(
-        owner_policy.get("phase") == "single-run-lifecycle-hardened",
+        owner_policy.get("phase") == "bootstrap-fixed-retry-preparation",
         "owner-only lifecycle policy phase changed",
     )
     for key in (
@@ -1411,6 +1453,7 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
         "firstRecordChangedPathAllowlist": sorted(ATTEMPT_EVIDENCE_CHANGED_PATH_ALLOWLIST),
         "codeWorkflowCheckerChangesAllowed": False,
         "stableRecordedStateAllowedAfterFirstRecordCommit": True,
+        "nextPreparationPreservesPriorAttemptEvidence": True,
         "successRequiresDigestAndVerifiedSignature": True,
     }, "attempt evidence policy changed")
 
@@ -1682,10 +1725,12 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
         "workflowFilePresent": True,
         "workflowCreationApproved": True,
         "workflowExecutionApproved": True,
-        "workflowExecutionExecuted": lifecycle_result["state"] in {
+        "workflowExecutionExecuted": bool(lifecycle.get("priorAttemptEvidence")) or lifecycle_result["state"] in {
             "authorization-closed-awaiting-evidence",
             "attempt-recorded",
         },
+        "registryMutationExecuted": bool(lifecycle.get("priorAttemptEvidence", {}).get("imagePushExecuted"))
+        or (lifecycle_result["state"] == "attempt-recorded" and lifecycle["observedAttempt"].get("imageDigest") is not None),
         "actionShasApproved": True,
         "actionsSettingsConfigured": True,
         "publishEnvironmentExists": True,
@@ -1715,7 +1760,7 @@ def render(result: dict[str, Any]) -> str:
         f"- reviewed workflow semantic SHA-256: {result['workflowSemanticSha256']}",
         "- recorded action allowlist/full SHA enforcement: configured/configured (2026-07-20 live recheck)",
         "- workflow file/creation approved: yes/yes",
-        "- workflow execution approved/executed: yes/no",
+        f"- workflow execution approved/executed: yes/{'yes' if result['workflowExecutionExecuted'] else 'no'}",
         "- publish permissions: contents=read, packages=write, id-token=write",
         "- pre-push gates: static checks, local OCI build, SPDX SBOM, HIGH/CRITICAL scan",
         "- post-push gates: exact digest, BuildKit provenance/SBOM, exact-digest Trivy, Cosign sign/verify",
@@ -1726,7 +1771,7 @@ def render(result: dict[str, Any]) -> str:
         "- root Docker context env files/re-includes: excluded/forbidden",
         "- dependency/frontend inputs: exact versions + SHA-256 locks ready",
         "- byte-for-byte deterministic image claim: no (not overclaimed)",
-        "- workflow/registry mutation executed: no/no",
+        f"- workflow/registry mutation executed: {'yes' if result['workflowExecutionExecuted'] else 'no'}/{'yes' if result['registryMutationExecuted'] else 'no'}",
         f"- result: {result['result']}",
         f"- next safe stage: {result['nextSafeStage']}",
     ))

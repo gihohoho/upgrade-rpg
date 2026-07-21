@@ -1,3 +1,12 @@
+# v324.bootstrap-fixed-retry-preparation-publish-gated
+
+- 기호가 승인한 focused fix로 workflow bootstrap wheel 대상 Python을 `3`에서 `3.11`로 수정.
+- workflow source/semantic hash와 validate dependency-install run-step hash를 새 값으로 잠금.
+- checker 요약의 고정 `workflow executed: no` 표기를 lifecycle 증거 기반 동적 값으로 수정해 prior workflow `yes`, registry mutation `no`를 구분.
+- 첫 실패 evidence commit `1f12ea59eb54385337557e9754f86731ec53d253`와 run `29716038891`을 `priorAttemptEvidence`로 보존한 새 retry `preparation-closed` lifecycle 추가.
+- authorization에서 GitHub live 설정 값은 그대로 유지하면서 `recheckedAtUtc`만 더 새로운 실제 확인 시각으로 갱신하도록 변경해 4시간 제한과 SHA 승인 절차의 충돌을 해소.
+- gate는 계속 `false`; 새 preparation SHA 승인 전 workflow 재실행 금지.
+
 # v323.first-owner-only-publish-attempt-recorded-failed-pre-registry
 
 - 기호가 정확히 승인한 preparation SHA `350bbd085f1cf636810d75ddcbb5321e0791256c`의 direct-child authorization commit `32e5102877851ace06e1c0ed3bcb48310b8d65b6`을 만들고 workflow를 정확히 한 번 dispatch.

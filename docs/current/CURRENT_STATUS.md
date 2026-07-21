@@ -1,11 +1,11 @@
-# Current Status — v323
+# Current Status — v324
 
 ## 현재 기준
 
-- 최신 작업: `v323.first-owner-only-publish-attempt-recorded-failed-pre-registry`
-- strict result: `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`
-- next safe stage: `review-failed-attempt-and-approve-focused-bootstrap-fix`
-- workflow source/semantic SHA-256: `8b3bde807cb241e14104272a13f1e4c5a857753716e5a2a7e13b710df55ae61e` / `f91419160e34e1ea5c16342b8d346e9b295d502131980eeb084b2da9aa2683fa`
+- 최신 작업: `v324.bootstrap-fixed-retry-preparation-publish-gated`
+- strict result: `github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated`
+- next safe stage: `review-and-approve-exact-bootstrap-fix-preparation-sha`
+- workflow source/semantic SHA-256: `245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd` / `e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c`
 - handoff: current repository + Git `main`; ZIP 기본 생성 없음
 - readiness: `v250.backend-admin-rollback-snapshot`
 - backend splitStatus: `admin-schema-field-constraint-contract-v238`
@@ -57,12 +57,13 @@ publish environment/main-only: present/configured
 environment secrets/variables: 0/0
 required reviewer/prevent self-review: missing/missing
 publish approval model: owner-only-source-controlled-two-step
-source-controlled lifecycle gate: attempt-recorded / publishReviewerGateReady=false
+source-controlled lifecycle gate: preparation-closed / publishReviewerGateReady=false
 dependency/frontend input lock: complete
 run_attempt=1: required
 single dispatch: required by Actions API
 immediate closure: required after run acceptance
-exact preparation-fix SHA approval: 350bbd085f1cf636810d75ddcbb5321e0791256c approved and consumed
+prior preparation SHA: 350bbd085f1cf636810d75ddcbb5321e0791256c approved and consumed
+new bootstrap-fix preparation SHA approval: pending
 ```
 
 workflow run은 정확히 한 번 실행됐지만 dependency 설치에서 실패했습니다. GHCR login, image build, push, sign은 실행되지 않았고 production image reference와 자동 deploy도 바꾸지 않았습니다.
@@ -81,6 +82,9 @@ workflow run은 정확히 한 번 실행됐지만 dependency 설치에서 실패
 - GHCR login/build/push: 실행되지 않음
 - rerun: 실행하지 않았고 정책상 금지
 - focused fix 후보: `.github/workflows/publish-backend-ghcr.yml`의 bootstrap pip download 값을 `--python-version 3.11`로 변경
+- focused fix 승인/적용: 기호가 승인했고 `--python-version 3.11`로 적용 완료
+- 실행 상태 요약: workflow 실행 `yes`, registry mutation `no`로 동적 표시하도록 checker 수정
+- retry preparation: 첫 실패 evidence commit `1f12ea59eb54385337557e9754f86731ec53d253`를 `priorAttemptEvidence`로 보존
 
 ## v321 승인 이후 발견한 감사 문제
 
@@ -134,13 +138,13 @@ workflow run은 정확히 한 번 실행됐지만 dependency 설치에서 실패
 
 ## 현재 안전 경계
 
-현재 lifecycle은 R `attempt-recorded`이고 gate는 `false`입니다. 첫 실행은 registry 접근 전 실패했으며 동일 실행의 rerun은 금지합니다. focused bootstrap fix를 별도 preparation commit으로 만든 뒤 그 새 정확한 40자 SHA를 기호가 승인해야 새 A → C → R lifecycle을 시작할 수 있습니다. 과거 승인을 재사용하지 않습니다.
+현재 lifecycle은 새 P `preparation-closed`이고 gate는 `false`입니다. 첫 실행은 registry 접근 전 실패했고 그 증거는 `priorAttemptEvidence`에 보존됩니다. 동일 실행의 rerun은 금지합니다. v324 preparation commit의 새 정확한 40자 SHA를 기호가 승인해야 새 A → C → R lifecycle을 시작할 수 있습니다. 과거 승인을 재사용하지 않습니다.
 
 DB/Alembic mutation, 인증·write API, Vue Preview/Apply/write, 게임 콘텐츠·밸런스, production container/network/volume, Compose up/down, production reference 갱신과 자동 deploy는 이번 범위 밖입니다.
 
 정상 strict 결과:
 
 ```txt
-result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-next safe stage: review-recorded-workflow-attempt-evidence
+result: github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated
+next safe stage: review-and-approve-exact-bootstrap-fix-preparation-sha
 ```

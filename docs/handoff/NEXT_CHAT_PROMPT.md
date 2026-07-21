@@ -13,9 +13,9 @@ GitHub Actions, workflow, action SHA, environment, variables와 필요한 reposi
 현재 고정값:
 
 ```txt
-latest: v323.first-owner-only-publish-attempt-recorded-failed-pre-registry
-strict result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-next safe stage: review-failed-attempt-and-approve-focused-bootstrap-fix
+latest: v324.bootstrap-fixed-retry-preparation-publish-gated
+strict result: github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated
+next safe stage: review-and-approve-exact-bootstrap-fix-preparation-sha
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR namespace: gihohoho
 backend repository: ghcr.io/gihohoho/upgrade-rpg-backend
@@ -36,14 +36,15 @@ repository Actions allowlist/full SHA enforcement: configured/configured
 publish environment/main-only: present/configured
 required reviewer/prevent self-review: missing/missing
 publish approval model: owner-only-source-controlled-two-step
-source-controlled lifecycle gate: attempt-recorded / publishReviewerGateReady=false
+source-controlled lifecycle gate: preparation-closed / publishReviewerGateReady=false
 dependency/frontend input lock: complete (exact versions + SHA-256)
-workflow source SHA-256: 8b3bde807cb241e14104272a13f1e4c5a857753716e5a2a7e13b710df55ae61e
-workflow semantic SHA-256: f91419160e34e1ea5c16342b8d346e9b295d502131980eeb084b2da9aa2683fa
+workflow source SHA-256: 245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd
+workflow semantic SHA-256: e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c
 run_attempt=1: required
 single dispatch: required by GitHub Actions API check
 immediate closure: required immediately after a run is accepted
-exact preparation-fix SHA approval: 350bbd085f1cf636810d75ddcbb5321e0791256c approved and consumed
+prior preparation SHA: 350bbd085f1cf636810d75ddcbb5321e0791256c approved and consumed
+new bootstrap-fix preparation SHA approval: pending
 ```
 
 `gihohoho`는 기호가 직접 확인한 고정 namespace입니다. placeholder로 되돌리거나 다른 이름을 추측하지 마세요. repository 주소는 `ghcr.io/gihohoho/upgrade-rpg-backend`로 고정합니다.
@@ -67,13 +68,13 @@ exact preparation-fix SHA approval: 350bbd085f1cf636810d75ddcbb5321e0791256c app
 - run `29716038891`: `https://github.com/gihohoho/upgrade-rpg/actions/runs/29716038891`
 - `Install backend validation dependencies`에서 실패; bootstrap pip download의 `--python-version 3`이 `pip==26.1.2`의 Python `>=3.10` 조건과 충돌
 - build/publish jobs는 skipped, GHCR login/build/push 미실행, artifact 0개, digest 없음, signature 미검증
-- lifecycle은 `attempt-recorded`, gate는 `false`; rerun 금지
-- 다음 focused fix 후보는 workflow의 해당 값만 `--python-version 3.11`로 변경하는 것
-- `github:gh-fix-ci` 절차에 따라 이 코드 수정은 기호의 명시 승인 후 구현
+- 기호가 focused fix를 승인해 workflow의 해당 값을 `--python-version 3.11`로 수정 완료
+- 첫 실패는 `priorAttemptEvidence.recordCommitSha=1f12ea59eb54385337557e9754f86731ec53d253`로 보존
+- lifecycle은 새 `preparation-closed`, gate는 `false`; 새 SHA 승인 전 실행 금지
 
 2026-07-20 GitHub live 재확인에서 allowlist/full SHA/default read-only/environment main-only/secrets·variables 0/0을 확인했습니다. 점검 중 켜져 있던 fork write token과 fork secret 전달은 모두 `false`로 복원했습니다. native required reviewer와 prevent self-review는 비공개 개인 저장소 제약으로 계속 없습니다. authorization 직전에는 4시간 이내 live 상태를 다시 확인해야 합니다.
 
-첫 작업은 읽기 전용 v322 검사입니다.
+첫 작업은 읽기 전용 v324 검사입니다.
 
 실행 위치: `backend` 폴더
 Python `.venv` 상태: 꺼져 있을 때
@@ -95,11 +96,11 @@ python tools/check_codex_handoff_readiness.py --strict
 정상 기대 결과:
 
 ```txt
-result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-next safe stage: review-recorded-workflow-attempt-evidence
+result: github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated
+next safe stage: review-and-approve-exact-bootstrap-fix-preparation-sha
 ```
 
-실패 증거를 검토한 뒤 기호가 bootstrap `--python-version 3` → `3.11` focused fix를 승인하면 workflow·정적 hash/checker·정책 문서를 함께 수정하고 검증한 새 preparation commit을 준비하세요. 그 새 40자 preparation SHA는 다시 별도 승인을 받아야 하며, 동일 run을 rerun하지 마세요.
+v324 preparation을 검증·push한 뒤 그 새 40자 preparation SHA를 기호에게 제시하고 별도 승인을 받으세요. 승인 뒤 GitHub live 설정을 재확인해 authorization의 `recheckedAtUtc`만 더 새로운 시각으로 갱신하고, 동일 run을 rerun하지 마세요.
 
 사용자 별도 작업 요청 전에는 DB write/restore/reset/seed, Alembic revision/autogenerate/stamp/upgrade/downgrade, 인증/API route·response body/write logic, Vue Preview/Apply/write, 게임 콘텐츠·밸런스, production container/network/volume, Compose up/down, 자동 deploy/production image reference를 변경하거나 실행하지 마세요.
 

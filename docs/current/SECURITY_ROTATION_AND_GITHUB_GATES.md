@@ -1,4 +1,4 @@
-# Security rotation and GitHub gates — v323
+# Security rotation and GitHub gates — v324
 
 이 문서는 기호가 허용한 GitHub·숨김 파일·`.env` 작업 범위와 나중에 재확인하거나 교체할 보안 항목을 기록합니다. 실제 secret 값은 적지 않습니다.
 
@@ -49,11 +49,13 @@ private personal repository에서는 native required reviewer를 구성하지 �
 
 ```txt
 file: deploy/github-actions-ghcr-publish-lifecycle.json
-state: attempt-recorded
+state: preparation-closed
 publishReviewerGateReady: false
-approvedPreparationSha: 350bbd085f1cf636810d75ddcbb5321e0791256c
-ownerApproval.recorded: true
-workflow run: 29716038891 completed/failure
+priorApprovedPreparationSha: 350bbd085f1cf636810d75ddcbb5321e0791256c
+priorAttemptEvidence.recordCommitSha: 1f12ea59eb54385337557e9754f86731ec53d253
+approvedPreparationSha: null
+ownerApproval.recorded: false
+workflow run: prior 29716038891 completed/failure; retry not dispatched
 ```
 
 첫 실행은 dependency 설치에서 실패해 build와 publish jobs가 skipped됐습니다. GHCR login/build/push, artifact, digest, signature는 발생하지 않았으며 동일 실행의 rerun은 금지합니다. 로컬 `gh` keyring의 `konghjin`, `gihohoho` 토큰은 2026-07-20 확인 시 만료 상태였지만 연결된 GitHub 앱으로 로그를 안전하게 조회해 이번 작업에는 재로그인이 필요하지 않았습니다. 향후 `gh` 전용 작업이 꼭 필요할 때만 기호에게 `gh auth login`을 요청합니다.
@@ -64,6 +66,7 @@ workflow run: 29716038891 completed/failure
 - 바뀐 경로는 lifecycle JSON 한 파일뿐
 - repository owner가 실행
 - live GitHub 설정 증거는 실행 기준 4시간 이내
+- authorization은 설정 값은 바꾸지 않고 실제 재확인 뒤 `recheckedAtUtc`만 preparation보다 새로운 시각으로 갱신
 - `run_attempt=1`; rerun 금지
 - API에서 같은 authorization SHA의 single dispatch 확인
 - run 접수 직후 결과와 무관하게 immediate closure commit으로 `authorization-closed-awaiting-evidence` 전이; C commit은 `closureCommitSha=null`
