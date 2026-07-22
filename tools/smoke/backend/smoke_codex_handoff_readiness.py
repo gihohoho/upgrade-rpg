@@ -48,9 +48,9 @@ REQUIRED = (
 
 
 def load_tool():
-    spec = importlib.util.spec_from_file_location("v331_codex_handoff", TOOL)
+    spec = importlib.util.spec_from_file_location("v332_codex_handoff", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v331 Codex handoff checker")
+        raise RuntimeError("cannot load v332 Codex handoff checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -69,7 +69,7 @@ def expect_blocked(module, temp: Path) -> None:
         module.inspect_codex_handoff(temp)
     except module.CodexHandoffError:
         return
-    raise AssertionError("unsafe v331 Codex handoff fixture was not blocked")
+    raise AssertionError("unsafe v332 Codex handoff fixture was not blocked")
 
 
 def main() -> int:
@@ -111,6 +111,9 @@ def main() -> int:
     assert result["immediateClosureAfterRunAccepted"] is True
     assert result["dockerBuildContextEnvExcluded"] is True
     assert result["reproducibleBuildReady"] is True
+    assert result["productionReference"] == module.EXPECTED_REFERENCE
+    assert result["productionReferenceStaticPrepared"] is True
+    assert result["productionReferenceAppliedToRuntime"] is False
 
     root_actions_result = module._inspect_actions_workflow(ROOT)
     module._inspect_actions_workflow = lambda _root: root_actions_result
@@ -139,6 +142,9 @@ def main() -> int:
         ("exactPreparationShaApproved", False),
         ("actualDockerCommandExecuted", False),
         ("ownerOnlyApprovalPhase", "authorization-open"),
+        ("productionReference", "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:" + "0" * 64),
+        ("productionReferenceStaticPrepared", False),
+        ("productionReferenceAppliedToRuntime", True),
         ("publishLifecycleState", "authorization-open"),
         ("publishLifecycleSupportedStates", ["preparation-closed"]),
     )
@@ -151,6 +157,19 @@ def main() -> int:
             payload[key] = value
             path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             expect_blocked(module, temp)
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp = Path(temp_dir)
+        copy_fixture(temp)
+        env_path = temp / "deploy/production.env.example"
+        env_path.write_text(
+            env_path.read_text(encoding="utf-8").replace(
+                module.EXPECTED_REFERENCE,
+                "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:" + "0" * 64,
+            ),
+            encoding="utf-8",
+        )
+        expect_blocked(module, temp)
 
     lifecycle_mutations = (
         lambda p: p.update({"schemaVersion": "v321.unsafe"}),
@@ -201,7 +220,7 @@ def main() -> int:
         local_env.write_text("NOT_A_REAL_SECRET=fixture-only\n", encoding="utf-8")
         expect_blocked(module, temp)
 
-    print("OK: v331 Codex/GHCR verified candidate handoff smoke passed")
+    print("OK: v332 production reference static preparation handoff smoke passed")
     return 0
 
 

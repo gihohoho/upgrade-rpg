@@ -21,7 +21,7 @@
 - service는 `backend` 하나만 포함
 - bundled PostgreSQL/Adminer/named DB volume 없음
 - backend host `ports:` 없음, `8000`은 proxy network에만 expose
-- backend image는 `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:<approved-64-hex-digest>` 형식 필수
+- backend image는 검증된 exact reference `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`로 정적 고정
 - `ENVIRONMENT=production`, `DEBUG=false`
 - JWT/Admin key/CORS/DATABASE_URL/CA path 필수 입력
 - non-root Dockerfile, read-only filesystem, tmpfs, no-new-privileges
@@ -31,7 +31,7 @@
 
 ## 관련 review-only 파일
 
-- `production.env.example`: 실제 값 없는 운영 변수 inventory
+- `production.env.example`: 검증된 backend digest만 고정하고 secret·DB·CA·network 값은 placeholder로 둔 운영 변수 inventory
 - `production-capacity-plan.example.json`: worker/pool/max_connections 계산과 승인 상태
 - `production-architecture-selection.example.json`: 운영 방향과 config render 완료 상태
 - `backend-image-ghcr-policy.example.json`: GHCR namespace, digest-only, credential/workflow 승인 경계

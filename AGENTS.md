@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v331
+# Upgrade RPG Codex working rules — v332
 
 이 파일은 저장소 전체에 적용됩니다. Codex는 작업을 시작할 때 이 파일과 `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -32,9 +32,9 @@
 
 ## 현재 고정 상태
 
-- latest: `v331.fifth-owner-only-attempt-recorded-verified-candidate`
-- strict result: `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`
-- next safe stage: `review-verified-candidate-evidence-before-production-reference`
+- latest: `v332.verified-digest-production-reference-static-prepared`
+- strict result: `verified-digest-production-reference-static-prepared-runtime-blocked`
+- next safe stage: `review-production-reference-and-approve-isolated-pull-validation`
 - GitHub remote: `https://github.com/gihohoho/upgrade-rpg.git`
 - GHCR namespace: `gihohoho`
 - backend image repository: `ghcr.io/gihohoho/upgrade-rpg-backend` (private)
@@ -53,6 +53,7 @@
 - required reviewer/prevent self-review: missing/missing
 - publish approval model: `owner-only-source-controlled-two-step` (기호가 2026-07-20 선택)
 - source-controlled lifecycle gate: `attempt-recorded` / `publishReviewerGateReady=false`
+- production reference: `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2` (정적 준비만 완료)
 - dependency/frontend input lock: complete (exact version + SHA-256, binary wheel only)
 - byte-for-byte deterministic image: 보장한다고 주장하지 않음
 - prior preparation SHA: `350bbd085f1cf636810d75ddcbb5321e0791256c` approved and consumed
@@ -136,7 +137,9 @@ live 증거는 authorization 실행 시점 기준 4시간 이내여야 하므로
 
 ## 현재 안전 경계
 
-현재 lifecycle은 v331 `attempt-recorded`이고 gate는 닫혀 있습니다. 다섯 실행 모두 rerun 금지입니다. 5차 run은 exact-digest Trivy와 Cosign sign/verify까지 통과해 verified candidate를 만들었습니다. 다만 production reference는 여전히 placeholder이며, 별도 승인 전에는 reference 변경·pull·container 시작·deploy를 실행하지 않습니다.
+현재 lifecycle은 v331 실행 기록 기준 `attempt-recorded`이고 gate는 닫혀 있습니다. 다섯 실행 모두 rerun 금지입니다. 5차 run은 exact-digest Trivy와 Cosign sign/verify까지 통과해 verified candidate를 만들었고, v332에서 그 exact digest를 `deploy/production.env.example`의 production reference에 정적으로 고정했습니다. 실제 pull·container 시작·deploy는 여전히 별도 승인 전에는 실행하지 않습니다.
+
+콘텐츠·코드·DB 개발은 계속할 수 있습니다. 다만 현재 production reference는 v330 코드 시점의 immutable image이므로 이후 코드나 이미지 포함 콘텐츠가 바뀌면 최신 배포 전에 새 image build와 공급망 검증이 필요합니다. DB row 변경은 image digest를 바꾸지 않지만 호환성 검증이 필요하며, schema 변경은 새 Alembic revision과 배포 순서를 별도 승인·검토합니다. Codex는 구체적인 작업 요청 전에는 DB mutation, Alembic mutation, 게임 콘텐츠·밸런스를 변경하지 않습니다.
 
 다음 항목은 이번 GitHub 권한 확대와 별개이므로 기호의 구체적인 작업 요청 전에는 변경·실행하지 않습니다.
 
@@ -157,7 +160,7 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-현재 정상 결과는 `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`, 다음 안전 단계는 `review-verified-candidate-evidence-before-production-reference`입니다. verified digest를 production reference에 넣거나 isolated pull/validation/deploy를 하려면 별도 승인을 받습니다.
+현재 정상 결과는 `verified-digest-production-reference-static-prepared-runtime-blocked`, 다음 안전 단계는 `review-production-reference-and-approve-isolated-pull-validation`입니다. production reference 정적 반영은 완료됐지만 isolated pull/validation과 deploy는 각각 별도 승인을 받습니다.
 
 ## 변경과 검증
 
@@ -169,5 +172,5 @@ python tools/check_codex_handoff_readiness.py --strict
 - Python 파일을 바꾼 경우 변경 범위에 맞는 compileall을, JavaScript 파일을 바꾼 경우 해당 파일 문법 검사를 실행합니다.
 - authorization-open workflow에서는 정적 checker를 먼저 직접 실행한 뒤 `SKIP_GHCR_HANDOFF_SMOKES=1 bash tools/run_smoke_core.sh`를 실행합니다. 이 플래그는 closed root 상태만 전제로 하는 `smoke_github_actions_ghcr_static_plan.py`, `smoke_codex_handoff_readiness.py`, `smoke_next_chat_handoff.py` 세 개만 건너뛰며 앱·백엔드 전체 smoke는 그대로 실행합니다.
 - Vue 변경 시에만 `frontend/vue-app`에서 Python `.venv` 없이 `npm ci`와 `npm run build`를 실행합니다.
-- 현재 v331 evidence/checker/문서 변경에는 개발 서버 재시작이 필요 없고 새 로컬 설치도 없습니다. 이 후 전체 smoke는 단순 문서 변경으로 반복하지 않습니다.
+- 현재 v332 production reference 정적 준비에는 개발 서버 재시작이 필요 없고 새 로컬 설치도 없습니다. 이 후 전체 smoke는 단순 문서 변경으로 반복하지 않습니다.
 - 완료 답변에는 한 일, 검증, 서버 재시작 필요 여부, commit/push 결과, 다음 추천 단계, 필요한 extension/권한/설치 요청을 포함합니다.

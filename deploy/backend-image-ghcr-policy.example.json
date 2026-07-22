@@ -1,8 +1,8 @@
 {
-  "schemaVersion": "v331.fifth-owner-only-attempt-recorded-verified-candidate",
+  "schemaVersion": "v332.verified-digest-production-reference-static-prepared",
   "preparedOnly": false,
   "publishApprovalModel": "owner-only-source-controlled-two-step",
-  "ownerOnlyApprovalPhase": "attempt-recorded-review",
+  "ownerOnlyApprovalPhase": "verified-production-reference-static-prepared",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
   "publishLifecycleState": "attempt-recorded",
   "publishLifecycleSupportedStates": [
@@ -83,6 +83,9 @@
   "repositoryVisibility": "private",
   "productionReferenceMode": "digest-only",
   "productionReferenceTemplate": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:<approved-64-hex-digest>",
+  "productionReference": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2",
+  "productionReferenceStaticPrepared": true,
+  "productionReferenceAppliedToRuntime": false,
   "targetPlatform": "linux/amd64",
   "productionDockerfile": "backend/Dockerfile.production",
   "baseImageReference": "python:3.11.15-alpine3.23@sha256:ac0151f0eec4b7ba78bc47d337f328c6db706e7255b35b2327c2749f058c82fe",
@@ -125,5 +128,5 @@
   "actualRegistryMutationExecuted": true,
   "actualDockerCommandExecuted": true,
   "actualDatabaseAlembicMutationExecuted": false,
-  "nextSafeStage": "review-verified-candidate-evidence-before-production-reference"
+  "nextSafeStage": "review-production-reference-and-approve-isolated-pull-validation"
 }

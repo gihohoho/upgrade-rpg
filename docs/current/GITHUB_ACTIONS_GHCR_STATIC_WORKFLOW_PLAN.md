@@ -1,4 +1,4 @@
-# GitHub Actions / GHCR workflow plan — v331
+# GitHub Actions / GHCR workflow plan — v332
 
 ```txt
 version: v330.slsa-v1-provenance-path-preparation
@@ -16,7 +16,7 @@ workflow file creation: complete
 workflow 파일 생성: 완료
 workflow execution: runs 29716038891, 29877813770, 29883012957, 29886540317 failure; 29909291344 success
 registry login/build/push: yes/yes/yes
-next safe stage: review-verified-candidate-evidence-before-production-reference
+next safe stage: review-production-reference-and-approve-isolated-pull-validation
 ```
 
 정적 문서 잠금 표식: `workflow_dispatch`, `pull_request_target` 금지, `contents: read`, `actions: read`, `packages: write`, `id-token: write`, Docker BuildKit, `HIGH,CRITICAL`, Sigstore Cosign keyless, `approved_preparation_commit`, `DOCKER_BUILD_RECORD_UPLOAD`, required reviewer 제약.
@@ -223,9 +223,9 @@ production reference 자동 갱신과 deploy는 하지 않습니다.
 
 ## 현재와 다음 단계
 
-현재 lifecycle은 `attempt-recorded`이고 gate는 `false`입니다. 네 실패와 한 성공을 보존하고 다섯 run 모두 rerun 금지합니다. verified candidate는 생성됐지만 production reference 변경과 deploy는 미실행입니다.
+현재 lifecycle은 `attempt-recorded`이고 gate는 `false`입니다. 네 실패와 한 성공을 보존하고 다섯 run 모두 rerun 금지합니다. verified candidate의 exact digest는 production env inventory에 정적으로 고정했지만 pull·container·deploy는 미실행입니다.
 
 ```txt
 result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-next safe stage: review-verified-candidate-evidence-before-production-reference
+next safe stage: review-production-reference-and-approve-isolated-pull-validation
 ```

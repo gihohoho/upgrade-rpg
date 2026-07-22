@@ -80,6 +80,19 @@ def main() -> int:
             path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
             expect_blocked(module, temp)
 
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp = Path(temp_dir)
+        copy_fixture(temp)
+        env_path = temp / "deploy/production.env.example"
+        env_path.write_text(
+            env_path.read_text(encoding="utf-8").replace(
+                module.APPROVED_BACKEND_REFERENCE,
+                "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:" + "0" * 64,
+            ),
+            encoding="utf-8",
+        )
+        expect_blocked(module, temp)
+
     print("OK: v312 managed PostgreSQL/reverse proxy selection smoke passed")
     return 0
 

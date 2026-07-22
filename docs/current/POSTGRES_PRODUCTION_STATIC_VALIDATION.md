@@ -1,5 +1,7 @@
 # Production secret / TLS / container static validation — current through v321
 
+현재 backend production reference는 `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`로 정적 고정되어 있습니다. 이 값은 아직 pull·container·deploy에 적용하지 않았습니다.
+
 ## 현재 정적 계약
 
 - production Compose service: backend only

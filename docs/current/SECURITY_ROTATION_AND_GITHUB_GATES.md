@@ -1,4 +1,4 @@
-# Security rotation and GitHub gates — v331
+# Security rotation and GitHub gates — v332
 
 ## Secret 원칙
 
@@ -60,3 +60,10 @@
 - Cosign keyless sign/verify와 certificate identity/issuer 검증이 성공했습니다.
 - verified digest는 `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`입니다.
 - production reference, local pull, container 시작, deploy는 미실행이며 별도 승인 전에 실행하지 않습니다.
+
+## v332 production reference 정적 준비
+
+- `deploy/production.env.example`의 `BACKEND_IMAGE`는 검증된 exact digest로 고정했습니다.
+- checker는 tag, placeholder, 다른 digest로 바뀌면 fail-closed합니다.
+- 실제 secret·managed DB 주소·provider CA·network 값은 계속 placeholder입니다.
+- reference는 runtime에 적용하지 않았고 Docker pull·container 시작·deploy도 실행하지 않았습니다.

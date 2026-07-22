@@ -6,10 +6,10 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v331.fifth-owner-only-attempt-recorded-verified-candidate"
+VERSION = "v332.verified-digest-production-reference-static-prepared"
 STATIC_PLAN_VERSION = "v330.slsa-v1-provenance-path-preparation"
-READY_RESULT = "github-actions-ghcr-owner-only-attempt-recorded-publish-gated"
-NEXT_SAFE_STAGE = "review-verified-candidate-evidence-before-production-reference"
+READY_RESULT = "verified-digest-production-reference-static-prepared-runtime-blocked"
+NEXT_SAFE_STAGE = "review-production-reference-and-approve-isolated-pull-validation"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 PREPARATION = "36e8720a53ef7ff6a8334de6bc99646998d63fc9"
@@ -19,6 +19,7 @@ RECORD = "1f0340ddfcf3c8a74cf14110d5957627d4c5d38a"
 RUN_ID = 29909291344
 ARTIFACT_IDS = [8525220616, 8525254543]
 IMAGE_DIGEST = "sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2"
+PRODUCTION_REFERENCE = f"{REPOSITORY}@{IMAGE_DIGEST}"
 REVISION_SHA256 = "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa"
 
 
@@ -81,12 +82,15 @@ def main() -> int:
     policy = json.loads(read("deploy/backend-image-ghcr-policy.example.json"))
     assert policy["schemaVersion"] == VERSION
     assert policy["preparedOnly"] is False
-    assert policy["ownerOnlyApprovalPhase"] == "attempt-recorded-review"
+    assert policy["ownerOnlyApprovalPhase"] == "verified-production-reference-static-prepared"
     assert policy["publishLifecycleState"] == "attempt-recorded"
     assert policy["approvedPreparationSha"] == PREPARATION
     assert policy["exactPreparationShaApproved"] is True
     assert policy["sourceControlledPublishGateReady"] is False
     assert policy["actualRegistryMutationExecuted"] is True
+    assert policy["productionReference"] == PRODUCTION_REFERENCE
+    assert policy["productionReferenceStaticPrepared"] is True
+    assert policy["productionReferenceAppliedToRuntime"] is False
     assert policy["currentAttemptEvidence"] == {
         "authorizationSha": AUTHORIZATION,
         "closureSha": CLOSURE,
@@ -145,7 +149,7 @@ def main() -> int:
     if hashlib.sha256(revision.read_bytes()).hexdigest() != REVISION_SHA256:
         raise AssertionError("reviewed Alembic revision SHA-256 differs")
 
-    print("OK: v331 Codex handoff and verified candidate documents are synchronized")
+    print("OK: v332 production reference and handoff documents are synchronized")
     return 0
 
 

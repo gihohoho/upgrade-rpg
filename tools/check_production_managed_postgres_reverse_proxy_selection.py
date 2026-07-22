@@ -16,6 +16,10 @@ TOOL_VERSION = "v312.production-managed-postgres-reverse-proxy-selection"
 READY_RESULT = "managed-postgresql-reverse-proxy-selection-verified-config-render-complete"
 BLOCKED_RESULT = "blocked-or-failed"
 NEXT_SAFE_STAGE = "review-render-report-and-approve-backend-image-source-digest"
+APPROVED_BACKEND_REFERENCE = (
+    "ghcr.io/gihohoho/upgrade-rpg-backend@"
+    "sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2"
+)
 
 
 class ProductionArchitectureSelectionError(RuntimeError):
@@ -184,13 +188,8 @@ def inspect_production_architecture_selection(root: Path) -> dict[str, Any]:
         if line.strip() and not line.lstrip().startswith("#") and "=" in line
     }
     _require(
-        bool(
-            re.fullmatch(
-                r"ghcr\.io/gihohoho/upgrade-rpg-backend@sha256:<approved-64-hex-digest>",
-                env_inventory.get("BACKEND_IMAGE", ""),
-            )
-        ),
-        "backend image digest placeholder is invalid",
+        env_inventory.get("BACKEND_IMAGE", "") == APPROVED_BACKEND_REFERENCE,
+        "backend image must match the approved verified digest",
     )
     database_url = env_inventory.get("DATABASE_URL", "")
     _require("sslmode=verify-full" in database_url, "DATABASE_URL example must use verify-full")

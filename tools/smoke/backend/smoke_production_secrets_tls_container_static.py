@@ -42,7 +42,7 @@ def main() -> int:
     assert result["requiredComposeValueCount"] == 7
     assert result["composeServices"] == ["backend"]
     assert result["managedPostgresServiceAbsent"] is True
-    assert result["backendDigestPlaceholder"] is True
+    assert result["backendDigestPinned"] is True
     assert result["tlsVerifyFullExample"] is True
     assert result["tlsCaPathExample"] is True
     assert result["externalEdgeNetwork"] is True
@@ -70,6 +70,24 @@ def main() -> int:
             pass
         else:
             raise AssertionError("unsafe production default was not blocked")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp = Path(temp_dir)
+        copy_fixture(temp)
+        env_path = temp / "deploy/production.env.example"
+        env_path.write_text(
+            env_path.read_text(encoding="utf-8").replace(
+                module.APPROVED_BACKEND_REFERENCE,
+                "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:" + "0" * 64,
+            ),
+            encoding="utf-8",
+        )
+        try:
+            module.inspect_production_static_templates(temp)
+        except module.ProductionStaticValidationError:
+            pass
+        else:
+            raise AssertionError("unapproved production image digest was not blocked")
 
     with tempfile.TemporaryDirectory() as temp_dir:
         temp = Path(temp_dir)

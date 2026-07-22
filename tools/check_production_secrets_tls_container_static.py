@@ -16,6 +16,10 @@ TOOL_VERSION = "v312.production-secrets-tls-container-static-managed-db"
 READY_RESULT = "production-static-validation-managed-db-template-verified-runtime-application-blocked"
 BLOCKED_RESULT = "blocked-or-failed"
 NEXT_SAFE_STAGE = "select-registry-repository-platform-and-base-image-digest"
+APPROVED_BACKEND_REFERENCE = (
+    "ghcr.io/gihohoho/upgrade-rpg-backend@"
+    "sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2"
+)
 
 
 class ProductionStaticValidationError(RuntimeError):
@@ -112,12 +116,7 @@ def inspect_production_static_templates(root: Path) -> dict[str, Any]:
             marker in compose
             for marker in ("source: postgres_ca", "target: postgres_ca.pem", "postgres_ca:", "POSTGRES_CA_FILE")
         ),
-        "backendDigestPlaceholder": bool(
-            re.fullmatch(
-                r"ghcr\.io/gihohoho/upgrade-rpg-backend@sha256:<approved-64-hex-digest>",
-                env_inventory.get("BACKEND_IMAGE", ""),
-            )
-        ),
+        "backendDigestPinned": env_inventory.get("BACKEND_IMAGE", "") == APPROVED_BACKEND_REFERENCE,
         "tlsVerifyFullExample": "sslmode=verify-full" in env_inventory.get("DATABASE_URL", ""),
         "tlsCaPathExample": "sslrootcert=/run/secrets/postgres_ca.pem" in env_inventory.get("DATABASE_URL", ""),
         "placeholderSecretsOnly": all(
@@ -167,7 +166,7 @@ def inspect_production_static_templates(root: Path) -> dict[str, Any]:
         "productionEnvironmentFixed",
         "productionDebugFalse",
         "postgresCaSecret",
-        "backendDigestPlaceholder",
+        "backendDigestPinned",
         "tlsVerifyFullExample",
         "tlsCaPathExample",
         "placeholderSecretsOnly",
@@ -200,7 +199,7 @@ def render(result: dict[str, Any]) -> str:
             f"- managed PostgreSQL service absent: {result['managedPostgresServiceAbsent']}",
             f"- Adminer/host ports/build/volumes absent: {result['adminerAbsent']}/{result['hostPortsAbsent']}/{result['buildAbsent']}/{result['namedVolumesAbsent']}",
             f"- production environment/debug fixed: {result['productionEnvironmentFixed']}/{result['productionDebugFalse']}",
-            f"- backend digest/CA/edge boundary: {result['backendDigestPlaceholder']}/{result['postgresCaSecret']}/{result['externalEdgeNetwork']}",
+            f"- approved backend digest/CA/edge boundary: {result['backendDigestPinned']}/{result['postgresCaSecret']}/{result['externalEdgeNetwork']}",
             f"- TLS example verify-full/CA path: {result['tlsVerifyFullExample']}/{result['tlsCaPathExample']}",
             f"- backend healthcheck/read-only/non-root: {result['backendHealthcheck']}/{result['backendReadOnly']}/{result['dockerfileNonRoot']}",
             f"- backend replicas/Uvicorn workers: {1 if result['singleReplica'] else 'invalid'}/{1 if result['singleUvicornWorker'] else 'invalid'}",

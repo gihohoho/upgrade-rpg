@@ -1,9 +1,9 @@
-# Backend image GHCR policy — v331
+# Backend image GHCR policy — v332
 
 ## 고정값
 
 ```txt
-version: v331.fifth-owner-only-attempt-recorded-verified-candidate
+version: v332.verified-digest-production-reference-static-prepared
 remote: https://github.com/gihohoho/upgrade-rpg.git
 repository: ghcr.io/gihohoho/upgrade-rpg-backend
 visibility/platform: private / linux/amd64
@@ -42,6 +42,6 @@ lifecycle: attempt-recorded / publishReviewerGateReady=false
 
 v330 focused fix는 registry provenance의 `SLSA` 객체와 `buildDefinition` 객체를 각각 확인한 뒤 `SLSA.buildDefinition.buildType`을 검사합니다. 구형 `SLSA.buildType`으로 되돌리거나 객체 검사를 빼면 정적 smoke가 차단합니다.
 
-5차 run `29909291344`은 모든 gate와 Cosign sign/verify를 통과했습니다. verified digest는 `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`입니다. 현재 lifecycle은 `attempt-recorded`, gate는 `false`입니다. production reference는 여전히 placeholder이며 자동 deploy는 없습니다.
+5차 run `29909291344`은 모든 gate와 Cosign sign/verify를 통과했습니다. verified digest는 `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`입니다. 현재 lifecycle은 `attempt-recorded`, gate는 `false`입니다. v332에서 production reference를 `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`로 정적 고정했으며 자동 deploy는 없습니다.
 
-다음 안전 단계는 `review-verified-candidate-evidence-before-production-reference`입니다. production reference 변경, isolated pull/validation, deploy는 각각 별도 승인 범위입니다.
+다음 안전 단계는 `review-production-reference-and-approve-isolated-pull-validation`입니다. reference 정적 준비는 완료됐지만 local/host pull, isolated validation, container 시작과 deploy는 각각 별도 승인 범위입니다.

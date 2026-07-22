@@ -1,18 +1,18 @@
-# Current Status — v331
+# Current Status — v332
 
 ## 현재 결과
 
 ```txt
-latest: v331.fifth-owner-only-attempt-recorded-verified-candidate
-strict result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-next safe stage: review-verified-candidate-evidence-before-production-reference
+latest: v332.verified-digest-production-reference-static-prepared
+strict result: verified-digest-production-reference-static-prepared-runtime-blocked
+next safe stage: review-production-reference-and-approve-isolated-pull-validation
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR repository: ghcr.io/gihohoho/upgrade-rpg-backend
 lifecycle: attempt-recorded
 publishReviewerGateReady: false
 ```
 
-CI credential은 GitHub Actions `GITHUB_TOKEN`이고 local PAT는 deferred입니다. workflow는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `owner-only-source-controlled-two-step` source-controlled lifecycle gate를 사용하며 `run_attempt=1`, single dispatch, immediate closure, rerun 금지를 강제합니다. 5차 run은 성공 evidence로 기록했고 현재 구체적 단계는 `review-verified-candidate-evidence-before-production-reference`입니다.
+CI credential은 GitHub Actions `GITHUB_TOKEN`이고 local PAT는 deferred입니다. workflow는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `owner-only-source-controlled-two-step` source-controlled lifecycle gate를 사용하며 `run_attempt=1`, single dispatch, immediate closure, rerun 금지를 강제합니다. 5차 run은 성공 evidence로 기록했고, v332에서 verified digest를 production reference에 정적으로 고정했습니다. 현재 구체적 단계는 `review-production-reference-and-approve-isolated-pull-validation`입니다.
 
 ## 세 번째 실행
 
@@ -52,7 +52,21 @@ Trivy 기준 fixed version이 있는 항목은 `jaraco.context 6.1.0`, `wheel 0.
 - verified digest: `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`
 - artifact `8525220616` / `8525254543`, SHA-256 `c08e483754d357f2f7120659cea455e670bc570a5fb0db3eadfbc0b217f1e30e` / `697fbb38e30d9328d65e392da819eb1645cb42be5059ca502c29cd3b9241db65`, 14일 보존
 - lifecycle `attempt-recorded`, gate `false`, rerun 금지
-- production reference는 아직 placeholder이며 pull/deploy는 미실행
+- production reference는 verified exact digest로 정적 고정됐으며 pull/deploy는 미실행
+
+## 로컬 Failed to fetch 확인
+
+- backend `127.0.0.1:8000`과 Vue `127.0.0.1:5173` 프로세스는 실행 중입니다.
+- local PostgreSQL `127.0.0.1:55432` 연결이 거부되어 `/api/v1/health/db`와 `/api/v1/game/master-data`가 500입니다.
+- legacy HTML용 `127.0.0.1:5500` 서버도 현재 꺼져 있습니다.
+- 따라서 `index.html`·`admin.html`의 `Failed to fetch`는 배포 준비상 의도된 정상 상태가 아니라, 로컬 DB와 legacy 정적 서버가 실행되지 않은 개발 환경 문제입니다.
+
+## 이후 콘텐츠·DB 변경 원칙
+
+- 콘텐츠·코드·DB 개발은 가능하지만 현재 pinned image는 변경 전 snapshot으로 유지됩니다.
+- 코드나 image 포함 콘텐츠가 바뀌면 최신 배포 전에 새 image build·SBOM·Trivy·provenance·Cosign 검증이 필요합니다.
+- DB row 변경은 image digest와 별개지만 호환성 검증이 필요합니다.
+- DB schema 변경은 새 Alembic revision과 배포 순서를 별도 승인·검토합니다.
 
 ## v330 focused fix 준비
 
@@ -83,6 +97,6 @@ Trivy 기준 fixed version이 있는 항목은 `jaraco.context 6.1.0`, `wheel 0.
 - Distroless Debian 12 후보는 실제 동일 검사에서 41건으로 실패해 채택하지 않았습니다.
 - 위 내용은 v328 preparation commit 시점의 준비 결과입니다. 그 시점에 lifecycle은 `preparation-closed`, 승인 SHA는 `null`, 새 workflow는 미실행이었습니다. 현재 상태는 위의 다섯 번째 실행 기록과 같이 `attempt-recorded`입니다.
 
-다음 단계는 verified candidate evidence를 검토한 뒤 production reference 반영 또는 isolated pull/validation을 별도 승인하는 것입니다. 현재 필요한 extension·설치·추가 권한은 없고 서버 재시작도 불필요합니다. 로컬 token은 `read:packages`가 없어 GHCR package API 조회는 할 수 없지만 Actions evidence로 candidate 검증을 완료했습니다.
+다음 단계는 정적으로 고정한 production reference를 검토한 뒤 isolated pull/validation을 별도 승인하는 것입니다. 현재 필요한 extension·설치·추가 권한은 없습니다. 배포 정적 준비에는 서버 재시작이 불필요하지만 legacy 화면을 사용하려면 기존 local PostgreSQL과 별도 정적 서버를 시작해야 합니다. 로컬 token은 `read:packages`가 없어 GHCR package API 조회는 할 수 없지만 Actions evidence로 candidate 검증을 완료했습니다.
 
 검증은 기호의 요청에 따라 위험도 기반 최소 범위로 실행합니다. 문서·handoff·상태값 변경에는 관련 strict checker와 handoff smoke만 사용하고 전체 core smoke는 실행하지 않습니다. 전체 smoke는 핵심 로직·DB/Alembic·API 계약·공통 구조·여러 영역 변경 또는 실제 배포 후보 직전에만 1회 실행합니다.

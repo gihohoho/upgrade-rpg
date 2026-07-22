@@ -1,3 +1,11 @@
+# v332.verified-digest-production-reference-static-prepared
+
+- verified image `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`를 `deploy/production.env.example`의 `BACKEND_IMAGE`에 정적으로 고정.
+- production checker 세 개가 exact approved digest만 허용하고 placeholder·tag·다른 digest를 fail-closed하도록 갱신.
+- actual secret·managed DB·provider CA·network 값은 placeholder로 유지하고 Docker pull·container·deploy는 실행하지 않음.
+- local `Failed to fetch` 원인을 PostgreSQL `127.0.0.1:55432` 미실행과 legacy `127.0.0.1:5500` 서버 미실행으로 확인.
+- 콘텐츠·코드·DB 개발은 가능하되 이후 코드/image 포함 변경은 새 image 공급망 검증이 필요하고 schema 변경은 Alembic·배포 순서를 별도 승인하도록 handoff에 기록.
+
 # v331.fifth-owner-only-attempt-recorded-verified-candidate
 
 - exact preparation `36e8720a53ef7ff6a8334de6bc99646998d63fc9` 승인 후 authorization `26a11356e33c978afa8cd8a4881500fa62cdbc5c`을 single-dispatch로 실행.
