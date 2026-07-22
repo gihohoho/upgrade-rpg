@@ -1289,3 +1289,11 @@
 - Added `tools/smoke/backend/smoke_backend_local_cors.py` and included it in `tools/run_smoke_core.sh`.
 - Added `docs/current/LOCAL_DEV_CORS.md`.
 - Did not change `.env`, DB, seed, auth, route paths, API response body, write logic, Write Guard, Preview/Apply request bodies, or game content.
+# v327.third-owner-only-attempt-recorded-vulnerability-gated
+
+- 기호가 preparation `b35dfacf427162b348a6bd29eb030778edc7741c`을 승인한 뒤 lifecycle-only authorization `04e002060e576f19f4d8687b33635a414486206d`으로 run `29883012957`을 정확히 한 번 dispatch.
+- 접수 직후 closure `64e5ae0f5e5385ba00df16bb10ac33789ca3760a`으로 gate를 닫고 rerun하지 않음.
+- validation, repository checks, local linux/amd64 image build, SPDX SBOM은 성공했으나 Trivy HIGH/CRITICAL 27건으로 publish 차단.
+- artifact `8515504259`에 SBOM/vulnerability report 보존. publish job은 skipped되어 GHCR login/push/provenance/Cosign과 registry mutation 없음.
+- evidence commit `303a2ed01c69c29894efdcde4ead6c2291c3d8bc`으로 `attempt-recorded` 확정. 다음 단계는 `review-recorded-vulnerability-gate-evidence`.
+- gate 완화 없이 exact base image/runtime 구성/Python dependency focused fix를 별도 승인 대상으로 남김.

@@ -1,7 +1,8 @@
-# GitHub Actions / GHCR workflow plan — v326
+# GitHub Actions / GHCR workflow plan — v327
 
 ```txt
-version: v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated
+version: v327.third-owner-only-attempt-recorded-vulnerability-gated
+static workflow plan version: v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated
 preparation version: v324.bootstrap-fixed-retry-preparation-publish-gated
 base plan version: v322.owner-only-single-run-lifecycle-hardened-publish-gated
 result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
@@ -13,9 +14,9 @@ workflow source SHA-256: 245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6f
 workflow semantic SHA-256: e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c
 workflow file creation: complete
 workflow 파일 생성: 완료
-workflow execution: runs 29716038891 and 29877813770 completed/failure
+workflow execution: runs 29716038891, 29877813770, 29883012957 completed/failure
 registry login/build/push: no/attempted-failed/no
-next safe stage: review-and-approve-exact-dockerfile-bootstrap-fix-preparation-sha
+next safe stage: review-recorded-vulnerability-gate-evidence
 ```
 
 정적 문서 잠금 표식: `workflow_dispatch`, `pull_request_target` 금지, `contents: read`, `actions: read`, `packages: write`, `id-token: write`, Docker BuildKit, `HIGH,CRITICAL`, Sigstore Cosign keyless, `approved_preparation_commit`, `DOCKER_BUILD_RECORD_UPLOAD`, required reviewer 제약.
@@ -26,7 +27,7 @@ run `29716038891`은 validate job의 `Install backend validation dependencies`�
 
 ## 두 번째 실행 결과와 focused fix 후보
 
-run `29877813770`은 workflow bootstrap과 repository checks를 통과한 뒤 `Build local linux/amd64 image without registry mutation`에서 실패했습니다. 직접 원인은 `backend/Dockerfile.production:22`에 같은 bootstrap target `--python-version 3`이 남아 있던 것입니다. SBOM/Trivy와 publish job은 미실행 또는 skipped였고 artifact/digest는 없으며 GHCR login/push와 registry mutation도 없었습니다. 기호의 승인에 따라 Dockerfile의 해당 한 곳을 `3.11`로 수정했고 두 실패를 `attemptHistory`에 보존한 새 preparation을 닫힌 gate로 준비했습니다.
+run `29877813770`은 Dockerfile bootstrap target 문제로 로컬 build에서 실패했습니다. 그 focused fix를 반영한 preparation `b35dfacf427162b348a6bd29eb030778edc7741c`을 기호가 승인했고 3차 run `29883012957`을 정확히 한 번 실행했습니다. 3차 run은 validation, repository checks, local image build, SPDX SBOM에 성공했지만 Trivy가 HIGH/CRITICAL 27건을 찾아 publish를 차단했습니다. artifact `8515504259`에 SBOM과 vulnerability report를 보존했으며 publish job은 skipped되어 GHCR login/push/provenance/Cosign과 registry mutation은 없었습니다.
 
 ## v322가 필요한 이유
 
@@ -214,9 +215,9 @@ production reference 자동 갱신과 deploy는 하지 않습니다.
 
 ## 현재와 다음 단계
 
-현재 lifecycle은 `preparation-closed`이고 gate는 `false`입니다. Dockerfile focused fix는 반영됐고 두 실패는 `attemptHistory`에 보존됩니다. 새 preparation의 exact SHA 승인 전에는 authorization이나 workflow dispatch를 하지 않습니다.
+현재 lifecycle은 `attempt-recorded`이고 gate는 `false`입니다. 세 실패를 보존하고 모두 rerun 금지합니다. vulnerability gate를 자동 완화하지 않으며 새 focused fix와 preparation/workflow는 별도 승인 전 진행하지 않습니다.
 
 ```txt
 result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-next safe stage: review-and-approve-exact-dockerfile-bootstrap-fix-preparation-sha
+next safe stage: review-recorded-vulnerability-gate-evidence
 ```

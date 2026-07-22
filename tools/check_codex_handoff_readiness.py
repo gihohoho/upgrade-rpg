@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the v326 owner-only Dockerfile-fix preparation handoff."""
+"""Validate the v327 vulnerability-gated owner-only publish-attempt handoff."""
 from __future__ import annotations
 
 import argparse
@@ -11,8 +11,8 @@ import re
 import subprocess
 from typing import Any
 
-TOOL_VERSION = "v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated"
-READY_RESULT = "github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated"
+TOOL_VERSION = "v327.third-owner-only-attempt-recorded-vulnerability-gated"
+READY_RESULT = "github-actions-ghcr-owner-only-attempt-recorded-publish-gated"
 PREPARATION_READY_RESULT = "github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated"
 AUTHORIZATION_OPEN_RESULT = "github-actions-ghcr-owner-only-authorization-open"
 AUTHORIZATION_CLOSED_AWAITING_EVIDENCE_RESULT = (
@@ -20,7 +20,7 @@ AUTHORIZATION_CLOSED_AWAITING_EVIDENCE_RESULT = (
 )
 ATTEMPT_RECORDED_RESULT = "github-actions-ghcr-owner-only-attempt-recorded-publish-gated"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "review-and-approve-exact-dockerfile-bootstrap-fix-preparation-sha"
+NEXT_SAFE_STAGE = "review-recorded-vulnerability-gate-evidence"
 EXPECTED_REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 EXPECTED_NAMESPACE = "gihohoho"
 EXPECTED_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
@@ -30,7 +30,7 @@ WORKFLOW_PATH = ".github/workflows/publish-backend-ghcr.yml"
 LIFECYCLE_PATH = "deploy/github-actions-ghcr-publish-lifecycle.json"
 LIFECYCLE_SCHEMA_VERSION = "v326.owner-only-publish-lifecycle-with-attempt-history"
 PRIOR_APPROVED_PREPARATION_SHA = "350bbd085f1cf636810d75ddcbb5321e0791256c"
-APPROVED_PREPARATION_SHA = "2f77ebf0f60a39c936509df26f903995f0c62967"
+SECOND_APPROVED_PREPARATION_SHA = "2f77ebf0f60a39c936509df26f903995f0c62967"
 PRIOR_ATTEMPT_EVIDENCE = {
     "preparationSha": PRIOR_APPROVED_PREPARATION_SHA,
     "authorizationSha": "32e5102877851ace06e1c0ed3bcb48310b8d65b6",
@@ -51,7 +51,7 @@ ATTEMPT_HISTORY = [
         "signatureVerified": False,
     },
     {
-        "preparationSha": APPROVED_PREPARATION_SHA,
+        "preparationSha": SECOND_APPROVED_PREPARATION_SHA,
         "authorizationSha": "7e69555b8b653c406b322fb5c8f23e550751d72c",
         "closureSha": "5479e6b14826b3a0f2b6d0c3beb0e2142ca22c94",
         "recordCommitSha": "c93a0327bc25941865f4ee8d600a4f903886a4fe",
@@ -66,10 +66,13 @@ ATTEMPT_HISTORY = [
         "signatureVerified": False,
     },
 ]
-AUTHORIZATION_SHA = "7e69555b8b653c406b322fb5c8f23e550751d72c"
-CLOSURE_SHA = "5479e6b14826b3a0f2b6d0c3beb0e2142ca22c94"
-CURRENT_RUN_ID = 29877813770
+APPROVED_PREPARATION_SHA = "b35dfacf427162b348a6bd29eb030778edc7741c"
+AUTHORIZATION_SHA = "04e002060e576f19f4d8687b33635a414486206d"
+CLOSURE_SHA = "64e5ae0f5e5385ba00df16bb10ac33789ca3760a"
+RECORD_COMMIT_SHA = "303a2ed01c69c29894efdcde4ead6c2291c3d8bc"
+CURRENT_RUN_ID = 29883012957
 CURRENT_RUN_URL = f"https://github.com/gihohoho/upgrade-rpg/actions/runs/{CURRENT_RUN_ID}"
+CURRENT_ARTIFACT_ID = 8515504259
 LIFECYCLE_SUPPORTED_STATES = (
     "preparation-closed",
     "authorization-open",
@@ -136,17 +139,17 @@ def _inspect_publish_lifecycle(root: Path) -> dict[str, Any]:
         "publish lifecycle top-level schema changed",
     )
     _require(lifecycle.get("schemaVersion") == LIFECYCLE_SCHEMA_VERSION, "publish lifecycle schemaVersion changed")
-    _require(lifecycle.get("state") == "preparation-closed", "root handoff lifecycle must be preparation-closed")
+    _require(lifecycle.get("state") == "attempt-recorded", "root handoff lifecycle must be attempt-recorded")
     _require(_bool(lifecycle, "publishReviewerGateReady") is False, "root handoff publish lifecycle gate must be false")
     _require(
         lifecycle.get("priorApprovedPreparationSha") == PRIOR_APPROVED_PREPARATION_SHA,
         "prior exact-SHA approval record changed",
     )
     _require(lifecycle.get("priorAttemptEvidence") == PRIOR_ATTEMPT_EVIDENCE, "prior attempt evidence changed")
-    _require(lifecycle.get("attemptHistory") == ATTEMPT_HISTORY, "two-attempt history changed")
+    _require(lifecycle.get("attemptHistory") == ATTEMPT_HISTORY, "prior two-attempt history changed")
     _require(
-        lifecycle.get("approvedPreparationSha") is None,
-        "new preparation must await exact-SHA approval",
+        lifecycle.get("approvedPreparationSha") == APPROVED_PREPARATION_SHA,
+        "recorded attempt approved preparation SHA changed",
     )
 
     owner_approval = lifecycle.get("ownerApproval")
@@ -155,8 +158,8 @@ def _inspect_publish_lifecycle(root: Path) -> dict[str, Any]:
         set(owner_approval) == {"recorded", "recordedAtUtc", "evidence"},
         "ownerApproval schema changed",
     )
-    _require(_bool(owner_approval, "recorded") is False, "new preparation must await owner approval")
-    _require(owner_approval.get("recordedAtUtc") is None, "new preparation approval timestamp must be empty")
+    _require(_bool(owner_approval, "recorded") is True, "recorded attempt must preserve owner approval")
+    _require(owner_approval.get("recordedAtUtc") == "2026-07-22T01:21:58Z", "owner approval timestamp changed")
     _require(
         owner_approval.get("evidence") == "exact-40-character-sha-user-message",
         "owner approval evidence type changed",
@@ -254,10 +257,10 @@ def _inspect_publish_lifecycle(root: Path) -> dict[str, Any]:
         "closure schema changed",
     )
     _require(closure == {
-        "authorizationSourceSha": None,
-        "closureCommitSha": None,
-        "preparedAtUtc": None,
-    }, "new preparation closure must be empty")
+        "authorizationSourceSha": AUTHORIZATION_SHA,
+        "closureCommitSha": CLOSURE_SHA,
+        "preparedAtUtc": "2026-07-22T01:24:55Z",
+    }, "recorded attempt closure evidence changed")
 
     observed = lifecycle.get("observedAttempt")
     _require(isinstance(observed, dict), "observedAttempt must be an object")
@@ -274,14 +277,14 @@ def _inspect_publish_lifecycle(root: Path) -> dict[str, Any]:
         "observedAttempt schema changed",
     )
     _require(observed == {
-        "runId": None,
-        "runUrl": None,
-        "runAttempt": None,
-        "status": "not-dispatched",
-        "conclusion": None,
+        "runId": CURRENT_RUN_ID,
+        "runUrl": CURRENT_RUN_URL,
+        "runAttempt": 1,
+        "status": "completed",
+        "conclusion": "failure",
         "imageDigest": None,
         "signatureVerified": False,
-    }, "new preparation attempt record must be empty")
+    }, "recorded vulnerability-gated attempt evidence changed")
     return lifecycle
 
 
@@ -380,15 +383,15 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     handoff_state = _read(root / "docs/handoff/NEXT_CHAT_HANDOFF.md")
     actions_result = _inspect_actions_workflow(root)
 
-    _require(policy.get("schemaVersion") == TOOL_VERSION, "unexpected v326 schemaVersion")
-    _require(_bool(policy, "preparedOnly") is True, "new preparation policy must remain prepared-only")
+    _require(policy.get("schemaVersion") == TOOL_VERSION, "unexpected v327 schemaVersion")
+    _require(_bool(policy, "preparedOnly") is False, "recorded attempt policy cannot remain prepared-only")
     _require(
         policy.get("publishApprovalModel") == "owner-only-source-controlled-two-step",
         "owner-only publish approval model changed",
     )
-    _require(policy.get("ownerOnlyApprovalPhase") == "exact-sha-awaiting-approval", "owner-only phase changed")
+    _require(policy.get("ownerOnlyApprovalPhase") == "attempt-recorded-review", "owner-only phase changed")
     _require(policy.get("publishLifecyclePath") == LIFECYCLE_PATH, "publish lifecycle path changed")
-    _require(policy.get("publishLifecycleState") == "preparation-closed", "policy lifecycle must be preparation-closed")
+    _require(policy.get("publishLifecycleState") == "attempt-recorded", "policy lifecycle must be attempt-recorded")
     _require(
         policy.get("publishLifecycleSupportedStates") == list(LIFECYCLE_SUPPORTED_STATES),
         "policy lifecycle supported-state list changed",
@@ -408,9 +411,23 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require(policy.get("attemptHistory") == [
         {key: item[key] for key in ("recordCommitSha", "runId", "conclusion", "registryLoginExecuted", "imageBuildExecuted", "imagePushExecuted")}
         for item in ATTEMPT_HISTORY
-    ], "policy two-attempt history changed")
-    _require(policy.get("approvedPreparationSha") is None, "policy must await exact preparation SHA approval")
-    _require(policy.get("currentAttemptEvidence") is None, "new attempt evidence must be empty")
+    ], "policy prior two-attempt history changed")
+    _require(policy.get("approvedPreparationSha") == APPROVED_PREPARATION_SHA, "policy approved preparation SHA changed")
+    _require(policy.get("currentAttemptEvidence") == {
+        "authorizationSha": AUTHORIZATION_SHA,
+        "closureSha": CLOSURE_SHA,
+        "recordCommitSha": RECORD_COMMIT_SHA,
+        "runId": CURRENT_RUN_ID,
+        "runUrl": CURRENT_RUN_URL,
+        "conclusion": "failure",
+        "registryLoginExecuted": False,
+        "imageBuildExecuted": True,
+        "imagePushExecuted": False,
+        "artifactCount": 1,
+        "artifactId": CURRENT_ARTIFACT_ID,
+        "imageDigest": None,
+        "signatureVerified": False,
+    }, "current vulnerability-gated attempt evidence changed")
     _require(_bool(policy, "priorExactPreparationShaApproved") is True, "prior exact-SHA approval record is missing")
     _require(lifecycle.get("state") == policy.get("publishLifecycleState"), "policy/lifecycle state differs")
     _require(policy.get("githubRemote") == EXPECTED_REMOTE, "GitHub remote changed")
@@ -453,8 +470,9 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "ciImagePushApproved",
         "dependencyAndFrontendInputsLocked",
         "actualDockerCommandExecuted",
+        "exactPreparationShaApproved",
     ):
-        _require(_bool(policy, key) is True, f"completed/approved v326 state must remain true: {key}")
+        _require(_bool(policy, key) is True, f"completed/approved v327 state must remain true: {key}")
     for key in (
         "longLivedCredentialInRepository",
         "registryCredentialFileInRepository",
@@ -471,15 +489,14 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "containerStartApproved",
         "actualRegistryMutationExecuted",
         "actualDatabaseAlembicMutationExecuted",
-        "exactPreparationShaApproved",
     ):
-        _require(_bool(policy, key) is False, f"blocked/unexecuted v326 state must remain false: {key}")
+        _require(_bool(policy, key) is False, f"blocked/unexecuted v327 state must remain false: {key}")
     _require(policy.get("nextSafeStage") == NEXT_SAFE_STAGE, "unexpected next safe stage")
     _require(
-        actions_result.get("publishLifecycleState") == "preparation-closed",
-        "root handoff must use the closed preparation state",
+        actions_result.get("publishLifecycleState") == "attempt-recorded",
+        "root handoff must use the recorded attempt state",
     )
-    _require(actions_result.get("result") == READY_RESULT, "root handoff must use the retry-preparation result")
+    _require(actions_result.get("result") == READY_RESULT, "root handoff must use the recorded-attempt result")
 
     env = _env_inventory(env_example)
     _require(env.get("BACKEND_IMAGE") == EXPECTED_REFERENCE, "production env repository/reference differs")
@@ -601,6 +618,11 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "publishLifecycleSupportedStates": list(LIFECYCLE_SUPPORTED_STATES),
         "priorApprovedPreparationSha": lifecycle["priorApprovedPreparationSha"],
         "approvedPreparationSha": lifecycle["approvedPreparationSha"],
+        "authorizationSha": AUTHORIZATION_SHA,
+        "closureSha": CLOSURE_SHA,
+        "recordCommitSha": RECORD_COMMIT_SHA,
+        "currentRunId": CURRENT_RUN_ID,
+        "currentArtifactId": CURRENT_ARTIFACT_ID,
         "ownerApprovalRecorded": lifecycle["ownerApproval"]["recorded"],
         "workflowRunAttemptMustEqual": lifecycle["authorizationPolicy"]["workflowRunAttemptMustEqual"],
         "singleDispatchApiCheckRequired": lifecycle["authorizationPolicy"]["singleDispatchApiCheckRequired"],
@@ -616,8 +638,8 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
 
 def render(result: dict[str, Any]) -> str:
     return "\n".join((
-        "Codex/GHCR v326 retry-preparation handoff verification (read-only)",
-        "The Dockerfile bootstrap fix is prepared with both failed attempts preserved.",
+        "Codex/GHCR v327 vulnerability-gated attempt handoff verification (read-only)",
+        "The third owner-only attempt was recorded after the vulnerability gate blocked publishing.",
         "",
         f"- GitHub remote: {result['githubRemote']}",
         f"- namespace/repository: {result['namespace']} / {result['repository']}",
@@ -628,16 +650,19 @@ def render(result: dict[str, Any]) -> str:
         "- workflow file/creation approved: yes/yes",
         f"- reviewed workflow source SHA-256: {result['workflowSourceSha256']}",
         f"- reviewed workflow semantic SHA-256: {result['workflowSemanticSha256']}",
-        "- workflow execution approved/executed: yes/yes (two runs failed pre-registry)",
+        "- workflow execution approved/executed: yes/yes (three runs recorded; latest failed pre-registry)",
         "- action allowlist/full SHA enforcement: configured/configured (live rechecked 2026-07-22)",
-        "- CI login/build/push approved/executed: yes/yes/yes / no/attempted-failed/no",
+        "- CI login/build/push approved/executed: yes/yes/yes / no/yes/no",
         "- publish environment/main-only: present/configured (live rechecked 2026-07-22)",
         "- native required reviewer/current private plan: missing/unavailable",
-        "- publish approval model: owner-only-source-controlled-two-step (exact SHA awaiting approval)",
+        "- publish approval model: owner-only-source-controlled-two-step (attempt recorded; gate closed)",
         f"- publish lifecycle: {result['publishLifecycleState']} / gate={result['publishGateReady']}",
         f"- lifecycle states: {', '.join(result['publishLifecycleSupportedStates'])}",
         f"- prior approved preparation SHA: {result['priorApprovedPreparationSha']}",
-        f"- newly approved preparation SHA: {result['approvedPreparationSha']}",
+        f"- consumed Dockerfile-fix preparation SHA: {result['approvedPreparationSha']}",
+        f"- authorization/closure/record SHA: {result['authorizationSha']} / {result['closureSha']} / {result['recordCommitSha']}",
+        f"- latest run/artifact ID: {result['currentRunId']} / {result['currentArtifactId']}",
+        "- latest gate result: local image built; SPDX SBOM saved; 27 HIGH/CRITICAL findings blocked publish",
         "- single-run policy: run_attempt=1 / single dispatch / rerun forbidden / immediate closure",
         "- PUBLISH_REVIEWER_GATE_READY: lifecycle-controlled false (fail-closed before GHCR login)",
         "- root Docker context env files/re-includes: excluded/forbidden",

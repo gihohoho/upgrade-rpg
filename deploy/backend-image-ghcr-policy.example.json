@@ -1,10 +1,10 @@
 {
-  "schemaVersion": "v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated",
-  "preparedOnly": true,
+  "schemaVersion": "v327.third-owner-only-attempt-recorded-vulnerability-gated",
+  "preparedOnly": false,
   "publishApprovalModel": "owner-only-source-controlled-two-step",
-  "ownerOnlyApprovalPhase": "exact-sha-awaiting-approval",
+  "ownerOnlyApprovalPhase": "attempt-recorded-review",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
-  "publishLifecycleState": "preparation-closed",
+  "publishLifecycleState": "attempt-recorded",
   "publishLifecycleSupportedStates": [
     "preparation-closed",
     "authorization-open",
@@ -38,10 +38,24 @@
       "imagePushExecuted": false
     }
   ],
-  "approvedPreparationSha": null,
-  "currentAttemptEvidence": null,
+  "approvedPreparationSha": "b35dfacf427162b348a6bd29eb030778edc7741c",
+  "currentAttemptEvidence": {
+    "authorizationSha": "04e002060e576f19f4d8687b33635a414486206d",
+    "closureSha": "64e5ae0f5e5385ba00df16bb10ac33789ca3760a",
+    "recordCommitSha": "303a2ed01c69c29894efdcde4ead6c2291c3d8bc",
+    "runId": 29883012957,
+    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29883012957",
+    "conclusion": "failure",
+    "registryLoginExecuted": false,
+    "imageBuildExecuted": true,
+    "imagePushExecuted": false,
+    "artifactCount": 1,
+    "artifactId": 8515504259,
+    "imageDigest": null,
+    "signatureVerified": false
+  },
   "priorExactPreparationShaApproved": true,
-  "exactPreparationShaApproved": false,
+  "exactPreparationShaApproved": true,
   "dependencyAndFrontendInputsLocked": true,
   "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
   "registryProvider": "github-container-registry",
@@ -95,5 +109,5 @@
   "actualRegistryMutationExecuted": false,
   "actualDockerCommandExecuted": true,
   "actualDatabaseAlembicMutationExecuted": false,
-  "nextSafeStage": "review-and-approve-exact-dockerfile-bootstrap-fix-preparation-sha"
+  "nextSafeStage": "review-recorded-vulnerability-gate-evidence"
 }

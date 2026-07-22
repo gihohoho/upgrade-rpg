@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v326
+# Upgrade RPG Codex working rules — v327
 
 이 파일은 저장소 전체에 적용됩니다. Codex는 작업을 시작할 때 이 파일과 `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -32,9 +32,9 @@
 
 ## 현재 고정 상태
 
-- latest: `v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated`
-- strict result: `github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated`
-- next safe stage: `review-and-approve-exact-dockerfile-bootstrap-fix-preparation-sha`
+- latest: `v327.third-owner-only-attempt-recorded-vulnerability-gated`
+- strict result: `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`
+- next safe stage: `review-recorded-vulnerability-gate-evidence`
 - GitHub remote: `https://github.com/gihohoho/upgrade-rpg.git`
 - GHCR namespace: `gihohoho`
 - backend image repository: `ghcr.io/gihohoho/upgrade-rpg-backend` (private)
@@ -52,12 +52,13 @@
 - `ghcr-production-publish` environment/main-only: present/configured
 - required reviewer/prevent self-review: missing/missing
 - publish approval model: `owner-only-source-controlled-two-step` (기호가 2026-07-20 선택)
-- source-controlled lifecycle gate: `preparation-closed` / `publishReviewerGateReady=false`
+- source-controlled lifecycle gate: `attempt-recorded` / `publishReviewerGateReady=false`
 - dependency/frontend input lock: complete (exact version + SHA-256, binary wheel only)
 - byte-for-byte deterministic image: 보장한다고 주장하지 않음
 - prior preparation SHA: `350bbd085f1cf636810d75ddcbb5321e0791256c` approved and consumed
 - bootstrap-fix preparation SHA: `2f77ebf0f60a39c936509df26f903995f0c62967` approved and consumed
-- workflow run/login/build/push: two failed runs / no / attempted-failed / no
+- Dockerfile-fix preparation SHA: `b35dfacf427162b348a6bd29eb030778edc7741c` approved and consumed
+- workflow run/login/build/push: three failed runs / no / yes / no
 - reviewed workflow source/semantic SHA-256: `245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd` / `e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c`
 
 ## v321 승인과 v322 감사 결과
@@ -112,9 +113,19 @@ live 증거는 authorization 실행 시점 기준 4시간 이내여야 하므로
 - focused fix: 기호가 승인했으며 Dockerfile bootstrap target을 `--python-version 3.11`로 수정 완료
 - evidence 보존: `attemptHistory`에 첫 run `29716038891`과 두 번째 run `29877813770`을 모두 보존
 
+## 2026-07-22 세 번째 owner-only 게시 시도 결과
+
+- preparation/authorization/closure/evidence: `b35dfacf427162b348a6bd29eb030778edc7741c` / `04e002060e576f19f4d8687b33635a414486206d` / `64e5ae0f5e5385ba00df16bb10ac33789ca3760a` / `303a2ed01c69c29894efdcde4ead6c2291c3d8bc`
+- GitHub Actions run: `29883012957` / `https://github.com/gihohoho/upgrade-rpg/actions/runs/29883012957`, `run_attempt=1`, conclusion `failure`
+- validation, repository checks, local linux/amd64 image build, SPDX SBOM 생성은 성공했습니다.
+- Trivy HIGH/CRITICAL gate가 27건(Debian 24, Python 3)을 발견해 게시를 차단했습니다. 2건은 Trivy 기준 fixed version이 있고 25건은 아직 없습니다.
+- artifact `8515504259`에 `sbom.spdx.json`, `trivy-results.json`을 14일 보존합니다. artifact SHA-256은 `6a5dfd4cd96754fd365323c7c6a7d1edf18542b5e5729e44220d7bf21ace4c50`입니다.
+- publish job은 skipped됐으므로 GHCR login/push/provenance/Cosign은 미실행, image digest는 없고 signature는 미검증입니다.
+- `--ignore-unfixed=false` 정책은 의도대로 작동했습니다. 다음 단계는 base image/runtime 구성/Python dependency를 검토하는 것이며, 자동으로 gate를 약화하지 않습니다.
+
 ## 현재 안전 경계
 
-현재 lifecycle은 `preparation-closed`이고 gate는 닫혀 있습니다. 첫·두 번째 실행은 `attemptHistory`에 보존되며 두 실행 모두 rerun 금지입니다. Dockerfile focused fix는 반영됐지만, 이 v326 preparation commit의 새 정확한 40자 SHA를 기호가 별도로 승인하기 전에는 authorization이나 workflow를 실행하지 않습니다.
+현재 lifecycle은 `attempt-recorded`이고 gate는 닫혀 있습니다. 세 실행 모두 rerun 금지입니다. 3차 실행은 로컬 이미지를 만들고 SPDX SBOM을 생성한 뒤 Trivy HIGH/CRITICAL gate에서 차단됐으며, publish job 전체가 skipped되어 GHCR login/push/provenance/Cosign은 실행되지 않았습니다. 취약점 정책을 자동 완화하거나 새 workflow를 실행하지 않습니다.
 
 다음 항목은 이번 GitHub 권한 확대와 별개이므로 기호의 구체적인 작업 요청 전에는 변경·실행하지 않습니다.
 
@@ -135,7 +146,7 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-현재 정상 결과는 `github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated`, 다음 안전 단계는 `review-and-approve-exact-dockerfile-bootstrap-fix-preparation-sha`입니다. 새 preparation SHA 승인 전에는 workflow를 실행하지 않습니다.
+현재 정상 결과는 `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`, 다음 안전 단계는 `review-recorded-vulnerability-gate-evidence`입니다. 다음 preparation과 workflow 실행에는 별도 사용자 승인이 필요합니다.
 
 ## 변경과 검증
 
@@ -144,5 +155,5 @@ python tools/check_codex_handoff_readiness.py --strict
 - 코드나 구조를 바꾸면 관련 전용 smoke, `python -m compileall -q backend/app backend/scripts backend/alembic tools`, JavaScript 문법, `bash tools/run_smoke_core.sh`를 확인합니다.
 - authorization-open workflow에서는 정적 checker를 먼저 직접 실행한 뒤 `SKIP_GHCR_HANDOFF_SMOKES=1 bash tools/run_smoke_core.sh`를 실행합니다. 이 플래그는 closed root 상태만 전제로 하는 `smoke_github_actions_ghcr_static_plan.py`, `smoke_codex_handoff_readiness.py`, `smoke_next_chat_handoff.py` 세 개만 건너뛰며 앱·백엔드 전체 smoke는 그대로 실행합니다.
 - Vue 변경 시에만 `frontend/vue-app`에서 Python `.venv` 없이 `npm ci`와 `npm run build`를 실행합니다.
-- 현재 v326 Dockerfile·문서·검사기 정적 변경에는 서버 재시작이 필요 없고 새 설치도 없습니다.
+- 현재 v327 문서·검사기 정적 변경에는 서버 재시작이 필요 없고 새 설치도 없습니다.
 - 완료 답변에는 한 일, 검증, 서버 재시작 필요 여부, commit/push 결과, 다음 추천 단계, 필요한 extension/권한/설치 요청을 포함합니다.
