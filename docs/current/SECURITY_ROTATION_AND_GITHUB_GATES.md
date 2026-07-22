@@ -4,6 +4,14 @@
 
 실제 secret 값은 적지 않습니다. token, PAT, Docker credential, production `.env`, CA/cert/key를 Git·채팅·로그·artifact에 넣지 않습니다. 나중에 사용한 credential이 생기면 사용 완료 후 회전·폐기 여부를 이 문서에 기록합니다.
 
+## Neon database credential rotation — 2026-07-22
+
+- Neon Free PostgreSQL 16 AWS Singapore 프로젝트 생성 직후 최초 `neondb_owner` connection string이 채팅에 노출됐습니다.
+- 기호가 Neon Console에서 해당 역할 비밀번호를 즉시 재설정해 최초 credential과 connection string을 무효화했습니다.
+- 노출된 값은 Git, 로컬 파일, Docker image, Render, GitHub secret에 저장하거나 사용하지 않았습니다.
+- 새 direct/pooled URL은 채팅으로 받지 않고 Git/Docker 제외 경로 `deploy/.env.production`에서만 로컬 입력받습니다.
+- 새 URL 입력 전에는 Neon 연결 검사, DB 생성, schema/data write, migration을 실행하지 않습니다.
+
 ## Production deployment approval boundary
 
 - 운영 배포 계획 검토는 완료했지만 production host/DB/CA/proxy/domain/secret/network/rollback 입력이 미확정이므로 approval ready는 `false`입니다.

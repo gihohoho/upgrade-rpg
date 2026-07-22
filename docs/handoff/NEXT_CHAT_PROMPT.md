@@ -19,7 +19,9 @@ visibility/platform: private / linux/amd64
 production reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2
 provider selection: Render Free Web Service Singapore + Neon Free PostgreSQL 16 Singapore
 fixed monthly cost: USD 0
-account/resources/deploy: not connected/not created/not executed
+Neon account/project: connected/created (PostgreSQL 16, AWS Singapore)
+Neon credential: exposed initial password rotated; new URLs not injected
+Render account/service/deploy: not connected/not created/not executed
 approval ready/approved/executed: no/no/no
 ```
 
@@ -40,13 +42,13 @@ Render는 무료 Hobby workspace에 결제수단을 처음부터 넣지 않습�
 
 ## 다음 작업
 
-기호가 Render와 Neon 로그인을 완료했다고 말하면 계정 화면을 확인하고 아래를 진행합니다.
+Neon Free PostgreSQL 16 AWS Singapore 프로젝트는 생성됐고 Neon Auth는 사용하지 않습니다. 채팅에 노출된 최초 `neondb_owner` 비밀번호는 재설정해 폐기했습니다. 새 secret을 채팅으로 요청하거나 출력하지 마세요.
 
-1. Render Hobby workspace와 Neon Free plan/region 확인
-2. 실제 생성 전 무료 한도·결제수단 미등록 상태 재확인
-3. Render Free image-backed Web Service Singapore 설정 초안
-4. Neon Free PostgreSQL 16 AWS Singapore 설정 초안
-5. exact image, health path, secret 이름, `verify-full` certificate strategy 정적 준비
+1. 기호가 Neon Connect 화면의 새 direct/pooled URL을 Git/Docker 제외 파일 `deploy/.env.production`에 직접 입력하게 합니다.
+2. 입력 완료 뒤 secret을 출력하지 않는 read-only 연결 검사로 PostgreSQL 16, AWS Singapore endpoint, TLS `verify-full`, database/role을 확인합니다.
+3. `neondb`와 계획상 `rpg_game`의 차이를 해소하는 DB 생성·schema/data 이식은 별도 구체적 승인 전 실행하지 않습니다.
+4. Render Hobby 로그인과 결제수단 미등록 상태를 확인한 뒤 Free image-backed Web Service Singapore 설정을 준비합니다.
+5. exact image, health path, secret 이름, certificate strategy를 실제 Render 입력과 연결하되 deploy는 exact-SHA 승인 전 실행하지 않습니다.
 
 실제 resource 생성, DB 초기화/이식, GHCR PAT 생성·주입, backend deploy는 각 범위를 명확히 한 뒤 실행 준비 commit의 정확한 40자리 SHA를 별도 승인받기 전까지 실행하지 않습니다.
 

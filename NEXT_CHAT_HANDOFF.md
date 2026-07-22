@@ -14,7 +14,9 @@ GHCR repository: ghcr.io/gihohoho/upgrade-rpg-backend
 verified reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2
 provider selection: Render Free Singapore + Neon Free PostgreSQL 16 Singapore
 fixed monthly cost: USD 0
-account/resources/deploy: no/no/no
+Neon account/project: connected/created (PostgreSQL 16, AWS Singapore)
+Neon credential: exposed initial password rotated; new URLs not injected
+Render account/service/deploy: not connected/not created/not executed
 approval ready/approved/executed: no/no/no
 ```
 
@@ -26,9 +28,15 @@ Render에는 처음에 결제수단을 등록하지 않아 한도 초과 시 과
 
 선택 문서는 `docs/current/PRODUCTION_PROVIDER_SELECTION.md`, 정적 계약은 `deploy/production-provider-selection.example.json`, checker는 `tools/check_production_provider_selection.py`입니다.
 
+## Neon onboarding checkpoint — 2026-07-22
+
+기호가 Neon Free PostgreSQL 16 AWS Singapore 프로젝트를 생성했고 Neon Auth는 선택하지 않았습니다. 최초 connection string을 채팅에 붙인 직후 `neondb_owner` 비밀번호를 재설정해 노출 credential을 폐기했습니다. 새 비밀번호와 connection string은 채팅·Git·로그에 받지 않습니다.
+
+로컬 입력 파일 `deploy/.env.production`을 만들었고 이 경로는 Git과 Docker build context에서 제외됩니다. 현재 두 URL 값은 비어 있습니다. 다음에는 기호가 Neon Connect 화면에서 새 direct URL과 pooled URL을 이 파일에 직접 넣은 뒤, Codex가 secret을 출력하지 않는 읽기 전용 연결·TLS·버전 검사를 준비합니다. DB 생성·schema/data 초기화·restore·Alembic mutation은 아직 승인하거나 실행하지 않았습니다.
+
 ## 아직 사용자 작업이 필요한 것
 
-기호가 Render Hobby와 Neon Free에 로그인해야 합니다. 현재 계정 연결, resource, endpoint, registry credential, runtime secret은 전부 없습니다. Render 결제수단은 추가하지 않습니다. 로그인 외 필요한 extension·로컬 설치는 없습니다.
+Neon의 새 direct/pooled URL을 로컬 제외 파일에 입력하고 Render Hobby에 로그인해야 합니다. Render 결제수단은 추가하지 않습니다. 필요한 extension·로컬 설치는 없습니다.
 
 로그인 뒤에도 resource 생성, GHCR `read:packages` PAT 생성·주입, DB schema/data 초기화·이식, actual deploy는 실행 준비 범위와 exact 40자리 SHA 승인을 별도로 확인합니다.
 

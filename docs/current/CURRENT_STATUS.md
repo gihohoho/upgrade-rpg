@@ -26,18 +26,26 @@ production deployment approval ready/approved/executed: no/no/no
 
 Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 cold start가 생길 수 있습니다. Neon Free는 프로젝트당 월 100 CU-hours, 0.5 GB storage, 6시간 restore history 범위입니다. 상세 근거와 비교는 `PRODUCTION_PROVIDER_SELECTION.md`, 정적 계약은 `deploy/production-provider-selection.example.json`에 있습니다.
 
+## Neon onboarding checkpoint — 2026-07-22
+
+- Neon Free PostgreSQL 16 AWS Singapore 프로젝트 생성 완료
+- Neon Auth 비활성 선택
+- 채팅에 노출된 최초 `neondb_owner` 비밀번호 재설정·폐기 완료
+- 새 direct/pooled URL은 채팅·Git·앱·배포 플랫폼에 아직 주입하지 않음
+- Git/Docker 제외 로컬 입력 파일: `deploy/.env.production`
+
 ## 아직 하지 않은 것
 
-- Render/Neon 계정 로그인 또는 가입
-- Render Web Service와 Neon project 생성
-- 실제 DB endpoint·role·password 생성 또는 연결
+- Render 계정 로그인과 Web Service 생성
+- 새 Neon direct/pooled URL 로컬 입력 및 read-only TLS 연결 확인
+- 계획상 `rpg_game` 데이터베이스 생성
 - GHCR `read:packages` 전용 credential 생성·주입
 - JWT/admin secret 생성·주입
 - production CORS origin 확정
 - DB schema/data 초기화·restore·Alembic 작업
 - production deploy
 
-provider 선택은 완료했지만 실제 resource가 없으므로 v334 deployment plan의 required input은 계속 `unresolved`입니다.
+Neon resource는 생성됐지만 Render resource와 안전한 secret 주입, DB/schema/data 준비가 남아 있으므로 v334 deployment plan의 required input은 계속 `unresolved`입니다.
 
 ## 검증된 배포 후보
 
