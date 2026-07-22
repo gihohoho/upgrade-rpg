@@ -152,8 +152,11 @@ python tools/check_codex_handoff_readiness.py --strict
 
 - 현재 판단 문서는 `docs/current/`를 우선합니다. 과거 단계 기록은 `docs/archive/`와 `deploy/review/`에 있습니다.
 - legacy 게임 `index.html`, 관리자 `admin.html`, `src/`는 Vue 이식 전까지 이동하거나 대규모 재작성하지 않습니다.
-- 코드나 구조를 바꾸면 관련 전용 smoke, `python -m compileall -q backend/app backend/scripts backend/alembic tools`, JavaScript 문법, `bash tools/run_smoke_core.sh`를 확인합니다.
+- 검증은 위험도에 맞춰 최소 범위부터 실행합니다. 기본은 변경한 영역의 전용 checker/smoke 1회이며, 실패할 때만 관련 범위를 넓힙니다.
+- 문서·handoff·상태값·검사 결과 문자열만 바꾼 경우에는 관련 strict checker와 handoff smoke만 실행하고 `bash tools/run_smoke_core.sh`는 실행하지 않습니다.
+- `bash tools/run_smoke_core.sh` 전체 검사는 backend 핵심 로직, DB/Alembic, API 계약, 공통 구조, 여러 영역을 함께 바꾼 경우 또는 실제 배포 후보 직전에만 1회 실행합니다. 단순 문구 수정이나 이미 통과한 검사의 반복 확인을 위해 재실행하지 않습니다.
+- Python 파일을 바꾼 경우 변경 범위에 맞는 compileall을, JavaScript 파일을 바꾼 경우 해당 파일 문법 검사를 실행합니다.
 - authorization-open workflow에서는 정적 checker를 먼저 직접 실행한 뒤 `SKIP_GHCR_HANDOFF_SMOKES=1 bash tools/run_smoke_core.sh`를 실행합니다. 이 플래그는 closed root 상태만 전제로 하는 `smoke_github_actions_ghcr_static_plan.py`, `smoke_codex_handoff_readiness.py`, `smoke_next_chat_handoff.py` 세 개만 건너뛰며 앱·백엔드 전체 smoke는 그대로 실행합니다.
 - Vue 변경 시에만 `frontend/vue-app`에서 Python `.venv` 없이 `npm ci`와 `npm run build`를 실행합니다.
-- 현재 v327 문서·검사기 정적 변경에는 서버 재시작이 필요 없고 새 설치도 없습니다.
+- 현재 v327 문서·검사기 정적 변경에는 서버 재시작이 필요 없고 새 설치도 없습니다. 기호의 요청에 따라 전체 smoke 반복을 줄이고 위험도 기반 검증을 사용합니다.
 - 완료 답변에는 한 일, 검증, 서버 재시작 필요 여부, commit/push 결과, 다음 추천 단계, 필요한 extension/권한/설치 요청을 포함합니다.

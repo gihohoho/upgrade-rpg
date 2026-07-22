@@ -8,6 +8,7 @@
 - 실행 중인 개발 서버를 재사용하며 필요할 때만 재시작합니다.
 - Codex가 검증 뒤 git add/commit/push까지 직접 합니다. ZIP과 Git 명령 안내는 제공하지 않습니다.
 - actual secret/token/PAT/credential/CA/cert/key는 Git·채팅·로그·artifact에 넣지 않습니다.
+- 검증은 변경 영역의 전용 checker/smoke 1회부터 시작하고 실패할 때만 확대합니다. 문서·handoff·상태값 변경에는 전체 core smoke를 실행하지 않습니다. 전체 `bash tools/run_smoke_core.sh`는 backend 핵심 로직, DB/Alembic, API 계약, 공통 구조, 여러 영역 변경 또는 실제 배포 후보 직전에만 1회 실행합니다.
 
 ## 현재 고정값
 

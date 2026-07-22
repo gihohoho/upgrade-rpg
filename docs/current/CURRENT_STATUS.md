@@ -44,3 +44,5 @@ Trivy 기준 fixed version이 있는 항목은 `jaraco.context 6.1.0`, `wheel 0.
 ## 다음 단계
 
 artifact를 근거로 newer exact base digest, runtime image 최소화/multi-stage, Python dependency 업데이트를 검토합니다. focused fix와 새 preparation/workflow는 기호의 별도 승인 뒤 진행합니다. 현재 필요한 extension·설치·추가 권한은 없고 서버 재시작도 불필요합니다.
+
+검증은 기호의 요청에 따라 위험도 기반 최소 범위로 실행합니다. 문서·handoff·상태값 변경에는 관련 strict checker와 handoff smoke만 사용하고 전체 core smoke는 실행하지 않습니다. 전체 smoke는 핵심 로직·DB/Alembic·API 계약·공통 구조·여러 영역 변경 또는 실제 배포 후보 직전에만 1회 실행합니다.

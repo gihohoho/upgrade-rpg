@@ -4,6 +4,8 @@
 
 기호는 코딩을 거의 모릅니다. 항상 한국어로 쉽게 설명하고, 모든 터미널 명령 바로 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension, 권한, 설치가 있으면 요청하고 해결될 때까지 다음 handoff에도 기록하세요. Codex가 변경·검증 뒤 git add/commit/push까지 직접 하며 ZIP과 Git 명령 안내는 제공하지 않습니다. 실행 중인 개발 서버는 재사용하고 필요할 때만 재시작합니다.
 
+검증은 위험도에 맞춰 최소 범위부터 실행하세요. 기본은 변경 영역의 전용 checker/smoke 1회이고 실패할 때만 범위를 넓힙니다. 문서·handoff·상태값·검사 결과 문자열만 바꾼 경우에는 관련 strict checker와 handoff smoke만 실행하며 전체 `bash tools/run_smoke_core.sh`는 실행하지 않습니다. 전체 smoke는 backend 핵심 로직, DB/Alembic, API 계약, 공통 구조, 여러 영역 변경 또는 실제 배포 후보 직전에만 1회 실행하고 단순 문구 수정 뒤 반복하지 않습니다.
+
 ```txt
 latest: v327.third-owner-only-attempt-recorded-vulnerability-gated
 strict result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
