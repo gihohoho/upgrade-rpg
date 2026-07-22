@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v335
+# Upgrade RPG Codex handoff — v336
 
 ## 현재 상태
 
 ```txt
-latest: v335.cost-minimum-provider-selection-account-onboarding-required
-strict result: cost-minimum-production-provider-selected-account-onboarding-required
-next safe stage: owner-connect-render-and-neon-accounts
+latest: v336.neon-readonly-connectivity-verified-render-onboarding-required
+strict result: neon-direct-pooled-readonly-connectivity-verified
+next safe stage: owner-connect-render-and-review-database-initialization-plan
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked
 baseline result: production-deploy-plan-reviewed-inputs-blocked
 baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
@@ -15,7 +15,8 @@ verified reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3
 provider selection: Render Free Singapore + Neon Free PostgreSQL 16 Singapore
 fixed monthly cost: USD 0
 Neon account/project: connected/created (PostgreSQL 16, AWS Singapore)
-Neon credential: exposed initial password rotated; new URLs not injected
+Neon credential: exposed initial password rotated; new URLs local-only, not deployed
+Neon read-only connectivity: direct/pooled verified with TLS 1.3 hostname verification
 Render account/service/deploy: not connected/not created/not executed
 approval ready/approved/executed: no/no/no
 ```
@@ -32,11 +33,13 @@ Render에는 처음에 결제수단을 등록하지 않아 한도 초과 시 과
 
 기호가 Neon Free PostgreSQL 16 AWS Singapore 프로젝트를 생성했고 Neon Auth는 선택하지 않았습니다. 최초 connection string을 채팅에 붙인 직후 `neondb_owner` 비밀번호를 재설정해 노출 credential을 폐기했습니다. 새 비밀번호와 connection string은 채팅·Git·로그에 받지 않습니다.
 
-로컬 입력 파일 `deploy/.env.production`을 만들었고 이 경로는 Git과 Docker build context에서 제외됩니다. 현재 두 URL 값은 비어 있습니다. 다음에는 기호가 Neon Connect 화면에서 새 direct URL과 pooled URL을 이 파일에 직접 넣은 뒤, Codex가 secret을 출력하지 않는 읽기 전용 연결·TLS·버전 검사를 준비합니다. DB 생성·schema/data 초기화·restore·Alembic mutation은 아직 승인하거나 실행하지 않았습니다.
+로컬 입력 파일 `deploy/.env.production`은 Git과 Docker build context에서 제외됩니다. 새 direct/pooled URL은 이 파일에만 저장됐고 채팅·Git·로그에는 기록하지 않았습니다. `tools/check_neon_readonly_connectivity.py --execute`로 두 연결 모두 PostgreSQL 16.14, TLS 1.3 인증서·호스트 검증, `neondb`/`neondb_owner`, read-only transaction을 확인했습니다. DB write·create, schema/data 초기화, restore, Alembic mutation은 실행하지 않았습니다.
+
+sanitized evidence는 `deploy/review/neon-readonly-connectivity-v336.json`이며 `python tools/check_neon_readonly_connectivity.py --evidence`로 secret 없이 재검증합니다. 첫 검사에서 Neon Proxy 뒤 `pg_stat_ssl`을 클라이언트 TLS 판정에 잘못 사용해 direct 단계가 실패했지만, 클라이언트 TLS transport의 인증서·cipher·version을 직접 확인하도록 수정한 뒤 Direct/Pooler가 모두 통과했습니다.
 
 ## 아직 사용자 작업이 필요한 것
 
-Neon의 새 direct/pooled URL을 로컬 제외 파일에 입력하고 Render Hobby에 로그인해야 합니다. Render 결제수단은 추가하지 않습니다. 필요한 extension·로컬 설치는 없습니다.
+Render Hobby에 로그인해야 합니다. Render 결제수단은 추가하지 않습니다. DB 이름은 현재 Neon 기본 `neondb`이고 계획상 대상은 `rpg_game`이므로, DB 생성과 schema/data 초기화는 별도 실행 계획과 승인 뒤에만 진행합니다. 필요한 extension·로컬 설치는 없습니다.
 
 로그인 뒤에도 resource 생성, GHCR `read:packages` PAT 생성·주입, DB schema/data 초기화·이식, actual deploy는 실행 준비 범위와 exact 40자리 SHA 승인을 별도로 확인합니다.
 
@@ -70,12 +73,13 @@ Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.ex
 새 설치 여부: 없음
 
 ```bash
+python tools/check_neon_readonly_connectivity.py --evidence
 python tools/check_production_provider_selection.py --strict
 python tools/check_production_deployment_plan.py --strict
 python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v335 기대값은 `cost-minimum-production-provider-selected-account-onboarding-required`, 다음 단계는 `owner-connect-render-and-neon-accounts`입니다. v334 baseline marker `production-deploy-plan-reviewed-inputs-blocked`와 `select-production-targets-and-complete-executable-deploy-plan`도 보존합니다.
+v336 기대값은 `neon-direct-pooled-readonly-connectivity-verified`, 다음 단계는 `owner-connect-render-and-review-database-initialization-plan`입니다. v335 provider-selection 결과와 v334 deployment baseline도 보존합니다.
 
 서버 재시작은 이 공급자 선택·문서 작업에 필요하지 않습니다.

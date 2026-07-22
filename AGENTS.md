@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v335
+# Upgrade RPG Codex working rules — v336
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -31,9 +31,9 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v335.cost-minimum-provider-selection-account-onboarding-required
-strict result: cost-minimum-production-provider-selected-account-onboarding-required
-next safe stage: owner-connect-render-and-neon-accounts
+latest: v336.neon-readonly-connectivity-verified-render-onboarding-required
+strict result: neon-direct-pooled-readonly-connectivity-verified
+next safe stage: owner-connect-render-and-review-database-initialization-plan
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked / production-deploy-plan-reviewed-inputs-blocked
 baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
@@ -55,7 +55,8 @@ Alembic current: v295_initial_schema / new revision needed: no
 - 첫 공개 주소는 Render `onrender.com` managed HTTPS이며 custom domain과 DNS 변경은 보류합니다.
 - 무료 구성은 SLA production이 아닌 개인용 public preview이고 월 고정비 $0, idle cold start 허용 조건입니다.
 - Neon Free PostgreSQL 16 AWS Singapore 프로젝트는 생성됐고 Neon Auth는 사용하지 않습니다. 채팅에 노출된 최초 `neondb_owner` 비밀번호는 2026-07-22에 재설정해 폐기했습니다.
-- 새 Neon direct/pooled URL은 아직 앱·배포 플랫폼에 주입하지 않았습니다. 실제 값은 Git/Docker 제외 경로 `deploy/.env.production`에서만 받아 읽기 전용 연결 검사를 준비합니다.
+- 새 Neon direct/pooled URL은 앱·배포 플랫폼에 아직 주입하지 않고 Git/Docker 제외 경로 `deploy/.env.production`에만 보관합니다.
+- Direct/Pooler 모두 PostgreSQL 16.14, TLS 1.3 인증서·호스트 검증, read-only transaction을 통과했습니다. sanitized evidence는 `deploy/review/neon-readonly-connectivity-v336.json`입니다.
 - Render 계정 연결과 Web Service 생성, DB schema/data 초기화, production deploy는 아직 하지 않았습니다.
 
 ## 승인과 안전 경계
@@ -88,6 +89,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 프로젝트 루트에서 `backend/.venv` Python으로 먼저 실행합니다.
 
 ```bash
+python tools/check_neon_readonly_connectivity.py --evidence
 python tools/check_production_provider_selection.py --strict
 python tools/check_production_deployment_plan.py --strict
 python tools/check_github_actions_ghcr_static_plan.py --strict

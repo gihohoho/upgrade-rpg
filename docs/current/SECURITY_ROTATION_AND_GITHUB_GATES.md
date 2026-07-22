@@ -10,7 +10,9 @@
 - 기호가 Neon Console에서 해당 역할 비밀번호를 즉시 재설정해 최초 credential과 connection string을 무효화했습니다.
 - 노출된 값은 Git, 로컬 파일, Docker image, Render, GitHub secret에 저장하거나 사용하지 않았습니다.
 - 새 direct/pooled URL은 채팅으로 받지 않고 Git/Docker 제외 경로 `deploy/.env.production`에서만 로컬 입력받습니다.
-- 새 URL 입력 전에는 Neon 연결 검사, DB 생성, schema/data write, migration을 실행하지 않습니다.
+- 새 URL 입력 전까지 Neon 연결 검사, DB 생성, schema/data write, migration을 실행하지 않았습니다.
+- 새 URL은 Git/Docker 제외 로컬 파일에 입력했고 Direct/Pooler 모두 TLS 1.3 인증서·호스트 검증과 read-only transaction을 통과했습니다.
+- sanitized evidence에는 endpoint·URL·password를 기록하지 않았고 DB write·create, schema change, restore, Alembic은 실행하지 않았습니다.
 
 ## Production deployment approval boundary
 

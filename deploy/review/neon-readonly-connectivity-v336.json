@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "v336.neon-readonly-connectivity-verified-render-onboarding-required",
+  "checkedAtUtc": "2026-07-22T15:28:34Z",
+  "provider": "Neon Free",
+  "region": "aws-ap-southeast-1",
+  "postgresMajor": 16,
+  "serverVersion": "16.14 (b253d90)",
+  "database": "neondb",
+  "role": "neondb_owner",
+  "neonAuthEnabled": false,
+  "credential": {
+    "initialExposedPasswordRotated": true,
+    "actualValuesStoredInEvidence": false
+  },
+  "checks": {
+    "directConnected": true,
+    "pooledConnected": true,
+    "tlsVersion": "TLSv1.3",
+    "certificateRequired": true,
+    "hostnameVerified": true,
+    "readOnlyTransaction": true,
+    "selectOnly": true
+  },
+  "mutations": {
+    "databaseWrite": false,
+    "databaseCreate": false,
+    "schemaChange": false,
+    "dataRestore": false,
+    "alembic": false
+  },
+  "secretOrEndpointRecorded": false,
+  "result": "neon-direct-pooled-readonly-connectivity-verified",
+  "nextSafeStage": "owner-connect-render-and-review-database-initialization-plan"
+}

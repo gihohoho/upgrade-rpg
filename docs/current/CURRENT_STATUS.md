@@ -1,11 +1,11 @@
-# Current Status — v335
+# Current Status — v336
 
 ## 현재 결과
 
 ```txt
-latest: v335.cost-minimum-provider-selection-account-onboarding-required
-strict result: cost-minimum-production-provider-selected-account-onboarding-required
-next safe stage: owner-connect-render-and-neon-accounts
+latest: v336.neon-readonly-connectivity-verified-render-onboarding-required
+strict result: neon-direct-pooled-readonly-connectivity-verified
+next safe stage: owner-connect-render-and-review-database-initialization-plan
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked
 baseline result: production-deploy-plan-reviewed-inputs-blocked
 baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
@@ -31,13 +31,14 @@ Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 col
 - Neon Free PostgreSQL 16 AWS Singapore 프로젝트 생성 완료
 - Neon Auth 비활성 선택
 - 채팅에 노출된 최초 `neondb_owner` 비밀번호 재설정·폐기 완료
-- 새 direct/pooled URL은 채팅·Git·앱·배포 플랫폼에 아직 주입하지 않음
+- 새 direct/pooled URL은 채팅·Git·앱·배포 플랫폼에 주입하지 않고 로컬 제외 파일에만 저장
 - Git/Docker 제외 로컬 입력 파일: `deploy/.env.production`
+- Direct/Pooler 모두 PostgreSQL 16.14, TLS 1.3 인증서·호스트 검증, read-only transaction 통과
+- sanitized evidence: `deploy/review/neon-readonly-connectivity-v336.json`
 
 ## 아직 하지 않은 것
 
 - Render 계정 로그인과 Web Service 생성
-- 새 Neon direct/pooled URL 로컬 입력 및 read-only TLS 연결 확인
 - 계획상 `rpg_game` 데이터베이스 생성
 - GHCR `read:packages` 전용 credential 생성·주입
 - JWT/admin secret 생성·주입
@@ -45,7 +46,7 @@ Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 col
 - DB schema/data 초기화·restore·Alembic 작업
 - production deploy
 
-Neon resource는 생성됐지만 Render resource와 안전한 secret 주입, DB/schema/data 준비가 남아 있으므로 v334 deployment plan의 required input은 계속 `unresolved`입니다.
+Neon resource와 read-only 연결 검증은 완료됐지만 Render resource와 배포 플랫폼 secret 주입, DB/schema/data 준비가 남아 있으므로 v334 deployment plan의 required input은 계속 `unresolved`입니다.
 
 ## 검증된 배포 후보
 
@@ -67,4 +68,4 @@ Neon resource는 생성됐지만 Render resource와 안전한 secret 주입, DB/
 
 ## 다음 단계
 
-기호가 Render Hobby와 Neon Free에 로그인합니다. Render 결제수단은 추가하지 않습니다. 로그인 완료 뒤 Codex가 계정 화면을 확인하고 resource 생성 직전 설정을 준비합니다. 현재 필요한 로컬 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.
+기호가 Render Hobby에 로그인합니다. Render 결제수단은 추가하지 않습니다. 로그인 완료 뒤 Codex가 계정 화면을 확인하고 Web Service 생성 직전 설정과 별도 DB 초기화 계획을 준비합니다. 현재 필요한 로컬 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.

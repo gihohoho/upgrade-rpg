@@ -1,6 +1,6 @@
 # Production deployment plan — v334
 
-> v335에서 비용 최소 공급자는 Render Free Web Service Singapore + Neon Free PostgreSQL 16 Singapore로 선택했습니다. 자세한 근거는 `PRODUCTION_PROVIDER_SELECTION.md`에 있습니다. 실제 계정, resource, endpoint, secret이 아직 없으므로 이 v334 실행 계획의 required input과 approval은 계속 닫혀 있습니다.
+> v335에서 비용 최소 공급자는 Render Free Web Service Singapore + Neon Free PostgreSQL 16 Singapore로 선택했습니다. v336에서 Neon 프로젝트와 Direct/Pooler read-only TLS 연결은 검증했지만 Render resource, 배포 secret, `rpg_game` DB/schema/data는 아직 준비되지 않았으므로 이 v334 실행 계획의 required input과 approval은 계속 닫혀 있습니다.
 
 ## 결론
 
