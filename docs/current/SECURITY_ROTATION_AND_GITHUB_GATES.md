@@ -1,4 +1,4 @@
-# Security rotation and GitHub gates — v330
+# Security rotation and GitHub gates — v331
 
 ## Secret 원칙
 
@@ -52,3 +52,11 @@
 - provenance 검사는 `SLSA`/`buildDefinition` 객체와 `buildDefinition.buildType`을 순서대로 fail-closed 확인합니다.
 - workflow source/semantic/per-step SHA-256 잠금을 새 내용으로 갱신했습니다.
 - 새 exact preparation SHA 승인 전에는 authorization, workflow, GHCR login/push를 실행하지 않습니다.
+
+## v331 verified candidate 보안 결과
+
+- 2026-07-22T09:41:21Z repository Actions/allowlist/full SHA/default token/fork/environment 설정을 재확인했습니다.
+- run `29909291344`의 exact-digest Trivy 결과는 0건이고 SLSA v1 provenance/SBOM 검사가 통과했습니다.
+- Cosign keyless sign/verify와 certificate identity/issuer 검증이 성공했습니다.
+- verified digest는 `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`입니다.
+- production reference, local pull, container 시작, deploy는 미실행이며 별도 승인 전에 실행하지 않습니다.

@@ -48,9 +48,9 @@ REQUIRED = (
 
 
 def load_tool():
-    spec = importlib.util.spec_from_file_location("v330_codex_handoff", TOOL)
+    spec = importlib.util.spec_from_file_location("v331_codex_handoff", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v330 Codex handoff checker")
+        raise RuntimeError("cannot load v331 Codex handoff checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -69,7 +69,7 @@ def expect_blocked(module, temp: Path) -> None:
         module.inspect_codex_handoff(temp)
     except module.CodexHandoffError:
         return
-    raise AssertionError("unsafe v330 Codex handoff fixture was not blocked")
+    raise AssertionError("unsafe v331 Codex handoff fixture was not blocked")
 
 
 def main() -> int:
@@ -95,7 +95,7 @@ def main() -> int:
     assert result["publishEnvironmentExists"] is True
     assert result["publishEnvironmentConfigured"] is False
     assert result["publishGateReady"] is False
-    assert result["publishLifecycleState"] == "preparation-closed"
+    assert result["publishLifecycleState"] == "attempt-recorded"
     assert result["publishLifecycleSupportedStates"] == [
         "preparation-closed",
         "authorization-open",
@@ -103,8 +103,8 @@ def main() -> int:
         "attempt-recorded",
     ]
     assert result["priorApprovedPreparationSha"] == "350bbd085f1cf636810d75ddcbb5321e0791256c"
-    assert result["approvedPreparationSha"] is None
-    assert result["ownerApprovalRecorded"] is False
+    assert result["approvedPreparationSha"] == "36e8720a53ef7ff6a8334de6bc99646998d63fc9"
+    assert result["ownerApprovalRecorded"] is True
     assert result["workflowRunAttemptMustEqual"] == 1
     assert result["singleDispatchApiCheckRequired"] is True
     assert result["rerunForbidden"] is True
@@ -136,7 +136,7 @@ def main() -> int:
         ("actualRegistryMutationExecuted", False),
         ("priorExactPreparationShaApproved", False),
         ("priorApprovedPreparationSha", "0" * 40),
-        ("exactPreparationShaApproved", True),
+        ("exactPreparationShaApproved", False),
         ("actualDockerCommandExecuted", False),
         ("ownerOnlyApprovalPhase", "authorization-open"),
         ("publishLifecycleState", "authorization-open"),
@@ -158,7 +158,7 @@ def main() -> int:
         lambda p: p.update({"publishReviewerGateReady": True}),
         lambda p: p.update({"priorApprovedPreparationSha": "0" * 40}),
         lambda p: p.update({"approvedPreparationSha": "f4788acf5455b07169320bd29f43ddf92ff1d5ad"}),
-        lambda p: p["ownerApproval"].update({"recorded": True}),
+        lambda p: p["ownerApproval"].update({"recorded": False}),
         lambda p: p["ownerApproval"].update({"recordedAtUtc": "not-utc"}),
         lambda p: p["ownerApproval"].update({"evidence": "codex-self-approval"}),
         lambda p: p["authorizationPolicy"].update({"workflowRunAttemptMustEqual": 2}),
@@ -201,7 +201,7 @@ def main() -> int:
         local_env.write_text("NOT_A_REAL_SECRET=fixture-only\n", encoding="utf-8")
         expect_blocked(module, temp)
 
-    print("OK: v330 Codex/GHCR SLSA v1 provenance-path preparation handoff smoke passed")
+    print("OK: v331 Codex/GHCR verified candidate handoff smoke passed")
     return 0
 
 

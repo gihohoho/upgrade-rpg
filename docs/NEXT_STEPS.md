@@ -1,8 +1,8 @@
-# Next Steps — v330
+# Next Steps — v331
 
-1. v330 `SLSA.buildDefinition.buildType` focused fix preparation을 검증·commit·push합니다.
-2. 새 preparation의 정확한 40자 SHA를 기호에게 별도 승인받습니다.
-3. 승인 후 새 A → C → R single-dispatch lifecycle을 진행합니다. 기존 네 run은 rerun하지 않습니다.
-4. exact-digest Trivy와 Cosign까지 통과한 digest만 isolated 검증 후보로 사용합니다.
+1. run `29909291344`의 verified candidate evidence와 artifact를 검토합니다.
+2. digest `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`를 production reference에 반영할지, isolated pull/validation만 할지 별도 승인받습니다.
+3. 승인된 범위만 정적 검증하고, production deploy는 다시 별도 승인받습니다.
+4. 기존 다섯 run은 rerun하지 않습니다.
 
-현재 lifecycle은 `preparation-closed`, gate는 `false`, 승인 SHA는 `null`입니다. GHCR의 기존 digest는 unsigned·미검증이므로 배포하지 않습니다. 현재 필요한 설치·extension·추가 권한은 없고 서버 재시작도 불필요합니다.
+현재 lifecycle은 `attempt-recorded`, gate는 `false`입니다. verified candidate는 존재하지만 production reference는 아직 placeholder이고 deploy는 미실행입니다. 현재 필요한 설치·extension·추가 권한은 없고 서버 재시작도 불필요합니다.

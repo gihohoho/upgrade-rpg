@@ -1,10 +1,10 @@
 {
-  "schemaVersion": "v330.slsa-v1-provenance-path-preparation",
-  "preparedOnly": true,
+  "schemaVersion": "v331.fifth-owner-only-attempt-recorded-verified-candidate",
+  "preparedOnly": false,
   "publishApprovalModel": "owner-only-source-controlled-two-step",
-  "ownerOnlyApprovalPhase": "preparation-awaiting-exact-sha-approval",
+  "ownerOnlyApprovalPhase": "attempt-recorded-review",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
-  "publishLifecycleState": "preparation-closed",
+  "publishLifecycleState": "attempt-recorded",
   "publishLifecycleSupportedStates": [
     "preparation-closed",
     "authorization-open",
@@ -54,24 +54,24 @@
       "imagePushExecuted": true
     }
   ],
-  "approvedPreparationSha": null,
+  "approvedPreparationSha": "36e8720a53ef7ff6a8334de6bc99646998d63fc9",
   "currentAttemptEvidence": {
-    "authorizationSha": "4fb31f51ca0de15d77a73390b5a07e394ffce12a",
-    "closureSha": "ddf475c1a2449feb50ef2af1a536e4150cf0ad59",
-    "recordCommitSha": "f945214f2387b6aa191655d3740e18ef862bd6fb",
-    "runId": 29886540317,
-    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29886540317",
-    "conclusion": "failure",
+    "authorizationSha": "26a11356e33c978afa8cd8a4881500fa62cdbc5c",
+    "closureSha": "1c4a982b2a35d3d45f59e7d9faefcdecca69e6c5",
+    "recordCommitSha": "1f0340ddfcf3c8a74cf14110d5957627d4c5d38a",
+    "runId": 29909291344,
+    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29909291344",
+    "conclusion": "success",
     "registryLoginExecuted": true,
     "imageBuildExecuted": true,
     "imagePushExecuted": true,
     "artifactCount": 2,
-    "artifactIds": [8516735247, 8516749365],
-    "imageDigest": "sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149",
-    "signatureVerified": false
+    "artifactIds": [8525220616, 8525254543],
+    "imageDigest": "sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2",
+    "signatureVerified": true
   },
   "priorExactPreparationShaApproved": true,
-  "exactPreparationShaApproved": false,
+  "exactPreparationShaApproved": true,
   "dependencyAndFrontendInputsLocked": true,
   "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
   "registryProvider": "github-container-registry",
@@ -125,5 +125,5 @@
   "actualRegistryMutationExecuted": true,
   "actualDockerCommandExecuted": true,
   "actualDatabaseAlembicMutationExecuted": false,
-  "nextSafeStage": "review-and-approve-exact-provenance-path-preparation-sha"
+  "nextSafeStage": "review-verified-candidate-evidence-before-production-reference"
 }

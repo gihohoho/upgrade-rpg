@@ -1,4 +1,4 @@
-# Roadmap — v330
+# Roadmap — v331
 
 ## 완료
 
@@ -13,17 +13,17 @@
 ## 현재
 
 ```txt
-latest: v330.slsa-v1-provenance-path-preparation
-result: github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated
-lifecycle: preparation-closed / gate=false
-next safe stage: review-and-approve-exact-provenance-path-preparation-sha
+latest: v331.fifth-owner-only-attempt-recorded-verified-candidate
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+lifecycle: attempt-recorded / gate=false
+next safe stage: review-verified-candidate-evidence-before-production-reference
 ```
 
 ## 다음 순서
 
-1. v330 preparation 검증·commit·push
-2. 새 preparation의 exact 40자 SHA 승인
-3. 새 A → C → R single dispatch
-4. exact-digest Trivy와 Cosign까지 통과한 digest만 isolated 검증 후보로 사용
+1. verified candidate evidence 검토
+2. production reference 반영 또는 isolated pull/validation 범위 별도 승인
+3. 승인된 범위만 정적 검증
+4. production deploy는 다시 별도 승인
 
-정책을 자동 완화하지 않고 기존 네 run도 rerun하지 않습니다. production reference나 deployment는 별도 승인 단계입니다.
+정책을 자동 완화하지 않고 기존 다섯 run도 rerun하지 않습니다. production reference나 deployment는 별도 승인 단계입니다.

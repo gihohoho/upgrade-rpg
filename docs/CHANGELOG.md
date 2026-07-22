@@ -1,3 +1,12 @@
+# v331.fifth-owner-only-attempt-recorded-verified-candidate
+
+- exact preparation `36e8720a53ef7ff6a8334de6bc99646998d63fc9` 승인 후 authorization `26a11356e33c978afa8cd8a4881500fa62cdbc5c`을 single-dispatch로 실행.
+- run `29909291344` 접수 즉시 closure `1c4a982b2a35d3d45f59e7d9faefcdecca69e6c5`로 gate를 닫고 rerun 금지.
+- validation/local build/SBOM/Trivy, GHCR login/build/push, SLSA v1 provenance/SBOM, exact-digest Trivy 0건, Cosign sign/verify 모두 성공.
+- verified digest `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`와 artifacts `8525220616`/`8525254543` 기록.
+- evidence `1f0340ddfcf3c8a74cf14110d5957627d4c5d38a`로 lifecycle `attempt-recorded`, gate `false`, signature verified 상태 확정.
+- production reference 변경, pull, container 시작, deploy는 별도 승인 전에 실행하지 않음.
+
 # v330.slsa-v1-provenance-path-preparation
 
 - run `29886540317`의 실패 로그와 registry provenance artifact에서 SLSA v1 `buildType` 위치를 `SLSA.buildDefinition.buildType`으로 재확인.

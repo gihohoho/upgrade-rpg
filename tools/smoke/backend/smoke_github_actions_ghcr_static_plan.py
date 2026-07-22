@@ -53,6 +53,7 @@ def copy_fixture(temp: Path) -> None:
             "approvedPreparationSha": None,
         }),
         p["ownerApproval"].update({"recorded": False, "recordedAtUtc": None}),
+        p["githubLiveSettings"].update({"recheckedAtUtc": "2026-07-22T02:30:00Z"}),
         p["closure"].update({
             "authorizationSourceSha": None,
             "closureCommitSha": None,
@@ -241,7 +242,7 @@ def expect_secret_expression_blocked(module, temp: Path, label: str, run_step_ke
 def main() -> int:
     module = load_tool()
     result = module.inspect_static_workflow_plan(ROOT)
-    assert result["result"] == module.READY_RESULT
+    assert result["result"] == module.ATTEMPT_RECORDED_RESULT
     assert result["trigger"] == "workflow_dispatch-only"
     assert result["workflowFilePresent"] is True
     assert result["workflowSourceSha256"] == module.EXPECTED_WORKFLOW_SHA256
@@ -253,9 +254,9 @@ def main() -> int:
     assert result["actionsSettingsConfigured"] is True
     assert result["publishEnvironmentExists"] is True
     assert result["publishEnvironmentConfigured"] is False
-    assert result["publishLifecycleState"] == "preparation-closed"
+    assert result["publishLifecycleState"] == "attempt-recorded"
     assert result["publishGateReady"] is False
-    assert result["approvedPreparationSha"] is None
+    assert result["approvedPreparationSha"] == "36e8720a53ef7ff6a8334de6bc99646998d63fc9"
     assert result["dockerBuildContextEnvExcluded"] is True
     assert result["reproducibleBuildReady"] is True
     assert result["supplyChainGate"] == "fail-closed"
@@ -551,7 +552,7 @@ def main() -> int:
             )
             expect_secret_expression_blocked(module, temp, expression, emit_step_key)
 
-    print("OK: v330 GitHub Actions/GHCR SLSA v1 provenance-path preparation smoke passed")
+    print("OK: v331 GitHub Actions/GHCR verified candidate smoke passed")
     return 0
 
 

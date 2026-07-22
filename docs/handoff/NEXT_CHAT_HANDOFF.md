@@ -1,4 +1,4 @@
-# Upgrade RPG Codex handoff — v330
+# Upgrade RPG Codex handoff — v331
 
 ## 작업 원칙
 
@@ -13,9 +13,9 @@
 ## 현재 고정값
 
 ```txt
-latest: v330.slsa-v1-provenance-path-preparation
-strict result: github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated
-next safe stage: review-and-approve-exact-provenance-path-preparation-sha
+latest: v331.fifth-owner-only-attempt-recorded-verified-candidate
+strict result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-verified-candidate-evidence-before-production-reference
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR namespace: gihohoho
 repository: ghcr.io/gihohoho/upgrade-rpg-backend
@@ -23,7 +23,7 @@ visibility/platform: private / linux/amd64
 CI credential: GitHub Actions GITHUB_TOKEN
 local credential/PAT: deferred
 publish approval model: owner-only-source-controlled-two-step
-source-controlled lifecycle gate: preparation-closed / publishReviewerGateReady=false
+source-controlled lifecycle gate: attempt-recorded / publishReviewerGateReady=false
 workflow/login/build/push executed: yes/yes/yes/yes
 ```
 
@@ -88,15 +88,31 @@ signature verified: false
 
 validation, local build, SPDX SBOM, local Trivy, GHCR login/build/push는 성공했습니다. registry provenance/SBOM도 생성됐지만 SLSA v1 `buildType` 경로를 구형 위치로 검사해 실패했습니다. artifact는 `8516735247`과 `8516749365`이며 exact-digest Trivy/Cosign은 미실행입니다.
 
+## 다섯 번째 owner-only 시도 — verified candidate
+
+```txt
+approved preparation: 36e8720a53ef7ff6a8334de6bc99646998d63fc9
+authorization: 26a11356e33c978afa8cd8a4881500fa62cdbc5c
+immediate closure: 1c4a982b2a35d3d45f59e7d9faefcdecca69e6c5
+evidence record: 1f0340ddfcf3c8a74cf14110d5957627d4c5d38a
+run ID: 29909291344
+run URL: https://github.com/gihohoho/upgrade-rpg/actions/runs/29909291344
+status/conclusion: completed / success
+image digest: sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2
+signature verified: true
+```
+
+validation, local build/SBOM/Trivy, GHCR login/build/push, SLSA v1 provenance/SBOM, exact-digest Trivy 0건, Cosign sign/verify가 모두 성공했습니다. artifacts는 `8525220616`, `8525254543`이며 lifecycle은 `attempt-recorded`, gate는 `false`입니다. production reference/pull/deploy는 미실행입니다.
+
 ## 이전 시도 보존
 
 - run `29716038891`: workflow bootstrap dependency 단계 실패, build/login/push 미실행, evidence `1f12ea59eb54385337557e9754f86731ec53d253`
 - run `29877813770`: Dockerfile bootstrap target 문제로 local build 실패, login/push 미실행, evidence `c93a0327bc25941865f4ee8d600a4f903886a4fe`
-- 세 run 모두 rerun 금지이며 lifecycle `attemptHistory`와 현재 evidence에 보존됩니다.
+- 이전 네 run과 현재 성공 run 모두 rerun 금지이며 lifecycle history/current evidence에 보존됩니다.
 
 ## GitHub 보안 설정
 
-2026-07-22T01:21:58Z 재확인:
+2026-07-22T09:41:21Z 재확인:
 
 - 외부 action allowlist와 full-length SHA 강제 정상
 - GitHub-owned/verified creator blanket false
@@ -129,11 +145,11 @@ python tools/check_codex_handoff_readiness.py --strict
 기대값:
 
 ```txt
-result: github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated
-next safe stage: review-and-approve-exact-provenance-path-preparation-sha
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-verified-candidate-evidence-before-production-reference
 ```
 
-4차 run `29886540317`은 GHCR push까지 성공했고 digest는 `sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149`입니다. SLSA v1 provenance의 buildType은 `SLSA.buildDefinition.buildType`에 있었지만 workflow가 구형 경로를 검사해 실패했습니다. exact-digest Trivy/Cosign은 미실행이고 digest는 unsigned·미검증입니다. v330 focused fix는 `SLSA`/`buildDefinition` 객체와 `buildDefinition.buildType`을 fail-closed로 확인하고 구형 경로 복원을 mutation smoke로 차단합니다. 현재 approval SHA는 `null`, run은 not-dispatched입니다. 준비 커밋의 exact SHA 승인 전에는 authorization/workflow를 실행하지 않습니다.
+5차 run `29909291344`은 v330 focused fix와 모든 공급망 gate를 통과해 verified digest `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`를 만들었습니다. 현재 lifecycle은 `attempt-recorded`, gate는 `false`입니다. 다음에는 production reference 반영 또는 isolated pull/validation 범위를 별도 승인받습니다. production deploy는 다시 별도 승인입니다.
 
 ## 안전 경계
 

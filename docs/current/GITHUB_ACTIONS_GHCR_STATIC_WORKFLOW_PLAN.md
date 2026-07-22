@@ -1,11 +1,11 @@
-# GitHub Actions / GHCR workflow plan — v330
+# GitHub Actions / GHCR workflow plan — v331
 
 ```txt
 version: v330.slsa-v1-provenance-path-preparation
 static workflow plan version: v330.slsa-v1-provenance-path-preparation
 preparation version: v330.slsa-v1-provenance-path-preparation
 base plan version: v322.owner-only-single-run-lifecycle-hardened-publish-gated
-result: github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
 repository: gihohoho/upgrade-rpg
 image: ghcr.io/gihohoho/upgrade-rpg-backend
 workflow: .github/workflows/publish-backend-ghcr.yml
@@ -14,9 +14,9 @@ workflow source SHA-256: 3331484f280a12a239275785bef625f18656c62ccbe33e8707a296a
 workflow semantic SHA-256: 526c4d21f9bc223e25829f60bf804f9167f6905b9129ffe1e70d85f354d57126
 workflow file creation: complete
 workflow 파일 생성: 완료
-workflow execution: runs 29716038891, 29877813770, 29883012957, 29886540317 completed/failure
+workflow execution: runs 29716038891, 29877813770, 29883012957, 29886540317 failure; 29909291344 success
 registry login/build/push: yes/yes/yes
-next safe stage: review-and-approve-exact-provenance-path-preparation-sha
+next safe stage: review-verified-candidate-evidence-before-production-reference
 ```
 
 정적 문서 잠금 표식: `workflow_dispatch`, `pull_request_target` 금지, `contents: read`, `actions: read`, `packages: write`, `id-token: write`, Docker BuildKit, `HIGH,CRITICAL`, Sigstore Cosign keyless, `approved_preparation_commit`, `DOCKER_BUILD_RECORD_UPLOAD`, required reviewer 제약.
@@ -32,6 +32,10 @@ run `29877813770`은 Dockerfile bootstrap target 문제로 로컬 build에서 �
 ## 네 번째 실행과 v330 focused fix
 
 run `29886540317`은 GHCR push까지 성공했지만 registry provenance의 SLSA v1 `buildType`을 구형 `SLSA.buildType`에서 검사해 실패했습니다. artifact에서 실제 경로가 `SLSA.buildDefinition.buildType`임을 확인했습니다. v330은 `SLSA`/`buildDefinition` 객체를 각각 fail-closed로 확인한 뒤 `buildType`을 검사하며, 구형 경로 복원을 mutation smoke로 차단합니다. 새 workflow는 아직 실행하지 않았습니다.
+
+## 다섯 번째 실행 결과
+
+run `29909291344`은 preparation `36e8720a53ef7ff6a8334de6bc99646998d63fc9`를 승인한 단일 `run_attempt=1`입니다. validation, local build/SBOM/Trivy, GHCR login/build/push, SLSA v1 provenance/SBOM, exact-digest Trivy, Cosign keyless sign/verify가 모두 성공했습니다. exact-digest Trivy 결과는 0건이고 verified digest는 `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`입니다. artifacts `8525220616`, `8525254543`을 14일 보존합니다.
 
 ## v322가 필요한 이유
 
@@ -219,9 +223,9 @@ production reference 자동 갱신과 deploy는 하지 않습니다.
 
 ## 현재와 다음 단계
 
-현재 lifecycle은 `preparation-closed`이고 gate는 `false`, 승인 SHA는 `null`입니다. 네 실패를 history에 보존하고 모두 rerun 금지합니다. 4차 run의 pushed digest는 unsigned·미검증이며 검증 완료 후보가 아닙니다.
+현재 lifecycle은 `attempt-recorded`이고 gate는 `false`입니다. 네 실패와 한 성공을 보존하고 다섯 run 모두 rerun 금지합니다. verified candidate는 생성됐지만 production reference 변경과 deploy는 미실행입니다.
 
 ```txt
-result: github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated
-next safe stage: review-and-approve-exact-provenance-path-preparation-sha
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-verified-candidate-evidence-before-production-reference
 ```

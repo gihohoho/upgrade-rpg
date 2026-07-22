@@ -1,4 +1,4 @@
-# Upgrade RPG 다음 Codex 작업 프롬프트 — v330
+# Upgrade RPG 다음 Codex 작업 프롬프트 — v331
 
 기호의 Upgrade RPG 프로젝트를 현재 Git `main` 최신 상태에서 이어서 진행합니다. 먼저 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 읽고 저장소 규칙을 지켜주세요.
 
@@ -7,9 +7,9 @@
 검증은 위험도에 맞춰 최소 범위부터 실행하세요. 기본은 변경 영역의 전용 checker/smoke 1회이고 실패할 때만 범위를 넓힙니다. 문서·handoff·상태값·검사 결과 문자열만 바꾼 경우에는 관련 strict checker와 handoff smoke만 실행하며 전체 `bash tools/run_smoke_core.sh`는 실행하지 않습니다. 전체 smoke는 backend 핵심 로직, DB/Alembic, API 계약, 공통 구조, 여러 영역 변경 또는 실제 배포 후보 직전에만 1회 실행하고 단순 문구 수정 뒤 반복하지 않습니다.
 
 ```txt
-latest: v330.slsa-v1-provenance-path-preparation
-strict result: github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated
-next safe stage: review-and-approve-exact-provenance-path-preparation-sha
+latest: v331.fifth-owner-only-attempt-recorded-verified-candidate
+strict result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-verified-candidate-evidence-before-production-reference
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR namespace: gihohoho
 backend repository: ghcr.io/gihohoho/upgrade-rpg-backend
@@ -17,7 +17,7 @@ visibility: private
 target platform: linux/amd64
 CI credential strategy: github-actions-github-token
 publish approval model: owner-only-source-controlled-two-step
-source-controlled lifecycle gate: preparation-closed / publishReviewerGateReady=false
+source-controlled lifecycle gate: attempt-recorded / publishReviewerGateReady=false
 run_attempt=1: required
 single dispatch: required
 immediate closure: required
@@ -46,6 +46,17 @@ immediate closure: required
 - artifact: `8516735247` / `8516749365`, 14일 보존
 - image digest: `sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149`, signature 미검증
 
+5차 실행 증거:
+
+- preparation: `36e8720a53ef7ff6a8334de6bc99646998d63fc9` (기호 승인·소비 완료)
+- authorization: `26a11356e33c978afa8cd8a4881500fa62cdbc5c`
+- closure: `1c4a982b2a35d3d45f59e7d9faefcdecca69e6c5`
+- evidence: `1f0340ddfcf3c8a74cf14110d5957627d4c5d38a`
+- run: `29909291344` / `https://github.com/gihohoho/upgrade-rpg/actions/runs/29909291344` / success
+- artifact: `8525220616` SHA-256 `c08e483754d357f2f7120659cea455e670bc570a5fb0db3eadfbc0b217f1e30e`; `8525254543` SHA-256 `697fbb38e30d9328d65e392da819eb1645cb42be5059ca502c29cd3b9241db65`
+- verified digest: `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`
+- exact-digest Trivy 0건, SLSA v1 provenance/SBOM, Cosign sign/verify 성공
+
 첫 작업은 읽기 전용 v329 검사입니다.
 
 실행 위치: `backend` 폴더
@@ -68,12 +79,12 @@ python tools/check_codex_handoff_readiness.py --strict
 정상 기대 결과:
 
 ```txt
-result: github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated
-next safe stage: review-and-approve-exact-provenance-path-preparation-sha
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-verified-candidate-evidence-before-production-reference
 ```
 
 4차 run `29886540317`은 validation/local build/SBOM/local Trivy/GHCR login·push까지 성공해 digest `sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149`를 만들었습니다. registry provenance와 SBOM도 존재하지만 workflow가 SLSA v1의 `SLSA.buildDefinition.buildType` 대신 구형 `SLSA.buildType`을 검사해 실패했습니다. exact-digest Trivy와 Cosign은 미실행이므로 digest는 unsigned·미검증이며 배포하지 않습니다. 기존 네 run은 rerun 금지입니다.
 
-v330 focused fix는 `SLSA` 객체와 `buildDefinition` 객체를 각각 fail-closed로 검사한 뒤 `buildDefinition.buildType`을 확인하며, 구형 경로로 되돌리는 mutation smoke를 포함합니다. workflow source/semantic SHA-256은 `3331484f280a12a239275785bef625f18656c62ccbe33e8707a296ac2e204843` / `526c4d21f9bc223e25829f60bf804f9167f6905b9129ffe1e70d85f354d57126`입니다. 현재 gate는 닫혀 있고 승인 SHA는 `null`, run은 not-dispatched입니다. 다음에는 v330 준비 커밋의 정확한 40자 SHA를 기호가 별도 승인한 뒤만 authorization을 열세요.
+v330 focused fix를 사용한 5차 run은 모든 gate와 Cosign sign/verify를 통과했습니다. 현재 lifecycle은 `attempt-recorded`, gate는 `false`이고 다섯 run 모두 rerun 금지입니다. verified candidate는 생성됐지만 production reference는 아직 placeholder입니다. 다음에는 evidence를 검토하고 production reference 반영 또는 isolated pull/validation 범위를 기호가 별도 승인한 뒤만 진행하세요. production deploy는 다시 별도 승인입니다.
 
 사용자 별도 요청 전에는 DB/Alembic/auth/API write/Vue Preview·Apply·write/게임 콘텐츠와 밸런스/production Compose·container·network·volume/자동 deploy를 변경하거나 실행하지 마세요. actual secret/token/PAT/credential/CA/cert/key는 Git·채팅·로그·artifact에 넣지 않습니다.

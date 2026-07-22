@@ -1,15 +1,15 @@
-# Backend image GHCR policy — v330
+# Backend image GHCR policy — v331
 
 ## 고정값
 
 ```txt
-version: v330.slsa-v1-provenance-path-preparation
+version: v331.fifth-owner-only-attempt-recorded-verified-candidate
 remote: https://github.com/gihohoho/upgrade-rpg.git
 repository: ghcr.io/gihohoho/upgrade-rpg-backend
 visibility/platform: private / linux/amd64
 credential: GitHub Actions GITHUB_TOKEN
 reference mode: digest-only
-lifecycle: preparation-closed / publishReviewerGateReady=false
+lifecycle: attempt-recorded / publishReviewerGateReady=false
 ```
 
 `owner-only-source-controlled-two-step` source-controlled lifecycle gate를 사용합니다. authorization은 승인된 preparation의 직접 자식이며 lifecycle 파일만 변경합니다. workflow는 repository owner, `run_attempt=1`, single dispatch만 허용하고 접수 즉시 immediate closure로 gate를 닫습니다. rerun은 금지합니다. 종료 뒤 별도 `attempt-recorded` commit이 정확한 `closureCommitSha`와 실제 run/digest/signature 증거를 남깁니다. 일반 R 계약 next stage는 `review-recorded-workflow-attempt-evidence`입니다.
@@ -40,6 +40,8 @@ lifecycle: preparation-closed / publishReviewerGateReady=false
 
 4차 run은 GHCR push까지 성공해 digest `sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149`를 만들었지만 SLSA v1 provenance 경로 검사에서 실패했습니다. exact-digest Trivy와 Cosign은 미실행이므로 이 digest는 검증 완료 후보가 아닙니다. 4차 증거는 lifecycle `attemptHistory`에 보존했습니다.
 
-v330 focused fix는 registry provenance의 `SLSA` 객체와 `buildDefinition` 객체를 각각 확인한 뒤 `SLSA.buildDefinition.buildType`을 검사합니다. 구형 `SLSA.buildType`으로 되돌리거나 객체 검사를 빼면 정적 smoke가 차단합니다. 현재 새 lifecycle은 `preparation-closed`, 승인 SHA는 `null`, gate는 `false`입니다.
+v330 focused fix는 registry provenance의 `SLSA` 객체와 `buildDefinition` 객체를 각각 확인한 뒤 `SLSA.buildDefinition.buildType`을 검사합니다. 구형 `SLSA.buildType`으로 되돌리거나 객체 검사를 빼면 정적 smoke가 차단합니다.
 
-다음 안전 단계는 `review-and-approve-exact-provenance-path-preparation-sha`입니다. 준비 커밋의 정확한 40자 SHA 승인 전에는 authorization/workflow를 실행하지 않습니다.
+5차 run `29909291344`은 모든 gate와 Cosign sign/verify를 통과했습니다. verified digest는 `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`입니다. 현재 lifecycle은 `attempt-recorded`, gate는 `false`입니다. production reference는 여전히 placeholder이며 자동 deploy는 없습니다.
+
+다음 안전 단계는 `review-verified-candidate-evidence-before-production-reference`입니다. production reference 변경, isolated pull/validation, deploy는 각각 별도 승인 범위입니다.
