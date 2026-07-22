@@ -1,18 +1,33 @@
-# Current Status — v332
+# Current Status — v333
 
 ## 현재 결과
 
 ```txt
-latest: v332.verified-digest-production-reference-static-prepared
-strict result: verified-digest-production-reference-static-prepared-runtime-blocked
-next safe stage: review-production-reference-and-approve-isolated-pull-validation
+latest: v333.isolated-image-pull-runtime-validation-complete-deploy-blocked
+strict result: isolated-image-pull-runtime-validation-complete-production-deploy-blocked
+next safe stage: review-isolated-validation-and-approve-production-deploy-plan
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR repository: ghcr.io/gihohoho/upgrade-rpg-backend
 lifecycle: attempt-recorded
 publishReviewerGateReady: false
 ```
 
-CI credential은 GitHub Actions `GITHUB_TOKEN`이고 local PAT는 deferred입니다. workflow는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `owner-only-source-controlled-two-step` source-controlled lifecycle gate를 사용하며 `run_attempt=1`, single dispatch, immediate closure, rerun 금지를 강제합니다. 5차 run은 성공 evidence로 기록했고, v332에서 verified digest를 production reference에 정적으로 고정했습니다. 현재 구체적 단계는 `review-production-reference-and-approve-isolated-pull-validation`입니다.
+CI credential은 GitHub Actions `GITHUB_TOKEN`입니다. isolated pull에는 기호가 웹 로그인한 GitHub CLI OAuth `read:packages`를 Docker credential store로 전달했고 token 값은 기록하지 않았습니다. `deploy/github-actions-ghcr-publish-lifecycle.json`의 source-controlled lifecycle gate는 계속 `attempt-recorded`, gate `false`입니다. 현재 구체적 단계는 `review-isolated-validation-and-approve-production-deploy-plan`입니다.
+
+## v333 isolated image pull/runtime 검증
+
+- exact reference pull 성공: `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`
+- image ID/digest 일치, `linux/amd64`, 기본 user `65532:65532`
+- internal bridge network, host port 없음, volume 없음
+- read-only rootfs, `/tmp` tmpfs `noexec,nosuid`, cap-drop ALL, no-new-privileges, PID/memory/CPU 제한
+- effective UID 65532, Python 3.11.15, pip 없음
+- `/api/v1/health` 200 및 `system.health`; `/health/db`와 실제 DB 연결은 실행하지 않음
+- rootfs write 차단, `/tmp` write/remove 성공
+- Alembic 미실행, production secret/CA/network 미사용
+- 첫 start의 CORS JSON quoting 실패는 앱 시작 전 발생했고 해당 container/network를 제거한 뒤 지원되는 단일 문자열 형식으로 재검증 성공
+- 최종 cleanup: 임시 container/network/local image 모두 제거, volume 생성 없음, 기존 PostgreSQL healthy
+- evidence: `deploy/review/isolated-image-pull-validation-v333.json`
+- production runtime/deploy: 미적용/미승인/미실행
 
 ## 세 번째 실행
 
@@ -98,6 +113,6 @@ Trivy 기준 fixed version이 있는 항목은 `jaraco.context 6.1.0`, `wheel 0.
 - Distroless Debian 12 후보는 실제 동일 검사에서 41건으로 실패해 채택하지 않았습니다.
 - 위 내용은 v328 preparation commit 시점의 준비 결과입니다. 그 시점에 lifecycle은 `preparation-closed`, 승인 SHA는 `null`, 새 workflow는 미실행이었습니다. 현재 상태는 위의 다섯 번째 실행 기록과 같이 `attempt-recorded`입니다.
 
-다음 단계는 정적으로 고정한 production reference를 검토한 뒤 isolated pull/validation을 별도 승인하는 것입니다. 현재 필요한 extension·설치·추가 권한은 없습니다. 배포 정적 준비에는 서버 재시작이 불필요하지만 legacy 화면을 사용하려면 기존 local PostgreSQL과 별도 정적 서버를 시작해야 합니다. 로컬 token은 `read:packages`가 없어 GHCR package API 조회는 할 수 없지만 Actions evidence로 candidate 검증을 완료했습니다.
+다음 단계는 isolated 검증 증거를 검토한 뒤 production deploy 계획과 실제 deploy를 별도 승인하는 것입니다. 현재 필요한 extension·설치는 없습니다. 활성 `gihohoho` GitHub CLI 계정에는 `read:packages`가 있고, 비활성 `konghjin` 계정의 만료 token은 건드리지 않았습니다.
 
 검증은 기호의 요청에 따라 위험도 기반 최소 범위로 실행합니다. 문서·handoff·상태값 변경에는 관련 strict checker와 handoff smoke만 사용하고 전체 core smoke는 실행하지 않습니다. 전체 smoke는 핵심 로직·DB/Alembic·API 계약·공통 구조·여러 영역 변경 또는 실제 배포 후보 직전에만 1회 실행합니다.

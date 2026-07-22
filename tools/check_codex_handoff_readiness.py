@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the v332 digest-pinned production reference static handoff."""
+"""Validate the v333 isolated image pull/runtime evidence and deploy boundary."""
 from __future__ import annotations
 
 import argparse
@@ -11,8 +11,8 @@ import re
 import subprocess
 from typing import Any
 
-TOOL_VERSION = "v332.verified-digest-production-reference-static-prepared"
-READY_RESULT = "verified-digest-production-reference-static-prepared-runtime-blocked"
+TOOL_VERSION = "v333.isolated-image-pull-runtime-validation-complete-deploy-blocked"
+READY_RESULT = "isolated-image-pull-runtime-validation-complete-production-deploy-blocked"
 PREPARATION_READY_RESULT = "github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated"
 AUTHORIZATION_OPEN_RESULT = "github-actions-ghcr-owner-only-authorization-open"
 AUTHORIZATION_CLOSED_AWAITING_EVIDENCE_RESULT = (
@@ -20,7 +20,7 @@ AUTHORIZATION_CLOSED_AWAITING_EVIDENCE_RESULT = (
 )
 ATTEMPT_RECORDED_RESULT = "github-actions-ghcr-owner-only-attempt-recorded-publish-gated"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "review-production-reference-and-approve-isolated-pull-validation"
+NEXT_SAFE_STAGE = "review-isolated-validation-and-approve-production-deploy-plan"
 EXPECTED_REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 EXPECTED_NAMESPACE = "gihohoho"
 EXPECTED_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
@@ -29,6 +29,7 @@ EXPECTED_REFERENCE = EXPECTED_REPOSITORY + "@sha256:ff939391517452a3ec477adaa0f8
 EXPECTED_BASE = "python:3.11.15-alpine3.23@sha256:ac0151f0eec4b7ba78bc47d337f328c6db706e7255b35b2327c2749f058c82fe"
 WORKFLOW_PATH = ".github/workflows/publish-backend-ghcr.yml"
 LIFECYCLE_PATH = "deploy/github-actions-ghcr-publish-lifecycle.json"
+ISOLATED_EVIDENCE_PATH = "deploy/review/isolated-image-pull-validation-v333.json"
 LIFECYCLE_SCHEMA_VERSION = "v326.owner-only-publish-lifecycle-with-attempt-history"
 PRIOR_APPROVED_PREPARATION_SHA = "350bbd085f1cf636810d75ddcbb5321e0791256c"
 SECOND_APPROVED_PREPARATION_SHA = "2f77ebf0f60a39c936509df26f903995f0c62967"
@@ -396,6 +397,7 @@ def _inspect_actions_workflow(root: Path) -> dict[str, Any]:
 
 def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     policy = _read_json(root / "deploy/backend-image-ghcr-policy.example.json")
+    isolated_evidence = _read_json(root / ISOLATED_EVIDENCE_PATH)
     lifecycle = _inspect_publish_lifecycle(root)
     env_example = _read(root / "deploy/production.env.example")
     compose = _read(root / "deploy/docker-compose.production.yml")
@@ -412,14 +414,14 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     handoff_state = _read(root / "docs/handoff/NEXT_CHAT_HANDOFF.md")
     actions_result = _inspect_actions_workflow(root)
 
-    _require(policy.get("schemaVersion") == TOOL_VERSION, "unexpected v332 schemaVersion")
+    _require(policy.get("schemaVersion") == TOOL_VERSION, "unexpected v333 schemaVersion")
     _require(_bool(policy, "preparedOnly") is False, "recorded attempt cannot remain preparation-only")
     _require(
         policy.get("publishApprovalModel") == "owner-only-source-controlled-two-step",
         "owner-only publish approval model changed",
     )
     _require(
-        policy.get("ownerOnlyApprovalPhase") == "verified-production-reference-static-prepared",
+        policy.get("ownerOnlyApprovalPhase") == "isolated-image-validation-complete-deploy-blocked",
         "owner-only phase changed",
     )
     _require(policy.get("publishLifecyclePath") == LIFECYCLE_PATH, "publish lifecycle path changed")
@@ -480,7 +482,66 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require(policy.get("baseImageReference") == EXPECTED_BASE, "base image reference changed")
     _require(_bool(policy, "baseImageDigestApproved") is True, "base image digest approval missing")
     _require(policy.get("ciCredentialStrategy") == "github-actions-github-token", "CI credential strategy changed")
-    _require(policy.get("localCredentialStrategy") == "deferred", "local credential strategy must remain deferred")
+    _require(
+        policy.get("localCredentialStrategy") == "github-cli-oauth-read-packages",
+        "local credential strategy must remain the approved GitHub CLI OAuth flow",
+    )
+    _require(policy.get("isolatedValidationEvidence") == ISOLATED_EVIDENCE_PATH, "isolated validation evidence path changed")
+    _require(isolated_evidence == {
+        "schemaVersion": "v333.isolated-image-pull-runtime-validation",
+        "completedAtUtc": "2026-07-22T12:27:37Z",
+        "approvedByUserMessage": True,
+        "imageReference": EXPECTED_REFERENCE,
+        "imageId": CURRENT_IMAGE_DIGEST,
+        "platform": "linux/amd64",
+        "registryAuthentication": "github-cli-oauth-read-packages-to-docker-credential-store",
+        "pullExecuted": True,
+        "containerExecution": {
+            "executed": True,
+            "user": "65532:65532",
+            "effectiveUid": 65532,
+            "internalNetwork": True,
+            "publishedHostPorts": [],
+            "volumes": [],
+            "readOnlyRootFilesystem": True,
+            "tmpfs": ["/tmp:rw,noexec,nosuid,size=64m"],
+            "capabilitiesDropped": ["ALL"],
+            "noNewPrivileges": True,
+            "pidsLimit": 128,
+            "memoryBytes": 268435456,
+            "nanoCpus": 1000000000,
+        },
+        "runtimeValidation": {
+            "pythonVersion": "3.11.15",
+            "machine": "x86_64",
+            "healthPath": "/api/v1/health",
+            "healthOk": True,
+            "healthType": "system.health",
+            "pipPresent": False,
+            "rootFilesystemWriteBlocked": True,
+            "tmpfsWriteRemovePassed": True,
+            "alembicCommandExecuted": False,
+            "databaseHealthPathCalled": False,
+            "actualDatabaseConnectionAttempted": False,
+        },
+        "firstStartProbe": {
+            "conclusion": "failed-before-app-start",
+            "reason": "PowerShell removed JSON quotes from the isolated CORS input",
+            "resourcesCleanedBeforeRetry": True,
+            "applicationOrImageDefect": False,
+        },
+        "cleanup": {
+            "containerRemoved": True,
+            "internalNetworkRemoved": True,
+            "localImageRemoved": True,
+            "volumeCreated": False,
+            "existingPostgresContainerHealthyAfterCleanup": True,
+        },
+        "productionRuntimeApplied": False,
+        "productionDeploymentApproved": False,
+        "productionDeploymentExecuted": False,
+        "nextSafeStage": NEXT_SAFE_STAGE,
+    }, "isolated image pull/runtime evidence changed")
 
     for key in (
         "githubActionsWorkflowPresent",
@@ -508,8 +569,14 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "localImageBuildApproved",
         "exactPreparationShaApproved",
         "actualRegistryMutationExecuted",
+        "localDockerLoginApproved",
+        "localImagePullApproved",
+        "containerStartApproved",
+        "isolatedImagePullExecuted",
+        "isolatedContainerExecutionExecuted",
+        "isolatedCleanupExecuted",
     ):
-        _require(_bool(policy, key) is True, f"completed/approved v332 state must remain true: {key}")
+        _require(_bool(policy, key) is True, f"completed/approved v333 state must remain true: {key}")
     for key in (
         "longLivedCredentialInRepository",
         "registryCredentialFileInRepository",
@@ -519,13 +586,12 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "publishEnvironmentReviewerAvailableForCurrentPlan",
         "sourceControlledPublishGateReady",
         "publishEnvironmentConfigured",
-        "localDockerLoginApproved",
-        "localImagePullApproved",
         "localImagePushApproved",
-        "containerStartApproved",
         "actualDatabaseAlembicMutationExecuted",
+        "productionDeploymentApproved",
+        "productionDeploymentExecuted",
     ):
-        _require(_bool(policy, key) is False, f"blocked/unexecuted v332 state must remain false: {key}")
+        _require(_bool(policy, key) is False, f"blocked/unexecuted v333 state must remain false: {key}")
     _require(policy.get("nextSafeStage") == NEXT_SAFE_STAGE, "unexpected next safe stage")
     _require(
         actions_result.get("publishLifecycleState") == "attempt-recorded",
@@ -636,7 +702,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "targetPlatform": "linux/amd64",
         "baseImageDigestApproved": True,
         "ciCredentialStrategy": "github-actions-github-token",
-        "localCredentialStrategy": "deferred",
+        "localCredentialStrategy": "github-cli-oauth-read-packages",
         "workflowCreationApproved": True,
         "workflowExecutionApproved": True,
         "workflowExecutionExecuted": True,
@@ -663,6 +729,11 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "productionReference": EXPECTED_REFERENCE,
         "productionReferenceStaticPrepared": True,
         "productionReferenceAppliedToRuntime": False,
+        "isolatedImagePullExecuted": True,
+        "isolatedContainerExecutionExecuted": True,
+        "isolatedCleanupExecuted": True,
+        "productionDeploymentApproved": False,
+        "productionDeploymentExecuted": False,
         "ownerApprovalRecorded": lifecycle["ownerApproval"]["recorded"],
         "workflowRunAttemptMustEqual": lifecycle["authorizationPolicy"]["workflowRunAttemptMustEqual"],
         "singleDispatchApiCheckRequired": lifecycle["authorizationPolicy"]["singleDispatchApiCheckRequired"],
@@ -678,8 +749,8 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
 
 def render(result: dict[str, Any]) -> str:
     return "\n".join((
-        "Codex/GHCR v332 production reference static preparation verification (read-only)",
-        "The verified digest is pinned in the production env inventory while runtime use remains blocked.",
+        "Codex/GHCR v333 isolated image pull/runtime evidence verification (read-only)",
+        "The verified digest passed isolated runtime validation while production deployment remains blocked.",
         "",
         f"- GitHub remote: {result['githubRemote']}",
         f"- namespace/repository: {result['namespace']} / {result['repository']}",
@@ -705,12 +776,13 @@ def render(result: dict[str, Any]) -> str:
         f"- verified image digest: {CURRENT_IMAGE_DIGEST}",
         f"- production reference: {EXPECTED_REFERENCE}",
         "- production reference static/runtime applied: yes/no",
+        "- isolated pull/container/cleanup executed: yes/yes/yes",
         "- latest result: provenance/SBOM, exact-digest Trivy 0 findings, Cosign sign/verify passed",
         "- single-run policy: run_attempt=1 / single dispatch / rerun forbidden / immediate closure",
         "- PUBLISH_REVIEWER_GATE_READY: lifecycle-controlled false (fail-closed before GHCR login)",
         "- root Docker context env files/re-includes: excluded/forbidden",
         "- dependency/frontend inputs: exact versions + SHA-256 locks ready",
-        "- container/registry/DB/Alembic mutation executed: no/yes/no/no",
+        "- isolated container cleaned / registry push / DB / Alembic: yes/yes/no/no",
         f"- result: {result['result']}",
         f"- next safe stage: {result['nextSafeStage']}",
     ))

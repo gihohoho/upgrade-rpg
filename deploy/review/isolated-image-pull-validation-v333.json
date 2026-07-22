@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "v333.isolated-image-pull-runtime-validation",
+  "completedAtUtc": "2026-07-22T12:27:37Z",
+  "approvedByUserMessage": true,
+  "imageReference": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2",
+  "imageId": "sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2",
+  "platform": "linux/amd64",
+  "registryAuthentication": "github-cli-oauth-read-packages-to-docker-credential-store",
+  "pullExecuted": true,
+  "containerExecution": {
+    "executed": true,
+    "user": "65532:65532",
+    "effectiveUid": 65532,
+    "internalNetwork": true,
+    "publishedHostPorts": [],
+    "volumes": [],
+    "readOnlyRootFilesystem": true,
+    "tmpfs": [
+      "/tmp:rw,noexec,nosuid,size=64m"
+    ],
+    "capabilitiesDropped": [
+      "ALL"
+    ],
+    "noNewPrivileges": true,
+    "pidsLimit": 128,
+    "memoryBytes": 268435456,
+    "nanoCpus": 1000000000
+  },
+  "runtimeValidation": {
+    "pythonVersion": "3.11.15",
+    "machine": "x86_64",
+    "healthPath": "/api/v1/health",
+    "healthOk": true,
+    "healthType": "system.health",
+    "pipPresent": false,
+    "rootFilesystemWriteBlocked": true,
+    "tmpfsWriteRemovePassed": true,
+    "alembicCommandExecuted": false,
+    "databaseHealthPathCalled": false,
+    "actualDatabaseConnectionAttempted": false
+  },
+  "firstStartProbe": {
+    "conclusion": "failed-before-app-start",
+    "reason": "PowerShell removed JSON quotes from the isolated CORS input",
+    "resourcesCleanedBeforeRetry": true,
+    "applicationOrImageDefect": false
+  },
+  "cleanup": {
+    "containerRemoved": true,
+    "internalNetworkRemoved": true,
+    "localImageRemoved": true,
+    "volumeCreated": false,
+    "existingPostgresContainerHealthyAfterCleanup": true
+  },
+  "productionRuntimeApplied": false,
+  "productionDeploymentApproved": false,
+  "productionDeploymentExecuted": false,
+  "nextSafeStage": "review-isolated-validation-and-approve-production-deploy-plan"
+}

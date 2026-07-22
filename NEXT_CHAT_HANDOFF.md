@@ -1,4 +1,4 @@
-# Upgrade RPG Codex handoff — v332
+# Upgrade RPG Codex handoff — v333
 
 ## 작업 원칙
 
@@ -13,15 +13,15 @@
 ## 현재 고정값
 
 ```txt
-latest: v332.verified-digest-production-reference-static-prepared
-strict result: verified-digest-production-reference-static-prepared-runtime-blocked
-next safe stage: review-production-reference-and-approve-isolated-pull-validation
+latest: v333.isolated-image-pull-runtime-validation-complete-deploy-blocked
+strict result: isolated-image-pull-runtime-validation-complete-production-deploy-blocked
+next safe stage: review-isolated-validation-and-approve-production-deploy-plan
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR namespace: gihohoho
 repository: ghcr.io/gihohoho/upgrade-rpg-backend
 visibility/platform: private / linux/amd64
 CI credential: GitHub Actions GITHUB_TOKEN
-local credential/PAT: deferred
+local pull credential: GitHub CLI OAuth read:packages → Docker credential store
 publish approval model: owner-only-source-controlled-two-step
 source-controlled lifecycle gate: attempt-recorded / publishReviewerGateReady=false
 production reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2
@@ -39,7 +39,7 @@ workflow/login/build/push executed: yes/yes/yes/yes
 - C `authorization-closed-awaiting-evidence`
 - R `attempt-recorded` (현재)
 
-authorization은 승인된 preparation의 direct child이고 lifecycle 파일 하나만 변경합니다. workflow는 repository owner, `run_attempt=1`, GitHub API로 확인한 single dispatch만 허용하며 rerun은 금지합니다. run 접수 즉시 immediate closure commit으로 C 상태를 만들고 gate를 닫습니다. C는 자기 SHA를 기록할 수 없어 `closureCommitSha=null`이고, 종료 뒤 별도 R evidence commit이 부모 C의 정확한 `closureCommitSha`와 실제 run/digest/signature 결과를 기록합니다. 일반 계약 next stage `review-recorded-workflow-attempt-evidence`는 보존하며, 이번 구체적 next stage는 `review-production-reference-and-approve-isolated-pull-validation`입니다.
+authorization은 승인된 preparation의 direct child이고 lifecycle 파일 하나만 변경합니다. workflow는 repository owner, `run_attempt=1`, GitHub API로 확인한 single dispatch만 허용하며 rerun은 금지합니다. run 접수 즉시 immediate closure commit으로 C 상태를 만들고 gate를 닫습니다. C는 자기 SHA를 기록할 수 없어 `closureCommitSha=null`이고, 종료 뒤 별도 R evidence commit이 부모 C의 정확한 `closureCommitSha`와 실제 run/digest/signature 결과를 기록합니다. 일반 계약 next stage `review-recorded-workflow-attempt-evidence`는 보존하며, 이번 구체적 next stage는 `review-isolated-validation-and-approve-production-deploy-plan`입니다.
 
 ## 세 번째 owner-only 시도
 
@@ -103,7 +103,21 @@ image digest: sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8
 signature verified: true
 ```
 
-validation, local build/SBOM/Trivy, GHCR login/build/push, SLSA v1 provenance/SBOM, exact-digest Trivy 0건, Cosign sign/verify가 모두 성공했습니다. artifacts는 `8525220616`, `8525254543`이며 lifecycle은 `attempt-recorded`, gate는 `false`입니다. v332에서 production reference 정적 반영만 완료했고 pull/deploy는 미실행입니다.
+validation, local build/SBOM/Trivy, GHCR login/build/push, SLSA v1 provenance/SBOM, exact-digest Trivy 0건, Cosign sign/verify가 모두 성공했습니다. artifacts는 `8525220616`, `8525254543`이며 lifecycle은 `attempt-recorded`, gate는 `false`입니다. v332에서 production reference를 정적으로 반영했습니다.
+
+## v333 isolated image pull/runtime validation
+
+- 기호가 별도 승인하고 `gihohoho` GitHub CLI OAuth `read:packages`로 private GHCR 로그인
+- exact digest pull 및 image ID/digest `ff939391...61d2`, `linux/amd64`, user `65532:65532` 확인
+- internal network, host port 없음, volume 없음
+- read-only rootfs, `/tmp` tmpfs `noexec,nosuid`, cap-drop ALL, no-new-privileges, PID/memory/CPU 제한
+- effective UID 65532, Python 3.11.15, pip 제거 확인
+- `/api/v1/health` 200 `system.health`; `/health/db`, actual DB, Alembic 미실행
+- rootfs write 차단, `/tmp` write/remove 성공
+- 첫 CORS JSON quoting 실패 자원은 즉시 제거하고 문자열 형식으로 재검증 성공
+- 최종 container/network/local image cleanup 완료, volume 생성 없음, 기존 PostgreSQL healthy
+- evidence: `deploy/review/isolated-image-pull-validation-v333.json`
+- production runtime/deploy: 미적용/미승인/미실행
 
 ## 이전 시도 보존
 
@@ -146,11 +160,11 @@ python tools/check_codex_handoff_readiness.py --strict
 기대값:
 
 ```txt
-result: verified-digest-production-reference-static-prepared-runtime-blocked
-next safe stage: review-production-reference-and-approve-isolated-pull-validation
+result: isolated-image-pull-runtime-validation-complete-production-deploy-blocked
+next safe stage: review-isolated-validation-and-approve-production-deploy-plan
 ```
 
-5차 run `29909291344`은 v330 focused fix와 모든 공급망 gate를 통과해 verified digest `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`를 만들었습니다. 현재 lifecycle은 `attempt-recorded`, gate는 `false`입니다. v332에서 이 digest를 production reference에 정적으로 고정했습니다. 다음에는 isolated pull/validation 범위를 별도 승인받고 production deploy는 다시 별도 승인합니다.
+5차 run `29909291344`은 v330 focused fix와 모든 공급망 gate를 통과해 verified digest `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`를 만들었습니다. 현재 lifecycle은 `attempt-recorded`, gate는 `false`입니다. v332에서 이 digest를 production reference에 고정했고 v333 isolated pull/runtime validation/cleanup도 완료했습니다. 다음에는 production deploy 계획을 별도 승인받습니다.
 
 ## 로컬 개발 상태와 이후 변경 원칙
 
@@ -162,6 +176,6 @@ next safe stage: review-production-reference-and-approve-isolated-pull-validatio
 
 ## 안전 경계
 
-별도 요청 전에는 DB write/restore/reset/seed, Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스, production Compose/container/network/volume, isolated pull/validation과 자동 deploy를 실행하지 않습니다. 현재 필요한 extension·설치·추가 권한은 없습니다. 이번에는 기존 local PostgreSQL과 legacy 정적 서버를 시작했고 backend/Vue 재시작은 불필요했습니다.
+별도 요청 전에는 DB write/restore/reset/seed, Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스, production Compose/container/network/volume과 자동 deploy를 실행하지 않습니다. isolated 검증 자원은 모두 정리됐습니다. 현재 필요한 extension·설치·추가 권한은 없습니다.
 
 로컬 PowerShell 전역 `DEBUG=release`는 Pydantic boolean 설정과 충돌합니다. 전체 smoke가 필요할 때 저장값을 바꾸지 말고 해당 명령 프로세스에만 `DEBUG=false`를 지정합니다. 로컬 `backend/.env`의 `DEBUG=true`는 정상입니다. 로컬 token에는 `read:packages`가 없어 GHCR package metadata API 조회는 불가하지만 현재 작업에는 필요하지 않습니다.

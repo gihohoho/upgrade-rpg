@@ -1,4 +1,4 @@
-# Roadmap — v332
+# Roadmap — v333
 
 ## 완료
 
@@ -13,17 +13,17 @@
 ## 현재
 
 ```txt
-latest: v332.verified-digest-production-reference-static-prepared
-result: verified-digest-production-reference-static-prepared-runtime-blocked
+latest: v333.isolated-image-pull-runtime-validation-complete-deploy-blocked
+result: isolated-image-pull-runtime-validation-complete-production-deploy-blocked
 lifecycle: attempt-recorded / gate=false
-next safe stage: review-production-reference-and-approve-isolated-pull-validation
+next safe stage: review-isolated-validation-and-approve-production-deploy-plan
 ```
 
 ## 다음 순서
 
 1. 완료: verified candidate evidence 검토
 2. 완료: production reference 정적 반영
-3. isolated pull/validation 범위 별도 승인
-4. production deploy는 다시 별도 승인
+3. 완료: isolated exact-digest pull/runtime validation/cleanup
+4. production deploy 계획과 실제 deploy는 다시 별도 승인
 
-정책을 자동 완화하지 않고 기존 다섯 run도 rerun하지 않습니다. production reference는 정적으로만 준비됐고 pull/validation/deployment는 별도 승인 단계입니다.
+정책을 자동 완화하지 않고 기존 다섯 run도 rerun하지 않습니다. isolated validation은 통과했지만 production runtime/deployment는 아직 적용하지 않았습니다.

@@ -30,6 +30,7 @@ REQUIRED = (
     "backend/requirements/dev-linux-amd64-py311.lock",
     "backend/alembic/versions/v295_initial_schema_initial_postgresql_schema.py",
     "deploy/backend-image-ghcr-policy.example.json",
+    "deploy/review/isolated-image-pull-validation-v333.json",
     "deploy/github-actions-ghcr-publish-lifecycle.json",
     "deploy/docker-compose.production.yml",
     "deploy/production.env.example",
@@ -48,9 +49,9 @@ REQUIRED = (
 
 
 def load_tool():
-    spec = importlib.util.spec_from_file_location("v332_codex_handoff", TOOL)
+    spec = importlib.util.spec_from_file_location("v333_codex_handoff", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v332 Codex handoff checker")
+        raise RuntimeError("cannot load v333 Codex handoff checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -69,7 +70,7 @@ def expect_blocked(module, temp: Path) -> None:
         module.inspect_codex_handoff(temp)
     except module.CodexHandoffError:
         return
-    raise AssertionError("unsafe v332 Codex handoff fixture was not blocked")
+    raise AssertionError("unsafe v333 Codex handoff fixture was not blocked")
 
 
 def main() -> int:
@@ -79,7 +80,7 @@ def main() -> int:
     assert result["namespace"] == "gihohoho"
     assert result["repository"] == "ghcr.io/gihohoho/upgrade-rpg-backend"
     assert result["ciCredentialStrategy"] == "github-actions-github-token"
-    assert result["localCredentialStrategy"] == "deferred"
+    assert result["localCredentialStrategy"] == "github-cli-oauth-read-packages"
     assert result["workflowCreationApproved"] is True
     assert result["workflowExecutionApproved"] is True
     assert result["workflowExecutionExecuted"] is True
@@ -114,6 +115,11 @@ def main() -> int:
     assert result["productionReference"] == module.EXPECTED_REFERENCE
     assert result["productionReferenceStaticPrepared"] is True
     assert result["productionReferenceAppliedToRuntime"] is False
+    assert result["isolatedImagePullExecuted"] is True
+    assert result["isolatedContainerExecutionExecuted"] is True
+    assert result["isolatedCleanupExecuted"] is True
+    assert result["productionDeploymentApproved"] is False
+    assert result["productionDeploymentExecuted"] is False
 
     root_actions_result = module._inspect_actions_workflow(ROOT)
     module._inspect_actions_workflow = lambda _root: root_actions_result
@@ -126,6 +132,10 @@ def main() -> int:
         ("targetPlatform", "linux/arm64"),
         ("ciCredentialStrategy", "committed-pat"),
         ("localCredentialStrategy", "plaintext-file"),
+        ("isolatedImagePullExecuted", False),
+        ("isolatedContainerExecutionExecuted", False),
+        ("isolatedCleanupExecuted", False),
+        ("productionDeploymentApproved", True),
         ("githubPatCreated", True),
         ("githubActionsWorkflowPresent", False),
         ("githubActionsWorkflowCreationApproved", False),
@@ -220,7 +230,16 @@ def main() -> int:
         local_env.write_text("NOT_A_REAL_SECRET=fixture-only\n", encoding="utf-8")
         expect_blocked(module, temp)
 
-    print("OK: v332 production reference static preparation handoff smoke passed")
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp = Path(temp_dir)
+        copy_fixture(temp)
+        evidence_path = temp / module.ISOLATED_EVIDENCE_PATH
+        evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+        evidence["runtimeValidation"]["healthOk"] = False
+        evidence_path.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        expect_blocked(module, temp)
+
+    print("OK: v333 isolated image pull/runtime handoff smoke passed")
     return 0
 
 

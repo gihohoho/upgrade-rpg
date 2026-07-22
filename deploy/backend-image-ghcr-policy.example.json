@@ -1,8 +1,8 @@
 {
-  "schemaVersion": "v332.verified-digest-production-reference-static-prepared",
+  "schemaVersion": "v333.isolated-image-pull-runtime-validation-complete-deploy-blocked",
   "preparedOnly": false,
   "publishApprovalModel": "owner-only-source-controlled-two-step",
-  "ownerOnlyApprovalPhase": "verified-production-reference-static-prepared",
+  "ownerOnlyApprovalPhase": "isolated-image-validation-complete-deploy-blocked",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
   "publishLifecycleState": "attempt-recorded",
   "publishLifecycleSupportedStates": [
@@ -91,7 +91,7 @@
   "baseImageReference": "python:3.11.15-alpine3.23@sha256:ac0151f0eec4b7ba78bc47d337f328c6db706e7255b35b2327c2749f058c82fe",
   "baseImageDigestApproved": true,
   "ciCredentialStrategy": "github-actions-github-token",
-  "localCredentialStrategy": "deferred",
+  "localCredentialStrategy": "github-cli-oauth-read-packages",
   "longLivedCredentialInRepository": false,
   "registryCredentialFileInRepository": false,
   "githubPatCreated": false,
@@ -120,13 +120,19 @@
   "ciDockerLoginApproved": true,
   "ciImageBuildApproved": true,
   "ciImagePushApproved": true,
-  "localDockerLoginApproved": false,
-  "localImagePullApproved": false,
+  "localDockerLoginApproved": true,
+  "localImagePullApproved": true,
   "localImageBuildApproved": true,
   "localImagePushApproved": false,
-  "containerStartApproved": false,
+  "containerStartApproved": true,
+  "isolatedValidationEvidence": "deploy/review/isolated-image-pull-validation-v333.json",
+  "isolatedImagePullExecuted": true,
+  "isolatedContainerExecutionExecuted": true,
+  "isolatedCleanupExecuted": true,
+  "productionDeploymentApproved": false,
+  "productionDeploymentExecuted": false,
   "actualRegistryMutationExecuted": true,
   "actualDockerCommandExecuted": true,
   "actualDatabaseAlembicMutationExecuted": false,
-  "nextSafeStage": "review-production-reference-and-approve-isolated-pull-validation"
+  "nextSafeStage": "review-isolated-validation-and-approve-production-deploy-plan"
 }

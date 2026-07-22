@@ -1,3 +1,13 @@
+# v333.isolated-image-pull-runtime-validation-complete-deploy-blocked
+
+- 기호의 별도 승인과 GitHub CLI OAuth `read:packages` 인증으로 private GHCR exact digest pull 성공.
+- `linux/amd64`, UID 65532, Python 3.11.15, pip 제거 상태와 exact image ID/digest 일치 확인.
+- internal network, host port/volume 없음, read-only rootfs, `/tmp` tmpfs, cap-drop ALL, no-new-privileges 및 resource limit 조건에서 `/api/v1/health` 200 검증.
+- `/health/db`, 실제 DB, Alembic, production secret/CA/network는 사용하지 않음.
+- 첫 CORS JSON shell quoting 실패 자원을 정리한 뒤 지원되는 문자열 형식으로 재검증 성공.
+- 임시 container/network/local image를 모두 제거하고 기존 PostgreSQL healthy 확인.
+- sanitized evidence `deploy/review/isolated-image-pull-validation-v333.json` 추가; production deploy는 계속 미승인·미실행.
+
 # v332.verified-digest-production-reference-static-prepared
 
 - verified image `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`를 `deploy/production.env.example`의 `BACKEND_IMAGE`에 정적으로 고정.

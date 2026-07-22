@@ -16,7 +16,7 @@ workflow file creation: complete
 workflow 파일 생성: 완료
 workflow execution: runs 29716038891, 29877813770, 29883012957, 29886540317 failure; 29909291344 success
 registry login/build/push: yes/yes/yes
-next safe stage: review-production-reference-and-approve-isolated-pull-validation
+next safe stage: review-isolated-validation-and-approve-production-deploy-plan
 ```
 
 정적 문서 잠금 표식: `workflow_dispatch`, `pull_request_target` 금지, `contents: read`, `actions: read`, `packages: write`, `id-token: write`, Docker BuildKit, `HIGH,CRITICAL`, Sigstore Cosign keyless, `approved_preparation_commit`, `DOCKER_BUILD_RECORD_UPLOAD`, required reviewer 제약.
@@ -227,5 +227,5 @@ production reference 자동 갱신과 deploy는 하지 않습니다.
 
 ```txt
 result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-next safe stage: review-production-reference-and-approve-isolated-pull-validation
+next safe stage: review-isolated-validation-and-approve-production-deploy-plan
 ```

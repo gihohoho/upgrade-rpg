@@ -6,10 +6,10 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v332.verified-digest-production-reference-static-prepared"
+VERSION = "v333.isolated-image-pull-runtime-validation-complete-deploy-blocked"
 STATIC_PLAN_VERSION = "v330.slsa-v1-provenance-path-preparation"
-READY_RESULT = "verified-digest-production-reference-static-prepared-runtime-blocked"
-NEXT_SAFE_STAGE = "review-production-reference-and-approve-isolated-pull-validation"
+READY_RESULT = "isolated-image-pull-runtime-validation-complete-production-deploy-blocked"
+NEXT_SAFE_STAGE = "review-isolated-validation-and-approve-production-deploy-plan"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 PREPARATION = "36e8720a53ef7ff6a8334de6bc99646998d63fc9"
@@ -60,6 +60,7 @@ def main() -> int:
         "closureCommitSha",
         "attempt-recorded",
         "review-recorded-workflow-attempt-evidence",
+        "deploy/review/isolated-image-pull-validation-v333.json",
         PREPARATION,
         str(RUN_ID),
         *(str(value) for value in ARTIFACT_IDS),
@@ -82,7 +83,7 @@ def main() -> int:
     policy = json.loads(read("deploy/backend-image-ghcr-policy.example.json"))
     assert policy["schemaVersion"] == VERSION
     assert policy["preparedOnly"] is False
-    assert policy["ownerOnlyApprovalPhase"] == "verified-production-reference-static-prepared"
+    assert policy["ownerOnlyApprovalPhase"] == "isolated-image-validation-complete-deploy-blocked"
     assert policy["publishLifecycleState"] == "attempt-recorded"
     assert policy["approvedPreparationSha"] == PREPARATION
     assert policy["exactPreparationShaApproved"] is True
@@ -91,6 +92,12 @@ def main() -> int:
     assert policy["productionReference"] == PRODUCTION_REFERENCE
     assert policy["productionReferenceStaticPrepared"] is True
     assert policy["productionReferenceAppliedToRuntime"] is False
+    assert policy["localCredentialStrategy"] == "github-cli-oauth-read-packages"
+    assert policy["isolatedImagePullExecuted"] is True
+    assert policy["isolatedContainerExecutionExecuted"] is True
+    assert policy["isolatedCleanupExecuted"] is True
+    assert policy["productionDeploymentApproved"] is False
+    assert policy["productionDeploymentExecuted"] is False
     assert policy["currentAttemptEvidence"] == {
         "authorizationSha": AUTHORIZATION,
         "closureSha": CLOSURE,
@@ -149,7 +156,15 @@ def main() -> int:
     if hashlib.sha256(revision.read_bytes()).hexdigest() != REVISION_SHA256:
         raise AssertionError("reviewed Alembic revision SHA-256 differs")
 
-    print("OK: v332 production reference and handoff documents are synchronized")
+    evidence = json.loads(read("deploy/review/isolated-image-pull-validation-v333.json"))
+    assert evidence["imageReference"] == PRODUCTION_REFERENCE
+    assert evidence["runtimeValidation"]["healthOk"] is True
+    assert evidence["cleanup"]["containerRemoved"] is True
+    assert evidence["cleanup"]["internalNetworkRemoved"] is True
+    assert evidence["cleanup"]["localImageRemoved"] is True
+    assert evidence["productionDeploymentExecuted"] is False
+
+    print("OK: v333 isolated image validation and handoff documents are synchronized")
     return 0
 
 

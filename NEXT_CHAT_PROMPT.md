@@ -1,4 +1,4 @@
-# Upgrade RPG 다음 Codex 작업 프롬프트 — v332
+# Upgrade RPG 다음 Codex 작업 프롬프트 — v333
 
 기호의 Upgrade RPG 프로젝트를 현재 Git `main` 최신 상태에서 이어서 진행합니다. 먼저 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 읽고 저장소 규칙을 지켜주세요.
 
@@ -7,15 +7,16 @@
 검증은 위험도에 맞춰 최소 범위부터 실행하세요. 기본은 변경 영역의 전용 checker/smoke 1회이고 실패할 때만 범위를 넓힙니다. 문서·handoff·상태값·검사 결과 문자열만 바꾼 경우에는 관련 strict checker와 handoff smoke만 실행하며 전체 `bash tools/run_smoke_core.sh`는 실행하지 않습니다. 전체 smoke는 backend 핵심 로직, DB/Alembic, API 계약, 공통 구조, 여러 영역 변경 또는 실제 배포 후보 직전에만 1회 실행하고 단순 문구 수정 뒤 반복하지 않습니다.
 
 ```txt
-latest: v332.verified-digest-production-reference-static-prepared
-strict result: verified-digest-production-reference-static-prepared-runtime-blocked
-next safe stage: review-production-reference-and-approve-isolated-pull-validation
+latest: v333.isolated-image-pull-runtime-validation-complete-deploy-blocked
+strict result: isolated-image-pull-runtime-validation-complete-production-deploy-blocked
+next safe stage: review-isolated-validation-and-approve-production-deploy-plan
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR namespace: gihohoho
 backend repository: ghcr.io/gihohoho/upgrade-rpg-backend
 visibility: private
 target platform: linux/amd64
 CI credential strategy: github-actions-github-token
+local pull credential strategy: github-cli-oauth-read-packages
 publish approval model: owner-only-source-controlled-two-step
 source-controlled lifecycle gate: attempt-recorded / publishReviewerGateReady=false
 production reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2
@@ -58,7 +59,17 @@ immediate closure: required
 - verified digest: `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`
 - exact-digest Trivy 0건, SLSA v1 provenance/SBOM, Cosign sign/verify 성공
 
-첫 작업은 읽기 전용 v332 검사입니다.
+isolated validation 증거:
+
+- exact digest pull과 `linux/amd64` image ID 일치 확인
+- internal network, host port/volume 없음, read-only rootfs, `/tmp` tmpfs, UID 65532, cap-drop ALL, no-new-privileges
+- Python 3.11.15, pip 없음, `/api/v1/health` 200, rootfs write 차단
+- `/health/db`, 실제 DB, Alembic, production secret/CA/network 미사용
+- 임시 container/network/local image cleanup 완료, 기존 PostgreSQL healthy
+- evidence: `deploy/review/isolated-image-pull-validation-v333.json`
+- production runtime/deploy 미적용·미승인·미실행
+
+첫 작업은 읽기 전용 v333 검사입니다.
 
 실행 위치: `backend` 폴더
 Python `.venv` 상태: 꺼짐
@@ -80,13 +91,13 @@ python tools/check_codex_handoff_readiness.py --strict
 정상 기대 결과:
 
 ```txt
-result: verified-digest-production-reference-static-prepared-runtime-blocked
-next safe stage: review-production-reference-and-approve-isolated-pull-validation
+result: isolated-image-pull-runtime-validation-complete-production-deploy-blocked
+next safe stage: review-isolated-validation-and-approve-production-deploy-plan
 ```
 
 4차 run `29886540317`은 validation/local build/SBOM/local Trivy/GHCR login·push까지 성공해 digest `sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149`를 만들었습니다. registry provenance와 SBOM도 존재하지만 workflow가 SLSA v1의 `SLSA.buildDefinition.buildType` 대신 구형 `SLSA.buildType`을 검사해 실패했습니다. exact-digest Trivy와 Cosign은 미실행이므로 digest는 unsigned·미검증이며 배포하지 않습니다. 기존 네 run은 rerun 금지입니다.
 
-v330 focused fix를 사용한 5차 run은 모든 gate와 Cosign sign/verify를 통과했습니다. 현재 lifecycle은 `attempt-recorded`, gate는 `false`이고 다섯 run 모두 rerun 금지입니다. v332에서 verified exact digest를 production reference에 정적으로 고정했지만 pull·container·deploy는 실행하지 않았습니다. 다음에는 isolated pull/validation 범위를 기호가 별도 승인한 뒤만 진행하고 production deploy는 다시 별도 승인받으세요.
+v330 focused fix를 사용한 5차 run은 모든 gate와 Cosign sign/verify를 통과했습니다. 현재 lifecycle은 `attempt-recorded`, gate는 `false`이고 다섯 run 모두 rerun 금지입니다. v332에서 production reference를 고정했고 v333에서 isolated pull/runtime validation/cleanup을 완료했습니다. production deploy 계획과 실제 deploy는 별도 승인 전에는 실행하지 마세요.
 
 콘텐츠·코드·DB 개발은 가능하지만 현재 pinned image는 변경 전 snapshot입니다. 코드나 image 포함 콘텐츠가 바뀌면 최신 배포 전에 새 image build와 공급망 검증이 필요합니다. DB row 변경은 image와 별개지만 호환성 검증이 필요하고, schema 변경은 새 Alembic revision과 배포 순서를 별도 승인·검토합니다. 구체적인 요청 전에는 DB/Alembic/content mutation을 실행하지 마세요.
 

@@ -1,4 +1,4 @@
-# PostgreSQL production capacity / TLS / network plan — current through v321
+# PostgreSQL production capacity / TLS / network plan — v311 snapshot with v333 runtime evidence
 
 ## 목적
 
@@ -40,6 +40,8 @@ provider CA와 `sslmode=verify-full`을 사용하고 backend는 external edge ne
 
 ## 승인 상태
 
+아래 블록은 v311 정적 검토 당시 스냅샷이며 현재 실행 상태가 아닙니다.
+
 ```txt
 config render approved: yes
 config render executed on user PC: yes
@@ -57,6 +59,10 @@ select-registry-repository-platform-and-base-image-digest
 ```
 
 registry/provider/platform/base image digest를 선택해도 pull/build/push는 각각 별도 승인합니다.
+
+## v333 isolated 실행 결과
+
+기호의 별도 승인 뒤 exact digest pull과 isolated container 실행을 완료했습니다. host port·volume·actual DB connection 없이 internal network와 제한된 security option으로 `/api/v1/health`를 검증했고 모든 임시 자원을 정리했습니다. 따라서 production capacity 값, managed DB, provider CA, external edge network에는 변화가 없습니다. sanitized evidence는 `deploy/review/isolated-image-pull-validation-v333.json`에 있습니다. production deploy는 계속 별도 승인입니다.
 
 ## 읽기 전용 검사
 

@@ -1,9 +1,9 @@
-# Backend image GHCR policy — v332
+# Backend image GHCR policy — v333
 
 ## 고정값
 
 ```txt
-version: v332.verified-digest-production-reference-static-prepared
+version: v333.isolated-image-pull-runtime-validation-complete-deploy-blocked
 remote: https://github.com/gihohoho/upgrade-rpg.git
 repository: ghcr.io/gihohoho/upgrade-rpg-backend
 visibility/platform: private / linux/amd64
@@ -44,4 +44,8 @@ v330 focused fix는 registry provenance의 `SLSA` 객체와 `buildDefinition` �
 
 5차 run `29909291344`은 모든 gate와 Cosign sign/verify를 통과했습니다. verified digest는 `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`입니다. 현재 lifecycle은 `attempt-recorded`, gate는 `false`입니다. v332에서 production reference를 `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`로 정적 고정했으며 자동 deploy는 없습니다.
 
-다음 안전 단계는 `review-production-reference-and-approve-isolated-pull-validation`입니다. reference 정적 준비는 완료됐지만 local/host pull, isolated validation, container 시작과 deploy는 각각 별도 승인 범위입니다.
+## v333 isolated runtime 결과
+
+기호의 별도 승인 뒤 verified exact digest를 GitHub CLI OAuth `read:packages`로 인증해 pull했습니다. internal network, host port/volume 없음, UID 65532, read-only rootfs, `/tmp` tmpfs, cap-drop ALL, no-new-privileges 조건에서 `/api/v1/health` 200을 확인했습니다. `/health/db`, 실제 DB, Alembic, production secret/CA/network는 사용하지 않았습니다. 임시 container/network/local image는 모두 제거했습니다. evidence는 `deploy/review/isolated-image-pull-validation-v333.json`입니다.
+
+다음 안전 단계는 `review-isolated-validation-and-approve-production-deploy-plan`입니다. production runtime 적용과 deploy는 별도 승인 전까지 차단합니다.

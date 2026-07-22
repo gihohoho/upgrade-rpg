@@ -1,4 +1,4 @@
-# Security rotation and GitHub gates — v332
+# Security rotation and GitHub gates — v333
 
 ## Secret 원칙
 
@@ -67,3 +67,13 @@
 - checker는 tag, placeholder, 다른 digest로 바뀌면 fail-closed합니다.
 - 실제 secret·managed DB 주소·provider CA·network 값은 계속 placeholder입니다.
 - reference는 runtime에 적용하지 않았고 Docker pull·container 시작·deploy도 실행하지 않았습니다.
+
+## v333 local GHCR credential과 isolated 검증
+
+- 기호가 `gihohoho` 계정으로 GitHub CLI 웹 로그인을 완료했고 OAuth scope `read:packages`를 확인했습니다.
+- token 값은 출력·파일·Git·채팅·artifact에 기록하지 않고 `gh auth token | docker login ... --password-stdin`으로 Docker credential store에 전달했습니다.
+- private GHCR exact digest pull과 isolated container 검증은 성공했습니다.
+- 임시 container/network/local image는 제거했지만 GitHub CLI keyring과 Docker credential store의 GHCR 로그인은 남아 있습니다.
+- 로컬 GHCR 접근이 더 이상 필요 없을 때 `docker logout ghcr.io`와 필요 시 `gh auth logout -h github.com -u gihohoho`를 별도 보안 정리 단계로 검토합니다. 지금 임의 logout하면 다음 승인 작업을 방해할 수 있어 자동 실행하지 않았습니다.
+- 비활성 `konghjin` 계정의 만료 keyring 항목은 이번 작업에서 사용하거나 삭제하지 않았습니다.
+- production secret/CA/cert/key, 실제 DB, production network는 사용하지 않았습니다.

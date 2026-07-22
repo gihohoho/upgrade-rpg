@@ -1,4 +1,4 @@
-# Isolated production validation plan — v321
+# Isolated production validation plan and evidence — v333
 
 이 폴더는 승인 경계와 안전한 검사 도구만 보관합니다. 실제 production secret, CA, certificate, key, registry credential 또는 production env 파일을 두지 않습니다.
 
@@ -76,7 +76,7 @@ container/image/network/volume mutation executed: no
 
 정확한 preparation SHA를 기호가 승인하고 GitHub 설정을 live 재확인하기 전에는 source-controlled gate를 `false`로 유지하고 workflow를 실행하지 않습니다. authorization당 한 번 실행한 뒤 gate를 즉시 다시 닫습니다.
 
-## Stage 3 — 별도 승인 필요: isolated start
+## Stage 3 — 완료: isolated start
 
 - 고유 project/network 이름 사용
 - 실제 production DB/secret 대신 승인된 isolated test 자원 사용
@@ -84,11 +84,11 @@ container/image/network/volume mutation executed: no
 - Alembic 자동 실행 없음
 - schema/data write 검증 없음
 
-## Stage 4 — 별도 승인 필요: isolated cleanup
+## Stage 4 — 완료: isolated cleanup
 
 실제 생성 목록을 먼저 확인하고 해당 isolated resource만 제거합니다. 기존 local PostgreSQL container/volume은 절대 변경하지 않습니다.
 
-## 현재 고정 상태
+## v321 당시 고정 상태
 
 ```txt
 actual Docker config command executed on user PC: yes (config only)
@@ -100,3 +100,19 @@ actual DB connection/write executed: no
 actual Alembic command executed: no
 isolated container execution approved: no
 ```
+
+## v333 현재 결과
+
+```txt
+exact digest pull approved/executed: yes/yes
+isolated container execution approved/executed: yes/yes
+host ports/volumes: none/none
+internal network/read-only rootfs/non-root: yes/yes/yes
+health: /api/v1/health 200
+actual DB connection/Alembic: no/no
+temporary container/network/local image cleanup: yes/yes/yes
+production runtime/deploy applied: no/no
+next safe stage: review-isolated-validation-and-approve-production-deploy-plan
+```
+
+sanitized evidence는 `deploy/review/isolated-image-pull-validation-v333.json`에 있습니다. GitHub CLI/Docker credential store의 실제 credential 값은 기록하지 않습니다.
