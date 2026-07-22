@@ -1,9 +1,10 @@
-# Current Documents — v334
+# Current Documents — v335
 
 현재 판단은 이 폴더와 루트 `AGENTS.md`를 우선합니다.
 
 - `CURRENT_STATUS.md`: 현재 완료 상태와 금지 경계
 - `PRODUCTION_DEPLOYMENT_PLAN.md`: 운영 배포 계획·입력·승인·rollback
+- `PRODUCTION_PROVIDER_SELECTION.md`: 비용 최소 Render + Neon 선택과 무료 한도·다음 계정 연결 단계
 - `BACKEND_IMAGE_GHCR_POLICY.md`: exact verified image와 GHCR 정책
 - `GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md`: workflow와 supply-chain gate
 - `SECURITY_ROTATION_AND_GITHUB_GATES.md`: secret·credential·reviewer 경계

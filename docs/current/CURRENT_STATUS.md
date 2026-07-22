@@ -1,70 +1,62 @@
-# Current Status — v334
+# Current Status — v335
 
 ## 현재 결과
 
 ```txt
-latest: v334.production-deploy-plan-reviewed-inputs-blocked
-strict result: production-deploy-plan-reviewed-inputs-blocked
-next safe stage: select-production-targets-and-complete-executable-deploy-plan
+latest: v335.cost-minimum-provider-selection-account-onboarding-required
+strict result: cost-minimum-production-provider-selected-account-onboarding-required
+next safe stage: owner-connect-render-and-neon-accounts
+deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked
+baseline result: production-deploy-plan-reviewed-inputs-blocked
+baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR repository: ghcr.io/gihohoho/upgrade-rpg-backend
-publish lifecycle: attempt-recorded / publishReviewerGateReady=false
-production deploy plan reviewed: yes
-approval ready / approved / executed: no / no / no
+production deployment approval ready/approved/executed: no/no/no
 ```
+
+## 비용 최소 공급자 선택
+
+- runtime: Render Free Web Service, Singapore, 512 MB/0.1 CPU, 단일 instance
+- database: Neon Free PostgreSQL 16, AWS Singapore (`aws-ap-southeast-1`)
+- public HTTPS: Render가 발급하는 `onrender.com` 주소와 managed TLS
+- deployment: private GHCR의 exact digest를 사용하는 manual image-backed service
+- fixed monthly cost: $0
+- payment method: Render에 처음에는 등록하지 않음
+- classification: SLA production이 아닌 개인용 public preview
+
+Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 cold start가 생길 수 있습니다. Neon Free는 프로젝트당 월 100 CU-hours, 0.5 GB storage, 6시간 restore history 범위입니다. 상세 근거와 비교는 `PRODUCTION_PROVIDER_SELECTION.md`, 정적 계약은 `deploy/production-provider-selection.example.json`에 있습니다.
+
+## 아직 하지 않은 것
+
+- Render/Neon 계정 로그인 또는 가입
+- Render Web Service와 Neon project 생성
+- 실제 DB endpoint·role·password 생성 또는 연결
+- GHCR `read:packages` 전용 credential 생성·주입
+- JWT/admin secret 생성·주입
+- production CORS origin 확정
+- DB schema/data 초기화·restore·Alembic 작업
+- production deploy
+
+provider 선택은 완료했지만 실제 resource가 없으므로 v334 deployment plan의 required input은 계속 `unresolved`입니다.
 
 ## 검증된 배포 후보
 
 - exact reference: `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`
-- GitHub Actions run `29909291344`: build, SPDX SBOM, local/pushed Trivy HIGH/CRITICAL 0건, SLSA provenance/SBOM, Cosign sign/verify 성공
-- artifacts: `8525220616`, `8525254543`
-- v333 isolated validation: `linux/amd64`, UID 65532, read-only rootfs, `/tmp` tmpfs, no host port/volume, health 200
-- isolated container/network/local image cleanup 완료; 실제 DB, Alembic, production secret/CA/network 미사용
-- evidence: `deploy/review/isolated-image-pull-validation-v333.json`
+- GitHub Actions run `29909291344`: SBOM, Trivy HIGH/CRITICAL 0, provenance, Cosign sign/verify 성공
+- isolated evidence: `deploy/review/isolated-image-pull-validation-v333.json`
+- source-controlled lifecycle gate: `deploy/github-actions-ghcr-publish-lifecycle.json`
+- lifecycle: `attempt-recorded`, `publishReviewerGateReady=false`
+- CI credential: GitHub Actions `GITHUB_TOKEN`
+- 개인 비공개 저장소 required reviewer는 없으므로 exact-SHA owner approval을 유지
 
-CI credential은 GitHub Actions `GITHUB_TOKEN`입니다. local private GHCR pull은 GitHub CLI OAuth `read:packages`를 Docker credential store로 전달했고 token 값은 기록하지 않았습니다. source-controlled lifecycle gate는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `attempt-recorded`, gate `false`이며 기존 다섯 run은 rerun하지 않습니다.
+## 안전 경계
 
-## v334 운영 배포 계획 검토
+- backend replicas/workers 1/1, PostgreSQL TLS `verify-full`, automatic deploy/migration 금지
+- actual secret/token/PAT/password/CA/cert/key를 Git·채팅·로그·artifact에 기록하지 않음
+- DB create/delete/restore/reset/seed/write와 Alembic mutation은 별도 구체적 요청·승인 전 금지
+- 인증/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스 변경 금지
+- resource 생성과 실제 deploy 전 실행 준비 commit의 정확한 40자리 SHA 승인 필요
 
-`docs/current/PRODUCTION_DEPLOYMENT_PLAN.md`와 `deploy/production-deploy-plan.example.json`을 검토 완료했습니다. 이번 작업은 계획 검토와 repository 정리만 승인됐고 production resource는 변경하지 않았습니다.
+## 다음 단계
 
-미확정 입력:
-
-- production host/provider/region/OS/access
-- managed PostgreSQL provider/product/region/endpoint/network
-- provider CA PEM과 host mount path
-- reverse proxy 또는 ingress, domain, DNS, certificate 책임
-- Git 밖의 secret injection 위치
-- 사전 생성 external edge network
-- managed DB backup 상태와 첫 배포 traffic rollback 담당
-
-개인 비공개 저장소의 `ghcr-production-publish` environment에는 native required reviewer가 없고 관리자 우회가 가능합니다. 실제 deploy는 모든 입력을 확정한 실행 준비 commit의 정확한 SHA를 기호가 별도 승인해야 합니다.
-
-## GitHub live 확인
-
-2026-07-22T12:49:50Z 기준:
-
-- Actions enabled, selected actions only, full-length SHA required
-- default `GITHUB_TOKEN` read-only, Actions PR approval false
-- `ghcr-production-publish` 존재, `main` only
-- native required reviewer false, admins can bypass true
-- latest verified run `29909291344` completed/success
-
-## 문서·폴더 정리
-
-- `docs/` 루트는 `README.md`, `CHANGELOG.md`만 유지
-- current/guides/contracts/archive/handoff 역할 분리
-- 동일한 docs 사본 제거, obsolete root smoke 134개를 `tools/smoke/` canonical 구조로 통합
-- 오래된 v316 ZIP과 빈 `.agents` 제거
-- `local-backups/` PostgreSQL backup과 `local-review-artifacts/` Alembic evidence는 보존
-- canonical 구조: `docs/current/PROJECT_STRUCTURE.md`
-
-## 개발과 안전 경계
-
-- Alembic current `v295_initial_schema`, 새 revision 필요 없음
-- Vue는 GET read-only만 연결, Preview/Apply/write/auth 보류
-- 구체적 요청 전 DB mutation, Alembic mutation, auth/API write, 게임 콘텐츠·밸런스 변경 금지
-- production Compose/container/network/volume/DNS/proxy 변경과 실제 deploy는 승인 전 금지
-- `docker compose down -v`, 자동 migration/deploy/retry 금지
-
-현재 필요한 extension·설치는 없습니다. 다음에는 운영 공급자와 domain 정보를 확정해 실행 가능한 deploy plan을 준비합니다.
+기호가 Render Hobby와 Neon Free에 로그인합니다. Render 결제수단은 추가하지 않습니다. 로그인 완료 뒤 Codex가 계정 화면을 확인하고 resource 생성 직전 설정을 준비합니다. 현재 필요한 로컬 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.

@@ -1,4 +1,4 @@
-# Production deployment — v334
+# Production deployment — v335
 
 이 폴더는 운영 배포의 source-controlled template과 sanitized evidence를 보관합니다. 실제 secret·CA·certificate·private key는 넣지 않습니다.
 
@@ -7,6 +7,7 @@
 - `docker-compose.production.yml`: managed PostgreSQL과 외부 reverse proxy를 사용하는 backend 1개
 - `production.env.example`: verified exact digest와 필수 변수 inventory
 - `production-deploy-plan.example.json`: 검토된 실행 순서·승인·rollback 계약
+- `production-provider-selection.example.json`: Render Free + Neon Free 비용 최소 선택과 미해결 onboarding 계약
 - `backend-image-ghcr-policy.example.json`: GHCR exact-digest와 lifecycle 정책
 - `github-actions-ghcr-publish-lifecycle.json`: owner-only image publish 기록
 - `review/isolated-image-pull-validation-v333.json`: isolated runtime 검증 증거
@@ -18,7 +19,8 @@
 image supply-chain verification: complete
 isolated pull/runtime/cleanup: complete
 production deployment plan review: complete
-production host/DB/proxy/secret inputs: unresolved
+provider/region/ingress class selected: Render Singapore / Neon Singapore / Render HTTPS
+account/resource/endpoint/secret inputs: unresolved
 production deployment approval/execution: no/no
 ```
 

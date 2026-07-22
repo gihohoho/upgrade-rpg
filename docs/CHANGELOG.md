@@ -1,3 +1,11 @@
+# v335.cost-minimum-provider-selection-account-onboarding-required
+
+- 2026-07-22 공식 가격·제품 문서를 비교해 개인 프로젝트 비용 최소 조합을 Render Free Web Service Singapore + Neon Free PostgreSQL 16 Singapore로 선택.
+- 월 고정비 $0, Render 결제수단 미등록, `onrender.com` managed HTTPS, private GHCR exact digest 수동 image deploy를 고정.
+- Render 무료 app cold start와 Neon 무료 storage/compute/restore 한계를 SLA production으로 과장하지 않고 개인용 public preview로 명시.
+- 선택 계약, 공식 근거, fail-closed checker와 mutation smoke를 추가하고 실제 계정/resource/endpoint/secret/DB/deploy는 생성·변경하지 않음.
+- 다음 단계는 기호의 Render/Neon 로그인이고, resource 생성·DB 초기화·deploy는 계속 별도 범위와 exact-SHA 승인을 요구.
+
 # v334.production-deploy-plan-reviewed-inputs-blocked
 
 - verified image와 v333 isolated evidence를 기준으로 production deploy 순서, exact-SHA 승인, 중단·rollback 계약을 정적 JSON과 fail-closed checker로 추가.

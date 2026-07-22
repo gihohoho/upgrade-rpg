@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v334
+# Upgrade RPG Codex working rules — v335
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -31,14 +31,16 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v334.production-deploy-plan-reviewed-inputs-blocked
-strict result: production-deploy-plan-reviewed-inputs-blocked
-next safe stage: select-production-targets-and-complete-executable-deploy-plan
+latest: v335.cost-minimum-provider-selection-account-onboarding-required
+strict result: cost-minimum-production-provider-selected-account-onboarding-required
+next safe stage: owner-connect-render-and-neon-accounts
+deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked / production-deploy-plan-reviewed-inputs-blocked
+baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR repository: ghcr.io/gihohoho/upgrade-rpg-backend (private)
 target: linux/amd64
 verified production reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2
-architecture: managed PostgreSQL + provider CA verify-full + external reverse proxy HTTPS + backend 1/1
+architecture: managed PostgreSQL + verify-full + provider-managed HTTPS ingress + backend 1/1
 Alembic current: v295_initial_schema / new revision needed: no
 ```
 
@@ -49,6 +51,10 @@ Alembic current: v295_initial_schema / new revision needed: no
 - 운영 배포 계획은 `deploy/production-deploy-plan.example.json`과 `docs/current/PRODUCTION_DEPLOYMENT_PLAN.md`에서 검토 완료했습니다.
 - production host, managed DB, provider CA, reverse proxy/domain/certificate, secret injection, edge network, first-deploy rollback 입력은 아직 미확정입니다.
 - production deployment approval ready/approved/executed는 `no/no/no`입니다.
+- 비용 최소 공급자는 Render Free Web Service Singapore + Neon Free PostgreSQL 16 Singapore로 선택했습니다.
+- 첫 공개 주소는 Render `onrender.com` managed HTTPS이며 custom domain과 DNS 변경은 보류합니다.
+- 무료 구성은 SLA production이 아닌 개인용 public preview이고 월 고정비 $0, idle cold start 허용 조건입니다.
+- Render/Neon 계정 로그인, 실제 resource/endpoint/secret 생성은 아직 하지 않았습니다.
 
 ## 승인과 안전 경계
 
@@ -80,6 +86,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 프로젝트 루트에서 `backend/.venv` Python으로 먼저 실행합니다.
 
 ```bash
+python tools/check_production_provider_selection.py --strict
 python tools/check_production_deployment_plan.py --strict
 python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict

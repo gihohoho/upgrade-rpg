@@ -133,6 +133,7 @@ python tools/smoke/backend/smoke_production_capacity_tls_network_plan.py
 python tools/smoke/backend/smoke_production_managed_postgres_reverse_proxy_selection.py
 python tools/smoke/backend/smoke_production_compose_config_render.py
 python tools/smoke/backend/smoke_production_deployment_plan.py
+python tools/smoke/backend/smoke_production_provider_selection.py
 if [[ "${SKIP_GHCR_HANDOFF_SMOKES:-0}" != "1" ]]; then
   python tools/smoke/backend/smoke_github_actions_ghcr_static_plan.py
   python tools/smoke/backend/smoke_codex_handoff_readiness.py

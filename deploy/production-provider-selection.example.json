@@ -1,0 +1,137 @@
+{
+  "schemaVersion": "v335.cost-minimum-provider-selection-account-onboarding-required",
+  "researchedAtUtc": "2026-07-22T14:18:45Z",
+  "selectionStatus": {
+    "requestedByOwner": true,
+    "costMinimumRequested": true,
+    "selected": true,
+    "productionResourcesMutated": false,
+    "paymentMethodAdded": false,
+    "monthlyFixedCostUsd": 0,
+    "deploymentClass": "personal-hobby-public-preview-not-sla-production"
+  },
+  "runtime": {
+    "provider": "render",
+    "product": "web-service",
+    "plan": "free",
+    "region": "singapore",
+    "instanceCount": 1,
+    "ramMb": 512,
+    "cpu": 0.1,
+    "deploymentMethod": "manual-image-backed-service",
+    "imageReference": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2",
+    "imagePlatform": "linux/amd64",
+    "privateRegistryCredential": "render-secret-read-packages-credential",
+    "automaticDeploy": false,
+    "publicAddress": "render-generated-onrender-subdomain",
+    "managedTls": true,
+    "idleSpinDownMinutes": 15,
+    "coldStartApproxSeconds": 60,
+    "paymentMethodPolicy": "do-not-add-initially-so-overage-suspends-instead-of-billing"
+  },
+  "database": {
+    "provider": "neon",
+    "product": "serverless-postgresql",
+    "plan": "free",
+    "region": "aws-ap-southeast-1",
+    "postgresqlMajorVersion": 16,
+    "storageLimitGb": 0.5,
+    "computeUnitHoursPerProjectMonth": 100,
+    "restoreWindowHours": 6,
+    "tlsMode": "verify-full",
+    "rootCertificateStrategy": "system-trust-store-or-render-secret-file-after-live-certificate-review",
+    "pooledRuntimeConnection": true,
+    "directMigrationConnection": false,
+    "endpointHostname": null,
+    "databaseName": null,
+    "roleName": null
+  },
+  "ingressAndSecrets": {
+    "providerManagedIngress": "render-load-balancer",
+    "httpsRedirect": true,
+    "customDomainRequiredForFirstDeploy": false,
+    "dnsChangeRequiredForFirstDeploy": false,
+    "certificateOwner": "render-managed-tls",
+    "runtimeSecretStore": "render-environment-secrets",
+    "repositorySecretsAllowed": false,
+    "actualSecretValuesRecorded": false
+  },
+  "retainedSafetyBoundary": {
+    "backendReplicas": 1,
+    "uvicornWorkers": 1,
+    "automaticMigration": false,
+    "automaticDeployment": false,
+    "databaseMutationApproved": false,
+    "alembicMutationApproved": false,
+    "productionDeploymentApprovalReady": false,
+    "productionDeploymentApproved": false,
+    "productionDeploymentExecuted": false,
+    "exactPreparationShaApprovalStillRequired": true
+  },
+  "rejectedAlternatives": [
+    {
+      "option": "render-free-postgresql",
+      "reason": "free database expires after 30 days and has no backups"
+    },
+    {
+      "option": "koyeb-free-web-plus-koyeb-free-postgresql",
+      "reason": "free database provides only 5 active compute hours per month; Starter resource use also requires a valid payment method"
+    },
+    {
+      "option": "fly-io-plus-neon-free",
+      "reason": "new accounts require a payment card and the always-running VM has a non-zero monthly compute cost"
+    }
+  ],
+  "officialEvidence": [
+    "https://render.com/docs/free",
+    "https://render.com/docs/deploying-an-image",
+    "https://render.com/docs/regions",
+    "https://render.com/docs/web-services",
+    "https://render.com/docs/configure-environment-variables",
+    "https://neon.com/pricing",
+    "https://neon.com/docs/introduction/regions",
+    "https://neon.com/docs/security/security-overview",
+    "https://neon.com/docs/introduction/history-window",
+    "https://www.koyeb.com/docs/databases",
+    "https://www.koyeb.com/docs/reference/organizations",
+    "https://fly.io/docs/about/pricing/"
+  ],
+  "unresolvedInputs": [
+    {
+      "key": "render-account",
+      "status": "owner-action-required",
+      "requiredValue": "owner signs in to a Render Hobby workspace without adding a payment method"
+    },
+    {
+      "key": "neon-account",
+      "status": "owner-action-required",
+      "requiredValue": "owner signs in to Neon Free"
+    },
+    {
+      "key": "render-service",
+      "status": "not-created",
+      "requiredValue": "Free image-backed Web Service in Singapore using the exact digest"
+    },
+    {
+      "key": "neon-project",
+      "status": "not-created",
+      "requiredValue": "Free PostgreSQL 16 project in aws-ap-southeast-1"
+    },
+    {
+      "key": "registry-read-credential",
+      "status": "not-created",
+      "requiredValue": "dedicated GitHub read:packages credential stored only in Render"
+    },
+    {
+      "key": "runtime-secrets-and-cors",
+      "status": "not-created",
+      "requiredValue": "Render secrets for database/JWT/admin key and exact generated HTTPS CORS origin"
+    },
+    {
+      "key": "database-initialization-and-backup",
+      "status": "separate-approval-required",
+      "requiredValue": "approved initial schema/data path, pre-mutation backup, and restore evidence"
+    }
+  ],
+  "nextSafeStage": "owner-connect-render-and-neon-accounts"
+}
