@@ -1,118 +1,70 @@
-# Current Status — v333
+# Current Status — v334
 
 ## 현재 결과
 
 ```txt
-latest: v333.isolated-image-pull-runtime-validation-complete-deploy-blocked
-strict result: isolated-image-pull-runtime-validation-complete-production-deploy-blocked
-next safe stage: review-isolated-validation-and-approve-production-deploy-plan
+latest: v334.production-deploy-plan-reviewed-inputs-blocked
+strict result: production-deploy-plan-reviewed-inputs-blocked
+next safe stage: select-production-targets-and-complete-executable-deploy-plan
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR repository: ghcr.io/gihohoho/upgrade-rpg-backend
-lifecycle: attempt-recorded
-publishReviewerGateReady: false
+publish lifecycle: attempt-recorded / publishReviewerGateReady=false
+production deploy plan reviewed: yes
+approval ready / approved / executed: no / no / no
 ```
 
-CI credential은 GitHub Actions `GITHUB_TOKEN`입니다. isolated pull에는 기호가 웹 로그인한 GitHub CLI OAuth `read:packages`를 Docker credential store로 전달했고 token 값은 기록하지 않았습니다. `deploy/github-actions-ghcr-publish-lifecycle.json`의 source-controlled lifecycle gate는 계속 `attempt-recorded`, gate `false`입니다. 현재 구체적 단계는 `review-isolated-validation-and-approve-production-deploy-plan`입니다.
+## 검증된 배포 후보
 
-## v333 isolated image pull/runtime 검증
-
-- exact reference pull 성공: `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`
-- image ID/digest 일치, `linux/amd64`, 기본 user `65532:65532`
-- internal bridge network, host port 없음, volume 없음
-- read-only rootfs, `/tmp` tmpfs `noexec,nosuid`, cap-drop ALL, no-new-privileges, PID/memory/CPU 제한
-- effective UID 65532, Python 3.11.15, pip 없음
-- `/api/v1/health` 200 및 `system.health`; `/health/db`와 실제 DB 연결은 실행하지 않음
-- rootfs write 차단, `/tmp` write/remove 성공
-- Alembic 미실행, production secret/CA/network 미사용
-- 첫 start의 CORS JSON quoting 실패는 앱 시작 전 발생했고 해당 container/network를 제거한 뒤 지원되는 단일 문자열 형식으로 재검증 성공
-- 최종 cleanup: 임시 container/network/local image 모두 제거, volume 생성 없음, 기존 PostgreSQL healthy
+- exact reference: `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`
+- GitHub Actions run `29909291344`: build, SPDX SBOM, local/pushed Trivy HIGH/CRITICAL 0건, SLSA provenance/SBOM, Cosign sign/verify 성공
+- artifacts: `8525220616`, `8525254543`
+- v333 isolated validation: `linux/amd64`, UID 65532, read-only rootfs, `/tmp` tmpfs, no host port/volume, health 200
+- isolated container/network/local image cleanup 완료; 실제 DB, Alembic, production secret/CA/network 미사용
 - evidence: `deploy/review/isolated-image-pull-validation-v333.json`
-- production runtime/deploy: 미적용/미승인/미실행
 
-## 세 번째 실행
+CI credential은 GitHub Actions `GITHUB_TOKEN`입니다. local private GHCR pull은 GitHub CLI OAuth `read:packages`를 Docker credential store로 전달했고 token 값은 기록하지 않았습니다. source-controlled lifecycle gate는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `attempt-recorded`, gate `false`이며 기존 다섯 run은 rerun하지 않습니다.
 
-- 승인 preparation `b35dfacf427162b348a6bd29eb030778edc7741c`
-- authorization `04e002060e576f19f4d8687b33635a414486206d`
-- closure `64e5ae0f5e5385ba00df16bb10ac33789ca3760a`
-- evidence `303a2ed01c69c29894efdcde4ead6c2291c3d8bc`
-- run `29883012957`: completed/failure
-- validation, repository checks, local image build, SPDX SBOM 성공
-- Trivy HIGH/CRITICAL gate: 27건(Debian 24, Python 3)으로 실패
-- artifact `8515504259`, SHA-256 `6a5dfd4cd96754fd365323c7c6a7d1edf18542b5e5729e44220d7bf21ace4c50`, 14일 보존
-- publish job skipped: GHCR login/push/provenance/Cosign 미실행, digest 없음, signature 미검증
+## v334 운영 배포 계획 검토
 
-Trivy 기준 fixed version이 있는 항목은 `jaraco.context 6.1.0`, `wheel 0.46.2` 두 건이며 25건은 현재 fixed version이 없습니다. `--ignore-unfixed=false`와 HIGH/CRITICAL gate는 의도대로 작동했으므로 자동 완화하지 않습니다.
+`docs/current/PRODUCTION_DEPLOYMENT_PLAN.md`와 `deploy/production-deploy-plan.example.json`을 검토 완료했습니다. 이번 작업은 계획 검토와 repository 정리만 승인됐고 production resource는 변경하지 않았습니다.
 
-## 네 번째 실행
+미확정 입력:
 
-- preparation/authorization/closure/evidence: `13b15409929d77b4e6209481596e4f4550a22ba5` / `4fb31f51ca0de15d77a73390b5a07e394ffce12a` / `ddf475c1a2449feb50ef2af1a536e4150cf0ad59` / `f945214f2387b6aa191655d3740e18ef862bd6fb`
-- run `29886540317`: completed/failure
-- validation, 전체 repository checks, local linux/amd64 build, SPDX SBOM, local Trivy HIGH/CRITICAL gate 모두 성공
-- GHCR login/build/push 성공, digest `sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149`
-- registry provenance와 SBOM은 존재하지만 workflow가 SLSA v1의 `SLSA.buildDefinition.buildType` 대신 구형 `SLSA.buildType`을 검사해 실패
-- exact-digest Trivy와 Cosign sign/verify는 미실행, signature 미검증
-- artifact `8516735247` / `8516749365`, SHA-256 `ff23e73c5c7aa8cd2abc8de88f043b1601debaf43652e3d76ff353f5e243d86b` / `f3d5b685c98bed863e07c35f8dd82aec7523c8c538de69c2c96da20ffda2e3e9`, 14일 보존
-- pushed digest는 unsigned·미검증 상태이므로 production reference나 deploy에 사용하지 않음
+- production host/provider/region/OS/access
+- managed PostgreSQL provider/product/region/endpoint/network
+- provider CA PEM과 host mount path
+- reverse proxy 또는 ingress, domain, DNS, certificate 책임
+- Git 밖의 secret injection 위치
+- 사전 생성 external edge network
+- managed DB backup 상태와 첫 배포 traffic rollback 담당
 
-## GitHub 설정
+개인 비공개 저장소의 `ghcr-production-publish` environment에는 native required reviewer가 없고 관리자 우회가 가능합니다. 실제 deploy는 모든 입력을 확정한 실행 준비 commit의 정확한 SHA를 기호가 별도 승인해야 합니다.
 
-2026-07-22T09:41:21Z 기준 allowlist/full SHA, 기본 token read-only, fork write token/secret false, `ghcr-production-publish` main-only와 secrets/variables 0/0을 authorization 직전에 재확인했습니다. native required reviewer/prevent self-review는 비공개 개인 저장소 제약으로 없습니다.
+## GitHub live 확인
 
-## 다섯 번째 실행 — verified candidate
+2026-07-22T12:49:50Z 기준:
 
-- preparation/authorization/closure/evidence: `36e8720a53ef7ff6a8334de6bc99646998d63fc9` / `26a11356e33c978afa8cd8a4881500fa62cdbc5c` / `1c4a982b2a35d3d45f59e7d9faefcdecca69e6c5` / `1f0340ddfcf3c8a74cf14110d5957627d4c5d38a`
-- run `29909291344`: completed/success, `run_attempt=1`
-- validation, repository checks, local build/SBOM/Trivy, GHCR login/build/push 성공
-- SLSA v1 provenance/SBOM, exact-digest Trivy 0건, Cosign keyless sign/verify 성공
-- verified digest: `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`
-- artifact `8525220616` / `8525254543`, SHA-256 `c08e483754d357f2f7120659cea455e670bc570a5fb0db3eadfbc0b217f1e30e` / `697fbb38e30d9328d65e392da819eb1645cb42be5059ca502c29cd3b9241db65`, 14일 보존
-- lifecycle `attempt-recorded`, gate `false`, rerun 금지
-- production reference는 verified exact digest로 정적 고정됐으며 pull/deploy는 미실행
+- Actions enabled, selected actions only, full-length SHA required
+- default `GITHUB_TOKEN` read-only, Actions PR approval false
+- `ghcr-production-publish` 존재, `main` only
+- native required reviewer false, admins can bypass true
+- latest verified run `29909291344` completed/success
 
-## 로컬 Failed to fetch 해결 상태
+## 문서·폴더 정리
 
-- Codex가 기존 local PostgreSQL 컨테이너와 프로젝트 루트 legacy 정적 서버를 시작했습니다.
-- backend `127.0.0.1:8000`, Vue `127.0.0.1:5173`, legacy `127.0.0.1:5500`, PostgreSQL `127.0.0.1:55432`가 실행 중입니다.
-- `/api/v1/health`, `/api/v1/health/db`, `/api/v1/game/master-data`는 모두 200입니다.
-- 브라우저에서 `http://127.0.0.1:5500/index.html`과 `http://127.0.0.1:5500/admin.html`을 실제 확인했고 `Failed to fetch` 로그가 없습니다.
-- `file:///C:/Users/HOME/Desktop/Upgrade%20RPG/...` 경로는 파일 위치로는 맞지만 origin이 `null`이므로 API 통합 실행 주소로는 사용하지 않습니다.
+- `docs/` 루트는 `README.md`, `CHANGELOG.md`만 유지
+- current/guides/contracts/archive/handoff 역할 분리
+- 동일한 docs 사본 제거, obsolete root smoke 134개를 `tools/smoke/` canonical 구조로 통합
+- 오래된 v316 ZIP과 빈 `.agents` 제거
+- `local-backups/` PostgreSQL backup과 `local-review-artifacts/` Alembic evidence는 보존
+- canonical 구조: `docs/current/PROJECT_STRUCTURE.md`
 
-## 이후 콘텐츠·DB 변경 원칙
+## 개발과 안전 경계
 
-- 콘텐츠·코드·DB 개발은 가능하지만 현재 pinned image는 변경 전 snapshot으로 유지됩니다.
-- 코드나 image 포함 콘텐츠가 바뀌면 최신 배포 전에 새 image build·SBOM·Trivy·provenance·Cosign 검증이 필요합니다.
-- DB row 변경은 image digest와 별개지만 호환성 검증이 필요합니다.
-- DB schema 변경은 새 Alembic revision과 배포 순서를 별도 승인·검토합니다.
-
-## v330 focused fix 준비
-
-- workflow는 `SLSA` 객체와 `SLSA.buildDefinition` 객체를 각각 검사합니다.
-- `buildType`은 SLSA v1 실제 경로인 `SLSA.buildDefinition.buildType`에서만 확인합니다.
-- 구형 `SLSA.buildType`으로 되돌리거나 `buildDefinition` 검사를 제거하면 mutation smoke가 차단합니다.
-- workflow source/semantic SHA-256은 `3331484f280a12a239275785bef625f18656c62ccbe33e8707a296ac2e204843` / `526c4d21f9bc223e25829f60bf804f9167f6905b9129ffe1e70d85f354d57126`으로 잠겼습니다.
-- 현재 lifecycle은 `preparation-closed`, gate `false`, `approvedPreparationSha=null`, `observedAttempt.status=not-dispatched`입니다.
-- 새 workflow/login/build/push는 실행하지 않았습니다.
-
-## 운영·개발 경계
-
-- target `linux/amd64`, private GHCR
-- managed PostgreSQL + provider CA `verify-full` + external reverse proxy HTTPS + backend 1/1
 - Alembic current `v295_initial_schema`, 새 revision 필요 없음
-- Vue GET read-only 외 Preview/Apply/write/auth 보류
-- DB/Alembic/auth/API write/게임/production Compose·deploy는 별도 요청 전 금지
-- actual secret/token/PAT/credential은 파일·Git·로그·채팅·artifact에 기록하지 않음
+- Vue는 GET read-only만 연결, Preview/Apply/write/auth 보류
+- 구체적 요청 전 DB mutation, Alembic mutation, auth/API write, 게임 콘텐츠·밸런스 변경 금지
+- production Compose/container/network/volume/DNS/proxy 변경과 실제 deploy는 승인 전 금지
+- `docker compose down -v`, 자동 migration/deploy/retry 금지
 
-## v328 focused fix 준비 결과
-
-- exact base: `python:3.11.15-alpine3.23@sha256:ac0151f0eec4b7ba78bc47d337f328c6db706e7255b35b2327c2749f058c82fe`
-- Ubuntu 검증용 manylinux lock과 운영용 musllinux lock을 분리하고 모두 SHA-256으로 고정했습니다.
-- multi-stage build와 UID/GID `65532` 비루트 실행을 적용하고 최종 runtime에서 pip/setuptools/wheel/ensurepip을 제거했습니다.
-- 앱에서 사용되지 않는 `python-jose[cryptography]`와 전이 의존성 8개를 runtime에서 제거했습니다.
-- 로컬 linux/amd64 후보는 약 40.2MB이며 Python 3.11.15와 앱 핵심 import를 확인했습니다.
-- Trivy 0.70 동일 정책 `HIGH,CRITICAL`, `--ignore-unfixed=false` 결과는 OS 0건, Python 0건입니다.
-- Distroless Debian 12 후보는 실제 동일 검사에서 41건으로 실패해 채택하지 않았습니다.
-- 위 내용은 v328 preparation commit 시점의 준비 결과입니다. 그 시점에 lifecycle은 `preparation-closed`, 승인 SHA는 `null`, 새 workflow는 미실행이었습니다. 현재 상태는 위의 다섯 번째 실행 기록과 같이 `attempt-recorded`입니다.
-
-다음 단계는 isolated 검증 증거를 검토한 뒤 production deploy 계획과 실제 deploy를 별도 승인하는 것입니다. 현재 필요한 extension·설치는 없습니다. 활성 `gihohoho` GitHub CLI 계정에는 `read:packages`가 있고, 비활성 `konghjin` 계정의 만료 token은 건드리지 않았습니다.
-
-검증은 기호의 요청에 따라 위험도 기반 최소 범위로 실행합니다. 문서·handoff·상태값 변경에는 관련 strict checker와 handoff smoke만 사용하고 전체 core smoke는 실행하지 않습니다. 전체 smoke는 핵심 로직·DB/Alembic·API 계약·공통 구조·여러 영역 변경 또는 실제 배포 후보 직전에만 1회 실행합니다.
+현재 필요한 extension·설치는 없습니다. 다음에는 운영 공급자와 domain 정보를 확정해 실행 가능한 deploy plan을 준비합니다.

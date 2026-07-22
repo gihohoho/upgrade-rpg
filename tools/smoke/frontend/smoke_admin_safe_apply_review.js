@@ -40,14 +40,14 @@ assertContains("admin.html", [
   "catalog-row-selected",
 ]);
 
-assertContains("docs/ADMIN_SAFE_APPLY_REVIEW.md", [
+assertContains("docs/archive/stage-notes/ADMIN_SAFE_APPLY_REVIEW.md", [
   "Admin Safe Apply Review",
   "HIGH RISK EDIT",
   "before/after",
   "DB reset / seed는 필요 없습니다",
 ]);
 
-assertContains("docs/ADMIN_CATALOG_SELECTION_HELPER.md", [
+assertContains("docs/archive/stage-notes/ADMIN_CATALOG_SELECTION_HELPER.md", [
   "Admin Catalog Selection Helper",
   "선택됨",
   "markSelectedMasterCatalogRow",

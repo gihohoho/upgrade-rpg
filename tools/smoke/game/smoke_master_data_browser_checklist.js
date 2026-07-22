@@ -14,7 +14,7 @@ function assert(condition, message) {
 }
 
 assert(fs.existsSync(checklistPath), "src/api/master-data-browser-checklist.js 파일이 없습니다.");
-assert(fs.existsSync(docsPath), "docs/MASTER_DATA_BROWSER_CHECKLIST.md 문서가 없습니다.");
+assert(fs.existsSync(docsPath), "docs/guides/MASTER_DATA_BROWSER_CHECKLIST.md 문서가 없습니다.");
 
 const source = fs.readFileSync(checklistPath, "utf8");
 const index = fs.readFileSync(indexPath, "utf8");

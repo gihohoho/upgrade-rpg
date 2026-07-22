@@ -36,6 +36,6 @@ assertIncludes("src/api/save-data-restore-guard.js", "최근 백업으로 되돌
 assertIncludes("src/api/save-data-restore-guard.js", "save-restore-modal-warning");
 assertIncludes("src/api/save-data-restore-guard.js", "escapeHtml");
 assertOrder("index.html", "src/api/save-data-restore-guard.js", "src/api/save-data-dev-badge.js");
-assertIncludes("docs/SAVE_DATA_BADGE_RESTORE_ACTIONS.md", "Save Data Badge Restore Actions");
+assertIncludes("docs/archive/stage-notes/SAVE_DATA_BADGE_RESTORE_ACTIONS.md", "Save Data Badge Restore Actions");
 
 console.log("save data badge restore actions smoke test passed");

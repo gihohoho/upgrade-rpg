@@ -72,7 +72,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "createDeleteRollbackReady",
 ]);
 
-assertContains("docs/ADMIN_CREATE_DELETE_ROLLBACK.md", [
+assertContains("docs/archive/stage-notes/ADMIN_CREATE_DELETE_ROLLBACK.md", [
   "Admin Create Delete Rollback",
   "DELETE CREATED MASTER DATA ROW",
   "dependencyBlockerCount",

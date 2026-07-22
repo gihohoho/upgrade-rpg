@@ -30,6 +30,7 @@ REQUIRED = (
     "backend/requirements/dev-linux-amd64-py311.lock",
     "backend/alembic/versions/v295_initial_schema_initial_postgresql_schema.py",
     "deploy/backend-image-ghcr-policy.example.json",
+    "deploy/production-deploy-plan.example.json",
     "deploy/review/isolated-image-pull-validation-v333.json",
     "deploy/github-actions-ghcr-publish-lifecycle.json",
     "deploy/docker-compose.production.yml",
@@ -37,6 +38,7 @@ REQUIRED = (
     "deploy/secrets/README.md",
     "docs/README.md",
     "docs/current/CURRENT_STATUS.md",
+    "docs/current/PRODUCTION_DEPLOYMENT_PLAN.md",
     "docs/current/BACKEND_IMAGE_GHCR_POLICY.md",
     "docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md",
     "docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md",
@@ -44,14 +46,15 @@ REQUIRED = (
     "docs/handoff/NEXT_CHAT_PROMPT.md",
     "docs/handoff/NEXT_CHAT_HANDOFF.md",
     "tools/check_github_actions_ghcr_static_plan.py",
+    "tools/check_production_deployment_plan.py",
     "tools/generate_backend_linux_dependency_locks.py",
 )
 
 
 def load_tool():
-    spec = importlib.util.spec_from_file_location("v333_codex_handoff", TOOL)
+    spec = importlib.util.spec_from_file_location("v334_codex_handoff", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v333 Codex handoff checker")
+        raise RuntimeError("cannot load v334 Codex handoff checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -70,7 +73,7 @@ def expect_blocked(module, temp: Path) -> None:
         module.inspect_codex_handoff(temp)
     except module.CodexHandoffError:
         return
-    raise AssertionError("unsafe v333 Codex handoff fixture was not blocked")
+    raise AssertionError("unsafe v334 Codex handoff fixture was not blocked")
 
 
 def main() -> int:
@@ -118,6 +121,8 @@ def main() -> int:
     assert result["isolatedImagePullExecuted"] is True
     assert result["isolatedContainerExecutionExecuted"] is True
     assert result["isolatedCleanupExecuted"] is True
+    assert result["productionDeploymentPlanReviewed"] is True
+    assert result["productionDeploymentApprovalReady"] is False
     assert result["productionDeploymentApproved"] is False
     assert result["productionDeploymentExecuted"] is False
 
@@ -135,6 +140,8 @@ def main() -> int:
         ("isolatedImagePullExecuted", False),
         ("isolatedContainerExecutionExecuted", False),
         ("isolatedCleanupExecuted", False),
+        ("productionDeploymentPlanReviewed", False),
+        ("productionDeploymentApprovalReady", True),
         ("productionDeploymentApproved", True),
         ("githubPatCreated", True),
         ("githubActionsWorkflowPresent", False),
@@ -239,7 +246,7 @@ def main() -> int:
         evidence_path.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         expect_blocked(module, temp)
 
-    print("OK: v333 isolated image pull/runtime handoff smoke passed")
+    print("OK: v334 reviewed production deployment plan handoff smoke passed")
     return 0
 
 

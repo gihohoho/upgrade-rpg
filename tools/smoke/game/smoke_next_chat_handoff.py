@@ -6,10 +6,10 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v333.isolated-image-pull-runtime-validation-complete-deploy-blocked"
+VERSION = "v334.production-deploy-plan-reviewed-inputs-blocked"
 STATIC_PLAN_VERSION = "v330.slsa-v1-provenance-path-preparation"
-READY_RESULT = "isolated-image-pull-runtime-validation-complete-production-deploy-blocked"
-NEXT_SAFE_STAGE = "review-isolated-validation-and-approve-production-deploy-plan"
+READY_RESULT = "production-deploy-plan-reviewed-inputs-blocked"
+NEXT_SAFE_STAGE = "select-production-targets-and-complete-executable-deploy-plan"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 PREPARATION = "36e8720a53ef7ff6a8334de6bc99646998d63fc9"
@@ -61,6 +61,7 @@ def main() -> int:
         "attempt-recorded",
         "review-recorded-workflow-attempt-evidence",
         "deploy/review/isolated-image-pull-validation-v333.json",
+        "deploy/production-deploy-plan.example.json",
         PREPARATION,
         str(RUN_ID),
         *(str(value) for value in ARTIFACT_IDS),
@@ -83,7 +84,7 @@ def main() -> int:
     policy = json.loads(read("deploy/backend-image-ghcr-policy.example.json"))
     assert policy["schemaVersion"] == VERSION
     assert policy["preparedOnly"] is False
-    assert policy["ownerOnlyApprovalPhase"] == "isolated-image-validation-complete-deploy-blocked"
+    assert policy["ownerOnlyApprovalPhase"] == "production-deploy-plan-reviewed-inputs-blocked"
     assert policy["publishLifecycleState"] == "attempt-recorded"
     assert policy["approvedPreparationSha"] == PREPARATION
     assert policy["exactPreparationShaApproved"] is True
@@ -96,6 +97,8 @@ def main() -> int:
     assert policy["isolatedImagePullExecuted"] is True
     assert policy["isolatedContainerExecutionExecuted"] is True
     assert policy["isolatedCleanupExecuted"] is True
+    assert policy["productionDeploymentPlanReviewed"] is True
+    assert policy["productionDeploymentApprovalReady"] is False
     assert policy["productionDeploymentApproved"] is False
     assert policy["productionDeploymentExecuted"] is False
     assert policy["currentAttemptEvidence"] == {
@@ -164,7 +167,14 @@ def main() -> int:
     assert evidence["cleanup"]["localImageRemoved"] is True
     assert evidence["productionDeploymentExecuted"] is False
 
-    print("OK: v333 isolated image validation and handoff documents are synchronized")
+    plan = json.loads(read("deploy/production-deploy-plan.example.json"))
+    assert plan["schemaVersion"] == VERSION
+    assert plan["planReview"]["completed"] is True
+    assert plan["approvalContract"]["approvalReady"] is False
+    assert plan["approvalContract"]["productionDeploymentExecuted"] is False
+    assert plan["nextSafeStage"] == NEXT_SAFE_STAGE
+
+    print("OK: v334 deployment plan and handoff documents are synchronized")
     return 0
 
 

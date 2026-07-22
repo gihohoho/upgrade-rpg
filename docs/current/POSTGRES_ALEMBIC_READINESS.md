@@ -138,7 +138,7 @@ python -m pip install -e ".[dev]"
 - isolated target restore 및 검증: `tools/restore_postgres_rehearsal_database.py`
 - empty migration test DB 생성: `tools/create_postgres_migration_test_database.py`
 - 최초 revision 생성·자동 검토: `tools/create_postgres_initial_alembic_revision.py`
-- 최초 revision 수동 검토: `docs/archive/postgres-baseline/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md`
+- 최초 revision 수동 검토: `docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md`
 - isolated migration DB upgrade guard: `tools/upgrade_postgres_migration_test_database.py`
 - isolated migration DB downgrade guard: `tools/downgrade_postgres_migration_test_database.py`
 - isolated migration round-trip re-upgrade guard: `tools/reupgrade_postgres_migration_test_database.py`
@@ -329,7 +329,7 @@ python tools/create_postgres_restore_rehearsal_database.py --execute
 python tools/restore_postgres_rehearsal_database.py --execute
 ```
 
-완료된 baseline 전략 기록은 `docs/archive/postgres-baseline/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md`에 보관합니다.
+완료된 baseline 전략 기록은 `docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md`에 보관합니다.
 
 ## v310에서 변경하지 않은 것
 

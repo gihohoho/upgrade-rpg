@@ -62,7 +62,7 @@ assertContains("admin.html", [
   "<option value=\"dropTableItems\">드랍 아이템</option>",
 ]);
 
-assertContains("docs/ADMIN_CREATE_APPLY_ITEMS_DROPITEMS.md", [
+assertContains("docs/archive/stage-notes/ADMIN_CREATE_APPLY_ITEMS_DROPITEMS.md", [
   "Admin Create Apply ItemTemplates and DropTableItems",
   "itemTemplates",
   "dropTableItems",

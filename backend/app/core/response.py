@@ -19,7 +19,7 @@ def api_response(
     error: dict[str, Any] | None = None,
     request_id: str | None = None,
 ) -> dict[str, Any]:
-    """Return the response shape fixed in docs/API_RESPONSE_CONTRACT.md."""
+    """Return the response shape fixed in docs/contracts/API_RESPONSE_CONTRACT.md."""
     now = datetime.now(UTC)
     return {
         "ok": ok,

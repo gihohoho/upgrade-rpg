@@ -116,7 +116,7 @@
 
 완료된 내용:
 
-- `docs/API_RESPONSE_CONTRACT.md` 추가
+- `docs/contracts/API_RESPONSE_CONTRACT.md` 추가
 - `src/api/api-response-contract.js` 추가
 - `src/api/API_PLAN.md`를 확정 응답 형태 기준으로 갱신
 - 저장/불러오기 응답 형태 정리

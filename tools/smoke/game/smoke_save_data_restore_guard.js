@@ -42,6 +42,6 @@ assertIncludes("src/app/main.js", "completeBackendSaveRestoreReloadApply");
 assertIncludes("index.html", "src/api/save-data-restore-guard.js");
 assertOrder("index.html", "src/api/save-data-preview.js", "src/api/save-data-restore-guard.js");
 assertOrder("index.html", "src/api/save-data-restore-guard.js", "src/api/save-data-dev-badge.js");
-assertIncludes("docs/SAVE_DATA_RESTORE_GUARD.md", "Save Data Restore Guard");
+assertIncludes("docs/archive/stage-notes/SAVE_DATA_RESTORE_GUARD.md", "Save Data Restore Guard");
 
 console.log("save data restore guard smoke test passed");

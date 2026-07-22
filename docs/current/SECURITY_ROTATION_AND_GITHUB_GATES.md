@@ -1,12 +1,20 @@
-# Security rotation and GitHub gates — v333
+# Security rotation and GitHub gates — v334
 
 ## Secret 원칙
 
 실제 secret 값은 적지 않습니다. token, PAT, Docker credential, production `.env`, CA/cert/key를 Git·채팅·로그·artifact에 넣지 않습니다. 나중에 사용한 credential이 생기면 사용 완료 후 회전·폐기 여부를 이 문서에 기록합니다.
 
+## Production deployment approval boundary
+
+- 운영 배포 계획 검토는 완료했지만 production host/DB/CA/proxy/domain/secret/network/rollback 입력이 미확정이므로 approval ready는 `false`입니다.
+- 개인 비공개 저장소의 environment에는 native required reviewer가 없고 admins can bypass가 `true`이므로 실제 deploy 준비 commit의 정확한 SHA를 source-controlled owner approval로 다시 확인합니다.
+- 실제 값은 Git 밖의 승인된 secret/deployment platform에만 넣고 final Compose render 결과에도 secret을 출력하지 않습니다.
+- 첫 배포는 이전 production image가 없으므로 실패 시 proxy route를 철회하고 새 backend만 중지합니다. DB, CA, network, volume은 보존합니다.
+- DB/Alembic mutation, `docker compose down -v`, 자동 retry/deploy는 승인 범위 밖입니다.
+
 ## GitHub gate 상태
 
-2026-07-22T01:21:58Z 확인:
+2026-07-22T12:49:50Z live API 재확인:
 
 - external action allowlist와 full-length SHA enforcement 정상
 - GitHub-owned/verified creator blanket false
@@ -15,6 +23,7 @@
 - fork write token와 secret 전달 false
 - `ghcr-production-publish`: main-only, secrets 0, variables 0
 - required reviewer/prevent self-review: 비공개 개인 저장소 제약으로 unavailable
+- environment admins can bypass: true
 
 따라서 owner-only source-controlled two-step을 사용합니다. `run_attempt=1`, single dispatch, immediate closure, 정확한 `closureCommitSha`, rerun 금지를 유지합니다.
 

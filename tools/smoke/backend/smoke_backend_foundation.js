@@ -15,10 +15,10 @@ const required = [
   'backend/app/api/routes/game.py',
   'backend/app/api/routes/admin.py',
   'backend/sql/schema_draft.sql',
-  'docs/ADMIN_REQUIREMENTS_V1.md',
-  'docs/DB_SCHEMA_DRAFT.md',
-  'docs/BACKEND_ARCHITECTURE.md',
-  'docs/BACKEND_API_ROUTES_DRAFT.md',
+  'docs/archive/stage-notes/ADMIN_REQUIREMENTS_V1.md',
+  'docs/archive/stage-notes/DB_SCHEMA_DRAFT.md',
+  'docs/current/BACKEND_ARCHITECTURE.md',
+  'docs/archive/stage-notes/BACKEND_API_ROUTES_DRAFT.md',
 ];
 
 const missing = required.filter((file) => !fs.existsSync(path.join(root, file)));
@@ -34,7 +34,7 @@ if (!responseContract.includes('game-api-response.v1')) {
   process.exit(1);
 }
 
-const adminRequirements = fs.readFileSync(path.join(root, 'docs/ADMIN_REQUIREMENTS_V1.md'), 'utf8');
+const adminRequirements = fs.readFileSync(path.join(root, 'docs/archive/stage-notes/ADMIN_REQUIREMENTS_V1.md'), 'utf8');
 for (const keyword of ['아이템 관리', '보스 관리', '드랍률 관리', '강화 규칙 관리', '캐릭터 관리', '스킬 관리', '수정 전 값 저장']) {
   if (!adminRequirements.includes(keyword)) {
     console.error(`Missing admin requirement keyword: ${keyword}`);

@@ -4,7 +4,7 @@ const path = require('path');
 const root = path.resolve(__dirname, "..", "..", "..");
 const adminJs = fs.readFileSync(path.join(root, 'src/api/admin-page-readonly.js'), 'utf8');
 const adminHtml = fs.readFileSync(path.join(root, 'admin.html'), 'utf8');
-const docs = fs.readFileSync(path.join(root, 'docs/ADMIN_POST_EDIT_API_VERIFY.md'), 'utf8');
+const docs = fs.readFileSync(path.join(root, 'docs/archive/stage-notes/ADMIN_POST_EDIT_API_VERIFY.md'), 'utf8');
 const changelog = fs.readFileSync(path.join(root, 'docs/CHANGELOG.md'), 'utf8');
 
 function assert(condition, message) {

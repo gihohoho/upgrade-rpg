@@ -48,6 +48,6 @@ assertIncludes("src/api/save-data-sync-policy.js", "dispatchBackendSaveSyncEvent
 assertIncludes("src/api/save-data-sync-policy.js", "dispatchBackendSaveSyncEvent(\"mode\"");
 assertIncludes("index.html", "src/api/save-data-dev-badge.js");
 assertOrder("index.html", "src/api/save-data-sync-policy.js", "src/api/save-data-dev-badge.js");
-assertIncludes("docs/SAVE_DATA_DEV_BADGE.md", "SAVE DATA");
+assertIncludes("docs/archive/stage-notes/SAVE_DATA_DEV_BADGE.md", "SAVE DATA");
 
 console.log("save data dev badge smoke test passed");

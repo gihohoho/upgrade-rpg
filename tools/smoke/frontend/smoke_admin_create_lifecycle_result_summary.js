@@ -53,7 +53,7 @@ assertContains("tools/run_smoke_core.sh", [
   "node tools/smoke/frontend/smoke_admin_create_lifecycle_result_summary.js",
 ]);
 
-assertContains("docs/ADMIN_CREATE_LIFECYCLE_RESULT_SUMMARY.md", [
+assertContains("docs/archive/stage-notes/ADMIN_CREATE_LIFECYCLE_RESULT_SUMMARY.md", [
   "Admin Create Lifecycle Result Summary",
   "dependencyCheckCount",
   "restoreConflictCount",

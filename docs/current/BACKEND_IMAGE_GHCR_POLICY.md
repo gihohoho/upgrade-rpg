@@ -1,51 +1,31 @@
-# Backend image GHCR policy — v333
+# Backend image GHCR policy — v334
 
 ## 고정값
 
 ```txt
-version: v333.isolated-image-pull-runtime-validation-complete-deploy-blocked
+version: v334.production-deploy-plan-reviewed-inputs-blocked
 remote: https://github.com/gihohoho/upgrade-rpg.git
 repository: ghcr.io/gihohoho/upgrade-rpg-backend
 visibility/platform: private / linux/amd64
-credential: GitHub Actions GITHUB_TOKEN
+CI credential: GitHub Actions GITHUB_TOKEN
 reference mode: digest-only
-lifecycle: attempt-recorded / publishReviewerGateReady=false
+publish lifecycle: attempt-recorded / publishReviewerGateReady=false
 ```
 
-`owner-only-source-controlled-two-step` source-controlled lifecycle gate를 사용합니다. authorization은 승인된 preparation의 직접 자식이며 lifecycle 파일만 변경합니다. workflow는 repository owner, `run_attempt=1`, single dispatch만 허용하고 접수 즉시 immediate closure로 gate를 닫습니다. rerun은 금지합니다. 종료 뒤 별도 `attempt-recorded` commit이 정확한 `closureCommitSha`와 실제 run/digest/signature 증거를 남깁니다. 일반 R 계약 next stage는 `review-recorded-workflow-attempt-evidence`입니다.
+verified production reference:
 
-## 3차 실행 기록
+```txt
+ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2
+```
 
-- preparation `b35dfacf427162b348a6bd29eb030778edc7741c`
-- authorization `04e002060e576f19f4d8687b33635a414486206d`
-- closure `64e5ae0f5e5385ba00df16bb10ac33789ca3760a`
-- evidence `303a2ed01c69c29894efdcde4ead6c2291c3d8bc`
-- run `29883012957`: failure at local Trivy HIGH/CRITICAL gate
-- image build와 SPDX SBOM 성공, 27건 발견
-- artifact `8515504259`, SHA-256 `6a5dfd4cd96754fd365323c7c6a7d1edf18542b5e5729e44220d7bf21ace4c50`
-- publish skipped, login/push/provenance/Cosign 미실행, digest 없음, signature 미검증
+run `29909291344`에서 build, SBOM, Trivy HIGH/CRITICAL 0건, SLSA provenance/SBOM, Cosign sign/verify를 통과했습니다. v333 isolated runtime에서도 exact digest, `linux/amd64`, UID 65532, read-only rootfs, health 200을 확인하고 임시 자원을 모두 제거했습니다.
 
-## Fail-closed 원칙
+image publish는 `owner-only-source-controlled-two-step`과 `deploy/github-actions-ghcr-publish-lifecycle.json`을 사용합니다. run_attempt=1, single dispatch, immediate closure, rerun 금지를 유지합니다. 이전 시도와 artifact 상세는 lifecycle JSON과 `docs/CHANGELOG.md`에 보존합니다.
 
-- exact dependency와 action SHA를 유지합니다.
-- root `.dockerignore`는 `.env`/`*.env`/`.envrc`를 제외하고 재포함을 금지합니다.
-- `backend/Dockerfile.production.dockerignore`는 만들지 않습니다.
-- Trivy `--ignore-unfixed=false` 및 HIGH/CRITICAL gate를 자동 완화하지 않습니다.
-- byte-for-byte deterministic image를 보장한다고 주장하지 않습니다.
-- 모든 검증을 통과하고 Cosign 확인까지 끝난 exact digest만 후보로 사용합니다.
+## 현재 배포 경계
 
-## v328 runtime focused fix
+`deploy/production-deploy-plan.example.json`은 검토 완료됐지만 필수 운영 입력이 미확정이라 approval ready가 `false`입니다. exact-SHA 실행 승인이 있기 전에는 production runtime에 적용하지 않습니다.
 
-기반 이미지는 Python 3.11.15 Alpine 3.23의 `linux/amd64` manifest digest로 고정했습니다. Ubuntu 검증은 manylinux lock, 운영 빌드는 musllinux lock을 사용합니다. 최종 runtime은 비루트 UID/GID 65532로 실행하며 pip/setuptools/wheel/ensurepip을 포함하지 않습니다. 사용되지 않는 `python-jose[cryptography]`도 제거했습니다. 로컬 Trivy 0.70 동일 gate 결과는 HIGH/CRITICAL 0건입니다.
+actual secret을 repository에 넣지 않고, tag·unsigned digest·미검증 digest를 production reference로 사용하지 않습니다. root build context는 env 파일을 제외하며 Trivy `--ignore-unfixed=false`를 유지합니다. byte-for-byte deterministic image라고 주장하지 않습니다.
 
-4차 run은 GHCR push까지 성공해 digest `sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149`를 만들었지만 SLSA v1 provenance 경로 검사에서 실패했습니다. exact-digest Trivy와 Cosign은 미실행이므로 이 digest는 검증 완료 후보가 아닙니다. 4차 증거는 lifecycle `attemptHistory`에 보존했습니다.
-
-v330 focused fix는 registry provenance의 `SLSA` 객체와 `buildDefinition` 객체를 각각 확인한 뒤 `SLSA.buildDefinition.buildType`을 검사합니다. 구형 `SLSA.buildType`으로 되돌리거나 객체 검사를 빼면 정적 smoke가 차단합니다.
-
-5차 run `29909291344`은 모든 gate와 Cosign sign/verify를 통과했습니다. verified digest는 `sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`입니다. 현재 lifecycle은 `attempt-recorded`, gate는 `false`입니다. v332에서 production reference를 `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2`로 정적 고정했으며 자동 deploy는 없습니다.
-
-## v333 isolated runtime 결과
-
-기호의 별도 승인 뒤 verified exact digest를 GitHub CLI OAuth `read:packages`로 인증해 pull했습니다. internal network, host port/volume 없음, UID 65532, read-only rootfs, `/tmp` tmpfs, cap-drop ALL, no-new-privileges 조건에서 `/api/v1/health` 200을 확인했습니다. `/health/db`, 실제 DB, Alembic, production secret/CA/network는 사용하지 않았습니다. 임시 container/network/local image는 모두 제거했습니다. evidence는 `deploy/review/isolated-image-pull-validation-v333.json`입니다.
-
-다음 안전 단계는 `review-isolated-validation-and-approve-production-deploy-plan`입니다. production runtime 적용과 deploy는 별도 승인 전까지 차단합니다.
+다음 단계는 `select-production-targets-and-complete-executable-deploy-plan`입니다.

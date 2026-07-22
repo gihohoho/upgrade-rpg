@@ -76,7 +76,7 @@ assertContains("tools/run_smoke_core.sh", [
   "node tools/smoke/frontend/smoke_admin_create_lifecycle_split_contract.js",
 ]);
 
-assertContains("docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md", [
+assertContains("docs/archive/stage-notes/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md", [
   "Admin Create Lifecycle Split Contract",
   "v188",
   "contract-frozen-v188",

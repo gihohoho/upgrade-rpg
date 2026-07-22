@@ -510,18 +510,18 @@ player.userCharacters
 CSS 중복/SCSS 전환 판단은 아래 문서에 정리했습니다.
 
 ```txt
-docs/CSS_AUDIT.md
+docs/archive/stage-notes/CSS_AUDIT.md
 ```
 
 
 ## v069 추가 문서
 
-- `docs/SKILL_DAMAGE_TEXT_FIX.md`: 기존 저장 스킬 데이터가 캐릭터별 스킬 구조로 이관되지 않아 스킬 데미지 텍스트가 안 보일 수 있는 문제와 수정 내용을 설명합니다.
+- `docs/archive/stage-notes/SKILL_DAMAGE_TEXT_FIX.md`: 기존 저장 스킬 데이터가 캐릭터별 스킬 구조로 이관되지 않아 스킬 데미지 텍스트가 안 보일 수 있는 문제와 수정 내용을 설명합니다.
 
 
 ## 4순위 2차 관련 문서
 
-- `docs/KILL_REWARD_RESULT_STAGE2.md`
+- `docs/archive/stage-notes/KILL_REWARD_RESULT_STAGE2.md`
   - `killEnemy()` 처치/드랍/보상 결과 객체화 내용 정리
 - `src/systems/action-result-system.js`
   - `createEnemyKillResult()`, `addDropAward()`, `addRewardGold()`, `addBlockedReward()` 추가
@@ -534,7 +534,7 @@ docs/CSS_AUDIT.md
 - `src/systems/action-result-system.js`: `item.equip`, `item.unequip`, `skill_book.use`, `boss.summon` 결과 객체 생성 헬퍼와 UI 요청 처리 확장
 - `src/systems/item-system.js`: `actionEquipDirect()`, `actionUnequipDirect()` 결과 객체화
 - `src/ui/render-ui.js`: `summonBoss()` 결과 객체화
-- `docs/EQUIP_SKILL_BOSS_RESULT_STAGE3.md`: 4순위 3차 작업 상세
+- `docs/archive/stage-notes/EQUIP_SKILL_BOSS_RESULT_STAGE3.md`: 4순위 3차 작업 상세
 
 
 ---
@@ -545,7 +545,7 @@ docs/CSS_AUDIT.md
 |---|---|---|
 | `src/api/API_PLAN.md` | FastAPI로 만들 API 목록과 우선순위 | 5순위에서 확정 응답 형태 기준으로 갱신 |
 | `src/api/api-response-contract.js` | API 응답 버전, 행동 타입, 에러 코드, 응답 생성 헬퍼 | 현재 `index.html`에서 로드하지 않음. 미래 FastAPI/Vue 연결 기준 |
-| `docs/API_RESPONSE_CONTRACT.md` | 서버-프론트 응답 형태 계약서 | FastAPI 구현 전 반드시 참고 |
+| `docs/contracts/API_RESPONSE_CONTRACT.md` | 서버-프론트 응답 형태 계약서 | FastAPI 구현 전 반드시 참고 |
 | `tools/smoke/frontend/smoke_api_response_contract.js` | 응답 계약 헬퍼/예시 검증 | `node tools/smoke/frontend/smoke_api_response_contract.js` |
 
 

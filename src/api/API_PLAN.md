@@ -5,7 +5,7 @@
 5순위 작업에서 API 응답 형태를 아래 문서로 확정했습니다.
 
 ```txt
-docs/API_RESPONSE_CONTRACT.md
+docs/contracts/API_RESPONSE_CONTRACT.md
 src/api/api-response-contract.js
 ```
 

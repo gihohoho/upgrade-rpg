@@ -12,11 +12,11 @@ REPORT_TOOL = ROOT / "tools/report_postgres_alembic_readiness.py"
 CHECK_TOOL = ROOT / "tools/check_postgres_alembic_prerequisites.py"
 STATE_TOOL = ROOT / "tools/check_alembic_readonly_state.py"
 REPORT = ROOT / "docs/current/POSTGRES_ALEMBIC_READINESS.md"
-CHECKLIST = ROOT / "docs/archive/postgres-baseline/POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md"
-ASYNC_FIX_DOC = ROOT / "docs/archive/postgres-baseline/ALEMBIC_ASYNC_ENV_FIX.md"
+CHECKLIST = ROOT / "docs/current/POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md"
+ASYNC_FIX_DOC = ROOT / "docs/current/ALEMBIC_ASYNC_ENV_FIX.md"
 RUNTIME_TOOL = ROOT / "tools/check_postgres_runtime_readonly_state.py"
-RUNTIME_DOC = ROOT / "docs/archive/postgres-baseline/POSTGRES_RUNTIME_READONLY_STATE.md"
-BASELINE_DOC = ROOT / "docs/archive/postgres-baseline/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md"
+RUNTIME_DOC = ROOT / "docs/current/POSTGRES_RUNTIME_READONLY_STATE.md"
+BASELINE_DOC = ROOT / "docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md"
 
 REQUIRED_REPORT_TEXT = [
     "PostgreSQL / Alembic Readiness — v310",

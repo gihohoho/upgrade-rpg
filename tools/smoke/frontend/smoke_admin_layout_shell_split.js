@@ -52,7 +52,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "window.getAdminDefaultCollapsedSectionKeys = getAdminDefaultCollapsedSectionKeys",
 ]);
 
-assertContains("docs/ADMIN_LAYOUT_SHELL_SPLIT.md", [
+assertContains("docs/archive/stage-notes/ADMIN_LAYOUT_SHELL_SPLIT.md", [
   "Admin Layout Shell Split",
   "v185",
   "src/api/admin-layout-shell.js",

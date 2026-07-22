@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-node tools/smoke_docs_index_archive.js
+node tools/smoke/game/smoke_docs_index_archive.js
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
@@ -132,6 +132,7 @@ python tools/smoke/backend/smoke_production_secrets_tls_container_static.py
 python tools/smoke/backend/smoke_production_capacity_tls_network_plan.py
 python tools/smoke/backend/smoke_production_managed_postgres_reverse_proxy_selection.py
 python tools/smoke/backend/smoke_production_compose_config_render.py
+python tools/smoke/backend/smoke_production_deployment_plan.py
 if [[ "${SKIP_GHCR_HANDOFF_SMOKES:-0}" != "1" ]]; then
   python tools/smoke/backend/smoke_github_actions_ghcr_static_plan.py
   python tools/smoke/backend/smoke_codex_handoff_readiness.py

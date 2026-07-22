@@ -36,4 +36,4 @@ manifest.json
 
 - 이 seed는 아직 DB에 자동 삽입하지 않습니다.
 - 다음 단계에서 SQLAlchemy 모델/마이그레이션과 맞춰 seed import 스크립트로 발전시킬 예정입니다.
-- 관리자 페이지에서 수정 가능해야 하는 데이터가 누락되지 않았는지 `docs/ADMIN_REQUIREMENTS_V1.md`와 함께 확인해야 합니다.
+- 관리자 페이지에서 수정 가능해야 하는 데이터가 누락되지 않았는지 `docs/archive/stage-notes/ADMIN_REQUIREMENTS_V1.md`와 함께 확인해야 합니다.

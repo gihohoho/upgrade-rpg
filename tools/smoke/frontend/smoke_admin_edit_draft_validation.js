@@ -73,7 +73,7 @@ assertContains("admin.html", [
   "확인 문구",
 ]);
 
-assertContains("docs/ADMIN_EDIT_DRAFT_VALIDATION.md", [
+assertContains("docs/archive/stage-notes/ADMIN_EDIT_DRAFT_VALIDATION.md", [
   "Admin Edit Draft Validation",
   "POST /api/v1/admin/master-data/edit-preview",
   "DB를 수정하지 않는다",

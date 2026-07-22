@@ -143,7 +143,7 @@ DB를 건드리지 않고 seed JSON만 확인하려면:
 python scripts/setup_dev_db.py --dry-run
 ```
 
-자세한 설명은 `../docs/SEED_IMPORT.md`를 확인하세요.
+자세한 설명은 `../docs/archive/stage-notes/SEED_IMPORT.md`를 확인하세요.
 
 
 
@@ -154,7 +154,7 @@ python scripts/setup_dev_db.py --dry-run
 - `backend/pyproject.toml`에 `psycopg[binary]` 의존성을 추가했습니다.
 
 
-> 로컬 PostgreSQL은 기본 포트 `5432`가 아니라 `55432`를 사용한다. Windows에서 기존 PostgreSQL과 충돌을 피하기 위한 프로젝트 기준이다. 자세한 내용은 `docs/LOCAL_DB_PORT_POLICY.md`를 참고한다.
+> 로컬 PostgreSQL은 기본 포트 `5432`가 아니라 `55432`를 사용한다. Windows에서 기존 PostgreSQL과 충돌을 피하기 위한 프로젝트 기준이다. 자세한 내용은 `docs/archive/stage-notes/LOCAL_DB_PORT_POLICY.md`를 참고한다.
 
 ## v081 master-data API 확인
 

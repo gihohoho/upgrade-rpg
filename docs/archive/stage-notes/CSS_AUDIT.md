@@ -202,4 +202,4 @@ Vue/Vite 전환 후: SCSS 도입 추천
 남은 중복 선택자: 55개
 ```
 
-남은 중복 선택자는 cascade 순서, 상태별 스타일, 향후 CSS 파일 분리 가능성을 고려해 이번 작업에서는 유지했습니다. 자세한 기준은 `docs/CSS_MERGE_REPORT.md`를 참고하세요.
+남은 중복 선택자는 cascade 순서, 상태별 스타일, 향후 CSS 파일 분리 가능성을 고려해 이번 작업에서는 유지했습니다. 자세한 기준은 `docs/archive/stage-notes/CSS_MERGE_REPORT.md`를 참고하세요.

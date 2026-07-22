@@ -140,11 +140,11 @@ python scripts/setup_dev_db.py --reset --seed --verify
 value too long for type character varying(500)
 ```
 
-자세한 내용은 `docs/SEED_IMPORT_LONG_ASSET_FIX.md`를 참고하세요.
+자세한 내용은 `docs/archive/stage-notes/SEED_IMPORT_LONG_ASSET_FIX.md`를 참고하세요.
 
 ## 다음 단계
 
 seed import가 성공하면 다음 단계는 `/game/master-data` API가 DB에서 실제 데이터를 읽어오게 만드는 작업입니다.
 
 
-> 로컬 PostgreSQL은 기본 포트 `5432`가 아니라 `55432`를 사용한다. Windows에서 기존 PostgreSQL과 충돌을 피하기 위한 프로젝트 기준이다. 자세한 내용은 `docs/LOCAL_DB_PORT_POLICY.md`를 참고한다.
+> 로컬 PostgreSQL은 기본 포트 `5432`가 아니라 `55432`를 사용한다. Windows에서 기존 PostgreSQL과 충돌을 피하기 위한 프로젝트 기준이다. 자세한 내용은 `docs/archive/stage-notes/LOCAL_DB_PORT_POLICY.md`를 참고한다.

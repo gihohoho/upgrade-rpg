@@ -1,56 +1,29 @@
-# FastAPI managed PostgreSQL 운영 배포 template — v312
+# FastAPI managed PostgreSQL production template — v334
+
+역사적 계약명 `운영 배포 template — v312`의 Adminer 제외, exact digest, `verify-full`, 자동 Alembic 금지 원칙을 그대로 유지합니다.
 
 ## 파일
 
 ```txt
-backend/Dockerfile
+backend/Dockerfile.production
 deploy/docker-compose.production.yml
 deploy/production.env.example
-deploy/production-capacity-plan.example.json
-deploy/production-architecture-selection.example.json
-deploy/reverse-proxy/README.md
-deploy/isolated-validation/README.md
-deploy/secrets/README.md
+deploy/production-deploy-plan.example.json
+deploy/review/isolated-image-pull-validation-v333.json
+docs/current/PRODUCTION_DEPLOYMENT_PLAN.md
 ```
 
-## FastAPI image 경계
+## 고정 경계
 
-- Python 3.11 slim 기반 Dockerfile
-- non-root `app` 사용자
-- `.env`와 실제 secret을 image에 복사하지 않음
-- Uvicorn 1 worker
-- 자동 Alembic 없음
-- production Compose에서는 `build:` 대신 exact digest `BACKEND_IMAGE` 요구
-
-## production Compose 경계
-
-- backend service 하나만 포함
-- 관리형 PostgreSQL 사용, bundled PostgreSQL service/volume 없음
-- Adminer 없음
-- host `ports:` 없음
-- external reverse proxy network에 `8000`만 expose
-- provider CA는 Compose secret으로 mount
-- DATABASE_URL은 `verify-full` 요구
-- `ENVIRONMENT=production`, `DEBUG=false`
-- backend read-only/tmpfs/no-new-privileges
+- verified exact digest image, `linux/amd64`, non-root UID/GID 65532
+- managed PostgreSQL, provider CA `verify-full`
+- external reverse proxy HTTPS, backend host port 없음
+- backend replicas/workers 1/1
+- read-only rootfs, tmpfs, no-new-privileges
 - `/api/v1/health` healthcheck
-- replica 1
+- bundled PostgreSQL/Adminer/DB volume 없음
+- startup/entrypoint Alembic 없음
 
-## 승인 경계
+v333에서 exact image의 isolated pull/runtime/cleanup을 완료했고 v334에서 production deploy plan을 검토했습니다. 실제 production host, DB, CA, proxy/domain, secret injection, edge network가 미확정이므로 deployment approval/execution은 `no/no`입니다.
 
-현재 허용:
-
-```txt
-project wrapper를 통한 docker compose config render only
-```
-
-아직 금지:
-
-```txt
-실제 env/secret/CA 입력
-image pull/build
-container/network/volume create/start/stop/remove
-managed DB 연결
-DNS/reverse proxy 실제 공개
-Alembic/DB mutation
-```
+실행 준비 commit의 exact SHA 승인 전에는 production GHCR login/pull, Compose up/down, container/network/volume, managed DB 연결, DNS/proxy 변경을 실행하지 않습니다.

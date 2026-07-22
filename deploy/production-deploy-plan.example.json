@@ -1,0 +1,126 @@
+{
+  "schemaVersion": "v334.production-deploy-plan-reviewed-inputs-blocked",
+  "reviewedAtUtc": "2026-07-22T12:49:50Z",
+  "basedOnCommitSha": "54202da11dd805c38c978ccec9ff44f5f66e2807",
+  "planReview": {
+    "requestedByOwner": true,
+    "completed": true,
+    "isolatedEvidenceReviewed": true,
+    "productionResourcesMutated": false
+  },
+  "approvalContract": {
+    "model": "owner-only-exact-preparation-sha",
+    "preparationCommitSha": null,
+    "exactPreparationShaApprovalRecorded": false,
+    "approvalReady": false,
+    "productionDeploymentApproved": false,
+    "productionDeploymentExecuted": false,
+    "requiresAllInputsResolved": true,
+    "authorizedScopeWhenApproved": [
+      "authenticate the selected production host to private GHCR without logging the token",
+      "pull only the approved exact digest",
+      "render and review the final Compose configuration without printing secrets",
+      "start or replace the backend service with one replica and one worker",
+      "run non-mutating application and managed-database health checks",
+      "verify the existing reverse proxy route and HTTPS endpoint",
+      "record sanitized deployment evidence"
+    ],
+    "excludedScope": [
+      "database create, reset, seed, restore, write, or destructive query",
+      "Alembic revision, autogenerate, stamp, upgrade, or downgrade",
+      "automatic image reference updates or automatic deployment",
+      "Docker volume deletion or docker compose down -v",
+      "secret, token, password, CA, certificate, or private-key disclosure"
+    ]
+  },
+  "image": {
+    "reference": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2",
+    "platform": "linux/amd64",
+    "signatureVerified": true,
+    "exactDigestTrivyHighCriticalFindings": 0,
+    "isolatedRuntimeEvidence": "deploy/review/isolated-image-pull-validation-v333.json"
+  },
+  "githubLiveReview": {
+    "checkedAtUtc": "2026-07-22T12:49:50Z",
+    "actionsEnabled": true,
+    "selectedActionsOnly": true,
+    "fullLengthActionShaRequired": true,
+    "defaultWorkflowPermissions": "read",
+    "actionsCanApprovePullRequests": false,
+    "publishEnvironmentExists": true,
+    "publishEnvironmentMainOnly": true,
+    "nativeRequiredReviewerConfigured": false,
+    "adminsCanBypassEnvironment": true
+  },
+  "architecture": {
+    "managedPostgresql": true,
+    "providerCaVerifyFull": true,
+    "externalReverseProxyHttps": true,
+    "backendReplicas": 1,
+    "uvicornWorkers": 1,
+    "backendHostPortPublished": false,
+    "bundledDatabase": false,
+    "automaticMigration": false
+  },
+  "requiredInputs": [
+    {
+      "key": "production-host",
+      "status": "unresolved",
+      "requiredValue": "provider, region, operating system, linux/amd64 Docker host, and access method"
+    },
+    {
+      "key": "managed-postgresql",
+      "status": "unresolved",
+      "requiredValue": "provider, product, region, endpoint hostname, database name, user, and connectivity policy"
+    },
+    {
+      "key": "provider-ca",
+      "status": "unresolved",
+      "requiredValue": "provider-authenticated CA PEM and approved host mount path"
+    },
+    {
+      "key": "reverse-proxy-and-domain",
+      "status": "unresolved",
+      "requiredValue": "proxy product or managed ingress, domain, DNS ownership, certificate issuance, and renewal owner"
+    },
+    {
+      "key": "secret-injection",
+      "status": "unresolved",
+      "requiredValue": "non-repository secret store or host-only protected env path for database, JWT, and admin keys"
+    },
+    {
+      "key": "external-edge-network",
+      "status": "unresolved",
+      "requiredValue": "pre-created Docker network name shared only with the selected reverse proxy"
+    },
+    {
+      "key": "backup-and-first-deploy-rollback",
+      "status": "unresolved",
+      "requiredValue": "managed database backup status and first-deploy traffic rollback owner"
+    }
+  ],
+  "orderedExecution": [
+    "read-only preflight of host architecture, Docker, disk, clock, and outbound GHCR access",
+    "verify every required input and secret source without printing values",
+    "reconfirm the exact image digest and signature evidence",
+    "authenticate GHCR on the selected host using the approved non-logged credential path",
+    "pull the exact digest and verify local RepoDigests and linux/amd64 platform",
+    "verify the pre-created edge network and provider CA file permissions",
+    "render final Compose config through the sanitized wrapper and stop on placeholders or drift",
+    "start the backend service without host ports, database service, volume, or migration",
+    "wait for /api/v1/health and inspect non-root, read-only, limits, and exact image digest",
+    "run /api/v1/health/db as a read-only connectivity check only after verify-full TLS is confirmed",
+    "verify the existing reverse proxy route and public HTTPS origin without changing game data",
+    "record sanitized evidence and leave automatic deployment disabled"
+  ],
+  "rollback": {
+    "automaticRollback": false,
+    "firstDeploymentHasPreviousImage": false,
+    "onPreTrafficFailure": "remove only the new backend container and keep database, CA, network, and volumes untouched",
+    "onPostTrafficFailure": "withdraw the proxy route, stop the new backend, preserve logs without secrets, and investigate before retry",
+    "databaseRollback": "not applicable because this plan performs no schema or data mutation",
+    "forbidComposeDownVolumes": true,
+    "forbidAutomaticRetry": true
+  },
+  "nextSafeStage": "select-production-targets-and-complete-executable-deploy-plan"
+}

@@ -153,7 +153,7 @@ actionUnequipDirect()
 CSS 점검 결과는 아래 문서에 정리했습니다.
 
 ```txt
-docs/CSS_AUDIT.md
+docs/archive/stage-notes/CSS_AUDIT.md
 ```
 
 현재는 바로 SCSS로 바꾸기보다 CSS 유지 후, Vue/Vite 전환 시점에 SCSS 도입을 추천합니다.
@@ -186,7 +186,7 @@ FastAPI 구현 전에 프론트와 백엔드가 맞춰야 할 응답 형태를 �
 추가 파일:
 
 ```txt
-docs/API_RESPONSE_CONTRACT.md
+docs/contracts/API_RESPONSE_CONTRACT.md
 src/api/api-response-contract.js
 tools/smoke/frontend/smoke_api_response_contract.js
 ```

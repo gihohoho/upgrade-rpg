@@ -45,7 +45,7 @@ assertContains("admin.html", [
   "v165 admin create apply limited",
 ]);
 
-assertContains("docs/ADMIN_OWNER_CODE_RELATION_TOOLS.md", [
+assertContains("docs/archive/stage-notes/ADMIN_OWNER_CODE_RELATION_TOOLS.md", [
   "Admin Owner Code Relation Tools",
   "dropTables.owner_code",
   "owner_type=boss",

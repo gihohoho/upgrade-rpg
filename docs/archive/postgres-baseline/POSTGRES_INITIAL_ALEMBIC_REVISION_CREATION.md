@@ -104,6 +104,6 @@ alembic_version rows before/after: 0 / 0
 v298에서 review bundle의 exact revision을 수동 교차 검토했고 통과했습니다. 이후 기준은 아래 문서입니다.
 
 ```txt
-docs/archive/postgres-baseline/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md
+docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md
 docs/archive/postgres-baseline/POSTGRES_MIGRATION_TEST_UPGRADE.md
 ```

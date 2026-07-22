@@ -33,7 +33,7 @@ assertIncludes("src/app/main.js", "window.shouldSkipSaveGameForBackendRestore");
 assertIncludes("src/app/main.js", "window.completeBackendSaveRestoreReloadApply");
 assertIncludes("src/app/main.js", "세이브 복구가 새로고침 대기 중이라 수동 저장");
 assertOrder("index.html", "src/api/save-data-restore-guard.js", "src/app/main.js");
-assertIncludes("docs/SAVE_DATA_RESTORE_RELOAD_LOCK.md", "Save Data Restore Reload Lock");
+assertIncludes("docs/archive/stage-notes/SAVE_DATA_RESTORE_RELOAD_LOCK.md", "Save Data Restore Reload Lock");
 
 async function assertDynamicRestoreLockBehavior() {
   const code = read("src/api/save-data-restore-guard.js");

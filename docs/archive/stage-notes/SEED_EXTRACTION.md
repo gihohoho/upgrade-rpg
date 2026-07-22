@@ -81,7 +81,7 @@ enhancement_rules: 일반 장비 강화 테이블/확률 초안
 관련 문서:
 
 ```txt
-docs/ADMIN_REQUIREMENTS_V1.md
-docs/DB_SCHEMA_DRAFT.md
-docs/BACKEND_API_ROUTES_DRAFT.md
+docs/archive/stage-notes/ADMIN_REQUIREMENTS_V1.md
+docs/archive/stage-notes/DB_SCHEMA_DRAFT.md
+docs/archive/stage-notes/BACKEND_API_ROUTES_DRAFT.md
 ```

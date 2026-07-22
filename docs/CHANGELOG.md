@@ -1,3 +1,13 @@
+# v334.production-deploy-plan-reviewed-inputs-blocked
+
+- verified image와 v333 isolated evidence를 기준으로 production deploy 순서, exact-SHA 승인, 중단·rollback 계약을 정적 JSON과 fail-closed checker로 추가.
+- production host, managed PostgreSQL, provider CA, reverse proxy/domain/certificate, secret injection, edge network, first-deploy rollback 입력이 미확정이라 approval ready/approved/executed를 `no/no/no`로 유지.
+- GitHub Actions selected-only/full SHA, default token read-only, publish environment main-only 상태를 재확인하고 native reviewer 없음/admin bypass 가능 상태를 exact-SHA 승인 경계에 반영.
+- `docs/`를 current/guides/contracts/archive/handoff로 재분류하고 root 단계 기록과 완전 동일한 archive 사본을 제거.
+- `tools/` 루트의 obsolete `smoke_*` 사본 134개를 제거하고 실행되는 canonical smoke를 `tools/smoke/` 아래로 통합; 문서 구조와 production plan smoke를 core 목록에 반영.
+- 루트의 오래된 v320 changelog와 backend readiness는 archive로 이동하고, 오래된 v316 ZIP과 빈 `.agents` 폴더를 제거.
+- PostgreSQL local backup과 Alembic local review artifact는 보존하고 실제 production resource, DB, Alembic, DNS/proxy를 변경하지 않음.
+
 # v333.isolated-image-pull-runtime-validation-complete-deploy-blocked
 
 - 기호의 별도 승인과 GitHub CLI OAuth `read:packages` 인증으로 private GHCR exact digest pull 성공.
@@ -303,7 +313,7 @@
 # v288 - PostgreSQL schema equivalence read-only preflight
 
 - Added `tools/check_postgres_schema_equivalence.py` to compare live PostgreSQL tables, columns, types, nullability, PK, FK, unique constraints, indexes, and check constraints with SQLAlchemy metadata.
-- Added `docs/archive/postgres-baseline/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md` and a dedicated core smoke.
+- Added `docs/current/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md` and a dedicated core smoke.
 - Kept DB schema/data, Docker resources, env, seed, revisions, migration apply/stamp, API contracts, auth, and write behavior unchanged.
 
 # v287 - Windows subprocess decode fix and baseline strategy confirmation
@@ -338,7 +348,7 @@
 # v283 - PostgreSQL/Alembic prerequisite checker
 
 - Added `tools/check_postgres_alembic_prerequisites.py`, a read-only local checker for Python, virtualenv, Docker, Compose, SQLAlchemy, Alembic, asyncpg, psycopg, and required project files.
-- Added `docs/archive/postgres-baseline/POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md` with exact install locations, `.venv` states, and dangerous commands that remain forbidden.
+- Added `docs/current/POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md` with exact install locations, `.venv` states, and dangerous commands that remain forbidden.
 - The checker never connects to the DB, starts Docker, changes `.env`, or runs migrations.
 
 # v282 - PostgreSQL/Alembic readiness report
@@ -990,8 +1000,8 @@
 # v132 - handoff cleanup
 
 - 새 채팅 인수인계용 `NEXT_CHAT_HANDOFF.md` 추가.
-- 현재 상태 요약 `docs/CURRENT_STATUS.md` 추가.
-- 다음 단계 추천 `docs/NEXT_STEPS.md` 추가.
+- 현재 상태 요약 `docs/current/CURRENT_STATUS.md` 추가.
+- 다음 단계 추천 `docs/current/NEXT_STEPS.md` 추가.
 - 문서 루트 정리: 자주 보지 않는 기록성 문서를 `docs/archive/stage-notes/`로 이동.
 - `tools/run_smoke_core.sh`, `tools/run_smoke_all.sh` 추가.
 - 기능 로직 변경 없음. DB reset/seed 필요 없음.
@@ -1182,14 +1192,14 @@
 - 현재 JS 마스터 데이터에서 생성된 `backend/seeds/generated/*.json`과 FastAPI `/api/v1/game/master-data` 응답을 비교할 수 있습니다.
 - 기본 경량 응답과 `--include-assets` 이미지 포함 응답을 모두 검사할 수 있습니다.
 - characters, skills, itemTemplates, bosses, fieldZones, dropTables, dropTableItems, enhancementRules의 개수와 주요 필드를 비교합니다.
-- `tools/smoke/game/smoke_master_data_parity_checker.py`와 `docs/MASTER_DATA_PARITY_CHECKER.md`를 추가했습니다.
+- `tools/smoke/game/smoke_master_data_parity_checker.py`와 `docs/archive/stage-notes/MASTER_DATA_PARITY_CHECKER.md`를 추가했습니다.
 
 ## v085 - Frontend Master Data Bridge
 
 - `src/api/game-api-client.js`와 `src/api/master-data-bridge.js`를 추가했습니다.
 - 기존 게임 동작은 유지하면서 브라우저 콘솔에서 FastAPI master-data API를 읽어올 수 있게 했습니다.
 - `checkBackendMasterData()`, `loadBackendMasterData()`, `getCachedBackendMasterData()` 전역 함수를 추가했습니다.
-- `tools/smoke/game/smoke_frontend_master_data_bridge.js`와 `docs/FRONTEND_MASTER_DATA_BRIDGE.md`를 추가했습니다.
+- `tools/smoke/game/smoke_frontend_master_data_bridge.js`와 `docs/archive/stage-notes/FRONTEND_MASTER_DATA_BRIDGE.md`를 추가했습니다.
 
 ## v084 - Master Data Nested Asset Cleanup
 
@@ -1210,7 +1220,7 @@
 - `backend/scripts/setup_dev_db.py` 추가
   - 로컬 DB reset/schema 생성/seed import/verify 지원
   - `--dry-run`으로 DB 접속 없이 seed JSON 개수 확인 가능
-- `docs/SEED_IMPORT.md` 추가
+- `docs/archive/stage-notes/SEED_IMPORT.md` 추가
 - `tools/smoke/game/smoke_seed_import_structure.py` 추가
 - 매우 큰 HP/골드/강화비용을 고려해 DB 초안/모델의 관련 컬럼을 `NUMERIC(40,0)` 계열로 보정
 - `user_mailbox_messages` 테이블을 SQL 초안에 보강
@@ -1223,13 +1233,13 @@
 - `backend/pyproject.toml` 버전을 `0.1.1`로 올리고 `asyncpg` 의존성을 명시했습니다.
 - `tools/extract_seed_data.js`를 추가해 현재 JS 마스터 데이터를 `backend/seeds/generated/*.json`으로 추출할 수 있게 했습니다.
 - `tools/smoke/game/smoke_seed_extraction.js`를 추가해 생성된 seed JSON 기본 검증을 할 수 있게 했습니다.
-- `backend/seeds/README.md`, `docs/SEED_EXTRACTION.md`를 추가했습니다.
+- `backend/seeds/README.md`, `docs/archive/stage-notes/SEED_EXTRACTION.md`를 추가했습니다.
 - Docker/FastAPI 로컬 실행 중 실제로 발생한 `CORS_ORIGINS` 파싱 오류와 `asyncpg` 누락 오류 해결법을 문서에 반영했습니다.
 - 기존 프론트 게임 동작은 변경하지 않았습니다.
 
 ## v074 - 5순위: API 응답 형태 확정
 
-- `docs/API_RESPONSE_CONTRACT.md`를 추가해 FastAPI 응답 표준 봉투를 확정했습니다.
+- `docs/contracts/API_RESPONSE_CONTRACT.md`를 추가해 FastAPI 응답 표준 봉투를 확정했습니다.
 - `src/api/api-response-contract.js`를 추가해 응답 버전, 행동 타입, 에러 코드, 응답 생성 헬퍼를 정리했습니다.
 - `src/api/API_PLAN.md`를 확정 응답 형태 기준으로 갱신했습니다.
 - 저장/불러오기, 마스터 데이터, 전투, 처치/드랍, 장착/해제/강화, 스킬강화권, 보스 소환, 관리자 변경 응답 예시를 정리했습니다.
@@ -1313,7 +1323,7 @@
 - 다음 채팅에서 바로 이어갈 수 있도록 root/docs handoff prompt를 최신 v266 기준으로 정리했습니다.
 - 오래된 v250/v260 중심 인계 문구를 v267/Vue-FastAPI-DB 전환 방향으로 갱신했습니다.
 - `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`를 추가했습니다.
-- `docs/current/CURRENT_STATUS.md`, `docs/current/ROADMAP.md`, `docs/NEXT_STEPS.md`, `README.md`, `README_BACKEND_READY.md`를 최신 방향에 맞게 정리했습니다.
+- `docs/current/CURRENT_STATUS.md`, `docs/current/ROADMAP.md`, `docs/current/NEXT_STEPS.md`, `README.md`, `docs/archive/production-deployment/BACKEND_READY_V320.md`를 최신 방향에 맞게 정리했습니다.
 - 런타임 코드, DB, env, seed, 인증, route, API 응답 body, Write Guard, 실제 write 로직은 변경하지 않았습니다.
 
 ## v271.vue-readonly-api-client

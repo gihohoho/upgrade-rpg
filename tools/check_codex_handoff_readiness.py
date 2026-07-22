@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the v333 isolated image pull/runtime evidence and deploy boundary."""
+"""Validate the v334 reviewed production deploy plan and closed approval boundary."""
 from __future__ import annotations
 
 import argparse
@@ -11,8 +11,8 @@ import re
 import subprocess
 from typing import Any
 
-TOOL_VERSION = "v333.isolated-image-pull-runtime-validation-complete-deploy-blocked"
-READY_RESULT = "isolated-image-pull-runtime-validation-complete-production-deploy-blocked"
+TOOL_VERSION = "v334.production-deploy-plan-reviewed-inputs-blocked"
+READY_RESULT = "production-deploy-plan-reviewed-inputs-blocked"
 PREPARATION_READY_RESULT = "github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated"
 AUTHORIZATION_OPEN_RESULT = "github-actions-ghcr-owner-only-authorization-open"
 AUTHORIZATION_CLOSED_AWAITING_EVIDENCE_RESULT = (
@@ -20,7 +20,8 @@ AUTHORIZATION_CLOSED_AWAITING_EVIDENCE_RESULT = (
 )
 ATTEMPT_RECORDED_RESULT = "github-actions-ghcr-owner-only-attempt-recorded-publish-gated"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "review-isolated-validation-and-approve-production-deploy-plan"
+NEXT_SAFE_STAGE = "select-production-targets-and-complete-executable-deploy-plan"
+ISOLATED_NEXT_SAFE_STAGE = "review-isolated-validation-and-approve-production-deploy-plan"
 EXPECTED_REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 EXPECTED_NAMESPACE = "gihohoho"
 EXPECTED_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
@@ -30,6 +31,7 @@ EXPECTED_BASE = "python:3.11.15-alpine3.23@sha256:ac0151f0eec4b7ba78bc47d337f328
 WORKFLOW_PATH = ".github/workflows/publish-backend-ghcr.yml"
 LIFECYCLE_PATH = "deploy/github-actions-ghcr-publish-lifecycle.json"
 ISOLATED_EVIDENCE_PATH = "deploy/review/isolated-image-pull-validation-v333.json"
+PRODUCTION_DEPLOY_PLAN_PATH = "deploy/production-deploy-plan.example.json"
 LIFECYCLE_SCHEMA_VERSION = "v326.owner-only-publish-lifecycle-with-attempt-history"
 PRIOR_APPROVED_PREPARATION_SHA = "350bbd085f1cf636810d75ddcbb5321e0791256c"
 SECOND_APPROVED_PREPARATION_SHA = "2f77ebf0f60a39c936509df26f903995f0c62967"
@@ -395,6 +397,23 @@ def _inspect_actions_workflow(root: Path) -> dict[str, Any]:
     return result
 
 
+def _inspect_production_deployment_plan(root: Path) -> dict[str, Any]:
+    tool = root / "tools/check_production_deployment_plan.py"
+    spec = importlib.util.spec_from_file_location("v334_production_deployment_plan_for_handoff", tool)
+    _require(spec is not None and spec.loader is not None, "cannot load v334 production deployment plan checker")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    try:
+        result = module.inspect_plan(root)
+    except module.DeploymentPlanError as exc:
+        raise CodexHandoffError(f"production deployment plan check failed: {exc}") from exc
+    _require(result.get("result") == READY_RESULT, "production deployment plan result differs")
+    _require(result.get("nextSafeStage") == NEXT_SAFE_STAGE, "production deployment plan next stage differs")
+    _require(result.get("approvalReady") is False, "production deployment approval must remain closed")
+    _require(result.get("productionDeploymentExecuted") is False, "production deployment must remain unexecuted")
+    return result
+
+
 def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     policy = _read_json(root / "deploy/backend-image-ghcr-policy.example.json")
     isolated_evidence = _read_json(root / ISOLATED_EVIDENCE_PATH)
@@ -413,15 +432,16 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     handoff_prompt = _read(root / "docs/handoff/NEXT_CHAT_PROMPT.md")
     handoff_state = _read(root / "docs/handoff/NEXT_CHAT_HANDOFF.md")
     actions_result = _inspect_actions_workflow(root)
+    deployment_plan_result = _inspect_production_deployment_plan(root)
 
-    _require(policy.get("schemaVersion") == TOOL_VERSION, "unexpected v333 schemaVersion")
+    _require(policy.get("schemaVersion") == TOOL_VERSION, "unexpected v334 schemaVersion")
     _require(_bool(policy, "preparedOnly") is False, "recorded attempt cannot remain preparation-only")
     _require(
         policy.get("publishApprovalModel") == "owner-only-source-controlled-two-step",
         "owner-only publish approval model changed",
     )
     _require(
-        policy.get("ownerOnlyApprovalPhase") == "isolated-image-validation-complete-deploy-blocked",
+        policy.get("ownerOnlyApprovalPhase") == "production-deploy-plan-reviewed-inputs-blocked",
         "owner-only phase changed",
     )
     _require(policy.get("publishLifecyclePath") == LIFECYCLE_PATH, "publish lifecycle path changed")
@@ -540,7 +560,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "productionRuntimeApplied": False,
         "productionDeploymentApproved": False,
         "productionDeploymentExecuted": False,
-        "nextSafeStage": NEXT_SAFE_STAGE,
+        "nextSafeStage": ISOLATED_NEXT_SAFE_STAGE,
     }, "isolated image pull/runtime evidence changed")
 
     for key in (
@@ -575,8 +595,9 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "isolatedImagePullExecuted",
         "isolatedContainerExecutionExecuted",
         "isolatedCleanupExecuted",
+        "productionDeploymentPlanReviewed",
     ):
-        _require(_bool(policy, key) is True, f"completed/approved v333 state must remain true: {key}")
+        _require(_bool(policy, key) is True, f"completed/approved v334 state must remain true: {key}")
     for key in (
         "longLivedCredentialInRepository",
         "registryCredentialFileInRepository",
@@ -590,8 +611,10 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "actualDatabaseAlembicMutationExecuted",
         "productionDeploymentApproved",
         "productionDeploymentExecuted",
+        "productionDeploymentApprovalReady",
     ):
-        _require(_bool(policy, key) is False, f"blocked/unexecuted v333 state must remain false: {key}")
+        _require(_bool(policy, key) is False, f"blocked/unexecuted v334 state must remain false: {key}")
+    _require(policy.get("productionDeploymentPlan") == PRODUCTION_DEPLOY_PLAN_PATH, "production deployment plan path changed")
     _require(policy.get("nextSafeStage") == NEXT_SAFE_STAGE, "unexpected next safe stage")
     _require(
         actions_result.get("publishLifecycleState") == "attempt-recorded",
@@ -732,6 +755,8 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "isolatedImagePullExecuted": True,
         "isolatedContainerExecutionExecuted": True,
         "isolatedCleanupExecuted": True,
+        "productionDeploymentPlanReviewed": deployment_plan_result["planReviewCompleted"],
+        "productionDeploymentApprovalReady": deployment_plan_result["approvalReady"],
         "productionDeploymentApproved": False,
         "productionDeploymentExecuted": False,
         "ownerApprovalRecorded": lifecycle["ownerApproval"]["recorded"],
@@ -749,8 +774,8 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
 
 def render(result: dict[str, Any]) -> str:
     return "\n".join((
-        "Codex/GHCR v333 isolated image pull/runtime evidence verification (read-only)",
-        "The verified digest passed isolated runtime validation while production deployment remains blocked.",
+        "Codex/GHCR v334 production deployment plan verification (read-only)",
+        "The deploy plan is reviewed, required production inputs are unresolved, and execution remains blocked.",
         "",
         f"- GitHub remote: {result['githubRemote']}",
         f"- namespace/repository: {result['namespace']} / {result['repository']}",
@@ -777,6 +802,7 @@ def render(result: dict[str, Any]) -> str:
         f"- production reference: {EXPECTED_REFERENCE}",
         "- production reference static/runtime applied: yes/no",
         "- isolated pull/container/cleanup executed: yes/yes/yes",
+        "- production deploy plan reviewed / approval ready: yes/no",
         "- latest result: provenance/SBOM, exact-digest Trivy 0 findings, Cosign sign/verify passed",
         "- single-run policy: run_attempt=1 / single dispatch / rerun forbidden / immediate closure",
         "- PUBLISH_REVIEWER_GATE_READY: lifecycle-controlled false (fail-closed before GHCR login)",

@@ -48,7 +48,7 @@ assertContains("admin.html", [
   "relation-edit-note",
 ]);
 
-assertContains("docs/ADMIN_COMBO_RELATION_GUARD.md", [
+assertContains("docs/archive/stage-notes/ADMIN_COMBO_RELATION_GUARD.md", [
   "Admin Combo Relation Guard",
   "skill_code + level",
   "group_code + from_level",

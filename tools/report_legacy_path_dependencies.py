@@ -10,12 +10,13 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Iterable
 
-PROJECT_VERSION = "v269"
+PROJECT_VERSION = "v334"
 REPORT_PATH = Path("docs/current/LEGACY_PATH_DEPENDENCIES.md")
 
 IGNORED_DIRS = {
@@ -30,6 +31,11 @@ IGNORED_DIRS = {
     "build",
     ".idea",
     ".vscode",
+}
+
+IGNORED_PREFIXES = {
+    ("docs", "archive"),
+    ("docs", "handoff"),
 }
 
 TEXT_EXTENSIONS = {
@@ -80,7 +86,19 @@ SMOKE_COMMAND_RE = re.compile(r"^(node|python|bash)\s+([^\s#]+)", re.MULTILINE)
 
 
 def iter_text_files(root: Path) -> Iterable[Path]:
-    for path in sorted(root.rglob("*")):
+    completed = subprocess.run(
+        ("git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard"),
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    candidates = (
+        [root / line for line in completed.stdout.splitlines() if line]
+        if completed.returncode == 0
+        else sorted(root.rglob("*"))
+    )
+    for path in candidates:
         if not path.is_file():
             continue
         if any(part in IGNORED_DIRS for part in path.parts):
@@ -89,6 +107,8 @@ def iter_text_files(root: Path) -> Iterable[Path]:
             relative = path.relative_to(root)
         except ValueError:
             relative = path
+        if any(tuple(relative.parts[: len(prefix)]) == prefix for prefix in IGNORED_PREFIXES):
+            continue
         if relative == REPORT_PATH:
             continue
         if path.suffix.lower() not in TEXT_EXTENSIONS:
@@ -242,12 +262,12 @@ def render_report(root: Path) -> str:
 
 목적은 Vue/FastAPI/DB 전환 전에 **움직이면 깨질 가능성이 높은 경로**를 먼저 고정하는 것입니다. 이 문서는 새 contract가 아니라 구조 전환 보조 문서입니다.
 
-## v269 결론
+## v334 결론
 
 - `admin.html`, `index.html`, `src/`, `backend/`, `tools/smoke/`는 아직 이동하지 않습니다.
 - 새 Vue 앱은 기존 파일을 대체하지 않고 `frontend/vue-app/`에 별도로 만드는 방식이 가장 안전합니다.
 - `legacy/` 폴더로 기존 파일을 옮기는 작업은 smoke 경로 alias/copy 전략이 확정된 뒤에만 진행합니다.
-- 이번 단계에서는 DB/env/seed/auth/API body/route/write 로직을 변경하지 않습니다.
+- 문서 구조 정리와 무관하게 DB/env/seed/auth/API body/route/write 로직은 변경하지 않습니다.
 
 ## 주요 경로 참조 요약
 
@@ -301,18 +321,11 @@ frontend/vue-app/
 - Vue 앱에서 기존 route/API body 변경
 - DB/env/seed/auth/write guard 변경
 
-## 다음 단계 후보
-
-v270에서는 사용자 승인 후 아래 중 하나를 진행하는 것이 안전합니다.
-
-1. `frontend/vue-app/`에 Vite + Vue 기본 shell만 생성
-2. 기존 `admin.html`/`index.html`은 그대로 유지
-3. Vue shell에서 아직 실제 관리자/게임 로직은 연결하지 않음
-4. root legacy smoke와 Vue shell smoke를 분리해서 검증
-
 ## 재생성 방법
 
 실행 위치: 프로젝트 루트
+Python `.venv` 상태: `backend/.venv` 사용
+새 설치 여부: 없음
 
 ```bash
 python tools/report_legacy_path_dependencies.py --write
@@ -321,6 +334,8 @@ python tools/report_legacy_path_dependencies.py --write
 검사만 할 때:
 
 실행 위치: 프로젝트 루트
+Python `.venv` 상태: `backend/.venv` 사용
+새 설치 여부: 없음
 
 ```bash
 python tools/report_legacy_path_dependencies.py --check

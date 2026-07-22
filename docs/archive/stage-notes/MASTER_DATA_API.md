@@ -164,4 +164,4 @@ bosses.imageUrl
 
 대신 `hasImage`, `hasIcon` 값으로 원본 이미지 데이터 존재 여부를 알 수 있습니다.
 긴 SVG/data URL까지 필요하면 `?includeAssets=true`를 붙여 요청합니다.
-자세한 내용은 `docs/MASTER_DATA_ASSET_POLICY.md`를 참고하세요.
+자세한 내용은 `docs/archive/stage-notes/MASTER_DATA_ASSET_POLICY.md`를 참고하세요.

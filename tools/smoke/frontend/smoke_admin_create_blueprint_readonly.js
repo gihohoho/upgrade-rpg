@@ -55,7 +55,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "data-admin-create-draft",
 ]);
 
-assertContains("docs/ADMIN_CREATE_BLUEPRINT_READONLY.md", [
+assertContains("docs/archive/stage-notes/ADMIN_CREATE_BLUEPRINT_READONLY.md", [
   "Admin Create Blueprint Read-only",
   "create-blueprint",
   "DB reset / seed",

@@ -1,38 +1,43 @@
-# Project Structure — v321
+# Project Structure — v334
 
 ```txt
 .
-├── AGENTS.md                              # Codex 저장소 규칙
-├── NEXT_CHAT_PROMPT.md                    # Codex 새 채팅에 붙여넣을 프롬프트
-├── NEXT_CHAT_HANDOFF.md                   # 현재 상태 요약
-├── index.html / admin.html / src/         # legacy 게임·관리자
+├── AGENTS.md                         # Codex 저장소 규칙
+├── NEXT_CHAT_PROMPT.md               # 다음 작업용 prompt
+├── NEXT_CHAT_HANDOFF.md              # 현재 handoff
+├── README.md                         # 짧은 프로젝트 입구
+├── index.html / admin.html / src/    # legacy 게임·관리자
 ├── .github/workflows/
-│   └── publish-backend-ghcr.yml           # 수동 실행, reviewer hard gate 상태
-├── frontend/vue-app/                      # Vue GET read-only 앱
+│   └── publish-backend-ghcr.yml      # 수동 owner-only image publish
+├── frontend/vue-app/                 # Vue GET read-only 앱
 ├── backend/
-│   ├── .venv/                             # 로컬 전용, ZIP/Git 제외
-│   ├── requirements/                      # Linux/amd64 exact pin + wheel SHA-256 locks
-│   ├── Dockerfile                         # 로컬 호환
-│   └── Dockerfile.production              # exact base/frontend digest + hash-locked install
+│   ├── .venv/                        # 로컬 전용, Git 제외
+│   ├── app/ / alembic/ / scripts/
+│   ├── requirements/                 # exact version + wheel SHA-256 locks
+│   ├── Dockerfile                    # 로컬 호환
+│   └── Dockerfile.production         # verified production image source
 ├── deploy/
-│   ├── backend-image-ghcr-policy.example.json
-│   ├── github-actions-ghcr-static-plan.example.json
 │   ├── docker-compose.production.yml
 │   ├── production.env.example
-│   ├── review/                            # 완료된 정적 review 증거
+│   ├── production-deploy-plan.example.json
+│   ├── review/                       # sanitized 정적·runtime 증거
+│   ├── reverse-proxy/ / secrets/
 │   └── isolated-validation/
 ├── docs/
-│   ├── current/                           # 현재 판단
-│   │   ├── GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md
-│   │   └── SECURITY_ROTATION_AND_GITHUB_GATES.md
-│   ├── handoff/                           # 인수인계 mirror
-│   ├── contracts/
-│   └── archive/                           # 과거 단계 기록
+│   ├── current/                      # 현재 판단과 runbook
+│   ├── guides/                       # 실제 사용 가이드
+│   ├── contracts/                    # 자동 검사되는 계약
+│   ├── handoff/                      # 루트 handoff mirror
+│   ├── archive/                      # 고유한 과거 기록
+│   └── CHANGELOG.md                  # 단일 현재 변경 이력
 └── tools/
-    ├── check_codex_handoff_readiness.py
-    ├── check_github_actions_ghcr_static_plan.py
-    ├── generate_backend_linux_dependency_locks.py
-    └── smoke/
+    ├── check_*.py / report_*.py      # 정적·읽기 전용 검사
+    ├── smoke/                        # backend/frontend/game/contracts smoke
+    └── run_smoke_core.sh
 ```
 
-legacy 경로는 Vue 이식 전까지 유지합니다. 현재 배포 repository는 `ghcr.io/gihohoho/upgrade-rpg-backend`입니다.
+## 로컬 전용 보존 폴더
+
+`local-backups/`, `local-review-artifacts/`, `backend/.venv/`, `frontend/vue-app/node_modules/`는 Git에서 제외합니다. PostgreSQL backup과 Alembic review 증거가 있으므로 구조 정리 때 자동 삭제하지 않습니다.
+
+legacy `index.html`, `admin.html`, `src/`는 Vue 이식 전까지 경로를 유지합니다. 현재 GHCR repository는 `ghcr.io/gihohoho/upgrade-rpg-backend`입니다.

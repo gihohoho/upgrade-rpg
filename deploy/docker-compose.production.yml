@@ -1,7 +1,7 @@
-# v320 managed PostgreSQL + external reverse proxy production review template only.
+# v334 managed PostgreSQL + external reverse proxy production review template only.
 # This file is approved for `docker compose config` rendering with review-only
 # sentinel values. Do not pull/build/start containers or use real production
-# secrets until each later approval boundary is explicitly granted.
+# secrets until required inputs and the exact preparation SHA are approved.
 services:
   backend:
     image: ${BACKEND_IMAGE:?Set an approved digest-pinned backend image}

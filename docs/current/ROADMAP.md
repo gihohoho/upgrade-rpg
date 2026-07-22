@@ -1,29 +1,26 @@
-# Roadmap — v333
+# Roadmap — v334
 
-## 완료
-
-- production topology, PostgreSQL/Alembic baseline, GHCR namespace/repository/base digest 정책 확정
-- GitHub Actions action allowlist/full SHA/default read-only/environment main-only 구성
-- `owner-only-source-controlled-two-step` source-controlled lifecycle gate 구현
-- direct-parent/lifecycle-only authorization, `run_attempt=1`, single dispatch, immediate closure, rerun 금지 구현
-- three owner-only attempts recorded without GHCR mutation
-- 3차 run `29883012957`: local linux/amd64 image와 SPDX SBOM 생성 성공, Trivy HIGH/CRITICAL gate에서 차단
-- artifact `8515504259`에 SBOM과 vulnerability report 보존
-
-## 현재
+## 현재 위치
 
 ```txt
-latest: v333.isolated-image-pull-runtime-validation-complete-deploy-blocked
-result: isolated-image-pull-runtime-validation-complete-production-deploy-blocked
-lifecycle: attempt-recorded / gate=false
-next safe stage: review-isolated-validation-and-approve-production-deploy-plan
+verified GHCR image: complete
+isolated pull/runtime/cleanup: complete
+production deploy plan review: complete
+required production inputs: unresolved
+deployment approval/execution: no/no
 ```
+
+strict result는 `production-deploy-plan-reviewed-inputs-blocked`, 다음 단계는 `select-production-targets-and-complete-executable-deploy-plan`입니다.
 
 ## 다음 순서
 
-1. 완료: verified candidate evidence 검토
-2. 완료: production reference 정적 반영
-3. 완료: isolated exact-digest pull/runtime validation/cleanup
-4. production deploy 계획과 실제 deploy는 다시 별도 승인
+1. production host/provider/region/OS/access를 선택합니다.
+2. managed PostgreSQL provider/product/region/network와 provider CA를 선택합니다.
+3. reverse proxy 또는 ingress, domain, DNS, certificate 책임을 선택합니다.
+4. Git 밖의 secret injection과 external edge network를 정합니다.
+5. managed DB backup과 first-deploy rollback 담당을 확인합니다.
+6. Codex가 placeholder 없는 실행 준비 계획을 만들고 정적 검증합니다.
+7. 기호가 그 준비 commit의 정확한 40자리 SHA를 한 번 승인합니다.
+8. 승인 범위에서만 실제 deploy하고 sanitized evidence를 기록합니다.
 
-정책을 자동 완화하지 않고 기존 다섯 run도 rerun하지 않습니다. isolated validation은 통과했지만 production runtime/deployment는 아직 적용하지 않았습니다.
+DB/Alembic mutation, volume 삭제, 자동 deploy/retry는 이 순서에 포함하지 않습니다. 코드나 image 포함 콘텐츠가 바뀌면 현재 digest를 재사용하지 않고 새 공급망 검증부터 진행합니다.

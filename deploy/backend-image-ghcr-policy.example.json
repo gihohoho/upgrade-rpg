@@ -1,8 +1,8 @@
 {
-  "schemaVersion": "v333.isolated-image-pull-runtime-validation-complete-deploy-blocked",
+  "schemaVersion": "v334.production-deploy-plan-reviewed-inputs-blocked",
   "preparedOnly": false,
   "publishApprovalModel": "owner-only-source-controlled-two-step",
-  "ownerOnlyApprovalPhase": "isolated-image-validation-complete-deploy-blocked",
+  "ownerOnlyApprovalPhase": "production-deploy-plan-reviewed-inputs-blocked",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
   "publishLifecycleState": "attempt-recorded",
   "publishLifecycleSupportedStates": [
@@ -129,10 +129,13 @@
   "isolatedImagePullExecuted": true,
   "isolatedContainerExecutionExecuted": true,
   "isolatedCleanupExecuted": true,
+  "productionDeploymentPlan": "deploy/production-deploy-plan.example.json",
+  "productionDeploymentPlanReviewed": true,
+  "productionDeploymentApprovalReady": false,
   "productionDeploymentApproved": false,
   "productionDeploymentExecuted": false,
   "actualRegistryMutationExecuted": true,
   "actualDockerCommandExecuted": true,
   "actualDatabaseAlembicMutationExecuted": false,
-  "nextSafeStage": "review-isolated-validation-and-approve-production-deploy-plan"
+  "nextSafeStage": "select-production-targets-and-complete-executable-deploy-plan"
 }

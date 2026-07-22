@@ -39,6 +39,6 @@ assertIncludes("src/api/save-data-dev-badge.js", "openBackendSaveSlotsModal");
 assertIncludes("index.html", "src/api/save-data-slots.js");
 assertOrder("index.html", "src/api/game-api-client.js", "src/api/save-data-slots.js");
 assertOrder("index.html", "src/api/save-data-slots.js", "src/api/save-data-dev-badge.js");
-assertIncludes("docs/SAVE_DATA_SLOT_LIST.md", "Save Data Slot List");
+assertIncludes("docs/archive/stage-notes/SAVE_DATA_SLOT_LIST.md", "Save Data Slot List");
 
 console.log("save data slot list smoke test passed");

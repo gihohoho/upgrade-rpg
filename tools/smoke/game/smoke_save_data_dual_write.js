@@ -31,7 +31,7 @@ assertIncludes("src/app/main.js", "requestBackendSaveAfterManualSave");
 assertIncludes("index.html", "src/api/save-data-sync-policy.js");
 assertOrder("index.html", "src/api/save-data-bridge.js", "src/api/save-data-sync-policy.js");
 assertOrder("index.html", "src/api/save-data-sync-policy.js", "src/app/main.js");
-assertIncludes("docs/SAVE_DATA_DUAL_WRITE.md", "manual_dual");
-assertIncludes("docs/SAVE_DATA_DUAL_WRITE.md", "disableBackendSaveDualWrite");
+assertIncludes("docs/archive/stage-notes/SAVE_DATA_DUAL_WRITE.md", "manual_dual");
+assertIncludes("docs/archive/stage-notes/SAVE_DATA_DUAL_WRITE.md", "disableBackendSaveDualWrite");
 
 console.log("save data dual-write smoke test passed");

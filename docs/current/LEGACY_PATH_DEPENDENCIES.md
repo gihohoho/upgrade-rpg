@@ -1,36 +1,36 @@
-# Legacy Path Dependencies — v269
+# Legacy Path Dependencies — v334
 
 이 문서는 `tools/report_legacy_path_dependencies.py`가 현재 프로젝트 파일을 스캔해서 만든 legacy 경로 의존성 보고서입니다.
 
 목적은 Vue/FastAPI/DB 전환 전에 **움직이면 깨질 가능성이 높은 경로**를 먼저 고정하는 것입니다. 이 문서는 새 contract가 아니라 구조 전환 보조 문서입니다.
 
-## v269 결론
+## v334 결론
 
 - `admin.html`, `index.html`, `src/`, `backend/`, `tools/smoke/`는 아직 이동하지 않습니다.
 - 새 Vue 앱은 기존 파일을 대체하지 않고 `frontend/vue-app/`에 별도로 만드는 방식이 가장 안전합니다.
 - `legacy/` 폴더로 기존 파일을 옮기는 작업은 smoke 경로 alias/copy 전략이 확정된 뒤에만 진행합니다.
-- 이번 단계에서는 DB/env/seed/auth/API body/route/write 로직을 변경하지 않습니다.
+- 문서 구조 정리와 무관하게 DB/env/seed/auth/API body/route/write 로직은 변경하지 않습니다.
 
 ## 주요 경로 참조 요약
 
 | 대상 | 존재 | 참조 수 | 참조 파일 수 | 판단 |
 | --- | --- | --- | --- | --- |
-| `admin.html` | O | 369 | 169 | 절대 이동 금지 |
-| `index.html` | O | 211 | 103 | 절대 이동 금지 |
-| `src/` | O | 2284 | 422 | 절대 이동 금지 |
-| `src/api/` | O | 1319 | 341 | Vue 이식 후보이지만 현 위치 유지 |
-| `src/api/admin/` | O | 742 | 261 | Vue 관리자 이식 후보이지만 현 위치 유지 |
-| `src/data/` | O | 166 | 54 | DB seed 준비 전 이동 금지 |
-| `src/rules/` | O | 68 | 28 | 콘텐츠 개발 보류, 현 위치 유지 |
-| `src/state/` | O | 36 | 26 | Vue store 후보, 현 위치 유지 |
-| `src/systems/` | O | 134 | 52 | domain module 후보, 현 위치 유지 |
-| `src/ui/` | O | 42 | 28 | Vue component 대체 후보, 현 위치 유지 |
-| `src/styles/` | O | 54 | 20 | Vue CSS 분해 후보, 현 위치 유지 |
-| `backend/app/api/routes/` | O | 845 | 155 | route path/contract 보호 |
-| `backend/app/services/` | O | 568 | 180 | service contract 보호 |
-| `backend/seeds/` | O | 65 | 22 | 사용자 승인 전 변경 금지 |
-| `tools/run_smoke_core.sh` | O | 160 | 136 | 검증 기준 유지 |
-| `tools/smoke/` | O | 690 | 259 | 경로 의존성 기준 |
+| `admin.html` | O | 139 | 74 | 절대 이동 금지 |
+| `index.html` | O | 76 | 36 | 절대 이동 금지 |
+| `src/` | O | 869 | 162 | 절대 이동 금지 |
+| `src/api/` | O | 566 | 139 | Vue 이식 후보이지만 현 위치 유지 |
+| `src/api/admin/` | O | 318 | 113 | Vue 관리자 이식 후보이지만 현 위치 유지 |
+| `src/data/` | O | 27 | 11 | DB seed 준비 전 이동 금지 |
+| `src/rules/` | O | 13 | 7 | 콘텐츠 개발 보류, 현 위치 유지 |
+| `src/state/` | O | 6 | 6 | Vue store 후보, 현 위치 유지 |
+| `src/systems/` | O | 17 | 7 | domain module 후보, 현 위치 유지 |
+| `src/ui/` | O | 5 | 5 | Vue component 대체 후보, 현 위치 유지 |
+| `src/styles/` | O | 10 | 7 | Vue CSS 분해 후보, 현 위치 유지 |
+| `backend/app/api/routes/` | O | 393 | 63 | route path/contract 보호 |
+| `backend/app/services/` | O | 237 | 78 | service contract 보호 |
+| `backend/seeds/` | O | 8 | 6 | 사용자 승인 전 변경 금지 |
+| `tools/run_smoke_core.sh` | O | 64 | 48 | 검증 기준 유지 |
+| `tools/smoke/` | O | 265 | 77 | 경로 의존성 기준 |
 
 ## 참조 파일 예시
 
@@ -38,22 +38,22 @@
 
 | 대상 | 참조 파일 예시 |
 |---|---|
-| `admin.html` | `admin.html`<br>`AGENTS.md`<br>`CHANGELOG.md`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_LAYOUT_NAVIGATION_SHELL.md`<br>`docs/ADMIN_LAYOUT_SHELL_SPLIT.md`<br>`docs/ADMIN_MASTER_DATA_CATALOG.md` |
-| `index.html` | `admin.html`<br>`AGENTS.md`<br>`CHANGELOG.md`<br>`docs/ADMIN_PAGE_URL_HELPER.md`<br>`docs/ADMIN_READONLY_PAGE.md`<br>`docs/archive/stage-notes/ADMIN_PAGE_URL_HELPER.md`<br>`docs/archive/stage-notes/ADMIN_READONLY_PAGE.md`<br>`docs/archive/stage-notes/CODE_MAP.md` |
-| `src/` | `admin.html`<br>`AGENTS.md`<br>`CHANGELOG.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT.md` |
-| `src/api/` | `admin.html`<br>`CHANGELOG.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT_CONTRACT.md` |
-| `src/api/admin/` | `admin.html`<br>`CHANGELOG.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT.md`<br>`docs/ADMIN_EDIT_DRAFT_SPLIT_CONTRACT.md` |
-| `src/data/` | `docs/archive/stage-notes/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/FRONTEND_MASTER_DATA_BRIDGE.md`<br>`docs/archive/stage-notes/SEED_EXTRACTION.md`<br>`docs/archive/stage-notes/SKILL_DAMAGE_TEXT_FIX.md`<br>`docs/archive/stage-notes/SKILL_STRUCTURE_READY.md`<br>`docs/BACKEND_SPLIT_CHECKLIST.md` |
-| `src/rules/` | `docs/archive/stage-notes/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/CODE_MAP.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`index.html` |
-| `src/state/` | `docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/SKILL_STRUCTURE_READY.md`<br>`docs/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/CODE_MAP.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`docs/SKILL_STRUCTURE_READY.md`<br>`frontend/vue-app/src/stores/README.md` |
-| `src/systems/` | `docs/archive/stage-notes/BACKEND_SPLIT_CHECKLIST.md`<br>`docs/archive/stage-notes/BACKEND_SPLIT_STAGE2_PLAN.md`<br>`docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/DAMAGE_TEXT_POSITION_FIX.md`<br>`docs/archive/stage-notes/EQUIP_SKILL_BOSS_RESULT_STAGE3.md`<br>`docs/archive/stage-notes/KILL_REWARD_RESULT_STAGE2.md`<br>`docs/archive/stage-notes/SEED_EXTRACTION.md`<br>`docs/archive/stage-notes/SKILL_STRUCTURE_READY.md` |
-| `src/ui/` | `docs/archive/stage-notes/CODE_MAP.md`<br>`docs/archive/stage-notes/EQUIP_SKILL_BOSS_RESULT_STAGE3.md`<br>`docs/archive/stage-notes/MASTER_DATA_FIELD_ZONE_ASSET_FALLBACK.md`<br>`docs/archive/stage-notes/SKILL_STRUCTURE_READY.md`<br>`docs/CODE_MAP.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`docs/EQUIP_SKILL_BOSS_RESULT_STAGE3.md`<br>`docs/MASTER_DATA_FIELD_ZONE_ASSET_FALLBACK.md` |
-| `src/styles/` | `docs/archive/stage-notes/CSS_AUDIT.md`<br>`docs/archive/stage-notes/CSS_MERGE_REPORT.md`<br>`docs/CSS_AUDIT.md`<br>`docs/CSS_MERGE_REPORT.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`index.html`<br>`local-backups/docs/archive/stage-notes/CSS_AUDIT.md`<br>`local-backups/docs/archive/stage-notes/CSS_MERGE_REPORT.md` |
+| `admin.html` | `AGENTS.md`<br>`README.md`<br>`admin.html`<br>`docs/CHANGELOG.md`<br>`docs/current/PROJECT_STRUCTURE.md`<br>`docs/current/VUE_ADMIN_READONLY_CATALOG.md`<br>`docs/current/VUE_APP_SHELL.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md` |
+| `index.html` | `AGENTS.md`<br>`README.md`<br>`admin.html`<br>`docs/CHANGELOG.md`<br>`docs/current/PROJECT_STRUCTURE.md`<br>`docs/current/VUE_APP_SHELL.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`frontend/vue-app/README.md` |
+| `src/` | `AGENTS.md`<br>`README.md`<br>`admin.html`<br>`docs/CHANGELOG.md`<br>`docs/current/BACKEND_ARCHITECTURE.md`<br>`docs/current/BACKEND_ROUTE_MAP.md`<br>`docs/current/PROJECT_STRUCTURE.md`<br>`docs/current/VUE_ADMIN_READONLY_CATALOG.md` |
+| `src/api/` | `admin.html`<br>`docs/CHANGELOG.md`<br>`docs/current/BACKEND_ARCHITECTURE.md`<br>`docs/current/BACKEND_ROUTE_MAP.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`docs/current/VUE_READONLY_API_CLIENT.md`<br>`index.html`<br>`src/api/API_PLAN.md` |
+| `src/api/admin/` | `admin.html`<br>`docs/CHANGELOG.md`<br>`docs/current/BACKEND_ROUTE_MAP.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`docs/current/VUE_READONLY_API_CLIENT.md`<br>`index.html`<br>`src/api/admin-page-readonly.js`<br>`src/api/admin/README.md` |
+| `src/data/` | `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`index.html`<br>`src/data/README.md`<br>`src/state/STATE_SPLIT_READY.md`<br>`src/ui/render-ui.js`<br>`tools/extract_seed_data.js`<br>`tools/report_legacy_path_dependencies.py`<br>`tools/smoke/frontend/smoke_action_results.js` |
+| `src/rules/` | `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`index.html`<br>`src/rules/README.md`<br>`src/state/STATE_SPLIT_READY.md`<br>`tools/extract_seed_data.js`<br>`tools/report_legacy_path_dependencies.py`<br>`tools/smoke/frontend/smoke_action_results.js` |
+| `src/state/` | `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`frontend/vue-app/src/stores/README.md`<br>`index.html`<br>`tools/extract_seed_data.js`<br>`tools/report_legacy_path_dependencies.py`<br>`tools/smoke/frontend/smoke_action_results.js` |
+| `src/systems/` | `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`index.html`<br>`tools/extract_seed_data.js`<br>`tools/report_legacy_path_dependencies.py`<br>`tools/smoke/frontend/smoke_action_results.js`<br>`tools/smoke/game/smoke_runtime_stackable_items.js`<br>`tools/smoke/game/smoke_runtime_stacked_enhance_space_guard.js` |
+| `src/ui/` | `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`index.html`<br>`tools/report_legacy_path_dependencies.py`<br>`tools/smoke/frontend/smoke_action_results.js`<br>`tools/smoke/game/smoke_runtime_stackable_items.js` |
+| `src/styles/` | `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`index.html`<br>`tools/report_legacy_path_dependencies.py`<br>`tools/smoke/frontend/smoke_vue_admin_readonly_catalog_panel.py`<br>`tools/smoke/frontend/smoke_vue_admin_readonly_relations_panel.py`<br>`tools/smoke/frontend/smoke_vue_readonly_api_status_panel.py`<br>`tools/smoke/frontend/smoke_vue_shell_structure.py` |
 | `backend/app/api/routes/` | `backend/app/api/routes/admin_openapi_route_contract.py`<br>`backend/app/api/routes/admin_request_metadata_contract.py`<br>`backend/app/api/routes/admin_response_metadata_contract.py`<br>`backend/app/api/routes/admin_route_map_contract.py`<br>`backend/app/api/routes/admin_route_module_import_contract.py`<br>`backend/app/api/routes/admin_route_operation_contract.py`<br>`backend/app/api/routes/admin_route_services.py`<br>`backend/app/api/routes/admin_runtime_route_contract.py` |
-| `backend/app/services/` | `backend/app/api/routes/admin_preview_side_effect_contract.py`<br>`backend/app/api/routes/admin_route_error_helpers.py`<br>`backend/app/api/routes/admin_service_mutation_boundary_contract.py`<br>`backend/app/services/admin/admin_shared_utils.py`<br>`backend/app/services/admin/README.md`<br>`backend/app/services/admin_service.py`<br>`backend/app/services/admin_service_facade_contract.py`<br>`backend/app/services/admin_service_legacy_markers.py` |
-| `backend/seeds/` | `backend/seeds/README.md`<br>`docs/archive/stage-notes/SEED_EXTRACTION.md`<br>`docs/archive/stage-notes/SEED_IMPORT.md`<br>`docs/CHANGELOG.md`<br>`docs/LOCAL_DEV_SETUP.md`<br>`docs/MASTER_DATA_PARITY_CHECKER.md`<br>`docs/SEED_EXTRACTION.md`<br>`docs/SEED_IMPORT.md` |
-| `tools/run_smoke_core.sh` | `AGENTS.md`<br>`CHANGELOG.md`<br>`docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md`<br>`docs/ADMIN_CHANGE_LOGS_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_GUIDE.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md`<br>`docs/ADMIN_FIELD_HELP_SPLIT.md` |
-| `tools/smoke/` | `backend/README.md`<br>`backend/seeds/README.md`<br>`CHANGELOG.md`<br>`docs/ADMIN_BOOTSTRAP_BINDINGS_READINESS.md`<br>`docs/ADMIN_CATALOG_COMPACT_HELP_UX.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_GUIDE.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT.md`<br>`docs/ADMIN_CREATE_LIFECYCLE_SPLIT_CONTRACT.md` |
+| `backend/app/services/` | `backend/app/api/routes/admin_preview_side_effect_contract.py`<br>`backend/app/api/routes/admin_route_error_helpers.py`<br>`backend/app/api/routes/admin_service_mutation_boundary_contract.py`<br>`backend/app/services/admin/README.md`<br>`backend/app/services/admin/admin_shared_utils.py`<br>`backend/app/services/admin_service.py`<br>`backend/app/services/admin_service_facade_contract.py`<br>`backend/app/services/admin_service_legacy_markers.py` |
+| `backend/seeds/` | `backend/seeds/README.md`<br>`docs/CHANGELOG.md`<br>`docs/guides/LOCAL_DEV_SETUP.md`<br>`tools/extract_seed_data.js`<br>`tools/report_legacy_path_dependencies.py`<br>`tools/smoke/game/smoke_seed_extraction.js` |
+| `tools/run_smoke_core.sh` | `.github/workflows/publish-backend-ghcr.yml`<br>`AGENTS.md`<br>`deploy/github-actions-ghcr-static-plan.example.json`<br>`docs/CHANGELOG.md`<br>`docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md`<br>`docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`<br>`src/api/admin-page-readonly.js`<br>`tools/README.md` |
+| `tools/smoke/` | `NEXT_CHAT_HANDOFF.md`<br>`backend/README.md`<br>`backend/seeds/README.md`<br>`deploy/github-actions-ghcr-static-plan.example.json`<br>`docs/CHANGELOG.md`<br>`docs/current/CURRENT_STATUS.md`<br>`docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md`<br>`docs/current/LOCAL_DEV_CORS.md` |
 
 ## HTML 진입점 직접 로드 관계
 
@@ -121,7 +121,7 @@
 
 | 순서 | 명령 |
 | --- | --- |
-| 1 | `node tools/smoke_docs_index_archive.js` |
+| 1 | `node tools/smoke/game/smoke_docs_index_archive.js` |
 | 2 | `node tools/smoke/frontend/smoke_admin_edit_stale_guard.js` |
 | 3 | `node tools/smoke/frontend/smoke_admin_write_dev_key_guard.js` |
 | 4 | `node tools/smoke/frontend/smoke_admin_guarded_edit_apply.js` |
@@ -239,15 +239,13 @@
 | 116 | `python tools/smoke/backend/smoke_production_capacity_tls_network_plan.py` |
 | 117 | `python tools/smoke/backend/smoke_production_managed_postgres_reverse_proxy_selection.py` |
 | 118 | `python tools/smoke/backend/smoke_production_compose_config_render.py` |
-| 119 | `python tools/smoke/backend/smoke_github_actions_ghcr_static_plan.py` |
-| 120 | `python tools/smoke/backend/smoke_codex_handoff_readiness.py` |
-| 121 | `python tools/smoke/game/smoke_next_chat_handoff.py` |
-| 122 | `python tools/smoke/contracts/smoke_backend_admin_preview_side_effect_contract.py` |
-| 123 | `python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contract.py` |
-| 124 | `python tools/smoke/contracts/smoke_backend_admin_diff_engine_contract.py` |
-| 125 | `python tools/smoke/contracts/smoke_backend_admin_change_log_shared_diff.py` |
-| 126 | `python tools/smoke/contracts/smoke_backend_admin_rollback_snapshot_contract.py` |
-| 127 | `python tools/smoke/contracts/smoke_backend_admin_rollback_preview_snapshot.py` |
+| 119 | `python tools/smoke/backend/smoke_production_deployment_plan.py` |
+| 120 | `python tools/smoke/contracts/smoke_backend_admin_preview_side_effect_contract.py` |
+| 121 | `python tools/smoke/contracts/smoke_backend_admin_service_mutation_boundary_contract.py` |
+| 122 | `python tools/smoke/contracts/smoke_backend_admin_diff_engine_contract.py` |
+| 123 | `python tools/smoke/contracts/smoke_backend_admin_change_log_shared_diff.py` |
+| 124 | `python tools/smoke/contracts/smoke_backend_admin_rollback_snapshot_contract.py` |
+| 125 | `python tools/smoke/contracts/smoke_backend_admin_rollback_preview_snapshot.py` |
 
 ## smoke 내부에서 많이 발견된 경로 문자열
 
@@ -257,8 +255,8 @@
 | `admin.html` | 108 |
 | `index.html` | 46 |
 | `src/api/save-data-dev-badge.js` | 44 |
+| `tools/run_smoke_core.sh` | 43 |
 | `src/api/game-api-client.js` | 41 |
-| `tools/run_smoke_core.sh` | 38 |
 | `backend/app/services/admin_service_legacy_markers.py` | 37 |
 | `src/api/save-data-restore-guard.js` | 32 |
 | `backend/app/api/routes/admin_master_data_routes.py` | 24 |
@@ -320,18 +318,11 @@ frontend/vue-app/
 - Vue 앱에서 기존 route/API body 변경
 - DB/env/seed/auth/write guard 변경
 
-## 다음 단계 후보
-
-v270에서는 사용자 승인 후 아래 중 하나를 진행하는 것이 안전합니다.
-
-1. `frontend/vue-app/`에 Vite + Vue 기본 shell만 생성
-2. 기존 `admin.html`/`index.html`은 그대로 유지
-3. Vue shell에서 아직 실제 관리자/게임 로직은 연결하지 않음
-4. root legacy smoke와 Vue shell smoke를 분리해서 검증
-
 ## 재생성 방법
 
 실행 위치: 프로젝트 루트
+Python `.venv` 상태: `backend/.venv` 사용
+새 설치 여부: 없음
 
 ```bash
 python tools/report_legacy_path_dependencies.py --write
@@ -340,6 +331,8 @@ python tools/report_legacy_path_dependencies.py --write
 검사만 할 때:
 
 실행 위치: 프로젝트 루트
+Python `.venv` 상태: `backend/.venv` 사용
+새 설치 여부: 없음
 
 ```bash
 python tools/report_legacy_path_dependencies.py --check

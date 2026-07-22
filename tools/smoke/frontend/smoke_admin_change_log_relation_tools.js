@@ -41,7 +41,7 @@ assertContains("admin.html", [
   "relation-jump-btn",
 ]);
 
-assertContains("docs/ADMIN_CHANGE_LOG_RELATION_TOOLS.md", [
+assertContains("docs/archive/stage-notes/ADMIN_CHANGE_LOG_RELATION_TOOLS.md", [
   "Admin Change Log Relation Tools",
   "rollback preview",
   "relation label",

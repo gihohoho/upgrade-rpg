@@ -11,7 +11,7 @@
 ```txt
 src/api/master-data-adapter.js
 tools/smoke/game/smoke_master_data_adapter.js
-docs/MASTER_DATA_ADAPTER.md
+docs/archive/stage-notes/MASTER_DATA_ADAPTER.md
 ```
 
 ## 로딩 순서

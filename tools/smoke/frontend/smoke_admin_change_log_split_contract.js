@@ -68,7 +68,7 @@ assertContains("tools/run_smoke_core.sh", [
   "node tools/smoke/frontend/smoke_admin_change_log_split_contract.js",
 ]);
 
-assertContains("docs/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md", [
+assertContains("docs/archive/stage-notes/ADMIN_CHANGE_LOG_SPLIT_CONTRACT.md", [
   "Admin Change Log Split Contract",
   "v186",
   "contract-frozen-v186",
