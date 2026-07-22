@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v324.bootstrap-fixed-retry-preparation-publish-gated",
+  "schemaVersion": "v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated",
   "staticPolicyOnly": true,
   "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
   "repository": "gihohoho/upgrade-rpg",
@@ -12,7 +12,7 @@
   "workflowSourceSha256": "245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd",
   "workflowSemanticSha256": "e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
-  "publishLifecycleSchemaVersion": "v324.owner-only-publish-lifecycle",
+  "publishLifecycleSchemaVersion": "v326.owner-only-publish-lifecycle-with-attempt-history",
   "workflowFilePresent": true,
   "workflowCreationApproved": true,
   "workflowExecutionApproved": true,
@@ -293,7 +293,7 @@
         "backend/requirements/runtime.in": "9eeff8d010a3f18711d82e68effa3874c15f63b99a1f65988106cc46719727ce",
         "backend/requirements/dev.in": "6404277a75ce651735fcea3f89b5eee548cfd58ee197faed27b03333d587e2fe",
         "backend/pyproject.toml": "1c10a732138522f00b87c5fdc8fc866affc9dbbe87f3bca81af94354d35f864b",
-        "backend/Dockerfile.production": "2ccd445b3b73f52825d8696d241d34a180c513dde2bebabbae3e0a833624af5e"
+      "backend/Dockerfile.production": "c73df69e5e0d933f12ada5afb0bbd39470d1cff394badad5e8b79ced09047648"
       },
       "requiredBeforeFirstPublish": true
     },

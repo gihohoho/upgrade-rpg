@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the v324 owner-only, repeatable single-run GHCR publish lifecycle policy."""
+"""Validate the v326 owner-only, repeatable single-run GHCR publish lifecycle policy."""
 from __future__ import annotations
 
 import argparse
@@ -13,7 +13,7 @@ from typing import Any
 
 import yaml
 
-TOOL_VERSION = "v324.bootstrap-fixed-retry-preparation-publish-gated"
+TOOL_VERSION = "v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated"
 READY_RESULT = "github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated"
 AUTHORIZATION_OPEN_RESULT = "github-actions-ghcr-owner-only-authorization-open"
 AUTHORIZATION_CLOSED_RESULT = (
@@ -21,7 +21,7 @@ AUTHORIZATION_CLOSED_RESULT = (
 )
 ATTEMPT_RECORDED_RESULT = "github-actions-ghcr-owner-only-attempt-recorded-publish-gated"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "review-and-approve-exact-bootstrap-fix-preparation-sha"
+NEXT_SAFE_STAGE = "review-and-approve-exact-dockerfile-bootstrap-fix-preparation-sha"
 AUTHORIZATION_OPEN_NEXT_SAFE_STAGE = "dispatch-one-owner-approved-workflow-run"
 AUTHORIZATION_CLOSED_NEXT_SAFE_STAGE = "record-workflow-run-evidence"
 ATTEMPT_RECORDED_NEXT_SAFE_STAGE = "review-recorded-workflow-attempt-evidence"
@@ -30,7 +30,7 @@ REPOSITORY = "gihohoho/upgrade-rpg"
 IMAGE_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 WORKFLOW_PATH = ".github/workflows/publish-backend-ghcr.yml"
 LIFECYCLE_PATH = "deploy/github-actions-ghcr-publish-lifecycle.json"
-LIFECYCLE_SCHEMA_VERSION = "v324.owner-only-publish-lifecycle"
+LIFECYCLE_SCHEMA_VERSION = "v326.owner-only-publish-lifecycle-with-attempt-history"
 PRIOR_APPROVED_PREPARATION_SHA = "350bbd085f1cf636810d75ddcbb5321e0791256c"
 PRIOR_ATTEMPT_EVIDENCE = {
     "preparationSha": PRIOR_APPROVED_PREPARATION_SHA,
@@ -44,6 +44,29 @@ PRIOR_ATTEMPT_EVIDENCE = {
     "imageBuildExecuted": False,
     "imagePushExecuted": False,
 }
+ATTEMPT_HISTORY = [
+    {
+        **PRIOR_ATTEMPT_EVIDENCE,
+        "artifactCount": 0,
+        "imageDigest": None,
+        "signatureVerified": False,
+    },
+    {
+        "preparationSha": "2f77ebf0f60a39c936509df26f903995f0c62967",
+        "authorizationSha": "7e69555b8b653c406b322fb5c8f23e550751d72c",
+        "closureSha": "5479e6b14826b3a0f2b6d0c3beb0e2142ca22c94",
+        "recordCommitSha": "c93a0327bc25941865f4ee8d600a4f903886a4fe",
+        "runId": 29877813770,
+        "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29877813770",
+        "conclusion": "failure",
+        "registryLoginExecuted": False,
+        "imageBuildExecuted": True,
+        "imagePushExecuted": False,
+        "artifactCount": 0,
+        "imageDigest": None,
+        "signatureVerified": False,
+    },
+]
 EXPECTED_WORKFLOW_SHA256 = "245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd"
 EXPECTED_WORKFLOW_SEMANTIC_SHA256 = "e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c"
 SMOKE_CORE_PATH = "tools/run_smoke_core.sh"
@@ -81,7 +104,7 @@ REPRODUCIBILITY_INPUT_SHA256 = {
     "backend/requirements/runtime.in": "9eeff8d010a3f18711d82e68effa3874c15f63b99a1f65988106cc46719727ce",
     "backend/requirements/dev.in": "6404277a75ce651735fcea3f89b5eee548cfd58ee197faed27b03333d587e2fe",
     "backend/pyproject.toml": "1c10a732138522f00b87c5fdc8fc866affc9dbbe87f3bca81af94354d35f864b",
-    "backend/Dockerfile.production": "2ccd445b3b73f52825d8696d241d34a180c513dde2bebabbae3e0a833624af5e",
+    "backend/Dockerfile.production": "c73df69e5e0d933f12ada5afb0bbd39470d1cff394badad5e8b79ced09047648",
 }
 CERTIFICATE_IDENTITY = (
     "https://github.com/gihohoho/upgrade-rpg/"
@@ -443,6 +466,7 @@ def _require_lifecycle_shape(lifecycle: dict[str, Any]) -> None:
         "publishReviewerGateReady",
         "priorApprovedPreparationSha",
         "priorAttemptEvidence",
+        "attemptHistory",
         "approvedPreparationSha",
         "ownerApproval",
         "githubLiveSettings",
@@ -459,6 +483,7 @@ def _require_lifecycle_shape(lifecycle: dict[str, Any]) -> None:
         lifecycle.get("priorAttemptEvidence") == PRIOR_ATTEMPT_EVIDENCE,
         "prior workflow attempt evidence changed",
     )
+    _require(lifecycle.get("attemptHistory") == ATTEMPT_HISTORY, "workflow attempt history changed")
     owner = lifecycle.get("ownerApproval")
     _require(isinstance(owner, dict), "owner approval record is missing")
     _require(
@@ -553,6 +578,7 @@ def _verify_lifecycle(root: Path, lifecycle: dict[str, Any]) -> dict[str, Any]:
             parent.get("priorAttemptEvidence") == lifecycle.get("priorAttemptEvidence"),
             "authorization changed prior attempt evidence",
         )
+        _require(parent.get("attemptHistory") == lifecycle.get("attemptHistory"), "authorization changed attempt history")
         _require_refreshed_live_settings(parent, lifecycle)
         _require(
             closure == {
@@ -595,6 +621,7 @@ def _verify_lifecycle(root: Path, lifecycle: dict[str, Any]) -> dict[str, Any]:
             parent.get("priorAttemptEvidence") == lifecycle.get("priorAttemptEvidence"),
             "closure changed prior attempt evidence",
         )
+        _require(parent.get("attemptHistory") == lifecycle.get("attemptHistory"), "closure changed attempt history")
         _require(
             parent.get("githubLiveSettings") == lifecycle.get("githubLiveSettings"),
             "closure changed GitHub live-settings evidence",
@@ -653,6 +680,7 @@ def _verify_lifecycle(root: Path, lifecycle: dict[str, Any]) -> dict[str, Any]:
             closed.get("priorAttemptEvidence") == lifecycle.get("priorAttemptEvidence"),
             "attempt evidence changed prior attempt evidence",
         )
+        _require(closed.get("attemptHistory") == lifecycle.get("attemptHistory"), "attempt evidence changed attempt history")
         _require(
             closed.get("githubLiveSettings") == lifecycle.get("githubLiveSettings"),
             "attempt evidence changed GitHub live-settings evidence",
@@ -1725,11 +1753,11 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
         "workflowFilePresent": True,
         "workflowCreationApproved": True,
         "workflowExecutionApproved": True,
-        "workflowExecutionExecuted": bool(lifecycle.get("priorAttemptEvidence")) or lifecycle_result["state"] in {
+        "workflowExecutionExecuted": bool(lifecycle.get("attemptHistory")) or lifecycle_result["state"] in {
             "authorization-closed-awaiting-evidence",
             "attempt-recorded",
         },
-        "registryMutationExecuted": bool(lifecycle.get("priorAttemptEvidence", {}).get("imagePushExecuted"))
+        "registryMutationExecuted": any(item.get("imagePushExecuted") for item in lifecycle.get("attemptHistory", []))
         or (lifecycle_result["state"] == "attempt-recorded" and lifecycle["observedAttempt"].get("imageDigest") is not None),
         "actionShasApproved": True,
         "actionsSettingsConfigured": True,

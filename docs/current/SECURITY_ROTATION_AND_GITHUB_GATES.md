@@ -1,4 +1,4 @@
-# Security rotation and GitHub gates — v325
+# Security rotation and GitHub gates — v326
 
 이 문서는 기호가 허용한 GitHub·숨김 파일·`.env` 작업 범위와 나중에 재확인하거나 교체할 보안 항목을 기록합니다. 실제 secret 값은 적지 않습니다.
 
@@ -112,4 +112,4 @@ authorization-open CI는 closed root 전용 handoff smoke가 lifecycle 전이를
 
 ## 로컬 GitHub CLI 상태
 
-브라우저 기반 GitHub 연결은 정상입니다. 로컬 `gh` CLI에 저장된 예전 token은 이번 확인에서도 만료 상태였으므로 필요 시에만 기호에게 재인증을 요청합니다. 현재 v325 evidence 검토 단계에는 새 로그인이나 설치가 필요 없습니다.
+브라우저 기반 GitHub 연결은 정상입니다. 로컬 `gh` CLI에 저장된 예전 token은 이번 확인에서도 만료 상태였으므로 필요 시에만 기호에게 재인증을 요청합니다. 현재 v326 preparation 승인 대기 단계에는 새 로그인이나 설치가 필요 없습니다.

@@ -1,4 +1,4 @@
-# Roadmap — v325
+# Roadmap — v326
 
 ## 현재 완료
 
@@ -33,11 +33,11 @@
 ## 현재 단계
 
 ```txt
-latest: v325.second-owner-only-attempt-recorded-failed-pre-registry-image-build
+latest: v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated
 result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
 lifecycle: attempt-recorded
 workflow/login/build/push executed: yes/no/attempted-failed/no
-next safe stage: review-recorded-workflow-attempt-evidence
+next safe stage: review-and-approve-exact-dockerfile-bootstrap-fix-preparation-sha
 ```
 
 ## 다음 순서

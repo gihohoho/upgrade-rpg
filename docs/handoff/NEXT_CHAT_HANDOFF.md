@@ -1,4 +1,4 @@
-# Upgrade RPG Codex handoff — v325
+# Upgrade RPG Codex handoff — v326
 
 ## 먼저 읽을 것
 
@@ -10,9 +10,9 @@
 
 ## 현재 기준
 
-- latest: `v325.second-owner-only-attempt-recorded-failed-pre-registry-image-build`
-- strict result: `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`
-- next safe stage: `review-recorded-workflow-attempt-evidence`
+- latest: `v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated`
+- strict result: `github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated`
+- next safe stage: `review-and-approve-exact-dockerfile-bootstrap-fix-preparation-sha`
 - workflow source/semantic SHA-256: `245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd` / `e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c`
 - 기준: 현재 repository + Git `main`; ZIP은 기본 생성하지 않음
 - 사용자: 코딩을 거의 모르는 기호, 한국어로 쉽고 자세하게 설명
@@ -66,7 +66,7 @@ publish environment/main-only: present/configured
 environment secrets/variables: 0/0
 required reviewer/prevent self-review: missing/missing
 publish approval model: owner-only-source-controlled-two-step
-source-controlled lifecycle gate: attempt-recorded / publishReviewerGateReady=false
+source-controlled lifecycle gate: preparation-closed / publishReviewerGateReady=false
 run_attempt=1: required
 single dispatch: required
 immediate closure: required
@@ -99,17 +99,18 @@ f4788acf5455b07169320bd29f43ddf92ff1d5ad
 source-controlled lifecycle gate는 `deploy/github-actions-ghcr-publish-lifecycle.json`입니다. 첫 실행 결과까지 기록한 현재 값은 다음처럼 닫혀 있습니다.
 
 ```txt
-schemaVersion: v324.owner-only-publish-lifecycle
-state: attempt-recorded
+schemaVersion: v326.owner-only-publish-lifecycle-with-attempt-history
+state: preparation-closed
 publishReviewerGateReady: false
 priorApprovedPreparationSha: 350bbd085f1cf636810d75ddcbb5321e0791256c
 priorAttemptEvidence.recordCommitSha: 1f12ea59eb54385337557e9754f86731ec53d253
 priorAttemptEvidence.runId/conclusion: 29716038891/failure
-approvedPreparationSha: 2f77ebf0f60a39c936509df26f903995f0c62967
-ownerApproval.recorded: true
-closure.authorizationSourceSha: 7e69555b8b653c406b322fb5c8f23e550751d72c
-closure.closureCommitSha: 5479e6b14826b3a0f2b6d0c3beb0e2142ca22c94
-observedAttempt.runId/status/conclusion: 29877813770/completed/failure
+attemptHistory[0].runId/recordCommitSha: 29716038891/1f12ea59eb54385337557e9754f86731ec53d253
+attemptHistory[1].runId/recordCommitSha: 29877813770/c93a0327bc25941865f4ee8d600a4f903886a4fe
+approvedPreparationSha: null
+ownerApproval.recorded: false
+closure.authorizationSourceSha/closureCommitSha: null/null
+observedAttempt.status: not-dispatched
 ```
 
 ## 2026-07-20 첫 owner-only 게시 시도
@@ -133,7 +134,8 @@ observedAttempt.runId/status/conclusion: 29877813770/completed/failure
 - artifact 0개, image digest 없음, signature 미검증, registry mutation 없음
 - artifact upload 실패는 build 실패 뒤 SBOM/Trivy 파일이 없었던 후속 결과
 - 동일 run rerun은 금지하고 실행하지 않음
-- 다음 focused fix 후보는 Dockerfile bootstrap target 한 곳을 `3.11`로 바꾸는 것; 아직 적용 승인 전
+- Dockerfile focused fix 승인/적용 완료: bootstrap target 한 곳을 `3.11`로 변경
+- 새 preparation의 exact 40-character SHA는 아직 별도 승인 전
 
 새 preparation-fix SHA가 승인된 뒤의 authorization contract:
 
@@ -215,19 +217,17 @@ python tools/check_codex_handoff_readiness.py --strict
 정상 기대 결과:
 
 ```txt
-result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-next safe stage: review-recorded-workflow-attempt-evidence
+result: github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated
+next safe stage: review-and-approve-exact-dockerfile-bootstrap-fix-preparation-sha
 ```
 
 코드/구조 변경이므로 관련 전용 smoke, compileall, JavaScript 문법, `bash tools/run_smoke_core.sh`까지 통과해야 합니다. 단, authorization-open CI에서는 위의 closed 전용 세 smoke만 플래그로 건너뜁니다. Vue 변경이 없으므로 `npm ci`/`npm run build`는 불필요합니다.
 
 ## 다음 안전 단계
 
-1. run `29877813770`의 recorded evidence와 registry 미변경 사실 검토
-2. 기호가 승인하면 `backend/Dockerfile.production` bootstrap target만 `3`에서 `3.11`로 수정
-3. 새 retry preparation을 검증·commit·push
-4. 그 새 exact 40-character preparation SHA를 기호가 별도 승인
-5. 승인 뒤 새 A → C → R 1회 lifecycle 실행
+1. v326 retry preparation을 검증·commit·push
+2. 그 새 exact 40-character preparation SHA를 기호가 별도 승인
+3. 승인 뒤 새 A → C → R 1회 lifecycle 실행
 
 동일 run의 rerun은 금지합니다. focused fix 승인과 이후 새 preparation SHA 승인은 서로 다른 승인 지점입니다.
 

@@ -1,10 +1,10 @@
-# Current Status — v325
+# Current Status — v326
 
 ## 현재 기준
 
-- 최신 작업: `v325.second-owner-only-attempt-recorded-failed-pre-registry-image-build`
-- strict result: `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`
-- next safe stage: `review-recorded-workflow-attempt-evidence`
+- 최신 작업: `v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated`
+- strict result: `github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated`
+- next safe stage: `review-and-approve-exact-dockerfile-bootstrap-fix-preparation-sha`
 - workflow source/semantic SHA-256: `245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd` / `e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c`
 - handoff: current repository + Git `main`; ZIP 기본 생성 없음
 - readiness: `v250.backend-admin-rollback-snapshot`
@@ -57,7 +57,7 @@ publish environment/main-only: present/configured
 environment secrets/variables: 0/0
 required reviewer/prevent self-review: missing/missing
 publish approval model: owner-only-source-controlled-two-step
-source-controlled lifecycle gate: attempt-recorded / publishReviewerGateReady=false
+source-controlled lifecycle gate: preparation-closed / publishReviewerGateReady=false
 dependency/frontend input lock: complete
 run_attempt=1: required
 single dispatch: required by Actions API
@@ -101,7 +101,8 @@ workflow run은 두 번 실행됐고 둘 다 실패했습니다. 두 번째 run�
 - artifact: 0개; build 실패로 SBOM/Trivy 파일이 없어 보존 단계도 후속 실패
 - registry mutation: 없음
 - rerun: 실행하지 않았고 정책상 금지
-- focused fix 후보: Dockerfile bootstrap target만 `--python-version 3.11`로 변경
+- focused fix 승인/적용: Dockerfile bootstrap target만 `--python-version 3.11`로 변경 완료
+- 새 시도 상태: `not-dispatched`; 새 preparation exact SHA 승인 대기
 
 ## v321 승인 이후 발견한 감사 문제
 
@@ -155,13 +156,13 @@ workflow run은 두 번 실행됐고 둘 다 실패했습니다. 두 번째 run�
 
 ## 현재 안전 경계
 
-현재 lifecycle은 R `attempt-recorded`이고 gate는 `false`입니다. 첫 실행은 `priorAttemptEvidence`, 두 번째 실행은 현재 `observedAttempt`에 보존됩니다. 두 run 모두 registry mutation 전에 실패했으며 rerun은 금지합니다. 다음 Dockerfile focused fix는 별도 승인 후 새 preparation commit으로 만들고, 그 새 정확한 SHA를 다시 승인받아야 합니다.
+현재 lifecycle은 P `preparation-closed`이고 gate는 `false`입니다. 첫·두 번째 실행은 `attemptHistory`에 보존됩니다. 두 run 모두 registry mutation 전에 실패했고 rerun은 금지합니다. Dockerfile focused fix는 완료됐지만 새 preparation commit의 정확한 SHA를 별도로 승인받기 전에는 authorization/workflow를 실행하지 않습니다.
 
 DB/Alembic mutation, 인증·write API, Vue Preview/Apply/write, 게임 콘텐츠·밸런스, production container/network/volume, Compose up/down, production reference 갱신과 자동 deploy는 이번 범위 밖입니다.
 
 정상 strict 결과:
 
 ```txt
-result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-next safe stage: review-recorded-workflow-attempt-evidence
+result: github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated
+next safe stage: review-and-approve-exact-dockerfile-bootstrap-fix-preparation-sha
 ```

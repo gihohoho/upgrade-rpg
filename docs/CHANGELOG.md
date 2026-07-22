@@ -1,3 +1,10 @@
+# v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated
+
+- 기호의 승인에 따라 `backend/Dockerfile.production` bootstrap pip download의 `--python-version 3`을 `3.11`로 focused fix.
+- workflow run `29716038891`, `29877813770`의 실패 증거를 lifecycle `attemptHistory`에 모두 보존.
+- lifecycle을 새 `preparation-closed`로 초기화하고 gate를 `false`, 현재 run을 `not-dispatched`로 유지.
+- 새 preparation commit의 exact 40-character SHA 승인 전에는 authorization/workflow 실행 금지.
+
 # v325.second-owner-only-attempt-recorded-failed-pre-registry-image-build
 
 - 기호가 승인한 preparation `2f77ebf0f60a39c936509df26f903995f0c62967`의 direct-child authorization `7e69555b8b653c406b322fb5c8f23e550751d72c`을 만들고 workflow를 정확히 한 번 dispatch.

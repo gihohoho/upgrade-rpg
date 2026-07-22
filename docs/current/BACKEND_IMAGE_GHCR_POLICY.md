@@ -1,4 +1,4 @@
-# Backend image GHCR policy — v325
+# Backend image GHCR policy — v326
 
 ## 확정값
 
@@ -27,7 +27,7 @@ production reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:<approved-64-h
 ## 현재 실행 상태
 
 ```txt
-version: v325.second-owner-only-attempt-recorded-failed-pre-registry-image-build
+version: v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated
 workflow file/creation approved: yes/yes
 workflow execution approved/executed: yes/yes
 CI registry login/build/push approved: yes/yes/yes
