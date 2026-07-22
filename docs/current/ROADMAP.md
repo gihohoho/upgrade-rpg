@@ -1,4 +1,4 @@
-# Roadmap — v328
+# Roadmap — v329
 
 ## 완료
 
@@ -13,18 +13,18 @@
 ## 현재
 
 ```txt
-latest: v328.alpine-musllinux-runtime-minimization-preparation
-result: github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated
-lifecycle: preparation-closed / gate=false
-next safe stage: review-and-approve-exact-runtime-minimization-preparation-sha
+latest: v329.fourth-owner-only-attempt-recorded-provenance-inspection-failed
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+lifecycle: attempt-recorded / gate=false
+next safe stage: review-recorded-provenance-inspection-evidence
 ```
 
 ## 다음 순서
 
-1. v328 preparation 검증·commit·push
-2. 기호의 정확한 40자 preparation SHA 승인
-3. GitHub live 설정 재확인 후 새 authorization
+1. 4차 run provenance 실패 증거 검토
+2. `SLSA.buildDefinition.buildType` focused fix 별도 승인
+3. 새 preparation 검증·commit·push 및 exact SHA 승인
 4. 새 A → C → R single dispatch
-5. 모든 gate를 통과한 exact digest만 isolated 검증 후보로 사용
+5. exact-digest Trivy와 Cosign까지 통과한 digest만 isolated 검증 후보로 사용
 
 정책을 자동 완화하지 않고 기존 세 run도 rerun하지 않습니다. production reference나 deployment는 별도 승인 단계입니다.

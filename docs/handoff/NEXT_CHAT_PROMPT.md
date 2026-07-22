@@ -1,4 +1,4 @@
-# Upgrade RPG 다음 Codex 작업 프롬프트 — v328
+# Upgrade RPG 다음 Codex 작업 프롬프트 — v329
 
 기호의 Upgrade RPG 프로젝트를 현재 Git `main` 최신 상태에서 이어서 진행합니다. 먼저 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 읽고 저장소 규칙을 지켜주세요.
 
@@ -7,9 +7,9 @@
 검증은 위험도에 맞춰 최소 범위부터 실행하세요. 기본은 변경 영역의 전용 checker/smoke 1회이고 실패할 때만 범위를 넓힙니다. 문서·handoff·상태값·검사 결과 문자열만 바꾼 경우에는 관련 strict checker와 handoff smoke만 실행하며 전체 `bash tools/run_smoke_core.sh`는 실행하지 않습니다. 전체 smoke는 backend 핵심 로직, DB/Alembic, API 계약, 공통 구조, 여러 영역 변경 또는 실제 배포 후보 직전에만 1회 실행하고 단순 문구 수정 뒤 반복하지 않습니다.
 
 ```txt
-latest: v328.alpine-musllinux-runtime-minimization-preparation
-strict result: github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated
-next safe stage: review-and-approve-exact-runtime-minimization-preparation-sha
+latest: v329.fourth-owner-only-attempt-recorded-provenance-inspection-failed
+strict result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-recorded-provenance-inspection-evidence
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR namespace: gihohoho
 backend repository: ghcr.io/gihohoho/upgrade-rpg-backend
@@ -17,7 +17,7 @@ visibility: private
 target platform: linux/amd64
 CI credential strategy: github-actions-github-token
 publish approval model: owner-only-source-controlled-two-step
-source-controlled lifecycle gate: preparation-closed / publishReviewerGateReady=false
+source-controlled lifecycle gate: attempt-recorded / publishReviewerGateReady=false
 run_attempt=1: required
 single dispatch: required
 immediate closure: required
@@ -36,7 +36,17 @@ immediate closure: required
 - artifact `8515504259`, SHA-256 `6a5dfd4cd96754fd365323c7c6a7d1edf18542b5e5729e44220d7bf21ace4c50`, `sbom.spdx.json`과 `trivy-results.json`, 14일 보존
 - publish job skipped: GHCR login/push/provenance/Cosign 미실행, image digest 없음, signature 미검증
 
-첫 작업은 읽기 전용 v328 검사입니다.
+4차 실행 증거:
+
+- preparation: `13b15409929d77b4e6209481596e4f4550a22ba5` (기호 승인·소비 완료)
+- authorization: `4fb31f51ca0de15d77a73390b5a07e394ffce12a`
+- closure: `ddf475c1a2449feb50ef2af1a536e4150cf0ad59`
+- evidence: `f945214f2387b6aa191655d3740e18ef862bd6fb`
+- run: `29886540317` / `https://github.com/gihohoho/upgrade-rpg/actions/runs/29886540317` / failure
+- artifact: `8516735247` / `8516749365`, 14일 보존
+- image digest: `sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149`, signature 미검증
+
+첫 작업은 읽기 전용 v329 검사입니다.
 
 실행 위치: `backend` 폴더
 Python `.venv` 상태: 꺼짐
@@ -58,10 +68,10 @@ python tools/check_codex_handoff_readiness.py --strict
 정상 기대 결과:
 
 ```txt
-result: github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated
-next safe stage: review-and-approve-exact-runtime-minimization-preparation-sha
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-recorded-provenance-inspection-evidence
 ```
 
-v328 focused fix는 Python 3.11.15 Alpine 3.23 exact linux/amd64 digest, manylinux/musllinux 분리 hash lock, multi-stage build, 비루트 UID/GID 65532, runtime pip/setuptools/wheel/ensurepip 제거, 사용되지 않는 `python-jose[cryptography]` 제거를 포함합니다. 로컬 후보는 약 40.2MB이고 Trivy 0.70 동일 HIGH/CRITICAL `--ignore-unfixed=false` gate에서 0건이었습니다. Distroless Debian 12 후보는 동일 검사 41건으로 폐기했습니다. 준비 commit의 정확한 40자 SHA를 기호가 승인하기 전에는 authorization이나 새 workflow를 실행하지 마세요. 기존 세 run은 rerun 금지입니다.
+4차 run `29886540317`은 validation/local build/SBOM/local Trivy/GHCR login·push까지 성공해 digest `sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149`를 만들었습니다. registry provenance와 SBOM도 존재하지만 workflow가 SLSA v1의 `SLSA.buildDefinition.buildType` 대신 구형 `SLSA.buildType`을 검사해 실패했습니다. exact-digest Trivy와 Cosign은 미실행이므로 digest는 unsigned·미검증이며 배포하지 않습니다. 기존 네 run은 rerun 금지입니다. 다음에는 이 증거를 검토하고 provenance 경로 focused fix를 기호가 별도 승인한 뒤 새 preparation을 만드세요.
 
 사용자 별도 요청 전에는 DB/Alembic/auth/API write/Vue Preview·Apply·write/게임 콘텐츠와 밸런스/production Compose·container·network·volume/자동 deploy를 변경하거나 실행하지 마세요. actual secret/token/PAT/credential/CA/cert/key는 Git·채팅·로그·artifact에 넣지 않습니다.

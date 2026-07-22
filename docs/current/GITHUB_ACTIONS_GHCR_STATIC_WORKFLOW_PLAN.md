@@ -1,11 +1,11 @@
-# GitHub Actions / GHCR workflow plan — v328
+# GitHub Actions / GHCR workflow plan — v329
 
 ```txt
 version: v328.alpine-musllinux-runtime-minimization-preparation
 static workflow plan version: v328.alpine-musllinux-runtime-minimization-preparation
 preparation version: v328.alpine-musllinux-runtime-minimization-preparation
 base plan version: v322.owner-only-single-run-lifecycle-hardened-publish-gated
-result: github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
 repository: gihohoho/upgrade-rpg
 image: ghcr.io/gihohoho/upgrade-rpg-backend
 workflow: .github/workflows/publish-backend-ghcr.yml
@@ -14,9 +14,9 @@ workflow source SHA-256: 245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6f
 workflow semantic SHA-256: e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c
 workflow file creation: complete
 workflow 파일 생성: 완료
-workflow execution: runs 29716038891, 29877813770, 29883012957 completed/failure
-registry login/build/push: no/attempted-failed/no
-next safe stage: review-and-approve-exact-runtime-minimization-preparation-sha
+workflow execution: runs 29716038891, 29877813770, 29883012957, 29886540317 completed/failure
+registry login/build/push: yes/yes/yes
+next safe stage: review-recorded-provenance-inspection-evidence
 ```
 
 정적 문서 잠금 표식: `workflow_dispatch`, `pull_request_target` 금지, `contents: read`, `actions: read`, `packages: write`, `id-token: write`, Docker BuildKit, `HIGH,CRITICAL`, Sigstore Cosign keyless, `approved_preparation_commit`, `DOCKER_BUILD_RECORD_UPLOAD`, required reviewer 제약.
@@ -215,9 +215,9 @@ production reference 자동 갱신과 deploy는 하지 않습니다.
 
 ## 현재와 다음 단계
 
-현재 lifecycle은 `preparation-closed`이고 gate는 `false`입니다. 세 실패를 history에 보존하고 모두 rerun 금지합니다. v328 focused fix의 로컬 linux/amd64 후보는 동일 Trivy 0.70 HIGH/CRITICAL `--ignore-unfixed=false` gate에서 0건입니다. exact preparation SHA 승인 전에는 authorization/workflow를 실행하지 않습니다.
+현재 lifecycle은 `attempt-recorded`이고 gate는 `false`입니다. 네 실패를 보존하고 모두 rerun 금지합니다. 4차 run은 GHCR push 뒤 SLSA v1 provenance의 `buildType` 경로 검사에서 실패했으며 exact-digest Trivy와 Cosign은 미실행입니다. pushed digest는 검증 완료 후보가 아닙니다.
 
 ```txt
-result: github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated
-next safe stage: review-and-approve-exact-runtime-minimization-preparation-sha
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-recorded-provenance-inspection-evidence
 ```

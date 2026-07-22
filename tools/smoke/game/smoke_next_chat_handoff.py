@@ -6,18 +6,19 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v328.alpine-musllinux-runtime-minimization-preparation"
-STATIC_PLAN_VERSION = VERSION
-READY_RESULT = "github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated"
-NEXT_SAFE_STAGE = "review-and-approve-exact-runtime-minimization-preparation-sha"
+VERSION = "v329.fourth-owner-only-attempt-recorded-provenance-inspection-failed"
+STATIC_PLAN_VERSION = "v328.alpine-musllinux-runtime-minimization-preparation"
+READY_RESULT = "github-actions-ghcr-owner-only-attempt-recorded-publish-gated"
+NEXT_SAFE_STAGE = "review-recorded-provenance-inspection-evidence"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
-PREPARATION = "b35dfacf427162b348a6bd29eb030778edc7741c"
-AUTHORIZATION = "04e002060e576f19f4d8687b33635a414486206d"
-CLOSURE = "64e5ae0f5e5385ba00df16bb10ac33789ca3760a"
-RECORD = "303a2ed01c69c29894efdcde4ead6c2291c3d8bc"
-RUN_ID = 29883012957
-ARTIFACT_ID = 8515504259
+PREPARATION = "13b15409929d77b4e6209481596e4f4550a22ba5"
+AUTHORIZATION = "4fb31f51ca0de15d77a73390b5a07e394ffce12a"
+CLOSURE = "ddf475c1a2449feb50ef2af1a536e4150cf0ad59"
+RECORD = "f945214f2387b6aa191655d3740e18ef862bd6fb"
+RUN_ID = 29886540317
+ARTIFACT_IDS = [8516735247, 8516749365]
+IMAGE_DIGEST = "sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149"
 REVISION_SHA256 = "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa"
 
 
@@ -60,7 +61,7 @@ def main() -> int:
         "review-recorded-workflow-attempt-evidence",
         PREPARATION,
         str(RUN_ID),
-        str(ARTIFACT_ID),
+        *(str(value) for value in ARTIFACT_IDS),
     )
     contains(
         "NEXT_CHAT_HANDOFF.md",
@@ -74,18 +75,18 @@ def main() -> int:
         CLOSURE,
         RECORD,
         str(RUN_ID),
-        str(ARTIFACT_ID),
+        *(str(value) for value in ARTIFACT_IDS),
     )
 
     policy = json.loads(read("deploy/backend-image-ghcr-policy.example.json"))
     assert policy["schemaVersion"] == VERSION
-    assert policy["preparedOnly"] is True
-    assert policy["ownerOnlyApprovalPhase"] == "preparation-awaiting-exact-sha-approval"
-    assert policy["publishLifecycleState"] == "preparation-closed"
-    assert policy["approvedPreparationSha"] is None
-    assert policy["exactPreparationShaApproved"] is False
+    assert policy["preparedOnly"] is False
+    assert policy["ownerOnlyApprovalPhase"] == "attempt-recorded-review"
+    assert policy["publishLifecycleState"] == "attempt-recorded"
+    assert policy["approvedPreparationSha"] == PREPARATION
+    assert policy["exactPreparationShaApproved"] is True
     assert policy["sourceControlledPublishGateReady"] is False
-    assert policy["actualRegistryMutationExecuted"] is False
+    assert policy["actualRegistryMutationExecuted"] is True
     assert policy["currentAttemptEvidence"] == {
         "authorizationSha": AUTHORIZATION,
         "closureSha": CLOSURE,
@@ -93,27 +94,27 @@ def main() -> int:
         "runId": RUN_ID,
         "runUrl": f"https://github.com/gihohoho/upgrade-rpg/actions/runs/{RUN_ID}",
         "conclusion": "failure",
-        "registryLoginExecuted": False,
+        "registryLoginExecuted": True,
         "imageBuildExecuted": True,
-        "imagePushExecuted": False,
-        "artifactCount": 1,
-        "artifactId": ARTIFACT_ID,
-        "imageDigest": None,
+        "imagePushExecuted": True,
+        "artifactCount": 2,
+        "artifactIds": ARTIFACT_IDS,
+        "imageDigest": IMAGE_DIGEST,
         "signatureVerified": False,
     }
 
     lifecycle = json.loads(read("deploy/github-actions-ghcr-publish-lifecycle.json"))
     assert lifecycle["schemaVersion"] == "v326.owner-only-publish-lifecycle-with-attempt-history"
-    assert lifecycle["state"] == "preparation-closed"
+    assert lifecycle["state"] == "attempt-recorded"
     assert lifecycle["publishReviewerGateReady"] is False
-    assert lifecycle["approvedPreparationSha"] is None
-    assert lifecycle["ownerApproval"]["recorded"] is False
-    assert lifecycle["closure"]["authorizationSourceSha"] is None
-    assert lifecycle["closure"]["closureCommitSha"] is None
-    assert lifecycle["observedAttempt"]["runId"] is None
-    assert lifecycle["observedAttempt"]["status"] == "not-dispatched"
-    assert lifecycle["observedAttempt"]["conclusion"] is None
-    assert lifecycle["observedAttempt"]["imageDigest"] is None
+    assert lifecycle["approvedPreparationSha"] == PREPARATION
+    assert lifecycle["ownerApproval"]["recorded"] is True
+    assert lifecycle["closure"]["authorizationSourceSha"] == AUTHORIZATION
+    assert lifecycle["closure"]["closureCommitSha"] == CLOSURE
+    assert lifecycle["observedAttempt"]["runId"] == RUN_ID
+    assert lifecycle["observedAttempt"]["status"] == "completed"
+    assert lifecycle["observedAttempt"]["conclusion"] == "failure"
+    assert lifecycle["observedAttempt"]["imageDigest"] == IMAGE_DIGEST
     assert lifecycle["observedAttempt"]["signatureVerified"] is False
 
     static_plan = json.loads(read("deploy/github-actions-ghcr-static-plan.example.json"))
@@ -142,7 +143,7 @@ def main() -> int:
     if hashlib.sha256(revision.read_bytes()).hexdigest() != REVISION_SHA256:
         raise AssertionError("reviewed Alembic revision SHA-256 differs")
 
-    print("OK: v328 Codex handoff and Alpine runtime preparation documents are synchronized")
+    print("OK: v329 Codex handoff and recorded provenance failure documents are synchronized")
     return 0
 
 

@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v328
+# Upgrade RPG Codex working rules — v329
 
 이 파일은 저장소 전체에 적용됩니다. Codex는 작업을 시작할 때 이 파일과 `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -32,9 +32,9 @@
 
 ## 현재 고정 상태
 
-- latest: `v328.alpine-musllinux-runtime-minimization-preparation`
-- strict result: `github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated`
-- next safe stage: `review-and-approve-exact-runtime-minimization-preparation-sha`
+- latest: `v329.fourth-owner-only-attempt-recorded-provenance-inspection-failed`
+- strict result: `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`
+- next safe stage: `review-recorded-provenance-inspection-evidence`
 - GitHub remote: `https://github.com/gihohoho/upgrade-rpg.git`
 - GHCR namespace: `gihohoho`
 - backend image repository: `ghcr.io/gihohoho/upgrade-rpg-backend` (private)
@@ -47,18 +47,18 @@
 - workflow file/creation approved: yes/yes
 - workflow execution approved/executed: yes/yes
 - CI workflow/login/build/push approved: yes/yes/yes/yes
-- CI login/build/push executed: no/yes/no (build attempted and failed)
+- CI login/build/push executed: yes/yes/yes
 - repository Actions allowlist/full SHA enforcement: configured/configured
 - `ghcr-production-publish` environment/main-only: present/configured
 - required reviewer/prevent self-review: missing/missing
 - publish approval model: `owner-only-source-controlled-two-step` (기호가 2026-07-20 선택)
-- source-controlled lifecycle gate: `preparation-closed` / `publishReviewerGateReady=false`
+- source-controlled lifecycle gate: `attempt-recorded` / `publishReviewerGateReady=false`
 - dependency/frontend input lock: complete (exact version + SHA-256, binary wheel only)
 - byte-for-byte deterministic image: 보장한다고 주장하지 않음
 - prior preparation SHA: `350bbd085f1cf636810d75ddcbb5321e0791256c` approved and consumed
 - bootstrap-fix preparation SHA: `2f77ebf0f60a39c936509df26f903995f0c62967` approved and consumed
 - Dockerfile-fix preparation SHA: `b35dfacf427162b348a6bd29eb030778edc7741c` approved and consumed
-- workflow run/login/build/push: three failed runs / no / yes / no
+- workflow run/login/build/push: four failed runs / yes / yes / yes
 - reviewed workflow source/semantic SHA-256: `245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd` / `e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c`
 
 ## v321 승인과 v322 감사 결과
@@ -125,7 +125,7 @@ live 증거는 authorization 실행 시점 기준 4시간 이내여야 하므로
 
 ## 현재 안전 경계
 
-현재 lifecycle은 v328 `preparation-closed`이고 gate는 닫혀 있습니다. 세 실행 모두 rerun 금지입니다. v328은 Python 3.11.15 Alpine 3.23 exact linux/amd64 digest, manylinux/musllinux 분리 hash lock, multi-stage build, 비루트 UID/GID 65532, runtime pip/setuptools/wheel 제거, 사용되지 않는 `python-jose[cryptography]` 제거를 포함합니다. 로컬 linux/amd64 후보는 Trivy 0.70의 동일 HIGH/CRITICAL `--ignore-unfixed=false` gate에서 0건이었습니다. 새 exact preparation SHA 승인 전에는 authorization이나 workflow를 실행하지 않습니다.
+현재 lifecycle은 v329 `attempt-recorded`이고 gate는 닫혀 있습니다. 네 실행 모두 rerun 금지입니다. 4차 run은 validation, local build, SBOM, local Trivy를 통과하고 GHCR에 digest를 push했지만 SLSA v1 provenance의 `buildType` 경로 검사에서 실패했습니다. exact-digest Trivy와 Cosign은 미실행이므로 pushed digest는 unsigned·미검증 상태이며 production reference나 deploy에 사용하지 않습니다. 다음 focused fix는 workflow가 `SLSA.buildDefinition.buildType`을 검사하도록 바꾸는 범위이며 사용자 승인 전에는 변경하거나 새 workflow를 실행하지 않습니다.
 
 다음 항목은 이번 GitHub 권한 확대와 별개이므로 기호의 구체적인 작업 요청 전에는 변경·실행하지 않습니다.
 
@@ -146,7 +146,7 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-현재 정상 결과는 `github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated`, 다음 안전 단계는 `review-and-approve-exact-runtime-minimization-preparation-sha`입니다. 준비 commit의 정확한 40자 SHA를 기호가 승인하기 전에는 새 workflow를 실행하지 않습니다.
+현재 정상 결과는 `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`, 다음 안전 단계는 `review-recorded-provenance-inspection-evidence`입니다. provenance 경로 focused fix와 새 preparation은 기호의 별도 승인 뒤 진행합니다.
 
 ## 변경과 검증
 

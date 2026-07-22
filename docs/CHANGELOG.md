@@ -1,3 +1,11 @@
+# v329.fourth-owner-only-attempt-recorded-provenance-inspection-failed
+
+- exact preparation `13b15409929d77b4e6209481596e4f4550a22ba5` 승인과 single-dispatch run `29886540317` 기록.
+- validation/local build/SBOM/local Trivy와 GHCR login/build/push 성공.
+- pushed digest `sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149` 기록.
+- SLSA v1 `buildType`이 `SLSA.buildDefinition.buildType`에 있으나 workflow가 구형 경로를 검사해 failure.
+- exact-digest Trivy/Cosign 미실행, signature 미검증, artifacts `8516735247`/`8516749365` 보존.
+
 # v328.alpine-musllinux-runtime-minimization-preparation
 
 - Python 3.11.15 Alpine 3.23 `linux/amd64` manifest digest로 production base를 갱신하고 multi-stage/UID 65532 runtime으로 최소화.

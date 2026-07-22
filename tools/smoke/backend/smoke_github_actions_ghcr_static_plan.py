@@ -130,9 +130,9 @@ def create_closed_authorization_sequence(module, temp: Path) -> tuple[str, str, 
         }),
         p["ownerApproval"].update({
             "recorded": True,
-            "recordedAtUtc": "2026-07-22T02:00:00Z",
+            "recordedAtUtc": "2026-07-22T02:38:00Z",
         }),
-        p["githubLiveSettings"].update({"recheckedAtUtc": "2026-07-22T02:00:00Z"}),
+        p["githubLiveSettings"].update({"recheckedAtUtc": "2026-07-22T02:38:00Z"}),
     ))
     authorization = commit_all(temp, "authorization open")
     opened = module.inspect_static_workflow_plan(temp)
@@ -144,7 +144,7 @@ def create_closed_authorization_sequence(module, temp: Path) -> tuple[str, str, 
         p["closure"].update({
             "authorizationSourceSha": authorization,
             "closureCommitSha": None,
-            "preparedAtUtc": "2026-07-22T02:05:00Z",
+            "preparedAtUtc": "2026-07-22T02:40:00Z",
         }),
         p["observedAttempt"].update({
             "runId": 123456,
@@ -241,7 +241,7 @@ def expect_secret_expression_blocked(module, temp: Path, label: str, run_step_ke
 def main() -> int:
     module = load_tool()
     result = module.inspect_static_workflow_plan(ROOT)
-    assert result["result"] == module.READY_RESULT
+    assert result["result"] == module.ATTEMPT_RECORDED_RESULT
     assert result["trigger"] == "workflow_dispatch-only"
     assert result["workflowFilePresent"] is True
     assert result["workflowSourceSha256"] == module.EXPECTED_WORKFLOW_SHA256
@@ -253,9 +253,9 @@ def main() -> int:
     assert result["actionsSettingsConfigured"] is True
     assert result["publishEnvironmentExists"] is True
     assert result["publishEnvironmentConfigured"] is False
-    assert result["publishLifecycleState"] == "preparation-closed"
+    assert result["publishLifecycleState"] == "attempt-recorded"
     assert result["publishGateReady"] is False
-    assert result["approvedPreparationSha"] is None
+    assert result["approvedPreparationSha"] == "13b15409929d77b4e6209481596e4f4550a22ba5"
     assert result["dockerBuildContextEnvExcluded"] is True
     assert result["reproducibleBuildReady"] is True
     assert result["supplyChainGate"] == "fail-closed"
@@ -543,7 +543,7 @@ def main() -> int:
             )
             expect_secret_expression_blocked(module, temp, expression, emit_step_key)
 
-    print("OK: v328 GitHub Actions/GHCR Alpine runtime preparation smoke passed")
+    print("OK: v329 GitHub Actions/GHCR recorded provenance failure smoke passed")
     return 0
 
 

@@ -1,18 +1,18 @@
-# Current Status — v328
+# Current Status — v329
 
 ## 현재 결과
 
 ```txt
-latest: v328.alpine-musllinux-runtime-minimization-preparation
-strict result: github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated
-next safe stage: review-and-approve-exact-runtime-minimization-preparation-sha
+latest: v329.fourth-owner-only-attempt-recorded-provenance-inspection-failed
+strict result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-recorded-provenance-inspection-evidence
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR repository: ghcr.io/gihohoho/upgrade-rpg-backend
-lifecycle: preparation-closed
+lifecycle: attempt-recorded
 publishReviewerGateReady: false
 ```
 
-CI credential은 GitHub Actions `GITHUB_TOKEN`이고 local PAT는 deferred입니다. workflow는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `owner-only-source-controlled-two-step` source-controlled lifecycle gate를 사용하며 `run_attempt=1`, single dispatch, immediate closure, rerun 금지를 강제합니다. 일반 R 상태 계약의 다음 단계 `review-recorded-workflow-attempt-evidence`는 유지하고, 현재 구체적 단계는 `review-and-approve-exact-runtime-minimization-preparation-sha`입니다.
+CI credential은 GitHub Actions `GITHUB_TOKEN`이고 local PAT는 deferred입니다. workflow는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `owner-only-source-controlled-two-step` source-controlled lifecycle gate를 사용하며 `run_attempt=1`, single dispatch, immediate closure, rerun 금지를 강제합니다. 일반 R 상태 계약의 다음 단계 `review-recorded-workflow-attempt-evidence`는 유지하고, 현재 구체적 단계는 `review-recorded-provenance-inspection-evidence`입니다.
 
 ## 세 번째 실행
 
@@ -28,9 +28,20 @@ CI credential은 GitHub Actions `GITHUB_TOKEN`이고 local PAT는 deferred입니
 
 Trivy 기준 fixed version이 있는 항목은 `jaraco.context 6.1.0`, `wheel 0.46.2` 두 건이며 25건은 현재 fixed version이 없습니다. `--ignore-unfixed=false`와 HIGH/CRITICAL gate는 의도대로 작동했으므로 자동 완화하지 않습니다.
 
+## 네 번째 실행
+
+- preparation/authorization/closure/evidence: `13b15409929d77b4e6209481596e4f4550a22ba5` / `4fb31f51ca0de15d77a73390b5a07e394ffce12a` / `ddf475c1a2449feb50ef2af1a536e4150cf0ad59` / `f945214f2387b6aa191655d3740e18ef862bd6fb`
+- run `29886540317`: completed/failure
+- validation, 전체 repository checks, local linux/amd64 build, SPDX SBOM, local Trivy HIGH/CRITICAL gate 모두 성공
+- GHCR login/build/push 성공, digest `sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149`
+- registry provenance와 SBOM은 존재하지만 workflow가 SLSA v1의 `SLSA.buildDefinition.buildType` 대신 구형 `SLSA.buildType`을 검사해 실패
+- exact-digest Trivy와 Cosign sign/verify는 미실행, signature 미검증
+- artifact `8516735247` / `8516749365`, SHA-256 `ff23e73c5c7aa8cd2abc8de88f043b1601debaf43652e3d76ff353f5e243d86b` / `f3d5b685c98bed863e07c35f8dd82aec7523c8c538de69c2c96da20ffda2e3e9`, 14일 보존
+- pushed digest는 unsigned·미검증 상태이므로 production reference나 deploy에 사용하지 않음
+
 ## GitHub 설정
 
-2026-07-22T01:21:58Z 기준 allowlist/full SHA, 기본 token read-only, fork write token/secret false, `ghcr-production-publish` main-only와 secrets/variables 0/0을 재확인했습니다. native required reviewer/prevent self-review는 비공개 개인 저장소 제약으로 없습니다.
+2026-07-22T02:37:10Z 기준 allowlist/full SHA, 기본 token read-only, fork write token/secret false, `ghcr-production-publish` main-only와 secrets/variables 0/0을 authorization 직전에 재확인했습니다. native required reviewer/prevent self-review는 비공개 개인 저장소 제약으로 없습니다.
 
 ## 운영·개발 경계
 
@@ -50,8 +61,8 @@ Trivy 기준 fixed version이 있는 항목은 `jaraco.context 6.1.0`, `wheel 0.
 - 로컬 linux/amd64 후보는 약 40.2MB이며 Python 3.11.15와 앱 핵심 import를 확인했습니다.
 - Trivy 0.70 동일 정책 `HIGH,CRITICAL`, `--ignore-unfixed=false` 결과는 OS 0건, Python 0건입니다.
 - Distroless Debian 12 후보는 실제 동일 검사에서 41건으로 실패해 채택하지 않았습니다.
-- lifecycle은 `preparation-closed`, 승인 SHA는 `null`, 새 workflow는 미실행입니다.
+- 위 내용은 v328 preparation commit 시점의 준비 결과입니다. 그 시점에 lifecycle은 `preparation-closed`, 승인 SHA는 `null`, 새 workflow는 미실행이었습니다. 현재 상태는 위의 네 번째 실행 기록과 같이 `attempt-recorded`입니다.
 
-다음 단계는 준비 commit의 정확한 40자 SHA 승인입니다. 현재 필요한 extension·설치·추가 권한은 없고 서버 재시작도 불필요합니다.
+다음 단계는 기록된 provenance 검사 실패를 검토하고 `SLSA.buildDefinition.buildType` focused fix를 별도 승인하는 것입니다. 현재 필요한 extension·설치·추가 권한은 없고 서버 재시작도 불필요합니다. 로컬 token은 `read:packages`가 없어 GHCR package API 조회는 할 수 없지만 이번 증거 기록에는 필요하지 않습니다.
 
 검증은 기호의 요청에 따라 위험도 기반 최소 범위로 실행합니다. 문서·handoff·상태값 변경에는 관련 strict checker와 handoff smoke만 사용하고 전체 core smoke는 실행하지 않습니다. 전체 smoke는 핵심 로직·DB/Alembic·API 계약·공통 구조·여러 영역 변경 또는 실제 배포 후보 직전에만 1회 실행합니다.

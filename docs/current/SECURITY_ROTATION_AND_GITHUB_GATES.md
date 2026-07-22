@@ -1,4 +1,4 @@
-# Security rotation and GitHub gates — v328
+# Security rotation and GitHub gates — v329
 
 ## Secret 원칙
 
@@ -35,4 +35,12 @@
 - gate 완화나 예외 추가는 하지 않았고 새 workflow도 실행하지 않았습니다.
 - 새 preparation SHA 승인 뒤 authorization 직전에 GitHub live 설정을 4시간 이내 기준으로 다시 확인합니다.
 
-현재 필요한 extension, 설치, 추가 GitHub 권한은 없습니다. 로컬 `gh` CLI token은 만료 상태이지만 signed-in GitHub 연결로 필요한 확인을 완료했으므로 지금 재인증은 필요하지 않습니다.
+## 4차 run 보안 결과
+
+- 2026-07-22T02:37:10Z allowlist/full SHA/default read-only/fork token·secret false/environment main-only를 재확인했습니다.
+- GHCR login과 push가 실행되어 digest `sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149`가 존재합니다.
+- provenance/SBOM은 존재하지만 SLSA v1 경로 검사 실패로 exact-digest Trivy와 Cosign이 실행되지 않았습니다.
+- unsigned·미검증 digest는 production reference에 넣거나 deploy하지 않습니다.
+- workflow의 `SLSA.buildType` 검사만 `SLSA.buildDefinition.buildType`으로 바꾸는 focused fix가 후보입니다.
+
+현재 필요한 extension·설치는 없습니다. `gh` keyring의 기존 계정 token은 만료 상태지만 Windows Git 자격 증명을 명령별 `GH_TOKEN`으로만 사용해 `repo`/`workflow` 작업을 완료했고 token 값을 저장·출력하지 않았습니다. 이 token에는 `read:org`와 `read:packages`가 없지만 현재 evidence 기록에는 필요하지 않습니다. 나중에 로컬에서 GHCR package metadata를 직접 조회해야 할 때만 `read:packages` 권한을 요청합니다.

@@ -1,4 +1,4 @@
-# Upgrade RPG Codex handoff — v328
+# Upgrade RPG Codex handoff — v329
 
 ## 작업 원칙
 
@@ -13,9 +13,9 @@
 ## 현재 고정값
 
 ```txt
-latest: v328.alpine-musllinux-runtime-minimization-preparation
-strict result: github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated
-next safe stage: review-and-approve-exact-runtime-minimization-preparation-sha
+latest: v329.fourth-owner-only-attempt-recorded-provenance-inspection-failed
+strict result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-recorded-provenance-inspection-evidence
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR namespace: gihohoho
 repository: ghcr.io/gihohoho/upgrade-rpg-backend
@@ -23,8 +23,8 @@ visibility/platform: private / linux/amd64
 CI credential: GitHub Actions GITHUB_TOKEN
 local credential/PAT: deferred
 publish approval model: owner-only-source-controlled-two-step
-source-controlled lifecycle gate: preparation-closed / publishReviewerGateReady=false
-workflow/login/build/push executed: yes/no/yes/no
+source-controlled lifecycle gate: attempt-recorded / publishReviewerGateReady=false
+workflow/login/build/push executed: yes/yes/yes/yes
 ```
 
 운영 구조는 managed PostgreSQL + provider CA `verify-full` + external reverse proxy HTTPS + backend 1 replica/1 worker입니다. Vue는 GET read-only까지만 연결하며 Preview/Apply/write/auth는 보류합니다. Alembic current revision은 `v295_initial_schema`, 새 revision 필요 상태는 `no`입니다.
@@ -72,6 +72,22 @@ signature verified: false
 
 fixable Python 항목은 `jaraco.context 5.3.0 → 6.1.0`과 `wheel 0.45.1 → 0.46.2`입니다. `ecdsa 0.19.2`의 HIGH와 Debian 24건은 현재 report에 fixed version이 없습니다. 정책의 `--ignore-unfixed=false`가 의도대로 게시를 차단했습니다.
 
+## 네 번째 owner-only 시도
+
+```txt
+approved preparation: 13b15409929d77b4e6209481596e4f4550a22ba5
+authorization: 4fb31f51ca0de15d77a73390b5a07e394ffce12a
+immediate closure: ddf475c1a2449feb50ef2af1a536e4150cf0ad59
+evidence record: f945214f2387b6aa191655d3740e18ef862bd6fb
+run ID: 29886540317
+run URL: https://github.com/gihohoho/upgrade-rpg/actions/runs/29886540317
+status/conclusion: completed / failure
+image digest: sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149
+signature verified: false
+```
+
+validation, local build, SPDX SBOM, local Trivy, GHCR login/build/push는 성공했습니다. registry provenance/SBOM도 생성됐지만 SLSA v1 `buildType` 경로를 구형 위치로 검사해 실패했습니다. artifact는 `8516735247`과 `8516749365`이며 exact-digest Trivy/Cosign은 미실행입니다.
+
 ## 이전 시도 보존
 
 - run `29716038891`: workflow bootstrap dependency 단계 실패, build/login/push 미실행, evidence `1f12ea59eb54385337557e9754f86731ec53d253`
@@ -113,12 +129,14 @@ python tools/check_codex_handoff_readiness.py --strict
 기대값:
 
 ```txt
-result: github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated
-next safe stage: review-and-approve-exact-runtime-minimization-preparation-sha
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: review-recorded-provenance-inspection-evidence
 ```
 
-v328 focused fix는 Alpine 3.23 exact digest, musllinux 운영 lock, multi-stage/비루트 runtime, runtime 빌드 도구와 미사용 JWT 의존성 제거를 포함합니다. 로컬 linux/amd64 이미지 build/import와 Trivy 0.70 동일 gate가 통과했으며 HIGH/CRITICAL은 0건입니다. 준비 commit의 정확한 40자 SHA 승인 전에는 authorization/workflow를 실행하지 않습니다.
+4차 run `29886540317`은 GHCR push까지 성공했고 digest는 `sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149`입니다. SLSA v1 provenance의 buildType은 `SLSA.buildDefinition.buildType`에 있었지만 workflow가 구형 경로를 검사해 실패했습니다. exact-digest Trivy/Cosign은 미실행이고 digest는 unsigned·미검증입니다. 다음 focused fix는 이 provenance 경로 검사만 고치는 범위이며 별도 승인 전 변경·실행하지 않습니다.
 
 ## 안전 경계
 
 별도 요청 전에는 DB write/restore/reset/seed, Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스, production Compose/container/network/volume, production reference 변경과 자동 deploy를 실행하지 않습니다. 현재 필요한 extension·설치·추가 권한은 없고 서버 재시작도 불필요합니다.
+
+로컬 PowerShell 전역 `DEBUG=release`는 Pydantic boolean 설정과 충돌합니다. 전체 smoke가 필요할 때 저장값을 바꾸지 말고 해당 명령 프로세스에만 `DEBUG=false`를 지정합니다. 로컬 `backend/.env`의 `DEBUG=true`는 정상입니다. 로컬 token에는 `read:packages`가 없어 GHCR package metadata API 조회는 불가하지만 현재 작업에는 필요하지 않습니다.
