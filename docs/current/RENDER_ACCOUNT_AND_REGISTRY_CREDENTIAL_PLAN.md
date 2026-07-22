@@ -38,7 +38,7 @@ GitHub Container Registry는 private image pull에 classic PAT의 `read:packages
 
 ## 다음 승인 범위
 
-기호의 명시적 승인 뒤에만 아래를 실행합니다.
+기호가 아래 범위를 명시적으로 승인했습니다. 현재는 GitHub `Confirm access` verification code 사용자 입력을 기다립니다.
 
 1. GitHub에서 위 이름·만료·scope의 dedicated classic PAT 생성
 2. token 값을 채팅·파일·로그에 출력하지 않고 Render `upgrade-rpg-ghcr-read` credential에 직접 전달

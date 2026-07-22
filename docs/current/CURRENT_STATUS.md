@@ -5,7 +5,7 @@
 ```txt
 latest: v337.render-account-inspected-private-ghcr-credential-approval-required
 strict result: render-hobby-no-card-existing-image-private-ghcr-credential-required
-next safe stage: owner-approve-dedicated-classic-pat-read-packages-and-render-source-connect
+next safe stage: owner-complete-github-confirm-access-then-resume-approved-render-credential-flow
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked
 baseline result: production-deploy-plan-reviewed-inputs-blocked
 baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
@@ -58,7 +58,15 @@ Neon resource와 read-only 연결 검증은 완료됐지만 Render resource와 �
 - registry credential: 없음
 - PAT/credential/service/payment/deploy mutation: 없음
 - sanitized evidence: `deploy/review/render-account-readiness-v337.json`
-- next: dedicated classic PAT `read:packages` only 생성·Render 저장·exact image Connect에 대한 사용자 승인
+- credential 범위 승인 완료, GitHub `Confirm access` verification code 사용자 입력 대기
+
+## GitHub Confirm access checkpoint — 2026-07-23
+
+- Render credential action approval: ready/approved/executed = yes/yes/no
+- GitHub classic PAT 생성 페이지 진입: 시도함
+- GitHub 인증 앱 verification code: 사용자 입력 대기
+- token/PAT/Render credential/Web Service/deploy: 생성·실행하지 않음
+- 다음: 사용자가 GitHub `Verify` 완료 후 Codex에 완료 알림
 
 ## 검증된 배포 후보
 
@@ -80,4 +88,4 @@ Neon resource와 read-only 연결 검증은 완료됐지만 Render resource와 �
 
 ## 다음 단계
 
-기호가 dedicated classic PAT `read:packages` only 생성·Render 저장·exact image Connect 범위를 승인하면 Codex가 민감값을 출력하지 않고 진행합니다. Web Service 생성/deploy와 DB 초기화는 포함하지 않습니다. 현재 필요한 로컬 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.
+기호가 GitHub `Confirm access` 탭에서 verification code를 입력하고 `Verify`를 완료하면 Codex가 승인된 credential 범위를 민감값 출력 없이 재개합니다. Web Service 생성/deploy와 DB 초기화는 포함하지 않습니다. 현재 필요한 로컬 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.

@@ -9,7 +9,7 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 ```txt
 latest: v337.render-account-inspected-private-ghcr-credential-approval-required
 strict result: render-hobby-no-card-existing-image-private-ghcr-credential-required
-next safe stage: owner-approve-dedicated-classic-pat-read-packages-and-render-source-connect
+next safe stage: owner-complete-github-confirm-access-then-resume-approved-render-credential-flow
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked
 baseline result: production-deploy-plan-reviewed-inputs-blocked
 baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
@@ -24,7 +24,8 @@ Neon credential: exposed initial password rotated; new URLs local-only, not depl
 Neon read-only connectivity: direct/pooled verified with TLS 1.3 hostname verification
 Render account/plan/payment: connected/Hobby (legacy)/no card
 Render registry credential/service/deploy: absent/not created/not executed
-approval ready/approved/executed: no/no/no
+Render credential action ready/approved/executed: yes/yes/no
+production deployment approval ready/approved/executed: no/no/no
 ```
 
 Render는 무료 Hobby workspace에 결제수단을 처음부터 넣지 않습니다. 한도 초과 시 과금 대신 일시 중지를 선택합니다. 첫 주소는 Render `onrender.com` managed HTTPS이고 custom domain/DNS는 보류합니다. 이 무료 구성은 SLA production이 아니라 cold start를 허용한 개인용 public preview입니다.
@@ -48,8 +49,10 @@ Neon Free PostgreSQL 16 AWS Singapore 프로젝트는 생성됐고 Neon Auth는 
 
 Render `Hobby (legacy)`/no-card account와 `Existing Image`/GitHub credential 양식은 읽기 전용으로 확인했습니다. credential/PAT/Web Service/deploy는 아직 없습니다.
 
-1. 사용자가 Render 전용 classic PAT 생성·저장과 exact image `Connect` 검증을 명시적으로 승인했는지 확인합니다.
-2. 승인됐다면 GitHub classic PAT를 `render-upgrade-rpg-ghcr-read`, 365일, `read:packages` only로 생성합니다. 기존 CLI OAuth token은 재사용하지 않습니다.
+사용자는 Render 전용 classic PAT 생성·저장과 exact image `Connect` 검증을 승인했습니다. GitHub `Confirm access` 탭에서 인증 앱 verification code 입력만 사용자가 직접 완료해야 합니다.
+
+1. 사용자가 “GitHub Confirm access 완료”라고 알리기 전에는 브라우저 작업을 재개하지 않습니다.
+2. 완료 후 classic PAT를 `render-upgrade-rpg-ghcr-read`, 365일, `read:packages` only로 생성합니다. 기존 CLI OAuth token은 재사용하지 않습니다.
 3. token을 채팅·파일·로그에 출력하지 않고 Render `upgrade-rpg-ghcr-read` GitHub credential에 직접 저장합니다.
 4. verified exact digest를 입력해 `Connect`로 pull 접근만 검증합니다. Web Service 생성/deploy는 누르지 않습니다.
 5. 현재 Neon `neondb`와 계획상 `rpg_game`의 DB 초기화 계획은 별도 승인 범위로 유지합니다.
@@ -70,6 +73,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v337 현재 결과는 `render-hobby-no-card-existing-image-private-ghcr-credential-required`, 다음 단계는 `owner-approve-dedicated-classic-pat-read-packages-and-render-source-connect`입니다. 첫 정적 검사에서는 v336 Neon evidence와 v335/v334 baseline을 계속 보존합니다.
+v337 현재 결과는 `render-hobby-no-card-existing-image-private-ghcr-credential-required`, 다음 단계는 `owner-complete-github-confirm-access-then-resume-approved-render-credential-flow`입니다. 첫 정적 검사에서는 v336 Neon evidence와 v335/v334 baseline을 계속 보존합니다.
 
 별도 승인 전에는 production resource, GHCR credential, DB/Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스를 변경하지 않습니다.

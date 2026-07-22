@@ -13,12 +13,12 @@ Render registry credential/resource: absent/not created
 deployment approval/execution: no/no
 ```
 
-v337 strict result는 `render-hobby-no-card-existing-image-private-ghcr-credential-required`, 다음 단계는 `owner-approve-dedicated-classic-pat-read-packages-and-render-source-connect`입니다. v336 Neon 연결 증거, v335 공급자 선택, v334 실행 안전 baseline은 계속 보존합니다.
+v337 strict result는 `render-hobby-no-card-existing-image-private-ghcr-credential-required`, 다음 단계는 `owner-complete-github-confirm-access-then-resume-approved-render-credential-flow`입니다. v336 Neon 연결 증거, v335 공급자 선택, v334 실행 안전 baseline은 계속 보존합니다.
 
 ## 다음 순서
 
-1. 기호가 dedicated classic PAT `read:packages` only 생성·Render 저장·exact image Connect를 승인합니다.
-2. token을 노출하지 않고 Render registry credential을 만들고 private GHCR pull 접근만 확인합니다.
+1. 기호가 GitHub `Confirm access` verification code 입력과 `Verify`를 완료합니다. credential 범위 승인은 이미 완료됐습니다.
+2. token을 노출하지 않고 dedicated classic PAT와 Render registry credential을 만들고 private GHCR pull 접근만 확인합니다.
 3. Render Free image-backed Web Service Singapore 생성 직전 설정을 검토합니다.
 4. 현재 `neondb`와 계획상 `rpg_game` 차이를 포함한 DB 생성·초기화·이식 계획을 별도로 검토합니다.
 5. resource 생성 범위와 DB 초기화/이식 범위를 분리해 승인합니다.

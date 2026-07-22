@@ -29,7 +29,9 @@
 - 기존 GitHub CLI OAuth token을 Render에 저장하지 않습니다.
 - 추천안은 dedicated classic PAT `render-upgrade-rpg-ghcr-read`, 365일, `read:packages` only입니다.
 - `repo`, `write:packages`, `delete:packages`는 허용하지 않습니다.
-- token 생성·Render 저장은 민감정보 외부 전송이므로 사용자 action-time 승인 뒤에만 실행합니다.
+- token 생성·Render 저장은 민감정보 외부 전송이므로 사용자 action-time 승인을 받았습니다.
+- GitHub `Confirm access`에서 인증 앱 verification code를 요구해 token 생성 전에 중단했습니다. verification code는 Codex가 입력·기록하지 않습니다.
+- token/Render credential/exact image Connect는 아직 실행되지 않았습니다.
 - 생성되면 실제 값 없이 생성일·만료일·폐기/회전 예정만 이 문서에 기록합니다.
 
 ## GitHub gate 상태
