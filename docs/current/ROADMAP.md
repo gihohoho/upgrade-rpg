@@ -1,4 +1,4 @@
-# Roadmap — v327
+# Roadmap — v328
 
 ## 완료
 
@@ -13,19 +13,18 @@
 ## 현재
 
 ```txt
-latest: v327.third-owner-only-attempt-recorded-vulnerability-gated
-result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-lifecycle: attempt-recorded / gate=false
-next safe stage: review-recorded-vulnerability-gate-evidence
+latest: v328.alpine-musllinux-runtime-minimization-preparation
+result: github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated
+lifecycle: preparation-closed / gate=false
+next safe stage: review-and-approve-exact-runtime-minimization-preparation-sha
 ```
 
 ## 다음 순서
 
-1. 27개 vulnerability evidence 검토
-2. exact base digest/runtime image/dependency focused fix 설계
-3. 기호의 별도 승인
-4. 새 preparation 검증·commit·push 및 exact SHA 승인
-5. 새 A → C → R single dispatch
-6. 모든 gate를 통과한 exact digest만 isolated 검증 후보로 사용
+1. v328 preparation 검증·commit·push
+2. 기호의 정확한 40자 preparation SHA 승인
+3. GitHub live 설정 재확인 후 새 authorization
+4. 새 A → C → R single dispatch
+5. 모든 gate를 통과한 exact digest만 isolated 검증 후보로 사용
 
 정책을 자동 완화하지 않고 기존 세 run도 rerun하지 않습니다. production reference나 deployment는 별도 승인 단계입니다.

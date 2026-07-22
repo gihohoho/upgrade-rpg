@@ -24,6 +24,7 @@ REQUIRED = (
     "backend/requirements/pip-bootstrap.lock",
     "backend/requirements/runtime.in",
     "backend/requirements/runtime-linux-amd64-py311.lock",
+    "backend/requirements/runtime-musllinux-amd64-py311.lock",
     "backend/requirements/dev.in",
     "backend/requirements/dev-linux-amd64-py311.lock",
     "tools/run_smoke_core.sh",
@@ -31,9 +32,9 @@ REQUIRED = (
 
 
 def load_tool():
-    spec = importlib.util.spec_from_file_location("v326_github_actions_plan", TOOL)
+    spec = importlib.util.spec_from_file_location("v328_github_actions_plan", TOOL)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load v326 GitHub Actions workflow checker")
+        raise RuntimeError("cannot load v328 GitHub Actions workflow checker")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -240,7 +241,7 @@ def expect_secret_expression_blocked(module, temp: Path, label: str, run_step_ke
 def main() -> int:
     module = load_tool()
     result = module.inspect_static_workflow_plan(ROOT)
-    assert result["result"] == module.ATTEMPT_RECORDED_RESULT
+    assert result["result"] == module.READY_RESULT
     assert result["trigger"] == "workflow_dispatch-only"
     assert result["workflowFilePresent"] is True
     assert result["workflowSourceSha256"] == module.EXPECTED_WORKFLOW_SHA256
@@ -252,9 +253,9 @@ def main() -> int:
     assert result["actionsSettingsConfigured"] is True
     assert result["publishEnvironmentExists"] is True
     assert result["publishEnvironmentConfigured"] is False
-    assert result["publishLifecycleState"] == "attempt-recorded"
+    assert result["publishLifecycleState"] == "preparation-closed"
     assert result["publishGateReady"] is False
-    assert result["approvedPreparationSha"] == "b35dfacf427162b348a6bd29eb030778edc7741c"
+    assert result["approvedPreparationSha"] is None
     assert result["dockerBuildContextEnvExcluded"] is True
     assert result["reproducibleBuildReady"] is True
     assert result["supplyChainGate"] == "fail-closed"
@@ -542,7 +543,7 @@ def main() -> int:
             )
             expect_secret_expression_blocked(module, temp, expression, emit_step_key)
 
-    print("OK: v327 GitHub Actions/GHCR recorded vulnerability-gate workflow smoke passed")
+    print("OK: v328 GitHub Actions/GHCR Alpine runtime preparation smoke passed")
     return 0
 
 

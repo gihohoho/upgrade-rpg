@@ -1,3 +1,11 @@
+# v328.alpine-musllinux-runtime-minimization-preparation
+
+- Python 3.11.15 Alpine 3.23 `linux/amd64` manifest digest로 production base를 갱신하고 multi-stage/UID 65532 runtime으로 최소화.
+- Ubuntu CI용 manylinux와 production용 musllinux binary-only SHA-256 lock을 분리.
+- 최종 runtime에서 pip/setuptools/wheel/ensurepip을 제거하고 미사용 `python-jose[cryptography]` 전이 의존성을 제거.
+- 로컬 linux/amd64 import/read-only 검사와 Trivy 0.70 HIGH/CRITICAL `--ignore-unfixed=false` gate 0건 통과.
+- 기존 세 workflow 시도를 history로 보존하고 새 lifecycle을 `preparation-closed`, gate `false`, not-dispatched로 초기화.
+
 # v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated
 
 - 기호의 승인에 따라 `backend/Dockerfile.production` bootstrap pip download의 `--python-version 3`을 `3.11`로 focused fix.

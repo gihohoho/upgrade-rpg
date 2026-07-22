@@ -44,7 +44,7 @@ container/image/network/volume mutation executed: no
 - repository: `ghcr.io/gihohoho/upgrade-rpg-backend`
 - repository visibility: private
 - target platform: `linux/amd64`
-- production Dockerfile base: `python:3.11.15-slim-bookworm@sha256:28255a3ace7eb4c48bc1b57b90af29e1bc82b4fd6c60614a8e3dce61b87ff941`
+- production Dockerfile base: `python:3.11.15-alpine3.23@sha256:ac0151f0eec4b7ba78bc47d337f328c6db706e7255b35b2327c2749f058c82fe`
 - local `backend/Dockerfile`은 보존
 
 선택 과정에서는 registry 또는 Docker mutation을 실행하지 않았습니다. `gihohoho`는 기호가 직접 확인한 고정 namespace입니다.

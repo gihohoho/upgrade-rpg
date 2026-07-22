@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v327
+# Upgrade RPG Codex working rules — v328
 
 이 파일은 저장소 전체에 적용됩니다. Codex는 작업을 시작할 때 이 파일과 `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -32,9 +32,9 @@
 
 ## 현재 고정 상태
 
-- latest: `v327.third-owner-only-attempt-recorded-vulnerability-gated`
-- strict result: `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`
-- next safe stage: `review-recorded-vulnerability-gate-evidence`
+- latest: `v328.alpine-musllinux-runtime-minimization-preparation`
+- strict result: `github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated`
+- next safe stage: `review-and-approve-exact-runtime-minimization-preparation-sha`
 - GitHub remote: `https://github.com/gihohoho/upgrade-rpg.git`
 - GHCR namespace: `gihohoho`
 - backend image repository: `ghcr.io/gihohoho/upgrade-rpg-backend` (private)
@@ -52,7 +52,7 @@
 - `ghcr-production-publish` environment/main-only: present/configured
 - required reviewer/prevent self-review: missing/missing
 - publish approval model: `owner-only-source-controlled-two-step` (기호가 2026-07-20 선택)
-- source-controlled lifecycle gate: `attempt-recorded` / `publishReviewerGateReady=false`
+- source-controlled lifecycle gate: `preparation-closed` / `publishReviewerGateReady=false`
 - dependency/frontend input lock: complete (exact version + SHA-256, binary wheel only)
 - byte-for-byte deterministic image: 보장한다고 주장하지 않음
 - prior preparation SHA: `350bbd085f1cf636810d75ddcbb5321e0791256c` approved and consumed
@@ -125,7 +125,7 @@ live 증거는 authorization 실행 시점 기준 4시간 이내여야 하므로
 
 ## 현재 안전 경계
 
-현재 lifecycle은 `attempt-recorded`이고 gate는 닫혀 있습니다. 세 실행 모두 rerun 금지입니다. 3차 실행은 로컬 이미지를 만들고 SPDX SBOM을 생성한 뒤 Trivy HIGH/CRITICAL gate에서 차단됐으며, publish job 전체가 skipped되어 GHCR login/push/provenance/Cosign은 실행되지 않았습니다. 취약점 정책을 자동 완화하거나 새 workflow를 실행하지 않습니다.
+현재 lifecycle은 v328 `preparation-closed`이고 gate는 닫혀 있습니다. 세 실행 모두 rerun 금지입니다. v328은 Python 3.11.15 Alpine 3.23 exact linux/amd64 digest, manylinux/musllinux 분리 hash lock, multi-stage build, 비루트 UID/GID 65532, runtime pip/setuptools/wheel 제거, 사용되지 않는 `python-jose[cryptography]` 제거를 포함합니다. 로컬 linux/amd64 후보는 Trivy 0.70의 동일 HIGH/CRITICAL `--ignore-unfixed=false` gate에서 0건이었습니다. 새 exact preparation SHA 승인 전에는 authorization이나 workflow를 실행하지 않습니다.
 
 다음 항목은 이번 GitHub 권한 확대와 별개이므로 기호의 구체적인 작업 요청 전에는 변경·실행하지 않습니다.
 
@@ -146,7 +146,7 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-현재 정상 결과는 `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`, 다음 안전 단계는 `review-recorded-vulnerability-gate-evidence`입니다. 다음 preparation과 workflow 실행에는 별도 사용자 승인이 필요합니다.
+현재 정상 결과는 `github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated`, 다음 안전 단계는 `review-and-approve-exact-runtime-minimization-preparation-sha`입니다. 준비 commit의 정확한 40자 SHA를 기호가 승인하기 전에는 새 workflow를 실행하지 않습니다.
 
 ## 변경과 검증
 
@@ -158,5 +158,5 @@ python tools/check_codex_handoff_readiness.py --strict
 - Python 파일을 바꾼 경우 변경 범위에 맞는 compileall을, JavaScript 파일을 바꾼 경우 해당 파일 문법 검사를 실행합니다.
 - authorization-open workflow에서는 정적 checker를 먼저 직접 실행한 뒤 `SKIP_GHCR_HANDOFF_SMOKES=1 bash tools/run_smoke_core.sh`를 실행합니다. 이 플래그는 closed root 상태만 전제로 하는 `smoke_github_actions_ghcr_static_plan.py`, `smoke_codex_handoff_readiness.py`, `smoke_next_chat_handoff.py` 세 개만 건너뛰며 앱·백엔드 전체 smoke는 그대로 실행합니다.
 - Vue 변경 시에만 `frontend/vue-app`에서 Python `.venv` 없이 `npm ci`와 `npm run build`를 실행합니다.
-- 현재 v327 문서·검사기 정적 변경에는 서버 재시작이 필요 없고 새 설치도 없습니다. 기호의 요청에 따라 전체 smoke 반복을 줄이고 위험도 기반 검증을 사용합니다.
+- 현재 v328 Docker/runtime/dependency 변경에는 개발 서버 재시작이 필요 없고 새 로컬 설치도 없습니다. 기호의 요청에 따라 전체 smoke 반복을 줄이고 위험도 기반 검증을 사용합니다.
 - 완료 답변에는 한 일, 검증, 서버 재시작 필요 여부, commit/push 결과, 다음 추천 단계, 필요한 extension/권한/설치 요청을 포함합니다.

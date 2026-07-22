@@ -6,10 +6,10 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v327.third-owner-only-attempt-recorded-vulnerability-gated"
-STATIC_PLAN_VERSION = "v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated"
-READY_RESULT = "github-actions-ghcr-owner-only-attempt-recorded-publish-gated"
-NEXT_SAFE_STAGE = "review-recorded-vulnerability-gate-evidence"
+VERSION = "v328.alpine-musllinux-runtime-minimization-preparation"
+STATIC_PLAN_VERSION = VERSION
+READY_RESULT = "github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated"
+NEXT_SAFE_STAGE = "review-and-approve-exact-runtime-minimization-preparation-sha"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 PREPARATION = "b35dfacf427162b348a6bd29eb030778edc7741c"
@@ -79,11 +79,11 @@ def main() -> int:
 
     policy = json.loads(read("deploy/backend-image-ghcr-policy.example.json"))
     assert policy["schemaVersion"] == VERSION
-    assert policy["preparedOnly"] is False
-    assert policy["ownerOnlyApprovalPhase"] == "attempt-recorded-review"
-    assert policy["publishLifecycleState"] == "attempt-recorded"
-    assert policy["approvedPreparationSha"] == PREPARATION
-    assert policy["exactPreparationShaApproved"] is True
+    assert policy["preparedOnly"] is True
+    assert policy["ownerOnlyApprovalPhase"] == "preparation-awaiting-exact-sha-approval"
+    assert policy["publishLifecycleState"] == "preparation-closed"
+    assert policy["approvedPreparationSha"] is None
+    assert policy["exactPreparationShaApproved"] is False
     assert policy["sourceControlledPublishGateReady"] is False
     assert policy["actualRegistryMutationExecuted"] is False
     assert policy["currentAttemptEvidence"] == {
@@ -104,15 +104,15 @@ def main() -> int:
 
     lifecycle = json.loads(read("deploy/github-actions-ghcr-publish-lifecycle.json"))
     assert lifecycle["schemaVersion"] == "v326.owner-only-publish-lifecycle-with-attempt-history"
-    assert lifecycle["state"] == "attempt-recorded"
+    assert lifecycle["state"] == "preparation-closed"
     assert lifecycle["publishReviewerGateReady"] is False
-    assert lifecycle["approvedPreparationSha"] == PREPARATION
-    assert lifecycle["ownerApproval"]["recorded"] is True
-    assert lifecycle["closure"]["authorizationSourceSha"] == AUTHORIZATION
-    assert lifecycle["closure"]["closureCommitSha"] == CLOSURE
-    assert lifecycle["observedAttempt"]["runId"] == RUN_ID
-    assert lifecycle["observedAttempt"]["status"] == "completed"
-    assert lifecycle["observedAttempt"]["conclusion"] == "failure"
+    assert lifecycle["approvedPreparationSha"] is None
+    assert lifecycle["ownerApproval"]["recorded"] is False
+    assert lifecycle["closure"]["authorizationSourceSha"] is None
+    assert lifecycle["closure"]["closureCommitSha"] is None
+    assert lifecycle["observedAttempt"]["runId"] is None
+    assert lifecycle["observedAttempt"]["status"] == "not-dispatched"
+    assert lifecycle["observedAttempt"]["conclusion"] is None
     assert lifecycle["observedAttempt"]["imageDigest"] is None
     assert lifecycle["observedAttempt"]["signatureVerified"] is False
 
@@ -142,7 +142,7 @@ def main() -> int:
     if hashlib.sha256(revision.read_bytes()).hexdigest() != REVISION_SHA256:
         raise AssertionError("reviewed Alembic revision SHA-256 differs")
 
-    print("OK: v327 Codex handoff and recorded vulnerability-gate documents are synchronized")
+    print("OK: v328 Codex handoff and Alpine runtime preparation documents are synchronized")
     return 0
 
 

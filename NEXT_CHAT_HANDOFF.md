@@ -1,4 +1,4 @@
-# Upgrade RPG Codex handoff — v327
+# Upgrade RPG Codex handoff — v328
 
 ## 작업 원칙
 
@@ -13,9 +13,9 @@
 ## 현재 고정값
 
 ```txt
-latest: v327.third-owner-only-attempt-recorded-vulnerability-gated
-strict result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-next safe stage: review-recorded-vulnerability-gate-evidence
+latest: v328.alpine-musllinux-runtime-minimization-preparation
+strict result: github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated
+next safe stage: review-and-approve-exact-runtime-minimization-preparation-sha
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR namespace: gihohoho
 repository: ghcr.io/gihohoho/upgrade-rpg-backend
@@ -23,7 +23,7 @@ visibility/platform: private / linux/amd64
 CI credential: GitHub Actions GITHUB_TOKEN
 local credential/PAT: deferred
 publish approval model: owner-only-source-controlled-two-step
-source-controlled lifecycle gate: attempt-recorded / publishReviewerGateReady=false
+source-controlled lifecycle gate: preparation-closed / publishReviewerGateReady=false
 workflow/login/build/push executed: yes/no/yes/no
 ```
 
@@ -38,7 +38,7 @@ workflow/login/build/push executed: yes/no/yes/no
 - C `authorization-closed-awaiting-evidence`
 - R `attempt-recorded` (현재)
 
-authorization은 승인된 preparation의 direct child이고 lifecycle 파일 하나만 변경합니다. workflow는 repository owner, `run_attempt=1`, GitHub API로 확인한 single dispatch만 허용하며 rerun은 금지합니다. run 접수 즉시 immediate closure commit으로 C 상태를 만들고 gate를 닫습니다. C는 자기 SHA를 기록할 수 없어 `closureCommitSha=null`이고, 종료 뒤 별도 R evidence commit이 부모 C의 정확한 `closureCommitSha`와 실제 run/digest/signature 결과를 기록합니다. 일반 계약 next stage `review-recorded-workflow-attempt-evidence`는 보존하며, 이번 구체적 next stage는 `review-recorded-vulnerability-gate-evidence`입니다.
+authorization은 승인된 preparation의 direct child이고 lifecycle 파일 하나만 변경합니다. workflow는 repository owner, `run_attempt=1`, GitHub API로 확인한 single dispatch만 허용하며 rerun은 금지합니다. run 접수 즉시 immediate closure commit으로 C 상태를 만들고 gate를 닫습니다. C는 자기 SHA를 기록할 수 없어 `closureCommitSha=null`이고, 종료 뒤 별도 R evidence commit이 부모 C의 정확한 `closureCommitSha`와 실제 run/digest/signature 결과를 기록합니다. 일반 계약 next stage `review-recorded-workflow-attempt-evidence`는 보존하며, 이번 구체적 next stage는 `review-and-approve-exact-runtime-minimization-preparation-sha`입니다.
 
 ## 세 번째 owner-only 시도
 
@@ -113,11 +113,11 @@ python tools/check_codex_handoff_readiness.py --strict
 기대값:
 
 ```txt
-result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-next safe stage: review-recorded-vulnerability-gate-evidence
+result: github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated
+next safe stage: review-and-approve-exact-runtime-minimization-preparation-sha
 ```
 
-그 다음 artifact 근거로 새 exact base image digest, runtime multi-stage/minimal image, dependency 업데이트 범위를 검토합니다. HIGH/CRITICAL 또는 `--ignore-unfixed=false` gate는 자동 완화하지 않습니다. focused fix와 새 preparation/workflow 실행은 기호의 별도 승인 뒤 진행합니다.
+v328 focused fix는 Alpine 3.23 exact digest, musllinux 운영 lock, multi-stage/비루트 runtime, runtime 빌드 도구와 미사용 JWT 의존성 제거를 포함합니다. 로컬 linux/amd64 이미지 build/import와 Trivy 0.70 동일 gate가 통과했으며 HIGH/CRITICAL은 0건입니다. 준비 commit의 정확한 40자 SHA 승인 전에는 authorization/workflow를 실행하지 않습니다.
 
 ## 안전 경계
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "v326.owner-only-publish-lifecycle-with-attempt-history",
-  "state": "attempt-recorded",
+  "state": "preparation-closed",
   "publishReviewerGateReady": false,
   "priorApprovedPreparationSha": "350bbd085f1cf636810d75ddcbb5321e0791256c",
   "priorAttemptEvidence": {
@@ -45,12 +45,27 @@
       "artifactCount": 0,
       "imageDigest": null,
       "signatureVerified": false
+    },
+    {
+      "preparationSha": "b35dfacf427162b348a6bd29eb030778edc7741c",
+      "authorizationSha": "04e002060e576f19f4d8687b33635a414486206d",
+      "closureSha": "64e5ae0f5e5385ba00df16bb10ac33789ca3760a",
+      "recordCommitSha": "303a2ed01c69c29894efdcde4ead6c2291c3d8bc",
+      "runId": 29883012957,
+      "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29883012957",
+      "conclusion": "failure",
+      "registryLoginExecuted": false,
+      "imageBuildExecuted": true,
+      "imagePushExecuted": false,
+      "artifactCount": 1,
+      "imageDigest": null,
+      "signatureVerified": false
     }
   ],
-  "approvedPreparationSha": "b35dfacf427162b348a6bd29eb030778edc7741c",
+  "approvedPreparationSha": null,
   "ownerApproval": {
-    "recorded": true,
-    "recordedAtUtc": "2026-07-22T01:21:58Z",
+    "recorded": false,
+    "recordedAtUtc": null,
     "evidence": "exact-40-character-sha-user-message"
   },
   "githubLiveSettings": {
@@ -81,16 +96,16 @@
     "immediateClosureAfterRunAccepted": true
   },
   "closure": {
-    "authorizationSourceSha": "04e002060e576f19f4d8687b33635a414486206d",
-    "closureCommitSha": "64e5ae0f5e5385ba00df16bb10ac33789ca3760a",
-    "preparedAtUtc": "2026-07-22T01:24:55Z"
+    "authorizationSourceSha": null,
+    "closureCommitSha": null,
+    "preparedAtUtc": null
   },
   "observedAttempt": {
-    "runId": 29883012957,
-    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29883012957",
-    "runAttempt": 1,
-    "status": "completed",
-    "conclusion": "failure",
+    "runId": null,
+    "runUrl": null,
+    "runAttempt": null,
+    "status": "not-dispatched",
+    "conclusion": null,
     "imageDigest": null,
     "signatureVerified": false
   }

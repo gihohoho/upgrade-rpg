@@ -22,6 +22,7 @@ assert build_system.get("requires") == ["setuptools==80.10.2", "wheel==0.46.3"],
 for lock_name in (
     "pip-bootstrap.lock",
     "runtime-linux-amd64-py311.lock",
+    "runtime-musllinux-amd64-py311.lock",
     "dev-linux-amd64-py311.lock",
 ):
     lock = ROOT / "backend" / "requirements" / lock_name

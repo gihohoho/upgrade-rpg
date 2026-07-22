@@ -1,11 +1,11 @@
-# GitHub Actions / GHCR workflow plan — v327
+# GitHub Actions / GHCR workflow plan — v328
 
 ```txt
-version: v327.third-owner-only-attempt-recorded-vulnerability-gated
-static workflow plan version: v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated
-preparation version: v324.bootstrap-fixed-retry-preparation-publish-gated
+version: v328.alpine-musllinux-runtime-minimization-preparation
+static workflow plan version: v328.alpine-musllinux-runtime-minimization-preparation
+preparation version: v328.alpine-musllinux-runtime-minimization-preparation
 base plan version: v322.owner-only-single-run-lifecycle-hardened-publish-gated
-result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+result: github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated
 repository: gihohoho/upgrade-rpg
 image: ghcr.io/gihohoho/upgrade-rpg-backend
 workflow: .github/workflows/publish-backend-ghcr.yml
@@ -16,7 +16,7 @@ workflow file creation: complete
 workflow 파일 생성: 완료
 workflow execution: runs 29716038891, 29877813770, 29883012957 completed/failure
 registry login/build/push: no/attempted-failed/no
-next safe stage: review-recorded-vulnerability-gate-evidence
+next safe stage: review-and-approve-exact-runtime-minimization-preparation-sha
 ```
 
 정적 문서 잠금 표식: `workflow_dispatch`, `pull_request_target` 금지, `contents: read`, `actions: read`, `packages: write`, `id-token: write`, Docker BuildKit, `HIGH,CRITICAL`, Sigstore Cosign keyless, `approved_preparation_commit`, `DOCKER_BUILD_RECORD_UPLOAD`, required reviewer 제약.
@@ -215,9 +215,9 @@ production reference 자동 갱신과 deploy는 하지 않습니다.
 
 ## 현재와 다음 단계
 
-현재 lifecycle은 `attempt-recorded`이고 gate는 `false`입니다. 세 실패를 보존하고 모두 rerun 금지합니다. vulnerability gate를 자동 완화하지 않으며 새 focused fix와 preparation/workflow는 별도 승인 전 진행하지 않습니다.
+현재 lifecycle은 `preparation-closed`이고 gate는 `false`입니다. 세 실패를 history에 보존하고 모두 rerun 금지합니다. v328 focused fix의 로컬 linux/amd64 후보는 동일 Trivy 0.70 HIGH/CRITICAL `--ignore-unfixed=false` gate에서 0건입니다. exact preparation SHA 승인 전에는 authorization/workflow를 실행하지 않습니다.
 
 ```txt
-result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-next safe stage: review-recorded-vulnerability-gate-evidence
+result: github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated
+next safe stage: review-and-approve-exact-runtime-minimization-preparation-sha
 ```

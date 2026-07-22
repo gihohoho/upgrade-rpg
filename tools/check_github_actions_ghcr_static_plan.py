@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the v326 owner-only, repeatable single-run GHCR publish lifecycle policy."""
+"""Validate the v328 owner-only Alpine runtime preparation and publish lifecycle."""
 from __future__ import annotations
 
 import argparse
@@ -13,15 +13,15 @@ from typing import Any
 
 import yaml
 
-TOOL_VERSION = "v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated"
-READY_RESULT = "github-actions-ghcr-owner-only-retry-preparation-ready-publish-gated"
+TOOL_VERSION = "v328.alpine-musllinux-runtime-minimization-preparation"
+READY_RESULT = "github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated"
 AUTHORIZATION_OPEN_RESULT = "github-actions-ghcr-owner-only-authorization-open"
 AUTHORIZATION_CLOSED_RESULT = (
     "github-actions-ghcr-owner-only-authorization-closed-awaiting-evidence"
 )
 ATTEMPT_RECORDED_RESULT = "github-actions-ghcr-owner-only-attempt-recorded-publish-gated"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "review-and-approve-exact-dockerfile-bootstrap-fix-preparation-sha"
+NEXT_SAFE_STAGE = "review-and-approve-exact-runtime-minimization-preparation-sha"
 AUTHORIZATION_OPEN_NEXT_SAFE_STAGE = "dispatch-one-owner-approved-workflow-run"
 AUTHORIZATION_CLOSED_NEXT_SAFE_STAGE = "record-workflow-run-evidence"
 ATTEMPT_RECORDED_NEXT_SAFE_STAGE = "review-recorded-workflow-attempt-evidence"
@@ -66,6 +66,21 @@ ATTEMPT_HISTORY = [
         "imageDigest": None,
         "signatureVerified": False,
     },
+    {
+        "preparationSha": "b35dfacf427162b348a6bd29eb030778edc7741c",
+        "authorizationSha": "04e002060e576f19f4d8687b33635a414486206d",
+        "closureSha": "64e5ae0f5e5385ba00df16bb10ac33789ca3760a",
+        "recordCommitSha": "303a2ed01c69c29894efdcde4ead6c2291c3d8bc",
+        "runId": 29883012957,
+        "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29883012957",
+        "conclusion": "failure",
+        "registryLoginExecuted": False,
+        "imageBuildExecuted": True,
+        "imagePushExecuted": False,
+        "artifactCount": 1,
+        "imageDigest": None,
+        "signatureVerified": False,
+    },
 ]
 EXPECTED_WORKFLOW_SHA256 = "245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd"
 EXPECTED_WORKFLOW_SEMANTIC_SHA256 = "e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c"
@@ -95,16 +110,17 @@ ATTEMPT_EVIDENCE_CHANGED_PATH_ALLOWLIST = frozenset({
 })
 DOCKERFILE_FRONTEND = "docker/dockerfile:1.21.0@sha256:27f9262d43452075f3c410287a2c43f5ef1bf7ec2bb06e8c9eeb1b8d453087bc"
 LOCK_SHA256 = {
-    "backend/requirements/pip-bootstrap.lock": "bcc097cb08562a39c235ad52c7183a7e2ae9b80010463cc404ff772881ced4f7",
-    "backend/requirements/runtime-linux-amd64-py311.lock": "863fc3dca235aaf692f4a065e4449e198bba9b5317ab29af57bc7e301b57a42c",
-    "backend/requirements/dev-linux-amd64-py311.lock": "5c5b025a96621f02b3667899db43f1e1f02e3fa55b50b615d95304e7f242844b",
+    "backend/requirements/pip-bootstrap.lock": "9399f6b52f827b1c92f996f77319107055ad01fa2296193e9bede8f42f6c3307",
+    "backend/requirements/runtime-linux-amd64-py311.lock": "c6ce22bfa188bec909ddc0628c276cd46acaf497cf593d5e536fa20108477ce7",
+    "backend/requirements/runtime-musllinux-amd64-py311.lock": "ed93d9ebe819e2f7e025b8dbcef2ccfed82f4bf20596a004fe2764134d0a5e1a",
+    "backend/requirements/dev-linux-amd64-py311.lock": "e8c238ebe304a30a1fb67c7b5251318b1ea3af7cc7cb35ef2a02112b84168bbf",
 }
 REPRODUCIBILITY_INPUT_SHA256 = {
     "backend/requirements/pip-bootstrap.in": "9df44a3db13ef551bf575949d553b8d14044635b91c09e85dc6d3ea97f50d225",
-    "backend/requirements/runtime.in": "9eeff8d010a3f18711d82e68effa3874c15f63b99a1f65988106cc46719727ce",
+    "backend/requirements/runtime.in": "57ec2d01cea29b29706fcbdf9d6fec1a7f3b3e799cef0b46f1111a2f09f7bc16",
     "backend/requirements/dev.in": "6404277a75ce651735fcea3f89b5eee548cfd58ee197faed27b03333d587e2fe",
-    "backend/pyproject.toml": "1c10a732138522f00b87c5fdc8fc866affc9dbbe87f3bca81af94354d35f864b",
-    "backend/Dockerfile.production": "c73df69e5e0d933f12ada5afb0bbd39470d1cff394badad5e8b79ced09047648",
+    "backend/pyproject.toml": "421adfa2e6a0152800ca5ef5b9e673aeceac46691a2e057070e7ef6ae9198205",
+    "backend/Dockerfile.production": "ca4bb49de42650355b6f28519c231f5249f1ea9f52fb6fe574bc778cd7c5f16c",
 }
 CERTIFICATE_IDENTITY = (
     "https://github.com/gihohoho/upgrade-rpg/"
@@ -839,12 +855,15 @@ def _verify_reproducibility_files(root: Path) -> None:
     )
     for marker in (
         "backend/requirements/pip-bootstrap.lock",
-        "backend/requirements/runtime-linux-amd64-py311.lock",
+        "backend/requirements/runtime-musllinux-amd64-py311.lock",
         "--require-hashes",
         "--only-binary=:all:",
         "--no-index",
-        "--platform manylinux_2_17_x86_64",
+        "--platform musllinux_1_2_x86_64",
+        "--platform musllinux_1_1_x86_64",
         "--python-version 3.11",
+        "USER 65532:65532",
+        "/usr/local/lib/python3.11/site-packages/setuptools*",
     ):
         _require(marker in dockerfile, f"production Dockerfile lock marker is missing: {marker}")
     _require("pip install --upgrade pip" not in dockerfile, "mutable pip upgrade is forbidden")
@@ -1432,7 +1451,7 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
     _require(isinstance(owner_policy, dict), "owner-only approval policy is missing")
     _require(owner_policy.get("selectedOn") == "2026-07-20", "owner-only selection date changed")
     _require(
-        owner_policy.get("phase") == "bootstrap-fixed-retry-preparation",
+        owner_policy.get("phase") == "alpine-musllinux-runtime-minimization-preparation",
         "owner-only lifecycle policy phase changed",
     )
     for key in (

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v326.dockerfile-bootstrap-fixed-retry-preparation-publish-gated",
+  "schemaVersion": "v328.alpine-musllinux-runtime-minimization-preparation",
   "staticPolicyOnly": true,
   "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
   "repository": "gihohoho/upgrade-rpg",
@@ -26,7 +26,7 @@
   ],
   "ownerOnlyApprovalPolicy": {
     "selectedOn": "2026-07-20",
-    "phase": "bootstrap-fixed-retry-preparation",
+    "phase": "alpine-musllinux-runtime-minimization-preparation",
     "riskAcceptedByOwner": true,
     "exactPreparationShaApprovalRequired": true,
     "separateAuthorizationCommitRequired": true,
@@ -284,16 +284,17 @@
       "binaryWheelOnly": true,
       "hashCheckingRequired": true,
       "lockSha256": {
-        "backend/requirements/pip-bootstrap.lock": "bcc097cb08562a39c235ad52c7183a7e2ae9b80010463cc404ff772881ced4f7",
-        "backend/requirements/runtime-linux-amd64-py311.lock": "863fc3dca235aaf692f4a065e4449e198bba9b5317ab29af57bc7e301b57a42c",
-        "backend/requirements/dev-linux-amd64-py311.lock": "5c5b025a96621f02b3667899db43f1e1f02e3fa55b50b615d95304e7f242844b"
+        "backend/requirements/pip-bootstrap.lock": "9399f6b52f827b1c92f996f77319107055ad01fa2296193e9bede8f42f6c3307",
+        "backend/requirements/runtime-linux-amd64-py311.lock": "c6ce22bfa188bec909ddc0628c276cd46acaf497cf593d5e536fa20108477ce7",
+        "backend/requirements/runtime-musllinux-amd64-py311.lock": "ed93d9ebe819e2f7e025b8dbcef2ccfed82f4bf20596a004fe2764134d0a5e1a",
+        "backend/requirements/dev-linux-amd64-py311.lock": "e8c238ebe304a30a1fb67c7b5251318b1ea3af7cc7cb35ef2a02112b84168bbf"
       },
       "inputSha256": {
         "backend/requirements/pip-bootstrap.in": "9df44a3db13ef551bf575949d553b8d14044635b91c09e85dc6d3ea97f50d225",
-        "backend/requirements/runtime.in": "9eeff8d010a3f18711d82e68effa3874c15f63b99a1f65988106cc46719727ce",
+        "backend/requirements/runtime.in": "57ec2d01cea29b29706fcbdf9d6fec1a7f3b3e799cef0b46f1111a2f09f7bc16",
         "backend/requirements/dev.in": "6404277a75ce651735fcea3f89b5eee548cfd58ee197faed27b03333d587e2fe",
-        "backend/pyproject.toml": "1c10a732138522f00b87c5fdc8fc866affc9dbbe87f3bca81af94354d35f864b",
-      "backend/Dockerfile.production": "c73df69e5e0d933f12ada5afb0bbd39470d1cff394badad5e8b79ced09047648"
+        "backend/pyproject.toml": "421adfa2e6a0152800ca5ef5b9e673aeceac46691a2e057070e7ef6ae9198205",
+      "backend/Dockerfile.production": "ca4bb49de42650355b6f28519c231f5249f1ea9f52fb6fe574bc778cd7c5f16c"
       },
       "requiredBeforeFirstPublish": true
     },

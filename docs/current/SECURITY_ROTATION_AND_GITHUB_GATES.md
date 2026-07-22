@@ -1,4 +1,4 @@
-# Security rotation and GitHub gates — v327
+# Security rotation and GitHub gates — v328
 
 ## Secret 원칙
 
@@ -27,8 +27,12 @@
 - artifact `8515504259`, SHA-256 `6a5dfd4cd96754fd365323c7c6a7d1edf18542b5e5729e44220d7bf21ace4c50`, 만료 `2026-08-05T01:26:39Z`
 - publish skipped: login/push/provenance/Cosign 미실행, registry mutation 없음
 
-## 다음 보안 검토
+## v328 보안 준비
 
-newer exact base image digest, runtime 최소화, fixed Python dependency를 먼저 검토합니다. `--ignore-unfixed=false`나 HIGH/CRITICAL gate 완화는 자동으로 승인하지 않습니다. 새 preparation/workflow 실행에는 별도 사용자 승인이 필요합니다.
+- Alpine 3.23 exact linux/amd64 digest와 musllinux binary-only hash lock을 채택했습니다.
+- 최종 runtime에서 pip/setuptools/wheel/ensurepip과 사용되지 않는 JWT 의존성을 제거했습니다.
+- 로컬 Trivy 0.70의 `--ignore-unfixed=false` HIGH/CRITICAL gate는 0건으로 통과했습니다.
+- gate 완화나 예외 추가는 하지 않았고 새 workflow도 실행하지 않았습니다.
+- 새 preparation SHA 승인 뒤 authorization 직전에 GitHub live 설정을 4시간 이내 기준으로 다시 확인합니다.
 
 현재 필요한 extension, 설치, 추가 GitHub 권한은 없습니다. 로컬 `gh` CLI token은 만료 상태이지만 signed-in GitHub 연결로 필요한 확인을 완료했으므로 지금 재인증은 필요하지 않습니다.
