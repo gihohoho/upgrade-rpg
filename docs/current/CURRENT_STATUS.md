@@ -1,11 +1,11 @@
-# Current Status — v337
+# Current Status — v338
 
 ## 현재 결과
 
 ```txt
-latest: v337.render-account-inspected-private-ghcr-credential-approval-required
-strict result: render-hobby-no-card-existing-image-private-ghcr-credential-required
-next safe stage: owner-complete-github-confirm-access-then-resume-approved-render-credential-flow
+latest: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
+strict result: render-ghcr-read-credential-exact-digest-connect-verified
+next safe stage: review-render-service-settings-and-database-initialization-plan
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked
 baseline result: production-deploy-plan-reviewed-inputs-blocked
 baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
@@ -38,9 +38,8 @@ Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 col
 
 ## 아직 하지 않은 것
 
-- Render registry credential와 Web Service 생성
+- Render Web Service 생성
 - 계획상 `rpg_game` 데이터베이스 생성
-- GHCR `read:packages` 전용 credential 생성·주입
 - JWT/admin secret 생성·주입
 - production CORS origin 확정
 - DB schema/data 초기화·restore·Alembic 작업
@@ -55,18 +54,21 @@ Neon resource와 read-only 연결 검증은 완료됐지만 Render resource와 �
 - existing service: total 1 / active 0 / owner-suspended 1
 - target source: Web Service → Existing Image
 - GitHub Container Registry 지원 확인
-- registry credential: 없음
-- PAT/credential/service/payment/deploy mutation: 없음
+- registry credential: `upgrade-rpg-ghcr-read` 생성 완료
+- dedicated classic PAT: `read:packages` only, 만료일 2027-07-23, 실제 값 미기록
+- exact-digest `Connect`: 성공, 서비스 설정 화면 진입 확인
+- Web Service/payment/deploy mutation: 없음
 - sanitized evidence: `deploy/review/render-account-readiness-v337.json`
-- credential 범위 승인 완료, GitHub `Confirm access` verification code 사용자 입력 대기
+- credential/Connect evidence: `deploy/review/render-private-ghcr-connect-v338.json`
 
-## GitHub Confirm access checkpoint — 2026-07-23
+## Render private GHCR checkpoint — 2026-07-23
 
-- Render credential action approval: ready/approved/executed = yes/yes/no
-- GitHub classic PAT 생성 페이지 진입: 시도함
-- GitHub 인증 앱 verification code: 사용자 입력 대기
-- token/PAT/Render credential/Web Service/deploy: 생성·실행하지 않음
-- 다음: 사용자가 GitHub `Verify` 완료 후 Codex에 완료 알림
+- Render credential action approval: ready/approved/executed = yes/yes/yes
+- GitHub `Confirm access`: 사용자 완료
+- 첫 PAT: 브라우저 검사 출력 노출을 감지해 Render에 저장하지 않고 즉시 GitHub에서 폐기
+- 교체 PAT: `read:packages` 외 scope 없음, 2027-07-23 만료, Render에 값 출력 없이 저장
+- exact reference `Connect`: 성공
+- Web Service/env/payment/deploy: 생성·주입·변경·실행하지 않음
 
 ## 검증된 배포 후보
 
@@ -88,4 +90,4 @@ Neon resource와 read-only 연결 검증은 완료됐지만 Render resource와 �
 
 ## 다음 단계
 
-기호가 GitHub `Confirm access` 탭에서 verification code를 입력하고 `Verify`를 완료하면 Codex가 승인된 credential 범위를 민감값 출력 없이 재개합니다. Web Service 생성/deploy와 DB 초기화는 포함하지 않습니다. 현재 필요한 로컬 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.
+Render 서비스 설정값과 Neon DB 초기화·이식 계획을 먼저 분리 검토합니다. 다음 단계에서도 `Deploy Web Service`를 누르거나 DB/Alembic write를 실행하지 않습니다. 현재 필요한 로컬 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.

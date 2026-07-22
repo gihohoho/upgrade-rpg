@@ -1,4 +1,4 @@
-# Production deployment — v337
+# Production deployment — v338
 
 이 폴더는 운영 배포의 source-controlled template과 sanitized evidence를 보관합니다. 실제 secret·CA·certificate·private key는 넣지 않습니다.
 
@@ -13,6 +13,7 @@
 - `review/isolated-image-pull-validation-v333.json`: isolated runtime 검증 증거
 - `review/neon-readonly-connectivity-v336.json`: secret 없는 Neon Direct/Pooler TLS·read-only 검증 증거
 - `review/render-account-readiness-v337.json`: payment/card 개인정보 없는 Render account/Existing Image readiness 증거
+- `review/render-private-ghcr-connect-v338.json`: token 값 없는 Render credential·exact-digest Connect·미배포 증거
 - `reverse-proxy/`, `secrets/`, `isolated-validation/`: 각 경계 설명
 
 ## 현재 상태
@@ -24,7 +25,8 @@ production deployment plan review: complete
 provider/region/ingress class selected: Render Singapore / Neon Singapore / Render HTTPS
 Neon project/read-only connectivity: created/verified
 Render account/plan/payment: connected/Hobby (legacy)/no card
-Render registry credential/resource/deploy: absent/not created/no
+Render registry credential/resource/deploy: created/not created/no
+Render exact-digest Connect: verified
 production deployment approval/execution: no/no
 ```
 

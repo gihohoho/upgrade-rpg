@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked",
+  "checkedAtUtc": "2026-07-22T23:51:04Z",
+  "ownerAuthorization": {
+    "githubConfirmAccessCompletedByOwner": true,
+    "credentialCreationApproved": true,
+    "credentialStorageApproved": true,
+    "exactDigestConnectApproved": true,
+    "webServiceCreationApproved": false,
+    "deploymentApproved": false
+  },
+  "credential": {
+    "renderCredentialName": "upgrade-rpg-ghcr-read",
+    "registry": "github",
+    "username": "gihohoho",
+    "tokenType": "personal-access-token-classic",
+    "tokenNote": "render-upgrade-rpg-ghcr-read",
+    "expiresOn": "2027-07-23",
+    "scopes": [
+      "read:packages"
+    ],
+    "repoScope": false,
+    "writePackagesScope": false,
+    "deletePackagesScope": false,
+    "actualTokenRecorded": false,
+    "storedOnlyInRender": true
+  },
+  "rotationIncident": {
+    "firstTokenExposedInBrowserInspectionOutput": true,
+    "firstTokenStoredInRender": false,
+    "firstTokenRevokedOnGitHub": true,
+    "replacementTokenValueOutput": false,
+    "replacementTokenStoredInRender": true
+  },
+  "connectValidation": {
+    "sourceType": "existing-image",
+    "imageReference": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2",
+    "privateRegistryAccessAccepted": true,
+    "serviceConfigurationFormReached": true,
+    "targetRegionShown": "singapore",
+    "freeInstanceOptionShown": true
+  },
+  "mutations": {
+    "registryCredentialCreated": true,
+    "paymentMethodAdded": false,
+    "webServiceCreated": false,
+    "environmentSecretsInjected": false,
+    "deployExecuted": false,
+    "databaseMutationExecuted": false,
+    "alembicMutationExecuted": false
+  },
+  "secretOrPersonalDataRecorded": false,
+  "result": "render-ghcr-read-credential-exact-digest-connect-verified",
+  "nextSafeStage": "review-render-service-settings-and-database-initialization-plan"
+}

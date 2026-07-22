@@ -1,4 +1,4 @@
-# Render account and registry credential plan — v337
+# Render account and registry credential plan — v338
 
 ## 읽기 전용 확인 결과
 
@@ -36,13 +36,18 @@ GitHub Container Registry는 private image pull에 classic PAT의 `read:packages
 - https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry
 - https://render.com/docs/deploying-an-image
 
-## 다음 승인 범위
+## 승인 범위 실행 결과 — 2026-07-23
 
-기호가 아래 범위를 명시적으로 승인했습니다. 현재는 GitHub `Confirm access` verification code 사용자 입력을 기다립니다.
+기호가 아래 범위를 명시적으로 승인했고 모두 완료했습니다.
 
-1. GitHub에서 위 이름·만료·scope의 dedicated classic PAT 생성
-2. token 값을 채팅·파일·로그에 출력하지 않고 Render `upgrade-rpg-ghcr-read` credential에 직접 전달
-3. exact-digest image URL을 입력하고 Render `Connect`로 private image pull 접근만 확인
-4. token 생성 시각과 만료 예정일을 값 없이 `SECURITY_ROTATION_AND_GITHUB_GATES.md`에 기록
+1. GitHub `Confirm access` 사용자 완료
+2. dedicated classic PAT 생성: `read:packages` only, 만료일 2027-07-23
+3. Render `upgrade-rpg-ghcr-read` credential 저장
+4. verified exact digest를 입력해 `Connect` 성공
+5. Render 서비스 설정 화면 진입 확인
+
+첫 PAT는 브라우저 검사 출력에 값이 노출된 것을 감지해 Render에 저장하지 않고 즉시 GitHub에서 폐기했습니다. 교체 PAT는 값 출력 없이 Render로 직접 전달하고 GitHub의 token 표시 화면을 닫았습니다. 실제 값은 어떤 저장소 문서나 evidence에도 기록하지 않습니다.
+
+sanitized 실행 evidence는 `deploy/review/render-private-ghcr-connect-v338.json`입니다.
 
 이 승인에는 Web Service 최종 생성, initial deploy, 환경변수 주입, DB 생성/write/restore/migration이 포함되지 않습니다. Render `Create Web Service` 또는 `Deploy`는 별도 실행 준비 SHA 승인 전 누르지 않습니다.

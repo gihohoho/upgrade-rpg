@@ -1,4 +1,4 @@
-# Security rotation and GitHub gates — v334
+# Security rotation and GitHub gates — v338
 
 ## Secret 원칙
 
@@ -22,17 +22,18 @@
 - 첫 배포는 이전 production image가 없으므로 실패 시 proxy route를 철회하고 새 backend만 중지합니다. DB, CA, network, volume은 보존합니다.
 - DB/Alembic mutation, `docker compose down -v`, 자동 retry/deploy는 승인 범위 밖입니다.
 
-## Pending Render GHCR credential — v337
+## Render GHCR credential rotation — v338
 
 - Render workspace는 `Hobby (legacy)`이고 payment method가 없습니다.
-- private GHCR pull용 registry credential은 아직 없습니다.
 - 기존 GitHub CLI OAuth token을 Render에 저장하지 않습니다.
-- 추천안은 dedicated classic PAT `render-upgrade-rpg-ghcr-read`, 365일, `read:packages` only입니다.
+- dedicated classic PAT note는 `render-upgrade-rpg-ghcr-read`, scope는 `read:packages` only, 만료일은 2027-07-23입니다.
 - `repo`, `write:packages`, `delete:packages`는 허용하지 않습니다.
-- token 생성·Render 저장은 민감정보 외부 전송이므로 사용자 action-time 승인을 받았습니다.
-- GitHub `Confirm access`에서 인증 앱 verification code를 요구해 token 생성 전에 중단했습니다. verification code는 Codex가 입력·기록하지 않습니다.
-- token/Render credential/exact image Connect는 아직 실행되지 않았습니다.
-- 생성되면 실제 값 없이 생성일·만료일·폐기/회전 예정만 이 문서에 기록합니다.
+- token 생성·Render 저장·exact-digest `Connect`는 사용자 action-time 승인을 받아 2026-07-23에 실행했습니다.
+- 첫 PAT는 브라우저 검사 출력에 노출된 것을 감지했습니다. Render에는 저장하지 않았고 즉시 GitHub에서 폐기했습니다. 값은 이 문서에 기록하지 않습니다.
+- 교체 PAT는 화면·로그·파일 출력 없이 Render `upgrade-rpg-ghcr-read` credential로 직접 전달했습니다.
+- verified exact digest `Connect`는 성공했고 서비스 설정 화면까지 진입했습니다.
+- Web Service, env secret, payment method, deploy는 생성·주입·변경·실행하지 않았습니다.
+- credential은 Render에서 실제 private GHCR pull이 더 이상 필요 없거나 2027-07-23 이전 회전 시 폐기합니다.
 
 ## GitHub gate 상태
 

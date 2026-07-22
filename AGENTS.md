@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v337
+# Upgrade RPG Codex working rules — v338
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -31,9 +31,9 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v337.render-account-inspected-private-ghcr-credential-approval-required
-strict result: render-hobby-no-card-existing-image-private-ghcr-credential-required
-next safe stage: owner-complete-github-confirm-access-then-resume-approved-render-credential-flow
+latest: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
+strict result: render-ghcr-read-credential-exact-digest-connect-verified
+next safe stage: review-render-service-settings-and-database-initialization-plan
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked / production-deploy-plan-reviewed-inputs-blocked
 baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
@@ -58,8 +58,9 @@ Alembic current: v295_initial_schema / new revision needed: no
 - 새 Neon direct/pooled URL은 앱·배포 플랫폼에 아직 주입하지 않고 Git/Docker 제외 경로 `deploy/.env.production`에만 보관합니다.
 - Direct/Pooler 모두 PostgreSQL 16.14, TLS 1.3 인증서·호스트 검증, read-only transaction을 통과했습니다. sanitized evidence는 `deploy/review/neon-readonly-connectivity-v336.json`입니다.
 - Render `Hobby (legacy)` workspace는 연결됐고 결제수단·billing 정보가 없습니다. 기존 service 1개는 owner-suspended이며 active service는 0개입니다.
-- `Existing Image`와 GitHub registry credential 양식은 확인했지만 credential/PAT/Web Service/deploy는 만들거나 실행하지 않았습니다.
-- Render 전용 classic PAT(`read:packages` only, 365일) 생성·저장과 exact-digest `Connect` 검증은 사용자가 승인했습니다. GitHub `Confirm access` 2FA는 사용자가 직접 완료해야 하며 token/credential/Connect는 아직 실행되지 않았습니다.
+- GitHub `Confirm access`는 사용자가 완료했고 Render 전용 classic PAT는 `read:packages` only, 만료일 2027-07-23으로 생성해 `upgrade-rpg-ghcr-read` credential에 저장했습니다. 실제 값은 Git·파일·채팅에 기록하지 않습니다.
+- 브라우저 검사 출력에 노출된 첫 PAT는 Render에 저장하지 않고 즉시 GitHub에서 폐기했습니다. 교체 PAT는 값 출력 없이 전달했으며 회전 기록은 `docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md`에 있습니다.
+- verified exact digest를 Render `Existing Image`에서 `Connect`해 private GHCR 접근과 서비스 설정 화면 진입을 확인했습니다. Web Service 생성, env 주입, deploy는 실행하지 않았습니다.
 
 ## 승인과 안전 경계
 
