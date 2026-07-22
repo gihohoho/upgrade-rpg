@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v329
+# Upgrade RPG Codex working rules — v330
 
 이 파일은 저장소 전체에 적용됩니다. Codex는 작업을 시작할 때 이 파일과 `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -32,9 +32,9 @@
 
 ## 현재 고정 상태
 
-- latest: `v329.fourth-owner-only-attempt-recorded-provenance-inspection-failed`
-- strict result: `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`
-- next safe stage: `review-recorded-provenance-inspection-evidence`
+- latest: `v330.slsa-v1-provenance-path-preparation`
+- strict result: `github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated`
+- next safe stage: `review-and-approve-exact-provenance-path-preparation-sha`
 - GitHub remote: `https://github.com/gihohoho/upgrade-rpg.git`
 - GHCR namespace: `gihohoho`
 - backend image repository: `ghcr.io/gihohoho/upgrade-rpg-backend` (private)
@@ -52,14 +52,14 @@
 - `ghcr-production-publish` environment/main-only: present/configured
 - required reviewer/prevent self-review: missing/missing
 - publish approval model: `owner-only-source-controlled-two-step` (기호가 2026-07-20 선택)
-- source-controlled lifecycle gate: `attempt-recorded` / `publishReviewerGateReady=false`
+- source-controlled lifecycle gate: `preparation-closed` / `publishReviewerGateReady=false`
 - dependency/frontend input lock: complete (exact version + SHA-256, binary wheel only)
 - byte-for-byte deterministic image: 보장한다고 주장하지 않음
 - prior preparation SHA: `350bbd085f1cf636810d75ddcbb5321e0791256c` approved and consumed
 - bootstrap-fix preparation SHA: `2f77ebf0f60a39c936509df26f903995f0c62967` approved and consumed
 - Dockerfile-fix preparation SHA: `b35dfacf427162b348a6bd29eb030778edc7741c` approved and consumed
 - workflow run/login/build/push: four failed runs / yes / yes / yes
-- reviewed workflow source/semantic SHA-256: `245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd` / `e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c`
+- reviewed workflow source/semantic SHA-256: `3331484f280a12a239275785bef625f18656c62ccbe33e8707a296ac2e204843` / `526c4d21f9bc223e25829f60bf804f9167f6905b9129ffe1e70d85f354d57126`
 
 ## v321 승인과 v322 감사 결과
 
@@ -125,7 +125,7 @@ live 증거는 authorization 실행 시점 기준 4시간 이내여야 하므로
 
 ## 현재 안전 경계
 
-현재 lifecycle은 v329 `attempt-recorded`이고 gate는 닫혀 있습니다. 네 실행 모두 rerun 금지입니다. 4차 run은 validation, local build, SBOM, local Trivy를 통과하고 GHCR에 digest를 push했지만 SLSA v1 provenance의 `buildType` 경로 검사에서 실패했습니다. exact-digest Trivy와 Cosign은 미실행이므로 pushed digest는 unsigned·미검증 상태이며 production reference나 deploy에 사용하지 않습니다. 다음 focused fix는 workflow가 `SLSA.buildDefinition.buildType`을 검사하도록 바꾸는 범위이며 사용자 승인 전에는 변경하거나 새 workflow를 실행하지 않습니다.
+현재 lifecycle은 v330 `preparation-closed`이고 gate는 닫혀 있으며 승인 SHA는 `null`입니다. 네 실행 모두 rerun 금지입니다. 4차 run은 GHCR에 digest를 push했지만 SLSA v1 provenance 경로 검사에서 실패했고 exact-digest Trivy/Cosign은 미실행입니다. pushed digest는 unsigned·미검증이며 production reference나 deploy에 사용하지 않습니다. v330 focused fix는 `SLSA`/`buildDefinition` 객체를 fail-closed로 확인한 뒤 `SLSA.buildDefinition.buildType`을 검사하고, 구형 경로로 되돌리는 mutation smoke를 추가한 준비 상태입니다. 새 exact preparation SHA 승인 전에는 authorization/workflow를 실행하지 않습니다.
 
 다음 항목은 이번 GitHub 권한 확대와 별개이므로 기호의 구체적인 작업 요청 전에는 변경·실행하지 않습니다.
 
@@ -146,7 +146,7 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-현재 정상 결과는 `github-actions-ghcr-owner-only-attempt-recorded-publish-gated`, 다음 안전 단계는 `review-recorded-provenance-inspection-evidence`입니다. provenance 경로 focused fix와 새 preparation은 기호의 별도 승인 뒤 진행합니다.
+현재 정상 결과는 `github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated`, 다음 안전 단계는 `review-and-approve-exact-provenance-path-preparation-sha`입니다. 준비 커밋의 정확한 40자 SHA를 기호가 별도 승인한 뒤만 authorization을 열고 새 workflow를 한 번 실행합니다.
 
 ## 변경과 검증
 
@@ -158,5 +158,5 @@ python tools/check_codex_handoff_readiness.py --strict
 - Python 파일을 바꾼 경우 변경 범위에 맞는 compileall을, JavaScript 파일을 바꾼 경우 해당 파일 문법 검사를 실행합니다.
 - authorization-open workflow에서는 정적 checker를 먼저 직접 실행한 뒤 `SKIP_GHCR_HANDOFF_SMOKES=1 bash tools/run_smoke_core.sh`를 실행합니다. 이 플래그는 closed root 상태만 전제로 하는 `smoke_github_actions_ghcr_static_plan.py`, `smoke_codex_handoff_readiness.py`, `smoke_next_chat_handoff.py` 세 개만 건너뛰며 앱·백엔드 전체 smoke는 그대로 실행합니다.
 - Vue 변경 시에만 `frontend/vue-app`에서 Python `.venv` 없이 `npm ci`와 `npm run build`를 실행합니다.
-- 현재 v328 Docker/runtime/dependency 변경에는 개발 서버 재시작이 필요 없고 새 로컬 설치도 없습니다. 기호의 요청에 따라 전체 smoke 반복을 줄이고 위험도 기반 검증을 사용합니다.
+- 현재 v330 workflow/checker/문서 변경에는 개발 서버 재시작이 필요 없고 새 로컬 설치도 없습니다. 기호의 요청에 따라 전체 smoke 반복을 줄이고 위험도 기반 검증을 사용합니다.
 - 완료 답변에는 한 일, 검증, 서버 재시작 필요 여부, commit/push 결과, 다음 추천 단계, 필요한 extension/권한/설치 요청을 포함합니다.

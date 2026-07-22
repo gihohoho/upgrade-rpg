@@ -1,4 +1,4 @@
-# Roadmap — v329
+# Roadmap — v330
 
 ## 완료
 
@@ -13,18 +13,17 @@
 ## 현재
 
 ```txt
-latest: v329.fourth-owner-only-attempt-recorded-provenance-inspection-failed
-result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-lifecycle: attempt-recorded / gate=false
-next safe stage: review-recorded-provenance-inspection-evidence
+latest: v330.slsa-v1-provenance-path-preparation
+result: github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated
+lifecycle: preparation-closed / gate=false
+next safe stage: review-and-approve-exact-provenance-path-preparation-sha
 ```
 
 ## 다음 순서
 
-1. 4차 run provenance 실패 증거 검토
-2. `SLSA.buildDefinition.buildType` focused fix 별도 승인
-3. 새 preparation 검증·commit·push 및 exact SHA 승인
-4. 새 A → C → R single dispatch
-5. exact-digest Trivy와 Cosign까지 통과한 digest만 isolated 검증 후보로 사용
+1. v330 preparation 검증·commit·push
+2. 새 preparation의 exact 40자 SHA 승인
+3. 새 A → C → R single dispatch
+4. exact-digest Trivy와 Cosign까지 통과한 digest만 isolated 검증 후보로 사용
 
-정책을 자동 완화하지 않고 기존 세 run도 rerun하지 않습니다. production reference나 deployment는 별도 승인 단계입니다.
+정책을 자동 완화하지 않고 기존 네 run도 rerun하지 않습니다. production reference나 deployment는 별도 승인 단계입니다.

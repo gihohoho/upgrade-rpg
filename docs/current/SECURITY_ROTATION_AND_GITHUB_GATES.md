@@ -1,4 +1,4 @@
-# Security rotation and GitHub gates — v329
+# Security rotation and GitHub gates — v330
 
 ## Secret 원칙
 
@@ -44,3 +44,11 @@
 - workflow의 `SLSA.buildType` 검사만 `SLSA.buildDefinition.buildType`으로 바꾸는 focused fix가 후보입니다.
 
 현재 필요한 extension·설치는 없습니다. `gh` keyring의 기존 계정 token은 만료 상태지만 Windows Git 자격 증명을 명령별 `GH_TOKEN`으로만 사용해 `repo`/`workflow` 작업을 완료했고 token 값을 저장·출력하지 않았습니다. 이 token에는 `read:org`와 `read:packages`가 없지만 현재 evidence 기록에는 필요하지 않습니다. 나중에 로컬에서 GHCR package metadata를 직접 조회해야 할 때만 `read:packages` 권한을 요청합니다.
+
+## v330 preparation 보안 상태
+
+- 4차 run의 login/push/digest 증거를 lifecycle history에 보존했습니다.
+- 새 lifecycle은 `preparation-closed`, gate `false`, approval `null`, not-dispatched입니다.
+- provenance 검사는 `SLSA`/`buildDefinition` 객체와 `buildDefinition.buildType`을 순서대로 fail-closed 확인합니다.
+- workflow source/semantic/per-step SHA-256 잠금을 새 내용으로 갱신했습니다.
+- 새 exact preparation SHA 승인 전에는 authorization, workflow, GHCR login/push를 실행하지 않습니다.

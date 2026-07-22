@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the v328 owner-only Alpine runtime preparation and publish lifecycle."""
+"""Validate the v330 SLSA v1 provenance-path preparation and publish lifecycle."""
 from __future__ import annotations
 
 import argparse
@@ -13,15 +13,15 @@ from typing import Any
 
 import yaml
 
-TOOL_VERSION = "v328.alpine-musllinux-runtime-minimization-preparation"
-READY_RESULT = "github-actions-ghcr-owner-only-runtime-minimization-preparation-ready-publish-gated"
+TOOL_VERSION = "v330.slsa-v1-provenance-path-preparation"
+READY_RESULT = "github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated"
 AUTHORIZATION_OPEN_RESULT = "github-actions-ghcr-owner-only-authorization-open"
 AUTHORIZATION_CLOSED_RESULT = (
     "github-actions-ghcr-owner-only-authorization-closed-awaiting-evidence"
 )
 ATTEMPT_RECORDED_RESULT = "github-actions-ghcr-owner-only-attempt-recorded-publish-gated"
 BLOCKED_RESULT = "blocked-or-failed"
-NEXT_SAFE_STAGE = "review-and-approve-exact-runtime-minimization-preparation-sha"
+NEXT_SAFE_STAGE = "review-and-approve-exact-provenance-path-preparation-sha"
 AUTHORIZATION_OPEN_NEXT_SAFE_STAGE = "dispatch-one-owner-approved-workflow-run"
 AUTHORIZATION_CLOSED_NEXT_SAFE_STAGE = "record-workflow-run-evidence"
 ATTEMPT_RECORDED_NEXT_SAFE_STAGE = "review-recorded-workflow-attempt-evidence"
@@ -81,9 +81,24 @@ ATTEMPT_HISTORY = [
         "imageDigest": None,
         "signatureVerified": False,
     },
+    {
+        "preparationSha": "13b15409929d77b4e6209481596e4f4550a22ba5",
+        "authorizationSha": "4fb31f51ca0de15d77a73390b5a07e394ffce12a",
+        "closureSha": "ddf475c1a2449feb50ef2af1a536e4150cf0ad59",
+        "recordCommitSha": "f945214f2387b6aa191655d3740e18ef862bd6fb",
+        "runId": 29886540317,
+        "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29886540317",
+        "conclusion": "failure",
+        "registryLoginExecuted": True,
+        "imageBuildExecuted": True,
+        "imagePushExecuted": True,
+        "artifactCount": 2,
+        "imageDigest": "sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149",
+        "signatureVerified": False,
+    },
 ]
-EXPECTED_WORKFLOW_SHA256 = "245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd"
-EXPECTED_WORKFLOW_SEMANTIC_SHA256 = "e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c"
+EXPECTED_WORKFLOW_SHA256 = "3331484f280a12a239275785bef625f18656c62ccbe33e8707a296ac2e204843"
+EXPECTED_WORKFLOW_SEMANTIC_SHA256 = "526c4d21f9bc223e25829f60bf804f9167f6905b9129ffe1e70d85f354d57126"
 SMOKE_CORE_PATH = "tools/run_smoke_core.sh"
 TRANSIENT_SMOKE_SKIP_VARIABLE = "SKIP_GHCR_HANDOFF_SMOKES"
 TRANSIENT_SMOKE_SKIP_COMMAND = "SKIP_GHCR_HANDOFF_SMOKES=1 bash tools/run_smoke_core.sh"
@@ -177,7 +192,7 @@ EXPECTED_RUN_STEP_SHA256 = {
     "publish_sign_verify:Enforce owner-only two-step authorization gate before registry access": "01ef0fd96cbec1ec23d26dedb437b04aa9994adbc0233f4373fbce80a36c589e",
     "publish_sign_verify:Install checksum-pinned Trivy 0.70.0": "22c99c3087798ff0a62797f773e206e248ab473954b770ba8b2acffbd8b74d64",
     "publish_sign_verify:Record exact pushed digest": "037fdfa573f401e059dc2e38da86b90d088f0319e8767c6076f5f97ead29b7de",
-    "publish_sign_verify:Inspect BuildKit provenance and SBOM on exact digest": "8395f1bd48b56880b4aca84f78c0d5a213db86b8cf90be10e353f8b59dfeb1a2",
+    "publish_sign_verify:Inspect BuildKit provenance and SBOM on exact digest": "e7e9d1433671935eb276fe6399850f2860a6f2f5bf7cfe8028f5f4a3702e7ea0",
     "publish_sign_verify:Block vulnerabilities in exact pushed digest before signing": "cb62951efdd38437c05e4f4c76c5cfe60bee7686f3915711e12e81d2d2f0adf6",
     "publish_sign_verify:Validate exact-digest Trivy JSON evidence": "8c3dac75fb13d9fe6183867fe61ec8ca6ee7c14eb8da59b7970df04eef133182",
     "publish_sign_verify:Sign exact digest with GitHub OIDC after all image gates": "bf287d3d80e1bd95acd54ad9294a8804a813ed10c076d557419ebdb53072453f",
@@ -1451,7 +1466,7 @@ def inspect_static_workflow_plan(root: Path) -> dict[str, Any]:
     _require(isinstance(owner_policy, dict), "owner-only approval policy is missing")
     _require(owner_policy.get("selectedOn") == "2026-07-20", "owner-only selection date changed")
     _require(
-        owner_policy.get("phase") == "alpine-musllinux-runtime-minimization-preparation",
+        owner_policy.get("phase") == "slsa-v1-provenance-path-preparation",
         "owner-only lifecycle policy phase changed",
     )
     for key in (

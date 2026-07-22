@@ -6,10 +6,10 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v329.fourth-owner-only-attempt-recorded-provenance-inspection-failed"
-STATIC_PLAN_VERSION = "v328.alpine-musllinux-runtime-minimization-preparation"
-READY_RESULT = "github-actions-ghcr-owner-only-attempt-recorded-publish-gated"
-NEXT_SAFE_STAGE = "review-recorded-provenance-inspection-evidence"
+VERSION = "v330.slsa-v1-provenance-path-preparation"
+STATIC_PLAN_VERSION = VERSION
+READY_RESULT = "github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated"
+NEXT_SAFE_STAGE = "review-and-approve-exact-provenance-path-preparation-sha"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 PREPARATION = "13b15409929d77b4e6209481596e4f4550a22ba5"
@@ -80,11 +80,11 @@ def main() -> int:
 
     policy = json.loads(read("deploy/backend-image-ghcr-policy.example.json"))
     assert policy["schemaVersion"] == VERSION
-    assert policy["preparedOnly"] is False
-    assert policy["ownerOnlyApprovalPhase"] == "attempt-recorded-review"
-    assert policy["publishLifecycleState"] == "attempt-recorded"
-    assert policy["approvedPreparationSha"] == PREPARATION
-    assert policy["exactPreparationShaApproved"] is True
+    assert policy["preparedOnly"] is True
+    assert policy["ownerOnlyApprovalPhase"] == "preparation-awaiting-exact-sha-approval"
+    assert policy["publishLifecycleState"] == "preparation-closed"
+    assert policy["approvedPreparationSha"] is None
+    assert policy["exactPreparationShaApproved"] is False
     assert policy["sourceControlledPublishGateReady"] is False
     assert policy["actualRegistryMutationExecuted"] is True
     assert policy["currentAttemptEvidence"] == {
@@ -105,16 +105,16 @@ def main() -> int:
 
     lifecycle = json.loads(read("deploy/github-actions-ghcr-publish-lifecycle.json"))
     assert lifecycle["schemaVersion"] == "v326.owner-only-publish-lifecycle-with-attempt-history"
-    assert lifecycle["state"] == "attempt-recorded"
+    assert lifecycle["state"] == "preparation-closed"
     assert lifecycle["publishReviewerGateReady"] is False
-    assert lifecycle["approvedPreparationSha"] == PREPARATION
-    assert lifecycle["ownerApproval"]["recorded"] is True
-    assert lifecycle["closure"]["authorizationSourceSha"] == AUTHORIZATION
-    assert lifecycle["closure"]["closureCommitSha"] == CLOSURE
-    assert lifecycle["observedAttempt"]["runId"] == RUN_ID
-    assert lifecycle["observedAttempt"]["status"] == "completed"
-    assert lifecycle["observedAttempt"]["conclusion"] == "failure"
-    assert lifecycle["observedAttempt"]["imageDigest"] == IMAGE_DIGEST
+    assert lifecycle["approvedPreparationSha"] is None
+    assert lifecycle["ownerApproval"]["recorded"] is False
+    assert lifecycle["closure"]["authorizationSourceSha"] is None
+    assert lifecycle["closure"]["closureCommitSha"] is None
+    assert lifecycle["observedAttempt"]["runId"] is None
+    assert lifecycle["observedAttempt"]["status"] == "not-dispatched"
+    assert lifecycle["observedAttempt"]["conclusion"] is None
+    assert lifecycle["observedAttempt"]["imageDigest"] is None
     assert lifecycle["observedAttempt"]["signatureVerified"] is False
 
     static_plan = json.loads(read("deploy/github-actions-ghcr-static-plan.example.json"))
@@ -131,6 +131,8 @@ def main() -> int:
         "cosign sign --yes",
         "cosign verify",
         'DOCKER_BUILD_RECORD_UPLOAD: "false"',
+        'build_definition = slsa.get("buildDefinition")',
+        'if not build_definition.get("buildType"):',
     ):
         if marker not in workflow:
             raise AssertionError(f"workflow missing fail-closed marker: {marker}")
@@ -143,7 +145,7 @@ def main() -> int:
     if hashlib.sha256(revision.read_bytes()).hexdigest() != REVISION_SHA256:
         raise AssertionError("reviewed Alembic revision SHA-256 differs")
 
-    print("OK: v329 Codex handoff and recorded provenance failure documents are synchronized")
+    print("OK: v330 Codex handoff and SLSA v1 provenance-path preparation documents are synchronized")
     return 0
 
 

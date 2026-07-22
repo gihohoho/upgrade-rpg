@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v328.alpine-musllinux-runtime-minimization-preparation",
+  "schemaVersion": "v330.slsa-v1-provenance-path-preparation",
   "staticPolicyOnly": true,
   "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
   "repository": "gihohoho/upgrade-rpg",
@@ -9,8 +9,8 @@
   "targetPlatform": "linux/amd64",
   "repositoryTextLineEnding": "lf",
   "workflowPath": ".github/workflows/publish-backend-ghcr.yml",
-  "workflowSourceSha256": "245630348d384cc1c862014454cb73b6149a8c3a20d7b114763bc6fe655ef4bd",
-  "workflowSemanticSha256": "e08c3788e88da351112bc381d225e418938f7bd74ccec7eb83f9f59eff6f724c",
+  "workflowSourceSha256": "3331484f280a12a239275785bef625f18656c62ccbe33e8707a296ac2e204843",
+  "workflowSemanticSha256": "526c4d21f9bc223e25829f60bf804f9167f6905b9129ffe1e70d85f354d57126",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
   "publishLifecycleSchemaVersion": "v326.owner-only-publish-lifecycle-with-attempt-history",
   "workflowFilePresent": true,
@@ -26,7 +26,7 @@
   ],
   "ownerOnlyApprovalPolicy": {
     "selectedOn": "2026-07-20",
-    "phase": "alpine-musllinux-runtime-minimization-preparation",
+    "phase": "slsa-v1-provenance-path-preparation",
     "riskAcceptedByOwner": true,
     "exactPreparationShaApprovalRequired": true,
     "separateAuthorizationCommitRequired": true,

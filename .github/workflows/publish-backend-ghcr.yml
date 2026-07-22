@@ -520,10 +520,14 @@ jobs:
 
           provenance = json.loads(Path("registry-provenance.json").read_text(encoding="utf-8"))
           sbom = json.loads(Path("registry-sbom.json").read_text(encoding="utf-8"))
-          if not isinstance(provenance.get("SLSA"), dict):
+          slsa = provenance.get("SLSA")
+          if not isinstance(slsa, dict):
               raise SystemExit("SLSA provenance is missing")
-          if not provenance["SLSA"].get("buildType"):
-              raise SystemExit("SLSA buildType is missing")
+          build_definition = slsa.get("buildDefinition")
+          if not isinstance(build_definition, dict):
+              raise SystemExit("SLSA buildDefinition is missing")
+          if not build_definition.get("buildType"):
+              raise SystemExit("SLSA buildDefinition.buildType is missing")
           if sbom.get("SPDX", {}).get("SPDXID") != "SPDXRef-DOCUMENT":
               raise SystemExit("registry SPDX SBOM is missing")
           PY

@@ -1,18 +1,18 @@
-# Current Status — v329
+# Current Status — v330
 
 ## 현재 결과
 
 ```txt
-latest: v329.fourth-owner-only-attempt-recorded-provenance-inspection-failed
-strict result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-next safe stage: review-recorded-provenance-inspection-evidence
+latest: v330.slsa-v1-provenance-path-preparation
+strict result: github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated
+next safe stage: review-and-approve-exact-provenance-path-preparation-sha
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR repository: ghcr.io/gihohoho/upgrade-rpg-backend
-lifecycle: attempt-recorded
+lifecycle: preparation-closed
 publishReviewerGateReady: false
 ```
 
-CI credential은 GitHub Actions `GITHUB_TOKEN`이고 local PAT는 deferred입니다. workflow는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `owner-only-source-controlled-two-step` source-controlled lifecycle gate를 사용하며 `run_attempt=1`, single dispatch, immediate closure, rerun 금지를 강제합니다. 일반 R 상태 계약의 다음 단계 `review-recorded-workflow-attempt-evidence`는 유지하고, 현재 구체적 단계는 `review-recorded-provenance-inspection-evidence`입니다.
+CI credential은 GitHub Actions `GITHUB_TOKEN`이고 local PAT는 deferred입니다. workflow는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `owner-only-source-controlled-two-step` source-controlled lifecycle gate를 사용하며 `run_attempt=1`, single dispatch, immediate closure, rerun 금지를 강제합니다. 4차 run 증거는 history에 보존했고, 현재 구체적 단계는 `review-and-approve-exact-provenance-path-preparation-sha`입니다.
 
 ## 세 번째 실행
 
@@ -43,6 +43,15 @@ Trivy 기준 fixed version이 있는 항목은 `jaraco.context 6.1.0`, `wheel 0.
 
 2026-07-22T02:37:10Z 기준 allowlist/full SHA, 기본 token read-only, fork write token/secret false, `ghcr-production-publish` main-only와 secrets/variables 0/0을 authorization 직전에 재확인했습니다. native required reviewer/prevent self-review는 비공개 개인 저장소 제약으로 없습니다.
 
+## v330 focused fix 준비
+
+- workflow는 `SLSA` 객체와 `SLSA.buildDefinition` 객체를 각각 검사합니다.
+- `buildType`은 SLSA v1 실제 경로인 `SLSA.buildDefinition.buildType`에서만 확인합니다.
+- 구형 `SLSA.buildType`으로 되돌리거나 `buildDefinition` 검사를 제거하면 mutation smoke가 차단합니다.
+- workflow source/semantic SHA-256은 `3331484f280a12a239275785bef625f18656c62ccbe33e8707a296ac2e204843` / `526c4d21f9bc223e25829f60bf804f9167f6905b9129ffe1e70d85f354d57126`으로 잠겼습니다.
+- 현재 lifecycle은 `preparation-closed`, gate `false`, `approvedPreparationSha=null`, `observedAttempt.status=not-dispatched`입니다.
+- 새 workflow/login/build/push는 실행하지 않았습니다.
+
 ## 운영·개발 경계
 
 - target `linux/amd64`, private GHCR
@@ -63,6 +72,6 @@ Trivy 기준 fixed version이 있는 항목은 `jaraco.context 6.1.0`, `wheel 0.
 - Distroless Debian 12 후보는 실제 동일 검사에서 41건으로 실패해 채택하지 않았습니다.
 - 위 내용은 v328 preparation commit 시점의 준비 결과입니다. 그 시점에 lifecycle은 `preparation-closed`, 승인 SHA는 `null`, 새 workflow는 미실행이었습니다. 현재 상태는 위의 네 번째 실행 기록과 같이 `attempt-recorded`입니다.
 
-다음 단계는 기록된 provenance 검사 실패를 검토하고 `SLSA.buildDefinition.buildType` focused fix를 별도 승인하는 것입니다. 현재 필요한 extension·설치·추가 권한은 없고 서버 재시작도 불필요합니다. 로컬 token은 `read:packages`가 없어 GHCR package API 조회는 할 수 없지만 이번 증거 기록에는 필요하지 않습니다.
+다음 단계는 v330 준비 커밋의 정확한 40자 SHA를 별도 승인하는 것입니다. 현재 필요한 extension·설치·추가 권한은 없고 서버 재시작도 불필요합니다. 로컬 token은 `read:packages`가 없어 GHCR package API 조회는 할 수 없지만 이번 준비에는 필요하지 않습니다.
 
 검증은 기호의 요청에 따라 위험도 기반 최소 범위로 실행합니다. 문서·handoff·상태값 변경에는 관련 strict checker와 handoff smoke만 사용하고 전체 core smoke는 실행하지 않습니다. 전체 smoke는 핵심 로직·DB/Alembic·API 계약·공통 구조·여러 영역 변경 또는 실제 배포 후보 직전에만 1회 실행합니다.

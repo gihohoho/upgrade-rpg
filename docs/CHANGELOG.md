@@ -1,3 +1,11 @@
+# v330.slsa-v1-provenance-path-preparation
+
+- run `29886540317`의 실패 로그와 registry provenance artifact에서 SLSA v1 `buildType` 위치를 `SLSA.buildDefinition.buildType`으로 재확인.
+- workflow가 `SLSA`/`buildDefinition` 객체를 fail-closed로 검사한 뒤 `buildDefinition.buildType`을 확인하도록 focused fix.
+- workflow source/semantic/per-step SHA-256 잠금을 갱신하고 구형 경로로 되돌리는 mutation smoke를 추가.
+- 4차 run의 push/digest/artifact 증거를 `attemptHistory`에 보존하고 새 lifecycle을 `preparation-closed`, gate `false`, approval `null`, not-dispatched로 초기화.
+- 새 workflow는 미실행이며 preparation commit의 exact 40자 SHA 승인 전에 authorization을 열지 않음.
+
 # v329.fourth-owner-only-attempt-recorded-provenance-inspection-failed
 
 - exact preparation `13b15409929d77b4e6209481596e4f4550a22ba5` 승인과 single-dispatch run `29886540317` 기록.

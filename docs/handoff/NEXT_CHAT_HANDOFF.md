@@ -1,4 +1,4 @@
-# Upgrade RPG Codex handoff — v329
+# Upgrade RPG Codex handoff — v330
 
 ## 작업 원칙
 
@@ -13,9 +13,9 @@
 ## 현재 고정값
 
 ```txt
-latest: v329.fourth-owner-only-attempt-recorded-provenance-inspection-failed
-strict result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-next safe stage: review-recorded-provenance-inspection-evidence
+latest: v330.slsa-v1-provenance-path-preparation
+strict result: github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated
+next safe stage: review-and-approve-exact-provenance-path-preparation-sha
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR namespace: gihohoho
 repository: ghcr.io/gihohoho/upgrade-rpg-backend
@@ -23,7 +23,7 @@ visibility/platform: private / linux/amd64
 CI credential: GitHub Actions GITHUB_TOKEN
 local credential/PAT: deferred
 publish approval model: owner-only-source-controlled-two-step
-source-controlled lifecycle gate: attempt-recorded / publishReviewerGateReady=false
+source-controlled lifecycle gate: preparation-closed / publishReviewerGateReady=false
 workflow/login/build/push executed: yes/yes/yes/yes
 ```
 
@@ -38,7 +38,7 @@ workflow/login/build/push executed: yes/yes/yes/yes
 - C `authorization-closed-awaiting-evidence`
 - R `attempt-recorded` (현재)
 
-authorization은 승인된 preparation의 direct child이고 lifecycle 파일 하나만 변경합니다. workflow는 repository owner, `run_attempt=1`, GitHub API로 확인한 single dispatch만 허용하며 rerun은 금지합니다. run 접수 즉시 immediate closure commit으로 C 상태를 만들고 gate를 닫습니다. C는 자기 SHA를 기록할 수 없어 `closureCommitSha=null`이고, 종료 뒤 별도 R evidence commit이 부모 C의 정확한 `closureCommitSha`와 실제 run/digest/signature 결과를 기록합니다. 일반 계약 next stage `review-recorded-workflow-attempt-evidence`는 보존하며, 이번 구체적 next stage는 `review-and-approve-exact-runtime-minimization-preparation-sha`입니다.
+authorization은 승인된 preparation의 direct child이고 lifecycle 파일 하나만 변경합니다. workflow는 repository owner, `run_attempt=1`, GitHub API로 확인한 single dispatch만 허용하며 rerun은 금지합니다. run 접수 즉시 immediate closure commit으로 C 상태를 만들고 gate를 닫습니다. C는 자기 SHA를 기록할 수 없어 `closureCommitSha=null`이고, 종료 뒤 별도 R evidence commit이 부모 C의 정확한 `closureCommitSha`와 실제 run/digest/signature 결과를 기록합니다. 일반 계약 next stage `review-recorded-workflow-attempt-evidence`는 보존하며, 이번 구체적 next stage는 `review-and-approve-exact-provenance-path-preparation-sha`입니다.
 
 ## 세 번째 owner-only 시도
 
@@ -129,11 +129,11 @@ python tools/check_codex_handoff_readiness.py --strict
 기대값:
 
 ```txt
-result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
-next safe stage: review-recorded-provenance-inspection-evidence
+result: github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated
+next safe stage: review-and-approve-exact-provenance-path-preparation-sha
 ```
 
-4차 run `29886540317`은 GHCR push까지 성공했고 digest는 `sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149`입니다. SLSA v1 provenance의 buildType은 `SLSA.buildDefinition.buildType`에 있었지만 workflow가 구형 경로를 검사해 실패했습니다. exact-digest Trivy/Cosign은 미실행이고 digest는 unsigned·미검증입니다. 다음 focused fix는 이 provenance 경로 검사만 고치는 범위이며 별도 승인 전 변경·실행하지 않습니다.
+4차 run `29886540317`은 GHCR push까지 성공했고 digest는 `sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149`입니다. SLSA v1 provenance의 buildType은 `SLSA.buildDefinition.buildType`에 있었지만 workflow가 구형 경로를 검사해 실패했습니다. exact-digest Trivy/Cosign은 미실행이고 digest는 unsigned·미검증입니다. v330 focused fix는 `SLSA`/`buildDefinition` 객체와 `buildDefinition.buildType`을 fail-closed로 확인하고 구형 경로 복원을 mutation smoke로 차단합니다. 현재 approval SHA는 `null`, run은 not-dispatched입니다. 준비 커밋의 exact SHA 승인 전에는 authorization/workflow를 실행하지 않습니다.
 
 ## 안전 경계
 

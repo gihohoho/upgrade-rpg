@@ -1,6 +1,6 @@
 {
   "schemaVersion": "v326.owner-only-publish-lifecycle-with-attempt-history",
-  "state": "attempt-recorded",
+  "state": "preparation-closed",
   "publishReviewerGateReady": false,
   "priorApprovedPreparationSha": "350bbd085f1cf636810d75ddcbb5321e0791256c",
   "priorAttemptEvidence": {
@@ -60,12 +60,27 @@
       "artifactCount": 1,
       "imageDigest": null,
       "signatureVerified": false
+    },
+    {
+      "preparationSha": "13b15409929d77b4e6209481596e4f4550a22ba5",
+      "authorizationSha": "4fb31f51ca0de15d77a73390b5a07e394ffce12a",
+      "closureSha": "ddf475c1a2449feb50ef2af1a536e4150cf0ad59",
+      "recordCommitSha": "f945214f2387b6aa191655d3740e18ef862bd6fb",
+      "runId": 29886540317,
+      "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29886540317",
+      "conclusion": "failure",
+      "registryLoginExecuted": true,
+      "imageBuildExecuted": true,
+      "imagePushExecuted": true,
+      "artifactCount": 2,
+      "imageDigest": "sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149",
+      "signatureVerified": false
     }
   ],
-  "approvedPreparationSha": "13b15409929d77b4e6209481596e4f4550a22ba5",
+  "approvedPreparationSha": null,
   "ownerApproval": {
-    "recorded": true,
-    "recordedAtUtc": "2026-07-22T02:36:00Z",
+    "recorded": false,
+    "recordedAtUtc": null,
     "evidence": "exact-40-character-sha-user-message"
   },
   "githubLiveSettings": {
@@ -96,17 +111,17 @@
     "immediateClosureAfterRunAccepted": true
   },
   "closure": {
-    "authorizationSourceSha": "4fb31f51ca0de15d77a73390b5a07e394ffce12a",
-    "closureCommitSha": "ddf475c1a2449feb50ef2af1a536e4150cf0ad59",
-    "preparedAtUtc": "2026-07-22T02:43:13Z"
+    "authorizationSourceSha": null,
+    "closureCommitSha": null,
+    "preparedAtUtc": null
   },
   "observedAttempt": {
-    "runId": 29886540317,
-    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29886540317",
-    "runAttempt": 1,
-    "status": "completed",
-    "conclusion": "failure",
-    "imageDigest": "sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149",
+    "runId": null,
+    "runUrl": null,
+    "runAttempt": null,
+    "status": "not-dispatched",
+    "conclusion": null,
+    "imageDigest": null,
     "signatureVerified": false
   }
 }
