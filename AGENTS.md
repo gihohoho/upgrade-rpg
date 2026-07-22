@@ -16,7 +16,11 @@
 ## 개발 서버와 터미널의 계속 적용 권한
 
 - Codex는 VS Code/Codex 터미널을 자유롭게 사용하고 실행 중인 개발 서버를 재사용할 수 있습니다.
+- Codex는 작업과 검증에 필요하면 프론트엔드, 백엔드, 프로젝트 루트 legacy 정적 서버를 별도 재승인 없이 직접 시작·중지·재시작할 수 있습니다.
+- backend 의존성으로 이미 생성된 local PostgreSQL 컨테이너의 단순 시작·중지도 Codex가 직접 할 수 있습니다. DB reset·recreate·volume 삭제·seed·restore·migration은 이 권한에 포함되지 않습니다.
 - 백엔드 `127.0.0.1:8000`과 프론트엔드 `127.0.0.1:5173`이 정상이라면 작업마다 종료·재시작하지 않습니다.
+- 루트 `index.html`과 `admin.html`은 Vue `5173`이 아니라 프로젝트 루트를 제공하는 `http://127.0.0.1:5500/index.html`, `http://127.0.0.1:5500/admin.html`로 검증합니다.
+- `file:///C:/Users/HOME/Desktop/Upgrade%20RPG/...`는 파일 위치 확인에는 맞지만 origin이 `null`이므로 API `fetch()` 통합 검증 주소로 사용하지 않습니다.
 - 소스 변경은 Uvicorn `--reload`와 Vite HMR에 맡기고, 프로세스가 죽었거나 설정 변경 때문에 필요한 경우에만 재시작합니다.
 - 서버를 재시작하지 않은 작업은 완료 답변에 “서버 재시작 불필요”라고 명확히 적습니다.
 

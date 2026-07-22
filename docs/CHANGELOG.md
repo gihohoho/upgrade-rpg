@@ -4,6 +4,8 @@
 - production checker 세 개가 exact approved digest만 허용하고 placeholder·tag·다른 digest를 fail-closed하도록 갱신.
 - actual secret·managed DB·provider CA·network 값은 placeholder로 유지하고 Docker pull·container·deploy는 실행하지 않음.
 - local `Failed to fetch` 원인을 PostgreSQL `127.0.0.1:55432` 미실행과 legacy `127.0.0.1:5500` 서버 미실행으로 확인.
+- 기존 local PostgreSQL과 프로젝트 루트 `5500` 정적 서버를 시작해 health/db/master-data와 legacy `index.html`·`admin.html` 브라우저 검증을 통과.
+- Codex가 프론트·백엔드·legacy 정적 서버와 기존 local PostgreSQL dependency를 필요에 따라 직접 시작·중지·재시작하고, legacy API 통합 검증은 `file://`나 Vue `5173`이 아닌 root `5500` 주소를 사용하도록 계속 적용 규칙에 고정.
 - 콘텐츠·코드·DB 개발은 가능하되 이후 코드/image 포함 변경은 새 image 공급망 검증이 필요하고 schema 변경은 Alembic·배포 순서를 별도 승인하도록 handoff에 기록.
 
 # v331.fifth-owner-only-attempt-recorded-verified-candidate

@@ -2,7 +2,7 @@
 
 기호의 Upgrade RPG 프로젝트를 현재 Git `main` 최신 상태에서 이어서 진행합니다. 먼저 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 읽고 저장소 규칙을 지켜주세요.
 
-기호는 코딩을 거의 모릅니다. 항상 한국어로 쉽게 설명하고, 모든 터미널 명령 바로 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension, 권한, 설치가 있으면 요청하고 해결될 때까지 다음 handoff에도 기록하세요. Codex가 변경·검증 뒤 git add/commit/push까지 직접 하며 ZIP과 Git 명령 안내는 제공하지 않습니다. 실행 중인 개발 서버는 재사용하고 필요할 때만 재시작합니다.
+기호는 코딩을 거의 모릅니다. 항상 한국어로 쉽게 설명하고, 모든 터미널 명령 바로 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension, 권한, 설치가 있으면 요청하고 해결될 때까지 다음 handoff에도 기록하세요. Codex가 변경·검증 뒤 git add/commit/push까지 직접 하며 ZIP과 Git 명령 안내는 제공하지 않습니다. Codex는 프론트·백엔드·legacy 정적 서버와 기존 local PostgreSQL dependency를 작업에 맞게 직접 시작·중지·재시작하고 정상 서버는 재사용합니다. DB reset·recreate·volume 삭제·seed·restore·migration은 별도 요청 전에는 실행하지 않습니다.
 
 검증은 위험도에 맞춰 최소 범위부터 실행하세요. 기본은 변경 영역의 전용 checker/smoke 1회이고 실패할 때만 범위를 넓힙니다. 문서·handoff·상태값·검사 결과 문자열만 바꾼 경우에는 관련 strict checker와 handoff smoke만 실행하며 전체 `bash tools/run_smoke_core.sh`는 실행하지 않습니다. 전체 smoke는 backend 핵심 로직, DB/Alembic, API 계약, 공통 구조, 여러 영역 변경 또는 실제 배포 후보 직전에만 1회 실행하고 단순 문구 수정 뒤 반복하지 않습니다.
 
@@ -90,6 +90,6 @@ v330 focused fix를 사용한 5차 run은 모든 gate와 Cosign sign/verify를 �
 
 콘텐츠·코드·DB 개발은 가능하지만 현재 pinned image는 변경 전 snapshot입니다. 코드나 image 포함 콘텐츠가 바뀌면 최신 배포 전에 새 image build와 공급망 검증이 필요합니다. DB row 변경은 image와 별개지만 호환성 검증이 필요하고, schema 변경은 새 Alembic revision과 배포 순서를 별도 승인·검토합니다. 구체적인 요청 전에는 DB/Alembic/content mutation을 실행하지 마세요.
 
-로컬 확인 시 backend와 Vue는 실행 중이었지만 PostgreSQL `127.0.0.1:55432`가 꺼져 DB API가 500이었고 legacy HTML용 `127.0.0.1:5500` 서버도 꺼져 있었습니다. 이 때문에 `index.html`·`admin.html`에서 `Failed to fetch`가 발생했으며 배포 준비상 정상 표시는 아닙니다.
+Codex가 기존 local PostgreSQL과 프로젝트 루트 legacy 정적 서버를 시작했습니다. backend `8000`, Vue `5173`, legacy `5500`, PostgreSQL `55432`가 실행 중이고 health/db/master-data가 200입니다. legacy 화면은 반드시 `http://127.0.0.1:5500/index.html`과 `/admin.html`로 검증하세요. `file:///C:/Users/HOME/Desktop/Upgrade%20RPG/...`는 실제 파일 위치로는 맞지만 origin이 `null`이므로 API `fetch()` 통합 테스트 주소로 사용하지 마세요. 두 legacy 화면은 올바른 `5500` 주소의 브라우저 확인에서 `Failed to fetch`가 없었습니다.
 
 사용자 별도 요청 전에는 DB/Alembic/auth/API write/Vue Preview·Apply·write/게임 콘텐츠와 밸런스/production Compose·container·network·volume/자동 deploy를 변경하거나 실행하지 마세요. actual secret/token/PAT/credential/CA/cert/key는 Git·채팅·로그·artifact에 넣지 않습니다.

@@ -54,12 +54,13 @@ Trivy 기준 fixed version이 있는 항목은 `jaraco.context 6.1.0`, `wheel 0.
 - lifecycle `attempt-recorded`, gate `false`, rerun 금지
 - production reference는 verified exact digest로 정적 고정됐으며 pull/deploy는 미실행
 
-## 로컬 Failed to fetch 확인
+## 로컬 Failed to fetch 해결 상태
 
-- backend `127.0.0.1:8000`과 Vue `127.0.0.1:5173` 프로세스는 실행 중입니다.
-- local PostgreSQL `127.0.0.1:55432` 연결이 거부되어 `/api/v1/health/db`와 `/api/v1/game/master-data`가 500입니다.
-- legacy HTML용 `127.0.0.1:5500` 서버도 현재 꺼져 있습니다.
-- 따라서 `index.html`·`admin.html`의 `Failed to fetch`는 배포 준비상 의도된 정상 상태가 아니라, 로컬 DB와 legacy 정적 서버가 실행되지 않은 개발 환경 문제입니다.
+- Codex가 기존 local PostgreSQL 컨테이너와 프로젝트 루트 legacy 정적 서버를 시작했습니다.
+- backend `127.0.0.1:8000`, Vue `127.0.0.1:5173`, legacy `127.0.0.1:5500`, PostgreSQL `127.0.0.1:55432`가 실행 중입니다.
+- `/api/v1/health`, `/api/v1/health/db`, `/api/v1/game/master-data`는 모두 200입니다.
+- 브라우저에서 `http://127.0.0.1:5500/index.html`과 `http://127.0.0.1:5500/admin.html`을 실제 확인했고 `Failed to fetch` 로그가 없습니다.
+- `file:///C:/Users/HOME/Desktop/Upgrade%20RPG/...` 경로는 파일 위치로는 맞지만 origin이 `null`이므로 API 통합 실행 주소로는 사용하지 않습니다.
 
 ## 이후 콘텐츠·DB 변경 원칙
 

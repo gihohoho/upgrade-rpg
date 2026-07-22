@@ -5,7 +5,7 @@
 - 시작할 때 `AGENTS.md`, 이 파일, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 - 기호에게 한국어로 쉽게 설명하고 모든 명령 전에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적습니다.
 - 필요한 extension·권한·설치는 해결될 때까지 요청과 handoff 기록을 반복합니다.
-- 실행 중인 개발 서버를 재사용하며 필요할 때만 재시작합니다.
+- Codex가 프론트·백엔드·legacy 정적 서버와 기존 local PostgreSQL dependency를 필요에 따라 직접 시작·중지·재시작하고 정상 서버는 재사용합니다. DB reset·recreate·volume 삭제·seed·restore·migration은 별도 요청 전에는 실행하지 않습니다.
 - Codex가 검증 뒤 git add/commit/push까지 직접 합니다. ZIP과 Git 명령 안내는 제공하지 않습니다.
 - actual secret/token/PAT/credential/CA/cert/key는 Git·채팅·로그·artifact에 넣지 않습니다.
 - 검증은 변경 영역의 전용 checker/smoke 1회부터 시작하고 실패할 때만 확대합니다. 문서·handoff·상태값 변경에는 전체 core smoke를 실행하지 않습니다. 전체 `bash tools/run_smoke_core.sh`는 backend 핵심 로직, DB/Alembic, API 계약, 공통 구조, 여러 영역 변경 또는 실제 배포 후보 직전에만 1회 실행합니다.
@@ -154,13 +154,14 @@ next safe stage: review-production-reference-and-approve-isolated-pull-validatio
 
 ## 로컬 개발 상태와 이후 변경 원칙
 
-- backend `127.0.0.1:8000`과 Vue `127.0.0.1:5173`은 실행 중입니다.
-- PostgreSQL `127.0.0.1:55432`가 꺼져 `/api/v1/health/db`와 master-data API가 500이고, legacy 정적 서버 `127.0.0.1:5500`도 꺼져 있습니다. 따라서 `index.html`·`admin.html`의 `Failed to fetch`는 배포 준비상 정상 표시가 아닙니다.
+- backend `127.0.0.1:8000`, Vue `127.0.0.1:5173`, legacy 정적 서버 `127.0.0.1:5500`, PostgreSQL `127.0.0.1:55432`가 실행 중입니다.
+- `/api/v1/health`, `/api/v1/health/db`, `/api/v1/game/master-data`는 모두 200이고, `http://127.0.0.1:5500/index.html`과 `/admin.html` 브라우저 확인에서 `Failed to fetch`가 없습니다.
+- `file:///C:/Users/HOME/Desktop/Upgrade%20RPG/...`는 파일 위치로는 맞지만 origin이 `null`이므로 API 통합 검증 주소로 사용하지 않습니다. Vue `5173`도 루트 legacy HTML 제공 주소가 아닙니다.
 - 콘텐츠·코드·DB 개발은 가능하지만 현재 pinned image는 변경 전 snapshot입니다. 최신 코드나 image 포함 콘텐츠를 배포하려면 새 image build와 공급망 검증이 필요합니다.
 - DB row 변경은 image digest와 별개지만 호환성 검증이 필요하고, schema 변경은 새 Alembic revision과 배포 순서를 별도 승인·검토합니다.
 
 ## 안전 경계
 
-별도 요청 전에는 DB write/restore/reset/seed, Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스, production Compose/container/network/volume, isolated pull/validation과 자동 deploy를 실행하지 않습니다. 현재 필요한 extension·설치·추가 권한은 없습니다. 배포 정적 준비에는 서버 재시작이 불필요하지만 legacy 화면 사용에는 기존 PostgreSQL과 정적 서버 시작이 필요합니다.
+별도 요청 전에는 DB write/restore/reset/seed, Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스, production Compose/container/network/volume, isolated pull/validation과 자동 deploy를 실행하지 않습니다. 현재 필요한 extension·설치·추가 권한은 없습니다. 이번에는 기존 local PostgreSQL과 legacy 정적 서버를 시작했고 backend/Vue 재시작은 불필요했습니다.
 
 로컬 PowerShell 전역 `DEBUG=release`는 Pydantic boolean 설정과 충돌합니다. 전체 smoke가 필요할 때 저장값을 바꾸지 말고 해당 명령 프로세스에만 `DEBUG=false`를 지정합니다. 로컬 `backend/.env`의 `DEBUG=true`는 정상입니다. 로컬 token에는 `read:packages`가 없어 GHCR package metadata API 조회는 불가하지만 현재 작업에는 필요하지 않습니다.
