@@ -22,6 +22,16 @@
 - 첫 배포는 이전 production image가 없으므로 실패 시 proxy route를 철회하고 새 backend만 중지합니다. DB, CA, network, volume은 보존합니다.
 - DB/Alembic mutation, `docker compose down -v`, 자동 retry/deploy는 승인 범위 밖입니다.
 
+## Pending Render GHCR credential — v337
+
+- Render workspace는 `Hobby (legacy)`이고 payment method가 없습니다.
+- private GHCR pull용 registry credential은 아직 없습니다.
+- 기존 GitHub CLI OAuth token을 Render에 저장하지 않습니다.
+- 추천안은 dedicated classic PAT `render-upgrade-rpg-ghcr-read`, 365일, `read:packages` only입니다.
+- `repo`, `write:packages`, `delete:packages`는 허용하지 않습니다.
+- token 생성·Render 저장은 민감정보 외부 전송이므로 사용자 action-time 승인 뒤에만 실행합니다.
+- 생성되면 실제 값 없이 생성일·만료일·폐기/회전 예정만 이 문서에 기록합니다.
+
 ## GitHub gate 상태
 
 2026-07-22T12:49:50Z live API 재확인:

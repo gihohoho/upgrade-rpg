@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v336
+# Upgrade RPG Codex handoff — v337
 
 ## 현재 상태
 
 ```txt
-latest: v336.neon-readonly-connectivity-verified-render-onboarding-required
-strict result: neon-direct-pooled-readonly-connectivity-verified
-next safe stage: owner-connect-render-and-review-database-initialization-plan
+latest: v337.render-account-inspected-private-ghcr-credential-approval-required
+strict result: render-hobby-no-card-existing-image-private-ghcr-credential-required
+next safe stage: owner-approve-dedicated-classic-pat-read-packages-and-render-source-connect
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked
 baseline result: production-deploy-plan-reviewed-inputs-blocked
 baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
@@ -17,7 +17,8 @@ fixed monthly cost: USD 0
 Neon account/project: connected/created (PostgreSQL 16, AWS Singapore)
 Neon credential: exposed initial password rotated; new URLs local-only, not deployed
 Neon read-only connectivity: direct/pooled verified with TLS 1.3 hostname verification
-Render account/service/deploy: not connected/not created/not executed
+Render account/plan/payment: connected/Hobby (legacy)/no card
+Render registry credential/service/deploy: absent/not created/not executed
 approval ready/approved/executed: no/no/no
 ```
 
@@ -37,9 +38,17 @@ Render에는 처음에 결제수단을 등록하지 않아 한도 초과 시 과
 
 sanitized evidence는 `deploy/review/neon-readonly-connectivity-v336.json`이며 `python tools/check_neon_readonly_connectivity.py --evidence`로 secret 없이 재검증합니다. 첫 검사에서 Neon Proxy 뒤 `pg_stat_ssl`을 클라이언트 TLS 판정에 잘못 사용해 direct 단계가 실패했지만, 클라이언트 TLS transport의 인증서·cipher·version을 직접 확인하도록 수정한 뒤 Direct/Pooler가 모두 통과했습니다.
 
-## 아직 사용자 작업이 필요한 것
+## Render account checkpoint — 2026-07-22
 
-Render Hobby에 로그인해야 합니다. Render 결제수단은 추가하지 않습니다. DB 이름은 현재 Neon 기본 `neondb`이고 계획상 대상은 `rpg_game`이므로, DB 생성과 schema/data 초기화는 별도 실행 계획과 승인 뒤에만 진행합니다. 필요한 extension·로컬 설치는 없습니다.
+Chrome의 로그인된 Render Dashboard를 읽기 전용으로 확인했습니다. workspace는 `Hobby (legacy)`, payment method는 `No card on file`, billing information도 없습니다. 기존 Singapore Python service 1개는 owner-suspended이고 active service는 0개입니다. 기존 이름과 workspace ID는 evidence에 기록하지 않았습니다.
+
+새 Web Service의 `Existing Image` 흐름은 GitHub Container Registry와 credential 추가를 지원합니다. 현재 credential은 없습니다. 양식에는 name, registry, username, Personal Access Token이 필요합니다. credential/PAT/Web Service/payment/deploy mutation은 실행하지 않았습니다. sanitized evidence는 `deploy/review/render-account-readiness-v337.json`, 상세 계획은 `docs/current/RENDER_ACCOUNT_AND_REGISTRY_CREDENTIAL_PLAN.md`입니다.
+
+## 아직 사용자 승인이 필요한 것
+
+다음 민감 작업은 Render 전용 GitHub classic PAT를 `read:packages` only, 365일 만료로 생성하고 Render credential에 직접 저장한 뒤 exact-digest image `Connect` 검증을 하는 것입니다. 기존 GitHub CLI OAuth token은 재사용하지 않습니다. 브라우저에서 token을 외부 서비스에 저장하는 작업이므로 action-time 승인이 필요합니다. 이 승인에는 Web Service 생성/deploy, env 주입, DB/Alembic mutation이 포함되지 않습니다.
+
+DB 이름은 현재 Neon 기본 `neondb`이고 계획상 대상은 `rpg_game`이므로, DB 생성과 schema/data 초기화도 별도 실행 계획과 승인 뒤에만 진행합니다. 필요한 extension·로컬 설치는 없습니다.
 
 로그인 뒤에도 resource 생성, GHCR `read:packages` PAT 생성·주입, DB schema/data 초기화·이식, actual deploy는 실행 준비 범위와 exact 40자리 SHA 승인을 별도로 확인합니다.
 
@@ -80,6 +89,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v336 기대값은 `neon-direct-pooled-readonly-connectivity-verified`, 다음 단계는 `owner-connect-render-and-review-database-initialization-plan`입니다. v335 provider-selection 결과와 v334 deployment baseline도 보존합니다.
+v337 현재 결과는 `render-hobby-no-card-existing-image-private-ghcr-credential-required`, 다음 단계는 `owner-approve-dedicated-classic-pat-read-packages-and-render-source-connect`입니다. v336 Neon evidence, v335 provider-selection 결과와 v334 deployment baseline도 보존합니다.
 
 서버 재시작은 이 공급자 선택·문서 작업에 필요하지 않습니다.

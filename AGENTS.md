@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v336
+# Upgrade RPG Codex working rules — v337
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -31,9 +31,9 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v336.neon-readonly-connectivity-verified-render-onboarding-required
-strict result: neon-direct-pooled-readonly-connectivity-verified
-next safe stage: owner-connect-render-and-review-database-initialization-plan
+latest: v337.render-account-inspected-private-ghcr-credential-approval-required
+strict result: render-hobby-no-card-existing-image-private-ghcr-credential-required
+next safe stage: owner-approve-dedicated-classic-pat-read-packages-and-render-source-connect
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked / production-deploy-plan-reviewed-inputs-blocked
 baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
@@ -57,7 +57,9 @@ Alembic current: v295_initial_schema / new revision needed: no
 - Neon Free PostgreSQL 16 AWS Singapore 프로젝트는 생성됐고 Neon Auth는 사용하지 않습니다. 채팅에 노출된 최초 `neondb_owner` 비밀번호는 2026-07-22에 재설정해 폐기했습니다.
 - 새 Neon direct/pooled URL은 앱·배포 플랫폼에 아직 주입하지 않고 Git/Docker 제외 경로 `deploy/.env.production`에만 보관합니다.
 - Direct/Pooler 모두 PostgreSQL 16.14, TLS 1.3 인증서·호스트 검증, read-only transaction을 통과했습니다. sanitized evidence는 `deploy/review/neon-readonly-connectivity-v336.json`입니다.
-- Render 계정 연결과 Web Service 생성, DB schema/data 초기화, production deploy는 아직 하지 않았습니다.
+- Render `Hobby (legacy)` workspace는 연결됐고 결제수단·billing 정보가 없습니다. 기존 service 1개는 owner-suspended이며 active service는 0개입니다.
+- `Existing Image`와 GitHub registry credential 양식은 확인했지만 credential/PAT/Web Service/deploy는 만들거나 실행하지 않았습니다.
+- 다음 민감 작업은 Render 전용 classic PAT(`read:packages` only, 365일) 생성·저장과 exact-digest `Connect` 검증이며 사용자 action-time 승인 전 실행하지 않습니다.
 
 ## 승인과 안전 경계
 

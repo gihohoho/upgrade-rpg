@@ -1,11 +1,11 @@
-# Current Status — v336
+# Current Status — v337
 
 ## 현재 결과
 
 ```txt
-latest: v336.neon-readonly-connectivity-verified-render-onboarding-required
-strict result: neon-direct-pooled-readonly-connectivity-verified
-next safe stage: owner-connect-render-and-review-database-initialization-plan
+latest: v337.render-account-inspected-private-ghcr-credential-approval-required
+strict result: render-hobby-no-card-existing-image-private-ghcr-credential-required
+next safe stage: owner-approve-dedicated-classic-pat-read-packages-and-render-source-connect
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked
 baseline result: production-deploy-plan-reviewed-inputs-blocked
 baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
@@ -38,7 +38,7 @@ Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 col
 
 ## 아직 하지 않은 것
 
-- Render 계정 로그인과 Web Service 생성
+- Render registry credential와 Web Service 생성
 - 계획상 `rpg_game` 데이터베이스 생성
 - GHCR `read:packages` 전용 credential 생성·주입
 - JWT/admin secret 생성·주입
@@ -47,6 +47,18 @@ Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 col
 - production deploy
 
 Neon resource와 read-only 연결 검증은 완료됐지만 Render resource와 배포 플랫폼 secret 주입, DB/schema/data 준비가 남아 있으므로 v334 deployment plan의 required input은 계속 `unresolved`입니다.
+
+## Render account checkpoint — 2026-07-22
+
+- workspace: `Hobby (legacy)`
+- payment method: `No card on file`
+- existing service: total 1 / active 0 / owner-suspended 1
+- target source: Web Service → Existing Image
+- GitHub Container Registry 지원 확인
+- registry credential: 없음
+- PAT/credential/service/payment/deploy mutation: 없음
+- sanitized evidence: `deploy/review/render-account-readiness-v337.json`
+- next: dedicated classic PAT `read:packages` only 생성·Render 저장·exact image Connect에 대한 사용자 승인
 
 ## 검증된 배포 후보
 
@@ -68,4 +80,4 @@ Neon resource와 read-only 연결 검증은 완료됐지만 Render resource와 �
 
 ## 다음 단계
 
-기호가 Render Hobby에 로그인합니다. Render 결제수단은 추가하지 않습니다. 로그인 완료 뒤 Codex가 계정 화면을 확인하고 Web Service 생성 직전 설정과 별도 DB 초기화 계획을 준비합니다. 현재 필요한 로컬 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.
+기호가 dedicated classic PAT `read:packages` only 생성·Render 저장·exact image Connect 범위를 승인하면 Codex가 민감값을 출력하지 않고 진행합니다. Web Service 생성/deploy와 DB 초기화는 포함하지 않습니다. 현재 필요한 로컬 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.

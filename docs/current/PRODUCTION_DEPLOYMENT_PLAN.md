@@ -1,6 +1,6 @@
 # Production deployment plan — v334
 
-> v335에서 비용 최소 공급자는 Render Free Web Service Singapore + Neon Free PostgreSQL 16 Singapore로 선택했습니다. v336에서 Neon 프로젝트와 Direct/Pooler read-only TLS 연결은 검증했지만 Render resource, 배포 secret, `rpg_game` DB/schema/data는 아직 준비되지 않았으므로 이 v334 실행 계획의 required input과 approval은 계속 닫혀 있습니다.
+> v335에서 비용 최소 공급자는 Render Free Web Service Singapore + Neon Free PostgreSQL 16 Singapore로 선택했습니다. v336에서 Neon 프로젝트와 Direct/Pooler read-only TLS 연결을 검증했고, v337에서 Render `Hobby (legacy)`/no-card account와 Existing Image 흐름을 확인했습니다. Render registry credential/resource, 배포 secret, `rpg_game` DB/schema/data는 아직 준비되지 않았으므로 이 v334 실행 계획의 required input과 approval은 계속 닫혀 있습니다.
 
 ## 결론
 

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "v337.render-account-inspected-private-ghcr-credential-approval-required",
+  "checkedAtUtc": "2026-07-22T15:59:18Z",
+  "workspace": {
+    "plan": "Hobby (legacy)",
+    "paymentMethodOnFile": false,
+    "billingInformationOnFile": false
+  },
+  "existingServices": {
+    "total": 1,
+    "active": 0,
+    "suspendedByOwner": 1,
+    "suspendedServiceNameRecorded": false
+  },
+  "targetFlow": {
+    "serviceType": "Web Service",
+    "sourceType": "Existing Image",
+    "githubContainerRegistrySupported": true,
+    "registryCredentialPresent": false,
+    "requiredCredentialFields": [
+      "name",
+      "registry",
+      "username",
+      "personalAccessToken"
+    ]
+  },
+  "mutations": {
+    "paymentMethodAdded": false,
+    "registryCredentialCreated": false,
+    "tokenCreatedOrTransmitted": false,
+    "webServiceCreated": false,
+    "deployExecuted": false
+  },
+  "secretOrPersonalDataRecorded": false,
+  "result": "render-hobby-no-card-existing-image-private-ghcr-credential-required",
+  "nextSafeStage": "owner-approve-dedicated-classic-pat-read-packages-and-render-source-connect"
+}
