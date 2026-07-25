@@ -31,6 +31,9 @@ build/
 # Logs
 *.log
 
+# Local Code Review Graph index (CLI-only trial; never commit)
+.code-review-graph/
+
 # Temporary archives
 *.zip
 # Local PostgreSQL backups (sensitive data; never commit or hand off)

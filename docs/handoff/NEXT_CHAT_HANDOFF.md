@@ -1,9 +1,11 @@
-# Upgrade RPG Codex handoff — v338
+# Upgrade RPG Codex handoff — v339
 
 ## 현재 상태
 
 ```txt
 latest: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
+tooling checkpoint: v339.code-review-graph-cli-only-trial-built-ponytail-principle-applied
+tooling result: code-review-graph-cli-only-built-hooks-mcp-disabled
 strict result: render-ghcr-read-credential-exact-digest-connect-verified
 next safe stage: review-render-service-settings-and-database-initialization-plan
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked
@@ -20,6 +22,15 @@ Render registry credential/service/deploy: present/not created/not executed
 Render credential action ready/approved/executed: yes/yes/yes
 production deployment approval ready/approved/executed: no/no/no
 ```
+
+## 로컬 코드 리뷰 보조 도구 — 2026-07-26
+
+- Code Review Graph 2.3.7은 `%LOCALAPPDATA%\UpgradeRPGTools\code-review-graph`의 사용자 전용 독립 환경에 CLI-only로 설치했습니다.
+- 첫 로컬 그래프 상태는 385 files / 4,242 nodes / 35,407 edges이며 저장소의 `.code-review-graph/`는 Git에서 제외합니다.
+- backend `.venv`와 프로젝트 dependency는 변경하지 않았습니다.
+- `code-review-graph install`, MCP, Codex hook/instruction 주입, watch/daemon, Git hook, cloud embedding은 사용하지 않습니다.
+- 다중 파일 리뷰 때만 수동 CLI 결과를 보조 evidence로 사용하며 그래프 위험도만으로 결함을 단정하지 않습니다.
+- Ponytail 플러그인은 설치하지 않았고 최소 구현 원칙 두 줄만 `AGENTS.md`에 반영했습니다.
 
 ## 완료된 공급자 준비
 

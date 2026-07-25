@@ -1,9 +1,11 @@
-# Current Status — v338
+# Current Status — v339
 
 ## 현재 결과
 
 ```txt
 latest: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
+tooling checkpoint: v339.code-review-graph-cli-only-trial-built-ponytail-principle-applied
+tooling result: code-review-graph-cli-only-built-hooks-mcp-disabled
 strict result: render-ghcr-read-credential-exact-digest-connect-verified
 next safe stage: review-render-service-settings-and-database-initialization-plan
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked
@@ -13,6 +15,15 @@ GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR repository: ghcr.io/gihohoho/upgrade-rpg-backend
 production deployment approval ready/approved/executed: no/no/no
 ```
+
+## 로컬 리뷰 도구 체크포인트 — 2026-07-26
+
+- Code Review Graph 2.3.7을 사용자 전용 독립 환경에 CLI-only로 설치하고 로컬 그래프를 생성했습니다.
+- 현재 그래프 상태: 385 files / 4,242 nodes / 35,407 edges
+- `.code-review-graph/`는 Git 제외이며 backend `.venv`와 프로젝트 dependency는 변경하지 않았습니다.
+- MCP, Codex hooks/instructions, watch/daemon, Git hook, cloud embedding은 구성하지 않았습니다.
+- Ponytail 플러그인은 설치하지 않고 최소 구현 원칙만 `AGENTS.md`에 반영했습니다.
+- 이 도구는 다중 파일 리뷰의 보조 evidence이며 위험도 출력만으로 결함을 판정하지 않습니다.
 
 ## 비용 최소 공급자 선택
 

@@ -1,4 +1,4 @@
-# Upgrade RPG Codex next prompt — v338
+# Upgrade RPG Codex next prompt — v339
 
 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽고 계속 지켜주세요. 기호는 코딩을 거의 모르므로 한국어로 쉽게 설명하고, 모든 터미널 명령 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension·권한·설치는 해결될 때까지 요청해주세요.
 
@@ -8,6 +8,8 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 
 ```txt
 latest: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
+tooling checkpoint: v339.code-review-graph-cli-only-trial-built-ponytail-principle-applied
+tooling result: code-review-graph-cli-only-built-hooks-mcp-disabled
 strict result: render-ghcr-read-credential-exact-digest-connect-verified
 next safe stage: review-render-service-settings-and-database-initialization-plan
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked
@@ -30,6 +32,14 @@ production deployment approval ready/approved/executed: no/no/no
 Render 전용 GitHub classic PAT는 `read:packages` only, 만료일 2027-07-23으로 만들고 `upgrade-rpg-ghcr-read` credential에 저장했습니다. 첫 PAT는 브라우저 검사 출력에 노출된 것을 감지해 Render에 저장하지 않고 즉시 GitHub에서 폐기했습니다. 교체 PAT 값은 채팅·파일·Git·로그에 기록하지 않았습니다.
 
 verified exact digest는 Render `Existing Image`에서 `Connect`에 성공했고 서비스 설정 화면까지 열렸습니다. `Deploy Web Service`는 누르지 않았으므로 Web Service 생성과 배포는 모두 없습니다. sanitized evidence는 `deploy/review/render-private-ghcr-connect-v338.json`입니다.
+
+## 로컬 코드 리뷰 보조 도구 — v339
+
+Code Review Graph 2.3.7은 `%LOCALAPPDATA%\UpgradeRPGTools\code-review-graph`의 독립 환경에 CLI-only로 설치했습니다. 첫 로컬 그래프 상태는 385 files / 4,242 nodes / 35,407 edges이며 `.code-review-graph/`는 Git에서 제외합니다. backend `.venv`와 프로젝트 dependency는 변경하지 않았습니다.
+
+`code-review-graph install`, MCP, Codex hook/instruction 주입, watch/daemon, Git hook, cloud embedding은 사용하지 않습니다. 다중 파일 리뷰가 실제로 필요할 때만 수동 CLI 결과를 보조 evidence로 사용하고, 그래프 위험도만으로 결함이나 수정 필요성을 단정하지 않습니다.
+
+Ponytail 플러그인은 설치하지 않았습니다. 새 추상화·의존성·파일보다 기존 기능을 먼저 사용하고 요청하지 않은 미래용 구조를 만들지 않는 최소 구현 원칙만 `AGENTS.md`에 반영했습니다. 안전·보안·검증·접근성 요구는 단순화를 이유로 생략하지 않습니다.
 
 ## 공급망 안전 baseline
 

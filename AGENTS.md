@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v338
+# Upgrade RPG Codex working rules — v339
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -20,6 +20,16 @@
 - 기존 local PostgreSQL dependency의 단순 시작·중지는 가능하지만 reset·recreate·volume 삭제·seed·restore·migration은 별도 요청 전 금지합니다.
 - 서버를 재시작하지 않았으면 완료 답변에 “서버 재시작 불필요”라고 적습니다.
 
+## 최소 구현 원칙
+
+- 새 추상화·의존성·파일을 만들기 전에 기존 코드, Python/JavaScript 표준 기능, 브라우저·DB·프레임워크 기본 기능으로 해결할 수 있는지 먼저 확인합니다.
+- 요청하지 않은 미래용 구조·설정·scaffolding은 만들지 않으며, 안전·보안·검증·접근성 요구는 단순화를 이유로 생략하지 않습니다.
+
+## Code Review Graph 제한 시험
+
+- Code Review Graph 2.3.7은 사용자 전용 독립 환경에 설치한 **CLI-only 보조 도구**입니다. backend `.venv`와 프로젝트 dependency에는 포함하지 않습니다.
+- `code-review-graph install`, MCP 연결, Codex hooks/instructions, watch/daemon, Git hook은 사용하지 않습니다. 필요한 다중 파일 리뷰에서만 수동 CLI 결과를 보조 evidence로 사용합니다.
+
 ## GitHub와 secret
 
 - 기호는 작업 목적 안에서 Actions, workflow, action SHA, environment, variables와 필요한 GitHub 설정을 Codex가 구성하도록 허용했습니다.
@@ -32,6 +42,8 @@
 
 ```txt
 latest: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
+tooling checkpoint: v339.code-review-graph-cli-only-trial-built-ponytail-principle-applied
+tooling result: code-review-graph-cli-only-built-hooks-mcp-disabled
 strict result: render-ghcr-read-credential-exact-digest-connect-verified
 next safe stage: review-render-service-settings-and-database-initialization-plan
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked / production-deploy-plan-reviewed-inputs-blocked
