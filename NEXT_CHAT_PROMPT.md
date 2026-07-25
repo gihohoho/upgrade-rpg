@@ -1,4 +1,4 @@
-# Upgrade RPG Codex next prompt — v339
+# Upgrade RPG Codex next prompt — v340
 
 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽고 계속 지켜주세요. 기호는 코딩을 거의 모르므로 한국어로 쉽게 설명하고, 모든 터미널 명령 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension·권한·설치는 해결될 때까지 요청해주세요.
 
@@ -7,11 +7,16 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 ## 현재 고정값
 
 ```txt
-latest: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
+latest: v340.render-neon-separated-plans-reviewed-bootstrap-fix-required
+strict result: render-neon-separated-plans-reviewed-fail-closed
+next safe stage: prepare-neon-verify-full-bootstrap-fix-and-new-image
+render plan: v340.render-service-settings-reviewed-creation-blocked
+neon plan: v340.neon-initialization-migration-reviewed-execution-blocked
+render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
+render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
+render checkpoint next stage: review-render-service-settings-and-database-initialization-plan
 tooling checkpoint: v339.code-review-graph-cli-only-trial-built-ponytail-principle-applied
 tooling result: code-review-graph-cli-only-built-hooks-mcp-disabled
-strict result: render-ghcr-read-credential-exact-digest-connect-verified
-next safe stage: review-render-service-settings-and-database-initialization-plan
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked
 baseline result: production-deploy-plan-reviewed-inputs-blocked
 baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
@@ -41,6 +46,16 @@ Code Review Graph 2.3.7은 `%LOCALAPPDATA%\UpgradeRPGTools\code-review-graph`의
 
 Ponytail 플러그인은 설치하지 않았습니다. 새 추상화·의존성·파일보다 기존 기능을 먼저 사용하고 요청하지 않은 미래용 구조를 만들지 않는 최소 구현 원칙만 `AGENTS.md`에 반영했습니다. 안전·보안·검증·접근성 요구는 단순화를 이유로 생략하지 않습니다.
 
+## Render/Neon 분리 계획 — v340
+
+두 계획은 `docs/current/RENDER_SERVICE_SETTINGS_PLAN.md`, `docs/current/NEON_DATABASE_INITIALIZATION_MIGRATION_PLAN.md`와 대응하는 `deploy/*.example.json` 계약으로 검토 완료했습니다.
+
+Neon production branch의 기본 `neondb`는 system-CA hostname verification과 read-only transaction에서 public table 0개, `alembic_version` 없음으로 확인됐습니다. 새 `rpg_game` DB는 만들지 않습니다. 검증된 local custom dump의 22 application tables / 748 rows를 direct URL로 restore한 뒤 exact `v295_initial_schema`를 stamp하는 계획입니다.
+
+현재 v338 image는 SQLAlchemy `asyncpg` production engine에 system-CA verify-full SSLContext를 전달하지 않아 Neon runtime 연결에 실패합니다. `deploy/production.env.example`에도 `ENVIRONMENT=production`, `DEBUG=false`, `PORT=8000`이 빠져 있습니다. 따라서 현재 digest로 Render Web Service를 만들지 않습니다.
+
+고정 순서는 bootstrap fix → 새 exact-digest image publish/isolated validation → DB 초기화 전용 exact-SHA 승인 후 Neon restore/stamp → Render 생성 전용 exact-SHA 승인 후 Web Service create/deploy입니다.
+
 ## 공급망 안전 baseline
 
 - CI credential: GitHub Actions `GITHUB_TOKEN`
@@ -53,14 +68,9 @@ Ponytail 플러그인은 설치하지 않았습니다. 새 추상화·의존성�
 
 ## 다음 작업
 
-문서와 정적 검사로만 다음 두 계획을 분리 검토해주세요.
+Neon verify-full bootstrap과 production env inventory의 focused fix를 준비해주세요. 아직 actual secret을 파일에 기록하거나 새 image publish, Neon restore/stamp, Render Web Service 생성·배포를 실행하지 마세요.
 
-1. Render Free Singapore 서비스 설정: 이름, region, Free instance, health check path, environment variable inventory, auto-deploy 차단, exact digest 유지, rollback 경계
-2. Neon 기본 `neondb`와 계획상 `rpg_game` 차이를 포함한 DB 생성·schema/data 초기화·이식 계획
-
-현재 열린 Render 탭은 서비스 설정 handoff 상태입니다. 읽기 전용 확인에 재사용할 수 있지만 `Deploy Web Service`를 누르지 마세요. 새 PAT를 다시 만들거나 credential을 교체하지 마세요. actual Neon URL, JWT/admin secret, CORS origin도 아직 Render에 넣지 마세요.
-
-실제 Web Service 생성, env 주입, DB write/restore/seed, Alembic mutation, production deploy는 각 실행 범위를 문서화하고 준비 commit의 정확한 40자리 SHA를 기호가 별도 승인하기 전까지 실행하지 않습니다.
+기호에게 지금 필요한 선택은 추천 Render 서비스 이름 `upgrade-rpg-api` 사용 여부 확인뿐입니다. 이후 DB 초기화 준비 commit과 Render 생성 준비 commit은 각각 정확한 40자리 SHA 승인을 별도로 받습니다.
 
 ## 첫 검사
 
@@ -69,6 +79,7 @@ Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.ex
 새 설치 여부: 없음
 
 ```bash
+python tools/check_render_neon_separated_plan.py --strict
 python tools/check_render_private_ghcr_connect.py --strict
 python tools/check_neon_readonly_connectivity.py --evidence
 python tools/check_production_provider_selection.py --strict
@@ -77,6 +88,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-첫 검사의 v338 기대 결과는 `render-ghcr-read-credential-exact-digest-connect-verified`, 다음 단계는 `review-render-service-settings-and-database-initialization-plan`입니다. v337 account readiness, v336 Neon evidence, v335 provider selection, v334 deployment baseline을 보존합니다.
+첫 검사의 v340 기대 결과는 `render-neon-separated-plans-reviewed-fail-closed`, 다음 단계는 `prepare-neon-verify-full-bootstrap-fix-and-new-image`입니다. v338 Render Connect, v337 account readiness, v336 Neon evidence, v335 provider selection, v334 deployment baseline을 보존합니다.
 
 별도 승인 전에는 Web Service/deploy, DB/Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스를 변경하지 않습니다.

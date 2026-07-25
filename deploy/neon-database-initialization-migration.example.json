@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "v340.neon-initialization-migration-reviewed-execution-blocked",
+  "reviewedAtUtc": "2026-07-25T23:06:18Z",
+  "result": "neon-existing-neondb-restore-stamp-plan-reviewed-execution-blocked",
+  "nextSafeStage": "prepare-neon-verify-full-bootstrap-fix-and-new-image",
+  "productionResourcesMutated": false,
+  "target": {
+    "provider": "neon-free",
+    "region": "aws-ap-southeast-1",
+    "postgresMajor": 16,
+    "branch": "production",
+    "database": "neondb",
+    "role": "neondb_owner",
+    "createDatabaseRequired": false,
+    "readOnlyObservedPublicTables": 0,
+    "readOnlyObservedAlembicVersion": false,
+    "readOnlyObservationAtUtc": "2026-07-25T22:57:00Z"
+  },
+  "source": {
+    "database": "rpg_game",
+    "backupFile": "local-backups/postgres/rpg_game_20260714_130403_KST_v290.custom.dump",
+    "backupSha256": "b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481",
+    "backupSizeBytes": 129635,
+    "applicationTables": 22,
+    "applicationRows": 748,
+    "backupContainsAlembicVersion": false,
+    "reviewedRevision": "v295_initial_schema",
+    "reviewedRevisionSha256": "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa",
+    "expectedSchemaDigest": "7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921",
+    "expectedDataDigest": "ecb19e57283dc6b780426339bfc46f2bac14da63a618249808f30132508f9244"
+  },
+  "connectionPolicy": {
+    "restoreAndAlembicConnection": "direct-only",
+    "pooledConnectionAllowedForRestoreOrAlembic": false,
+    "libpqMinimumMajor": 16,
+    "tls": "sslrootcert=system-implies-verify-full",
+    "actualConnectionValuesRecorded": false
+  },
+  "orderedExecutionAfterSeparateExactShaApproval": [
+    "reconfirm target neondb is empty in a read-only transaction",
+    "reconfirm exact local backup SHA-256, size, table list, and row-count snapshot",
+    "restore with pg_restore --exit-on-error --single-transaction --no-owner --no-privileges and without --create or --clean",
+    "verify 22 application tables, 748 application rows, schema digest, data digest, and no alembic_version",
+    "stamp only exact revision v295_initial_schema with the direct URL",
+    "verify 23 public tables, 749 total rows, unchanged application digests, and current revision v295_initial_schema"
+  ],
+  "forbidden": [
+    "CREATE DATABASE or DROP DATABASE",
+    "pooled URL for pg_restore or Alembic",
+    "pg_restore --create or --clean",
+    "alembic revision, autogenerate, upgrade, or downgrade",
+    "seed execution",
+    "automatic retry, cleanup, truncate, or reset",
+    "Render service creation before database initialization verification"
+  ],
+  "failurePolicy": {
+    "restoreUsesSingleTransaction": true,
+    "onRestoreFailure": "stop and verify target state read-only; do not retry or clean automatically",
+    "onPostRestoreVerificationFailure": "stop with target preserved and no Render traffic",
+    "onStampFailure": "stop with restored application data preserved and no Render traffic",
+    "automaticRollback": false
+  },
+  "executionGate": {
+    "planReviewed": true,
+    "runtimeFixCompleted": false,
+    "replacementImagePublishedAndIsolatedValidated": false,
+    "exactPreparationShaApprovalRequired": true,
+    "databaseInitializationApproved": false,
+    "restoreExecuted": false,
+    "stampExecuted": false,
+    "renderServiceExists": false
+  }
+}

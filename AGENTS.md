@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v339
+# Upgrade RPG Codex working rules — v340
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -28,7 +28,8 @@
 ## Code Review Graph 제한 시험
 
 - Code Review Graph 2.3.7은 사용자 전용 독립 환경에 설치한 **CLI-only 보조 도구**입니다. backend `.venv`와 프로젝트 dependency에는 포함하지 않습니다.
-- `code-review-graph install`, MCP 연결, Codex hooks/instructions, watch/daemon, Git hook은 사용하지 않습니다. 필요한 다중 파일 리뷰에서만 수동 CLI 결과를 보조 evidence로 사용합니다.
+- Codex가 다중 파일 변경, 영향 범위, 생소한 코드 경로, PR·복합 버그 검토에 도움이 된다고 판단하면 수동 CLI를 적극 사용하고 결과를 원본 코드·테스트와 대조합니다.
+- 좁은 `search`·`query`부터 사용하고 광범위 `impact`는 실제 필요할 때만 사용합니다. `install`, MCP, Codex hooks/instructions, watch/daemon, Git hook은 사용하지 않습니다.
 
 ## GitHub와 secret
 
@@ -41,11 +42,16 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
+latest: v340.render-neon-separated-plans-reviewed-bootstrap-fix-required
+strict result: render-neon-separated-plans-reviewed-fail-closed
+next safe stage: prepare-neon-verify-full-bootstrap-fix-and-new-image
+render plan: v340.render-service-settings-reviewed-creation-blocked
+neon plan: v340.neon-initialization-migration-reviewed-execution-blocked
+render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
+render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
+render checkpoint next stage: review-render-service-settings-and-database-initialization-plan
 tooling checkpoint: v339.code-review-graph-cli-only-trial-built-ponytail-principle-applied
 tooling result: code-review-graph-cli-only-built-hooks-mcp-disabled
-strict result: render-ghcr-read-credential-exact-digest-connect-verified
-next safe stage: review-render-service-settings-and-database-initialization-plan
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked / production-deploy-plan-reviewed-inputs-blocked
 baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
@@ -73,6 +79,9 @@ Alembic current: v295_initial_schema / new revision needed: no
 - GitHub `Confirm access`는 사용자가 완료했고 Render 전용 classic PAT는 `read:packages` only, 만료일 2027-07-23으로 생성해 `upgrade-rpg-ghcr-read` credential에 저장했습니다. 실제 값은 Git·파일·채팅에 기록하지 않습니다.
 - 브라우저 검사 출력에 노출된 첫 PAT는 Render에 저장하지 않고 즉시 GitHub에서 폐기했습니다. 교체 PAT는 값 출력 없이 전달했으며 회전 기록은 `docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md`에 있습니다.
 - verified exact digest를 Render `Existing Image`에서 `Connect`해 private GHCR 접근과 서비스 설정 화면 진입을 확인했습니다. Web Service 생성, env 주입, deploy는 실행하지 않았습니다.
+- Render/Neon 분리 계획은 검토됐지만 현재 v338 image는 Neon system-CA verify-full SQLAlchemy bootstrap이 없어 배포 불가입니다.
+- Neon production branch의 기본 `neondb`는 read-only 확인에서 0 public table / no Alembic입니다. 새 `rpg_game` DB는 만들지 않습니다.
+- 순서는 bootstrap fix → 새 image publish/isolated validation → 별도 exact-SHA Neon restore+stamp → 별도 exact-SHA Render create/deploy입니다.
 
 ## 승인과 안전 경계
 
@@ -104,6 +113,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 프로젝트 루트에서 `backend/.venv` Python으로 먼저 실행합니다.
 
 ```bash
+python tools/check_render_neon_separated_plan.py --strict
 python tools/check_neon_readonly_connectivity.py --evidence
 python tools/check_production_provider_selection.py --strict
 python tools/check_production_deployment_plan.py --strict

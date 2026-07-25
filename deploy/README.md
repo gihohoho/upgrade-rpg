@@ -1,6 +1,11 @@
-# Production deployment — v338
+# Production deployment — v340
 
 이 폴더는 운영 배포의 source-controlled template과 sanitized evidence를 보관합니다. 실제 secret·CA·certificate·private key는 넣지 않습니다.
+
+## 로컬 개발서버 ON
+
+- 백엔드 시작 : python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+- 프론트엔드 시작 : npm run dev
 
 ## 현재 준비된 것
 
@@ -14,6 +19,8 @@
 - `review/neon-readonly-connectivity-v336.json`: secret 없는 Neon Direct/Pooler TLS·read-only 검증 증거
 - `review/render-account-readiness-v337.json`: payment/card 개인정보 없는 Render account/Existing Image readiness 증거
 - `review/render-private-ghcr-connect-v338.json`: token 값 없는 Render credential·exact-digest Connect·미배포 증거
+- `render-service-settings.example.json`: Render Web Service 설정 검토와 current-image 차단 gate
+- `neon-database-initialization-migration.example.json`: 기존 빈 `neondb` restore·v295 stamp의 fail-closed 계획
 - `reverse-proxy/`, `secrets/`, `isolated-validation/`: 각 경계 설명
 
 ## 현재 상태

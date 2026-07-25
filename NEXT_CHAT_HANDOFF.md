@@ -1,13 +1,18 @@
-# Upgrade RPG Codex handoff — v339
+# Upgrade RPG Codex handoff — v340
 
 ## 현재 상태
 
 ```txt
-latest: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
+latest: v340.render-neon-separated-plans-reviewed-bootstrap-fix-required
+strict result: render-neon-separated-plans-reviewed-fail-closed
+next safe stage: prepare-neon-verify-full-bootstrap-fix-and-new-image
+render plan: v340.render-service-settings-reviewed-creation-blocked
+neon plan: v340.neon-initialization-migration-reviewed-execution-blocked
+render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
+render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
+render checkpoint next stage: review-render-service-settings-and-database-initialization-plan
 tooling checkpoint: v339.code-review-graph-cli-only-trial-built-ponytail-principle-applied
 tooling result: code-review-graph-cli-only-built-hooks-mcp-disabled
-strict result: render-ghcr-read-credential-exact-digest-connect-verified
-next safe stage: review-render-service-settings-and-database-initialization-plan
 deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked
 baseline result: production-deploy-plan-reviewed-inputs-blocked
 baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
@@ -22,6 +27,19 @@ Render registry credential/service/deploy: present/not created/not executed
 Render credential action ready/approved/executed: yes/yes/yes
 production deployment approval ready/approved/executed: no/no/no
 ```
+
+## Render/Neon 분리 계획 — 2026-07-26
+
+- Render 계약: `deploy/render-service-settings.example.json`
+- Neon 계약: `deploy/neon-database-initialization-migration.example.json`
+- 현재 v338 image: Neon system-CA verify-full SQLAlchemy bootstrap이 없어 배포 불가
+- production env blocker: `ENVIRONMENT=production`, `DEBUG=false`, `PORT=8000` 누락
+- Neon `neondb`: system-CA hostname verification/read-only 확인에서 0 public table / no Alembic
+- DB 선택: 새 `rpg_game`을 만들지 않고 기존 빈 `neondb` 사용
+- 이식: verified custom dump 22 application tables / 748 rows restore 후 exact `v295_initial_schema` stamp
+- 연결: restore/Alembic/runtime 모두 direct; pooled URL은 restore/Alembic에 사용 금지
+- 순서: bootstrap fix → 새 image publish/isolated validation → 별도 exact-SHA Neon restore/stamp → 별도 exact-SHA Render create/deploy
+- 추천 Render name: `upgrade-rpg-api`, owner 확인 필요
 
 ## 로컬 코드 리뷰 보조 도구 — 2026-07-26
 
@@ -78,12 +96,9 @@ Render workspace는 `Hobby (legacy)`, 결제수단 없음, active service 0개�
 
 ## 다음 단계
 
-문서와 fail-closed 정적 검사로 다음 두 계획을 분리 준비합니다.
+Neon verify-full SSLContext bootstrap과 production env inventory focused fix를 준비합니다. 실제 secret 주입, image publish, Neon restore/stamp, Render resource 생성은 아직 실행하지 않습니다.
 
-1. Render Free Singapore 서비스 생성 직전 설정: name, region, Free instance, health check, environment inventory, exact digest, auto-deploy 차단, rollback
-2. Neon 기본 `neondb`와 계획상 `rpg_game` 차이를 포함한 DB 생성·schema/data 초기화·이식 계획
-
-현재 Render 탭은 서비스 설정 화면에서 handoff 상태입니다. 읽기 전용 확인에는 재사용할 수 있지만 배포 버튼은 누르지 않습니다. 필요한 extension·로컬 설치는 현재 없습니다.
+기호가 지금 확인할 것은 추천 Render 서비스 이름 `upgrade-rpg-api` 사용 여부입니다. 이후 DB 초기화와 Render 생성은 각각 준비 commit의 정확한 40자리 SHA를 별도 승인받습니다. 필요한 extension·로컬 설치는 현재 없습니다.
 
 ## 첫 검사
 
@@ -92,6 +107,7 @@ Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.ex
 새 설치 여부: 없음
 
 ```bash
+python tools/check_render_neon_separated_plan.py --strict
 python tools/check_render_private_ghcr_connect.py --strict
 python tools/check_neon_readonly_connectivity.py --evidence
 python tools/check_production_provider_selection.py --strict
@@ -100,6 +116,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v338 기대 결과는 `render-ghcr-read-credential-exact-digest-connect-verified`, 다음 단계는 `review-render-service-settings-and-database-initialization-plan`입니다. v337 account readiness, v336 Neon evidence, v335 provider selection과 v334 deployment baseline을 계속 보존합니다.
+v340 기대 결과는 `render-neon-separated-plans-reviewed-fail-closed`, 다음 단계는 `prepare-neon-verify-full-bootstrap-fix-and-new-image`입니다. v338 Render Connect, v337 account readiness, v336 Neon evidence, v335 provider selection과 v334 deployment baseline을 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.
