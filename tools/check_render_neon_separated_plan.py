@@ -16,11 +16,17 @@ RENDER_PLAN = ROOT / "deploy/render-service-settings.example.json"
 NEON_PLAN = ROOT / "deploy/neon-database-initialization-migration.example.json"
 RENDER_DOC = ROOT / "docs/current/RENDER_SERVICE_SETTINGS_PLAN.md"
 NEON_DOC = ROOT / "docs/current/NEON_DATABASE_INITIALIZATION_MIGRATION_PLAN.md"
+RENDER_ENV = ROOT / "deploy/render.production.env.example"
+CONFIG_SOURCE = ROOT / "backend/app/core/config.py"
+SESSION_SOURCE = ROOT / "backend/app/db/session.py"
+ALEMBIC_SOURCE = ROOT / "backend/alembic/env.py"
+BOOTSTRAP_SMOKE = ROOT / "tools/smoke/backend/smoke_neon_production_database_bootstrap.py"
 
 RENDER_VERSION = "v340.render-service-settings-reviewed-creation-blocked"
 NEON_VERSION = "v340.neon-initialization-migration-reviewed-execution-blocked"
-RESULT = "render-neon-separated-plans-reviewed-fail-closed"
-NEXT_STAGE = "prepare-neon-verify-full-bootstrap-fix-and-new-image"
+STATE_VERSION = "v341.neon-verify-full-bootstrap-fixed-render-name-confirmed-new-image-required"
+RESULT = "neon-production-bootstrap-verified-new-image-publish-approval-required"
+NEXT_STAGE = "owner-approve-v341-image-publish-preparation-sha"
 IMAGE = (
     "ghcr.io/gihohoho/upgrade-rpg-backend@"
     "sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2"
@@ -89,7 +95,7 @@ def verify_render(plan: dict[str, Any]) -> None:
     require(service.get("type") == "web-service", "Render service type differs")
     require(service.get("source") == "existing-image", "Render source differs")
     require(service.get("recommendedName") == "upgrade-rpg-api", "Render recommended name differs")
-    require(service.get("ownerConfirmedName") is False, "Render service name must await owner confirmation")
+    require(service.get("ownerConfirmedName") is True, "Render service name must be owner-confirmed")
     require(service.get("region") == "singapore", "Render region differs")
     require(service.get("instanceType") == "free", "Render instance type differs")
     require(service.get("instanceCount") == 1, "Render instance count differs")
@@ -104,6 +110,7 @@ def verify_render(plan: dict[str, Any]) -> None:
     require(image.get("reviewedReference") == IMAGE, "Render reviewed image differs")
     require(image.get("currentReferenceDeployable") is False, "current image must remain blocked")
     require(image.get("replacementExactDigestRequired") is True, "replacement exact digest must be required")
+    require(image.get("bootstrapSourceFixCompleted") is True, "bootstrap source fix must be complete")
 
     runtime = plan.get("databaseRuntime") or {}
     require(runtime.get("connectionMode") == "direct", "runtime connection must be direct")
@@ -111,6 +118,10 @@ def verify_render(plan: dict[str, Any]) -> None:
     require(runtime.get("poolSize") == 2 and runtime.get("maxOverflow") == 0, "runtime pool boundary differs")
 
     inventory = plan.get("environmentInventory") or {}
+    require(
+        inventory.get("sourceFile") == "deploy/render.production.env.example",
+        "Render env inventory source differs",
+    )
     non_secret = inventory.get("nonSecret") or {}
     expected = {
         "ENVIRONMENT": "production",
@@ -130,8 +141,9 @@ def verify_render(plan: dict[str, Any]) -> None:
 
     gate = plan.get("creationGate") or {}
     require(gate.get("settingsReviewed") is True, "Render settings review must be complete")
+    require(gate.get("ownerServiceNameRequired") is False, "Render service name must not remain unresolved")
+    require(gate.get("runtimeFixCompleted") is True, "Render runtime fix must be complete")
     for key in (
-        "runtimeFixCompleted",
         "replacementImagePublishedAndIsolatedValidated",
         "neonInitializationCompleted",
         "webServiceCreationApproved",
@@ -174,8 +186,8 @@ def verify_neon(plan: dict[str, Any]) -> None:
 
     gate = plan.get("executionGate") or {}
     require(gate.get("planReviewed") is True, "Neon plan review must be complete")
+    require(gate.get("runtimeFixCompleted") is True, "Neon runtime fix must be complete")
     for key in (
-        "runtimeFixCompleted",
         "replacementImagePublishedAndIsolatedValidated",
         "databaseInitializationApproved",
         "restoreExecuted",
@@ -192,7 +204,7 @@ def verify_docs() -> None:
     for path in STATE_FILES:
         require(path.is_file(), f"missing state file: {path.relative_to(ROOT)}")
         text = path.read_text(encoding="utf-8")
-        for marker in (RENDER_VERSION, NEON_VERSION, RESULT, NEXT_STAGE):
+        for marker in (STATE_VERSION, RENDER_VERSION, NEON_VERSION, RESULT, NEXT_STAGE):
             require(marker in text, f"{path.relative_to(ROOT)} is missing {marker}")
     require(
         (ROOT / "NEXT_CHAT_PROMPT.md").read_bytes()
@@ -206,6 +218,40 @@ def verify_docs() -> None:
     )
 
 
+def verify_bootstrap_sources() -> None:
+    for path in (RENDER_ENV, CONFIG_SOURCE, SESSION_SOURCE, ALEMBIC_SOURCE, BOOTSTRAP_SMOKE):
+        require(path.is_file(), f"missing bootstrap file: {path.relative_to(ROOT)}")
+
+    env_text = RENDER_ENV.read_text(encoding="utf-8")
+    for marker in (
+        "ENVIRONMENT=production",
+        "DEBUG=false",
+        "PORT=8000",
+        "CORS_ORIGINS=[]",
+        "DB_POOL_SIZE=2",
+        "DB_MAX_OVERFLOW=0",
+        "DB_POOL_RECYCLE_SECONDS=300",
+    ):
+        require(marker in env_text, f"Render env inventory is missing {marker}")
+    require("sslmode=" not in env_text and "sslrootcert=" not in env_text, "Render runtime URL must not contain TLS query settings")
+    require("ep-" not in env_text and "npg_" not in env_text, "Render env inventory contains endpoint-shaped data")
+
+    config_text = CONFIG_SOURCE.read_text(encoding="utf-8")
+    for marker in (
+        "def build_database_connect_args(",
+        "ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)",
+        "context.check_hostname = True",
+        "context.verify_mode = ssl.CERT_REQUIRED",
+        'context.cert_store_stats().get("x509_ca", 0) < 1',
+        "DATABASE_URL must not contain TLS query parameters in production",
+    ):
+        require(marker in config_text, f"production TLS bootstrap is missing {marker}")
+
+    for path in (SESSION_SOURCE, ALEMBIC_SOURCE):
+        text = path.read_text(encoding="utf-8")
+        require("connect_args=build_database_connect_args()" in text, f"{path.relative_to(ROOT)} does not bind shared TLS args")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--strict", action="store_true", help="validate all fail-closed plan and handoff markers")
@@ -213,14 +259,15 @@ def main() -> int:
     try:
         verify_render(load_json(RENDER_PLAN))
         verify_neon(load_json(NEON_PLAN))
+        verify_bootstrap_sources()
         verify_docs()
     except PlanError as exc:
         print(f"Render/Neon separated plan verification failed: {exc}", file=sys.stderr)
         return 1
 
     print("Render/Neon separated plan verification (static, no provider mutation)")
-    print("- Render: settings reviewed / current image blocked / service not created")
-    print("- Neon: existing neondb observed empty / restore+stamp reviewed / execution blocked")
+    print("- Render: upgrade-rpg-api confirmed / bootstrap fixed / current image blocked")
+    print("- Neon: existing neondb empty / direct verify-full runtime fixed / restore+stamp blocked")
     print("- secrets/endpoints recorded: no")
     print(f"- result: {RESULT}")
     print(f"- next safe stage: {NEXT_STAGE}")

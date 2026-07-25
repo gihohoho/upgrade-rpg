@@ -1,14 +1,14 @@
 {
   "schemaVersion": "v340.render-service-settings-reviewed-creation-blocked",
   "reviewedAtUtc": "2026-07-25T23:06:18Z",
-  "result": "render-service-settings-reviewed-runtime-image-fix-required",
-  "nextSafeStage": "prepare-neon-verify-full-bootstrap-fix-and-new-image",
+  "result": "render-service-settings-confirmed-bootstrap-fixed-new-image-required",
+  "nextSafeStage": "owner-approve-v341-image-publish-preparation-sha",
   "productionResourcesMutated": false,
   "service": {
     "type": "web-service",
     "source": "existing-image",
     "recommendedName": "upgrade-rpg-api",
-    "ownerConfirmedName": false,
+    "ownerConfirmedName": true,
     "region": "singapore",
     "instanceType": "free",
     "instanceCount": 1,
@@ -29,9 +29,10 @@
     "registryCredential": "upgrade-rpg-ghcr-read",
     "currentReferenceDeployable": false,
     "replacementExactDigestRequired": true,
+    "bootstrapSourceFixCompleted": true,
     "blockers": [
-      "production SQLAlchemy asyncpg engine does not yet inject a system-CA hostname-verifying SSLContext",
-      "production.env.example does not yet declare ENVIRONMENT=production, DEBUG=false, and PORT=8000"
+      "reviewed v338 exact digest predates the v341 verify-full bootstrap fix",
+      "replacement image must prove a non-empty Alpine system CA trust store during isolated validation"
     ]
   },
   "databaseRuntime": {
@@ -48,6 +49,7 @@
     "poolRecycleSeconds": 300
   },
   "environmentInventory": {
+    "sourceFile": "deploy/render.production.env.example",
     "nonSecret": {
       "APP_NAME": "Upgrade RPG Backend",
       "ENVIRONMENT": "production",
@@ -70,8 +72,8 @@
   },
   "creationGate": {
     "settingsReviewed": true,
-    "ownerServiceNameRequired": true,
-    "runtimeFixCompleted": false,
+    "ownerServiceNameRequired": false,
+    "runtimeFixCompleted": true,
     "replacementImagePublishedAndIsolatedValidated": false,
     "neonInitializationCompleted": false,
     "exactPreparationShaApprovalRequired": true,

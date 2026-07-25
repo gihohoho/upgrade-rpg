@@ -61,6 +61,20 @@ def working_directory(path: Path) -> Iterator[None]:
         os.chdir(previous)
 
 
+@contextmanager
+def temporary_environment(overrides: dict[str, str]) -> Iterator[None]:
+    previous = {key: os.environ.get(key) for key in overrides}
+    os.environ.update(overrides)
+    try:
+        yield
+    finally:
+        for key, value in previous.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+
 def inspect_static_hardening(root: Path) -> dict[str, Any]:
     backend = root / "backend"
     config = _read(backend / "app/core/config.py")
@@ -188,7 +202,9 @@ def inspect_runtime_hardening_settings(root: Path) -> dict[str, Any]:
     sys.path[:] = [item for item in sys.path if str(Path(item or ".").resolve()) != backend_text]
     sys.path.insert(0, backend_text)
 
-    with working_directory(backend):
+    with working_directory(backend), temporary_environment(
+        {"ENVIRONMENT": "local", "DEBUG": "false"}
+    ):
         from app.core.config import (  # noqa: PLC0415
             LOCAL_ADMIN_WRITE_KEY,
             LOCAL_JWT_SECRET,

@@ -2,9 +2,9 @@
 
 ## 결론
 
-Render 설정값은 검토됐지만 **현재 exact digest로 Web Service를 만들면 안 됩니다**. 현재 image에는 Neon hostname을 시스템 CA로 검증하는 SQLAlchemy `asyncpg` SSLContext가 없고, `deploy/production.env.example`에는 `ENVIRONMENT=production`, `DEBUG=false`, `PORT=8000`이 빠져 있습니다.
+Render 설정값과 서비스 이름 `upgrade-rpg-api`는 확정됐지만 **현재 exact digest로 Web Service를 만들면 안 됩니다**. v341 source에는 Neon hostname을 시스템 CA로 검증하는 SQLAlchemy `asyncpg` SSLContext와 Render 전용 `deploy/render.production.env.example`이 준비됐지만, v338 image에는 이 수정이 들어 있지 않습니다.
 
-먼저 bootstrap을 고쳐 새 exact-digest image를 게시하고 isolated 검증해야 합니다. 그 뒤 Neon 초기화가 끝나야 Render 생성 단계로 이동합니다.
+v341 준비 commit의 exact SHA를 owner가 승인한 뒤 새 exact-digest image를 게시하고 isolated 검증해야 합니다. 그 뒤 Neon 초기화가 끝나야 Render 생성 단계로 이동합니다.
 
 정적 계약은 `deploy/render-service-settings.example.json`입니다. 실제 secret이나 Neon endpoint는 이 문서와 계약에 기록하지 않습니다.
 
@@ -14,10 +14,10 @@ Render 설정값은 검토됐지만 **현재 exact digest로 Web Service를 만�
 |---|---|---|
 | Service type | Web Service | 공개 HTTPS API |
 | Source | Existing Image | 검증된 GHCR image 사용 |
-| Name | `upgrade-rpg-api` | 짧고 역할이 명확함, owner 확인 필요 |
+| Name | `upgrade-rpg-api` | owner 확인 완료 |
 | Region | Singapore | Neon AWS Singapore와 같은 지역 |
 | Instance | Free / 1개 | 개인 preview, 월 고정비 $0 |
-| Image | bootstrap 수정 후 새 exact digest | 현재 v338 digest는 Neon verify-full runtime 미지원 |
+| Image | v341 수정 후 새 exact digest | 현재 v338 digest는 Neon verify-full runtime 미지원 |
 | Registry credential | `upgrade-rpg-ghcr-read` | 이미 read:packages only로 저장됨 |
 | Docker command | override 없음 | image의 Uvicorn CMD 재사용 |
 | Port | `8000` | image CMD와 일치 |
@@ -30,7 +30,7 @@ Render 설정값은 검토됐지만 **현재 exact digest로 Web Service를 만�
 
 ## 환경변수
 
-비밀값이 아닌 고정값:
+비밀값이 아닌 고정값은 `deploy/render.production.env.example`에 있습니다.
 
 ```txt
 APP_NAME=Upgrade RPG Backend
@@ -62,13 +62,13 @@ ADMIN_WRITE_DEV_KEY
 
 다음이 모두 끝나기 전에는 `Create Web Service` 또는 `Deploy Web Service`를 누르지 않습니다.
 
-1. production SSLContext/bootstrap과 env inventory 수정
+1. production SSLContext/bootstrap과 env inventory 수정 완료
 2. 관련 smoke와 Neon SQLAlchemy read-only 호환성 검사
 3. 새 GHCR exact digest 게시
 4. 새 image isolated pull/runtime 검증
 5. Neon `neondb` restore + v295 stamp + read-only 검증
-6. 서비스 이름 owner 확인
-7. Render 생성 준비 commit의 정확한 40자리 SHA owner 승인
+6. 서비스 이름 `upgrade-rpg-api` owner 확인 완료
+7. 새 image publish 준비 commit과 Render 생성 준비 commit의 정확한 40자리 SHA를 단계별 owner 승인
 
 ## 첫 배포 후 확인
 

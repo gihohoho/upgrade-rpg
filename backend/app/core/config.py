@@ -1,4 +1,6 @@
+import ssl
 from functools import lru_cache
+from urllib.parse import parse_qs, urlsplit
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -68,6 +70,31 @@ class Settings(BaseSettings):
         if len(self.admin_write_dev_key.strip()) < 32:
             errors.append("ADMIN_WRITE_DEV_KEY must contain at least 32 characters in production")
 
+        try:
+            parsed_database_url = urlsplit(self.database_url)
+            database_host = (parsed_database_url.hostname or "").strip().lower()
+            database_query = parse_qs(parsed_database_url.query, keep_blank_values=True)
+        except ValueError:
+            errors.append("DATABASE_URL must be a valid URL in production")
+        else:
+            if parsed_database_url.scheme != "postgresql+asyncpg":
+                errors.append("DATABASE_URL must use postgresql+asyncpg in production")
+            if not database_host:
+                errors.append("DATABASE_URL must contain a host in production")
+            elif database_host in {"localhost", "127.0.0.1", "::1"}:
+                errors.append("DATABASE_URL must not target localhost in production")
+            if not parsed_database_url.path.strip("/"):
+                errors.append("DATABASE_URL must contain a database name in production")
+            conflicting_tls_keys = sorted(
+                set(database_query)
+                & {"channel_binding", "ssl", "sslmode", "sslrootcert"}
+            )
+            if conflicting_tls_keys:
+                errors.append(
+                    "DATABASE_URL must not contain TLS query parameters in production; "
+                    "the application injects a verified SSL context"
+                )
+
         if errors:
             raise ValueError("; ".join(errors))
         return self
@@ -107,3 +134,20 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
+
+
+def build_database_connect_args(
+    current_settings: Settings | None = None,
+) -> dict[str, object]:
+    """Use the system CA store with hostname verification for production DB TLS."""
+    selected_settings = current_settings or settings
+    if selected_settings.environment.strip().lower() not in PRODUCTION_ENVIRONMENTS:
+        return {}
+
+    context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
+    context.check_hostname = True
+    context.verify_mode = ssl.CERT_REQUIRED
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
+    if context.cert_store_stats().get("x509_ca", 0) < 1:
+        raise RuntimeError("production database system CA trust store is empty")
+    return {"ssl": context}

@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v340
+# Upgrade RPG Codex working rules — v341
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -42,9 +42,9 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v340.render-neon-separated-plans-reviewed-bootstrap-fix-required
-strict result: render-neon-separated-plans-reviewed-fail-closed
-next safe stage: prepare-neon-verify-full-bootstrap-fix-and-new-image
+latest: v341.neon-verify-full-bootstrap-fixed-render-name-confirmed-new-image-required
+strict result: neon-production-bootstrap-verified-new-image-publish-approval-required
+next safe stage: owner-approve-v341-image-publish-preparation-sha
 render plan: v340.render-service-settings-reviewed-creation-blocked
 neon plan: v340.neon-initialization-migration-reviewed-execution-blocked
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
@@ -79,9 +79,12 @@ Alembic current: v295_initial_schema / new revision needed: no
 - GitHub `Confirm access`는 사용자가 완료했고 Render 전용 classic PAT는 `read:packages` only, 만료일 2027-07-23으로 생성해 `upgrade-rpg-ghcr-read` credential에 저장했습니다. 실제 값은 Git·파일·채팅에 기록하지 않습니다.
 - 브라우저 검사 출력에 노출된 첫 PAT는 Render에 저장하지 않고 즉시 GitHub에서 폐기했습니다. 교체 PAT는 값 출력 없이 전달했으며 회전 기록은 `docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md`에 있습니다.
 - verified exact digest를 Render `Existing Image`에서 `Connect`해 private GHCR 접근과 서비스 설정 화면 진입을 확인했습니다. Web Service 생성, env 주입, deploy는 실행하지 않았습니다.
-- Render/Neon 분리 계획은 검토됐지만 현재 v338 image는 Neon system-CA verify-full SQLAlchemy bootstrap이 없어 배포 불가입니다.
+- Render 서비스 이름은 `upgrade-rpg-api`로 기호가 확정했습니다.
+- v341 source는 production SQLAlchemy/Alembic에 system-CA hostname-verifying SSLContext를 공유 주입하고 Render env inventory를 분리했습니다.
+- 실제 Neon direct URL을 프로세스에만 주입한 read-only bootstrap에서 TLS 연결과 빈 `neondb` 상태를 재확인했습니다.
+- 현재 v338 image는 v341 bootstrap fix 이전 산출물이므로 계속 배포 불가입니다. 새 image의 Alpine CA store와 runtime을 isolated validation에서 확인해야 합니다.
 - Neon production branch의 기본 `neondb`는 read-only 확인에서 0 public table / no Alembic입니다. 새 `rpg_game` DB는 만들지 않습니다.
-- 순서는 bootstrap fix → 새 image publish/isolated validation → 별도 exact-SHA Neon restore+stamp → 별도 exact-SHA Render create/deploy입니다.
+- 순서는 v341 exact-SHA 승인 → 새 image publish/isolated validation → 별도 exact-SHA Neon restore+stamp → 별도 exact-SHA Render create/deploy입니다.
 
 ## 승인과 안전 경계
 
@@ -114,6 +117,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 
 ```bash
 python tools/check_render_neon_separated_plan.py --strict
+python tools/smoke/backend/smoke_neon_production_database_bootstrap.py
 python tools/check_neon_readonly_connectivity.py --evidence
 python tools/check_production_provider_selection.py --strict
 python tools/check_production_deployment_plan.py --strict

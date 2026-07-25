@@ -1,4 +1,4 @@
-# Upgrade RPG Codex next prompt — v340
+# Upgrade RPG Codex next prompt — v341
 
 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽고 계속 지켜주세요. 기호는 코딩을 거의 모르므로 한국어로 쉽게 설명하고, 모든 터미널 명령 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension·권한·설치는 해결될 때까지 요청해주세요.
 
@@ -7,9 +7,9 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 ## 현재 고정값
 
 ```txt
-latest: v340.render-neon-separated-plans-reviewed-bootstrap-fix-required
-strict result: render-neon-separated-plans-reviewed-fail-closed
-next safe stage: prepare-neon-verify-full-bootstrap-fix-and-new-image
+latest: v341.neon-verify-full-bootstrap-fixed-render-name-confirmed-new-image-required
+strict result: neon-production-bootstrap-verified-new-image-publish-approval-required
+next safe stage: owner-approve-v341-image-publish-preparation-sha
 render plan: v340.render-service-settings-reviewed-creation-blocked
 neon plan: v340.neon-initialization-migration-reviewed-execution-blocked
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
@@ -46,13 +46,15 @@ Code Review Graph 2.3.7은 `%LOCALAPPDATA%\UpgradeRPGTools\code-review-graph`의
 
 Ponytail 플러그인은 설치하지 않았습니다. 새 추상화·의존성·파일보다 기존 기능을 먼저 사용하고 요청하지 않은 미래용 구조를 만들지 않는 최소 구현 원칙만 `AGENTS.md`에 반영했습니다. 안전·보안·검증·접근성 요구는 단순화를 이유로 생략하지 않습니다.
 
-## Render/Neon 분리 계획 — v340
+## Render/Neon 분리 계획과 bootstrap fix — v341
 
 두 계획은 `docs/current/RENDER_SERVICE_SETTINGS_PLAN.md`, `docs/current/NEON_DATABASE_INITIALIZATION_MIGRATION_PLAN.md`와 대응하는 `deploy/*.example.json` 계약으로 검토 완료했습니다.
 
 Neon production branch의 기본 `neondb`는 system-CA hostname verification과 read-only transaction에서 public table 0개, `alembic_version` 없음으로 확인됐습니다. 새 `rpg_game` DB는 만들지 않습니다. 검증된 local custom dump의 22 application tables / 748 rows를 direct URL로 restore한 뒤 exact `v295_initial_schema`를 stamp하는 계획입니다.
 
-현재 v338 image는 SQLAlchemy `asyncpg` production engine에 system-CA verify-full SSLContext를 전달하지 않아 Neon runtime 연결에 실패합니다. `deploy/production.env.example`에도 `ENVIRONMENT=production`, `DEBUG=false`, `PORT=8000`이 빠져 있습니다. 따라서 현재 digest로 Render Web Service를 만들지 않습니다.
+Render 서비스 이름은 기호가 `upgrade-rpg-api`로 확정했습니다. v341 source는 SQLAlchemy runtime과 Alembic에 같은 system-CA hostname-verifying SSLContext를 전달하며, `deploy/render.production.env.example`에 Render 전용 환경변수 inventory를 분리했습니다. 실제 Neon direct URL을 프로세스에만 주입한 read-only 검사도 통과했습니다.
+
+현재 v338 image는 이 fix 이전 산출물이므로 계속 배포하지 않습니다. 새 image를 발행한 뒤 Alpine system CA store, runtime health, architecture와 cleanup을 isolated validation에서 확인해야 합니다.
 
 고정 순서는 bootstrap fix → 새 exact-digest image publish/isolated validation → DB 초기화 전용 exact-SHA 승인 후 Neon restore/stamp → Render 생성 전용 exact-SHA 승인 후 Web Service create/deploy입니다.
 
@@ -65,12 +67,16 @@ Neon production branch의 기본 `neondb`는 system-CA hostname verification과 
 - single-run policy: `run_attempt=1`, single dispatch, immediate closure, `closureCommitSha`, rerun 금지
 - 역사 결과 `review-recorded-workflow-attempt-evidence` 보존
 - isolated evidence: `deploy/review/isolated-image-pull-validation-v333.json`
+- production plan: `deploy/production-deploy-plan.example.json`
+- historical preparation/authorization/closure/record SHA: `36e8720a53ef7ff6a8334de6bc99646998d63fc9` / `26a11356e33c978afa8cd8a4881500fa62cdbc5c` / `1c4a982b2a35d3d45f59e7d9faefcdecca69e6c5` / `1f0340ddfcf3c8a74cf14110d5957627d4c5d38a`
+- historical artifact IDs: `8525220616`, `8525254543`
+- private plan에는 native required reviewer가 없어 exact-SHA owner approval을 유지
 
 ## 다음 작업
 
-Neon verify-full bootstrap과 production env inventory의 focused fix를 준비해주세요. 아직 actual secret을 파일에 기록하거나 새 image publish, Neon restore/stamp, Render Web Service 생성·배포를 실행하지 마세요.
+v341 준비 commit의 정확한 40자리 SHA를 기호가 승인하기 전에는 새 image publish workflow를 열거나 실행하지 마세요. 승인을 받으면 source-controlled lifecycle을 단 한 번의 publish attempt용으로 열고, build/SBOM/Trivy/provenance/Cosign을 확인한 뒤 즉시 닫고 exact digest를 기록합니다. 이어서 isolated pull/runtime/CA-store/cleanup 검증까지만 진행합니다.
 
-기호에게 지금 필요한 선택은 추천 Render 서비스 이름 `upgrade-rpg-api` 사용 여부 확인뿐입니다. 이후 DB 초기화 준비 commit과 Render 생성 준비 commit은 각각 정확한 40자리 SHA 승인을 별도로 받습니다.
+이번 image 승인에는 Neon restore/stamp와 Render Web Service 생성·배포가 포함되지 않습니다. DB 초기화 준비 commit과 Render 생성 준비 commit은 나중에 각각 정확한 40자리 SHA 승인을 별도로 받습니다.
 
 ## 첫 검사
 
@@ -80,6 +86,7 @@ Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.ex
 
 ```bash
 python tools/check_render_neon_separated_plan.py --strict
+python tools/smoke/backend/smoke_neon_production_database_bootstrap.py
 python tools/check_render_private_ghcr_connect.py --strict
 python tools/check_neon_readonly_connectivity.py --evidence
 python tools/check_production_provider_selection.py --strict
@@ -88,6 +95,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-첫 검사의 v340 기대 결과는 `render-neon-separated-plans-reviewed-fail-closed`, 다음 단계는 `prepare-neon-verify-full-bootstrap-fix-and-new-image`입니다. v338 Render Connect, v337 account readiness, v336 Neon evidence, v335 provider selection, v334 deployment baseline을 보존합니다.
+첫 검사의 v341 기대 결과는 `neon-production-bootstrap-verified-new-image-publish-approval-required`, 다음 단계는 `owner-approve-v341-image-publish-preparation-sha`입니다. v340 분리 계획, v338 Render Connect, v337 account readiness, v336 Neon evidence, v335 provider selection, v334 deployment baseline을 보존합니다.
 
 별도 승인 전에는 Web Service/deploy, DB/Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스를 변경하지 않습니다.

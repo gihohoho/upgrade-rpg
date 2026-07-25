@@ -36,7 +36,7 @@ REVIEW_RESULT = "next-revision-review-required-schema-differences-detected"
 EXPECTED_HEADS = [REVISION_ID]
 EXPECTED_BASES = [REVISION_ID]
 EXPECTED_MODEL_SOURCE_SHA256 = {
-    "backend/alembic/env.py": "d803129c9e50f583d5a16aa73e6e4500b49b4b48943e30fbaac26bad92abe63f",
+    "backend/alembic/env.py": "3262c376e9a75763528008c53ee5d4c9efb0c8da2068a684aee735b4b638c434",
     "backend/app/db/base.py": "987edfd9dfe38b2c49492c7d1a4e774015d16b72e2281b018e4160be6b47d560",
     "backend/app/models/__init__.py": "9d813e5241210bdddf1bfadf0e3e87c969e4b3418001271a8c33d53d0c7da85c",
     "backend/app/models/admin.py": "651e478a4d9fcd7f388232afe7c29480471c943e62a457a7ae5b2aca1b23ad5d",

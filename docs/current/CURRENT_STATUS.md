@@ -1,11 +1,11 @@
-# Current Status — v340
+# Current Status — v341
 
 ## 현재 결과
 
 ```txt
-latest: v340.render-neon-separated-plans-reviewed-bootstrap-fix-required
-strict result: render-neon-separated-plans-reviewed-fail-closed
-next safe stage: prepare-neon-verify-full-bootstrap-fix-and-new-image
+latest: v341.neon-verify-full-bootstrap-fixed-render-name-confirmed-new-image-required
+strict result: neon-production-bootstrap-verified-new-image-publish-approval-required
+next safe stage: owner-approve-v341-image-publish-preparation-sha
 render plan: v340.render-service-settings-reviewed-creation-blocked
 neon plan: v340.neon-initialization-migration-reviewed-execution-blocked
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
@@ -24,15 +24,17 @@ production deployment approval ready/approved/executed: no/no/no
 ## Render/Neon 분리 계획 체크포인트 — 2026-07-26
 
 - 두 계획과 fail-closed 계약 검토 완료
-- 현재 v338 image는 Neon system-CA verify-full SQLAlchemy bootstrap이 없어 배포 불가
-- production env 예시에 `ENVIRONMENT=production`, `DEBUG=false`, `PORT=8000` 누락
+- v341 source에 runtime/Alembic 공용 system-CA hostname-verifying SSLContext 적용 완료
+- `deploy/render.production.env.example`에 Render 전용 non-secret/secret placeholder inventory 분리
+- 실제 Neon direct read-only bootstrap 통과
+- 현재 v338 image는 v341 fix 이전 산출물이므로 계속 배포 불가
 - Neon `neondb`는 read-only 확인에서 0 public table / no Alembic
 - 새 `rpg_game` DB를 만들지 않고 기존 빈 `neondb` 사용
 - verified local dump: 22 application tables / 748 rows / no Alembic
 - Neon 이식: direct verify-full restore → digest 검증 → exact v295 stamp → 23/749 검증
 - Render: Singapore / Free / 1 instance / port 8000 / health `/api/v1/health`
 - platform health에는 DB를 포함하지 않고 `/api/v1/health/db`는 수동 확인
-- 추천 서비스 이름 `upgrade-rpg-api`는 owner 확인 대기
+- 서비스 이름 `upgrade-rpg-api`는 owner 확인 완료
 - production resource/schema/data mutation: 없음
 
 ## 로컬 리뷰 도구 체크포인트 — 2026-07-26
@@ -120,6 +122,6 @@ Neon resource와 read-only 연결 검증은 완료됐지만 Render resource와 �
 
 ## 다음 단계
 
-다음은 Neon verify-full SSLContext bootstrap과 production env inventory focused fix입니다. 그 뒤 새 image를 publish·isolated 검증해야 합니다. Neon restore/stamp와 Render create/deploy는 서로 다른 준비 commit의 exact SHA를 기호가 각각 승인한 뒤에만 실행합니다.
+다음은 v341 준비 commit의 exact SHA를 기호가 승인한 뒤 새 image를 단 한 번 publish하고 SBOM/Trivy/provenance/Cosign과 isolated Alpine CA-store/runtime/cleanup을 검증하는 단계입니다. Neon restore/stamp와 Render create/deploy는 서로 다른 후속 준비 commit의 exact SHA를 기호가 각각 승인한 뒤에만 실행합니다.
 
-기호가 지금 확인할 항목은 추천 Render 서비스 이름 `upgrade-rpg-api` 사용 여부뿐입니다. 현재 필요한 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.
+현재 필요한 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.

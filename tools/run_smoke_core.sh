@@ -128,6 +128,7 @@ python tools/smoke/backend/smoke_postgres_next_revision_preflight.py
 python tools/smoke/backend/smoke_postgres_deployment_runtime_readiness.py
 python tools/smoke/backend/smoke_runtime_engine_source_binding_inspector.py
 python tools/smoke/backend/smoke_runtime_config_hardening.py
+python tools/smoke/backend/smoke_neon_production_database_bootstrap.py
 python tools/smoke/backend/smoke_production_secrets_tls_container_static.py
 python tools/smoke/backend/smoke_production_capacity_tls_network_plan.py
 python tools/smoke/backend/smoke_production_managed_postgres_reverse_proxy_selection.py
