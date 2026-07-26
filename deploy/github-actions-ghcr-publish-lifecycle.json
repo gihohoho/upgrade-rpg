@@ -1,7 +1,7 @@
 {
   "schemaVersion": "v326.owner-only-publish-lifecycle-with-attempt-history",
-  "state": "preparation-closed",
-  "publishReviewerGateReady": false,
+  "state": "authorization-open",
+  "publishReviewerGateReady": true,
   "priorApprovedPreparationSha": "36e8720a53ef7ff6a8334de6bc99646998d63fc9",
   "priorAttemptEvidence": {
     "preparationSha": "36e8720a53ef7ff6a8334de6bc99646998d63fc9",
@@ -92,14 +92,14 @@
       "signatureVerified": true
     }
   ],
-  "approvedPreparationSha": null,
+  "approvedPreparationSha": "fb231afa5081f5bfd7b459081a58bc5acd6699df",
   "ownerApproval": {
-    "recorded": false,
-    "recordedAtUtc": null,
+    "recorded": true,
+    "recordedAtUtc": "2026-07-26T00:08:04Z",
     "evidence": "exact-40-character-sha-user-message"
   },
   "githubLiveSettings": {
-    "recheckedAtUtc": "2026-07-22T09:41:21Z",
+    "recheckedAtUtc": "2026-07-26T00:08:04Z",
     "actionsAllowlistMatchesPlan": true,
     "fullLengthActionShaRequired": true,
     "githubOwnedActionsBlanketAllowed": false,
