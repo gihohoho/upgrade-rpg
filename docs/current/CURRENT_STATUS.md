@@ -108,7 +108,7 @@ Neon resource와 read-only 연결 검증은 완료됐지만 Render resource와 �
 - GitHub Actions run `29909291344`: SBOM, Trivy HIGH/CRITICAL 0, provenance, Cosign sign/verify 성공
 - isolated evidence: `deploy/review/isolated-image-pull-validation-v333.json`
 - source-controlled lifecycle gate: `deploy/github-actions-ghcr-publish-lifecycle.json`
-- lifecycle: `attempt-recorded`, `publishReviewerGateReady=false`
+- lifecycle: `preparation-closed`, `publishReviewerGateReady=false`, prior five attempts preserved
 - CI credential: GitHub Actions `GITHUB_TOKEN`
 - 개인 비공개 저장소 required reviewer는 없으므로 exact-SHA owner approval을 유지
 
@@ -122,6 +122,6 @@ Neon resource와 read-only 연결 검증은 완료됐지만 Render resource와 �
 
 ## 다음 단계
 
-다음은 v341 준비 commit의 exact SHA를 기호가 승인한 뒤 새 image를 단 한 번 publish하고 SBOM/Trivy/provenance/Cosign과 isolated Alpine CA-store/runtime/cleanup을 검증하는 단계입니다. Neon restore/stamp와 Render create/deploy는 서로 다른 후속 준비 commit의 exact SHA를 기호가 각각 승인한 뒤에만 실행합니다.
+`789599bfe1a26cad5d8b3d80ee6a9613c5e48576` 승인은 lifecycle이 이전 `attempt-recorded` 상태라 workflow 요구 조건을 만족하지 못해 소비하지 않았고 workflow도 실행하지 않았습니다. focused `preparation-closed` 보완 commit의 새 exact SHA를 기호가 승인한 뒤 새 image를 단 한 번 publish하고 SBOM/Trivy/provenance/Cosign과 isolated Alpine CA-store/runtime/cleanup을 검증합니다. Neon restore/stamp와 Render create/deploy는 서로 다른 후속 준비 commit의 exact SHA를 기호가 각각 승인한 뒤에만 실행합니다.
 
 현재 필요한 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.

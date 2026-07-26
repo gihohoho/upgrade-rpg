@@ -62,7 +62,7 @@ Render 서비스 이름은 기호가 `upgrade-rpg-api`로 확정했습니다. v3
 
 - CI credential: GitHub Actions `GITHUB_TOKEN`
 - source-controlled lifecycle gate: `deploy/github-actions-ghcr-publish-lifecycle.json`
-- lifecycle: `attempt-recorded` / `publishReviewerGateReady=false`
+- lifecycle: `preparation-closed` / `publishReviewerGateReady=false` / prior five attempts preserved
 - run `29909291344`: provenance/SBOM, exact-digest Trivy 0건, Cosign sign/verify 성공
 - single-run policy: `run_attempt=1`, single dispatch, immediate closure, `closureCommitSha`, rerun 금지
 - 역사 결과 `review-recorded-workflow-attempt-evidence` 보존
@@ -74,7 +74,7 @@ Render 서비스 이름은 기호가 `upgrade-rpg-api`로 확정했습니다. v3
 
 ## 다음 작업
 
-v341 준비 commit의 정확한 40자리 SHA를 기호가 승인하기 전에는 새 image publish workflow를 열거나 실행하지 마세요. 승인을 받으면 source-controlled lifecycle을 단 한 번의 publish attempt용으로 열고, build/SBOM/Trivy/provenance/Cosign을 확인한 뒤 즉시 닫고 exact digest를 기록합니다. 이어서 isolated pull/runtime/CA-store/cleanup 검증까지만 진행합니다.
+`789599bfe1a26cad5d8b3d80ee6a9613c5e48576` 승인은 lifecycle이 이전 `attempt-recorded`라 workflow가 요구하는 preparation parent가 아니어서 소비하지 않았습니다. workflow dispatch와 registry mutation은 없었습니다. focused `preparation-closed` 보완 commit의 새 정확한 40자리 SHA를 기호가 승인하기 전에는 새 image publish workflow를 열거나 실행하지 마세요. 승인을 받으면 source-controlled lifecycle을 단 한 번의 publish attempt용으로 열고, build/SBOM/Trivy/provenance/Cosign을 확인한 뒤 즉시 닫고 exact digest를 기록합니다. 이어서 isolated pull/runtime/CA-store/cleanup 검증까지만 진행합니다.
 
 이번 image 승인에는 Neon restore/stamp와 Render Web Service 생성·배포가 포함되지 않습니다. DB 초기화 준비 commit과 Render 생성 준비 commit은 나중에 각각 정확한 40자리 SHA 승인을 별도로 받습니다.
 

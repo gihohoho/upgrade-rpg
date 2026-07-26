@@ -78,7 +78,7 @@ Render workspace는 `Hobby (legacy)`, 결제수단 없음, active service 0개�
 
 - CI credential: GitHub Actions `GITHUB_TOKEN`
 - source-controlled lifecycle gate: `deploy/github-actions-ghcr-publish-lifecycle.json`
-- lifecycle: `attempt-recorded` / `publishReviewerGateReady=false`
+- lifecycle: `preparation-closed` / `publishReviewerGateReady=false` / prior five attempts preserved
 - run `29909291344`: provenance/SBOM, exact-digest Trivy 0건, Cosign sign/verify 성공
 - run policy: `run_attempt=1`, single dispatch, immediate closure, `closureCommitSha`, rerun 금지
 - 역사 lifecycle 결과 `review-recorded-workflow-attempt-evidence` 보존
@@ -102,6 +102,8 @@ Render workspace는 `Hobby (legacy)`, 결제수단 없음, active service 0개�
 ## 다음 단계
 
 Neon verify-full SSLContext bootstrap과 Render production env inventory focused fix는 완료했습니다. 실제 Neon direct URL을 프로세스에만 주입한 read-only 연결도 통과했고 `neondb`는 계속 0 public table / no Alembic입니다.
+
+사용자가 승인한 `789599bfe1a26cad5d8b3d80ee6a9613c5e48576`은 lifecycle JSON이 이전 성공 attempt의 `attempt-recorded` 상태라 새 authorization의 preparation parent로 사용할 수 없었습니다. workflow를 dispatch하지 않았고 GHCR mutation도 실행하지 않았습니다. 이전 성공 attempt를 history에 보존하고 lifecycle을 `preparation-closed`로 초기화한 focused 보완 commit의 새 exact SHA 승인이 필요합니다.
 
 다음은 v341 준비 commit의 정확한 40자리 SHA를 기호가 승인한 뒤 새 image를 1회 publish하고 supply-chain 및 isolated runtime/CA-store/cleanup을 검증하는 단계입니다. 이 승인은 Neon restore/stamp와 Render 생성·배포를 포함하지 않습니다. 필요한 extension·로컬 설치는 현재 없습니다.
 

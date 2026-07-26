@@ -1,24 +1,24 @@
 {
   "schemaVersion": "v334.production-deploy-plan-reviewed-inputs-blocked",
-  "preparedOnly": false,
+  "preparedOnly": true,
   "publishApprovalModel": "owner-only-source-controlled-two-step",
-  "ownerOnlyApprovalPhase": "production-deploy-plan-reviewed-inputs-blocked",
+  "ownerOnlyApprovalPhase": "v341-image-preparation-awaiting-exact-sha-approval",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
-  "publishLifecycleState": "attempt-recorded",
+  "publishLifecycleState": "preparation-closed",
   "publishLifecycleSupportedStates": [
     "preparation-closed",
     "authorization-open",
     "authorization-closed-awaiting-evidence",
     "attempt-recorded"
   ],
-  "priorApprovedPreparationSha": "350bbd085f1cf636810d75ddcbb5321e0791256c",
+  "priorApprovedPreparationSha": "36e8720a53ef7ff6a8334de6bc99646998d63fc9",
   "priorAttemptEvidence": {
-    "recordCommitSha": "1f12ea59eb54385337557e9754f86731ec53d253",
-    "runId": 29716038891,
-    "conclusion": "failure",
-    "registryLoginExecuted": false,
-    "imageBuildExecuted": false,
-    "imagePushExecuted": false
+    "recordCommitSha": "1f0340ddfcf3c8a74cf14110d5957627d4c5d38a",
+    "runId": 29909291344,
+    "conclusion": "success",
+    "registryLoginExecuted": true,
+    "imageBuildExecuted": true,
+    "imagePushExecuted": true
   },
   "attemptHistory": [
     {
@@ -52,9 +52,17 @@
       "registryLoginExecuted": true,
       "imageBuildExecuted": true,
       "imagePushExecuted": true
+    },
+    {
+      "recordCommitSha": "1f0340ddfcf3c8a74cf14110d5957627d4c5d38a",
+      "runId": 29909291344,
+      "conclusion": "success",
+      "registryLoginExecuted": true,
+      "imageBuildExecuted": true,
+      "imagePushExecuted": true
     }
   ],
-  "approvedPreparationSha": "36e8720a53ef7ff6a8334de6bc99646998d63fc9",
+  "approvedPreparationSha": null,
   "currentAttemptEvidence": {
     "authorizationSha": "26a11356e33c978afa8cd8a4881500fa62cdbc5c",
     "closureSha": "1c4a982b2a35d3d45f59e7d9faefcdecca69e6c5",
@@ -71,7 +79,7 @@
     "signatureVerified": true
   },
   "priorExactPreparationShaApproved": true,
-  "exactPreparationShaApproved": true,
+  "exactPreparationShaApproved": false,
   "dependencyAndFrontendInputsLocked": true,
   "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
   "registryProvider": "github-container-registry",

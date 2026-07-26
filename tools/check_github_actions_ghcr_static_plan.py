@@ -31,22 +31,31 @@ IMAGE_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 WORKFLOW_PATH = ".github/workflows/publish-backend-ghcr.yml"
 LIFECYCLE_PATH = "deploy/github-actions-ghcr-publish-lifecycle.json"
 LIFECYCLE_SCHEMA_VERSION = "v326.owner-only-publish-lifecycle-with-attempt-history"
-PRIOR_APPROVED_PREPARATION_SHA = "350bbd085f1cf636810d75ddcbb5321e0791256c"
+PRIOR_APPROVED_PREPARATION_SHA = "36e8720a53ef7ff6a8334de6bc99646998d63fc9"
 PRIOR_ATTEMPT_EVIDENCE = {
     "preparationSha": PRIOR_APPROVED_PREPARATION_SHA,
-    "authorizationSha": "32e5102877851ace06e1c0ed3bcb48310b8d65b6",
-    "closureSha": "362f5f1901d234b5b86f2a7cefdabd28ac61f896",
-    "recordCommitSha": "1f12ea59eb54385337557e9754f86731ec53d253",
-    "runId": 29716038891,
-    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29716038891",
-    "conclusion": "failure",
-    "registryLoginExecuted": False,
-    "imageBuildExecuted": False,
-    "imagePushExecuted": False,
+    "authorizationSha": "26a11356e33c978afa8cd8a4881500fa62cdbc5c",
+    "closureSha": "1c4a982b2a35d3d45f59e7d9faefcdecca69e6c5",
+    "recordCommitSha": "1f0340ddfcf3c8a74cf14110d5957627d4c5d38a",
+    "runId": 29909291344,
+    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29909291344",
+    "conclusion": "success",
+    "registryLoginExecuted": True,
+    "imageBuildExecuted": True,
+    "imagePushExecuted": True,
 }
 ATTEMPT_HISTORY = [
     {
-        **PRIOR_ATTEMPT_EVIDENCE,
+        "preparationSha": "350bbd085f1cf636810d75ddcbb5321e0791256c",
+        "authorizationSha": "32e5102877851ace06e1c0ed3bcb48310b8d65b6",
+        "closureSha": "362f5f1901d234b5b86f2a7cefdabd28ac61f896",
+        "recordCommitSha": "1f12ea59eb54385337557e9754f86731ec53d253",
+        "runId": 29716038891,
+        "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/29716038891",
+        "conclusion": "failure",
+        "registryLoginExecuted": False,
+        "imageBuildExecuted": False,
+        "imagePushExecuted": False,
         "artifactCount": 0,
         "imageDigest": None,
         "signatureVerified": False,
@@ -95,6 +104,12 @@ ATTEMPT_HISTORY = [
         "artifactCount": 2,
         "imageDigest": "sha256:6e4aefad0cdf1767670b7f736477dd9e00f17bf49a03fa471828df6667c41149",
         "signatureVerified": False,
+    },
+    {
+        **PRIOR_ATTEMPT_EVIDENCE,
+        "artifactCount": 2,
+        "imageDigest": "sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2",
+        "signatureVerified": True,
     },
 ]
 EXPECTED_WORKFLOW_SHA256 = "3331484f280a12a239275785bef625f18656c62ccbe33e8707a296ac2e204843"

@@ -1368,3 +1368,9 @@
 - artifact `8515504259`에 SBOM/vulnerability report 보존. publish job은 skipped되어 GHCR login/push/provenance/Cosign과 registry mutation 없음.
 - evidence commit `303a2ed01c69c29894efdcde4ead6c2291c3d8bc`으로 `attempt-recorded` 확정. 다음 단계는 `review-recorded-vulnerability-gate-evidence`.
 - gate 완화 없이 exact base image/runtime 구성/Python dependency focused fix를 별도 승인 대상으로 남김.
+# v341.lifecycle-preparation-closed-focused-correction
+
+- `789599bfe1a26cad5d8b3d80ee6a9613c5e48576` 승인 뒤 사전 검사에서 lifecycle이 이전 `attempt-recorded`라 workflow의 direct preparation-parent 조건을 만족하지 못함을 확인했습니다.
+- workflow dispatch나 새 GHCR mutation 없이 중단했습니다.
+- run `29909291344` 성공 evidence를 다섯 번째 `attemptHistory`와 `priorAttemptEvidence`로 보존하고 lifecycle을 `preparation-closed`, gate `false`, approval `null`, not-dispatched로 초기화했습니다.
+- static/handoff checker와 정책 JSON을 같은 history에 맞추고 새 focused preparation SHA 승인을 다시 요구합니다.

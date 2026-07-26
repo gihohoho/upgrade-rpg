@@ -50,6 +50,14 @@
 
 따라서 owner-only source-controlled two-step을 사용합니다. `run_attempt=1`, single dispatch, immediate closure, 정확한 `closureCommitSha`, rerun 금지를 유지합니다.
 
+### v341 게시 준비 lifecycle 보완 — 2026-07-26
+
+- 승인된 `789599bfe1a26cad5d8b3d80ee6a9613c5e48576`의 lifecycle이 이전 `attempt-recorded`라 workflow의 preparation-parent 조건을 충족하지 못했습니다.
+- workflow를 dispatch하지 않았고 GHCR login/build/push도 새로 실행하지 않았습니다.
+- 이전 성공 run `29909291344`과 관련 SHA/digest/signature evidence를 다섯 번째 history로 보존했습니다.
+- 새 attempt 슬롯은 `preparation-closed`, gate `false`, approval `null`, `not-dispatched`로 초기화했습니다.
+- focused 보완 commit의 새 exact SHA 승인 전에는 authorization을 열거나 workflow를 실행하지 않습니다.
+
 ## 최신 evidence
 
 - approved preparation `b35dfacf427162b348a6bd29eb030778edc7741c`

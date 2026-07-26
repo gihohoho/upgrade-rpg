@@ -5,7 +5,7 @@ version: v330.slsa-v1-provenance-path-preparation
 static workflow plan version: v330.slsa-v1-provenance-path-preparation
 preparation version: v330.slsa-v1-provenance-path-preparation
 base plan version: v322.owner-only-single-run-lifecycle-hardened-publish-gated
-result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+result: github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated
 repository: gihohoho/upgrade-rpg
 image: ghcr.io/gihohoho/upgrade-rpg-backend
 workflow: .github/workflows/publish-backend-ghcr.yml
@@ -223,9 +223,9 @@ production reference 자동 갱신과 deploy는 하지 않습니다.
 
 ## 현재와 다음 단계
 
-현재 lifecycle은 `attempt-recorded`이고 gate는 `false`입니다. 네 실패와 한 성공을 보존하고 다섯 run 모두 rerun 금지합니다. verified candidate의 exact digest는 production env inventory에 정적으로 고정했지만 pull·container·deploy는 미실행입니다.
+현재 lifecycle은 `preparation-closed`이고 gate는 `false`입니다. 네 실패와 한 성공을 `attemptHistory`에 보존하고 다섯 run 모두 rerun 금지합니다. `789599bfe1a26cad5d8b3d80ee6a9613c5e48576` 승인은 parent lifecycle 불일치 때문에 소비하지 않았고 새 workflow dispatch도 없었습니다. verified candidate의 exact digest는 production env inventory에 정적으로 고정했지만 새 v341 image publish·pull·container·deploy는 미실행입니다.
 
 ```txt
-result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+result: github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated
 next safe stage: select-production-targets-and-complete-executable-deploy-plan
 ```

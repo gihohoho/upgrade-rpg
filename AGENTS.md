@@ -64,7 +64,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 
 - CI credential은 GitHub Actions `GITHUB_TOKEN`, local pull은 GitHub CLI OAuth `read:packages` → Docker credential store입니다.
 - image publish model은 `owner-only-source-controlled-two-step`입니다.
-- source-controlled lifecycle gate는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `attempt-recorded`, `publishReviewerGateReady=false`입니다.
+- source-controlled lifecycle gate는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `preparation-closed`, `publishReviewerGateReady=false`입니다. 이전 성공 run 5건은 `attemptHistory`에 보존합니다.
 - run `29909291344`은 build/SBOM/Trivy/provenance/Cosign을 통과했고 image는 v333 isolated runtime 검증과 cleanup까지 완료했습니다.
 - 운영 배포 계획은 `deploy/production-deploy-plan.example.json`과 `docs/current/PRODUCTION_DEPLOYMENT_PLAN.md`에서 검토 완료했습니다.
 - production host, managed DB, provider CA, reverse proxy/domain/certificate, secret injection, edge network, first-deploy rollback 입력은 아직 미확정입니다.
@@ -85,6 +85,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 - 현재 v338 image는 v341 bootstrap fix 이전 산출물이므로 계속 배포 불가입니다. 새 image의 Alpine CA store와 runtime을 isolated validation에서 확인해야 합니다.
 - Neon production branch의 기본 `neondb`는 read-only 확인에서 0 public table / no Alembic입니다. 새 `rpg_game` DB는 만들지 않습니다.
 - 순서는 v341 exact-SHA 승인 → 새 image publish/isolated validation → 별도 exact-SHA Neon restore+stamp → 별도 exact-SHA Render create/deploy입니다.
+- `789599bfe1a26cad5d8b3d80ee6a9613c5e48576` 승인은 lifecycle이 이전 `attempt-recorded` 상태라 안전하게 소비할 수 없었습니다. workflow는 실행하지 않았고, focused `preparation-closed` 보완 commit의 새 exact SHA 승인이 필요합니다.
 
 ## 승인과 안전 경계
 

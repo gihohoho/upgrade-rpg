@@ -9,7 +9,7 @@ repository: ghcr.io/gihohoho/upgrade-rpg-backend
 visibility/platform: private / linux/amd64
 CI credential: GitHub Actions GITHUB_TOKEN
 reference mode: digest-only
-publish lifecycle: attempt-recorded / publishReviewerGateReady=false
+publish lifecycle: preparation-closed / publishReviewerGateReady=false / prior five attempts preserved
 ```
 
 verified production reference:
