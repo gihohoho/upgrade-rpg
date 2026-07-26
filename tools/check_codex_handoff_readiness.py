@@ -460,7 +460,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     )
     _require(
         policy.get("ownerOnlyApprovalPhase")
-        == "v346-render-service-creation-preparation-ready-exact-sha-gated",
+        == "v347-render-service-created-initial-deploy-verified",
         "owner-only phase changed",
     )
     _require(policy.get("publishLifecyclePath") == LIFECYCLE_PATH, "publish lifecycle path changed")
@@ -658,9 +658,20 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "productionDeploymentApprovalReady",
     ):
         _require(_bool(policy, key) is False, f"blocked/unexecuted v334 state must remain false: {key}")
+    for key in (
+        "renderPublicPreviewDeploymentApprovalReady",
+        "renderPublicPreviewDeploymentApproved",
+        "renderPublicPreviewDeploymentExecuted",
+    ):
+        _require(_bool(policy, key) is True, f"Render public preview deployment must be complete: {key}")
+    _require(
+        policy.get("renderPublicPreviewDeploymentEvidence")
+        == "deploy/review/render-service-initial-deploy-v347.json",
+        "Render public preview evidence path changed",
+    )
     _require(policy.get("productionDeploymentPlan") == PRODUCTION_DEPLOY_PLAN_PATH, "production deployment plan path changed")
     _require(
-        policy.get("nextSafeStage") == "owner-approve-render-service-creation-preparation-sha",
+        policy.get("nextSafeStage") == "review-render-live-service-and-prepare-frontend-deployment-plan",
         "unexpected image-policy next safe stage",
     )
     _require(

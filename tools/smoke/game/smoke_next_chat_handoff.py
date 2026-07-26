@@ -86,7 +86,7 @@ def main() -> int:
     assert policy["preparedOnly"] is False
     assert (
         policy["ownerOnlyApprovalPhase"]
-        == "v346-render-service-creation-preparation-ready-exact-sha-gated"
+        == "v347-render-service-created-initial-deploy-verified"
     )
     assert policy["publishLifecycleState"] == "attempt-recorded"
     assert policy["approvedPreparationSha"] == PREPARATION
@@ -104,6 +104,13 @@ def main() -> int:
     assert policy["productionDeploymentApprovalReady"] is False
     assert policy["productionDeploymentApproved"] is False
     assert policy["productionDeploymentExecuted"] is False
+    assert policy["renderPublicPreviewDeploymentApprovalReady"] is True
+    assert policy["renderPublicPreviewDeploymentApproved"] is True
+    assert policy["renderPublicPreviewDeploymentExecuted"] is True
+    assert (
+        policy["renderPublicPreviewDeploymentEvidence"]
+        == "deploy/review/render-service-initial-deploy-v347.json"
+    )
     assert policy["currentAttemptEvidence"] == {
         "authorizationSha": AUTHORIZATION,
         "closureSha": CLOSURE,

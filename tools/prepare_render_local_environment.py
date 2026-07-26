@@ -24,9 +24,9 @@ from check_neon_readonly_connectivity import (
 ROOT = Path(__file__).resolve().parents[1]
 ENV_FILE = ROOT / "deploy/.env.production"
 PLAN_FILE = ROOT / "deploy/render-service-settings.example.json"
-VERSION = "v346.render-service-creation-preparation-ready-exact-sha-gated"
-RESULT = "render-service-creation-preparation-ready-exact-sha-gated"
-NEXT_STAGE = "owner-approve-render-service-creation-preparation-sha"
+VERSION = "v347.render-service-created-initial-deploy-verified"
+RESULT = "render-service-created-initial-deploy-verified"
+NEXT_STAGE = "review-render-live-service-and-prepare-frontend-deployment-plan"
 SERVICE_NAME = "upgrade-rpg-api"
 IMAGE_REFERENCE = (
     "ghcr.io/gihohoho/upgrade-rpg-backend@"

@@ -1,63 +1,48 @@
-# Render Web Service 실행 계획 — v346
+# Render Web Service 실행 결과 — v347
 
 ## 현재 결론
 
-Render Web Service 생성·첫 배포에 필요한 설정, exact image, Neon 초기화, 로컬 환경값 준비가 모두 완료됐습니다. 하지만 Render에는 아직 서비스가 없고 환경변수도 주입하지 않았습니다.
+Render Free Web Service `upgrade-rpg-api`가 Singapore에서 Live입니다.
 
-다음 단계는 이 준비 상태가 담긴 clean pushed `main` 커밋의 정확한 40자리 SHA를 기호가 승인하는 것입니다. 정적 계약은 `deploy/render-service-settings.example.json`, 값이 없는 예시는 `deploy/render.production.env.example`입니다.
+- 공개 주소: `https://upgrade-rpg-api.onrender.com`
+- service ID: `srv-d9iro458nd3s73acgmsg`
+- first deploy ID: `dep-d9iro4l8nd3s73acgnmg`
+- image: 승인된 GHCR exact digest
+- plan: Free / 1 instance / 고정 월 비용 $0
+- evidence: `deploy/review/render-service-initial-deploy-v347.json`
 
-## 확정 설정
+## 실행된 범위
 
-| 항목 | 값 |
-|---|---|
-| Service | Web Service / Existing Image |
-| Name | `upgrade-rpg-api` |
-| Region / plan | Singapore / Free / 1 instance |
-| Image | `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1` |
-| Registry credential | `upgrade-rpg-ghcr-read` |
-| Port | `8000` |
-| Platform health | `/api/v1/health` |
-| Manual DB health | `/api/v1/health/db` 한 번 |
-| Command override / pre-deploy | 없음 / 없음 |
-| Auto deploy / disk | 꺼짐 / 없음 |
-| Public URL | Render managed `onrender.com` HTTPS |
-| Custom domain / payment | 보류 / 변경 없음 |
+승인된 preparation SHA `81d1c4faa59194e8928d54fbecac28694ab139ab`를 clean pushed `main`과 대조한 뒤 아래 작업을 실행했습니다.
 
-platform health는 DB를 포함하지 않아 Neon cold start 때문에 Render가 불필요하게 재시작하는 일을 막습니다. DB 연결은 첫 배포 후 `/api/v1/health/db`를 한 번 수동으로 확인합니다.
+1. Existing Image Web Service 한 개 생성
+2. 서비스 이름 `upgrade-rpg-api`, Singapore, Free 선택
+3. 승인된 환경변수 14개 주입
+4. exact image 최초 deploy 한 번
+5. platform health path `/api/v1/health` 설정
+6. Render 내부 health 200과 Live 상태 확인
+7. 공개 `/api/v1/health` HTTP 200 `status=ok` 확인
+8. `/api/v1/health/db`를 한 번 요청해 HTTP 200 `status=ok` 확인
 
-## 환경변수 준비
+`NEON_DIRECT_DATABASE_URL`과 `NEON_POOLED_DATABASE_URL`은 Render에 넣지 않았고 로컬 보관용으로만 유지합니다. 실제 `DATABASE_URL`, JWT/admin secret은 문서·Git·채팅·로그·evidence에 기록하지 않았습니다.
 
-비밀이 아닌 고정값 11개와 secret key 3개(`DATABASE_URL`, `JWT_SECRET_KEY`, `ADMIN_WRITE_DEV_KEY`)를 사용합니다. 실제 값은 Git/Docker 제외 `deploy/.env.production`에만 준비됐습니다.
+## 실제 runtime 관찰
 
-- `DATABASE_URL`: Neon direct endpoint 기반 `postgresql+asyncpg`, TLS query 없음
-- TLS: 앱이 system CA와 hostname verification을 강제로 적용
-- JWT/admin secret: 서로 다른 CSPRNG 값, 각각 43자 이상
-- DB pool: size 2, overflow 0, pre-ping 켜짐
-- CORS: 첫 backend-only 검증에서는 `[]`
+앱/예시의 기본 포트 힌트는 `8000`이지만 Render가 Free Web Service runtime에 reserved `PORT=10000`을 주입했습니다. 이미지 CMD가 `PORT`를 따르므로 `10000`에서 정상 기동했고 Render health check도 성공했습니다. worker는 1개입니다.
 
-`tools/prepare_render_local_environment.py --inspect-local`은 값이나 endpoint를 출력하지 않고 이 조건을 다시 검사합니다.
+Docker command override와 pre-deploy command는 비어 있습니다. image-backed service에는 auto deploy를 사용하지 않으며 persistent disk, custom domain, DNS, payment method도 추가하지 않았습니다.
 
-사용자 승인 뒤에는 같은 도구의 `--verify-execution-approval` 모드가 clean pushed `main`, exact 40자리 SHA, 서비스 이름, exact image, 단일 deploy action을 모두 확인합니다. 이 관문 자체는 Render를 변경하지 않습니다.
+## 실행하지 않은 것
 
-## exact-SHA 승인에 포함되는 실행
-
-1. clean pushed `main`과 승인 SHA가 정확히 같은지 확인
-2. Render에 `upgrade-rpg-api` Web Service 한 개 생성
-3. 검토된 non-secret과 로컬 secret 3개 주입
-4. 검증된 exact image로 최초 deploy 한 번 실행
-5. `/api/v1/health`가 정상화될 때까지 기다림
-6. `/api/v1/health/db`를 한 번 읽기 확인
-7. `onrender.com` 주소와 secret 없는 결과만 sanitized evidence에 기록
-8. command override, pre-deploy, auto deploy가 없음을 확인
-
-## 승인에 포함되지 않는 실행
-
-- DB create/delete/restore/reset/seed/write와 Alembic 작업
-- 다른 image 또는 tag 사용
+- DB create/delete/restore/reset/seed/write
+- Alembic revision/stamp/upgrade/downgrade
+- image 변경 또는 tag 배포
 - custom domain, DNS, 결제수단 변경
-- 자동 retry, 두 번째 deploy, 자동 migration
+- automatic retry, 두 번째 deploy
 - 인증/API write logic, Vue write, 게임 콘텐츠·밸런스 변경
 
-실패하면 서비스 상태를 보존한 채 멈추고 원인을 검토합니다. 자동으로 다시 deploy하거나 서비스를 삭제하지 않습니다.
+첫 deploy approval은 소비됐고 재사용할 수 없습니다. `tools/prepare_render_local_environment.py --verify-execution-approval`도 완료 상태에서 재실행을 거부합니다.
 
-무료 서비스는 idle 시 잠들어 첫 요청 cold start가 발생할 수 있는 개인용 public preview이며 SLA production으로 취급하지 않습니다.
+## 다음 단계
+
+현재 backend는 public HTTPS에서 동작하지만 `CORS_ORIGINS=[]`입니다. frontend 배포 위치를 먼저 정한 뒤 그 exact origin만 허용하는 CORS 변경과 frontend API base URL 배포 계획을 별도 검토합니다. 무료 instance는 idle 시 잠들어 첫 요청에 cold start가 발생할 수 있습니다.

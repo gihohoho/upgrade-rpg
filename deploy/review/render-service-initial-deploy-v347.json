@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "v347.render-service-created-initial-deploy-verified",
+  "completedAtUtc": "2026-07-26T07:51:20Z",
+  "result": "render-service-created-initial-deploy-verified",
+  "nextSafeStage": "review-render-live-service-and-prepare-frontend-deployment-plan",
+  "approvedPreparationSha": "81d1c4faa59194e8928d54fbecac28694ab139ab",
+  "service": {
+    "id": "srv-d9iro458nd3s73acgmsg",
+    "name": "upgrade-rpg-api",
+    "type": "web-service",
+    "source": "existing-image",
+    "region": "singapore",
+    "instanceType": "free",
+    "instanceCount": 1,
+    "publicUrl": "https://upgrade-rpg-api.onrender.com",
+    "status": "live"
+  },
+  "deployment": {
+    "id": "dep-d9iro4l8nd3s73acgnmg",
+    "trigger": "first-deploy",
+    "attemptCount": 1,
+    "automaticRetry": false,
+    "exactImageReference": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1",
+    "healthCheckPath": "/api/v1/health",
+    "configuredPortHint": 8000,
+    "observedProviderInjectedPort": 10000,
+    "workerCount": 1,
+    "dockerCommandOverride": false,
+    "preDeployCommand": false,
+    "autoDeploy": false
+  },
+  "environment": {
+    "approvedKeyCount": 14,
+    "excludedLocalStorageKeys": [
+      "NEON_DIRECT_DATABASE_URL",
+      "NEON_POOLED_DATABASE_URL"
+    ],
+    "actualSecretValuesRecorded": false
+  },
+  "verification": {
+    "renderInternalHealth200": true,
+    "publicHealthHttpStatus": 200,
+    "publicHealthStatus": "ok",
+    "databaseHealthHttpStatus": 200,
+    "databaseHealthStatus": "ok",
+    "databaseHealthRequestCount": 1
+  },
+  "mutations": {
+    "renderWebServiceCreated": true,
+    "renderEnvironmentInjected": true,
+    "renderInitialDeployExecuted": true,
+    "databaseWrite": false,
+    "alembic": false,
+    "imageChange": false,
+    "customDomainOrDns": false,
+    "paymentMethod": false,
+    "secondDeploy": false
+  },
+  "secretOrEndpointCredentialRecorded": false
+}

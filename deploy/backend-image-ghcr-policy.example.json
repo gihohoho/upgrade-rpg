@@ -2,7 +2,7 @@
   "schemaVersion": "v334.production-deploy-plan-reviewed-inputs-blocked",
   "preparedOnly": false,
   "publishApprovalModel": "owner-only-source-controlled-two-step",
-  "ownerOnlyApprovalPhase": "v346-render-service-creation-preparation-ready-exact-sha-gated",
+  "ownerOnlyApprovalPhase": "v347-render-service-created-initial-deploy-verified",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
   "publishLifecycleState": "attempt-recorded",
   "publishLifecycleSupportedStates": [
@@ -145,9 +145,13 @@
   "productionDeploymentApprovalReady": false,
   "productionDeploymentApproved": false,
   "productionDeploymentExecuted": false,
+  "renderPublicPreviewDeploymentApprovalReady": true,
+  "renderPublicPreviewDeploymentApproved": true,
+  "renderPublicPreviewDeploymentExecuted": true,
+  "renderPublicPreviewDeploymentEvidence": "deploy/review/render-service-initial-deploy-v347.json",
   "actualRegistryMutationExecuted": true,
   "actualDockerCommandExecuted": true,
   "actualDatabaseRestoreExecuted": true,
   "actualDatabaseAlembicMutationExecuted": true,
-  "nextSafeStage": "owner-approve-render-service-creation-preparation-sha"
+  "nextSafeStage": "review-render-live-service-and-prepare-frontend-deployment-plan"
 }

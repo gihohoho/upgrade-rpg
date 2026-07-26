@@ -1,12 +1,12 @@
-# Current Status — v346
+# Current Status — v347
 
 ## 현재 결과
 
 ```txt
-latest: v346.render-service-creation-preparation-ready-exact-sha-gated
-strict result: render-service-creation-preparation-ready-exact-sha-gated
-next safe stage: owner-approve-render-service-creation-preparation-sha
-render plan: v346.render-service-creation-preparation-ready-exact-sha-gated
+latest: v347.render-service-created-initial-deploy-verified
+strict result: render-service-created-initial-deploy-verified
+next safe stage: review-render-live-service-and-prepare-frontend-deployment-plan
+render plan: v347.render-service-created-initial-deploy-verified
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
@@ -19,6 +19,7 @@ baseline next stage marker: select-production-targets-and-complete-executable-de
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR repository: ghcr.io/gihohoho/upgrade-rpg-backend
 production deployment approval ready/approved/executed: no/no/no
+Render public preview deployment ready/approved/executed: yes/yes/yes
 ```
 
 ## Render/Neon 분리 계획 체크포인트 — 2026-07-26
@@ -125,8 +126,8 @@ Neon DB/schema/data 초기화는 완료됐지만 Render resource 생성, 배포 
 
 ## 다음 단계
 
-Render용 direct asyncpg `DATABASE_URL`과 서로 다른 강한 JWT/admin secret을 Git/Docker 제외 파일 `deploy/.env.production`에 준비했습니다. `tools/prepare_render_local_environment.py --inspect-local`이 값 출력 없이 14개 필수 키, query 없는 direct URL, secret 강도·분리를 검증합니다.
+승인된 v346 SHA로 Render Free Web Service `upgrade-rpg-api`를 Singapore에 만들고 승인된 env 14개와 exact image를 사용해 최초 deploy를 한 번 실행했습니다. service `srv-d9iro458nd3s73acgmsg`, deploy `dep-d9iro4l8nd3s73acgnmg`는 Live이며 공개 주소는 `https://upgrade-rpg-api.onrender.com`입니다.
 
-다음은 이 v346 실행 준비 commit의 정확한 40자리 SHA를 기호가 승인하는 단계입니다. 승인 후에도 실행 직전 `--verify-execution-approval` 관문으로 clean pushed `main`, SHA, service, image, 단일 deploy action을 다시 검사합니다. 승인 전에는 Render를 변경하지 않습니다. 허용 범위는 `upgrade-rpg-api` 서비스 1개 생성, 검토된 env 주입, exact digest 최초 deploy, `/api/v1/health` 대기, `/api/v1/health/db` 한 번의 읽기 확인, managed HTTPS URL과 sanitized evidence 기록입니다. DB/Alembic write, image 변경, custom domain/DNS, 결제수단, 자동 retry·두 번째 deploy는 포함되지 않습니다.
+Render 내부 health와 공개 `/api/v1/health`, Neon read-only `/api/v1/health/db`가 모두 HTTP 200 `status=ok`입니다. DB/Alembic write, image 변경, custom domain/DNS, 결제수단, 자동 retry·두 번째 deploy는 실행하지 않았습니다. 다음 단계는 live backend 확인과 frontend 배포/CORS origin 계획 검토입니다.
 
 현재 필요한 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.

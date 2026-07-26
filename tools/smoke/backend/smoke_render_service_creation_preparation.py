@@ -81,15 +81,9 @@ def main() -> int:
         ("rev-parse", "--verify", "origin/main"): "a" * 40,
     }[args]
     try:
-        module.require_exact_execution_approval(
-            preparation_sha="a" * 40,
-            service=module.SERVICE_NAME,
-            image=module.IMAGE_REFERENCE,
-            action=module.EXECUTION_ACTION,
-        )
         try:
             module.require_exact_execution_approval(
-                preparation_sha="A" * 40,
+                preparation_sha="a" * 40,
                 service=module.SERVICE_NAME,
                 image=module.IMAGE_REFERENCE,
                 action=module.EXECUTION_ACTION,
@@ -97,16 +91,16 @@ def main() -> int:
         except module.RenderEnvironmentError:
             pass
         else:
-            raise AssertionError("mutated exact SHA was accepted")
+            raise AssertionError("completed Render deployment approval was reusable")
     finally:
         module.git_output = original_git_output
 
     print("Render service creation preparation smoke")
     print("- direct asyncpg URL encoding and query-free policy: enforced")
     print("- production JWT/admin strength and separation: enforced")
-    print("- exact SHA/service/image/single-deploy approval guard: enforced")
+    print("- completed initial-deploy approval reuse/retry: forbidden")
     print("- actual secret or endpoint displayed: no")
-    print("- Render resource or database mutation: no")
+    print("- new Render resource or database mutation: no")
     print(f"- result: {module.RESULT}")
     print(f"- next safe stage: {module.NEXT_STAGE}")
     return 0

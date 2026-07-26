@@ -1,4 +1,4 @@
-# Security rotation and GitHub gates — v346
+# Security rotation and GitHub gates — v347
 
 ## Secret 원칙
 
@@ -28,7 +28,8 @@
 - 두 값은 서로 다르고 43자 이상이며 Git/Docker 제외 `deploy/.env.production`에만 있습니다.
 - Neon direct URL에서 query 없는 SQLAlchemy `postgresql+asyncpg` `DATABASE_URL`을 만들었고 endpoint·role·password 일치를 값 출력 없이 검사했습니다.
 - 실제 값은 Git, 문서, 채팅, 로그, artifact에 기록하지 않았고 Render에도 아직 주입하지 않았습니다.
-- exact-SHA 승인 뒤 Render secret store에 전달할 때도 값을 화면·로그에 출력하지 않습니다.
+- 승인된 v346 exact SHA로 Render secret store에 3개 secret을 전달했고 값은 화면·로그·evidence에 출력하지 않았습니다.
+- 첫 deploy가 Live인 뒤 `/api/v1/health/db`를 한 번 확인했으며 credential 값은 응답이나 로그에 나타나지 않았습니다.
 - 값이 노출되거나 Render 계정 접근이 의심되면 JWT/admin key를 새로 생성해 Render에 교체하고 서비스를 한 번 재배포합니다. Neon credential은 Neon Console에서 별도로 회전합니다.
 
 ## Render GHCR credential rotation — v338

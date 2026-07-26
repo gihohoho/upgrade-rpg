@@ -31,12 +31,13 @@ RENDER_PREPARER = ROOT / "tools/prepare_render_local_environment.py"
 RENDER_PREPARER_SMOKE = (
     ROOT / "tools/smoke/backend/smoke_render_service_creation_preparation.py"
 )
+RENDER_DEPLOY_EVIDENCE = ROOT / "deploy/review/render-service-initial-deploy-v347.json"
 
-RENDER_VERSION = "v346.render-service-creation-preparation-ready-exact-sha-gated"
+RENDER_VERSION = "v347.render-service-created-initial-deploy-verified"
 NEON_VERSION = "v345.neon-initialization-completed-verified-render-preparation-required"
-STATE_VERSION = "v346.render-service-creation-preparation-ready-exact-sha-gated"
-RESULT = "render-service-creation-preparation-ready-exact-sha-gated"
-NEXT_STAGE = "owner-approve-render-service-creation-preparation-sha"
+STATE_VERSION = "v347.render-service-created-initial-deploy-verified"
+RESULT = "render-service-created-initial-deploy-verified"
+NEXT_STAGE = "review-render-live-service-and-prepare-frontend-deployment-plan"
 IMAGE = (
     "ghcr.io/gihohoho/upgrade-rpg-backend@"
     "sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
@@ -44,6 +45,10 @@ IMAGE = (
 BACKUP_SHA = "b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481"
 REVISION_SHA = "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa"
 UTC_DATA_DIGEST = "4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c"
+RENDER_PREPARATION_SHA = "81d1c4faa59194e8928d54fbecac28694ab139ab"
+RENDER_SERVICE_ID = "srv-d9iro458nd3s73acgmsg"
+RENDER_DEPLOY_ID = "dep-d9iro4l8nd3s73acgnmg"
+RENDER_PUBLIC_URL = "https://upgrade-rpg-api.onrender.com"
 PRESTAMP_VERSION = "v344.neon-restore-verified-stamp-recovery-preparation-ready"
 PRESTAMP_RESULT = "neon-restore-verified-stamp-recovery-preparation-ready"
 PRESTAMP_NEXT_STAGE = "owner-approve-neon-stamp-recovery-preparation-sha"
@@ -105,7 +110,7 @@ def verify_no_secret_values(payload: dict[str, Any], label: str) -> None:
 def verify_render(plan: dict[str, Any]) -> None:
     require(plan.get("schemaVersion") == RENDER_VERSION, "Render schemaVersion differs")
     require(plan.get("nextSafeStage") == NEXT_STAGE, "Render next stage differs")
-    require(plan.get("productionResourcesMutated") is False, "Render mutation flag must be false")
+    require(plan.get("productionResourcesMutated") is True, "Render mutation flag must record deployment")
 
     service = plan.get("service") or {}
     require(service.get("type") == "web-service", "Render service type differs")
@@ -117,7 +122,8 @@ def verify_render(plan: dict[str, Any]) -> None:
     require(service.get("instanceCount") == 1, "Render instance count differs")
     require(service.get("healthCheckPath") == "/api/v1/health", "Render health path differs")
     require(service.get("databaseHealthUsedAsPlatformProbe") is False, "DB health must not be the platform probe")
-    require(service.get("port") == 8000, "Render port differs")
+    require(service.get("configuredPortHint") == 8000, "Render configured port hint differs")
+    require(service.get("observedProviderInjectedPort") == 10000, "Render provider port differs")
     require(service.get("preDeployCommand") is None, "Render pre-deploy command must remain empty")
     require(service.get("dockerCommandOverride") is None, "Render Docker command override must remain empty")
     require(service.get("autoDeploy") is False, "Render auto-deploy must remain false")
@@ -220,8 +226,73 @@ def verify_render(plan: dict[str, Any]) -> None:
         "webServiceCreated",
         "deploymentExecuted",
     ):
-        require(gate.get(key) is False, f"Render gate must remain false: {key}")
+        require(gate.get(key) is True, f"Render completed gate must be true: {key}")
+    require(
+        gate.get("approvedPreparationSha") == RENDER_PREPARATION_SHA,
+        "Render approved preparation SHA differs",
+    )
     require(gate.get("exactPreparationShaApprovalRequired") is True, "Render exact-SHA approval must be required")
+
+    live = plan.get("liveService") or {}
+    require(live.get("serviceId") == RENDER_SERVICE_ID, "Render live service ID differs")
+    require(live.get("deployId") == RENDER_DEPLOY_ID, "Render deploy ID differs")
+    require(live.get("publicUrl") == RENDER_PUBLIC_URL, "Render public URL differs")
+    require(live.get("status") == "live", "Render service must be live")
+    require(live.get("firstDeployAttemptCount") == 1, "Render deploy attempt count differs")
+    require(live.get("automaticRetryExecuted") is False, "Render automatic retry must remain false")
+    require(live.get("publicHealthHttpStatus") == 200, "Render public health differs")
+    require(live.get("databaseHealthHttpStatus") == 200, "Render DB health differs")
+    require(live.get("databaseHealthRequestCount") == 1, "Render DB health request count differs")
+    require(
+        live.get("sanitizedEvidence") == "deploy/review/render-service-initial-deploy-v347.json",
+        "Render deployment evidence path differs",
+    )
+
+    evidence = load_json(RENDER_DEPLOY_EVIDENCE)
+    require(evidence.get("schemaVersion") == RENDER_VERSION, "Render evidence version differs")
+    require(evidence.get("result") == RESULT, "Render evidence result differs")
+    require(evidence.get("nextSafeStage") == NEXT_STAGE, "Render evidence next stage differs")
+    require(evidence.get("approvedPreparationSha") == RENDER_PREPARATION_SHA, "Render evidence SHA differs")
+    evidence_service = evidence.get("service") or {}
+    require(evidence_service.get("id") == RENDER_SERVICE_ID, "Render evidence service ID differs")
+    require(evidence_service.get("publicUrl") == RENDER_PUBLIC_URL, "Render evidence URL differs")
+    require(evidence_service.get("status") == "live", "Render evidence status differs")
+    deployment = evidence.get("deployment") or {}
+    require(deployment.get("id") == RENDER_DEPLOY_ID, "Render evidence deploy ID differs")
+    require(deployment.get("attemptCount") == 1, "Render evidence attempt count differs")
+    require(deployment.get("automaticRetry") is False, "Render evidence retry differs")
+    require(deployment.get("exactImageReference") == IMAGE, "Render evidence image differs")
+    require(deployment.get("observedProviderInjectedPort") == 10000, "Render evidence port differs")
+    verification = evidence.get("verification") or {}
+    require(
+        verification.get("publicHealthHttpStatus") == 200
+        and verification.get("publicHealthStatus") == "ok",
+        "Render public health evidence differs",
+    )
+    require(
+        verification.get("databaseHealthHttpStatus") == 200
+        and verification.get("databaseHealthStatus") == "ok"
+        and verification.get("databaseHealthRequestCount") == 1,
+        "Render DB health evidence differs",
+    )
+    mutations = evidence.get("mutations") or {}
+    for key in (
+        "renderWebServiceCreated",
+        "renderEnvironmentInjected",
+        "renderInitialDeployExecuted",
+    ):
+        require(mutations.get(key) is True, f"Render mutation evidence must be true: {key}")
+    for key in (
+        "databaseWrite",
+        "alembic",
+        "imageChange",
+        "customDomainOrDns",
+        "paymentMethod",
+        "secondDeploy",
+    ):
+        require(mutations.get(key) is False, f"Render excluded mutation differs: {key}")
+    require(evidence.get("secretOrEndpointCredentialRecorded") is False, "Render evidence secret marker differs")
+    verify_no_secret_values(evidence, "Render deployment evidence")
     verify_no_secret_values(plan, "Render plan")
 
 
@@ -302,7 +373,7 @@ def verify_neon(plan: dict[str, Any]) -> None:
         == "cf0f506b6ae9dc9d4c02f3ab5313ca68be32676c",
         "Neon approved stamp recovery SHA differs",
     )
-    require(gate.get("renderServiceExists") is False, "Render service must not exist yet")
+    require(gate.get("renderServiceExists") is True, "Render service existence must be recorded")
     require(gate.get("exactPreparationShaApprovalRequired") is True, "Neon exact-SHA approval must be required")
     verify_no_secret_values(plan, "Neon plan")
 
@@ -398,6 +469,7 @@ def verify_bootstrap_sources() -> None:
         NEON_COMPLETION_EVIDENCE,
         RENDER_PREPARER,
         RENDER_PREPARER_SMOKE,
+        RENDER_DEPLOY_EVIDENCE,
     ):
         require(path.is_file(), f"missing bootstrap file: {path.relative_to(ROOT)}")
 
@@ -476,7 +548,7 @@ def main() -> int:
         return 1
 
     print("Render/Neon separated plan verification (static, no provider mutation)")
-    print("- Render: local env prepared / exact image + reviewed settings / exact-SHA approval required")
+    print("- Render: Free Singapore service live / exact image / public + DB health 200")
     print("- Neon: 22/748 restored + exact v295 stamped + 23/749 verified")
     print("- secrets/endpoints recorded: no")
     print(f"- result: {RESULT}")

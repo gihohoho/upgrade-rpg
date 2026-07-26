@@ -1,12 +1,12 @@
-# Upgrade RPG Codex handoff — v346
+# Upgrade RPG Codex handoff — v347
 
 ## 현재 상태
 
 ```txt
-latest: v346.render-service-creation-preparation-ready-exact-sha-gated
-strict result: render-service-creation-preparation-ready-exact-sha-gated
-next safe stage: owner-approve-render-service-creation-preparation-sha
-render plan: v346.render-service-creation-preparation-ready-exact-sha-gated
+latest: v347.render-service-created-initial-deploy-verified
+strict result: render-service-created-initial-deploy-verified
+next safe stage: review-render-live-service-and-prepare-frontend-deployment-plan
+render plan: v347.render-service-created-initial-deploy-verified
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
@@ -26,6 +26,7 @@ Render account/plan/payment: connected/Hobby (legacy)/no card
 Render registry credential/service/deploy: present/not created/not executed
 Render credential action ready/approved/executed: yes/yes/yes
 production deployment approval ready/approved/executed: no/no/no
+Render public preview deployment ready/approved/executed: yes/yes/yes
 ```
 
 ## Render/Neon 분리 계획 — 2026-07-26
@@ -43,6 +44,7 @@ production deployment approval ready/approved/executed: no/no/no
 - Render name: `upgrade-rpg-api`, owner 확인 완료
 - v345 tool: `tools/initialize_neon_database.py`, restore/stamp mutation 경로 비활성 + read-only completion guard
 - v346 local prep: `tools/prepare_render_local_environment.py`, Git/Docker 제외 env와 secret-safe 검사
+- v347 live: `https://upgrade-rpg-api.onrender.com`, Free Singapore, first deploy health/DB health 200
 - read-only preflight: asyncpg system CA와 PostgreSQL 16/libpq exported Windows system CA `verify-full` 모두 통과
 - current Neon mutation: restore 1회 + exact v295 stamp 1회 완료 / Render write 없음
 
@@ -113,9 +115,9 @@ verified local rehearsal은 `Asia/Seoul`, Neon은 `GMT`이며 양쪽에 44개 `t
 
 사용자가 승인한 v344 SHA `cf0f506b6ae9dc9d4c02f3ab5313ca68be32676c`로 기존 복원 상태를 재검증하고 exact `v295_initial_schema`만 stamp했습니다. `pg_restore`는 재실행하지 않았습니다. 최종 public 23 tables / total 749 rows, application 22 tables / 748 rows, unchanged schema/data digest, Alembic 1 row를 확인했습니다. sanitized evidence는 `deploy/review/neon-initialization-completed-v345.json`입니다.
 
-Render용 direct asyncpg `DATABASE_URL`과 서로 다른 강한 JWT/admin secret을 Git/Docker 제외 `deploy/.env.production`에 준비하고 값 출력 없이 검증했습니다. Render resource 변경은 없습니다.
+승인된 v346 SHA `81d1c4faa59194e8928d54fbecac28694ab139ab`로 Render Free Web Service `upgrade-rpg-api`를 Singapore에 생성하고 env 14개와 exact image로 첫 deploy를 한 번 실행했습니다. service `srv-d9iro458nd3s73acgmsg`, deploy `dep-d9iro4l8nd3s73acgnmg`는 Live입니다.
 
-다음 작업은 v346 clean pushed `main` commit의 정확한 40자리 SHA를 기호에게 승인받고 `tools/prepare_render_local_environment.py --verify-execution-approval` 관문을 통과한 뒤 Render Web Service 생성·첫 배포를 실행하는 것입니다. 승인 범위는 `upgrade-rpg-api` 서비스 1개, 검토된 env, exact image, health 2종 읽기 확인, managed HTTPS URL과 sanitized evidence입니다. DB/Alembic write, image 변경, custom domain/DNS, 결제, 자동 retry·두 번째 deploy는 제외합니다. 필요한 extension·권한·새 설치는 현재 없습니다.
+공개 `/api/v1/health`와 한 번 요청한 `/api/v1/health/db`가 모두 HTTP 200 `status=ok`입니다. DB/Alembic write, image 변경, custom domain/DNS, 결제, 자동 retry·두 번째 deploy는 없었습니다. 다음은 live backend 검토와 frontend 배포/CORS origin 계획이며 필요한 extension·권한·새 설치는 현재 없습니다.
 
 ## 첫 검사
 
@@ -138,6 +140,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v346 기대 결과는 `render-service-creation-preparation-ready-exact-sha-gated`, 다음 단계는 `owner-approve-render-service-creation-preparation-sha`입니다. v345 Neon 완료, v338 Render Connect, v337 account readiness, v336 Neon connectivity evidence, v335 provider selection과 v334 deployment baseline을 계속 보존합니다.
+v347 기대 결과는 `render-service-created-initial-deploy-verified`, 다음 단계는 `review-render-live-service-and-prepare-frontend-deployment-plan`입니다. v345 Neon 완료, v342 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline을 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

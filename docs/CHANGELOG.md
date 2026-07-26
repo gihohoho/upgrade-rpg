@@ -1,3 +1,11 @@
+# v347.render-service-created-initial-deploy-verified
+
+- 승인된 v346 exact SHA로 Render Free Web Service `upgrade-rpg-api`를 Singapore에 생성하고 승인 env 14개와 exact image로 첫 deploy를 한 번 실행했습니다.
+- service `srv-d9iro458nd3s73acgmsg`, deploy `dep-d9iro4l8nd3s73acgnmg`, public URL `https://upgrade-rpg-api.onrender.com`을 secret 없는 evidence에 기록했습니다.
+- Render 내부 health, 공개 `/api/v1/health`, 단 한 번의 `/api/v1/health/db`가 모두 HTTP 200 `status=ok`를 반환했습니다.
+- DB/Alembic write, image 변경, custom domain/DNS, 결제수단, 자동 retry·두 번째 deploy는 실행하지 않았습니다.
+- 다음 단계는 live backend 검토와 frontend 배포/CORS origin 계획입니다.
+
 # v345.neon-initialization-completed-verified-render-preparation-required
 
 - 승인된 v344 recovery SHA로 기존 Neon 복원 상태를 재검증하고 exact `v295_initial_schema`만 stamp했습니다.

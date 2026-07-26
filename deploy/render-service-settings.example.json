@@ -1,10 +1,11 @@
 {
-  "schemaVersion": "v346.render-service-creation-preparation-ready-exact-sha-gated",
+  "schemaVersion": "v347.render-service-created-initial-deploy-verified",
   "reviewedAtUtc": "2026-07-26T00:19:24Z",
   "preparedAtUtc": "2026-07-26T07:01:34Z",
-  "result": "render-service-creation-preparation-ready-exact-sha-gated",
-  "nextSafeStage": "owner-approve-render-service-creation-preparation-sha",
-  "productionResourcesMutated": false,
+  "deployedAtUtc": "2026-07-26T07:51:20Z",
+  "result": "render-service-created-initial-deploy-verified",
+  "nextSafeStage": "review-render-live-service-and-prepare-frontend-deployment-plan",
+  "productionResourcesMutated": true,
   "service": {
     "type": "web-service",
     "source": "existing-image",
@@ -23,7 +24,8 @@
     "healthCheckPath": "/api/v1/health",
     "databaseHealthCheckPath": "/api/v1/health/db",
     "databaseHealthUsedAsPlatformProbe": false,
-    "port": 8000
+    "configuredPortHint": 8000,
+    "observedProviderInjectedPort": 10000
   },
   "image": {
     "reviewedReference": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1",
@@ -100,6 +102,18 @@
     "cleanPushedMainRequired": true,
     "providerMutationDuringGuard": false
   },
+  "liveService": {
+    "serviceId": "srv-d9iro458nd3s73acgmsg",
+    "deployId": "dep-d9iro4l8nd3s73acgnmg",
+    "publicUrl": "https://upgrade-rpg-api.onrender.com",
+    "status": "live",
+    "firstDeployAttemptCount": 1,
+    "automaticRetryExecuted": false,
+    "publicHealthHttpStatus": 200,
+    "databaseHealthHttpStatus": 200,
+    "databaseHealthRequestCount": 1,
+    "sanitizedEvidence": "deploy/review/render-service-initial-deploy-v347.json"
+  },
   "creationGate": {
     "settingsReviewed": true,
     "ownerServiceNameRequired": false,
@@ -108,9 +122,10 @@
     "neonInitializationCompleted": true,
     "localEnvironmentPrepared": true,
     "exactPreparationShaApprovalRequired": true,
-    "exactPreparationShaApproved": false,
-    "webServiceCreationApproved": false,
-    "webServiceCreated": false,
-    "deploymentExecuted": false
+    "exactPreparationShaApproved": true,
+    "approvedPreparationSha": "81d1c4faa59194e8928d54fbecac28694ab139ab",
+    "webServiceCreationApproved": true,
+    "webServiceCreated": true,
+    "deploymentExecuted": true
   }
 }
