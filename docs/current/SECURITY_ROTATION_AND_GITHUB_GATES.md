@@ -146,3 +146,14 @@
 - 로컬 GHCR 접근이 더 이상 필요 없을 때 `docker logout ghcr.io`와 필요 시 `gh auth logout -h github.com -u gihohoho`를 별도 보안 정리 단계로 검토합니다. 지금 임의 logout하면 다음 승인 작업을 방해할 수 있어 자동 실행하지 않았습니다.
 - 비활성 `konghjin` 계정의 만료 keyring 항목은 이번 작업에서 사용하거나 삭제하지 않았습니다.
 - production secret/CA/cert/key, 실제 DB, production network는 사용하지 않았습니다.
+
+## v352 v351 backend image 게시 준비 게이트 — 2026-07-26
+
+- GitHub Actions repository 설정은 selected actions, full-SHA 고정, 기본 read 권한, fork write token·secret 차단 상태를 read-only로 재확인했습니다.
+- `ghcr-production-publish` environment는 `main` custom branch policy를 유지하며 secret·variable은 0개입니다.
+- 개인 비공개 저장소 제약상 native required reviewer가 없으므로 source-controlled exact-SHA owner approval을 계속 사용합니다.
+- v341 성공 게시 run `30180738530`은 여섯 번째 `attemptHistory` 항목으로 보존했습니다.
+- 현재 v351 게시 lifecycle은 `preparation-closed`, gate `false`, approval `null`, `not-dispatched`입니다.
+- v352 준비 SHA 승인 전에는 workflow dispatch, GHCR mutation, Docker isolated 실행, Render deploy를 하지 않습니다.
+- 승인 후에도 범위는 backend image 1회 게시와 SBOM·Trivy·provenance·Cosign·isolated 검증까지입니다. Render backend exact-image와 frontend static 배포는 새 digest 확인 뒤 별도 exact-SHA 승인을 받습니다.
+- 실제 token/PAT/secret 값은 조회 결과, 문서, Git, 로그, artifact에 기록하지 않았습니다.

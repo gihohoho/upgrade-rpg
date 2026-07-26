@@ -1,3 +1,12 @@
+# v352.v351-public-release-gates-prepared-backend-image-approval-required
+
+- v351 source baseline을 backend image와 frontend static 공개 release 입력으로 고정했습니다.
+- GHCR lifecycle을 `preparation-closed`, gate `false`, approval `null`, `not-dispatched`로 초기화했습니다.
+- v341 성공 run을 여섯 번째 attempt history로 보존하고 GitHub live settings를 read-only 재확인했습니다.
+- `deploy/v351-public-release-gates.example.json`과 fail-closed checker/smoke를 추가했습니다.
+- 이번 exact-SHA 승인은 backend image 게시·공급망·isolated 검증까지만 허용하며 Render backend/static deploy는 별도 후속 승인이 필요합니다.
+- 새 workflow dispatch, registry mutation, Docker isolated 실행, Render deploy, DB/Alembic/admin/content write는 없습니다.
+
 # v351.master-data-latency-focused-fix-blocking-io-audited
 
 - 공개 master-data의 1.83~1.98초 응답이 1.5초 제한을 넘던 문제를 위해 browser 기본 timeout을 5초로 조정했습니다.

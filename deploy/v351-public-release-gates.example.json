@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "v352.v351-public-release-gates-prepared-backend-image-approval-required",
+  "preparedAtUtc": "2026-07-26T14:23:57Z",
+  "result": "v351-backend-image-preparation-closed-owner-approval-required",
+  "nextSafeStage": "owner-approve-v352-v351-backend-image-preparation-sha",
+  "productionResourcesMutated": false,
+  "source": {
+    "baselineCommit": "81beaa0864c3422fb9fc2071b9c4965936ecafac",
+    "branch": "main",
+    "cleanPushedPreparationRequired": true,
+    "runtimeFiles": {
+      "backend/app/main.py": "61c34c329b19cea8568296317b2649ddfef191a7ff003348e845f37882d754d4",
+      "src/api/master-data-boot-policy.js": "4c230b5adde411c5ca7710d8582f3ff0871521ab554c89be47eebc3e718a53ec",
+      "src/api/master-data-runtime-switch.js": "701334af14edbb025389857a7802c07314ce18ac423fe28941dc2fa66f499a39",
+      "tools/build_legacy_static_site.mjs": "e05dfcb7e3ddb3782463ec3064acc45c60c8d5db2df2dfeee2312a3486ff501c"
+    }
+  },
+  "githubActions": {
+    "workflow": ".github/workflows/publish-backend-ghcr.yml",
+    "trigger": "workflow_dispatch-only",
+    "lifecycle": "deploy/github-actions-ghcr-publish-lifecycle.json",
+    "lifecycleSchemaVersion": "v352.owner-only-publish-lifecycle-with-six-attempt-history",
+    "lifecycleState": "preparation-closed",
+    "publishReviewerGateReady": false,
+    "approvedPreparationSha": null,
+    "ownerApprovalRecorded": false,
+    "priorAttemptCount": 6,
+    "newWorkflowDispatchExecuted": false,
+    "newRegistryMutationExecuted": false
+  },
+  "backendRelease": {
+    "currentLiveImage": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1",
+    "newImageReference": null,
+    "supplyChainValidationRequired": true,
+    "isolatedRuntimeValidationRequired": true,
+    "renderExactImageDeployPreparationReady": false,
+    "renderExactImageDeployBlockReason": "new exact digest and isolated evidence do not exist yet",
+    "renderDeployApproved": false,
+    "renderDeployExecuted": false
+  },
+  "frontendRelease": {
+    "service": "gihohoho-upgrade-rpg",
+    "serviceId": "srv-d9iu337aqgkc73am4lh0",
+    "autoDeploy": false,
+    "buildCommand": "node tools/build_legacy_static_site.mjs",
+    "publishDirectory": "frontend/legacy-dist",
+    "releaseSourceBaseline": "81beaa0864c3422fb9fc2071b9c4965936ecafac",
+    "staticDeployPreparationReady": false,
+    "staticDeployBlockReason": "backend exact-image deployment must be prepared after new image verification",
+    "staticDeployApproved": false,
+    "staticDeployExecuted": false
+  },
+  "orderedStages": [
+    "owner approves the exact v352 backend-image preparation SHA",
+    "a direct-child lifecycle-only authorization commit opens the gate",
+    "dispatch exactly one run_attempt=1 workflow and close the gate immediately",
+    "record supply-chain evidence and perform isolated exact-image validation",
+    "prepare a separate exact-SHA provider release commit with the new digest",
+    "owner separately approves backend exact-image deploy and frontend exact-source deploy",
+    "deploy each provider target once without automatic retry",
+    "verify public no-fallback master-data and guarded admin content workflow"
+  ],
+  "forbiddenBeforeNextSeparateApproval": [
+    "GitHub Actions dispatch",
+    "GHCR login, build, push, or tag mutation",
+    "Docker pull or isolated container execution",
+    "Render backend deploy",
+    "Render Static Site deploy",
+    "database or Alembic mutation",
+    "admin write or game content change",
+    "automatic deploy or retry"
+  ]
+}

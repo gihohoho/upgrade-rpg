@@ -1,11 +1,13 @@
-# Upgrade RPG Codex handoff — v351
+# Upgrade RPG Codex handoff — v352
 
 ## 현재 상태
 
 ```txt
-latest: v351.master-data-latency-focused-fix-blocking-io-audited
-strict result: master-data-latency-fix-blocking-io-audit-ready
-next safe stage: prepare-v351-image-and-static-release-exact-sha-gates
+latest: v352.v351-public-release-gates-prepared-backend-image-approval-required
+strict result: v351-backend-image-preparation-closed-owner-approval-required
+next safe stage: owner-approve-v352-v351-backend-image-preparation-sha
+v351 source checkpoint: v351.master-data-latency-focused-fix-blocking-io-audited / master-data-latency-fix-blocking-io-audit-ready
+v351 source next stage (completed): prepare-v351-image-and-static-release-exact-sha-gates
 frontend plan: v351.master-data-latency-focused-fix-blocking-io-audited
 v350 prior checkpoint: v350.backend-cors-recovered-browser-timeout-followup-required / backend-cors-recovered-browser-timeout-followup-required
 v350 prior next stage (completed): prepare-frontend-master-data-timeout-fix-and-content-readiness-review
@@ -88,7 +90,8 @@ Render workspace는 `Hobby (legacy)`이고 결제수단은 없습니다. v337 �
 
 - CI credential: GitHub Actions `GITHUB_TOKEN`
 - source-controlled lifecycle gate: `deploy/github-actions-ghcr-publish-lifecycle.json`
-- lifecycle: `attempt-recorded` / `publishReviewerGateReady=false` / prior five attempts preserved
+- lifecycle: `preparation-closed` / `publishReviewerGateReady=false` / approval `null` / prior six attempts preserved
+- lifecycle state machine: `preparation-closed` → `authorization-open` → `authorization-closed-awaiting-evidence` → `attempt-recorded`
 - run `30180738530`: provenance/SBOM, exact-digest Trivy 0건, Cosign sign/verify 성공
 - v341 image preparation/authorization/closure/evidence: `fb231afa5081f5bfd7b459081a58bc5acd6699df` / `f5d69c1bbef101cc9124b9dede18c844ef80b59c` / `ebb5ef46e3115bc358d62d93a64002b8711f4232` / `cf9e0bab121186d2ac51f889f807348cc46f192c`
 - v341 image artifact IDs: `8625485901`, `8625478503`
@@ -133,9 +136,11 @@ Render GitHub App은 `gihohoho/upgrade-rpg` 단일 private repository만 접근�
 
 v351 source에서 frontend master-data 기본 timeout을 5초로 늘리고 backend 1KB 이상 응답에 GZip level 5를 적용했습니다. 전체 runtime blocking-I/O audit는 sync FastAPI route 0, async 내부 blocking 호출 0, frontend blocking 호출 0으로 통과했습니다. offline tooling은 Python 148 files/371 blocking calls와 JavaScript 94 files/126 sync calls를 별도 확인하고 `intentional-one-shot-cli`로 분류했습니다. master-data의 11개 DB 조회는 하나의 `AsyncSession`을 공유하므로 위험한 동시 task로 바꾸지 않고 순차 await를 유지했습니다.
 
-아직 새 backend image 게시·Render exact-image deploy·Static Site deploy는 실행하지 않았습니다. 다음은 v351 image/static release의 source-controlled exact-SHA gate 준비입니다. 실제 공개 게임의 무폴백 로드와 관리자 guarded 콘텐츠 흐름을 확인하기 전까지 콘텐츠 추가·수정 시작 시점은 아닙니다. 조건이 충족되면 기호에게 먼저 명확히 알립니다.
+v352에서 v351 source baseline `81beaa0864c3422fb9fc2071b9c4965936ecafac`의 backend image publish lifecycle을 `preparation-closed`, gate false, approval null, not-dispatched로 준비했습니다. v341 성공 run은 여섯 번째 history로 보존했고 GitHub selected actions/full SHA/read permissions/main-only environment도 read-only 재확인했습니다.
 
-현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다.
+다음은 push된 v352 preparation commit의 정확한 40자리 SHA를 기호가 승인하는 단계입니다. 이번 승인은 backend image workflow 1회 게시와 공급망·isolated 검증까지만 포함합니다. 새 exact digest의 Render backend deploy와 v351 frontend Static Site deploy는 별도 준비 commit·별도 exact-SHA 승인을 받아야 합니다.
+
+실제 공개 게임의 무폴백 로드와 관리자 guarded 콘텐츠 흐름을 확인하기 전까지 콘텐츠 추가·수정 시작 시점은 아닙니다. 현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다.
 
 ## 첫 검사
 
@@ -144,6 +149,8 @@ Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.ex
 새 설치 여부: 없음
 
 ```bash
+python tools/check_v351_public_release_gates.py --strict
+python tools/smoke/backend/smoke_v351_public_release_gates.py
 python tools/check_runtime_blocking_io.py --strict
 python tools/smoke/backend/smoke_master_data_latency_guard.py
 node tools/smoke/game/smoke_master_data_auto_boot_policy.js
@@ -163,6 +170,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v351 기대 결과는 `runtime-blocking-io-audit-passed`와 focused smoke 통과이며, 다음 단계는 `prepare-v351-image-and-static-release-exact-sha-gates`입니다. v350의 `backend-cors-recovered-browser-timeout-followup-required`와 `prepare-frontend-master-data-timeout-fix-and-content-readiness-review`는 완료된 prior checkpoint로 보존합니다. v349 recovery, v348 static deploy, v347 backend, v345 Neon 완료, v342 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
+v352 기대 결과는 `v351-backend-image-preparation-closed-owner-approval-required`, 다음 단계는 `owner-approve-v352-v351-backend-image-preparation-sha`입니다. v351의 `runtime-blocking-io-audit-passed`와 `prepare-v351-image-and-static-release-exact-sha-gates`는 완료된 source checkpoint로 보존합니다. v350 recovery, v348 static deploy, v347 backend, v345 Neon 완료, v342 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

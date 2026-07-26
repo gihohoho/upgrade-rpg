@@ -86,11 +86,11 @@ def main() -> int:
     assert policy["preparedOnly"] is False
     assert (
         policy["ownerOnlyApprovalPhase"]
-        == "v347-render-service-created-initial-deploy-verified"
+        == "v352-v351-backend-image-preparation-closed-owner-approval-required"
     )
-    assert policy["publishLifecycleState"] == "attempt-recorded"
-    assert policy["approvedPreparationSha"] == PREPARATION
-    assert policy["exactPreparationShaApproved"] is True
+    assert policy["publishLifecycleState"] == "preparation-closed"
+    assert policy["approvedPreparationSha"] is None
+    assert policy["exactPreparationShaApproved"] is False
     assert policy["sourceControlledPublishGateReady"] is False
     assert policy["actualRegistryMutationExecuted"] is True
     assert policy["productionReference"] == PRODUCTION_REFERENCE
@@ -128,18 +128,22 @@ def main() -> int:
     }
 
     lifecycle = json.loads(read("deploy/github-actions-ghcr-publish-lifecycle.json"))
-    assert lifecycle["schemaVersion"] == "v326.owner-only-publish-lifecycle-with-attempt-history"
-    assert lifecycle["state"] == "attempt-recorded"
+    assert lifecycle["schemaVersion"] == "v352.owner-only-publish-lifecycle-with-six-attempt-history"
+    assert lifecycle["state"] == "preparation-closed"
     assert lifecycle["publishReviewerGateReady"] is False
-    assert lifecycle["approvedPreparationSha"] == PREPARATION
-    assert lifecycle["ownerApproval"]["recorded"] is True
-    assert lifecycle["closure"]["authorizationSourceSha"] == AUTHORIZATION
-    assert lifecycle["closure"]["closureCommitSha"] == CLOSURE
-    assert lifecycle["observedAttempt"]["runId"] == RUN_ID
-    assert lifecycle["observedAttempt"]["status"] == "completed"
-    assert lifecycle["observedAttempt"]["conclusion"] == "success"
-    assert lifecycle["observedAttempt"]["imageDigest"] == IMAGE_DIGEST
-    assert lifecycle["observedAttempt"]["signatureVerified"] is True
+    assert lifecycle["approvedPreparationSha"] is None
+    assert lifecycle["ownerApproval"]["recorded"] is False
+    assert lifecycle["closure"]["authorizationSourceSha"] is None
+    assert lifecycle["closure"]["closureCommitSha"] is None
+    assert lifecycle["observedAttempt"]["runId"] is None
+    assert lifecycle["observedAttempt"]["status"] == "not-dispatched"
+    assert lifecycle["observedAttempt"]["conclusion"] is None
+    assert lifecycle["observedAttempt"]["imageDigest"] is None
+    assert lifecycle["observedAttempt"]["signatureVerified"] is False
+    assert lifecycle["attemptHistory"][-1]["preparationSha"] == PREPARATION
+    assert lifecycle["attemptHistory"][-1]["runId"] == RUN_ID
+    assert lifecycle["attemptHistory"][-1]["imageDigest"] == IMAGE_DIGEST
+    assert lifecycle["attemptHistory"][-1]["signatureVerified"] is True
 
     static_plan = json.loads(read("deploy/github-actions-ghcr-static-plan.example.json"))
     assert static_plan["schemaVersion"] == STATIC_PLAN_VERSION

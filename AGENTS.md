@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v351
+# Upgrade RPG Codex working rules — v352
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -43,9 +43,11 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v351.master-data-latency-focused-fix-blocking-io-audited
-strict result: master-data-latency-fix-blocking-io-audit-ready
-next safe stage: prepare-v351-image-and-static-release-exact-sha-gates
+latest: v352.v351-public-release-gates-prepared-backend-image-approval-required
+strict result: v351-backend-image-preparation-closed-owner-approval-required
+next safe stage: owner-approve-v352-v351-backend-image-preparation-sha
+v351 source checkpoint: v351.master-data-latency-focused-fix-blocking-io-audited / master-data-latency-fix-blocking-io-audit-ready
+v351 source next stage (completed): prepare-v351-image-and-static-release-exact-sha-gates
 frontend plan: v351.master-data-latency-focused-fix-blocking-io-audited
 v350 prior checkpoint: v350.backend-cors-recovered-browser-timeout-followup-required / backend-cors-recovered-browser-timeout-followup-required
 v350 prior next stage (completed): prepare-frontend-master-data-timeout-fix-and-content-readiness-review
@@ -69,7 +71,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 
 - CI credential은 GitHub Actions `GITHUB_TOKEN`, local pull은 GitHub CLI OAuth `read:packages` → Docker credential store입니다.
 - image publish model은 `owner-only-source-controlled-two-step`입니다.
-- source-controlled lifecycle gate는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `attempt-recorded`, `publishReviewerGateReady=false`입니다. 이전 run 5건은 `attemptHistory`에 보존합니다.
+- source-controlled lifecycle gate는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `preparation-closed`, `publishReviewerGateReady=false`, approval `null`입니다. 이전 run 6건은 `attemptHistory`에 보존합니다.
 - run `30180738530`은 build/SBOM/Trivy/provenance/Cosign을 통과했고 exact digest `sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1`은 v342 isolated runtime/CA-store/cleanup까지 통과했습니다.
 - 운영 배포 계획은 `deploy/production-deploy-plan.example.json`과 `docs/current/PRODUCTION_DEPLOYMENT_PLAN.md`에서 검토 완료했습니다.
 - production host, managed DB, provider CA, reverse proxy/domain/certificate, secret injection, edge network, first-deploy rollback 입력은 아직 미확정입니다.
@@ -81,6 +83,8 @@ Alembic current: v295_initial_schema / new revision needed: no
 - 승인된 recovery SHA `e64d42d812d78de023dc6cbd7f960263bc1c2d15`로 backend CORS deploy `dep-d9ivfmvlk1mc73fbcv40`를 정확히 한 번 실행했고 Live입니다.
 - 실제 `CORS_ORIGINS`는 exact frontend origin 배열로 저장됐으며 health/preflight 200과 exact `Access-Control-Allow-Origin`을 확인했습니다.
 - v351 source는 master-data 기본 timeout을 5초로 늘리고 backend 1KB 이상 응답에 GZip을 적용했습니다. 아직 새 image/static deploy 전이므로 공개 게임은 v350 동작을 유지합니다.
+- v352는 v351 source baseline `81beaa0864c3422fb9fc2071b9c4965936ecafac`의 backend image publish preparation을 닫힌 상태로 준비했습니다. 새 workflow dispatch·registry mutation·Render deploy는 없습니다.
+- 이번 v352 exact-SHA 승인은 backend image 게시·공급망·isolated 검증까지만 허용합니다. backend exact-image deploy와 frontend Static Site deploy는 새 digest 확인 뒤 별도 준비 SHA 승인이 필요합니다.
 - 전체 runtime blocking-I/O audit는 sync FastAPI route 0, async 내부 blocking 호출 0, frontend entrypoint·source blocking 호출 0으로 통과했습니다.
 - offline tooling은 Python 148 files/371 blocking calls, JavaScript 94 files/126 sync calls를 별도 확인했고 서버·브라우저 event loop 밖의 `intentional-one-shot-cli`로 분류했습니다.
 - master-data의 11개 async DB 조회는 하나의 `AsyncSession`을 공유하므로 동시 task로 바꾸지 않고 안전한 순차 실행을 유지합니다.
@@ -149,6 +153,8 @@ Alembic current: v295_initial_schema / new revision needed: no
 프로젝트 루트에서 `backend/.venv` Python으로 먼저 실행합니다.
 
 ```bash
+python tools/check_v351_public_release_gates.py --strict
+python tools/smoke/backend/smoke_v351_public_release_gates.py
 python tools/check_runtime_blocking_io.py --strict
 python tools/smoke/backend/smoke_master_data_latency_guard.py
 node tools/smoke/game/smoke_master_data_auto_boot_policy.js

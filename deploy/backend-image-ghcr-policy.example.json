@@ -2,9 +2,9 @@
   "schemaVersion": "v334.production-deploy-plan-reviewed-inputs-blocked",
   "preparedOnly": false,
   "publishApprovalModel": "owner-only-source-controlled-two-step",
-  "ownerOnlyApprovalPhase": "v347-render-service-created-initial-deploy-verified",
+  "ownerOnlyApprovalPhase": "v352-v351-backend-image-preparation-closed-owner-approval-required",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
-  "publishLifecycleState": "attempt-recorded",
+  "publishLifecycleState": "preparation-closed",
   "publishLifecycleSupportedStates": [
     "preparation-closed",
     "authorization-open",
@@ -60,9 +60,17 @@
       "registryLoginExecuted": true,
       "imageBuildExecuted": true,
       "imagePushExecuted": true
+    },
+    {
+      "recordCommitSha": "cf9e0bab121186d2ac51f889f807348cc46f192c",
+      "runId": 30180738530,
+      "conclusion": "success",
+      "registryLoginExecuted": true,
+      "imageBuildExecuted": true,
+      "imagePushExecuted": true
     }
   ],
-  "approvedPreparationSha": "fb231afa5081f5bfd7b459081a58bc5acd6699df",
+  "approvedPreparationSha": null,
   "currentAttemptEvidence": {
     "authorizationSha": "f5d69c1bbef101cc9124b9dede18c844ef80b59c",
     "closureSha": "ebb5ef46e3115bc358d62d93a64002b8711f4232",
@@ -82,7 +90,7 @@
     "signatureVerified": true
   },
   "priorExactPreparationShaApproved": true,
-  "exactPreparationShaApproved": true,
+  "exactPreparationShaApproved": false,
   "dependencyAndFrontendInputsLocked": true,
   "githubRemote": "https://github.com/gihohoho/upgrade-rpg.git",
   "registryProvider": "github-container-registry",
@@ -153,5 +161,5 @@
   "actualDockerCommandExecuted": true,
   "actualDatabaseRestoreExecuted": true,
   "actualDatabaseAlembicMutationExecuted": true,
-  "nextSafeStage": "review-render-live-service-and-prepare-frontend-deployment-plan"
+  "nextSafeStage": "owner-approve-v352-v351-backend-image-preparation-sha"
 }

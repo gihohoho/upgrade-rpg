@@ -30,7 +30,7 @@ REPOSITORY = "gihohoho/upgrade-rpg"
 IMAGE_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 WORKFLOW_PATH = ".github/workflows/publish-backend-ghcr.yml"
 LIFECYCLE_PATH = "deploy/github-actions-ghcr-publish-lifecycle.json"
-LIFECYCLE_SCHEMA_VERSION = "v326.owner-only-publish-lifecycle-with-attempt-history"
+LIFECYCLE_SCHEMA_VERSION = "v352.owner-only-publish-lifecycle-with-six-attempt-history"
 PRIOR_APPROVED_PREPARATION_SHA = "36e8720a53ef7ff6a8334de6bc99646998d63fc9"
 PRIOR_ATTEMPT_EVIDENCE = {
     "preparationSha": PRIOR_APPROVED_PREPARATION_SHA,
@@ -109,6 +109,21 @@ ATTEMPT_HISTORY = [
         **PRIOR_ATTEMPT_EVIDENCE,
         "artifactCount": 2,
         "imageDigest": "sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2",
+        "signatureVerified": True,
+    },
+    {
+        "preparationSha": "fb231afa5081f5bfd7b459081a58bc5acd6699df",
+        "authorizationSha": "f5d69c1bbef101cc9124b9dede18c844ef80b59c",
+        "closureSha": "ebb5ef46e3115bc358d62d93a64002b8711f4232",
+        "recordCommitSha": "cf9e0bab121186d2ac51f889f807348cc46f192c",
+        "runId": 30180738530,
+        "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/30180738530",
+        "conclusion": "success",
+        "registryLoginExecuted": True,
+        "imageBuildExecuted": True,
+        "imagePushExecuted": True,
+        "artifactCount": 2,
+        "imageDigest": "sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1",
         "signatureVerified": True,
     },
 ]
