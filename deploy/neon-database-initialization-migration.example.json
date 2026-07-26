@@ -1,8 +1,8 @@
 {
-  "schemaVersion": "v344.neon-restore-verified-stamp-recovery-preparation-ready",
-  "reviewedAtUtc": "2026-07-26T05:15:53Z",
-  "result": "neon-restore-verified-stamp-recovery-preparation-ready",
-  "nextSafeStage": "owner-approve-neon-stamp-recovery-preparation-sha",
+  "schemaVersion": "v345.neon-initialization-completed-verified-render-preparation-required",
+  "reviewedAtUtc": "2026-07-26T05:28:52Z",
+  "result": "neon-database-initialization-completed-verified-render-preparation-required",
+  "nextSafeStage": "prepare-render-service-creation-exact-sha-approval",
   "productionResourcesMutated": true,
   "target": {
     "provider": "neon-free",
@@ -39,13 +39,11 @@
     "windowsLibpqCompatibility": "export public Windows system trust roots to a Git-ignored local PEM because PostgreSQL 16/OpenSSL sslrootcert=system returns unregistered scheme on this PC",
     "actualConnectionValuesRecorded": false
   },
-  "orderedStampRecoveryAfterSeparateExactShaApproval": [
-    "require the newly approved 40-character recovery preparation SHA to equal clean main HEAD and pushed origin/main",
-    "require exact target, backup SHA-256, revision, and verify-restored-and-stamp-once confirmations",
-    "do not run pg_restore again",
-    "reconfirm 22 application tables, 748 application rows, UTC-canonical schema/data digests, and no alembic_version",
-    "stamp only exact revision v295_initial_schema with the direct URL",
-    "verify 23 public tables, 749 total rows, unchanged application digests, and current revision v295_initial_schema"
+  "completedExecution": [
+    "v343 approved restore ran once with pg_restore single transaction and stopped before stamp on a session-timezone-dependent legacy digest",
+    "UTC-canonical read-only comparison verified 22 application tables, 748 rows, schema digest, and data digest",
+    "v344 approved recovery did not run pg_restore and stamped only exact revision v295_initial_schema",
+    "final read-only verification confirmed 23 public tables, 749 total rows, unchanged application digests, and current revision v295_initial_schema"
   ],
   "forbidden": [
     "CREATE DATABASE or DROP DATABASE",
@@ -78,8 +76,9 @@
     "exactPreparationShaApprovalRequired": true,
     "databaseInitializationApproved": true,
     "restoreExecuted": true,
-    "stampExecuted": false,
-    "stampRecoveryApproved": false,
+    "stampExecuted": true,
+    "stampRecoveryApproved": true,
+    "approvedStampRecoveryPreparationSha": "cf0f506b6ae9dc9d4c02f3ab5313ca68be32676c",
     "renderServiceExists": false
   }
 }

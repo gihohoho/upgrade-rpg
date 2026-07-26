@@ -460,7 +460,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     )
     _require(
         policy.get("ownerOnlyApprovalPhase")
-        == "v344-neon-restore-verified-stamp-recovery-owner-approval-required",
+        == "v345-neon-initialized-render-preparation-required",
         "owner-only phase changed",
     )
     _require(policy.get("publishLifecyclePath") == LIFECYCLE_PATH, "publish lifecycle path changed")
@@ -639,6 +639,8 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "isolatedContainerExecutionExecuted",
         "isolatedCleanupExecuted",
         "productionDeploymentPlanReviewed",
+        "actualDatabaseRestoreExecuted",
+        "actualDatabaseAlembicMutationExecuted",
     ):
         _require(_bool(policy, key) is True, f"completed/approved v334 state must remain true: {key}")
     for key in (
@@ -651,7 +653,6 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "sourceControlledPublishGateReady",
         "publishEnvironmentConfigured",
         "localImagePushApproved",
-        "actualDatabaseAlembicMutationExecuted",
         "productionDeploymentApproved",
         "productionDeploymentExecuted",
         "productionDeploymentApprovalReady",
@@ -659,7 +660,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         _require(_bool(policy, key) is False, f"blocked/unexecuted v334 state must remain false: {key}")
     _require(policy.get("productionDeploymentPlan") == PRODUCTION_DEPLOY_PLAN_PATH, "production deployment plan path changed")
     _require(
-        policy.get("nextSafeStage") == "owner-approve-neon-stamp-recovery-preparation-sha",
+        policy.get("nextSafeStage") == "prepare-render-service-creation-exact-sha-approval",
         "unexpected image-policy next safe stage",
     )
     _require(
@@ -857,7 +858,7 @@ def render(result: dict[str, Any]) -> str:
         "- PUBLISH_REVIEWER_GATE_READY: lifecycle-controlled false (fail-closed before GHCR login)",
         "- root Docker context env files/re-includes: excluded/forbidden",
         "- dependency/frontend inputs: exact versions + SHA-256 locks ready",
-        "- isolated container cleaned / registry push / DB / Alembic: yes/yes/no/no",
+        "- isolated container cleaned / registry push / DB restore / Alembic: yes/yes/yes/yes",
         f"- result: {result['result']}",
         f"- next safe stage: {result['nextSafeStage']}",
     ))

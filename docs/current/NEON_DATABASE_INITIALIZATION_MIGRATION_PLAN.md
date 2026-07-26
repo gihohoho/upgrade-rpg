@@ -1,16 +1,17 @@
-# Neon database initialization and migration plan — v344
+# Neon database initialization and migration plan — v345
 
 ## 결론
 
 새 `rpg_game` DB를 만들지 않고 restore 전에는 비어 있던 production branch의 `neondb`를 사용합니다. 앱은 DB 이름을 코드에 고정하지 않고 `DATABASE_URL`을 사용하므로 DB 생성 단계를 없애는 편이 단순하고 안전합니다.
 
-2026-07-26 restore 후 read-only 확인 결과:
+2026-07-26 restore와 exact stamp 후 최종 read-only 확인 결과:
 
 ```txt
 database/role: neondb / neondb_owner
-public base tables: 22
+public base tables: 23
 application rows: 748
-alembic_version: 없음
+total rows: 749
+alembic_version: v295_initial_schema / 1 row
 TLS hostname verification: 통과
 read-only inspection write: 없음
 ```
@@ -54,7 +55,7 @@ alembic_version: 없음
 
 sanitized evidence는 `deploy/review/neon-restore-prestamp-verification-v344.json`입니다. 복원은 재실행하지 않습니다.
 
-## 준비된 stamp recovery 도구와 승인 경계
+## v344에서 사용한 stamp recovery 승인 경계
 
 `tools/initialize_neon_database.py`가 아래 조건을 모두 fail-closed로 확인합니다.
 
@@ -65,9 +66,9 @@ sanitized evidence는 `deploy/review/neon-restore-prestamp-verification-v344.jso
 - pooled URL, `--create`, `--clean`, upgrade/downgrade, 자동 retry/cleanup은 사용하지 않음
 - 이미 완료된 `pg_restore` 재실행은 거부함
 
-기본 실행과 focused smoke는 DB에 연결하지 않습니다. `--inspect`만 read-only transaction과 libpq `verify-full` preflight를 수행합니다. 과거 `--execute`는 복원 완료 뒤 비활성화됐고, `--resume-stamp`만 새 exact 승인 입력이 모두 맞아야 열립니다.
+v344 당시 기본 실행과 focused smoke는 DB에 연결하지 않았고 `--inspect`만 read-only transaction과 libpq `verify-full` preflight를 수행했습니다. 과거 `--execute`는 복원 완료 뒤 비활성화됐고, 승인된 `--resume-stamp`만 exact recovery 조건에서 한 번 열렸습니다.
 
-## 별도 exact-SHA 승인 뒤 recovery 순서
+## v344 exact-SHA 승인으로 실행한 recovery 순서
 
 1. 새 recovery preparation SHA가 clean pushed `main` HEAD와 같은지 확인
 2. target, backup SHA-256, revision, `verify-restored-and-stamp-once` confirmation 확인
@@ -77,6 +78,12 @@ sanitized evidence는 `deploy/review/neon-restore-prestamp-verification-v344.jso
 6. public 23 tables / 749 rows, application digest 불변, current v295 확인
 
 stamp recovery는 Render 배포 승인과 다른 **DB stamp recovery 전용 준비 commit의 exact SHA 승인**을 받아야 합니다. 자동 retry, 자동 cleanup, reset, truncate, seed, upgrade/downgrade는 포함하지 않습니다.
+
+## v345 완료 상태
+
+승인된 recovery SHA `cf0f506b6ae9dc9d4c02f3ab5313ca68be32676c`로 위 순서를 한 번 실행했습니다. `pg_restore`는 재실행하지 않았고 exact `v295_initial_schema` stamp와 최종 23 tables / 749 rows 검증이 통과했습니다. application schema/data digest는 stamp 전후 불변입니다.
+
+현재 `tools/initialize_neon_database.py`의 `--execute`와 `--resume-stamp`는 모두 비활성화됐습니다. 기본 모드는 static 완료 상태만 확인하고 `--inspect`만 23/749, exact v295, TLS를 read-only로 재검증합니다. 최종 sanitized evidence는 `deploy/review/neon-initialization-completed-v345.json`입니다.
 
 ## 실패 시 중단
 

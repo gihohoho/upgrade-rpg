@@ -46,8 +46,9 @@ def main() -> int:
     assert plan["schemaVersion"] == module.PLAN_VERSION
     assert plan["executionGate"]["databaseInitializationApproved"] is True
     assert plan["executionGate"]["restoreExecuted"] is True
-    assert plan["executionGate"]["stampExecuted"] is False
-    assert plan["executionGate"]["stampRecoveryApproved"] is False
+    assert plan["executionGate"]["stampExecuted"] is True
+    assert plan["executionGate"]["stampRecoveryApproved"] is True
+    assert plan["executionGate"]["renderServiceExists"] is False
 
     command = module.build_restore_command()
     assert "--exit-on-error" in command
@@ -126,7 +127,7 @@ def main() -> int:
     print("Neon database initialization guard smoke")
     print("- exact SHA/target/backup/revision/action confirmations: enforced")
     print("- restore single transaction + no create/clean: enforced")
-    print("- completed restore retry: forbidden; stamp-only recovery: gated")
+    print("- completed restore/stamp retries: forbidden; Render mutation absent")
     print("- exact stamp only; upgrade/downgrade absent: enforced")
     print("- final Alembic revision value: exact v295 enforced")
     print("- database connection or mutation attempted: no")

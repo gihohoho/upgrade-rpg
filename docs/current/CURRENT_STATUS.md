@@ -1,13 +1,13 @@
-# Current Status — v344
+# Current Status — v345
 
 ## 현재 결과
 
 ```txt
-latest: v344.neon-restore-verified-stamp-recovery-preparation-ready
-strict result: neon-restore-verified-stamp-recovery-preparation-ready
-next safe stage: owner-approve-neon-stamp-recovery-preparation-sha
+latest: v345.neon-initialization-completed-verified-render-preparation-required
+strict result: neon-database-initialization-completed-verified-render-preparation-required
+next safe stage: prepare-render-service-creation-exact-sha-approval
 render plan: v340.render-service-settings-reviewed-creation-blocked
-neon plan: v344.neon-restore-verified-stamp-recovery-preparation-ready
+neon plan: v345.neon-initialization-completed-verified-render-preparation-required
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
 render checkpoint next stage: review-render-service-settings-and-database-initialization-plan
@@ -28,17 +28,18 @@ production deployment approval ready/approved/executed: no/no/no
 - `deploy/render.production.env.example`에 Render 전용 non-secret/secret placeholder inventory 분리
 - 실제 Neon direct read-only bootstrap 통과
 - 새 v341 exact image 게시와 isolated Alpine CA-store/runtime 검증 완료
-- Neon `neondb`는 승인된 restore 뒤 22 application tables / 748 rows / no Alembic
+- Neon `neondb` 초기화 완료: 22 application tables / 748 rows + `alembic_version` 1 row
 - 새 `rpg_game` DB를 만들지 않고 기존 빈 `neondb` 사용
 - verified local dump: 22 application tables / 748 rows / no Alembic
 - Neon 이식: direct verify-full restore → digest 검증 → exact v295 stamp → 23/749 검증
 - Render: Singapore / Free / 1 instance / port 8000 / health `/api/v1/health`
 - platform health에는 DB를 포함하지 않고 `/api/v1/health/db`는 수동 확인
 - 서비스 이름 `upgrade-rpg-api`는 owner 확인 완료
-- production DB mutation: restore 1회 완료 / stamp·Render mutation 없음
-- v344 exact-SHA-gated stamp-only recovery tool과 focused smoke 준비 완료
+- production DB mutation: restore 1회 + exact v295 stamp 1회 완료 / Render mutation 없음
+- v345 read-only completion guard와 focused smoke 준비 완료
 - asyncpg system-CA와 PostgreSQL 16/libpq exported-Windows-system-CA `verify-full` read-only preflight 통과
-- Neon restore UTC-canonical digest가 verified rehearsal과 일치 / Alembic stamp·Render service mutation 없음
+- 최종 public tables/total rows: 23/749 / current revision: v295_initial_schema
+- application UTC-canonical schema/data digest 불변 / Render service mutation 없음
 
 ## 로컬 리뷰 도구 체크포인트 — 2026-07-26
 
@@ -77,10 +78,9 @@ Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 col
 - 계획상 `rpg_game` 데이터베이스 생성
 - JWT/admin secret 생성·주입
 - production CORS origin 확정
-- Alembic exact v295 stamp와 최종 23 tables / 749 rows 검증
 - production deploy
 
-Neon resource와 read-only 연결 검증은 완료됐지만 Render resource와 배포 플랫폼 secret 주입, DB/schema/data 준비가 남아 있으므로 v334 deployment plan의 required input은 계속 `unresolved`입니다.
+Neon DB/schema/data 초기화는 완료됐지만 Render resource 생성, 배포 플랫폼 secret 주입, production CORS/public URL 확정이 남아 있으므로 v334 deployment plan의 required input은 계속 `unresolved`입니다.
 
 ## Render account checkpoint — 2026-07-22
 
@@ -125,8 +125,8 @@ Neon resource와 read-only 연결 검증은 완료됐지만 Render resource와 �
 
 ## 다음 단계
 
-승인된 v343 SHA로 단일 트랜잭션 restore를 한 번 실행했습니다. 초기 post-check는 로컬 `Asia/Seoul`과 Neon `GMT`의 timestamp offset 표현 차이 때문에 legacy digest가 달라 stamp 전에 안전하게 멈췄습니다. UTC-normalized digest로 verified rehearsal과 Neon을 다시 읽기 전용 비교한 결과 22 tables / 748 rows / schema·data digest가 모두 일치했고 `alembic_version`은 없습니다.
+승인된 v343 SHA로 restore를 한 번 실행하고, 승인된 v344 SHA로 기존 복원 상태를 재검증한 뒤 exact `v295_initial_schema`만 stamp했습니다. 최종 상태는 public 23 tables / total 749 rows이고 application 22 tables / 748 rows의 UTC-normalized schema·data digest는 불변입니다.
 
-복원은 재실행하지 않습니다. v344 recovery 준비 commit의 정확한 40자리 SHA를 기호가 별도 승인한 뒤 현재 복원 상태를 다시 확인하고 exact `v295_initial_schema` stamp만 한 번 실행합니다. 그 승인은 Render Web Service 생성·배포를 포함하지 않습니다.
+복원과 stamp는 재실행하지 않습니다. 다음은 Render Web Service 생성·배포를 위한 별도 실행 준비 commit을 작성·검증하는 단계이며, 실제 생성·배포 전에는 그 commit의 새 exact-SHA 승인을 다시 받습니다.
 
 현재 필요한 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.

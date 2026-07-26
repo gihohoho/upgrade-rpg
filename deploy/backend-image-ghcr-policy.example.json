@@ -2,7 +2,7 @@
   "schemaVersion": "v334.production-deploy-plan-reviewed-inputs-blocked",
   "preparedOnly": false,
   "publishApprovalModel": "owner-only-source-controlled-two-step",
-  "ownerOnlyApprovalPhase": "v344-neon-restore-verified-stamp-recovery-owner-approval-required",
+  "ownerOnlyApprovalPhase": "v345-neon-initialized-render-preparation-required",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
   "publishLifecycleState": "attempt-recorded",
   "publishLifecycleSupportedStates": [
@@ -147,6 +147,7 @@
   "productionDeploymentExecuted": false,
   "actualRegistryMutationExecuted": true,
   "actualDockerCommandExecuted": true,
-  "actualDatabaseAlembicMutationExecuted": false,
-  "nextSafeStage": "owner-approve-neon-stamp-recovery-preparation-sha"
+  "actualDatabaseRestoreExecuted": true,
+  "actualDatabaseAlembicMutationExecuted": true,
+  "nextSafeStage": "prepare-render-service-creation-exact-sha-approval"
 }

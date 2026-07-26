@@ -1,8 +1,8 @@
 {
   "schemaVersion": "v340.render-service-settings-reviewed-creation-blocked",
   "reviewedAtUtc": "2026-07-26T00:19:24Z",
-  "result": "render-service-settings-confirmed-v341-image-verified-neon-initialization-blocked",
-  "nextSafeStage": "owner-approve-neon-stamp-recovery-preparation-sha",
+  "result": "render-service-settings-confirmed-image-and-neon-verified-creation-preparation-required",
+  "nextSafeStage": "prepare-render-service-creation-exact-sha-approval",
   "productionResourcesMutated": false,
   "service": {
     "type": "web-service",
@@ -72,7 +72,7 @@
     "ownerServiceNameRequired": false,
     "runtimeFixCompleted": true,
     "replacementImagePublishedAndIsolatedValidated": true,
-    "neonInitializationCompleted": false,
+    "neonInitializationCompleted": true,
     "exactPreparationShaApprovalRequired": true,
     "webServiceCreationApproved": false,
     "webServiceCreated": false,

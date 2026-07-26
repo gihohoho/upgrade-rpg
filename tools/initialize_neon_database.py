@@ -1,24 +1,17 @@
 #!/usr/bin/env python3
-"""Guard recovery after the verified Neon restore and before the exact stamp.
+"""Read-only completion guard for the initialized Neon database.
 
-The approved v343 execution restored the pinned archive once, then stopped
-before Alembic because the legacy digest was session-timezone-dependent.  The
-restored 22-table/748-row state matches the verified rehearsal when aware
-datetimes are normalized to UTC.
+The approved v343 execution restored the pinned archive once.  The approved
+v344 recovery reverified the UTC-canonical application digest and stamped only
+``v295_initial_schema``.  The final state is 22 application tables / 748 rows
+plus one ``alembic_version`` table / row.
 
-The default and ``--inspect`` paths are read-only.  The old ``--execute`` path
-is disabled so the restore cannot be repeated.  The mutating
-``--resume-stamp`` path is deliberately narrow:
-
-1. bind the new approval to the clean, pushed ``main`` HEAD;
-2. require exact target, backup, revision, and recovery action confirmations;
-3. reverify the restored state and absence of ``alembic_version``;
-4. stamp only ``v295_initial_schema``;
-5. verify the stamp and unchanged application digests.
-
-There is no restore retry, automatic cleanup, reset, truncate, migration
-upgrade, or Render action.  Connection values are loaded from a Git-ignored
-local file and are never included in commands, reports, or displayed errors.
+The default path is static and ``--inspect`` is read-only.  Both historical
+mutation paths, ``--execute`` and ``--resume-stamp``, are disabled so neither
+the restore nor the stamp can be repeated.  There is no automatic cleanup,
+reset, truncate, migration upgrade, or Render action.  Connection values are
+loaded from a Git-ignored local file and are never included in commands,
+reports, or displayed errors.
 """
 
 from __future__ import annotations
@@ -70,12 +63,12 @@ PSQL = PG_BIN / "psql.exe"
 LOCAL_REPORT_DIR = ROOT / "local-review-artifacts/neon"
 LOCAL_CA_BUNDLE = LOCAL_REPORT_DIR / "windows-system-ca-roots.pem"
 
-TOOL_VERSION = "v344.neon-stamp-recovery-exact-sha-gated"
-PLAN_VERSION = "v344.neon-restore-verified-stamp-recovery-preparation-ready"
-READY_RESULT = "neon-restore-verified-stamp-recovery-preparation-ready"
-INSPECT_RESULT = "neon-restored-state-readonly-verified-stamp-gated"
+TOOL_VERSION = "v345.neon-initialization-completed-readonly-guard"
+PLAN_VERSION = "v345.neon-initialization-completed-verified-render-preparation-required"
+READY_RESULT = "neon-database-initialization-completed-verified-render-preparation-required"
+INSPECT_RESULT = "neon-database-initialization-readonly-current-state-verified"
 SUCCESS_RESULT = "neon-database-restored-stamped-and-verified"
-NEXT_STAGE = "owner-approve-neon-stamp-recovery-preparation-sha"
+NEXT_STAGE = "prepare-render-service-creation-exact-sha-approval"
 
 EXPECTED_DATABASE = "neondb"
 EXPECTED_ROLE = "neondb_owner"
@@ -200,7 +193,7 @@ def load_plan() -> dict[str, Any]:
     gate = plan.get("executionGate") or {}
     require(gate.get("preparationToolReviewed") is True, "preparation tool review is incomplete")
     require(gate.get("readOnlyPreflightRequired") is True, "read-only preflight must be required")
-    require(gate.get("stampRecoveryPreparationReady") is True, "stamp recovery preparation is incomplete")
+    require(gate.get("stampRecoveryPreparationReady") is True, "stamp recovery preparation record differs")
     require(
         gate.get("restoreVerifiedWithUtcCanonicalDigest") is True,
         "restored data UTC-canonical verification is incomplete",
@@ -209,10 +202,14 @@ def load_plan() -> dict[str, Any]:
         gate.get("exactPreparationShaApprovalRequired") is True,
         "exact preparation SHA approval must be required",
     )
-    require(gate.get("databaseInitializationApproved") is True, "initialization approval record differs")
-    require(gate.get("restoreExecuted") is True, "restore execution record differs")
-    for key in ("stampExecuted", "renderServiceExists", "stampRecoveryApproved"):
-        require(gate.get(key) is False, f"execution gate must remain false: {key}")
+    for key in (
+        "databaseInitializationApproved",
+        "restoreExecuted",
+        "stampExecuted",
+        "stampRecoveryApproved",
+    ):
+        require(gate.get(key) is True, f"completed execution gate must be true: {key}")
+    require(gate.get("renderServiceExists") is False, "Render service must not exist yet")
     return plan
 
 
@@ -649,11 +646,11 @@ def write_success_report(
 
 
 def print_preparation_summary(*, connected: bool) -> None:
-    print("Neon database stamp recovery guard")
+    print("Neon database initialization completion guard")
     print("- target: Neon Free / AWS Singapore / PostgreSQL 16 / neondb / neondb_owner")
-    print("- current state: pinned backup restored / 22 application tables / 748 rows / no Alembic")
-    print("- next mutation: verify restored state, exact v295 stamp once, verify")
-    print("- restore retry: forbidden")
+    print("- current state: 22 application tables / 748 rows / exact v295 Alembic stamp")
+    print("- restore retry and stamp retry: forbidden")
+    print("- next mutation: none; Render preparation requires a separate exact-SHA approval")
     print("- automatic retry/cleanup/reset/Render action: no")
     print("- secret/endpoint printed or recorded: no")
     print(f"- read-only target inspection: {'yes' if connected else 'no'}")
@@ -692,19 +689,19 @@ def main() -> int:
 
         if args.inspect:
             state = collect_integrity(target)
-            require_application_restore(state, stamped=False)
+            require_application_restore(state, stamped=True)
             run_libpq_readonly_preflight(target)
             print_preparation_summary(connected=True)
-            print("- current application tables/rows: 22/748; alembic_version: absent")
+            print("- current public tables/rows: 23/749; Alembic: exact v295_initial_schema")
             print("- PostgreSQL 16 libpq + exported Windows system CA + verify-full: passed")
             print("- database mutation attempted: no")
             print(f"- result: {INSPECT_RESULT}")
             print(f"- next safe stage: {NEXT_STAGE}")
             return 0
 
-        if args.execute:
+        if args.execute or args.resume_stamp:
             raise NeonInitializationError(
-                "restore is already recorded and must not be retried; use --resume-stamp only after a new exact-SHA approval"
+                "Neon initialization is complete; restore and stamp retries are disabled"
             )
 
         require_exact_approval(

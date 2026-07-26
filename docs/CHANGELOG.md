@@ -1,3 +1,12 @@
+# v345.neon-initialization-completed-verified-render-preparation-required
+
+- 승인된 v344 recovery SHA로 기존 Neon 복원 상태를 재검증하고 exact `v295_initial_schema`만 stamp했습니다.
+- `pg_restore`는 재실행하지 않았고 restore/stamp 자동 retry·cleanup도 없었습니다.
+- 최종 public 23 tables / total 749 rows, application 22 tables / 748 rows, `alembic_version` 1 row를 확인했습니다.
+- application UTC-normalized schema/data digest는 stamp 전후 불변입니다.
+- `tools/initialize_neon_database.py`의 restore와 stamp mutation 경로를 모두 비활성화하고 read-only completion guard로 전환했습니다.
+- Render Web Service 생성·secret 주입·deploy는 실행하지 않았으며 다음 단계는 Render 생성 실행 준비 commit 작성·검증입니다.
+
 # v344.neon-restore-verified-stamp-recovery-preparation-ready
 
 - 승인된 v343 SHA로 Neon `neondb`에 pinned backup을 단일 트랜잭션 restore 한 번 실행했습니다.

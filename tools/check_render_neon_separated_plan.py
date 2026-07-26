@@ -26,12 +26,13 @@ NEON_INITIALIZER_SMOKE = (
     ROOT / "tools/smoke/backend/smoke_neon_database_initialization_guard.py"
 )
 NEON_RESTORE_EVIDENCE = ROOT / "deploy/review/neon-restore-prestamp-verification-v344.json"
+NEON_COMPLETION_EVIDENCE = ROOT / "deploy/review/neon-initialization-completed-v345.json"
 
 RENDER_VERSION = "v340.render-service-settings-reviewed-creation-blocked"
-NEON_VERSION = "v344.neon-restore-verified-stamp-recovery-preparation-ready"
-STATE_VERSION = "v344.neon-restore-verified-stamp-recovery-preparation-ready"
-RESULT = "neon-restore-verified-stamp-recovery-preparation-ready"
-NEXT_STAGE = "owner-approve-neon-stamp-recovery-preparation-sha"
+NEON_VERSION = "v345.neon-initialization-completed-verified-render-preparation-required"
+STATE_VERSION = "v345.neon-initialization-completed-verified-render-preparation-required"
+RESULT = "neon-database-initialization-completed-verified-render-preparation-required"
+NEXT_STAGE = "prepare-render-service-creation-exact-sha-approval"
 IMAGE = (
     "ghcr.io/gihohoho/upgrade-rpg-backend@"
     "sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
@@ -39,6 +40,9 @@ IMAGE = (
 BACKUP_SHA = "b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481"
 REVISION_SHA = "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa"
 UTC_DATA_DIGEST = "4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c"
+PRESTAMP_VERSION = "v344.neon-restore-verified-stamp-recovery-preparation-ready"
+PRESTAMP_RESULT = "neon-restore-verified-stamp-recovery-preparation-ready"
+PRESTAMP_NEXT_STAGE = "owner-approve-neon-stamp-recovery-preparation-sha"
 
 STATE_FILES = (
     ROOT / "AGENTS.md",
@@ -153,8 +157,11 @@ def verify_render(plan: dict[str, Any]) -> None:
         gate.get("replacementImagePublishedAndIsolatedValidated") is True,
         "Render gate must record the verified replacement image",
     )
+    require(
+        gate.get("neonInitializationCompleted") is True,
+        "Render gate must record completed Neon initialization",
+    )
     for key in (
-        "neonInitializationCompleted",
         "webServiceCreationApproved",
         "webServiceCreated",
         "deploymentExecuted",
@@ -229,17 +236,29 @@ def verify_neon(plan: dict[str, Any]) -> None:
         == "tools/smoke/backend/smoke_neon_database_initialization_guard.py",
         "Neon preparation smoke path differs",
     )
-    require(gate.get("databaseInitializationApproved") is True, "Neon initialization approval must be recorded")
-    require(gate.get("restoreExecuted") is True, "Neon restore execution must be recorded")
-    for key in ("stampExecuted", "stampRecoveryApproved", "renderServiceExists"):
-        require(gate.get(key) is False, f"Neon gate must remain false: {key}")
+    for key in (
+        "databaseInitializationApproved",
+        "restoreExecuted",
+        "stampExecuted",
+        "stampRecoveryApproved",
+    ):
+        require(gate.get(key) is True, f"Neon completed gate must be true: {key}")
+    require(
+        gate.get("approvedStampRecoveryPreparationSha")
+        == "cf0f506b6ae9dc9d4c02f3ab5313ca68be32676c",
+        "Neon approved stamp recovery SHA differs",
+    )
+    require(gate.get("renderServiceExists") is False, "Render service must not exist yet")
     require(gate.get("exactPreparationShaApprovalRequired") is True, "Neon exact-SHA approval must be required")
     verify_no_secret_values(plan, "Neon plan")
 
     evidence = load_json(NEON_RESTORE_EVIDENCE)
-    require(evidence.get("schemaVersion") == NEON_VERSION, "Neon restore evidence version differs")
-    require(evidence.get("result") == RESULT, "Neon restore evidence result differs")
-    require(evidence.get("nextSafeStage") == NEXT_STAGE, "Neon restore evidence next stage differs")
+    require(evidence.get("schemaVersion") == PRESTAMP_VERSION, "Neon restore evidence version differs")
+    require(evidence.get("result") == PRESTAMP_RESULT, "Neon restore evidence result differs")
+    require(
+        evidence.get("nextSafeStage") == PRESTAMP_NEXT_STAGE,
+        "Neon restore evidence next stage differs",
+    )
     verification = evidence.get("readOnlyVerification") or {}
     require(
         verification.get("applicationTableCount") == 22
@@ -257,6 +276,34 @@ def verify_neon(plan: dict[str, Any]) -> None:
     require(mutations.get("alembicStampExecuted") is False, "Neon stamp evidence must remain false")
     require(evidence.get("secretOrEndpointRecorded") is False, "Neon evidence contains secret marker")
     verify_no_secret_values(evidence, "Neon restore evidence")
+
+    completion = load_json(NEON_COMPLETION_EVIDENCE)
+    require(completion.get("schemaVersion") == NEON_VERSION, "Neon completion evidence version differs")
+    require(completion.get("result") == RESULT, "Neon completion evidence result differs")
+    require(completion.get("nextSafeStage") == NEXT_STAGE, "Neon completion next stage differs")
+    require(completion.get("restoreRetried") is False, "Neon restore retry must remain false")
+    require(
+        completion.get("finalPublicTableCount") == 23
+        and completion.get("finalTotalRowCount") == 749,
+        "Neon final table/row counts differ",
+    )
+    require(
+        completion.get("applicationTableCount") == 22
+        and completion.get("applicationRowCount") == 748,
+        "Neon final application counts differ",
+    )
+    require(
+        completion.get("applicationDataDigestUtcCanonical") == UTC_DATA_DIGEST,
+        "Neon final UTC-canonical data digest differs",
+    )
+    require(
+        completion.get("alembicVersionTableRows") == 1
+        and completion.get("alembicCurrentRevision") == "v295_initial_schema",
+        "Neon final Alembic state differs",
+    )
+    require(completion.get("renderServiceCreated") is False, "Render service must remain absent")
+    require(completion.get("secretOrEndpointRecorded") is False, "Neon completion contains secret marker")
+    verify_no_secret_values(completion, "Neon completion evidence")
 
 
 def verify_docs() -> None:
@@ -288,6 +335,7 @@ def verify_bootstrap_sources() -> None:
         NEON_INITIALIZER,
         NEON_INITIALIZER_SMOKE,
         NEON_RESTORE_EVIDENCE,
+        NEON_COMPLETION_EVIDENCE,
     ):
         require(path.is_file(), f"missing bootstrap file: {path.relative_to(ROOT)}")
 
@@ -322,7 +370,6 @@ def verify_bootstrap_sources() -> None:
 
     initializer_text = NEON_INITIALIZER.read_text(encoding="utf-8")
     for marker in (
-        'EXPECTED_ACTION = "verify-restored-and-stamp-once"',
         '"--exit-on-error"',
         '"--single-transaction"',
         '"--no-owner"',
@@ -331,7 +378,7 @@ def verify_bootstrap_sources() -> None:
         "export_windows_system_ca_bundle",
         '"PGSSLMODE": "verify-full"',
         '"alembicRevisions"',
-        "restore is already recorded and must not be retried",
+        "Neon initialization is complete; restore and stamp retries are disabled",
         'git_output("rev-parse", "--verify", "origin/main")',
         '"stamp",\n        EXPECTED_REVISION',
         "automatic retry/cleanup/reset/Render action: no",
@@ -354,7 +401,7 @@ def main() -> int:
 
     print("Render/Neon separated plan verification (static, no provider mutation)")
     print("- Render: upgrade-rpg-api confirmed / v341 exact image isolated-verified / creation blocked")
-    print("- Neon: restore UTC-canonical verified / exact-SHA-gated stamp-only recovery ready / Render blocked")
+    print("- Neon: 22/748 restored + exact v295 stamped + 23/749 verified / Render preparation next")
     print("- secrets/endpoints recorded: no")
     print(f"- result: {RESULT}")
     print(f"- next safe stage: {NEXT_STAGE}")

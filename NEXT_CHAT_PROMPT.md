@@ -1,4 +1,4 @@
-# Upgrade RPG Codex next prompt — v344
+# Upgrade RPG Codex next prompt — v345
 
 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽고 계속 지켜주세요. 기호는 코딩을 거의 모르므로 한국어로 쉽게 설명하고, 모든 터미널 명령 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension·권한·설치는 해결될 때까지 요청해주세요.
 
@@ -7,11 +7,11 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 ## 현재 고정값
 
 ```txt
-latest: v344.neon-restore-verified-stamp-recovery-preparation-ready
-strict result: neon-restore-verified-stamp-recovery-preparation-ready
-next safe stage: owner-approve-neon-stamp-recovery-preparation-sha
+latest: v345.neon-initialization-completed-verified-render-preparation-required
+strict result: neon-database-initialization-completed-verified-render-preparation-required
+next safe stage: prepare-render-service-creation-exact-sha-approval
 render plan: v340.render-service-settings-reviewed-creation-blocked
-neon plan: v344.neon-restore-verified-stamp-recovery-preparation-ready
+neon plan: v345.neon-initialization-completed-verified-render-preparation-required
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
 render checkpoint next stage: review-render-service-settings-and-database-initialization-plan
@@ -50,7 +50,7 @@ Ponytail 플러그인은 설치하지 않았습니다. 새 추상화·의존성�
 
 두 계획은 `docs/current/RENDER_SERVICE_SETTINGS_PLAN.md`, `docs/current/NEON_DATABASE_INITIALIZATION_MIGRATION_PLAN.md`와 대응하는 `deploy/*.example.json` 계약으로 검토 완료했습니다.
 
-Neon production branch의 기본 `neondb`는 system-CA hostname verification과 read-only transaction에서 public table 0개, `alembic_version` 없음으로 확인됐습니다. 새 `rpg_game` DB는 만들지 않습니다. 검증된 local custom dump의 22 application tables / 748 rows를 direct URL로 restore한 뒤 exact `v295_initial_schema`를 stamp하는 계획입니다.
+Neon production branch의 기본 `neondb`는 처음에는 public table 0개, `alembic_version` 없음이었고 새 `rpg_game` DB는 만들지 않았습니다. 현재는 검증된 local custom dump의 22 application tables / 748 rows를 direct URL로 restore하고 exact `v295_initial_schema` stamp까지 완료했습니다.
 
 Render 서비스 이름은 기호가 `upgrade-rpg-api`로 확정했습니다. v341 source는 SQLAlchemy runtime과 Alembic에 같은 system-CA hostname-verifying SSLContext를 전달하며, `deploy/render.production.env.example`에 Render 전용 환경변수 inventory를 분리했습니다. 실제 Neon direct URL을 프로세스에만 주입한 read-only 검사도 통과했습니다.
 
@@ -78,7 +78,9 @@ v341 source를 포함한 새 image는 게시와 isolated Alpine system CA store,
 
 승인된 v343 SHA `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 Neon restore를 한 번 실행했습니다. 22 application tables / 748 rows / schema digest가 일치했고 stamp 전에 legacy data digest 비교가 session timezone 차이로 멈췄습니다. UTC-normalized digest는 verified rehearsal과 Neon이 정확히 일치하며 `alembic_version`은 없습니다.
 
-v344 도구는 `pg_restore` 재실행을 거부합니다. 다음은 push된 v344 recovery 준비 commit의 정확한 40자리 SHA를 기호가 승인한 뒤 `--resume-stamp`로 현재 복원 상태를 재검증하고 exact `v295_initial_schema` stamp만 한 번 실행하는 단계입니다. 이 승인에는 Render Web Service 생성·배포가 포함되지 않습니다.
+사용자가 승인한 v344 SHA `cf0f506b6ae9dc9d4c02f3ab5313ca68be32676c`로 기존 복원 상태를 재검증하고 exact `v295_initial_schema`만 stamp했습니다. 최종 public 23 tables / total 749 rows, application 22 tables / 748 rows, unchanged UTC-normalized schema/data digest를 확인했습니다. restore와 stamp 재실행은 모두 비활성화했습니다.
+
+다음은 Render Web Service 생성·배포 실행 준비 commit을 작성·검증하는 단계입니다. 실제 Render 생성·secret 주입·deploy는 새 준비 commit의 정확한 40자리 SHA를 기호가 별도 승인하기 전까지 실행하지 않습니다.
 
 ## 첫 검사
 
@@ -99,6 +101,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-첫 검사의 v344 기대 결과는 `neon-restore-verified-stamp-recovery-preparation-ready`, 다음 단계는 `owner-approve-neon-stamp-recovery-preparation-sha`입니다. v340 Render 계획, v338 Render Connect, v337 account readiness, v336 Neon evidence, v335 provider selection, v334 deployment baseline을 보존합니다.
+첫 검사의 v345 기대 결과는 `neon-database-initialization-completed-verified-render-preparation-required`, 다음 단계는 `prepare-render-service-creation-exact-sha-approval`입니다. v340 Render 계획, v338 Render Connect, v337 account readiness, v336 Neon connectivity evidence, v335 provider selection, v334 deployment baseline을 보존합니다.
 
 별도 승인 전에는 Web Service/deploy, DB/Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스를 변경하지 않습니다.

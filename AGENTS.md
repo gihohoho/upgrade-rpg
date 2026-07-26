@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v344
+# Upgrade RPG Codex working rules — v345
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -42,11 +42,11 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v344.neon-restore-verified-stamp-recovery-preparation-ready
-strict result: neon-restore-verified-stamp-recovery-preparation-ready
-next safe stage: owner-approve-neon-stamp-recovery-preparation-sha
+latest: v345.neon-initialization-completed-verified-render-preparation-required
+strict result: neon-database-initialization-completed-verified-render-preparation-required
+next safe stage: prepare-render-service-creation-exact-sha-approval
 render plan: v340.render-service-settings-reviewed-creation-blocked
-neon plan: v344.neon-restore-verified-stamp-recovery-preparation-ready
+neon plan: v345.neon-initialization-completed-verified-render-preparation-required
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
 render checkpoint next stage: review-render-service-settings-and-database-initialization-plan
@@ -83,14 +83,16 @@ Alembic current: v295_initial_schema / new revision needed: no
 - v341 source는 production SQLAlchemy/Alembic에 system-CA hostname-verifying SSLContext를 공유 주입하고 Render env inventory를 분리했습니다.
 - 실제 Neon direct URL을 프로세스에만 주입한 read-only bootstrap에서 TLS 연결과 빈 `neondb` 상태를 재확인했습니다.
 - v341 source를 포함한 새 exact image는 게시와 isolated Alpine CA-store/runtime 검증을 완료했습니다. Render Web Service 생성·배포는 Neon 초기화 검증 뒤 별도 exact-SHA 승인이 필요합니다.
-- Neon production branch의 `neondb`에는 승인된 restore가 한 번 완료돼 22 public application tables / 748 rows가 있고 `alembic_version`은 아직 없습니다. 새 `rpg_game` DB는 만들지 않습니다.
-- `tools/initialize_neon_database.py`는 백업·revision·direct target·clean pushed `main` HEAD와 exact 승인 입력을 모두 고정하고, 단일 트랜잭션 restore → digest 검증 → exact v295 stamp → 최종 검증만 허용합니다.
+- Neon production branch의 `neondb` 초기화가 완료됐습니다. 22 application tables / 748 rows와 `alembic_version` 1 table / 1 row, exact `v295_initial_schema`를 포함해 public 23 tables / total 749 rows입니다. 새 `rpg_game` DB는 만들지 않습니다.
+- `tools/initialize_neon_database.py`의 mutation 경로는 모두 비활성화됐고 기본/static 및 `--inspect` read-only 완료 검증만 허용합니다.
 - Windows PostgreSQL 16/OpenSSL의 `sslrootcert=system` 오류는 Windows 시스템 공개 CA를 Git 제외 로컬 PEM으로 내보내 `verify-full`에 전달하는 방식으로 해결했고, asyncpg와 libpq read-only preflight가 모두 통과했습니다.
 - 승인된 v343 commit `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 Neon restore를 한 번 실행했고 22 application tables / 748 rows / schema digest가 일치했습니다. legacy data digest는 session timezone 차이로 실패해 stamp 전에 안전하게 중단했습니다.
-- aware datetime을 UTC로 정규화한 digest `4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c`는 verified rehearsal과 Neon이 일치합니다. `alembic_version`은 아직 없습니다.
-- 복원 재실행은 금지합니다. 다음 순서는 v344 recovery 준비 commit의 별도 exact-SHA 승인 → 기존 복원 상태 재검증 + exact v295 stamp만 실행 → 별도 exact-SHA Render create/deploy입니다.
+- v343 안전 중단 시점에 aware datetime을 UTC로 정규화한 digest `4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c`가 verified rehearsal과 Neon에서 일치했고, 당시 `alembic_version`은 없었습니다.
+- 승인된 v344 commit `cf0f506b6ae9dc9d4c02f3ab5313ca68be32676c`로 복원 상태를 재검증하고 exact v295 stamp만 실행했습니다. application digest는 불변이며 최종 23/749 검증을 통과했습니다.
+- 복원과 stamp 재실행은 금지합니다. 다음 순서는 Render 생성 실행 준비 commit 작성·검증 → 별도 exact-SHA 승인 → Web Service create/deploy입니다.
 - 이번 image 게시 approval은 모두 소비됐으며 Neon restore/stamp나 Render 생성·배포 권한으로 재사용하지 않습니다.
 - v343 Neon 초기화 approval도 restore 시도와 안전 중단으로 소비됐으며 stamp 권한으로 재사용하지 않습니다.
+- v344 stamp recovery approval도 성공 실행으로 소비됐으며 Render 생성·배포 권한으로 재사용하지 않습니다.
 
 ## 승인과 안전 경계
 
