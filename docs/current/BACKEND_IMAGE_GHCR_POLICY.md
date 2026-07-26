@@ -9,16 +9,16 @@ repository: ghcr.io/gihohoho/upgrade-rpg-backend
 visibility/platform: private / linux/amd64
 CI credential: GitHub Actions GITHUB_TOKEN
 reference mode: digest-only
-publish lifecycle: preparation-closed / publishReviewerGateReady=false / prior five attempts preserved
+publish lifecycle: attempt-recorded / publishReviewerGateReady=false / prior five attempts preserved
 ```
 
 verified production reference:
 
 ```txt
-ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2
+ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1
 ```
 
-run `29909291344`에서 build, SBOM, Trivy HIGH/CRITICAL 0건, SLSA provenance/SBOM, Cosign sign/verify를 통과했습니다. v333 isolated runtime에서도 exact digest, `linux/amd64`, UID 65532, read-only rootfs, health 200을 확인하고 임시 자원을 모두 제거했습니다.
+run `30180738530`에서 build, SBOM, Trivy HIGH/CRITICAL 0건, SLSA provenance/SBOM, Cosign sign/verify를 통과했습니다. v342 isolated runtime에서도 exact digest, `linux/amd64`, UID 65532, system CA 119개, read-only rootfs, health 200을 확인하고 임시 자원을 모두 제거했습니다.
 
 image publish는 `owner-only-source-controlled-two-step`과 `deploy/github-actions-ghcr-publish-lifecycle.json`을 사용합니다. run_attempt=1, single dispatch, immediate closure, rerun 금지를 유지합니다. 이전 시도와 artifact 상세는 lifecycle JSON과 `docs/CHANGELOG.md`에 보존합니다.
 

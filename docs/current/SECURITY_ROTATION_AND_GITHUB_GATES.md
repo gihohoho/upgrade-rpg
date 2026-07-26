@@ -1,4 +1,4 @@
-# Security rotation and GitHub gates — v338
+# Security rotation and GitHub gates — v342
 
 ## Secret 원칙
 
@@ -49,6 +49,17 @@
 - environment admins can bypass: true
 
 따라서 owner-only source-controlled two-step을 사용합니다. `run_attempt=1`, single dispatch, immediate closure, 정확한 `closureCommitSha`, rerun 금지를 유지합니다.
+
+### v342 v341 image 게시와 gate closure — 2026-07-26
+
+- owner 승인 preparation: `fb231afa5081f5bfd7b459081a58bc5acd6699df`
+- authorization / immediate closure / evidence: `f5d69c1bbef101cc9124b9dede18c844ef80b59c` / `ebb5ef46e3115bc358d62d93a64002b8711f4232` / `cf9e0bab121186d2ac51f889f807348cc46f192c`
+- workflow run `30180738530`, `run_attempt=1`, actor `gihohoho`, conclusion `success`
+- artifact IDs `8625485901`, `8625478503`; exact digest `sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1`
+- local/registry Trivy HIGH·CRITICAL 0건, SLSA provenance/SPDX SBOM, Cosign OIDC sign/verify를 확인했습니다.
+- lifecycle은 `attempt-recorded`, gate `false`로 닫혔고 rerun은 금지합니다.
+- 실제 token 값은 출력·문서화하지 않았으며 GitHub `GITHUB_TOKEN`과 기존 Docker credential store만 사용했습니다.
+- Neon restore/stamp와 Render create/deploy는 실행하지 않았고 image approval을 해당 작업에 재사용하지 않습니다.
 
 ### v341 게시 준비 lifecycle 보완 — 2026-07-26
 

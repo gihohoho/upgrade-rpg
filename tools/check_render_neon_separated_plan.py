@@ -24,12 +24,12 @@ BOOTSTRAP_SMOKE = ROOT / "tools/smoke/backend/smoke_neon_production_database_boo
 
 RENDER_VERSION = "v340.render-service-settings-reviewed-creation-blocked"
 NEON_VERSION = "v340.neon-initialization-migration-reviewed-execution-blocked"
-STATE_VERSION = "v341.neon-verify-full-bootstrap-fixed-render-name-confirmed-new-image-required"
-RESULT = "neon-production-bootstrap-verified-new-image-publish-approval-required"
-NEXT_STAGE = "owner-approve-v341-image-publish-preparation-sha"
+STATE_VERSION = "v342.v341-image-publish-isolated-verified-neon-init-approval-required"
+RESULT = "v341-image-publish-isolated-verified-neon-initialization-approval-required"
+NEXT_STAGE = "prepare-neon-database-initialization-exact-sha-approval"
 IMAGE = (
     "ghcr.io/gihohoho/upgrade-rpg-backend@"
-    "sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2"
+    "sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
 )
 BACKUP_SHA = "b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481"
 REVISION_SHA = "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa"
@@ -108,8 +108,8 @@ def verify_render(plan: dict[str, Any]) -> None:
 
     image = plan.get("image") or {}
     require(image.get("reviewedReference") == IMAGE, "Render reviewed image differs")
-    require(image.get("currentReferenceDeployable") is False, "current image must remain blocked")
-    require(image.get("replacementExactDigestRequired") is True, "replacement exact digest must be required")
+    require(image.get("currentReferenceDeployable") is True, "verified v341 image must be deployable")
+    require(image.get("replacementExactDigestRequired") is False, "replacement image must no longer be required")
     require(image.get("bootstrapSourceFixCompleted") is True, "bootstrap source fix must be complete")
 
     runtime = plan.get("databaseRuntime") or {}
@@ -143,8 +143,11 @@ def verify_render(plan: dict[str, Any]) -> None:
     require(gate.get("settingsReviewed") is True, "Render settings review must be complete")
     require(gate.get("ownerServiceNameRequired") is False, "Render service name must not remain unresolved")
     require(gate.get("runtimeFixCompleted") is True, "Render runtime fix must be complete")
+    require(
+        gate.get("replacementImagePublishedAndIsolatedValidated") is True,
+        "Render gate must record the verified replacement image",
+    )
     for key in (
-        "replacementImagePublishedAndIsolatedValidated",
         "neonInitializationCompleted",
         "webServiceCreationApproved",
         "webServiceCreated",
@@ -187,8 +190,11 @@ def verify_neon(plan: dict[str, Any]) -> None:
     gate = plan.get("executionGate") or {}
     require(gate.get("planReviewed") is True, "Neon plan review must be complete")
     require(gate.get("runtimeFixCompleted") is True, "Neon runtime fix must be complete")
+    require(
+        gate.get("replacementImagePublishedAndIsolatedValidated") is True,
+        "Neon gate must record the verified replacement image",
+    )
     for key in (
-        "replacementImagePublishedAndIsolatedValidated",
         "databaseInitializationApproved",
         "restoreExecuted",
         "stampExecuted",
@@ -266,8 +272,8 @@ def main() -> int:
         return 1
 
     print("Render/Neon separated plan verification (static, no provider mutation)")
-    print("- Render: upgrade-rpg-api confirmed / bootstrap fixed / current image blocked")
-    print("- Neon: existing neondb empty / direct verify-full runtime fixed / restore+stamp blocked")
+    print("- Render: upgrade-rpg-api confirmed / v341 exact image isolated-verified / creation blocked")
+    print("- Neon: existing neondb empty / direct verify-full runtime fixed / restore+stamp approval required")
     print("- secrets/endpoints recorded: no")
     print(f"- result: {RESULT}")
     print(f"- next safe stage: {NEXT_STAGE}")

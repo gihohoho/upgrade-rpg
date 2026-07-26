@@ -1,8 +1,8 @@
 {
   "schemaVersion": "v340.render-service-settings-reviewed-creation-blocked",
-  "reviewedAtUtc": "2026-07-25T23:06:18Z",
-  "result": "render-service-settings-confirmed-bootstrap-fixed-new-image-required",
-  "nextSafeStage": "owner-approve-v341-image-publish-preparation-sha",
+  "reviewedAtUtc": "2026-07-26T00:19:24Z",
+  "result": "render-service-settings-confirmed-v341-image-verified-neon-initialization-blocked",
+  "nextSafeStage": "prepare-neon-database-initialization-exact-sha-approval",
   "productionResourcesMutated": false,
   "service": {
     "type": "web-service",
@@ -25,15 +25,12 @@
     "port": 8000
   },
   "image": {
-    "reviewedReference": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2",
+    "reviewedReference": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1",
     "registryCredential": "upgrade-rpg-ghcr-read",
-    "currentReferenceDeployable": false,
-    "replacementExactDigestRequired": true,
+    "currentReferenceDeployable": true,
+    "replacementExactDigestRequired": false,
     "bootstrapSourceFixCompleted": true,
-    "blockers": [
-      "reviewed v338 exact digest predates the v341 verify-full bootstrap fix",
-      "replacement image must prove a non-empty Alpine system CA trust store during isolated validation"
-    ]
+    "blockers": []
   },
   "databaseRuntime": {
     "provider": "neon-free-postgresql-16",
@@ -74,7 +71,7 @@
     "settingsReviewed": true,
     "ownerServiceNameRequired": false,
     "runtimeFixCompleted": true,
-    "replacementImagePublishedAndIsolatedValidated": false,
+    "replacementImagePublishedAndIsolatedValidated": true,
     "neonInitializationCompleted": false,
     "exactPreparationShaApprovalRequired": true,
     "webServiceCreationApproved": false,

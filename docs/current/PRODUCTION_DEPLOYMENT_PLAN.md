@@ -31,7 +31,7 @@
 ## 고정 배포 대상
 
 ```txt
-image: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2
+image: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1
 platform: linux/amd64
 backend replicas/workers: 1/1
 database: managed PostgreSQL, provider CA verify-full

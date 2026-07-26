@@ -63,11 +63,11 @@ restore와 stamp는 Render 배포 승인과 다른 **DB 초기화 전용 준비 
 
 Render Free는 pre-deploy command와 Shell/one-off job을 지원하지 않습니다. 앱 image도 시작 시 migration을 실행하지 않습니다. 그러므로 Neon 초기화를 먼저 끝내지 않으면 첫 Render deploy가 빈 DB에 연결되거나 실패할 수 있습니다.
 
-v341 source의 Neon verify-full SQLAlchemy bootstrap은 실제 Neon direct read-only 연결까지 통과했습니다. 현재 v338 image에는 이 수정이 없으므로 먼저 새 image가 필요합니다. 최종 순서는 다음과 같습니다.
+v341 source의 Neon verify-full SQLAlchemy bootstrap은 실제 Neon direct read-only 연결까지 통과했고, 새 exact image의 게시와 isolated CA-store/runtime 검증도 완료했습니다. 최종 순서는 다음과 같습니다.
 
 ```txt
-bootstrap fix → new image publish/isolated validation
-→ Neon restore/stamp/verification
+bootstrap fix → new image publish/isolated validation 완료
+→ 별도 exact-SHA 승인 뒤 Neon restore/stamp/verification
 → Render service create/deploy
 ```
 

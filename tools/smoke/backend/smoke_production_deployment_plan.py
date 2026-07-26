@@ -25,7 +25,7 @@ def fixture() -> Path:
         "deploy/production-deploy-plan.example.json",
         "deploy/production.env.example",
         "deploy/docker-compose.production.yml",
-        "deploy/review/isolated-image-pull-validation-v333.json",
+        "deploy/review/isolated-image-pull-validation-v342.json",
         "docs/current/PRODUCTION_DEPLOYMENT_PLAN.md",
     ):
         target = root / relative

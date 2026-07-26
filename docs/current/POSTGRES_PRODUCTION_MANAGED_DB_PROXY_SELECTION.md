@@ -78,7 +78,7 @@ result: production-compose-config-render-verified-no-runtime-mutation
 production Compose는 `build:`를 사용하지 않고 digest-pinned `BACKEND_IMAGE`를 요구합니다.
 
 ```txt
-ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2
+ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1
 ```
 
 registry, namespace, target platform, base image digest는 아직 선택하지 않았습니다. 따라서 pull/build/push는 실행하지 않습니다.

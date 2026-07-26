@@ -62,7 +62,7 @@ registry/provider/platform/base image digest를 선택해도 pull/build/push는 
 
 ## v333 isolated 실행 결과
 
-기호의 별도 승인 뒤 exact digest pull과 isolated container 실행을 완료했습니다. host port·volume·actual DB connection 없이 internal network와 제한된 security option으로 `/api/v1/health`를 검증했고 모든 임시 자원을 정리했습니다. 따라서 production capacity 값, managed DB, provider CA, external edge network에는 변화가 없습니다. sanitized evidence는 `deploy/review/isolated-image-pull-validation-v333.json`에 있습니다. production deploy는 계속 별도 승인입니다.
+기호의 별도 승인 뒤 현재 exact digest pull과 isolated container 실행을 완료했습니다. host port·volume·actual DB connection 없이 internal network와 제한된 security option으로 `/api/v1/health`와 system CA store를 검증했고 모든 임시 자원을 정리했습니다. 따라서 production capacity 값, managed DB, provider CA, external edge network에는 변화가 없습니다. sanitized evidence는 `deploy/review/isolated-image-pull-validation-v342.json`에 있습니다. production deploy는 계속 별도 승인입니다.
 
 ## 읽기 전용 검사
 

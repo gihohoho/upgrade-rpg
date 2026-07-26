@@ -9,7 +9,7 @@ backend/Dockerfile.production
 deploy/docker-compose.production.yml
 deploy/production.env.example
 deploy/production-deploy-plan.example.json
-deploy/review/isolated-image-pull-validation-v333.json
+deploy/review/isolated-image-pull-validation-v342.json
 docs/current/PRODUCTION_DEPLOYMENT_PLAN.md
 ```
 

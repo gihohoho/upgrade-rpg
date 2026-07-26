@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v341
+# Upgrade RPG Codex handoff — v342
 
 ## 현재 상태
 
 ```txt
-latest: v341.neon-verify-full-bootstrap-fixed-render-name-confirmed-new-image-required
-strict result: neon-production-bootstrap-verified-new-image-publish-approval-required
-next safe stage: owner-approve-v341-image-publish-preparation-sha
+latest: v342.v341-image-publish-isolated-verified-neon-init-approval-required
+strict result: v341-image-publish-isolated-verified-neon-initialization-approval-required
+next safe stage: prepare-neon-database-initialization-exact-sha-approval
 render plan: v340.render-service-settings-reviewed-creation-blocked
 neon plan: v340.neon-initialization-migration-reviewed-execution-blocked
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
@@ -18,7 +18,7 @@ baseline result: production-deploy-plan-reviewed-inputs-blocked
 baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR repository: ghcr.io/gihohoho/upgrade-rpg-backend
-verified reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2
+verified reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1
 provider selection: Render Free Singapore + Neon Free PostgreSQL 16 Singapore
 fixed monthly cost: USD 0
 Neon project/read-only connectivity: created/verified
@@ -34,7 +34,7 @@ production deployment approval ready/approved/executed: no/no/no
 - Neon 계약: `deploy/neon-database-initialization-migration.example.json`
 - v341 source: runtime/Alembic 공용 system-CA hostname-verifying SSLContext 적용 완료
 - Render env inventory: `deploy/render.production.env.example`로 분리 완료
-- 현재 v338 image: v341 fix 이전 산출물이므로 계속 배포 불가
+- 현재 verified image: v341 source 포함, 공급망·isolated CA-store/runtime 검증 완료
 - Neon `neondb`: system-CA hostname verification/read-only 확인에서 0 public table / no Alembic
 - DB 선택: 새 `rpg_game`을 만들지 않고 기존 빈 `neondb` 사용
 - 이식: verified custom dump 22 application tables / 748 rows restore 후 exact `v295_initial_schema` stamp
@@ -78,11 +78,11 @@ Render workspace는 `Hobby (legacy)`, 결제수단 없음, active service 0개�
 
 - CI credential: GitHub Actions `GITHUB_TOKEN`
 - source-controlled lifecycle gate: `deploy/github-actions-ghcr-publish-lifecycle.json`
-- lifecycle: `preparation-closed` / `publishReviewerGateReady=false` / prior five attempts preserved
-- run `29909291344`: provenance/SBOM, exact-digest Trivy 0건, Cosign sign/verify 성공
+- lifecycle: `attempt-recorded` / `publishReviewerGateReady=false` / prior five attempts preserved
+- run `30180738530`: provenance/SBOM, exact-digest Trivy 0건, Cosign sign/verify 성공
 - run policy: `run_attempt=1`, single dispatch, immediate closure, `closureCommitSha`, rerun 금지
 - 역사 lifecycle 결과 `review-recorded-workflow-attempt-evidence` 보존
-- isolated evidence: `deploy/review/isolated-image-pull-validation-v333.json`
+- isolated evidence: `deploy/review/isolated-image-pull-validation-v342.json`
 - production plan: `deploy/production-deploy-plan.example.json`
 - historical preparation/authorization/closure/record SHA: `36e8720a53ef7ff6a8334de6bc99646998d63fc9` / `26a11356e33c978afa8cd8a4881500fa62cdbc5c` / `1c4a982b2a35d3d45f59e7d9faefcdecca69e6c5` / `1f0340ddfcf3c8a74cf14110d5957627d4c5d38a`
 - historical artifact IDs: `8525220616`, `8525254543`
@@ -103,7 +103,7 @@ Render workspace는 `Hobby (legacy)`, 결제수단 없음, active service 0개�
 
 Neon verify-full SSLContext bootstrap과 Render production env inventory focused fix는 완료했습니다. 실제 Neon direct URL을 프로세스에만 주입한 read-only 연결도 통과했고 `neondb`는 계속 0 public table / no Alembic입니다.
 
-사용자가 승인한 `789599bfe1a26cad5d8b3d80ee6a9613c5e48576`은 lifecycle JSON이 이전 성공 attempt의 `attempt-recorded` 상태라 새 authorization의 preparation parent로 사용할 수 없었습니다. workflow를 dispatch하지 않았고 GHCR mutation도 실행하지 않았습니다. 이전 성공 attempt를 history에 보존하고 lifecycle을 `preparation-closed`로 초기화한 focused 보완 commit의 새 exact SHA 승인이 필요합니다.
+사용자가 승인한 `fb231afa5081f5bfd7b459081a58bc5acd6699df`를 preparation으로 사용해 authorization `f5d69c1bbef101cc9124b9dede18c844ef80b59c`, immediate closure `ebb5ef46e3115bc358d62d93a64002b8711f4232`, evidence `cf9e0bab121186d2ac51f889f807348cc46f192c` 순서로 안전하게 닫았습니다. run `30180738530`은 성공했고 artifact IDs는 `8625485901`, `8625478503`입니다. 다음은 Neon 초기화 실행 준비 commit 작성과 검증이며 실제 restore/stamp는 새 exact-SHA 별도 승인 전까지 금지합니다.
 
 다음은 v341 준비 commit의 정확한 40자리 SHA를 기호가 승인한 뒤 새 image를 1회 publish하고 supply-chain 및 isolated runtime/CA-store/cleanup을 검증하는 단계입니다. 이 승인은 Neon restore/stamp와 Render 생성·배포를 포함하지 않습니다. 필요한 extension·로컬 설치는 현재 없습니다.
 
@@ -124,6 +124,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v341 기대 결과는 `neon-production-bootstrap-verified-new-image-publish-approval-required`, 다음 단계는 `owner-approve-v341-image-publish-preparation-sha`입니다. v340 분리 계획, v338 Render Connect, v337 account readiness, v336 Neon evidence, v335 provider selection과 v334 deployment baseline을 계속 보존합니다.
+v342 기대 결과는 `v341-image-publish-isolated-verified-neon-initialization-approval-required`, 다음 단계는 `prepare-neon-database-initialization-exact-sha-approval`입니다. v340 분리 계획, v338 Render Connect, v337 account readiness, v336 Neon evidence, v335 provider selection과 v334 deployment baseline을 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

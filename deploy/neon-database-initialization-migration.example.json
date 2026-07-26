@@ -1,8 +1,8 @@
 {
   "schemaVersion": "v340.neon-initialization-migration-reviewed-execution-blocked",
-  "reviewedAtUtc": "2026-07-25T23:06:18Z",
-  "result": "neon-existing-neondb-restore-stamp-plan-reviewed-runtime-fix-complete-execution-blocked",
-  "nextSafeStage": "owner-approve-v341-image-publish-preparation-sha",
+  "reviewedAtUtc": "2026-07-26T00:19:24Z",
+  "result": "neon-existing-neondb-restore-stamp-plan-reviewed-image-verified-execution-approval-required",
+  "nextSafeStage": "prepare-neon-database-initialization-exact-sha-approval",
   "productionResourcesMutated": false,
   "target": {
     "provider": "neon-free",
@@ -63,7 +63,7 @@
   "executionGate": {
     "planReviewed": true,
     "runtimeFixCompleted": true,
-    "replacementImagePublishedAndIsolatedValidated": false,
+    "replacementImagePublishedAndIsolatedValidated": true,
     "exactPreparationShaApprovalRequired": true,
     "databaseInitializationApproved": false,
     "restoreExecuted": false,

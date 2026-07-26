@@ -2,9 +2,9 @@
 
 ## 결론
 
-Render 설정값과 서비스 이름 `upgrade-rpg-api`는 확정됐지만 **현재 exact digest로 Web Service를 만들면 안 됩니다**. v341 source에는 Neon hostname을 시스템 CA로 검증하는 SQLAlchemy `asyncpg` SSLContext와 Render 전용 `deploy/render.production.env.example`이 준비됐지만, v338 image에는 이 수정이 들어 있지 않습니다.
+Render 설정값과 서비스 이름 `upgrade-rpg-api`는 확정됐고 v341 source를 포함한 exact digest `sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1`도 공급망·isolated 검증을 통과했습니다. 다만 **Neon 초기화 검증과 별도 Render 생성 exact-SHA 승인 전에는 Web Service를 만들면 안 됩니다**.
 
-v341 준비 commit의 exact SHA를 owner가 승인한 뒤 새 exact-digest image를 게시하고 isolated 검증해야 합니다. 그 뒤 Neon 초기화가 끝나야 Render 생성 단계로 이동합니다.
+새 exact-digest image 게시와 isolated 검증은 완료됐습니다. 다음은 별도 준비 commit과 exact-SHA 승인으로 Neon 초기화를 끝낸 뒤 Render 생성 단계로 이동하는 것입니다.
 
 정적 계약은 `deploy/render-service-settings.example.json`입니다. 실제 secret이나 Neon endpoint는 이 문서와 계약에 기록하지 않습니다.
 
@@ -17,7 +17,7 @@ v341 준비 commit의 exact SHA를 owner가 승인한 뒤 새 exact-digest image
 | Name | `upgrade-rpg-api` | owner 확인 완료 |
 | Region | Singapore | Neon AWS Singapore와 같은 지역 |
 | Instance | Free / 1개 | 개인 preview, 월 고정비 $0 |
-| Image | v341 수정 후 새 exact digest | 현재 v338 digest는 Neon verify-full runtime 미지원 |
+| Image | `sha256:f3bf6eed...052c1` exact digest | v341 bootstrap과 Alpine system CA 119개를 isolated runtime에서 검증 |
 | Registry credential | `upgrade-rpg-ghcr-read` | 이미 read:packages only로 저장됨 |
 | Docker command | override 없음 | image의 Uvicorn CMD 재사용 |
 | Port | `8000` | image CMD와 일치 |
@@ -64,11 +64,11 @@ ADMIN_WRITE_DEV_KEY
 
 1. production SSLContext/bootstrap과 env inventory 수정 완료
 2. 관련 smoke와 Neon SQLAlchemy read-only 호환성 검사
-3. 새 GHCR exact digest 게시
-4. 새 image isolated pull/runtime 검증
+3. 새 GHCR exact digest 게시 완료
+4. 새 image isolated pull/runtime/CA-store 검증 완료
 5. Neon `neondb` restore + v295 stamp + read-only 검증
 6. 서비스 이름 `upgrade-rpg-api` owner 확인 완료
-7. 새 image publish 준비 commit과 Render 생성 준비 commit의 정확한 40자리 SHA를 단계별 owner 승인
+7. Neon 초기화 준비 commit과 Render 생성 준비 commit의 정확한 40자리 SHA를 단계별 owner 승인
 
 ## 첫 배포 후 확인
 

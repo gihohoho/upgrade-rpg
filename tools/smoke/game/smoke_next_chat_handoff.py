@@ -12,13 +12,13 @@ READY_RESULT = "production-deploy-plan-reviewed-inputs-blocked"
 NEXT_SAFE_STAGE = "select-production-targets-and-complete-executable-deploy-plan"
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
-PREPARATION = "36e8720a53ef7ff6a8334de6bc99646998d63fc9"
-AUTHORIZATION = "26a11356e33c978afa8cd8a4881500fa62cdbc5c"
-CLOSURE = "1c4a982b2a35d3d45f59e7d9faefcdecca69e6c5"
-RECORD = "1f0340ddfcf3c8a74cf14110d5957627d4c5d38a"
-RUN_ID = 29909291344
-ARTIFACT_IDS = [8525220616, 8525254543]
-IMAGE_DIGEST = "sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2"
+PREPARATION = "fb231afa5081f5bfd7b459081a58bc5acd6699df"
+AUTHORIZATION = "f5d69c1bbef101cc9124b9dede18c844ef80b59c"
+CLOSURE = "ebb5ef46e3115bc358d62d93a64002b8711f4232"
+RECORD = "cf9e0bab121186d2ac51f889f807348cc46f192c"
+RUN_ID = 30180738530
+ARTIFACT_IDS = [8625485901, 8625478503]
+IMAGE_DIGEST = "sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
 PRODUCTION_REFERENCE = f"{REPOSITORY}@{IMAGE_DIGEST}"
 REVISION_SHA256 = "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa"
 
@@ -58,9 +58,9 @@ def main() -> int:
         "single dispatch",
         "immediate closure",
         "closureCommitSha",
-        "preparation-closed",
-        "새 정확한 40자리 SHA",
-        "deploy/review/isolated-image-pull-validation-v333.json",
+        "attempt-recorded",
+        "Neon 초기화",
+        "deploy/review/isolated-image-pull-validation-v342.json",
         "deploy/production-deploy-plan.example.json",
         PREPARATION,
         str(RUN_ID),
@@ -83,11 +83,11 @@ def main() -> int:
 
     policy = json.loads(read("deploy/backend-image-ghcr-policy.example.json"))
     assert policy["schemaVersion"] == VERSION
-    assert policy["preparedOnly"] is True
-    assert policy["ownerOnlyApprovalPhase"] == "v341-image-preparation-awaiting-exact-sha-approval"
-    assert policy["publishLifecycleState"] == "preparation-closed"
-    assert policy["approvedPreparationSha"] is None
-    assert policy["exactPreparationShaApproved"] is False
+    assert policy["preparedOnly"] is False
+    assert policy["ownerOnlyApprovalPhase"] == "v342-image-verified-neon-initialization-preparation-required"
+    assert policy["publishLifecycleState"] == "attempt-recorded"
+    assert policy["approvedPreparationSha"] == PREPARATION
+    assert policy["exactPreparationShaApproved"] is True
     assert policy["sourceControlledPublishGateReady"] is False
     assert policy["actualRegistryMutationExecuted"] is True
     assert policy["productionReference"] == PRODUCTION_REFERENCE
@@ -119,19 +119,17 @@ def main() -> int:
 
     lifecycle = json.loads(read("deploy/github-actions-ghcr-publish-lifecycle.json"))
     assert lifecycle["schemaVersion"] == "v326.owner-only-publish-lifecycle-with-attempt-history"
-    assert lifecycle["state"] == "preparation-closed"
+    assert lifecycle["state"] == "attempt-recorded"
     assert lifecycle["publishReviewerGateReady"] is False
-    assert lifecycle["priorApprovedPreparationSha"] == PREPARATION
-    assert lifecycle["approvedPreparationSha"] is None
-    assert lifecycle["ownerApproval"]["recorded"] is False
-    assert lifecycle["ownerApproval"]["recordedAtUtc"] is None
-    assert lifecycle["closure"]["authorizationSourceSha"] is None
-    assert lifecycle["closure"]["closureCommitSha"] is None
-    assert lifecycle["observedAttempt"]["runId"] is None
-    assert lifecycle["observedAttempt"]["status"] == "not-dispatched"
-    assert lifecycle["observedAttempt"]["conclusion"] is None
-    assert lifecycle["observedAttempt"]["imageDigest"] is None
-    assert lifecycle["observedAttempt"]["signatureVerified"] is False
+    assert lifecycle["approvedPreparationSha"] == PREPARATION
+    assert lifecycle["ownerApproval"]["recorded"] is True
+    assert lifecycle["closure"]["authorizationSourceSha"] == AUTHORIZATION
+    assert lifecycle["closure"]["closureCommitSha"] == CLOSURE
+    assert lifecycle["observedAttempt"]["runId"] == RUN_ID
+    assert lifecycle["observedAttempt"]["status"] == "completed"
+    assert lifecycle["observedAttempt"]["conclusion"] == "success"
+    assert lifecycle["observedAttempt"]["imageDigest"] == IMAGE_DIGEST
+    assert lifecycle["observedAttempt"]["signatureVerified"] is True
 
     static_plan = json.loads(read("deploy/github-actions-ghcr-static-plan.example.json"))
     assert static_plan["schemaVersion"] == STATIC_PLAN_VERSION
@@ -161,7 +159,7 @@ def main() -> int:
     if hashlib.sha256(revision.read_bytes()).hexdigest() != REVISION_SHA256:
         raise AssertionError("reviewed Alembic revision SHA-256 differs")
 
-    evidence = json.loads(read("deploy/review/isolated-image-pull-validation-v333.json"))
+    evidence = json.loads(read("deploy/review/isolated-image-pull-validation-v342.json"))
     assert evidence["imageReference"] == PRODUCTION_REFERENCE
     assert evidence["runtimeValidation"]["healthOk"] is True
     assert evidence["cleanup"]["containerRemoved"] is True

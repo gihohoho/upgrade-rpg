@@ -1,7 +1,7 @@
 {
   "schemaVersion": "v334.production-deploy-plan-reviewed-inputs-blocked",
-  "reviewedAtUtc": "2026-07-22T12:49:50Z",
-  "basedOnCommitSha": "54202da11dd805c38c978ccec9ff44f5f66e2807",
+  "reviewedAtUtc": "2026-07-26T00:19:24Z",
+  "basedOnCommitSha": "cf9e0bab121186d2ac51f889f807348cc46f192c",
   "planReview": {
     "requestedByOwner": true,
     "completed": true,
@@ -34,11 +34,11 @@
     ]
   },
   "image": {
-    "reference": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2",
+    "reference": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1",
     "platform": "linux/amd64",
     "signatureVerified": true,
     "exactDigestTrivyHighCriticalFindings": 0,
-    "isolatedRuntimeEvidence": "deploy/review/isolated-image-pull-validation-v333.json"
+    "isolatedRuntimeEvidence": "deploy/review/isolated-image-pull-validation-v342.json"
   },
   "githubLiveReview": {
     "checkedAtUtc": "2026-07-22T12:49:50Z",

@@ -31,7 +31,7 @@ REQUIRED = (
     "backend/alembic/versions/v295_initial_schema_initial_postgresql_schema.py",
     "deploy/backend-image-ghcr-policy.example.json",
     "deploy/production-deploy-plan.example.json",
-    "deploy/review/isolated-image-pull-validation-v333.json",
+    "deploy/review/isolated-image-pull-validation-v342.json",
     "deploy/github-actions-ghcr-publish-lifecycle.json",
     "deploy/docker-compose.production.yml",
     "deploy/production.env.example",
@@ -99,7 +99,7 @@ def main() -> int:
     assert result["publishEnvironmentExists"] is True
     assert result["publishEnvironmentConfigured"] is False
     assert result["publishGateReady"] is False
-    assert result["publishLifecycleState"] == "preparation-closed"
+    assert result["publishLifecycleState"] == "attempt-recorded"
     assert result["publishLifecycleSupportedStates"] == [
         "preparation-closed",
         "authorization-open",
@@ -107,8 +107,8 @@ def main() -> int:
         "attempt-recorded",
     ]
     assert result["priorApprovedPreparationSha"] == "36e8720a53ef7ff6a8334de6bc99646998d63fc9"
-    assert result["approvedPreparationSha"] is None
-    assert result["ownerApprovalRecorded"] is False
+    assert result["approvedPreparationSha"] == "fb231afa5081f5bfd7b459081a58bc5acd6699df"
+    assert result["ownerApprovalRecorded"] is True
     assert result["workflowRunAttemptMustEqual"] == 1
     assert result["singleDispatchApiCheckRequired"] is True
     assert result["rerunForbidden"] is True
@@ -156,7 +156,7 @@ def main() -> int:
         ("actualRegistryMutationExecuted", False),
         ("priorExactPreparationShaApproved", False),
         ("priorApprovedPreparationSha", "0" * 40),
-        ("exactPreparationShaApproved", True),
+        ("exactPreparationShaApproved", False),
         ("actualDockerCommandExecuted", False),
         ("ownerOnlyApprovalPhase", "authorization-open"),
         ("productionReference", "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:" + "0" * 64),
@@ -194,7 +194,7 @@ def main() -> int:
         lambda p: p.update({"publishReviewerGateReady": True}),
         lambda p: p.update({"priorApprovedPreparationSha": "0" * 40}),
         lambda p: p.update({"approvedPreparationSha": "f4788acf5455b07169320bd29f43ddf92ff1d5ad"}),
-        lambda p: p["ownerApproval"].update({"recorded": True}),
+        lambda p: p["ownerApproval"].update({"recorded": False}),
         lambda p: p["ownerApproval"].update({"recordedAtUtc": "not-utc"}),
         lambda p: p["ownerApproval"].update({"evidence": "codex-self-approval"}),
         lambda p: p["authorizationPolicy"].update({"workflowRunAttemptMustEqual": 2}),

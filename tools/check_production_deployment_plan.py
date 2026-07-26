@@ -11,9 +11,9 @@ from typing import Any
 VERSION = "v334.production-deploy-plan-reviewed-inputs-blocked"
 RESULT = "production-deploy-plan-reviewed-inputs-blocked"
 NEXT_STAGE = "select-production-targets-and-complete-executable-deploy-plan"
-IMAGE = "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2"
+IMAGE = "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
 PLAN_PATH = "deploy/production-deploy-plan.example.json"
-EVIDENCE_PATH = "deploy/review/isolated-image-pull-validation-v333.json"
+EVIDENCE_PATH = "deploy/review/isolated-image-pull-validation-v342.json"
 
 
 class DeploymentPlanError(RuntimeError):

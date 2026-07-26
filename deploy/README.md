@@ -16,7 +16,8 @@
 - `production-provider-selection.example.json`: Render Free + Neon Free 비용 최소 선택과 미해결 onboarding 계약
 - `backend-image-ghcr-policy.example.json`: GHCR exact-digest와 lifecycle 정책
 - `github-actions-ghcr-publish-lifecycle.json`: owner-only image publish 기록
-- `review/isolated-image-pull-validation-v333.json`: isolated runtime 검증 증거
+- `review/isolated-image-pull-validation-v342.json`: 현재 v341 image isolated runtime/CA-store 검증 증거
+- `review/isolated-image-pull-validation-v333.json`: 이전 verified image isolated runtime 검증 증거
 - `review/neon-readonly-connectivity-v336.json`: secret 없는 Neon Direct/Pooler TLS·read-only 검증 증거
 - `review/render-account-readiness-v337.json`: payment/card 개인정보 없는 Render account/Existing Image readiness 증거
 - `review/render-private-ghcr-connect-v338.json`: token 값 없는 Render credential·exact-digest Connect·미배포 증거

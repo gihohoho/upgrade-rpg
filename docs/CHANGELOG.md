@@ -1,3 +1,12 @@
+# v342.v341-image-publish-isolated-verified-neon-init-approval-required
+
+- owner가 승인한 preparation `fb231afa5081f5bfd7b459081a58bc5acd6699df`의 직계 자식 authorization `f5d69c1bbef101cc9124b9dede18c844ef80b59c`로 workflow run `30180738530`을 한 번만 실행했습니다.
+- run 접수 직후 closure `ebb5ef46e3115bc358d62d93a64002b8711f4232`로 gate를 닫고, 성공 결과를 evidence `cf9e0bab121186d2ac51f889f807348cc46f192c`에 기록했습니다.
+- build, SPDX SBOM, Trivy HIGH/CRITICAL 0건, BuildKit SLSA provenance/SBOM, exact-digest Trivy 0건, Cosign keyless sign/verify가 모두 통과했습니다.
+- verified digest는 `sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1`, artifact IDs는 `8625485901`, `8625478503`입니다.
+- isolated `linux/amd64` runtime에서 UID 65532, Python 3.11.15, system CA 119개, read-only rootfs, health 200을 확인하고 container/network/local image를 모두 정리했습니다.
+- Neon restore/stamp와 Render 생성·배포는 실행하지 않았고, 다음 단계는 Neon 초기화 실행 준비 commit과 별도 exact-SHA 승인입니다.
+
 # v335.cost-minimum-provider-selection-account-onboarding-required
 
 - 2026-07-22 공식 가격·제품 문서를 비교해 개인 프로젝트 비용 최소 조합을 Render Free Web Service Singapore + Neon Free PostgreSQL 16 Singapore로 선택.

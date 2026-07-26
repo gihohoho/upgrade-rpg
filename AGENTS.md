@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v341
+# Upgrade RPG Codex working rules — v342
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -42,9 +42,9 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v341.neon-verify-full-bootstrap-fixed-render-name-confirmed-new-image-required
-strict result: neon-production-bootstrap-verified-new-image-publish-approval-required
-next safe stage: owner-approve-v341-image-publish-preparation-sha
+latest: v342.v341-image-publish-isolated-verified-neon-init-approval-required
+strict result: v341-image-publish-isolated-verified-neon-initialization-approval-required
+next safe stage: prepare-neon-database-initialization-exact-sha-approval
 render plan: v340.render-service-settings-reviewed-creation-blocked
 neon plan: v340.neon-initialization-migration-reviewed-execution-blocked
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
@@ -57,15 +57,15 @@ baseline next stage marker: select-production-targets-and-complete-executable-de
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR repository: ghcr.io/gihohoho/upgrade-rpg-backend (private)
 target: linux/amd64
-verified production reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:ff939391517452a3ec477adaa0f8556d3525f9d0c6fb5f9d0df11d8f3d8461d2
+verified production reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1
 architecture: managed PostgreSQL + verify-full + provider-managed HTTPS ingress + backend 1/1
 Alembic current: v295_initial_schema / new revision needed: no
 ```
 
 - CI credential은 GitHub Actions `GITHUB_TOKEN`, local pull은 GitHub CLI OAuth `read:packages` → Docker credential store입니다.
 - image publish model은 `owner-only-source-controlled-two-step`입니다.
-- source-controlled lifecycle gate는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `preparation-closed`, `publishReviewerGateReady=false`입니다. 이전 성공 run 5건은 `attemptHistory`에 보존합니다.
-- run `29909291344`은 build/SBOM/Trivy/provenance/Cosign을 통과했고 image는 v333 isolated runtime 검증과 cleanup까지 완료했습니다.
+- source-controlled lifecycle gate는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `attempt-recorded`, `publishReviewerGateReady=false`입니다. 이전 run 5건은 `attemptHistory`에 보존합니다.
+- run `30180738530`은 build/SBOM/Trivy/provenance/Cosign을 통과했고 exact digest `sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1`은 v342 isolated runtime/CA-store/cleanup까지 통과했습니다.
 - 운영 배포 계획은 `deploy/production-deploy-plan.example.json`과 `docs/current/PRODUCTION_DEPLOYMENT_PLAN.md`에서 검토 완료했습니다.
 - production host, managed DB, provider CA, reverse proxy/domain/certificate, secret injection, edge network, first-deploy rollback 입력은 아직 미확정입니다.
 - production deployment approval ready/approved/executed는 `no/no/no`입니다.
@@ -82,10 +82,10 @@ Alembic current: v295_initial_schema / new revision needed: no
 - Render 서비스 이름은 `upgrade-rpg-api`로 기호가 확정했습니다.
 - v341 source는 production SQLAlchemy/Alembic에 system-CA hostname-verifying SSLContext를 공유 주입하고 Render env inventory를 분리했습니다.
 - 실제 Neon direct URL을 프로세스에만 주입한 read-only bootstrap에서 TLS 연결과 빈 `neondb` 상태를 재확인했습니다.
-- 현재 v338 image는 v341 bootstrap fix 이전 산출물이므로 계속 배포 불가입니다. 새 image의 Alpine CA store와 runtime을 isolated validation에서 확인해야 합니다.
+- v341 source를 포함한 새 exact image는 게시와 isolated Alpine CA-store/runtime 검증을 완료했습니다. Render Web Service 생성·배포는 Neon 초기화 검증 뒤 별도 exact-SHA 승인이 필요합니다.
 - Neon production branch의 기본 `neondb`는 read-only 확인에서 0 public table / no Alembic입니다. 새 `rpg_game` DB는 만들지 않습니다.
-- 순서는 v341 exact-SHA 승인 → 새 image publish/isolated validation → 별도 exact-SHA Neon restore+stamp → 별도 exact-SHA Render create/deploy입니다.
-- `789599bfe1a26cad5d8b3d80ee6a9613c5e48576` 승인은 lifecycle이 이전 `attempt-recorded` 상태라 안전하게 소비할 수 없었습니다. workflow는 실행하지 않았고, focused `preparation-closed` 보완 commit의 새 exact SHA 승인이 필요합니다.
+- 다음 순서는 Neon restore+exact v295 stamp 실행 준비 commit 작성 → 그 commit의 별도 exact-SHA 승인 → Neon 검증 → 별도 exact-SHA Render create/deploy입니다.
+- 이번 image 게시 approval은 모두 소비됐으며 Neon restore/stamp나 Render 생성·배포 권한으로 재사용하지 않습니다.
 
 ## 승인과 안전 경계
 

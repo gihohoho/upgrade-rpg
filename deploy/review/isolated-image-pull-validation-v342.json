@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "v342.v341-image-isolated-runtime-validation",
+  "completedAtUtc": "2026-07-26T00:19:24Z",
+  "approvedByUserMessage": true,
+  "workflowRunId": 30180738530,
+  "workflowRunAttempt": 1,
+  "workflowConclusion": "success",
+  "sourceCommitSha": "f5d69c1bbef101cc9124b9dede18c844ef80b59c",
+  "preparationCommitSha": "fb231afa5081f5bfd7b459081a58bc5acd6699df",
+  "recordCommitSha": "cf9e0bab121186d2ac51f889f807348cc46f192c",
+  "artifactIds": [
+    8625485901,
+    8625478503
+  ],
+  "imageReference": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1",
+  "imageId": "sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1",
+  "platform": "linux/amd64",
+  "supplyChainValidation": {
+    "localSbomGenerated": true,
+    "localTrivyHighCriticalFindings": 0,
+    "registryProvenanceVerified": true,
+    "registrySbomFormat": "SPDX-2.3",
+    "registrySbomPackages": 87,
+    "registryTrivyHighCriticalFindings": 0,
+    "cosignSigned": true,
+    "cosignVerified": true
+  },
+  "registryAuthentication": "github-cli-oauth-read-packages-to-docker-credential-store",
+  "pullExecuted": true,
+  "containerExecution": {
+    "executed": true,
+    "user": "65532:65532",
+    "effectiveUid": 65532,
+    "internalNetwork": true,
+    "publishedHostPorts": [],
+    "volumes": [],
+    "readOnlyRootFilesystem": true,
+    "tmpfs": [
+      "/tmp:rw,noexec,nosuid,size=64m"
+    ],
+    "capabilitiesDropped": [
+      "ALL"
+    ],
+    "noNewPrivileges": true,
+    "pidsLimit": 128,
+    "memoryBytes": 268435456,
+    "nanoCpus": 1000000000
+  },
+  "runtimeValidation": {
+    "pythonVersion": "3.11.15",
+    "machine": "x86_64",
+    "systemCaX509Count": 119,
+    "healthPath": "/api/v1/health",
+    "healthStatus": 200,
+    "healthOk": true,
+    "healthType": "system.health",
+    "pipPresent": false,
+    "rootFilesystemWriteBlocked": true,
+    "tmpfsWriteRemovePassed": true,
+    "alembicCommandExecuted": false,
+    "databaseHealthPathCalled": false,
+    "actualDatabaseConnectionAttempted": false
+  },
+  "cleanup": {
+    "containerRemoved": true,
+    "internalNetworkRemoved": true,
+    "localImageRemoved": true,
+    "volumeCreated": false,
+    "existingPostgresContainerHealthyAfterCleanup": true
+  },
+  "productionRuntimeApplied": false,
+  "neonInitializationApproved": false,
+  "neonRestoreExecuted": false,
+  "neonStampExecuted": false,
+  "renderServiceCreationApproved": false,
+  "renderServiceCreated": false,
+  "productionDeploymentExecuted": false,
+  "result": "v341-image-publish-and-isolated-validation-complete",
+  "nextSafeStage": "prepare-neon-database-initialization-exact-sha-approval"
+}

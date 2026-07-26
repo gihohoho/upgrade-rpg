@@ -14,7 +14,7 @@ workflow source SHA-256: 3331484f280a12a239275785bef625f18656c62ccbe33e8707a296a
 workflow semantic SHA-256: 526c4d21f9bc223e25829f60bf804f9167f6905b9129ffe1e70d85f354d57126
 workflow file creation: complete
 workflow 파일 생성: 완료
-workflow execution: runs 29716038891, 29877813770, 29883012957, 29886540317 failure; 29909291344 success
+workflow execution: runs 29716038891, 29877813770, 29883012957, 29886540317 failure; 29909291344, 30180738530 success
 registry login/build/push: yes/yes/yes
 next safe stage: select-production-targets-and-complete-executable-deploy-plan
 ```
@@ -223,7 +223,7 @@ production reference 자동 갱신과 deploy는 하지 않습니다.
 
 ## 현재와 다음 단계
 
-현재 lifecycle은 `preparation-closed`이고 gate는 `false`입니다. 네 실패와 한 성공을 `attemptHistory`에 보존하고 다섯 run 모두 rerun 금지합니다. `789599bfe1a26cad5d8b3d80ee6a9613c5e48576` 승인은 parent lifecycle 불일치 때문에 소비하지 않았고 새 workflow dispatch도 없었습니다. verified candidate의 exact digest는 production env inventory에 정적으로 고정했지만 새 v341 image publish·pull·container·deploy는 미실행입니다.
+현재 lifecycle은 `attempt-recorded`이고 gate는 `false`입니다. 과거 네 실패와 한 성공은 `attemptHistory`에 보존하며, 새 run `30180738530`도 rerun 금지입니다. preparation `fb231afa5081f5bfd7b459081a58bc5acd6699df` → authorization `f5d69c1bbef101cc9124b9dede18c844ef80b59c` → closure `ebb5ef46e3115bc358d62d93a64002b8711f4232` → evidence `cf9e0bab121186d2ac51f889f807348cc46f192c` 전이를 완료했습니다. verified digest는 `sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1`이며 v342 isolated 검증도 통과했습니다.
 
 ```txt
 result: github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated
