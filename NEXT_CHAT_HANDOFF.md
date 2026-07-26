@@ -1,12 +1,12 @@
-# Upgrade RPG Codex handoff — v348
+# Upgrade RPG Codex handoff — v349
 
 ## 현재 상태
 
 ```txt
-latest: v348.frontend-static-deployment-preparation-ready-exact-sha-gated
-strict result: frontend-static-deployment-preparation-ready-exact-sha-gated
-next safe stage: owner-approve-frontend-static-deployment-preparation-sha
-frontend plan: v348.frontend-static-deployment-preparation-ready-exact-sha-gated
+latest: v349.frontend-static-live-cors-apply-failed-recovery-required
+strict result: frontend-static-live-cors-apply-failed-recovery-required
+next safe stage: prepare-and-owner-approve-backend-cors-recovery-sha
+frontend plan: v349.frontend-static-live-cors-apply-failed-recovery-required
 render plan: v347.render-service-created-initial-deploy-verified
 render prior next stage (completed): review-render-live-service-and-prepare-frontend-deployment-plan
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
@@ -65,7 +65,7 @@ Render public preview deployment ready/approved/executed: yes/yes/yes
 
 Neon Free PostgreSQL 16 AWS Singapore 프로젝트는 생성됐고 Neon Auth는 사용하지 않습니다. 채팅에 노출된 최초 `neondb_owner` 비밀번호는 재설정해 폐기했습니다. 새 direct/pooled URL은 Git/Docker 제외 파일 `deploy/.env.production`에만 있으며 Direct/Pooler 모두 PostgreSQL 16.14, TLS 1.3 인증서·호스트 검증과 read-only transaction을 통과했습니다. sanitized evidence는 `deploy/review/neon-readonly-connectivity-v336.json`입니다.
 
-Render workspace는 `Hobby (legacy)`, 결제수단 없음, active service 0개입니다. v337에서 `Existing Image`와 GitHub Container Registry credential 흐름을 확인했고 evidence는 `deploy/review/render-account-readiness-v337.json`입니다.
+Render workspace는 `Hobby (legacy)`이고 결제수단은 없습니다. v337 검사 당시 active service는 0개였으며 `Existing Image`와 GitHub Container Registry credential 흐름을 확인했습니다. 현재는 backend Web Service와 frontend Static Site가 각각 1개씩 있습니다. v337 evidence는 `deploy/review/render-account-readiness-v337.json`입니다.
 
 ## Render private GHCR Connect — 2026-07-23
 
@@ -121,11 +121,15 @@ verified local rehearsal은 `Asia/Seoul`, Neon은 `GMT`이며 양쪽에 44개 `t
 
 공개 `/api/v1/health`와 한 번 요청한 `/api/v1/health/db`가 모두 HTTP 200 `status=ok`입니다. DB/Alembic write, image 변경, custom domain/DNS, 결제, 자동 retry·두 번째 deploy는 없었습니다. 다음은 live backend 검토와 frontend 배포/CORS origin 계획이며 필요한 extension·권한·새 설치는 현재 없습니다.
 
-v348에서 실제 legacy `index.html`, `admin.html`, `src/**/*.js`, `src/**/*.css`만 묶는 Render Free Static Site 계획을 준비했습니다. 추천 이름은 `gihohoho-upgrade-rpg`, 예상 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`과 `/admin.html`입니다. local host는 기존 local API를 유지하고 non-local host만 `https://upgrade-rpg-api.onrender.com/api/v1`에 연결합니다.
+승인된 v348 SHA `b13b1775093716800d7361ee1e8f94d8112eefc1`로 Render Free Static Site `gihohoho-upgrade-rpg`를 만들고 exact commit 최초 deploy를 한 번 실행했습니다. service `srv-d9iu337aqgkc73am4lh0`, deploy `dep-d9iu33faqgkc73am4m3g`는 Live이고 auto-deploy는 Off입니다. 공개 주소 `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`은 둘 다 HTTP 200입니다.
 
-Static Site 생성·최초 deploy, backend exact `CORS_ORIGINS`, backend CORS deploy는 모두 미실행입니다. 다음 단계는 v348 준비 commit의 정확한 40자리 SHA owner 승인입니다. 승인 뒤 private GitHub repo 연결 → static deploy 1회 → exact origin 확인 → backend CORS 설정/deploy 1회 → 브라우저 read-only 통합 검증 순서만 허용합니다. admin key, DB/Alembic write, admin write, 자동 retry, custom domain/DNS/payment는 포함하지 않습니다.
+Render GitHub App은 `gihohoho/upgrade-rpg` 단일 private repository만 접근하도록 기호가 Confirm access를 완료했습니다. 핵심 정적 자산 세 개의 remote raw byte SHA-256은 approved source와 모두 일치합니다.
 
-현재 필요한 extension·설치는 없습니다. Render가 private `upgrade-rpg` repository 접근을 다시 확인하라고 표시할 때만 기호가 GitHub App 접근을 확인해야 합니다.
+승인된 backend CORS deploy도 정확히 한 번 실행했고 deploy `dep-d9iu4g3rjlhs73fiv570`는 Live지만, 실제 `CORS_ORIGINS`는 `[]`로 남았습니다. preflight는 HTTP 400이고 공개 게임은 CORS `Failed to fetch` 뒤 폴백합니다. 관리자 화면은 렌더링되지만 `RpgAdminFieldHelp is not loaded`가 미해결입니다. 자동 retry·두 번째 deploy는 실행하지 않았습니다.
+
+다음은 v349 회복 준비 commit의 정확한 40자리 SHA owner 승인입니다. 승인 전에는 Render env/deploy를 변경하지 않습니다. 승인 뒤에는 CORS 현재값 표시 → Edit에서 exact origin 전체 교체 → 포커스 이동 뒤 폼 값 재확인 → backend deploy 1회 → actual CORS/preflight/browser read-only 재검증만 허용합니다. frontend 재배포, DB/Alembic/admin write, secret, custom domain/DNS/payment는 포함하지 않습니다.
+
+현재 필요한 extension·권한·새 설치는 없습니다. 필요한 사용자 조치는 새 v349 회복 준비 SHA 승인입니다.
 
 ## 첫 검사
 
@@ -150,6 +154,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v348 기대 결과는 `frontend-static-deployment-preparation-ready-exact-sha-gated`, 다음 단계는 `owner-approve-frontend-static-deployment-preparation-sha`입니다. v347 backend, v345 Neon 완료, v342 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline을 계속 보존합니다.
+v349 기대 결과는 `frontend-static-live-cors-apply-failed-recovery-required`, 다음 단계는 `prepare-and-owner-approve-backend-cors-recovery-sha`입니다. v348 approved execution, v347 backend, v345 Neon 완료, v342 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline을 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

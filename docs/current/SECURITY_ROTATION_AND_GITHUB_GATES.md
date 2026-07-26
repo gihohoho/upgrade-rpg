@@ -1,4 +1,12 @@
-# Security rotation and GitHub gates — v347
+# Security rotation and GitHub gates — v349
+
+## Render GitHub App repository access — 2026-07-26
+
+- 기호가 GitHub `Confirm access`를 완료했습니다.
+- Render GitHub App은 개인 계정 `gihohoho`에서 `upgrade-rpg` 단일 저장소만 접근하도록 선택했습니다.
+- 모든 저장소 접근은 허용하지 않았습니다.
+- 이 확인 과정에서 새 token/PAT/secret을 문서·Git·로그에 기록하지 않았습니다.
+- Static Site auto-deploy는 꺼져 있으며 승인되지 않은 commit을 자동 배포하지 않습니다.
 
 ## Secret 원칙
 

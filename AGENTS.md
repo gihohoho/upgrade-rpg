@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v348
+# Upgrade RPG Codex working rules — v349
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -42,10 +42,10 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v348.frontend-static-deployment-preparation-ready-exact-sha-gated
-strict result: frontend-static-deployment-preparation-ready-exact-sha-gated
-next safe stage: owner-approve-frontend-static-deployment-preparation-sha
-frontend plan: v348.frontend-static-deployment-preparation-ready-exact-sha-gated
+latest: v349.frontend-static-live-cors-apply-failed-recovery-required
+strict result: frontend-static-live-cors-apply-failed-recovery-required
+next safe stage: prepare-and-owner-approve-backend-cors-recovery-sha
+frontend plan: v349.frontend-static-live-cors-apply-failed-recovery-required
 render plan: v347.render-service-created-initial-deploy-verified
 render prior next stage (completed): review-render-live-service-and-prepare-frontend-deployment-plan
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
@@ -72,6 +72,12 @@ Alembic current: v295_initial_schema / new revision needed: no
 - production host, managed DB, provider CA, reverse proxy/domain/certificate, secret injection, edge network, first-deploy rollback 입력은 아직 미확정입니다.
 - production deployment approval ready/approved/executed는 `no/no/no`입니다.
 - Render public preview deployment ready/approved/executed는 `yes/yes/yes`입니다.
+- Render GitHub App은 `gihohoho/upgrade-rpg` 단일 저장소만 접근하도록 연결됐습니다.
+- frontend Static Site `gihohoho-upgrade-rpg`는 approved commit `b13b1775093716800d7361ee1e8f94d8112eefc1`로 Live이며 auto-deploy는 꺼져 있습니다.
+- 공개 게임/관리자 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`이고 둘 다 HTTP 200입니다.
+- 승인된 backend CORS deploy 1회는 Live로 끝났지만 실제 `CORS_ORIGINS`가 `[]`로 남아 preflight 400이며 브라우저 API 연동은 실패했습니다.
+- 승인된 1회 deploy는 소비됐고 자동 retry나 두 번째 deploy는 실행하지 않았습니다. 다음 backend CORS 회복은 새 exact-SHA owner 승인이 필요합니다.
+- 공개 정적 자산 세 개의 raw byte SHA-256은 approved source와 일치합니다. 관리자 `RpgAdminFieldHelp` 로드 오류는 별도 미해결 브라우저 검증 항목입니다.
 - 비용 최소 공급자는 Render Free Web Service Singapore + Neon Free PostgreSQL 16 Singapore로 선택했습니다.
 - 첫 공개 주소는 Render `onrender.com` managed HTTPS이며 custom domain과 DNS 변경은 보류합니다.
 - 무료 구성은 SLA production이 아닌 개인용 public preview이고 월 고정비 $0, idle cold start 허용 조건입니다.
@@ -94,7 +100,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 - 첫 공개 frontend는 실제 legacy 화면을 Render Free Static Site `gihohoho-upgrade-rpg`로 배포하는 계획입니다. 예상 주소는 `/index.html`, `/admin.html`이며 Vue shell은 이번 배포 대상이 아닙니다.
 - `tools/build_legacy_static_site.mjs`는 `index.html`, `admin.html`, `src/**/*.js`, `src/**/*.css`만 `frontend/legacy-dist`에 묶고 secret·DB endpoint 형태가 있으면 실패합니다.
 - `src/api/runtime-config.js`는 로컬 host에서는 기존 local API를 유지하고 그 밖의 host에서만 `https://upgrade-rpg-api.onrender.com/api/v1`을 사용합니다.
-- frontend Static Site 생성과 backend exact CORS origin 설정·재배포는 아직 실행하지 않았으며 v348 준비 commit의 정확한 SHA 승인 뒤에만 실행합니다.
+- frontend Static Site 최초 배포와 backend CORS deploy 1회는 실행됐습니다. CORS actual value가 `[]`로 남았으므로 새 exact-SHA 승인 전에는 회복 deploy를 실행하지 않습니다.
 - 공개 `admin.html`에는 admin write key를 넣지 않으며 read-only public preview로만 취급합니다.
 - 현재 필요한 extension·설치는 없습니다. 실행 시 Render가 private repository 접근을 다시 확인하면 기호의 GitHub App 접근 확인이 필요할 수 있습니다.
 - Windows PostgreSQL 16/OpenSSL의 `sslrootcert=system` 오류는 Windows 시스템 공개 CA를 Git 제외 로컬 PEM으로 내보내 `verify-full`에 전달하는 방식으로 해결했고, asyncpg와 libpq read-only preflight가 모두 통과했습니다.

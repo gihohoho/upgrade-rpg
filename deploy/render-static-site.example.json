@@ -1,9 +1,9 @@
 {
-  "schemaVersion": "v348.frontend-static-deployment-preparation-ready-exact-sha-gated",
-  "preparedAtUtc": "2026-07-26T09:49:12Z",
-  "result": "frontend-static-deployment-preparation-ready-exact-sha-gated",
-  "nextSafeStage": "owner-approve-frontend-static-deployment-preparation-sha",
-  "productionResourcesMutated": false,
+  "schemaVersion": "v349.frontend-static-live-cors-apply-failed-recovery-required",
+  "preparedAtUtc": "2026-07-26T10:45:00Z",
+  "result": "frontend-static-live-cors-apply-failed-recovery-required",
+  "nextSafeStage": "prepare-and-owner-approve-backend-cors-recovery-sha",
+  "productionResourcesMutated": true,
   "site": {
     "provider": "render",
     "type": "static-site",
@@ -12,6 +12,9 @@
     "expectedOrigin": "https://gihohoho-upgrade-rpg.onrender.com",
     "expectedGameUrl": "https://gihohoho-upgrade-rpg.onrender.com/index.html",
     "expectedAdminUrl": "https://gihohoho-upgrade-rpg.onrender.com/admin.html",
+    "serviceId": "srv-d9iu337aqgkc73am4lh0",
+    "deployId": "dep-d9iu33faqgkc73am4m3g",
+    "deployStatus": "live",
     "customDomain": false,
     "autoDeploy": false
   },
@@ -20,6 +23,7 @@
     "visibility": "private",
     "branch": "main",
     "cleanPushedExactShaRequired": true,
+    "approvedAndDeployedCommit": "b13b1775093716800d7361ee1e8f94d8112eefc1",
     "buildCommand": "node tools/build_legacy_static_site.mjs",
     "publishDirectory": "frontend/legacy-dist",
     "publishedSourceAllowlist": [
@@ -47,6 +51,10 @@
     "backendCorsExactOriginRequired": true,
     "backendCorsEnvironmentKey": "CORS_ORIGINS",
     "backendCorsExpectedValue": "[\"https://gihohoho-upgrade-rpg.onrender.com\"]",
+    "backendCorsActualValueAfterDeploy": "[]",
+    "backendCorsApplied": false,
+    "backendCorsDeployId": "dep-d9iu4g3rjlhs73fiv570",
+    "backendCorsDeployStatus": "live",
     "backendService": "upgrade-rpg-api",
     "backendServiceId": "srv-d9iro458nd3s73acgmsg"
   },
@@ -92,17 +100,30 @@
   "approvalGate": {
     "preparationReady": true,
     "exactPreparationShaApprovalRequired": true,
-    "exactPreparationShaApproved": false,
-    "approvedPreparationSha": null,
-    "staticSiteCreated": false,
-    "staticDeployExecuted": false,
+    "exactPreparationShaApproved": true,
+    "approvedPreparationSha": "b13b1775093716800d7361ee1e8f94d8112eefc1",
+    "staticSiteCreated": true,
+    "staticDeployExecuted": true,
     "backendCorsApplied": false,
-    "backendCorsDeployExecuted": false,
-    "browserIntegrationVerified": false
+    "backendCorsDeployExecuted": true,
+    "browserIntegrationVerified": false,
+    "approvedOneShotBackendDeployConsumed": true,
+    "automaticRetryExecuted": false,
+    "recoveryExactShaApprovalRequired": true
+  },
+  "validation": {
+    "gameHttp200": true,
+    "adminHttp200": true,
+    "staticAssetRawBytesMatchApprovedSource": true,
+    "corsPreflightStatus": 400,
+    "corsPreflightResult": "disallowed-cors-origin",
+    "gameReadOnlyApiIntegration": false,
+    "adminModuleIntegrationVerified": false,
+    "sanitizedEvidence": "deploy/review/render-frontend-static-and-cors-attempt-v349.json"
   },
   "possibleUserAction": {
-    "requiredNow": false,
-    "actionIfPrompted": "confirm Render GitHub App access to the private upgrade-rpg repository",
+    "requiredNow": true,
+    "actionIfPrompted": "approve the exact v349 recovery preparation SHA before one focused backend CORS retry",
     "newExtensionOrLocalPackageRequired": false
   }
 }

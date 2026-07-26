@@ -1,12 +1,12 @@
-# Current Status — v348
+# Current Status — v349
 
 ## 현재 결과
 
 ```txt
-latest: v348.frontend-static-deployment-preparation-ready-exact-sha-gated
-strict result: frontend-static-deployment-preparation-ready-exact-sha-gated
-next safe stage: owner-approve-frontend-static-deployment-preparation-sha
-frontend plan: v348.frontend-static-deployment-preparation-ready-exact-sha-gated
+latest: v349.frontend-static-live-cors-apply-failed-recovery-required
+strict result: frontend-static-live-cors-apply-failed-recovery-required
+next safe stage: prepare-and-owner-approve-backend-cors-recovery-sha
+frontend plan: v349.frontend-static-live-cors-apply-failed-recovery-required
 render plan: v347.render-service-created-initial-deploy-verified
 render prior next stage (completed): review-render-live-service-and-prepare-frontend-deployment-plan
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
@@ -77,12 +77,12 @@ Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 col
 
 ## 아직 남은 것
 
-- Render Static Site 생성과 frontend 최초 deploy
-- exact frontend origin을 사용하는 backend CORS 설정과 CORS deploy
-- frontend browser read-only 통합 검증
+- backend `CORS_ORIGINS` exact origin 회복과 승인된 deploy 1회
+- frontend browser read-only API 통합 검증
+- 공개 관리자 `RpgAdminFieldHelp` 로드 오류 재확인
 - custom domain/DNS와 SLA production 전환은 보류
 
-Neon DB/schema/data 초기화와 Render backend public preview 배포는 완료됐습니다. v334 generic SLA production plan의 별도 host·domain·edge·rollback 입력은 계속 `unresolved`이며, 현재 v348 단계는 비용 $0의 frontend public preview 준비입니다.
+Neon DB/schema/data 초기화, Render backend public preview, frontend Static Site 최초 배포는 완료됐습니다. v334 generic SLA production plan의 별도 host·domain·edge·rollback 입력은 계속 `unresolved`이며, 현재 v349 단계는 비용 $0 public preview의 CORS 회복 준비입니다.
 
 ## Render account checkpoint — 2026-07-22
 
@@ -133,17 +133,24 @@ Render 내부 health와 공개 `/api/v1/health`, Neon read-only `/api/v1/health/
 
 현재 필요한 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.
 
-## Frontend static 배포 준비 — v348
+## Frontend static 배포 결과 — v349
 
 - 실제 배포 대상: legacy `index.html`, `admin.html`, `src/**/*.js`, `src/**/*.css`
-- Render Free Static Site 추천 이름: `gihohoho-upgrade-rpg`
-- 예상 게임/관리자 주소: `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`
+- Render Free Static Site: `gihohoho-upgrade-rpg`, service `srv-d9iu337aqgkc73am4lh0`
+- 게임/관리자 주소: `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`
 - production API: `https://upgrade-rpg-api.onrender.com/api/v1`
 - local `127.0.0.1:5500`: 기존 local backend 유지
 - packaging: `node tools/build_legacy_static_site.mjs` → `frontend/legacy-dist`
 - public admin: secret 없는 read-only preview, admin write 미승인
-- static site/backend CORS mutation: 미실행/미실행
-- 다음 단계: v348 준비 commit의 정확한 40자리 SHA owner 승인
-- 승인 뒤 범위: Static Site 최초 deploy 1회 + exact origin CORS backend deploy 1회 + browser read-only 검증
+- approved/deployed SHA: `b13b1775093716800d7361ee1e8f94d8112eefc1`
+- static deploy: `dep-d9iu33faqgkc73am4m3g` Live, auto-deploy Off
+- backend CORS deploy: `dep-d9iu4g3rjlhs73fiv570` Live, 실제 `CORS_ORIGINS=[]`
+- preflight/browser API integration: HTTP 400/실패
+- static raw bytes: 핵심 자산 세 개 모두 approved source SHA-256과 일치
+- 관리자 browser check: 화면 HTTP 200, `RpgAdminFieldHelp is not loaded` 미해결
+- 자동 retry·두 번째 deploy: 없음
+- 다음 단계: v349 회복 준비 commit의 정확한 40자리 SHA owner 승인
+- 승인 뒤 범위: exact CORS 값 저장 확인 + backend deploy 1회 + browser read-only 재검증
 - 현재 extension·설치: 없음
-- 가능한 사용자 조치: Render가 private repository 접근을 다시 확인할 때 GitHub App 접근 확인
+- GitHub App: `gihohoho/upgrade-rpg` 단일 저장소 접근 확인 완료
+- 필요한 사용자 조치: 새 v349 회복 준비 SHA 승인

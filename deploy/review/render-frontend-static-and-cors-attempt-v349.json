@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "v349.frontend-static-live-cors-apply-failed-recovery-required",
+  "recordedAtUtc": "2026-07-26T10:45:00Z",
+  "result": "frontend-static-live-cors-apply-failed-recovery-required",
+  "nextSafeStage": "prepare-and-owner-approve-backend-cors-recovery-sha",
+  "approval": {
+    "approvedPreparationSha": "b13b1775093716800d7361ee1e8f94d8112eefc1",
+    "cleanPushedMainMatched": true,
+    "oneStaticDeployApproved": true,
+    "oneBackendCorsDeployApproved": true,
+    "oneBackendCorsDeployConsumed": true,
+    "secondDeployOrRetryExecuted": false
+  },
+  "githubRepositoryAccess": {
+    "renderGitHubAppConfirmedByOwner": true,
+    "account": "gihohoho",
+    "repositorySelection": "selected-repositories-only",
+    "allowedRepository": "gihohoho/upgrade-rpg",
+    "allRepositoriesAccess": false
+  },
+  "staticSite": {
+    "serviceName": "gihohoho-upgrade-rpg",
+    "serviceId": "srv-d9iu337aqgkc73am4lh0",
+    "origin": "https://gihohoho-upgrade-rpg.onrender.com",
+    "gameUrl": "https://gihohoho-upgrade-rpg.onrender.com/index.html",
+    "adminUrl": "https://gihohoho-upgrade-rpg.onrender.com/admin.html",
+    "deployId": "dep-d9iu33faqgkc73am4m3g",
+    "deployStatus": "live",
+    "deployedCommit": "b13b1775093716800d7361ee1e8f94d8112eefc1",
+    "buildCommand": "node tools/build_legacy_static_site.mjs",
+    "publishDirectory": "frontend/legacy-dist",
+    "fileCount": 53,
+    "totalBytes": 1290015,
+    "secretOrDatabaseCredentialShapeFound": false,
+    "autoDeploy": false
+  },
+  "backendCorsAttempt": {
+    "serviceName": "upgrade-rpg-api",
+    "serviceId": "srv-d9iro458nd3s73acgmsg",
+    "deployId": "dep-d9iu4g3rjlhs73fiv570",
+    "deployStatus": "live",
+    "trigger": "environment-updated",
+    "exactImageReferenceUnchanged": true,
+    "intendedCorsOrigins": "[\"https://gihohoho-upgrade-rpg.onrender.com\"]",
+    "actualCorsOriginsAfterDeploy": "[]",
+    "corsApplied": false,
+    "healthHttpStatus": 200,
+    "preflightHttpStatus": 400,
+    "preflightResult": "disallowed-cors-origin"
+  },
+  "browserValidation": {
+    "gameHttpStatus": 200,
+    "adminHttpStatus": 200,
+    "gamePageRendered": true,
+    "adminPageRendered": true,
+    "gameReadOnlyApiIntegrationVerified": false,
+    "gameFallbackReason": "failed-to-fetch-after-cors-rejection",
+    "adminModuleIntegrationVerified": false,
+    "adminObservedError": "RpgAdminFieldHelp is not loaded"
+  },
+  "staticAssetIntegrity": {
+    "comparison": "remote-raw-bytes-vs-approved-local-source-sha256",
+    "allMatched": true,
+    "files": [
+      {
+        "path": "src/api/runtime-config.js",
+        "bytes": 611,
+        "sha256": "423a7505cc856ffbc3c1fd313876a36eef20b89594919fcc36442884446b5f08"
+      },
+      {
+        "path": "src/systems/stat-system.js",
+        "bytes": 27828,
+        "sha256": "efbc34b9082d80cfd3d5a25666598931c72d1045883dbd9f95185c3ce100f897"
+      },
+      {
+        "path": "src/api/admin/admin-field-help.js",
+        "bytes": 24297,
+        "sha256": "16bbfd8cbebce27fcf3f8f4147ccb8c08f6ef51aa02f14c73619cca9b0a240f2"
+      }
+    ]
+  },
+  "safety": {
+    "databaseWrite": false,
+    "alembicMutation": false,
+    "adminWrite": false,
+    "secretRecorded": false,
+    "customDomainOrDnsChanged": false,
+    "paymentMethodChanged": false,
+    "automaticDeployOrRetry": false,
+    "providerStatePreservedAfterFailure": true
+  }
+}

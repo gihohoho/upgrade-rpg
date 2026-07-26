@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail-closed static validation for the v348 frontend deployment preparation."""
+"""Fail-closed static validation for the v349 frontend/CORS attempt record."""
 
 from __future__ import annotations
 
@@ -17,9 +17,11 @@ DOC_PATH = ROOT / "docs/current/FRONTEND_STATIC_DEPLOYMENT_PLAN.md"
 BUILDER_PATH = ROOT / "tools/build_legacy_static_site.mjs"
 SMOKE_PATH = ROOT / "tools/smoke/frontend/smoke_legacy_static_deployment_preparation.js"
 RUNTIME_CONFIG_PATH = ROOT / "src/api/runtime-config.js"
-VERSION = "v348.frontend-static-deployment-preparation-ready-exact-sha-gated"
-RESULT = "frontend-static-deployment-preparation-ready-exact-sha-gated"
-NEXT_STAGE = "owner-approve-frontend-static-deployment-preparation-sha"
+EVIDENCE_PATH = ROOT / "deploy/review/render-frontend-static-and-cors-attempt-v349.json"
+VERSION = "v349.frontend-static-live-cors-apply-failed-recovery-required"
+RESULT = "frontend-static-live-cors-apply-failed-recovery-required"
+NEXT_STAGE = "prepare-and-owner-approve-backend-cors-recovery-sha"
+APPROVED_SHA = "b13b1775093716800d7361ee1e8f94d8112eefc1"
 FRONTEND_ORIGIN = "https://gihohoho-upgrade-rpg.onrender.com"
 BACKEND_API = "https://upgrade-rpg-api.onrender.com/api/v1"
 STATE_FILES = (
@@ -65,13 +67,16 @@ def verify_plan(plan: dict[str, Any]) -> None:
     require(plan.get("schemaVersion") == VERSION, "schemaVersion differs")
     require(plan.get("result") == RESULT, "result differs")
     require(plan.get("nextSafeStage") == NEXT_STAGE, "next safe stage differs")
-    require(plan.get("productionResourcesMutated") is False, "provider mutation must remain false")
+    require(plan.get("productionResourcesMutated") is True, "provider mutation record differs")
 
     site = plan.get("site") or {}
     require(site.get("provider") == "render" and site.get("type") == "static-site", "site type differs")
     require(site.get("plan") == "free", "site plan must remain free")
     require(site.get("recommendedName") == "gihohoho-upgrade-rpg", "site name differs")
     require(site.get("expectedOrigin") == FRONTEND_ORIGIN, "expected origin differs")
+    require(site.get("serviceId") == "srv-d9iu337aqgkc73am4lh0", "static service id differs")
+    require(site.get("deployId") == "dep-d9iu33faqgkc73am4m3g", "static deploy id differs")
+    require(site.get("deployStatus") == "live", "static deploy status differs")
     require(site.get("autoDeploy") is False, "auto-deploy must remain disabled")
     require(site.get("customDomain") is False, "custom domain must remain disabled")
 
@@ -79,6 +84,7 @@ def verify_plan(plan: dict[str, Any]) -> None:
     require(source.get("repository") == "https://github.com/gihohoho/upgrade-rpg.git", "repository differs")
     require(source.get("visibility") == "private", "repository visibility differs")
     require(source.get("branch") == "main", "branch differs")
+    require(source.get("approvedAndDeployedCommit") == APPROVED_SHA, "deployed commit differs")
     require(source.get("buildCommand") == "node tools/build_legacy_static_site.mjs", "build command differs")
     require(source.get("publishDirectory") == "frontend/legacy-dist", "publish directory differs")
     require(source.get("cleanPushedExactShaRequired") is True, "exact SHA gate must remain enabled")
@@ -89,6 +95,10 @@ def verify_plan(plan: dict[str, Any]) -> None:
     require(runtime.get("localStaticOrigin") == "http://127.0.0.1:5500", "local origin differs")
     require(runtime.get("backendCorsExactOriginRequired") is True, "exact CORS origin is required")
     require(runtime.get("backendCorsExpectedValue") == f'["{FRONTEND_ORIGIN}"]', "CORS value differs")
+    require(runtime.get("backendCorsActualValueAfterDeploy") == "[]", "actual CORS value differs")
+    require(runtime.get("backendCorsApplied") is False, "CORS must remain fail-closed")
+    require(runtime.get("backendCorsDeployId") == "dep-d9iu4g3rjlhs73fiv570", "backend deploy id differs")
+    require(runtime.get("backendCorsDeployStatus") == "live", "backend deploy status differs")
     require(runtime.get("backendServiceId") == "srv-d9iro458nd3s73acgmsg", "backend service differs")
 
     admin = plan.get("adminBoundary") or {}
@@ -126,16 +136,25 @@ def verify_plan(plan: dict[str, Any]) -> None:
     gate = plan.get("approvalGate") or {}
     require(gate.get("preparationReady") is True, "preparation must be ready")
     require(gate.get("exactPreparationShaApprovalRequired") is True, "exact SHA approval must be required")
-    require(gate.get("exactPreparationShaApproved") is False, "exact SHA must not be pre-approved")
-    require(gate.get("approvedPreparationSha") is None, "approved SHA must be empty")
-    for key in (
-        "staticSiteCreated",
-        "staticDeployExecuted",
-        "backendCorsApplied",
-        "backendCorsDeployExecuted",
-        "browserIntegrationVerified",
-    ):
-        require(gate.get(key) is False, f"execution gate must remain false: {key}")
+    require(gate.get("exactPreparationShaApproved") is True, "exact SHA approval record differs")
+    require(gate.get("approvedPreparationSha") == APPROVED_SHA, "approved SHA differs")
+    require(gate.get("staticSiteCreated") is True, "static site creation record differs")
+    require(gate.get("staticDeployExecuted") is True, "static deploy record differs")
+    require(gate.get("backendCorsApplied") is False, "CORS failure must remain recorded")
+    require(gate.get("backendCorsDeployExecuted") is True, "backend deploy execution record differs")
+    require(gate.get("browserIntegrationVerified") is False, "browser integration must remain fail-closed")
+    require(gate.get("approvedOneShotBackendDeployConsumed") is True, "one-shot deploy must be consumed")
+    require(gate.get("automaticRetryExecuted") is False, "automatic retry must remain false")
+    require(gate.get("recoveryExactShaApprovalRequired") is True, "recovery exact SHA gate is required")
+
+    validation = plan.get("validation") or {}
+    require(validation.get("gameHttp200") is True, "game HTTP validation differs")
+    require(validation.get("adminHttp200") is True, "admin HTTP validation differs")
+    require(validation.get("staticAssetRawBytesMatchApprovedSource") is True, "asset integrity differs")
+    require(validation.get("corsPreflightStatus") == 400, "CORS preflight status differs")
+    require(validation.get("gameReadOnlyApiIntegration") is False, "game integration must remain false")
+    require(validation.get("adminModuleIntegrationVerified") is False, "admin integration must remain false")
+    require(validation.get("sanitizedEvidence") == EVIDENCE_PATH.relative_to(ROOT).as_posix(), "evidence path differs")
 
     joined = "\n".join(flattened_strings(plan))
     for pattern in (
@@ -148,12 +167,40 @@ def verify_plan(plan: dict[str, Any]) -> None:
         require(re.search(pattern, joined, re.IGNORECASE) is None, "plan contains secret-shaped text")
 
 
+def verify_evidence() -> None:
+    evidence = load_json(EVIDENCE_PATH)
+    require(evidence.get("schemaVersion") == VERSION, "evidence schema differs")
+    require(evidence.get("result") == RESULT, "evidence result differs")
+    require(evidence.get("nextSafeStage") == NEXT_STAGE, "evidence next stage differs")
+    approval = evidence.get("approval") or {}
+    require(approval.get("approvedPreparationSha") == APPROVED_SHA, "evidence approved SHA differs")
+    require(approval.get("oneBackendCorsDeployConsumed") is True, "evidence deploy consumption differs")
+    require(approval.get("secondDeployOrRetryExecuted") is False, "evidence retry boundary differs")
+    github_access = evidence.get("githubRepositoryAccess") or {}
+    require(github_access.get("repositorySelection") == "selected-repositories-only", "GitHub access scope differs")
+    require(github_access.get("allowedRepository") == "gihohoho/upgrade-rpg", "GitHub repository scope differs")
+    require(github_access.get("allRepositoriesAccess") is False, "GitHub all-repository access must remain false")
+    static_site = evidence.get("staticSite") or {}
+    require(static_site.get("deployStatus") == "live", "evidence static deploy status differs")
+    require(static_site.get("deployedCommit") == APPROVED_SHA, "evidence deployed commit differs")
+    backend = evidence.get("backendCorsAttempt") or {}
+    require(backend.get("actualCorsOriginsAfterDeploy") == "[]", "evidence actual CORS differs")
+    require(backend.get("corsApplied") is False, "evidence CORS must remain false")
+    require(backend.get("preflightHttpStatus") == 400, "evidence preflight differs")
+    integrity = evidence.get("staticAssetIntegrity") or {}
+    require(integrity.get("allMatched") is True, "evidence asset integrity differs")
+    require(len(integrity.get("files") or []) == 3, "evidence asset count differs")
+    safety = evidence.get("safety") or {}
+    for key in ("databaseWrite", "alembicMutation", "adminWrite", "secretRecorded", "automaticDeployOrRetry"):
+        require(safety.get(key) is False, f"evidence safety marker differs: {key}")
+
+
 def verify_sources() -> None:
-    for path in (DOC_PATH, BUILDER_PATH, SMOKE_PATH, RUNTIME_CONFIG_PATH):
+    for path in (DOC_PATH, BUILDER_PATH, SMOKE_PATH, RUNTIME_CONFIG_PATH, EVIDENCE_PATH):
         require(path.is_file(), f"missing file: {path.relative_to(ROOT)}")
 
     runtime = RUNTIME_CONFIG_PATH.read_text(encoding="utf-8")
-    for marker in (VERSION.replace("-deployment-preparation-ready-exact-sha-gated", "-runtime-config"), BACKEND_API):
+    for marker in ("v348.frontend-static-runtime-config", BACKEND_API):
         require(marker in runtime, f"runtime config marker differs: {marker}")
     require("ADMIN_WRITE_DEV_KEY" not in runtime, "runtime config must not contain admin key")
 
@@ -178,7 +225,7 @@ def verify_sources() -> None:
     require("frontend/legacy-dist/" in dockerignore, "frontend output must be Docker-ignored")
 
     doc = DOC_PATH.read_text(encoding="utf-8")
-    for marker in (VERSION.split(".", 1)[0], FRONTEND_ORIGIN, BACKEND_API, "정확한 40자리 SHA"):
+    for marker in (VERSION.split(".", 1)[0], FRONTEND_ORIGIN, BACKEND_API, APPROVED_SHA, "정확한 40자리 SHA"):
         require(marker in doc, f"frontend plan document marker differs: {marker}")
 
     for state_path in STATE_FILES:
@@ -193,14 +240,17 @@ def main() -> int:
     parser.parse_args()
     try:
         verify_plan(load_json(PLAN_PATH))
+        verify_evidence()
         verify_sources()
     except PlanError as exc:
         print(f"frontend static deployment plan verification failed: {exc}", file=sys.stderr)
         return 1
-    print("frontend static deployment plan verification (static, no provider mutation)")
+    print("frontend static deployment result verification (static, no provider mutation)")
     print("- publish allowlist: index.html / admin.html / src/**/*.js / src/**/*.css")
     print("- local/public API: local preserved / Render backend pinned")
-    print("- static site/backend CORS mutation: no/no")
+    print("- static site/backend CORS deploy: live/executed-once")
+    print("- backend CORS actual/applied: []/no")
+    print("- automatic retry: no")
     print(f"- result: {RESULT}")
     print(f"- next safe stage: {NEXT_STAGE}")
     return 0

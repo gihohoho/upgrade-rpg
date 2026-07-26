@@ -1,3 +1,13 @@
+# v349.frontend-static-live-cors-apply-failed-recovery-required
+
+- approved SHA `b13b1775093716800d7361ee1e8f94d8112eefc1`로 Render Free Static Site `gihohoho-upgrade-rpg`를 생성하고 최초 deploy를 한 번 실행해 Live를 확인했습니다.
+- GitHub App 접근은 `gihohoho/upgrade-rpg` 단일 private repository로 제한했고 auto-deploy는 껐습니다.
+- 승인된 backend CORS deploy 1회는 Live였지만 실제 `CORS_ORIGINS`가 `[]`로 남아 preflight HTTP 400과 브라우저 `Failed to fetch`를 확인했습니다.
+- 승인된 1회 deploy를 소비한 뒤 자동 retry나 두 번째 deploy를 실행하지 않고 fail-closed로 중단했습니다.
+- 공개 게임·관리자 페이지 HTTP 200과 화면 렌더링을 확인했고, 핵심 정적 자산 세 개의 raw byte SHA-256이 approved source와 일치함을 확인했습니다.
+- 공개 관리자에서 `RpgAdminFieldHelp is not loaded`를 관찰해 별도 미해결 브라우저 검증 항목으로 남겼습니다.
+- DB/Alembic/admin write, secret 기록, custom domain/DNS, payment 변경은 없었습니다.
+
 # v348.frontend-static-deployment-preparation-ready-exact-sha-gated
 
 - 실제 legacy 게임/관리자 화면을 Render Free Static Site로 배포하기 위한 exact-SHA-gated 계획과 fail-closed checker를 추가했습니다.
