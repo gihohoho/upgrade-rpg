@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "v351.master-data-latency-focused-fix-blocking-io-audited",
+  "recordedDate": "2026-07-26",
+  "result": "master-data-latency-fix-blocking-io-audit-ready",
+  "nextSafeStage": "prepare-v351-image-and-static-release-exact-sha-gates",
+  "observedV350Baseline": {
+    "publicMasterDataStatus": 200,
+    "publicMasterDataResponseBytes": 464098,
+    "measuredMilliseconds": [
+      1980,
+      1829
+    ],
+    "frontendTimeoutMilliseconds": 1500,
+    "browserFallbackObserved": true
+  },
+  "focusedFix": {
+    "frontendTimeoutMilliseconds": 5000,
+    "backendGzipMinimumBytes": 1024,
+    "backendGzipCompressionLevel": 5,
+    "middlewareOrder": [
+      "CORSMiddleware",
+      "GZipMiddleware",
+      "route"
+    ],
+    "masterDataFetchCount": 11,
+    "sharedAsyncSessionConcurrencyAdded": false,
+    "reason": "one AsyncSession is not shared across concurrent tasks"
+  },
+  "runtimeBlockingIoAudit": {
+    "backend": {
+      "files": 77,
+      "asyncFunctions": 99,
+      "syncFunctions": 200,
+      "asyncFastApiRoutes": 28,
+      "syncFastApiRoutes": 0,
+      "blockingCallsInsideAsync": 0,
+      "unexpectedAsyncWithoutAwait": 0
+    },
+    "frontend": {
+      "files": 70,
+      "asyncDeclarations": 150,
+      "awaitExpressions": 134,
+      "fetchCalls": 2,
+      "promiseAllCalls": 2,
+      "blockingBrowserCalls": 0
+    },
+    "offlineTooling": {
+      "classification": "intentional-one-shot-cli",
+      "pythonFiles": 148,
+      "pythonBlockingCalls": 371,
+      "javascriptFiles": 94,
+      "javascriptSyncCalls": 126,
+      "failClosedRuntimeFinding": false
+    },
+    "auditCommand": "python tools/check_runtime_blocking_io.py --strict",
+    "passed": true
+  },
+  "releaseBoundary": {
+    "sourceOnly": true,
+    "backendImagePublishRequiredBeforeLiveUse": true,
+    "backendExactImageDeployRequiredBeforeLiveUse": true,
+    "frontendStaticDeployRequiredBeforeLiveUse": true,
+    "exactShaOwnerApprovalRequired": true,
+    "providerMutationExecuted": false,
+    "automaticDeployOrRetryExecuted": false
+  },
+  "contentReadiness": {
+    "ready": false,
+    "reason": "v351 source is not deployed and public no-fallback behavior is not yet verified",
+    "notifyOwnerWhenReady": true,
+    "readinessCriteria": [
+      "public-game-master-data-loads-without-fallback",
+      "admin-guarded-content-workflow-is-verified"
+    ]
+  },
+  "safety": {
+    "databaseWrite": false,
+    "alembicMutation": false,
+    "adminWrite": false,
+    "contentOrBalanceChanged": false,
+    "secretRecorded": false,
+    "providerDeploy": false
+  }
+}

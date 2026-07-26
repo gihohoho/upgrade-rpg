@@ -1,12 +1,14 @@
-# Upgrade RPG Codex handoff — v350
+# Upgrade RPG Codex handoff — v351
 
 ## 현재 상태
 
 ```txt
-latest: v350.backend-cors-recovered-browser-timeout-followup-required
-strict result: backend-cors-recovered-browser-timeout-followup-required
-next safe stage: prepare-frontend-master-data-timeout-fix-and-content-readiness-review
-frontend plan: v350.backend-cors-recovered-browser-timeout-followup-required
+latest: v351.master-data-latency-focused-fix-blocking-io-audited
+strict result: master-data-latency-fix-blocking-io-audit-ready
+next safe stage: prepare-v351-image-and-static-release-exact-sha-gates
+frontend plan: v351.master-data-latency-focused-fix-blocking-io-audited
+v350 prior checkpoint: v350.backend-cors-recovered-browser-timeout-followup-required / backend-cors-recovered-browser-timeout-followup-required
+v350 prior next stage (completed): prepare-frontend-master-data-timeout-fix-and-content-readiness-review
 render plan: v347.render-service-created-initial-deploy-verified
 render prior next stage (completed): review-render-live-service-and-prepare-frontend-deployment-plan
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
@@ -129,7 +131,9 @@ Render GitHub App은 `gihohoho/upgrade-rpg` 단일 private repository만 접근�
 
 공개 게임의 CORS 오류는 사라졌지만 `/game/master-data` 464,098-byte 응답이 약 1.98초/1.83초 걸려 frontend 1.5초 timeout을 넘고 기존 JS 데이터로 폴백합니다. 공개 관리자 새 탭에서는 이전 `RpgAdminFieldHelp is not loaded` 오류 로그가 재현되지 않았습니다.
 
-다음은 frontend master-data timeout focused fix 준비와 콘텐츠 준비도 재검토입니다. 아직 콘텐츠 추가·수정을 시작하기 좋은 시점은 아닙니다. 공개 게임이 backend master-data를 폴백 없이 로드하고 관리자 guarded 콘텐츠 작업 흐름이 검증되는 즉시 기호에게 먼저 명확히 알립니다.
+v351 source에서 frontend master-data 기본 timeout을 5초로 늘리고 backend 1KB 이상 응답에 GZip level 5를 적용했습니다. 전체 runtime blocking-I/O audit는 sync FastAPI route 0, async 내부 blocking 호출 0, frontend blocking 호출 0으로 통과했습니다. offline tooling은 Python 148 files/371 blocking calls와 JavaScript 94 files/126 sync calls를 별도 확인하고 `intentional-one-shot-cli`로 분류했습니다. master-data의 11개 DB 조회는 하나의 `AsyncSession`을 공유하므로 위험한 동시 task로 바꾸지 않고 순차 await를 유지했습니다.
+
+아직 새 backend image 게시·Render exact-image deploy·Static Site deploy는 실행하지 않았습니다. 다음은 v351 image/static release의 source-controlled exact-SHA gate 준비입니다. 실제 공개 게임의 무폴백 로드와 관리자 guarded 콘텐츠 흐름을 확인하기 전까지 콘텐츠 추가·수정 시작 시점은 아닙니다. 조건이 충족되면 기호에게 먼저 명확히 알립니다.
 
 현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다.
 
@@ -140,6 +144,9 @@ Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.ex
 새 설치 여부: 없음
 
 ```bash
+python tools/check_runtime_blocking_io.py --strict
+python tools/smoke/backend/smoke_master_data_latency_guard.py
+node tools/smoke/game/smoke_master_data_auto_boot_policy.js
 python tools/check_frontend_static_deployment_plan.py --strict
 node tools/smoke/frontend/smoke_legacy_static_deployment_preparation.js
 python tools/prepare_render_local_environment.py --inspect-local
@@ -156,6 +163,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v350 기대 결과는 `backend-cors-recovered-browser-timeout-followup-required`, 다음 단계는 `prepare-frontend-master-data-timeout-fix-and-content-readiness-review`입니다. v349 recovery, v348 static deploy, v347 backend, v345 Neon 완료, v342 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline을 계속 보존합니다.
+v351 기대 결과는 `runtime-blocking-io-audit-passed`와 focused smoke 통과이며, 다음 단계는 `prepare-v351-image-and-static-release-exact-sha-gates`입니다. v350의 `backend-cors-recovered-browser-timeout-followup-required`와 `prepare-frontend-master-data-timeout-fix-and-content-readiness-review`는 완료된 prior checkpoint로 보존합니다. v349 recovery, v348 static deploy, v347 backend, v345 Neon 완료, v342 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

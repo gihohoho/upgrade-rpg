@@ -25,6 +25,7 @@ const indexHtml = fs.readFileSync(path.join(root, "index.html"), "utf8");
 
 const requiredBootTokens = [
   "DEFAULT_BOOT_MODE = BOOT_MODES.AUTO",
+  "DEFAULT_TIMEOUT_MS = 5000",
   "DEFAULT_INCLUDE_ASSETS = false",
   "getBackendMasterDataBootPolicy",
   "useAutoBackendMasterDataMode",
@@ -42,6 +43,8 @@ for (const token of requiredBootTokens) {
 
 const requiredRuntimeTokens = [
   "getBootPolicy",
+  "timeoutMs: 5000",
+  "policy.timeoutMs || 5000",
   "hydrateMissingAssetsFromStaticData",
   "failed_fallback_to_static_js",
   "backend_auto_waiting_for_page_load",

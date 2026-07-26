@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v350
+# Upgrade RPG Codex working rules — v351
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -43,10 +43,12 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v350.backend-cors-recovered-browser-timeout-followup-required
-strict result: backend-cors-recovered-browser-timeout-followup-required
-next safe stage: prepare-frontend-master-data-timeout-fix-and-content-readiness-review
-frontend plan: v350.backend-cors-recovered-browser-timeout-followup-required
+latest: v351.master-data-latency-focused-fix-blocking-io-audited
+strict result: master-data-latency-fix-blocking-io-audit-ready
+next safe stage: prepare-v351-image-and-static-release-exact-sha-gates
+frontend plan: v351.master-data-latency-focused-fix-blocking-io-audited
+v350 prior checkpoint: v350.backend-cors-recovered-browser-timeout-followup-required / backend-cors-recovered-browser-timeout-followup-required
+v350 prior next stage (completed): prepare-frontend-master-data-timeout-fix-and-content-readiness-review
 render plan: v347.render-service-created-initial-deploy-verified
 render prior next stage (completed): review-render-live-service-and-prepare-frontend-deployment-plan
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
@@ -78,7 +80,10 @@ Alembic current: v295_initial_schema / new revision needed: no
 - 공개 게임/관리자 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`이고 둘 다 HTTP 200입니다.
 - 승인된 recovery SHA `e64d42d812d78de023dc6cbd7f960263bc1c2d15`로 backend CORS deploy `dep-d9ivfmvlk1mc73fbcv40`를 정확히 한 번 실행했고 Live입니다.
 - 실제 `CORS_ORIGINS`는 exact frontend origin 배열로 저장됐으며 health/preflight 200과 exact `Access-Control-Allow-Origin`을 확인했습니다.
-- 공개 게임의 CORS 오류는 사라졌지만 464,098-byte master-data 응답이 1.5초 frontend timeout보다 느려 기존 JS 데이터로 폴백합니다. 다음은 timeout focused fix와 콘텐츠 준비도 재검토입니다.
+- v351 source는 master-data 기본 timeout을 5초로 늘리고 backend 1KB 이상 응답에 GZip을 적용했습니다. 아직 새 image/static deploy 전이므로 공개 게임은 v350 동작을 유지합니다.
+- 전체 runtime blocking-I/O audit는 sync FastAPI route 0, async 내부 blocking 호출 0, frontend entrypoint·source blocking 호출 0으로 통과했습니다.
+- offline tooling은 Python 148 files/371 blocking calls, JavaScript 94 files/126 sync calls를 별도 확인했고 서버·브라우저 event loop 밖의 `intentional-one-shot-cli`로 분류했습니다.
+- master-data의 11개 async DB 조회는 하나의 `AsyncSession`을 공유하므로 동시 task로 바꾸지 않고 안전한 순차 실행을 유지합니다.
 - 공개 정적 자산 세 개의 raw byte SHA-256은 approved source와 일치합니다. 새 관리자 탭에서는 이전 `RpgAdminFieldHelp` 오류 로그가 재현되지 않았습니다.
 - 비용 최소 공급자는 Render Free Web Service Singapore + Neon Free PostgreSQL 16 Singapore로 선택했습니다.
 - 첫 공개 주소는 Render `onrender.com` managed HTTPS이며 custom domain과 DNS 변경은 보류합니다.
@@ -144,6 +149,9 @@ Alembic current: v295_initial_schema / new revision needed: no
 프로젝트 루트에서 `backend/.venv` Python으로 먼저 실행합니다.
 
 ```bash
+python tools/check_runtime_blocking_io.py --strict
+python tools/smoke/backend/smoke_master_data_latency_guard.py
+node tools/smoke/game/smoke_master_data_auto_boot_policy.js
 python tools/check_frontend_static_deployment_plan.py --strict
 node tools/smoke/frontend/smoke_legacy_static_deployment_preparation.js
 python tools/check_render_neon_separated_plan.py --strict

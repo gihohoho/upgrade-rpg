@@ -1,12 +1,14 @@
-# Current Status — v350
+# Current Status — v351
 
 ## 현재 결과
 
 ```txt
-latest: v350.backend-cors-recovered-browser-timeout-followup-required
-strict result: backend-cors-recovered-browser-timeout-followup-required
-next safe stage: prepare-frontend-master-data-timeout-fix-and-content-readiness-review
-frontend plan: v350.backend-cors-recovered-browser-timeout-followup-required
+latest: v351.master-data-latency-focused-fix-blocking-io-audited
+strict result: master-data-latency-fix-blocking-io-audit-ready
+next safe stage: prepare-v351-image-and-static-release-exact-sha-gates
+frontend plan: v351.master-data-latency-focused-fix-blocking-io-audited
+v350 prior checkpoint: v350.backend-cors-recovered-browser-timeout-followup-required / backend-cors-recovered-browser-timeout-followup-required
+v350 prior next stage (completed): prepare-frontend-master-data-timeout-fix-and-content-readiness-review
 render plan: v347.render-service-created-initial-deploy-verified
 render prior next stage (completed): review-render-live-service-and-prepare-frontend-deployment-plan
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
@@ -77,12 +79,13 @@ Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 col
 
 ## 아직 남은 것
 
-- frontend 1.5초 master-data timeout focused fix
+- v351 backend image 게시·isolated validation과 exact image deploy 준비
+- v351 frontend Static Site exact source deploy 준비
 - 공개 게임의 backend master-data 무폴백 통합 검증
 - 관리자 guarded 콘텐츠 작업 흐름 검증과 콘텐츠 준비도 재검토
 - custom domain/DNS와 SLA production 전환은 보류
 
-Neon DB/schema/data 초기화, Render backend public preview, frontend Static Site 최초 배포와 CORS recovery는 완료됐습니다. v334 generic SLA production plan의 별도 host·domain·edge·rollback 입력은 계속 `unresolved`이며, 현재 v350 단계는 frontend master-data timeout 후속 조치입니다.
+Neon DB/schema/data 초기화, Render backend public preview, frontend Static Site 최초 배포와 CORS recovery는 완료됐습니다. v334 generic SLA production plan의 별도 host·domain·edge·rollback 입력은 계속 `unresolved`입니다. v351 source는 latency fix와 blocking-I/O 감사를 통과했지만 아직 공개 환경에는 배포하지 않았습니다.
 
 ## Render account checkpoint — 2026-07-22
 
@@ -156,3 +159,18 @@ Render 내부 health와 공개 `/api/v1/health`, Neon read-only `/api/v1/health/
 - 현재 extension·설치: 없음
 - GitHub App: `gihohoho/upgrade-rpg` 단일 저장소 접근 확인 완료
 - 필요한 사용자 조치: 현재 없음
+
+## Master-data latency focused fix와 blocking-I/O audit — v351
+
+- browser master-data 기본 timeout: 1,500ms → 5,000ms
+- backend: 1KB 이상 응답에 GZip level 5 적용
+- middleware 실제 순서: CORS → GZip → route
+- backend runtime: 77 files / async 99 / sync 200 / async FastAPI route 28
+- 문제 탐지: sync FastAPI route 0 / async 내부 blocking-I/O 0 / unexpected async-without-await 0
+- frontend runtime: 70 files / blocking browser call 0
+- offline tooling 별도 분류: Python 148 files / blocking calls 371, JavaScript 94 files / sync calls 126
+- master-data 11개 DB 조회: 동일 `AsyncSession`의 안전한 순차 await 유지
+- sanitized evidence: `deploy/review/master-data-latency-blocking-io-audit-v351.json`
+- provider deploy·DB/Alembic/admin write·콘텐츠 변경: 없음
+- 다음 단계: v351 backend image와 frontend static release의 exact-SHA gate 준비
+- 콘텐츠 준비도: 아직 아님; 실제 public 무폴백과 admin guarded workflow 검증 뒤 기호에게 알림

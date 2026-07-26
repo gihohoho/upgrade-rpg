@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 
 from app.api.router import api_router
 from app.core.config import settings
@@ -26,6 +27,10 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    # Large read-only master-data snapshots benefit from transport compression.
+    # Register GZip first so the subsequently registered CORS middleware remains
+    # the outer wrapper and also covers middleware-generated responses.
+    app.add_middleware(GZipMiddleware, minimum_size=1024, compresslevel=5)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,

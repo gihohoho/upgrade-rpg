@@ -8,6 +8,9 @@ cd "$ROOT_DIR"
 
 echo "[core smoke] project root: $ROOT_DIR"
 
+python tools/check_runtime_blocking_io.py --strict
+python tools/smoke/backend/smoke_master_data_latency_guard.py
+node tools/smoke/game/smoke_master_data_auto_boot_policy.js
 python tools/check_frontend_static_deployment_plan.py --strict
 node tools/smoke/frontend/smoke_legacy_static_deployment_preparation.js
 node tools/smoke/frontend/smoke_admin_edit_stale_guard.js

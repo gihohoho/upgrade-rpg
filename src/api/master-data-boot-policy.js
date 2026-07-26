@@ -14,7 +14,7 @@
 	};
 
 	const DEFAULT_BOOT_MODE = BOOT_MODES.AUTO;
-	const DEFAULT_TIMEOUT_MS = 1500;
+	const DEFAULT_TIMEOUT_MS = 5000;
 	const DEFAULT_INCLUDE_ASSETS = false;
 
 	function readStorage(key) {

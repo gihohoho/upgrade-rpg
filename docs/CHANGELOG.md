@@ -1,3 +1,11 @@
+# v351.master-data-latency-focused-fix-blocking-io-audited
+
+- 공개 master-data의 1.83~1.98초 응답이 1.5초 제한을 넘던 문제를 위해 browser 기본 timeout을 5초로 조정했습니다.
+- backend에 1KB 이상 응답을 압축하는 Starlette GZip middleware를 추가하고 CORS가 바깥쪽 wrapper로 유지되는 순서를 검증했습니다.
+- 하나의 `AsyncSession`을 공유하는 master-data 조회 11개는 위험한 동시 실행으로 바꾸지 않고 기존 async 순차 실행을 유지했습니다.
+- runtime blocking-I/O fail-closed audit를 추가해 sync FastAPI route 0, async 내부 blocking 호출 0, frontend blocking 호출 0을 확인했습니다.
+- 새 backend image 게시, Render backend/static deploy, DB/Alembic/admin write, 콘텐츠·밸런스 변경은 실행하지 않았습니다.
+
 # v350.backend-cors-recovered-browser-timeout-followup-required
 
 - exact recovery SHA `e64d42d812d78de023dc6cbd7f960263bc1c2d15` 승인으로 backend CORS deploy `dep-d9ivfmvlk1mc73fbcv40`를 정확히 한 번 실행해 Live를 확인했습니다.

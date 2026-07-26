@@ -36,7 +36,7 @@
 		return {
 			mode: legacyEnabled ? "backend" : "static",
 			includeAssets: true,
-			timeoutMs: 1500,
+			timeoutMs: 5000,
 			shouldTryBackend: legacyEnabled,
 			required: false,
 			fallbackToStaticJs: true,
@@ -287,7 +287,7 @@
 		assertAdapterReady();
 		const policy = getBootPolicy();
 		const includeAssets = options && options.includeAssets !== undefined ? !!options.includeAssets : !!policy.includeAssets;
-		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : Number(policy.timeoutMs || 1500);
+		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : Number(policy.timeoutMs || 5000);
 		setStatus({ state: "loading", includeAssets, timeoutMs, bootPolicy: policy });
 		const snapshot = await window.RpgMasterDataAdapter.loadAdaptedMasterDataFromApi({ includeAssets, timeoutMs });
 		if (!snapshot.validation || snapshot.validation.ok !== true) {
