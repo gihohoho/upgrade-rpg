@@ -1,4 +1,4 @@
-# Neon database initialization and migration plan — v340
+# Neon database initialization and migration plan — v343
 
 ## 결론
 
@@ -33,10 +33,23 @@ reviewed revision: v295_initial_schema
 ## 연결 정책
 
 - `pg_restore`와 Alembic은 Neon **direct URL만** 사용합니다.
-- PostgreSQL/libpq 16의 `sslrootcert=system`으로 trusted CA와 hostname을 검증합니다.
+- 앱과 Alembic은 Windows 시스템 CA를 사용하는 hostname-verifying SSLContext로 검증합니다.
+- 이 PC의 PostgreSQL 16/OpenSSL은 `sslrootcert=system`에서 `unregistered scheme` 오류가 발생하므로, 공개 Windows 시스템 CA를 Git 제외 로컬 PEM으로 내보내 `pg_restore`/`psql`의 `verify-full`에 전달합니다.
 - pooled URL은 restore/Alembic에 사용하지 않습니다.
 - 앱 runtime도 단일 worker와 기존 SQLAlchemy pool을 고려해 direct URL을 사용합니다.
 - 실제 URL은 `deploy/.env.production`과 Render secret store 밖으로 출력하지 않습니다.
+
+## 준비된 실행 도구와 승인 경계
+
+`tools/initialize_neon_database.py`가 아래 조건을 모두 fail-closed로 확인합니다.
+
+- 실행 commit이 clean `main` HEAD이며 pushed `origin/main`과 같음
+- 사용자가 승인한 정확한 40자리 preparation SHA와 현재 HEAD가 같음
+- target `neondb`, backup SHA-256, revision `v295_initial_schema`, action `restore-and-stamp-once`가 모두 정확함
+- Neon direct target이 실행 직전에도 0 table / no Alembic임
+- pooled URL, `--create`, `--clean`, upgrade/downgrade, 자동 retry/cleanup은 사용하지 않음
+
+기본 실행과 focused smoke는 DB에 연결하지 않습니다. `--inspect`만 read-only transaction과 libpq `verify-full` preflight를 수행합니다. `--execute`는 위 exact 승인 입력이 모두 맞아야만 열립니다.
 
 ## 별도 exact-SHA 승인 뒤 실행할 순서
 
@@ -76,5 +89,5 @@ bootstrap fix → new image publish/isolated validation 완료
 - Neon 기본 `neondb`와 database 관리: https://neon.com/docs/manage/databases
 - `pg_dump`/`pg_restore`는 direct 연결 사용: https://neon.com/docs/import/migrate-from-neon
 - migration에는 direct 연결 권장: https://neon.com/docs/connect/connection-pooling
-- `verify-full`과 PostgreSQL 16 `sslrootcert=system`: https://neon.com/blog/avoid-mitm-attacks-with-psql-postgres-16
+- `verify-full`과 PostgreSQL 16 시스템 CA: https://neon.com/blog/avoid-mitm-attacks-with-psql-postgres-16
 - SQLAlchemy asyncpg와 PgBouncer 주의: https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#asyncpg

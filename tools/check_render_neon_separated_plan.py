@@ -21,12 +21,16 @@ CONFIG_SOURCE = ROOT / "backend/app/core/config.py"
 SESSION_SOURCE = ROOT / "backend/app/db/session.py"
 ALEMBIC_SOURCE = ROOT / "backend/alembic/env.py"
 BOOTSTRAP_SMOKE = ROOT / "tools/smoke/backend/smoke_neon_production_database_bootstrap.py"
+NEON_INITIALIZER = ROOT / "tools/initialize_neon_database.py"
+NEON_INITIALIZER_SMOKE = (
+    ROOT / "tools/smoke/backend/smoke_neon_database_initialization_guard.py"
+)
 
 RENDER_VERSION = "v340.render-service-settings-reviewed-creation-blocked"
-NEON_VERSION = "v340.neon-initialization-migration-reviewed-execution-blocked"
-STATE_VERSION = "v342.v341-image-publish-isolated-verified-neon-init-approval-required"
-RESULT = "v341-image-publish-isolated-verified-neon-initialization-approval-required"
-NEXT_STAGE = "prepare-neon-database-initialization-exact-sha-approval"
+NEON_VERSION = "v343.neon-initialization-preparation-ready-execution-gated"
+STATE_VERSION = "v343.neon-initialization-preparation-ready-execution-gated"
+RESULT = "neon-database-initialization-preparation-ready-execution-gated"
+NEXT_STAGE = "owner-approve-neon-database-initialization-preparation-sha"
 IMAGE = (
     "ghcr.io/gihohoho/upgrade-rpg-backend@"
     "sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
@@ -184,7 +188,14 @@ def verify_neon(plan: dict[str, Any]) -> None:
     require(connection.get("restoreAndAlembicConnection") == "direct-only", "Neon restore must use direct")
     require(connection.get("pooledConnectionAllowedForRestoreOrAlembic") is False, "pooled restore must be forbidden")
     require(connection.get("libpqMinimumMajor") == 16, "libpq minimum differs")
-    require(connection.get("tls") == "sslrootcert=system-implies-verify-full", "Neon TLS policy differs")
+    require(
+        connection.get("tls") == "windows-system-ca-export-plus-verify-full",
+        "Neon TLS policy differs",
+    )
+    require(
+        "Git-ignored local PEM" in str(connection.get("windowsLibpqCompatibility")),
+        "Neon Windows libpq compatibility boundary differs",
+    )
     require(connection.get("actualConnectionValuesRecorded") is False, "Neon connection values must not be recorded")
 
     gate = plan.get("executionGate") or {}
@@ -193,6 +204,17 @@ def verify_neon(plan: dict[str, Any]) -> None:
     require(
         gate.get("replacementImagePublishedAndIsolatedValidated") is True,
         "Neon gate must record the verified replacement image",
+    )
+    require(gate.get("preparationToolReviewed") is True, "Neon preparation tool must be reviewed")
+    require(gate.get("readOnlyPreflightRequired") is True, "Neon read-only preflight must be required")
+    require(
+        gate.get("preparationTool") == "tools/initialize_neon_database.py",
+        "Neon preparation tool path differs",
+    )
+    require(
+        gate.get("focusedSmoke")
+        == "tools/smoke/backend/smoke_neon_database_initialization_guard.py",
+        "Neon preparation smoke path differs",
     )
     for key in (
         "databaseInitializationApproved",
@@ -225,7 +247,15 @@ def verify_docs() -> None:
 
 
 def verify_bootstrap_sources() -> None:
-    for path in (RENDER_ENV, CONFIG_SOURCE, SESSION_SOURCE, ALEMBIC_SOURCE, BOOTSTRAP_SMOKE):
+    for path in (
+        RENDER_ENV,
+        CONFIG_SOURCE,
+        SESSION_SOURCE,
+        ALEMBIC_SOURCE,
+        BOOTSTRAP_SMOKE,
+        NEON_INITIALIZER,
+        NEON_INITIALIZER_SMOKE,
+    ):
         require(path.is_file(), f"missing bootstrap file: {path.relative_to(ROOT)}")
 
     env_text = RENDER_ENV.read_text(encoding="utf-8")
@@ -257,6 +287,23 @@ def verify_bootstrap_sources() -> None:
         text = path.read_text(encoding="utf-8")
         require("connect_args=build_database_connect_args()" in text, f"{path.relative_to(ROOT)} does not bind shared TLS args")
 
+    initializer_text = NEON_INITIALIZER.read_text(encoding="utf-8")
+    for marker in (
+        'EXPECTED_ACTION = "restore-and-stamp-once"',
+        '"--exit-on-error"',
+        '"--single-transaction"',
+        '"--no-owner"',
+        '"--no-privileges"',
+        '"SET TRANSACTION READ ONLY"',
+        "export_windows_system_ca_bundle",
+        '"PGSSLMODE": "verify-full"',
+        '"alembicRevisions"',
+        'git_output("rev-parse", "--verify", "origin/main")',
+        '"stamp",\n        EXPECTED_REVISION',
+        "automatic retry/cleanup/reset/Render action: no",
+    ):
+        require(marker in initializer_text, f"Neon initializer is missing safety marker: {marker}")
+
 
 def main() -> int:
     parser = argparse.ArgumentParser()
@@ -273,7 +320,7 @@ def main() -> int:
 
     print("Render/Neon separated plan verification (static, no provider mutation)")
     print("- Render: upgrade-rpg-api confirmed / v341 exact image isolated-verified / creation blocked")
-    print("- Neon: existing neondb empty / direct verify-full runtime fixed / restore+stamp approval required")
+    print("- Neon: exact-SHA-gated restore+stamp tool ready / read-only preflight required / execution blocked")
     print("- secrets/endpoints recorded: no")
     print(f"- result: {RESULT}")
     print(f"- next safe stage: {NEXT_STAGE}")

@@ -1,3 +1,11 @@
+# v343.neon-initialization-preparation-ready-execution-gated
+
+- Neon direct 대상의 exact-SHA-gated restore/stamp 도구와 focused smoke를 추가했습니다.
+- 도구는 clean pushed `main`, exact preparation SHA, target, backup SHA, revision, action을 모두 확인하고 단일 트랜잭션 restore와 exact v295 stamp만 허용합니다.
+- 읽기 전용 preflight에서 `neondb`의 0 public table / no Alembic 상태와 asyncpg·PostgreSQL 16/libpq `verify-full` 연결을 확인했습니다.
+- Windows libpq의 `sslrootcert=system` 호환 오류는 공개 Windows 시스템 CA를 Git 제외 로컬 PEM으로 export해 해결했습니다.
+- 실제 Neon restore/stamp/write와 Render Web Service 생성·배포는 실행하지 않았고, 다음 단계는 v343 준비 commit의 별도 exact-SHA owner 승인입니다.
+
 # v342.v341-image-publish-isolated-verified-neon-init-approval-required
 
 - owner가 승인한 preparation `fb231afa5081f5bfd7b459081a58bc5acd6699df`의 직계 자식 authorization `f5d69c1bbef101cc9124b9dede18c844ef80b59c`로 workflow run `30180738530`을 한 번만 실행했습니다.

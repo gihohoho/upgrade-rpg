@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v342
+# Upgrade RPG Codex working rules — v343
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -42,11 +42,11 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v342.v341-image-publish-isolated-verified-neon-init-approval-required
-strict result: v341-image-publish-isolated-verified-neon-initialization-approval-required
-next safe stage: prepare-neon-database-initialization-exact-sha-approval
+latest: v343.neon-initialization-preparation-ready-execution-gated
+strict result: neon-database-initialization-preparation-ready-execution-gated
+next safe stage: owner-approve-neon-database-initialization-preparation-sha
 render plan: v340.render-service-settings-reviewed-creation-blocked
-neon plan: v340.neon-initialization-migration-reviewed-execution-blocked
+neon plan: v343.neon-initialization-preparation-ready-execution-gated
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
 render checkpoint next stage: review-render-service-settings-and-database-initialization-plan
@@ -84,7 +84,9 @@ Alembic current: v295_initial_schema / new revision needed: no
 - 실제 Neon direct URL을 프로세스에만 주입한 read-only bootstrap에서 TLS 연결과 빈 `neondb` 상태를 재확인했습니다.
 - v341 source를 포함한 새 exact image는 게시와 isolated Alpine CA-store/runtime 검증을 완료했습니다. Render Web Service 생성·배포는 Neon 초기화 검증 뒤 별도 exact-SHA 승인이 필요합니다.
 - Neon production branch의 기본 `neondb`는 read-only 확인에서 0 public table / no Alembic입니다. 새 `rpg_game` DB는 만들지 않습니다.
-- 다음 순서는 Neon restore+exact v295 stamp 실행 준비 commit 작성 → 그 commit의 별도 exact-SHA 승인 → Neon 검증 → 별도 exact-SHA Render create/deploy입니다.
+- `tools/initialize_neon_database.py`는 백업·revision·direct target·clean pushed `main` HEAD와 exact 승인 입력을 모두 고정하고, 단일 트랜잭션 restore → digest 검증 → exact v295 stamp → 최종 검증만 허용합니다.
+- Windows PostgreSQL 16/OpenSSL의 `sslrootcert=system` 오류는 Windows 시스템 공개 CA를 Git 제외 로컬 PEM으로 내보내 `verify-full`에 전달하는 방식으로 해결했고, asyncpg와 libpq read-only preflight가 모두 통과했습니다.
+- 다음 순서는 v343 준비 commit의 별도 exact-SHA 승인 → Neon restore/stamp 검증 → 별도 exact-SHA Render create/deploy입니다.
 - 이번 image 게시 approval은 모두 소비됐으며 Neon restore/stamp나 Render 생성·배포 권한으로 재사용하지 않습니다.
 
 ## 승인과 안전 경계

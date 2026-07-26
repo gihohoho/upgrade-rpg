@@ -2,7 +2,7 @@
   "schemaVersion": "v340.render-service-settings-reviewed-creation-blocked",
   "reviewedAtUtc": "2026-07-26T00:19:24Z",
   "result": "render-service-settings-confirmed-v341-image-verified-neon-initialization-blocked",
-  "nextSafeStage": "prepare-neon-database-initialization-exact-sha-approval",
+  "nextSafeStage": "owner-approve-neon-database-initialization-preparation-sha",
   "productionResourcesMutated": false,
   "service": {
     "type": "web-service",

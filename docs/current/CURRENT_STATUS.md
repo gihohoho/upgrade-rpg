@@ -1,13 +1,13 @@
-# Current Status — v342
+# Current Status — v343
 
 ## 현재 결과
 
 ```txt
-latest: v342.v341-image-publish-isolated-verified-neon-init-approval-required
-strict result: v341-image-publish-isolated-verified-neon-initialization-approval-required
-next safe stage: prepare-neon-database-initialization-exact-sha-approval
+latest: v343.neon-initialization-preparation-ready-execution-gated
+strict result: neon-database-initialization-preparation-ready-execution-gated
+next safe stage: owner-approve-neon-database-initialization-preparation-sha
 render plan: v340.render-service-settings-reviewed-creation-blocked
-neon plan: v340.neon-initialization-migration-reviewed-execution-blocked
+neon plan: v343.neon-initialization-preparation-ready-execution-gated
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
 render checkpoint next stage: review-render-service-settings-and-database-initialization-plan
@@ -36,6 +36,9 @@ production deployment approval ready/approved/executed: no/no/no
 - platform health에는 DB를 포함하지 않고 `/api/v1/health/db`는 수동 확인
 - 서비스 이름 `upgrade-rpg-api`는 owner 확인 완료
 - production resource/schema/data mutation: 없음
+- v343 exact-SHA-gated initialization tool과 focused smoke 준비 완료
+- asyncpg system-CA와 PostgreSQL 16/libpq exported-Windows-system-CA `verify-full` read-only preflight 통과
+- Neon restore/Alembic stamp/Render service mutation: 없음
 
 ## 로컬 리뷰 도구 체크포인트 — 2026-07-26
 
@@ -122,6 +125,8 @@ Neon resource와 read-only 연결 검증은 완료됐지만 Render resource와 �
 
 ## 다음 단계
 
-run `30180738530`에서 새 image의 build/SBOM/Trivy/provenance/Cosign을 통과했고 exact digest `sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1`의 isolated pull/runtime/CA-store/cleanup도 완료했습니다. 다음은 Neon restore+exact v295 stamp를 위한 실행 준비 commit을 작성·검증하는 단계입니다. 실제 DB restore/stamp와 Render create/deploy는 각 후속 준비 commit의 exact SHA를 기호가 별도 승인한 뒤에만 실행합니다.
+Neon 초기화 전용 `tools/initialize_neon_database.py`와 fail-closed 정적 계약, focused smoke가 준비됐습니다. 읽기 전용 preflight에서 `neondb`는 계속 0 public table / no Alembic이고, 앱의 asyncpg TLS 경로와 실제 `pg_restore`가 사용할 PostgreSQL 16/libpq `verify-full` 경로가 모두 통과했습니다.
+
+이 v343 준비 commit을 push한 뒤 정확한 40자리 SHA를 기호가 별도 승인해야만 단일 트랜잭션 restore와 exact `v295_initial_schema` stamp를 한 번 실행합니다. 그 승인은 Render Web Service 생성·배포를 포함하지 않습니다.
 
 현재 필요한 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.

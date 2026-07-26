@@ -1,8 +1,8 @@
 {
-  "schemaVersion": "v340.neon-initialization-migration-reviewed-execution-blocked",
-  "reviewedAtUtc": "2026-07-26T00:19:24Z",
-  "result": "neon-existing-neondb-restore-stamp-plan-reviewed-image-verified-execution-approval-required",
-  "nextSafeStage": "prepare-neon-database-initialization-exact-sha-approval",
+  "schemaVersion": "v343.neon-initialization-preparation-ready-execution-gated",
+  "reviewedAtUtc": "2026-07-26T05:30:00Z",
+  "result": "neon-database-initialization-preparation-ready-execution-gated",
+  "nextSafeStage": "owner-approve-neon-database-initialization-preparation-sha",
   "productionResourcesMutated": false,
   "target": {
     "provider": "neon-free",
@@ -33,10 +33,13 @@
     "restoreAndAlembicConnection": "direct-only",
     "pooledConnectionAllowedForRestoreOrAlembic": false,
     "libpqMinimumMajor": 16,
-    "tls": "sslrootcert=system-implies-verify-full",
+    "tls": "windows-system-ca-export-plus-verify-full",
+    "windowsLibpqCompatibility": "export public Windows system trust roots to a Git-ignored local PEM because PostgreSQL 16/OpenSSL sslrootcert=system returns unregistered scheme on this PC",
     "actualConnectionValuesRecorded": false
   },
   "orderedExecutionAfterSeparateExactShaApproval": [
+    "require the approved 40-character preparation SHA to equal clean main HEAD and pushed origin/main",
+    "require exact target, backup SHA-256, revision, and restore-and-stamp-once confirmations",
     "reconfirm target neondb is empty in a read-only transaction",
     "reconfirm exact local backup SHA-256, size, table list, and row-count snapshot",
     "restore with pg_restore --exit-on-error --single-transaction --no-owner --no-privileges and without --create or --clean",
@@ -51,6 +54,7 @@
     "alembic revision, autogenerate, upgrade, or downgrade",
     "seed execution",
     "automatic retry, cleanup, truncate, or reset",
+    "execution from a dirty tree, a non-main branch, or an unpushed/unapproved commit",
     "Render service creation before database initialization verification"
   ],
   "failurePolicy": {
@@ -64,6 +68,10 @@
     "planReviewed": true,
     "runtimeFixCompleted": true,
     "replacementImagePublishedAndIsolatedValidated": true,
+    "preparationToolReviewed": true,
+    "readOnlyPreflightRequired": true,
+    "preparationTool": "tools/initialize_neon_database.py",
+    "focusedSmoke": "tools/smoke/backend/smoke_neon_database_initialization_guard.py",
     "exactPreparationShaApprovalRequired": true,
     "databaseInitializationApproved": false,
     "restoreExecuted": false,

@@ -84,7 +84,10 @@ def main() -> int:
     policy = json.loads(read("deploy/backend-image-ghcr-policy.example.json"))
     assert policy["schemaVersion"] == VERSION
     assert policy["preparedOnly"] is False
-    assert policy["ownerOnlyApprovalPhase"] == "v342-image-verified-neon-initialization-preparation-required"
+    assert (
+        policy["ownerOnlyApprovalPhase"]
+        == "v343-neon-initialization-preparation-ready-owner-approval-required"
+    )
     assert policy["publishLifecycleState"] == "attempt-recorded"
     assert policy["approvedPreparationSha"] == PREPARATION
     assert policy["exactPreparationShaApproved"] is True
