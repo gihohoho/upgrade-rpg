@@ -1409,3 +1409,9 @@
 - workflow dispatch나 새 GHCR mutation 없이 중단했습니다.
 - run `29909291344` 성공 evidence를 다섯 번째 `attemptHistory`와 `priorAttemptEvidence`로 보존하고 lifecycle을 `preparation-closed`, gate `false`, approval `null`, not-dispatched로 초기화했습니다.
 - static/handoff checker와 정책 JSON을 같은 history에 맞추고 새 focused preparation SHA 승인을 다시 요구합니다.
+# v346.render-service-creation-preparation-ready-exact-sha-gated
+
+- Git/Docker 제외 로컬 파일에 Render용 direct asyncpg `DATABASE_URL`과 서로 다른 강한 JWT/admin secret을 준비했습니다.
+- secret-safe 준비·검사 도구와 focused smoke를 추가하고 actual 값·endpoint가 출력되지 않도록 했으며, clean pushed `main`의 exact SHA/service/image/action 실행 관문을 추가했습니다.
+- Render Singapore Free 서비스 1개 생성, exact image 첫 deploy, health 확인의 승인 범위와 자동 retry/DB mutation 등의 제외 범위를 fail-closed 계약에 고정했습니다.
+- Render Web Service 생성·env 주입·deploy는 실행하지 않았고 다음 단계는 v346 준비 commit exact-SHA owner 승인입니다.

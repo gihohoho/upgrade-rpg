@@ -1,90 +1,63 @@
-# Render Web Service settings plan — v340
+# Render Web Service 실행 계획 — v346
 
-## 결론
+## 현재 결론
 
-Render 설정값과 서비스 이름 `upgrade-rpg-api`는 확정됐고 v341 source를 포함한 exact digest `sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1`도 공급망·isolated 검증을 통과했습니다. 다만 **Neon 초기화 검증과 별도 Render 생성 exact-SHA 승인 전에는 Web Service를 만들면 안 됩니다**.
+Render Web Service 생성·첫 배포에 필요한 설정, exact image, Neon 초기화, 로컬 환경값 준비가 모두 완료됐습니다. 하지만 Render에는 아직 서비스가 없고 환경변수도 주입하지 않았습니다.
 
-새 exact-digest image 게시와 isolated 검증은 완료됐습니다. 다음은 별도 준비 commit과 exact-SHA 승인으로 Neon 초기화를 끝낸 뒤 Render 생성 단계로 이동하는 것입니다.
+다음 단계는 이 준비 상태가 담긴 clean pushed `main` 커밋의 정확한 40자리 SHA를 기호가 승인하는 것입니다. 정적 계약은 `deploy/render-service-settings.example.json`, 값이 없는 예시는 `deploy/render.production.env.example`입니다.
 
-정적 계약은 `deploy/render-service-settings.example.json`입니다. 실제 secret이나 Neon endpoint는 이 문서와 계약에 기록하지 않습니다.
+## 확정 설정
 
-## 추천 설정
+| 항목 | 값 |
+|---|---|
+| Service | Web Service / Existing Image |
+| Name | `upgrade-rpg-api` |
+| Region / plan | Singapore / Free / 1 instance |
+| Image | `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1` |
+| Registry credential | `upgrade-rpg-ghcr-read` |
+| Port | `8000` |
+| Platform health | `/api/v1/health` |
+| Manual DB health | `/api/v1/health/db` 한 번 |
+| Command override / pre-deploy | 없음 / 없음 |
+| Auto deploy / disk | 꺼짐 / 없음 |
+| Public URL | Render managed `onrender.com` HTTPS |
+| Custom domain / payment | 보류 / 변경 없음 |
 
-| 항목 | 추천값 | 이유 |
-|---|---|---|
-| Service type | Web Service | 공개 HTTPS API |
-| Source | Existing Image | 검증된 GHCR image 사용 |
-| Name | `upgrade-rpg-api` | owner 확인 완료 |
-| Region | Singapore | Neon AWS Singapore와 같은 지역 |
-| Instance | Free / 1개 | 개인 preview, 월 고정비 $0 |
-| Image | `sha256:f3bf6eed...052c1` exact digest | v341 bootstrap과 Alpine system CA 119개를 isolated runtime에서 검증 |
-| Registry credential | `upgrade-rpg-ghcr-read` | 이미 read:packages only로 저장됨 |
-| Docker command | override 없음 | image의 Uvicorn CMD 재사용 |
-| Port | `8000` | image CMD와 일치 |
-| Health path | `/api/v1/health` | 앱 생존 확인, DB cold start와 분리 |
-| DB health | `/api/v1/health/db` 수동 확인 | transient Neon wake-up으로 Render가 재시작하는 것 방지 |
-| Persistent disk | 없음 | Free에서 미지원, DB는 Neon에 저장 |
-| Pre-deploy command | 없음 | Free Web Service에서 미지원, migration 자동 실행 금지 |
-| Auto-deploy | 없음 | Existing Image는 auto-deploy 미지원 |
-| Custom domain | 보류 | 첫 단계는 Render managed `onrender.com` HTTPS |
+platform health는 DB를 포함하지 않아 Neon cold start 때문에 Render가 불필요하게 재시작하는 일을 막습니다. DB 연결은 첫 배포 후 `/api/v1/health/db`를 한 번 수동으로 확인합니다.
 
-## 환경변수
+## 환경변수 준비
 
-비밀값이 아닌 고정값은 `deploy/render.production.env.example`에 있습니다.
+비밀이 아닌 고정값 11개와 secret key 3개(`DATABASE_URL`, `JWT_SECRET_KEY`, `ADMIN_WRITE_DEV_KEY`)를 사용합니다. 실제 값은 Git/Docker 제외 `deploy/.env.production`에만 준비됐습니다.
 
-```txt
-APP_NAME=Upgrade RPG Backend
-ENVIRONMENT=production
-DEBUG=false
-PORT=8000
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-CORS_ORIGINS=[]
-DB_POOL_PRE_PING=true
-DB_POOL_SIZE=2
-DB_MAX_OVERFLOW=0
-DB_POOL_TIMEOUT_SECONDS=30
-DB_POOL_RECYCLE_SECONDS=300
-```
+- `DATABASE_URL`: Neon direct endpoint 기반 `postgresql+asyncpg`, TLS query 없음
+- TLS: 앱이 system CA와 hostname verification을 강제로 적용
+- JWT/admin secret: 서로 다른 CSPRNG 값, 각각 43자 이상
+- DB pool: size 2, overflow 0, pre-ping 켜짐
+- CORS: 첫 backend-only 검증에서는 `[]`
 
-Render에만 저장할 secret key:
+`tools/prepare_render_local_environment.py --inspect-local`은 값이나 endpoint를 출력하지 않고 이 조건을 다시 검사합니다.
 
-```txt
-DATABASE_URL
-JWT_SECRET_KEY
-ADMIN_WRITE_DEV_KEY
-```
+사용자 승인 뒤에는 같은 도구의 `--verify-execution-approval` 모드가 clean pushed `main`, exact 40자리 SHA, 서비스 이름, exact image, 단일 deploy action을 모두 확인합니다. 이 관문 자체는 Render를 변경하지 않습니다.
 
-`DATABASE_URL`은 Neon direct endpoint를 사용하는 SQLAlchemy `postgresql+asyncpg` 형식입니다. 실제 host/user/password는 문서, Git, 로그에 기록하지 않습니다. 단일 worker가 SQLAlchemy QueuePool을 이미 사용하므로 runtime도 direct 연결을 사용해 PgBouncer와 asyncpg prepared statement의 이중 pooling 복잡성을 피합니다.
+## exact-SHA 승인에 포함되는 실행
 
-`CORS_ORIGINS=[]`는 backend-only 첫 검증용입니다. 공개 frontend 주소가 생기기 전에는 임의 origin을 허용하지 않습니다.
+1. clean pushed `main`과 승인 SHA가 정확히 같은지 확인
+2. Render에 `upgrade-rpg-api` Web Service 한 개 생성
+3. 검토된 non-secret과 로컬 secret 3개 주입
+4. 검증된 exact image로 최초 deploy 한 번 실행
+5. `/api/v1/health`가 정상화될 때까지 기다림
+6. `/api/v1/health/db`를 한 번 읽기 확인
+7. `onrender.com` 주소와 secret 없는 결과만 sanitized evidence에 기록
+8. command override, pre-deploy, auto deploy가 없음을 확인
 
-## 생성 전 gate
+## 승인에 포함되지 않는 실행
 
-다음이 모두 끝나기 전에는 `Create Web Service` 또는 `Deploy Web Service`를 누르지 않습니다.
+- DB create/delete/restore/reset/seed/write와 Alembic 작업
+- 다른 image 또는 tag 사용
+- custom domain, DNS, 결제수단 변경
+- 자동 retry, 두 번째 deploy, 자동 migration
+- 인증/API write logic, Vue write, 게임 콘텐츠·밸런스 변경
 
-1. production SSLContext/bootstrap과 env inventory 수정 완료
-2. 관련 smoke와 Neon SQLAlchemy read-only 호환성 검사
-3. 새 GHCR exact digest 게시 완료
-4. 새 image isolated pull/runtime/CA-store 검증 완료
-5. Neon `neondb` restore + v295 stamp + read-only 검증
-6. 서비스 이름 `upgrade-rpg-api` owner 확인 완료
-7. Neon 초기화 준비 commit과 Render 생성 준비 commit의 정확한 40자리 SHA를 단계별 owner 승인
+실패하면 서비스 상태를 보존한 채 멈추고 원인을 검토합니다. 자동으로 다시 deploy하거나 서비스를 삭제하지 않습니다.
 
-## 첫 배포 후 확인
-
-1. Render deploy event가 새 exact digest를 사용했는지 확인
-2. `/api/v1/health`가 2xx인지 확인
-3. `/api/v1/health/db`를 한 번 수동 확인
-4. container가 non-root UID 65532와 single worker로 실행되는지 확인
-5. 자동 migration, pre-deploy command, custom command가 없는지 확인
-6. 생성된 `onrender.com` 주소를 기록하되 secret은 기록하지 않음
-
-Free Web Service는 15분 유휴 후 잠들며 첫 요청에 cold start가 있을 수 있습니다. image-backed 서비스는 자동 갱신되지 않으므로 이후 배포도 새 exact digest를 별도 검토·수동 적용합니다.
-
-## 공식 근거
-
-- Render Existing Image와 수동 deploy: https://render.com/docs/deploying-an-image
-- Web Service port와 image-backed auto-deploy 제한: https://render.com/docs/web-services
-- Free Web Service 제한: https://render.com/docs/free
-- HTTP health check 동작: https://render.com/docs/health-checks
-- Free에서 사용할 수 없는 pre-deploy command: https://render.com/docs/deploys
+무료 서비스는 idle 시 잠들어 첫 요청 cold start가 발생할 수 있는 개인용 public preview이며 SLA production으로 취급하지 않습니다.

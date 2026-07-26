@@ -1,12 +1,12 @@
-# Upgrade RPG Codex handoff — v345
+# Upgrade RPG Codex handoff — v346
 
 ## 현재 상태
 
 ```txt
-latest: v345.neon-initialization-completed-verified-render-preparation-required
-strict result: neon-database-initialization-completed-verified-render-preparation-required
-next safe stage: prepare-render-service-creation-exact-sha-approval
-render plan: v340.render-service-settings-reviewed-creation-blocked
+latest: v346.render-service-creation-preparation-ready-exact-sha-gated
+strict result: render-service-creation-preparation-ready-exact-sha-gated
+next safe stage: owner-approve-render-service-creation-preparation-sha
+render plan: v346.render-service-creation-preparation-ready-exact-sha-gated
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
@@ -42,6 +42,7 @@ production deployment approval ready/approved/executed: no/no/no
 - 순서: image publish/isolated validation 완료 → Neon restore+exact v295 완료 → 별도 exact-SHA Render create/deploy
 - Render name: `upgrade-rpg-api`, owner 확인 완료
 - v345 tool: `tools/initialize_neon_database.py`, restore/stamp mutation 경로 비활성 + read-only completion guard
+- v346 local prep: `tools/prepare_render_local_environment.py`, Git/Docker 제외 env와 secret-safe 검사
 - read-only preflight: asyncpg system CA와 PostgreSQL 16/libpq exported Windows system CA `verify-full` 모두 통과
 - current Neon mutation: restore 1회 + exact v295 stamp 1회 완료 / Render write 없음
 
@@ -112,7 +113,9 @@ verified local rehearsal은 `Asia/Seoul`, Neon은 `GMT`이며 양쪽에 44개 `t
 
 사용자가 승인한 v344 SHA `cf0f506b6ae9dc9d4c02f3ab5313ca68be32676c`로 기존 복원 상태를 재검증하고 exact `v295_initial_schema`만 stamp했습니다. `pg_restore`는 재실행하지 않았습니다. 최종 public 23 tables / total 749 rows, application 22 tables / 748 rows, unchanged schema/data digest, Alembic 1 row를 확인했습니다. sanitized evidence는 `deploy/review/neon-initialization-completed-v345.json`입니다.
 
-다음 작업은 Render Web Service 생성·배포 실행 준비 commit을 작성·검증하는 것입니다. 실제 Render 생성·secret 주입·deploy는 그 새 commit의 정확한 40자리 SHA를 기호가 별도 승인하기 전까지 금지합니다. 필요한 extension·권한·새 설치는 현재 없습니다.
+Render용 direct asyncpg `DATABASE_URL`과 서로 다른 강한 JWT/admin secret을 Git/Docker 제외 `deploy/.env.production`에 준비하고 값 출력 없이 검증했습니다. Render resource 변경은 없습니다.
+
+다음 작업은 v346 clean pushed `main` commit의 정확한 40자리 SHA를 기호에게 승인받고 `tools/prepare_render_local_environment.py --verify-execution-approval` 관문을 통과한 뒤 Render Web Service 생성·첫 배포를 실행하는 것입니다. 승인 범위는 `upgrade-rpg-api` 서비스 1개, 검토된 env, exact image, health 2종 읽기 확인, managed HTTPS URL과 sanitized evidence입니다. DB/Alembic write, image 변경, custom domain/DNS, 결제, 자동 retry·두 번째 deploy는 제외합니다. 필요한 extension·권한·새 설치는 현재 없습니다.
 
 ## 첫 검사
 
@@ -121,6 +124,8 @@ Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.ex
 새 설치 여부: 없음
 
 ```bash
+python tools/prepare_render_local_environment.py --inspect-local
+python tools/smoke/backend/smoke_render_service_creation_preparation.py
 python tools/initialize_neon_database.py
 python tools/smoke/backend/smoke_neon_database_initialization_guard.py
 python tools/check_render_neon_separated_plan.py --strict
@@ -133,6 +138,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v345 기대 결과는 `neon-database-initialization-completed-verified-render-preparation-required`, 다음 단계는 `prepare-render-service-creation-exact-sha-approval`입니다. v340 Render 계획, v338 Render Connect, v337 account readiness, v336 Neon connectivity evidence, v335 provider selection과 v334 deployment baseline을 계속 보존합니다.
+v346 기대 결과는 `render-service-creation-preparation-ready-exact-sha-gated`, 다음 단계는 `owner-approve-render-service-creation-preparation-sha`입니다. v345 Neon 완료, v338 Render Connect, v337 account readiness, v336 Neon connectivity evidence, v335 provider selection과 v334 deployment baseline을 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

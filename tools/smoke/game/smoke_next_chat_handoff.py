@@ -86,7 +86,7 @@ def main() -> int:
     assert policy["preparedOnly"] is False
     assert (
         policy["ownerOnlyApprovalPhase"]
-        == "v345-neon-initialized-render-preparation-required"
+        == "v346-render-service-creation-preparation-ready-exact-sha-gated"
     )
     assert policy["publishLifecycleState"] == "attempt-recorded"
     assert policy["approvedPreparationSha"] == PREPARATION

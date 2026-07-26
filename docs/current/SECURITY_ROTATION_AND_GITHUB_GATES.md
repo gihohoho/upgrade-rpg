@@ -1,4 +1,4 @@
-# Security rotation and GitHub gates — v342
+# Security rotation and GitHub gates — v346
 
 ## Secret 원칙
 
@@ -21,6 +21,15 @@
 - 실제 값은 Git 밖의 승인된 secret/deployment platform에만 넣고 final Compose render 결과에도 secret을 출력하지 않습니다.
 - 첫 배포는 이전 production image가 없으므로 실패 시 proxy route를 철회하고 새 backend만 중지합니다. DB, CA, network, volume은 보존합니다.
 - DB/Alembic mutation, `docker compose down -v`, 자동 retry/deploy는 승인 범위 밖입니다.
+
+## Render application secrets — v346
+
+- 2026-07-26에 Render용 `JWT_SECRET_KEY`와 `ADMIN_WRITE_DEV_KEY`를 로컬 CSPRNG로 각각 생성했습니다.
+- 두 값은 서로 다르고 43자 이상이며 Git/Docker 제외 `deploy/.env.production`에만 있습니다.
+- Neon direct URL에서 query 없는 SQLAlchemy `postgresql+asyncpg` `DATABASE_URL`을 만들었고 endpoint·role·password 일치를 값 출력 없이 검사했습니다.
+- 실제 값은 Git, 문서, 채팅, 로그, artifact에 기록하지 않았고 Render에도 아직 주입하지 않았습니다.
+- exact-SHA 승인 뒤 Render secret store에 전달할 때도 값을 화면·로그에 출력하지 않습니다.
+- 값이 노출되거나 Render 계정 접근이 의심되면 JWT/admin key를 새로 생성해 Render에 교체하고 서비스를 한 번 재배포합니다. Neon credential은 Neon Console에서 별도로 회전합니다.
 
 ## Render GHCR credential rotation — v338
 

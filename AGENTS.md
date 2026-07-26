@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v345
+# Upgrade RPG Codex working rules — v346
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -42,10 +42,10 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v345.neon-initialization-completed-verified-render-preparation-required
-strict result: neon-database-initialization-completed-verified-render-preparation-required
-next safe stage: prepare-render-service-creation-exact-sha-approval
-render plan: v340.render-service-settings-reviewed-creation-blocked
+latest: v346.render-service-creation-preparation-ready-exact-sha-gated
+strict result: render-service-creation-preparation-ready-exact-sha-gated
+next safe stage: owner-approve-render-service-creation-preparation-sha
+render plan: v346.render-service-creation-preparation-ready-exact-sha-gated
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
@@ -85,6 +85,8 @@ Alembic current: v295_initial_schema / new revision needed: no
 - v341 source를 포함한 새 exact image는 게시와 isolated Alpine CA-store/runtime 검증을 완료했습니다. Render Web Service 생성·배포는 Neon 초기화 검증 뒤 별도 exact-SHA 승인이 필요합니다.
 - Neon production branch의 `neondb` 초기화가 완료됐습니다. 22 application tables / 748 rows와 `alembic_version` 1 table / 1 row, exact `v295_initial_schema`를 포함해 public 23 tables / total 749 rows입니다. 새 `rpg_game` DB는 만들지 않습니다.
 - `tools/initialize_neon_database.py`의 mutation 경로는 모두 비활성화됐고 기본/static 및 `--inspect` read-only 완료 검증만 허용합니다.
+- Git/Docker 제외 `deploy/.env.production`에는 Render용 direct asyncpg `DATABASE_URL`과 서로 다른 강한 JWT/admin secret이 준비됐습니다. 값은 출력·문서화·커밋하지 않습니다.
+- Render 실행은 clean pushed `main`의 exact SHA를 기호가 승인하고 `tools/prepare_render_local_environment.py --verify-execution-approval` 관문을 통과한 뒤에만 서비스 1개 생성, 검토된 env 주입, exact image 최초 deploy, health 2종 읽기 확인 범위로 진행합니다.
 - Windows PostgreSQL 16/OpenSSL의 `sslrootcert=system` 오류는 Windows 시스템 공개 CA를 Git 제외 로컬 PEM으로 내보내 `verify-full`에 전달하는 방식으로 해결했고, asyncpg와 libpq read-only preflight가 모두 통과했습니다.
 - 승인된 v343 commit `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 Neon restore를 한 번 실행했고 22 application tables / 748 rows / schema digest가 일치했습니다. legacy data digest는 session timezone 차이로 실패해 stamp 전에 안전하게 중단했습니다.
 - v343 안전 중단 시점에 aware datetime을 UTC로 정규화한 digest `4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c`가 verified rehearsal과 Neon에서 일치했고, 당시 `alembic_version`은 없었습니다.

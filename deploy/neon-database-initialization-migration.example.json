@@ -2,7 +2,7 @@
   "schemaVersion": "v345.neon-initialization-completed-verified-render-preparation-required",
   "reviewedAtUtc": "2026-07-26T05:28:52Z",
   "result": "neon-database-initialization-completed-verified-render-preparation-required",
-  "nextSafeStage": "prepare-render-service-creation-exact-sha-approval",
+  "nextSafeStage": "owner-approve-render-service-creation-preparation-sha",
   "productionResourcesMutated": true,
   "target": {
     "provider": "neon-free",

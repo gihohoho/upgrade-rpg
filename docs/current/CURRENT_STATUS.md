@@ -1,12 +1,12 @@
-# Current Status — v345
+# Current Status — v346
 
 ## 현재 결과
 
 ```txt
-latest: v345.neon-initialization-completed-verified-render-preparation-required
-strict result: neon-database-initialization-completed-verified-render-preparation-required
-next safe stage: prepare-render-service-creation-exact-sha-approval
-render plan: v340.render-service-settings-reviewed-creation-blocked
+latest: v346.render-service-creation-preparation-ready-exact-sha-gated
+strict result: render-service-creation-preparation-ready-exact-sha-gated
+next safe stage: owner-approve-render-service-creation-preparation-sha
+render plan: v346.render-service-creation-preparation-ready-exact-sha-gated
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
@@ -125,8 +125,8 @@ Neon DB/schema/data 초기화는 완료됐지만 Render resource 생성, 배포 
 
 ## 다음 단계
 
-승인된 v343 SHA로 restore를 한 번 실행하고, 승인된 v344 SHA로 기존 복원 상태를 재검증한 뒤 exact `v295_initial_schema`만 stamp했습니다. 최종 상태는 public 23 tables / total 749 rows이고 application 22 tables / 748 rows의 UTC-normalized schema·data digest는 불변입니다.
+Render용 direct asyncpg `DATABASE_URL`과 서로 다른 강한 JWT/admin secret을 Git/Docker 제외 파일 `deploy/.env.production`에 준비했습니다. `tools/prepare_render_local_environment.py --inspect-local`이 값 출력 없이 14개 필수 키, query 없는 direct URL, secret 강도·분리를 검증합니다.
 
-복원과 stamp는 재실행하지 않습니다. 다음은 Render Web Service 생성·배포를 위한 별도 실행 준비 commit을 작성·검증하는 단계이며, 실제 생성·배포 전에는 그 commit의 새 exact-SHA 승인을 다시 받습니다.
+다음은 이 v346 실행 준비 commit의 정확한 40자리 SHA를 기호가 승인하는 단계입니다. 승인 후에도 실행 직전 `--verify-execution-approval` 관문으로 clean pushed `main`, SHA, service, image, 단일 deploy action을 다시 검사합니다. 승인 전에는 Render를 변경하지 않습니다. 허용 범위는 `upgrade-rpg-api` 서비스 1개 생성, 검토된 env 주입, exact digest 최초 deploy, `/api/v1/health` 대기, `/api/v1/health/db` 한 번의 읽기 확인, managed HTTPS URL과 sanitized evidence 기록입니다. DB/Alembic write, image 변경, custom domain/DNS, 결제수단, 자동 retry·두 번째 deploy는 포함되지 않습니다.
 
 현재 필요한 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.

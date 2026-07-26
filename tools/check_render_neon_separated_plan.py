@@ -27,12 +27,16 @@ NEON_INITIALIZER_SMOKE = (
 )
 NEON_RESTORE_EVIDENCE = ROOT / "deploy/review/neon-restore-prestamp-verification-v344.json"
 NEON_COMPLETION_EVIDENCE = ROOT / "deploy/review/neon-initialization-completed-v345.json"
+RENDER_PREPARER = ROOT / "tools/prepare_render_local_environment.py"
+RENDER_PREPARER_SMOKE = (
+    ROOT / "tools/smoke/backend/smoke_render_service_creation_preparation.py"
+)
 
-RENDER_VERSION = "v340.render-service-settings-reviewed-creation-blocked"
+RENDER_VERSION = "v346.render-service-creation-preparation-ready-exact-sha-gated"
 NEON_VERSION = "v345.neon-initialization-completed-verified-render-preparation-required"
-STATE_VERSION = "v345.neon-initialization-completed-verified-render-preparation-required"
-RESULT = "neon-database-initialization-completed-verified-render-preparation-required"
-NEXT_STAGE = "prepare-render-service-creation-exact-sha-approval"
+STATE_VERSION = "v346.render-service-creation-preparation-ready-exact-sha-gated"
+RESULT = "render-service-creation-preparation-ready-exact-sha-gated"
+NEXT_STAGE = "owner-approve-render-service-creation-preparation-sha"
 IMAGE = (
     "ghcr.io/gihohoho/upgrade-rpg-backend@"
     "sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
@@ -43,6 +47,8 @@ UTC_DATA_DIGEST = "4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c
 PRESTAMP_VERSION = "v344.neon-restore-verified-stamp-recovery-preparation-ready"
 PRESTAMP_RESULT = "neon-restore-verified-stamp-recovery-preparation-ready"
 PRESTAMP_NEXT_STAGE = "owner-approve-neon-stamp-recovery-preparation-sha"
+NEON_COMPLETION_NEXT_STAGE = "prepare-render-service-creation-exact-sha-approval"
+NEON_COMPLETION_RESULT = "neon-database-initialization-completed-verified-render-preparation-required"
 
 STATE_FILES = (
     ROOT / "AGENTS.md",
@@ -148,6 +154,52 @@ def verify_render(plan: dict[str, Any]) -> None:
         "Render secret key inventory differs",
     )
     require(inventory.get("actualSecretValuesRecorded") is False, "Render secret values must not be recorded")
+    require(inventory.get("localValueFile") == "deploy/.env.production", "Render local env path differs")
+    for key in (
+        "localValueFileGitAndDockerExcluded",
+        "localEnvironmentPrepared",
+        "exactLocalValuesAbsentFromGitTrackedFiles",
+        "databaseUrlConvertedFromValidatedNeonDirect",
+        "databaseUrlUsesAsyncpgWithoutTlsQuery",
+        "jwtAndAdminSecretsStrongAndDistinct",
+    ):
+        require(inventory.get(key) is True, f"Render local preparation marker differs: {key}")
+
+    scope = plan.get("approvedExecutionScope") or {}
+    for key in (
+        "requiresCleanPushedMainExactSha",
+        "createOneWebService",
+        "injectReviewedEnvironment",
+        "initialDeployExactImage",
+        "recordManagedHttpsUrlAndSanitizedEvidence",
+        "confirmNoCommandOverridePreDeployOrAutoDeploy",
+    ):
+        require(scope.get(key) is True, f"Render execution scope marker differs: {key}")
+    for key in (
+        "databaseMutation",
+        "imageChange",
+        "customDomainOrDns",
+        "paymentMethodChange",
+        "automaticRetryOrSecondDeploy",
+    ):
+        require(scope.get(key) is False, f"Render excluded execution scope differs: {key}")
+    require(scope.get("waitForPlatformHealth") == "/api/v1/health", "Render platform health scope differs")
+    require(scope.get("singleManualDatabaseHealthRead") == "/api/v1/health/db", "Render DB health scope differs")
+    require(
+        scope.get("failurePolicy") == "stop-with-service-state-preserved-and-request-review",
+        "Render failure policy differs",
+    )
+    contract = plan.get("approvalContract") or {}
+    require(contract.get("tool") == "tools/prepare_render_local_environment.py", "Render approval tool differs")
+    require(contract.get("mode") == "--verify-execution-approval", "Render approval mode differs")
+    require(contract.get("serviceConfirmation") == "upgrade-rpg-api", "Render approval service differs")
+    require(contract.get("imageConfirmation") == IMAGE, "Render approval image differs")
+    require(
+        contract.get("actionConfirmation") == "create-inject-deploy-once-and-read-health",
+        "Render approval action differs",
+    )
+    require(contract.get("cleanPushedMainRequired") is True, "clean pushed main gate must be required")
+    require(contract.get("providerMutationDuringGuard") is False, "approval guard must not mutate Render")
 
     gate = plan.get("creationGate") or {}
     require(gate.get("settingsReviewed") is True, "Render settings review must be complete")
@@ -161,7 +213,9 @@ def verify_render(plan: dict[str, Any]) -> None:
         gate.get("neonInitializationCompleted") is True,
         "Render gate must record completed Neon initialization",
     )
+    require(gate.get("localEnvironmentPrepared") is True, "Render local environment must be prepared")
     for key in (
+        "exactPreparationShaApproved",
         "webServiceCreationApproved",
         "webServiceCreated",
         "deploymentExecuted",
@@ -279,8 +333,14 @@ def verify_neon(plan: dict[str, Any]) -> None:
 
     completion = load_json(NEON_COMPLETION_EVIDENCE)
     require(completion.get("schemaVersion") == NEON_VERSION, "Neon completion evidence version differs")
-    require(completion.get("result") == RESULT, "Neon completion evidence result differs")
-    require(completion.get("nextSafeStage") == NEXT_STAGE, "Neon completion next stage differs")
+    require(
+        completion.get("result") == NEON_COMPLETION_RESULT,
+        "Neon completion historical result differs",
+    )
+    require(
+        completion.get("nextSafeStage") == NEON_COMPLETION_NEXT_STAGE,
+        "Neon completion historical next stage differs",
+    )
     require(completion.get("restoreRetried") is False, "Neon restore retry must remain false")
     require(
         completion.get("finalPublicTableCount") == 23
@@ -336,6 +396,8 @@ def verify_bootstrap_sources() -> None:
         NEON_INITIALIZER_SMOKE,
         NEON_RESTORE_EVIDENCE,
         NEON_COMPLETION_EVIDENCE,
+        RENDER_PREPARER,
+        RENDER_PREPARER_SMOKE,
     ):
         require(path.is_file(), f"missing bootstrap file: {path.relative_to(ROOT)}")
 
@@ -385,6 +447,20 @@ def verify_bootstrap_sources() -> None:
     ):
         require(marker in initializer_text, f"Neon initializer is missing safety marker: {marker}")
 
+    preparer_text = RENDER_PREPARER.read_text(encoding="utf-8")
+    for marker in (
+        "postgresql+asyncpg://",
+        "secrets.token_urlsafe(48)",
+        "DATABASE_URL must not contain query or fragment",
+        "JWT_SECRET_KEY and ADMIN_WRITE_DEV_KEY must differ",
+        "exactLocalValuesAbsentFromGitTrackedFiles",
+        "require_exact_execution_approval",
+        'git_output("rev-parse", "--verify", "origin/main")',
+        "actual secret or endpoint displayed: no",
+        "Render resource mutation: no",
+    ):
+        require(marker in preparer_text, f"Render preparer is missing safety marker: {marker}")
+
 
 def main() -> int:
     parser = argparse.ArgumentParser()
@@ -400,8 +476,8 @@ def main() -> int:
         return 1
 
     print("Render/Neon separated plan verification (static, no provider mutation)")
-    print("- Render: upgrade-rpg-api confirmed / v341 exact image isolated-verified / creation blocked")
-    print("- Neon: 22/748 restored + exact v295 stamped + 23/749 verified / Render preparation next")
+    print("- Render: local env prepared / exact image + reviewed settings / exact-SHA approval required")
+    print("- Neon: 22/748 restored + exact v295 stamped + 23/749 verified")
     print("- secrets/endpoints recorded: no")
     print(f"- result: {RESULT}")
     print(f"- next safe stage: {NEXT_STAGE}")

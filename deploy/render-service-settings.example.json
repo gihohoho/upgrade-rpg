@@ -1,8 +1,9 @@
 {
-  "schemaVersion": "v340.render-service-settings-reviewed-creation-blocked",
+  "schemaVersion": "v346.render-service-creation-preparation-ready-exact-sha-gated",
   "reviewedAtUtc": "2026-07-26T00:19:24Z",
-  "result": "render-service-settings-confirmed-image-and-neon-verified-creation-preparation-required",
-  "nextSafeStage": "prepare-render-service-creation-exact-sha-approval",
+  "preparedAtUtc": "2026-07-26T07:01:34Z",
+  "result": "render-service-creation-preparation-ready-exact-sha-gated",
+  "nextSafeStage": "owner-approve-render-service-creation-preparation-sha",
   "productionResourcesMutated": false,
   "service": {
     "type": "web-service",
@@ -47,6 +48,13 @@
   },
   "environmentInventory": {
     "sourceFile": "deploy/render.production.env.example",
+    "localValueFile": "deploy/.env.production",
+    "localValueFileGitAndDockerExcluded": true,
+    "localEnvironmentPrepared": true,
+    "exactLocalValuesAbsentFromGitTrackedFiles": true,
+    "databaseUrlConvertedFromValidatedNeonDirect": true,
+    "databaseUrlUsesAsyncpgWithoutTlsQuery": true,
+    "jwtAndAdminSecretsStrongAndDistinct": true,
     "nonSecret": {
       "APP_NAME": "Upgrade RPG Backend",
       "ENVIRONMENT": "production",
@@ -67,13 +75,40 @@
     ],
     "actualSecretValuesRecorded": false
   },
+  "approvedExecutionScope": {
+    "requiresCleanPushedMainExactSha": true,
+    "createOneWebService": true,
+    "injectReviewedEnvironment": true,
+    "initialDeployExactImage": true,
+    "waitForPlatformHealth": "/api/v1/health",
+    "singleManualDatabaseHealthRead": "/api/v1/health/db",
+    "recordManagedHttpsUrlAndSanitizedEvidence": true,
+    "confirmNoCommandOverridePreDeployOrAutoDeploy": true,
+    "databaseMutation": false,
+    "imageChange": false,
+    "customDomainOrDns": false,
+    "paymentMethodChange": false,
+    "automaticRetryOrSecondDeploy": false,
+    "failurePolicy": "stop-with-service-state-preserved-and-request-review"
+  },
+  "approvalContract": {
+    "tool": "tools/prepare_render_local_environment.py",
+    "mode": "--verify-execution-approval",
+    "serviceConfirmation": "upgrade-rpg-api",
+    "imageConfirmation": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1",
+    "actionConfirmation": "create-inject-deploy-once-and-read-health",
+    "cleanPushedMainRequired": true,
+    "providerMutationDuringGuard": false
+  },
   "creationGate": {
     "settingsReviewed": true,
     "ownerServiceNameRequired": false,
     "runtimeFixCompleted": true,
     "replacementImagePublishedAndIsolatedValidated": true,
     "neonInitializationCompleted": true,
+    "localEnvironmentPrepared": true,
     "exactPreparationShaApprovalRequired": true,
+    "exactPreparationShaApproved": false,
     "webServiceCreationApproved": false,
     "webServiceCreated": false,
     "deploymentExecuted": false
