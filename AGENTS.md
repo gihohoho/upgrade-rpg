@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v343
+# Upgrade RPG Codex working rules — v344
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -42,11 +42,11 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v343.neon-initialization-preparation-ready-execution-gated
-strict result: neon-database-initialization-preparation-ready-execution-gated
-next safe stage: owner-approve-neon-database-initialization-preparation-sha
+latest: v344.neon-restore-verified-stamp-recovery-preparation-ready
+strict result: neon-restore-verified-stamp-recovery-preparation-ready
+next safe stage: owner-approve-neon-stamp-recovery-preparation-sha
 render plan: v340.render-service-settings-reviewed-creation-blocked
-neon plan: v343.neon-initialization-preparation-ready-execution-gated
+neon plan: v344.neon-restore-verified-stamp-recovery-preparation-ready
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
 render checkpoint next stage: review-render-service-settings-and-database-initialization-plan
@@ -83,11 +83,14 @@ Alembic current: v295_initial_schema / new revision needed: no
 - v341 source는 production SQLAlchemy/Alembic에 system-CA hostname-verifying SSLContext를 공유 주입하고 Render env inventory를 분리했습니다.
 - 실제 Neon direct URL을 프로세스에만 주입한 read-only bootstrap에서 TLS 연결과 빈 `neondb` 상태를 재확인했습니다.
 - v341 source를 포함한 새 exact image는 게시와 isolated Alpine CA-store/runtime 검증을 완료했습니다. Render Web Service 생성·배포는 Neon 초기화 검증 뒤 별도 exact-SHA 승인이 필요합니다.
-- Neon production branch의 기본 `neondb`는 read-only 확인에서 0 public table / no Alembic입니다. 새 `rpg_game` DB는 만들지 않습니다.
+- Neon production branch의 `neondb`에는 승인된 restore가 한 번 완료돼 22 public application tables / 748 rows가 있고 `alembic_version`은 아직 없습니다. 새 `rpg_game` DB는 만들지 않습니다.
 - `tools/initialize_neon_database.py`는 백업·revision·direct target·clean pushed `main` HEAD와 exact 승인 입력을 모두 고정하고, 단일 트랜잭션 restore → digest 검증 → exact v295 stamp → 최종 검증만 허용합니다.
 - Windows PostgreSQL 16/OpenSSL의 `sslrootcert=system` 오류는 Windows 시스템 공개 CA를 Git 제외 로컬 PEM으로 내보내 `verify-full`에 전달하는 방식으로 해결했고, asyncpg와 libpq read-only preflight가 모두 통과했습니다.
-- 다음 순서는 v343 준비 commit의 별도 exact-SHA 승인 → Neon restore/stamp 검증 → 별도 exact-SHA Render create/deploy입니다.
+- 승인된 v343 commit `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 Neon restore를 한 번 실행했고 22 application tables / 748 rows / schema digest가 일치했습니다. legacy data digest는 session timezone 차이로 실패해 stamp 전에 안전하게 중단했습니다.
+- aware datetime을 UTC로 정규화한 digest `4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c`는 verified rehearsal과 Neon이 일치합니다. `alembic_version`은 아직 없습니다.
+- 복원 재실행은 금지합니다. 다음 순서는 v344 recovery 준비 commit의 별도 exact-SHA 승인 → 기존 복원 상태 재검증 + exact v295 stamp만 실행 → 별도 exact-SHA Render create/deploy입니다.
 - 이번 image 게시 approval은 모두 소비됐으며 Neon restore/stamp나 Render 생성·배포 권한으로 재사용하지 않습니다.
+- v343 Neon 초기화 approval도 restore 시도와 안전 중단으로 소비됐으며 stamp 권한으로 재사용하지 않습니다.
 
 ## 승인과 안전 경계
 

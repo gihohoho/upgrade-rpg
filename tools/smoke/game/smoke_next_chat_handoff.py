@@ -59,7 +59,7 @@ def main() -> int:
         "immediate closure",
         "closureCommitSha",
         "attempt-recorded",
-        "Neon 초기화",
+        "Neon restore",
         "deploy/review/isolated-image-pull-validation-v342.json",
         "deploy/production-deploy-plan.example.json",
         PREPARATION,
@@ -86,7 +86,7 @@ def main() -> int:
     assert policy["preparedOnly"] is False
     assert (
         policy["ownerOnlyApprovalPhase"]
-        == "v343-neon-initialization-preparation-ready-owner-approval-required"
+        == "v344-neon-restore-verified-stamp-recovery-owner-approval-required"
     )
     assert policy["publishLifecycleState"] == "attempt-recorded"
     assert policy["approvedPreparationSha"] == PREPARATION

@@ -1,4 +1,4 @@
-# Upgrade RPG Codex next prompt — v343
+# Upgrade RPG Codex next prompt — v344
 
 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽고 계속 지켜주세요. 기호는 코딩을 거의 모르므로 한국어로 쉽게 설명하고, 모든 터미널 명령 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension·권한·설치는 해결될 때까지 요청해주세요.
 
@@ -7,11 +7,11 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 ## 현재 고정값
 
 ```txt
-latest: v343.neon-initialization-preparation-ready-execution-gated
-strict result: neon-database-initialization-preparation-ready-execution-gated
-next safe stage: owner-approve-neon-database-initialization-preparation-sha
+latest: v344.neon-restore-verified-stamp-recovery-preparation-ready
+strict result: neon-restore-verified-stamp-recovery-preparation-ready
+next safe stage: owner-approve-neon-stamp-recovery-preparation-sha
 render plan: v340.render-service-settings-reviewed-creation-blocked
-neon plan: v343.neon-initialization-preparation-ready-execution-gated
+neon plan: v344.neon-restore-verified-stamp-recovery-preparation-ready
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
 render checkpoint next stage: review-render-service-settings-and-database-initialization-plan
@@ -56,7 +56,7 @@ Render 서비스 이름은 기호가 `upgrade-rpg-api`로 확정했습니다. v3
 
 v341 source를 포함한 새 image는 게시와 isolated Alpine system CA store, runtime health, architecture, cleanup 검증을 완료했습니다. Render 생성·배포는 아직 하지 않았습니다.
 
-고정 순서는 bootstrap fix → 새 exact-digest image publish/isolated validation → DB 초기화 전용 exact-SHA 승인 후 Neon restore/stamp → Render 생성 전용 exact-SHA 승인 후 Web Service create/deploy입니다.
+고정 순서는 image publish/isolated validation 완료 → Neon restore 1회 완료 → DB stamp recovery 전용 exact-SHA 승인 후 exact v295 stamp만 실행 → Render 생성 전용 exact-SHA 승인 후 Web Service create/deploy입니다.
 
 ## 공급망 안전 baseline
 
@@ -76,9 +76,9 @@ v341 source를 포함한 새 image는 게시와 isolated Alpine system CA store,
 
 ## 다음 작업
 
-Neon 초기화 실행 준비는 v343에서 완료했습니다. `tools/initialize_neon_database.py`는 exact preparation SHA, clean/pushed `main`, target `neondb`, pinned backup SHA, exact revision과 action을 모두 확인한 뒤에만 실행됩니다. 기본 모드와 focused smoke는 연결·쓰기 없이 준비 계약만 검사합니다.
+승인된 v343 SHA `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 Neon restore를 한 번 실행했습니다. 22 application tables / 748 rows / schema digest가 일치했고 stamp 전에 legacy data digest 비교가 session timezone 차이로 멈췄습니다. UTC-normalized digest는 verified rehearsal과 Neon이 정확히 일치하며 `alembic_version`은 없습니다.
 
-`--inspect`는 asyncpg와 PostgreSQL 16/libpq `verify-full` read-only preflight를 통과했고 `neondb`는 계속 0 public table / no Alembic입니다. 실제 restore/stamp/write는 아직 실행하지 않았습니다. 다음은 push된 v343 준비 commit의 정확한 40자리 SHA를 기호가 승인한 뒤 `--execute`를 한 번만 실행하는 단계입니다. 이 승인에는 Render Web Service 생성·배포가 포함되지 않습니다.
+v344 도구는 `pg_restore` 재실행을 거부합니다. 다음은 push된 v344 recovery 준비 commit의 정확한 40자리 SHA를 기호가 승인한 뒤 `--resume-stamp`로 현재 복원 상태를 재검증하고 exact `v295_initial_schema` stamp만 한 번 실행하는 단계입니다. 이 승인에는 Render Web Service 생성·배포가 포함되지 않습니다.
 
 ## 첫 검사
 
@@ -99,6 +99,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-첫 검사의 v343 기대 결과는 `neon-database-initialization-preparation-ready-execution-gated`, 다음 단계는 `owner-approve-neon-database-initialization-preparation-sha`입니다. v340 Render 계획, v338 Render Connect, v337 account readiness, v336 Neon evidence, v335 provider selection, v334 deployment baseline을 보존합니다.
+첫 검사의 v344 기대 결과는 `neon-restore-verified-stamp-recovery-preparation-ready`, 다음 단계는 `owner-approve-neon-stamp-recovery-preparation-sha`입니다. v340 Render 계획, v338 Render Connect, v337 account readiness, v336 Neon evidence, v335 provider selection, v334 deployment baseline을 보존합니다.
 
 별도 승인 전에는 Web Service/deploy, DB/Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스를 변경하지 않습니다.

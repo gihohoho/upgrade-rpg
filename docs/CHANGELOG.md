@@ -1,3 +1,12 @@
+# v344.neon-restore-verified-stamp-recovery-preparation-ready
+
+- 승인된 v343 SHA로 Neon `neondb`에 pinned backup을 단일 트랜잭션 restore 한 번 실행했습니다.
+- 22 application tables / 748 rows / schema digest가 일치했고 legacy data digest 차이에서 stamp 전에 안전하게 중단했습니다.
+- 원인은 verified rehearsal `Asia/Seoul`과 Neon `GMT`가 timezone-aware datetime을 다른 offset 문자열로 반환한 session-timezone-dependent 해시였습니다.
+- aware datetime을 UTC로 정규화한 application data digest는 verified rehearsal과 Neon이 `4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c`로 일치합니다.
+- v344 recovery 도구는 `pg_restore` 재실행을 금지하고 새 exact-SHA 승인 뒤 restored state 재검증과 exact v295 stamp만 허용합니다.
+- Alembic stamp와 Render 생성·배포는 아직 실행하지 않았습니다.
+
 # v343.neon-initialization-preparation-ready-execution-gated
 
 - Neon direct 대상의 exact-SHA-gated restore/stamp 도구와 focused smoke를 추가했습니다.

@@ -460,7 +460,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     )
     _require(
         policy.get("ownerOnlyApprovalPhase")
-        == "v343-neon-initialization-preparation-ready-owner-approval-required",
+        == "v344-neon-restore-verified-stamp-recovery-owner-approval-required",
         "owner-only phase changed",
     )
     _require(policy.get("publishLifecyclePath") == LIFECYCLE_PATH, "publish lifecycle path changed")
@@ -659,7 +659,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         _require(_bool(policy, key) is False, f"blocked/unexecuted v334 state must remain false: {key}")
     _require(policy.get("productionDeploymentPlan") == PRODUCTION_DEPLOY_PLAN_PATH, "production deployment plan path changed")
     _require(
-        policy.get("nextSafeStage") == "owner-approve-neon-database-initialization-preparation-sha",
+        policy.get("nextSafeStage") == "owner-approve-neon-stamp-recovery-preparation-sha",
         "unexpected image-policy next safe stage",
     )
     _require(

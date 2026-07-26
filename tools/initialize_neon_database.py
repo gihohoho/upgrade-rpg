@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
-"""Prepare and, only after exact-SHA approval, initialize the Neon database.
+"""Guard recovery after the verified Neon restore and before the exact stamp.
 
-The default and ``--inspect`` paths are read-only.  The mutating ``--execute``
-path is deliberately narrow:
+The approved v343 execution restored the pinned archive once, then stopped
+before Alembic because the legacy digest was session-timezone-dependent.  The
+restored 22-table/748-row state matches the verified rehearsal when aware
+datetimes are normalized to UTC.
 
-1. bind the approval to the clean, pushed ``main`` HEAD;
-2. require exact target, backup, revision, and action confirmations;
-3. require the Neon direct target to still be completely empty;
-4. restore one pinned custom archive in one transaction;
-5. verify all application schema/data digests;
-6. stamp only ``v295_initial_schema``;
-7. verify the stamp and unchanged application digests.
+The default and ``--inspect`` paths are read-only.  The old ``--execute`` path
+is disabled so the restore cannot be repeated.  The mutating
+``--resume-stamp`` path is deliberately narrow:
 
-There is no automatic retry, cleanup, reset, truncate, migration upgrade, or
-Render action.  Connection values are loaded from a Git-ignored local file and
-are never included in commands, reports, or displayed errors.
+1. bind the new approval to the clean, pushed ``main`` HEAD;
+2. require exact target, backup, revision, and recovery action confirmations;
+3. reverify the restored state and absence of ``alembic_version``;
+4. stamp only ``v295_initial_schema``;
+5. verify the stamp and unchanged application digests.
+
+There is no restore retry, automatic cleanup, reset, truncate, migration
+upgrade, or Render action.  Connection values are loaded from a Git-ignored
+local file and are never included in commands, reports, or displayed errors.
 """
 
 from __future__ import annotations
@@ -66,12 +70,12 @@ PSQL = PG_BIN / "psql.exe"
 LOCAL_REPORT_DIR = ROOT / "local-review-artifacts/neon"
 LOCAL_CA_BUNDLE = LOCAL_REPORT_DIR / "windows-system-ca-roots.pem"
 
-TOOL_VERSION = "v343.neon-database-initialization-exact-sha-gated"
-PLAN_VERSION = "v343.neon-initialization-preparation-ready-execution-gated"
-READY_RESULT = "neon-database-initialization-preparation-ready-execution-gated"
-INSPECT_RESULT = "neon-database-initialization-readonly-preflight-ready"
+TOOL_VERSION = "v344.neon-stamp-recovery-exact-sha-gated"
+PLAN_VERSION = "v344.neon-restore-verified-stamp-recovery-preparation-ready"
+READY_RESULT = "neon-restore-verified-stamp-recovery-preparation-ready"
+INSPECT_RESULT = "neon-restored-state-readonly-verified-stamp-gated"
 SUCCESS_RESULT = "neon-database-restored-stamped-and-verified"
-NEXT_STAGE = "owner-approve-neon-database-initialization-preparation-sha"
+NEXT_STAGE = "owner-approve-neon-stamp-recovery-preparation-sha"
 
 EXPECTED_DATABASE = "neondb"
 EXPECTED_ROLE = "neondb_owner"
@@ -88,6 +92,9 @@ EXPECTED_SCHEMA_DIGEST = (
     "7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921"
 )
 EXPECTED_DATA_DIGEST = (
+    "4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c"
+)
+LEGACY_SESSION_TIMEZONE_DATA_DIGEST = (
     "ecb19e57283dc6b780426339bfc46f2bac14da63a618249808f30132508f9244"
 )
 EXPECTED_APP_ROWS = 748
@@ -115,7 +122,7 @@ EXPECTED_APP_TABLES = (
     "user_save_snapshots",
     "users",
 )
-EXPECTED_ACTION = "restore-and-stamp-once"
+EXPECTED_ACTION = "verify-restored-and-stamp-once"
 SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 
 
@@ -143,7 +150,11 @@ def canonical_value(value: Any) -> Any:
         return {"type": "float", "value": repr(value)}
     if isinstance(value, Decimal):
         return {"type": "decimal", "value": format(value, "f")}
-    if isinstance(value, (datetime, date, time)):
+    if isinstance(value, datetime):
+        if value.tzinfo is not None:
+            value = value.astimezone(timezone.utc)
+        return {"type": "datetime", "value": value.isoformat()}
+    if isinstance(value, (date, time)):
         return {"type": type(value).__name__, "value": value.isoformat()}
     if isinstance(value, UUID):
         return {"type": "uuid", "value": str(value)}
@@ -184,21 +195,23 @@ def load_plan() -> dict[str, Any]:
     require(plan.get("schemaVersion") == PLAN_VERSION, "Neon plan version differs")
     require(plan.get("result") == READY_RESULT, "Neon plan result differs")
     require(plan.get("nextSafeStage") == NEXT_STAGE, "Neon plan next stage differs")
-    require(plan.get("productionResourcesMutated") is False, "plan mutation marker differs")
+    require(plan.get("productionResourcesMutated") is True, "restore mutation marker differs")
 
     gate = plan.get("executionGate") or {}
     require(gate.get("preparationToolReviewed") is True, "preparation tool review is incomplete")
     require(gate.get("readOnlyPreflightRequired") is True, "read-only preflight must be required")
+    require(gate.get("stampRecoveryPreparationReady") is True, "stamp recovery preparation is incomplete")
+    require(
+        gate.get("restoreVerifiedWithUtcCanonicalDigest") is True,
+        "restored data UTC-canonical verification is incomplete",
+    )
     require(
         gate.get("exactPreparationShaApprovalRequired") is True,
         "exact preparation SHA approval must be required",
     )
-    for key in (
-        "databaseInitializationApproved",
-        "restoreExecuted",
-        "stampExecuted",
-        "renderServiceExists",
-    ):
+    require(gate.get("databaseInitializationApproved") is True, "initialization approval record differs")
+    require(gate.get("restoreExecuted") is True, "restore execution record differs")
+    for key in ("stampExecuted", "renderServiceExists", "stampRecoveryApproved"):
         require(gate.get(key) is False, f"execution gate must remain false: {key}")
     return plan
 
@@ -608,7 +621,8 @@ def write_success_report(
         "role": EXPECTED_ROLE,
         "backupSha256": EXPECTED_BACKUP_SHA256,
         "reviewedRevision": EXPECTED_REVISION,
-        "preRestorePublicTableCount": len(before["publicTables"]),
+        "recoveryMode": "verify-restored-and-stamp-once",
+        "preStampPublicTableCount": len(before["publicTables"]),
         "applicationTableCount": model["tableCount"],
         "applicationRowCount": model["rowCount"],
         "applicationSchemaDigest": model["schemaDigest"],
@@ -635,10 +649,11 @@ def write_success_report(
 
 
 def print_preparation_summary(*, connected: bool) -> None:
-    print("Neon database initialization guard")
+    print("Neon database stamp recovery guard")
     print("- target: Neon Free / AWS Singapore / PostgreSQL 16 / neondb / neondb_owner")
-    print("- source: pinned local custom backup / 22 application tables / 748 rows")
-    print("- mutation sequence: single-transaction restore, exact v295 stamp, verify")
+    print("- current state: pinned backup restored / 22 application tables / 748 rows / no Alembic")
+    print("- next mutation: verify restored state, exact v295 stamp once, verify")
+    print("- restore retry: forbidden")
     print("- automatic retry/cleanup/reset/Render action: no")
     print("- secret/endpoint printed or recorded: no")
     print(f"- read-only target inspection: {'yes' if connected else 'no'}")
@@ -648,7 +663,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--inspect", action="store_true", help="perform the read-only target preflight")
-    mode.add_argument("--execute", action="store_true", help="perform the exact approved restore and stamp once")
+    mode.add_argument("--execute", action="store_true", help="disabled after the completed restore")
+    mode.add_argument(
+        "--resume-stamp",
+        action="store_true",
+        help="verify the restored state and perform only the exact approved stamp",
+    )
     parser.add_argument("--confirm-preparation-sha", default="")
     parser.add_argument("--confirm-target", default="")
     parser.add_argument("--confirm-backup-sha", default="")
@@ -663,7 +683,7 @@ def main() -> int:
         run_version(PSQL)
         target = load_direct_target()
 
-        if not args.inspect and not args.execute:
+        if not args.inspect and not args.execute and not args.resume_stamp:
             print_preparation_summary(connected=False)
             print("- database mutation attempted: no")
             print(f"- result: {READY_RESULT}")
@@ -672,15 +692,20 @@ def main() -> int:
 
         if args.inspect:
             state = collect_integrity(target)
-            require_empty_target(state)
+            require_application_restore(state, stamped=False)
             run_libpq_readonly_preflight(target)
             print_preparation_summary(connected=True)
-            print("- current public tables: 0; alembic_version: absent")
+            print("- current application tables/rows: 22/748; alembic_version: absent")
             print("- PostgreSQL 16 libpq + exported Windows system CA + verify-full: passed")
             print("- database mutation attempted: no")
             print(f"- result: {INSPECT_RESULT}")
             print(f"- next safe stage: {NEXT_STAGE}")
             return 0
+
+        if args.execute:
+            raise NeonInitializationError(
+                "restore is already recorded and must not be retried; use --resume-stamp only after a new exact-SHA approval"
+            )
 
         require_exact_approval(
             preparation_sha=args.confirm_preparation_sha,
@@ -690,18 +715,8 @@ def main() -> int:
             action=args.confirm_action,
         )
         before = collect_integrity(target)
-        require_empty_target(before)
+        require_application_restore(before, stamped=False)
         run_libpq_readonly_preflight(target)
-
-        run_guarded_subprocess(
-            build_restore_command(),
-            environment=pg_environment(target),
-            label="single-transaction Neon restore",
-            cwd=ROOT,
-            timeout=600,
-        )
-        restored = collect_integrity(target)
-        require_application_restore(restored, stamped=False)
 
         run_guarded_subprocess(
             build_stamp_command(),
@@ -719,7 +734,7 @@ def main() -> int:
         )
 
         print_preparation_summary(connected=True)
-        print("- restore: completed and application integrity verified")
+        print("- existing restore: application integrity reverified; no restore retry")
         print(f"- Alembic: exact {EXPECTED_REVISION} stamped and verified")
         print(f"- sanitized local report: {report.relative_to(ROOT)}")
         print(f"- result: {SUCCESS_RESULT}")

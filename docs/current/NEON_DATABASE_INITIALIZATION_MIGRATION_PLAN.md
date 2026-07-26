@@ -1,17 +1,18 @@
-# Neon database initialization and migration plan — v343
+# Neon database initialization and migration plan — v344
 
 ## 결론
 
-새 `rpg_game` DB를 만들지 않고 기존 production branch의 빈 `neondb`를 사용합니다. 앱은 DB 이름을 코드에 고정하지 않고 `DATABASE_URL`을 사용하므로 DB 생성 단계를 없애는 편이 단순하고 안전합니다.
+새 `rpg_game` DB를 만들지 않고 restore 전에는 비어 있던 production branch의 `neondb`를 사용합니다. 앱은 DB 이름을 코드에 고정하지 않고 `DATABASE_URL`을 사용하므로 DB 생성 단계를 없애는 편이 단순하고 안전합니다.
 
-2026-07-26 read-only 확인 결과:
+2026-07-26 restore 후 read-only 확인 결과:
 
 ```txt
 database/role: neondb / neondb_owner
-public base tables: 0
+public base tables: 22
+application rows: 748
 alembic_version: 없음
 TLS hostname verification: 통과
-database write: 없음
+read-only inspection write: 없음
 ```
 
 정적 계약은 `deploy/neon-database-initialization-migration.example.json`입니다. 실제 endpoint, password, URL은 기록하지 않습니다.
@@ -39,31 +40,43 @@ reviewed revision: v295_initial_schema
 - 앱 runtime도 단일 worker와 기존 SQLAlchemy pool을 고려해 direct URL을 사용합니다.
 - 실제 URL은 `deploy/.env.production`과 Render secret store 밖으로 출력하지 않습니다.
 
-## 준비된 실행 도구와 승인 경계
+## v343 실행 결과와 안전 중단
+
+승인된 preparation SHA `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 `pg_restore`를 한 번 실행했습니다. 단일 트랜잭션 restore가 완료된 뒤 22 application tables, 748 rows, schema digest가 일치했습니다.
+
+기존 data digest는 timezone-aware datetime을 현재 DB session offset 문자열로 해시했습니다. verified rehearsal은 `Asia/Seoul`, Neon은 `GMT`여서 같은 시각도 다른 문자열이 되었고 도구는 Alembic stamp 전에 안전하게 중단했습니다. 양쪽 44개 `timestamptz` 컬럼을 UTC로 정규화해 다시 계산한 application data digest는 아래와 같이 정확히 일치합니다.
+
+```txt
+schema: 7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921
+data:   4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c
+alembic_version: 없음
+```
+
+sanitized evidence는 `deploy/review/neon-restore-prestamp-verification-v344.json`입니다. 복원은 재실행하지 않습니다.
+
+## 준비된 stamp recovery 도구와 승인 경계
 
 `tools/initialize_neon_database.py`가 아래 조건을 모두 fail-closed로 확인합니다.
 
 - 실행 commit이 clean `main` HEAD이며 pushed `origin/main`과 같음
 - 사용자가 승인한 정확한 40자리 preparation SHA와 현재 HEAD가 같음
-- target `neondb`, backup SHA-256, revision `v295_initial_schema`, action `restore-and-stamp-once`가 모두 정확함
-- Neon direct target이 실행 직전에도 0 table / no Alembic임
+- target `neondb`, backup SHA-256, revision `v295_initial_schema`, action `verify-restored-and-stamp-once`가 모두 정확함
+- Neon direct target이 실행 직전에도 22 application tables / 748 rows / UTC-normalized digest 일치 / no Alembic임
 - pooled URL, `--create`, `--clean`, upgrade/downgrade, 자동 retry/cleanup은 사용하지 않음
+- 이미 완료된 `pg_restore` 재실행은 거부함
 
-기본 실행과 focused smoke는 DB에 연결하지 않습니다. `--inspect`만 read-only transaction과 libpq `verify-full` preflight를 수행합니다. `--execute`는 위 exact 승인 입력이 모두 맞아야만 열립니다.
+기본 실행과 focused smoke는 DB에 연결하지 않습니다. `--inspect`만 read-only transaction과 libpq `verify-full` preflight를 수행합니다. 과거 `--execute`는 복원 완료 뒤 비활성화됐고, `--resume-stamp`만 새 exact 승인 입력이 모두 맞아야 열립니다.
 
-## 별도 exact-SHA 승인 뒤 실행할 순서
+## 별도 exact-SHA 승인 뒤 recovery 순서
 
-1. Neon `neondb`가 0 table / no Alembic인지 read-only 재확인
-2. backup filename, size, SHA-256, table 목록, 행 수 snapshot 재확인
-3. direct URL과 verify-full을 고정한 `pg_restore` 실행
-4. `--exit-on-error --single-transaction --no-owner --no-privileges` 사용
-5. `--create`, `--clean`은 사용하지 않음
-6. 복원 뒤 application 22 tables / 748 rows / schema·data digest 일치 확인
-7. 아직 `alembic_version`이 없는지 확인
-8. exact revision `v295_initial_schema`만 stamp
-9. public 23 tables / 749 rows, application digest 불변, current v295 확인
+1. 새 recovery preparation SHA가 clean pushed `main` HEAD와 같은지 확인
+2. target, backup SHA-256, revision, `verify-restored-and-stamp-once` confirmation 확인
+3. application 22 tables / 748 rows / UTC-normalized schema·data digest 일치와 no Alembic 재확인
+4. `pg_restore`는 실행하지 않음
+5. exact revision `v295_initial_schema`만 stamp
+6. public 23 tables / 749 rows, application digest 불변, current v295 확인
 
-restore와 stamp는 Render 배포 승인과 다른 **DB 초기화 전용 준비 commit의 exact SHA 승인**을 받아야 합니다. 자동 retry, 자동 cleanup, reset, truncate, seed, upgrade/downgrade는 포함하지 않습니다.
+stamp recovery는 Render 배포 승인과 다른 **DB stamp recovery 전용 준비 commit의 exact SHA 승인**을 받아야 합니다. 자동 retry, 자동 cleanup, reset, truncate, seed, upgrade/downgrade는 포함하지 않습니다.
 
 ## 실패 시 중단
 
@@ -80,7 +93,8 @@ v341 source의 Neon verify-full SQLAlchemy bootstrap은 실제 Neon direct read-
 
 ```txt
 bootstrap fix → new image publish/isolated validation 완료
-→ 별도 exact-SHA 승인 뒤 Neon restore/stamp/verification
+→ 별도 exact-SHA 승인 뒤 Neon restore 1회 완료
+→ 새 exact-SHA 승인 뒤 restored-state verification + exact v295 stamp
 → Render service create/deploy
 ```
 

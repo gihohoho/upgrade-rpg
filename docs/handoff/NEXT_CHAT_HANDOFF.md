@@ -1,13 +1,13 @@
-# Upgrade RPG Codex handoff — v343
+# Upgrade RPG Codex handoff — v344
 
 ## 현재 상태
 
 ```txt
-latest: v343.neon-initialization-preparation-ready-execution-gated
-strict result: neon-database-initialization-preparation-ready-execution-gated
-next safe stage: owner-approve-neon-database-initialization-preparation-sha
+latest: v344.neon-restore-verified-stamp-recovery-preparation-ready
+strict result: neon-restore-verified-stamp-recovery-preparation-ready
+next safe stage: owner-approve-neon-stamp-recovery-preparation-sha
 render plan: v340.render-service-settings-reviewed-creation-blocked
-neon plan: v343.neon-initialization-preparation-ready-execution-gated
+neon plan: v344.neon-restore-verified-stamp-recovery-preparation-ready
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
 render checkpoint next stage: review-render-service-settings-and-database-initialization-plan
@@ -35,15 +35,15 @@ production deployment approval ready/approved/executed: no/no/no
 - v341 source: runtime/Alembic 공용 system-CA hostname-verifying SSLContext 적용 완료
 - Render env inventory: `deploy/render.production.env.example`로 분리 완료
 - 현재 verified image: v341 source 포함, 공급망·isolated CA-store/runtime 검증 완료
-- Neon `neondb`: system-CA hostname verification/read-only 확인에서 0 public table / no Alembic
+- Neon `neondb`: 승인된 restore 뒤 22 application tables / 748 rows / no Alembic
 - DB 선택: 새 `rpg_game`을 만들지 않고 기존 빈 `neondb` 사용
 - 이식: verified custom dump 22 application tables / 748 rows restore 후 exact `v295_initial_schema` stamp
 - 연결: restore/Alembic/runtime 모두 direct; pooled URL은 restore/Alembic에 사용 금지
-- 순서: v341 exact-SHA 승인 → 새 image publish/isolated validation → 별도 exact-SHA Neon restore/stamp → 별도 exact-SHA Render create/deploy
+- 순서: image publish/isolated validation 완료 → Neon restore 1회 완료 → 별도 exact-SHA stamp-only recovery → 별도 exact-SHA Render create/deploy
 - Render name: `upgrade-rpg-api`, owner 확인 완료
-- v343 tool: `tools/initialize_neon_database.py`, exact SHA/target/backup/revision/action + clean pushed main guard
+- v344 tool: `tools/initialize_neon_database.py`, 재복원 금지 + exact SHA/target/backup/revision/action + clean pushed main guard
 - read-only preflight: asyncpg system CA와 PostgreSQL 16/libpq exported Windows system CA `verify-full` 모두 통과
-- current Neon mutation: restore/stamp/write 모두 없음
+- current Neon mutation: restore 1회 완료 / stamp·Render write 없음
 
 ## 로컬 코드 리뷰 보조 도구 — 2026-07-26
 
@@ -106,11 +106,11 @@ Render workspace는 `Hobby (legacy)`, 결제수단 없음, active service 0개�
 
 ## 다음 단계
 
-Neon 초기화 실행 준비는 v343에서 완료했습니다. `tools/initialize_neon_database.py`는 clean/pushed `main`의 승인된 정확한 SHA와 target·backup SHA·revision·action을 모두 확인한 뒤에만 단일 트랜잭션 restore와 exact v295 stamp를 허용합니다. 전후 22 application tables / 748 rows / schema·data digest와 최종 23 tables / 749 rows도 검사합니다.
+사용자가 승인한 v343 SHA `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 단일 트랜잭션 restore를 한 번 실행했습니다. 22 tables / 748 rows / schema digest는 즉시 일치했지만 legacy data digest가 session timezone offset에 의존해 달라졌고 도구는 stamp 전에 안전하게 중단했습니다.
 
-`--inspect` read-only preflight에서 `neondb`는 계속 0 public table / no Alembic이며 asyncpg와 PostgreSQL 16/libpq `verify-full`이 모두 통과했습니다. Windows libpq의 `sslrootcert=system` 호환 오류는 공개 Windows 시스템 CA를 Git 제외 로컬 PEM으로 export해 해결했습니다. 실제 restore/stamp/write는 아직 0건입니다.
+verified local rehearsal은 `Asia/Seoul`, Neon은 `GMT`이며 양쪽에 44개 `timestamptz` 컬럼이 있습니다. aware datetime을 UTC로 정규화한 application data digest `4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c`로 양쪽이 정확히 일치했습니다. sanitized evidence는 `deploy/review/neon-restore-prestamp-verification-v344.json`입니다.
 
-다음 작업은 이 v343 준비 commit의 정확한 40자리 SHA를 기호에게 받아 승인받은 뒤, 도구의 `--execute`를 한 번만 실행하는 것입니다. 승인에는 Render Web Service 생성·배포가 포함되지 않습니다. 필요한 extension·권한·새 설치는 현재 없습니다.
+다음 작업은 v344 recovery 준비 commit의 정확한 40자리 SHA를 기호에게 승인받은 뒤 `--resume-stamp`로 기존 복원 상태를 재검증하고 exact v295 stamp만 한 번 실행하는 것입니다. `pg_restore` 재실행은 금지되며 Render 생성·배포도 포함되지 않습니다. 필요한 extension·권한·새 설치는 현재 없습니다.
 
 ## 첫 검사
 
@@ -131,6 +131,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v343 기대 결과는 `neon-database-initialization-preparation-ready-execution-gated`, 다음 단계는 `owner-approve-neon-database-initialization-preparation-sha`입니다. v340 Render 계획, v338 Render Connect, v337 account readiness, v336 Neon evidence, v335 provider selection과 v334 deployment baseline을 계속 보존합니다.
+v344 기대 결과는 `neon-restore-verified-stamp-recovery-preparation-ready`, 다음 단계는 `owner-approve-neon-stamp-recovery-preparation-sha`입니다. v340 Render 계획, v338 Render Connect, v337 account readiness, v336 Neon evidence, v335 provider selection과 v334 deployment baseline을 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

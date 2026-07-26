@@ -4,6 +4,11 @@
 
 코딩을 이어갈 때는 루트 `AGENTS.md`와 `NEXT_CHAT_HANDOFF.md`를 먼저 읽고, 현재 상태는 `docs/current/CURRENT_STATUS.md`에서 확인합니다.
 
+## 로컬 개발서버 ON
+
+- 백엔드 시작 : python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+- 프론트엔드 시작 : npm run dev
+
 ## 핵심 폴더
 
 - `index.html`, `admin.html`, `src/`: legacy 게임·관리자

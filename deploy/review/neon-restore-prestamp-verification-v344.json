@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "v344.neon-restore-verified-stamp-recovery-preparation-ready",
+  "observedAtUtc": "2026-07-26T05:15:53Z",
+  "approvedPreparationSha": "d6df9984e00d08b28fd524dcfefeb492e334d5e9",
+  "provider": "Neon Free",
+  "region": "aws-ap-southeast-1",
+  "postgresMajor": 16,
+  "database": "neondb",
+  "role": "neondb_owner",
+  "restore": {
+    "attemptedOnce": true,
+    "singleTransaction": true,
+    "backupSha256": "b103d71370815478a6b3900854e7959b7d6c037c5f46c42da154855a24eff481",
+    "createOrCleanUsed": false,
+    "automaticRetryOrCleanup": false,
+    "retryForbidden": true
+  },
+  "readOnlyVerification": {
+    "publicTableCount": 22,
+    "applicationTableCount": 22,
+    "applicationRowCount": 748,
+    "applicationSchemaDigest": "7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921",
+    "applicationDataDigestUtcCanonical": "4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c",
+    "verifiedRehearsalDataDigestUtcCanonical": "4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c",
+    "schemaMatchesVerifiedRehearsal": true,
+    "dataMatchesVerifiedRehearsal": true,
+    "alembicVersionPresent": false
+  },
+  "initialGuardStop": {
+    "stoppedBeforeStamp": true,
+    "legacySessionTimezoneDataDigest": "ecb19e57283dc6b780426339bfc46f2bac14da63a618249808f30132508f9244",
+    "localRehearsalTimezone": "Asia/Seoul",
+    "neonTimezone": "GMT",
+    "timestamptzColumnCountBoth": 44,
+    "cause": "timezone-aware datetimes were hashed with session-specific UTC offsets",
+    "fix": "convert timezone-aware datetimes to UTC before canonical JSON hashing"
+  },
+  "mutations": {
+    "databaseRestoreExecuted": true,
+    "alembicStampExecuted": false,
+    "renderServiceCreated": false,
+    "productionDeploymentExecuted": false
+  },
+  "secretOrEndpointRecorded": false,
+  "result": "neon-restore-verified-stamp-recovery-preparation-ready",
+  "nextSafeStage": "owner-approve-neon-stamp-recovery-preparation-sha"
+}
