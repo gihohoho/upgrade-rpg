@@ -1,0 +1,108 @@
+{
+  "schemaVersion": "v348.frontend-static-deployment-preparation-ready-exact-sha-gated",
+  "preparedAtUtc": "2026-07-26T09:49:12Z",
+  "result": "frontend-static-deployment-preparation-ready-exact-sha-gated",
+  "nextSafeStage": "owner-approve-frontend-static-deployment-preparation-sha",
+  "productionResourcesMutated": false,
+  "site": {
+    "provider": "render",
+    "type": "static-site",
+    "plan": "free",
+    "recommendedName": "gihohoho-upgrade-rpg",
+    "expectedOrigin": "https://gihohoho-upgrade-rpg.onrender.com",
+    "expectedGameUrl": "https://gihohoho-upgrade-rpg.onrender.com/index.html",
+    "expectedAdminUrl": "https://gihohoho-upgrade-rpg.onrender.com/admin.html",
+    "customDomain": false,
+    "autoDeploy": false
+  },
+  "source": {
+    "repository": "https://github.com/gihohoho/upgrade-rpg.git",
+    "visibility": "private",
+    "branch": "main",
+    "cleanPushedExactShaRequired": true,
+    "buildCommand": "node tools/build_legacy_static_site.mjs",
+    "publishDirectory": "frontend/legacy-dist",
+    "publishedSourceAllowlist": [
+      "index.html",
+      "admin.html",
+      "src/**/*.js",
+      "src/**/*.css"
+    ],
+    "excludedFromPublish": [
+      "backend",
+      "deploy",
+      "docs",
+      "tools",
+      ".git",
+      ".env",
+      "*.env",
+      "src/**/*.md"
+    ]
+  },
+  "runtime": {
+    "productionApiBaseUrl": "https://upgrade-rpg-api.onrender.com/api/v1",
+    "localApiBaseUrl": "http://127.0.0.1:8000/api/v1",
+    "localStaticOrigin": "http://127.0.0.1:5500",
+    "runtimeConfig": "src/api/runtime-config.js",
+    "backendCorsExactOriginRequired": true,
+    "backendCorsEnvironmentKey": "CORS_ORIGINS",
+    "backendCorsExpectedValue": "[\"https://gihohoho-upgrade-rpg.onrender.com\"]",
+    "backendService": "upgrade-rpg-api",
+    "backendServiceId": "srv-d9iro458nd3s73acgmsg"
+  },
+  "adminBoundary": {
+    "adminHtmlPublic": true,
+    "readOnlyApiAllowed": true,
+    "adminWriteKeyEmbedded": false,
+    "adminWriteOperationApproved": false,
+    "publicPreviewOnly": true,
+    "futureProductionAuthenticationReviewRequired": true
+  },
+  "approvedExecutionScopeAfterExactShaApproval": {
+    "verifyCleanPushedMainExactSha": true,
+    "connectPrivateGitHubRepository": true,
+    "createOneFreeStaticSite": true,
+    "initialStaticDeployExactCommitOnce": true,
+    "confirmExactStaticOrigin": true,
+    "setBackendCorsToExactStaticOrigin": true,
+    "deployBackendCorsConfigurationOnce": true,
+    "verifyGameAndAdminHttp200": true,
+    "verifyBrowserCorsAndReadOnlyApi": true,
+    "recordSanitizedEvidence": true,
+    "databaseWrite": false,
+    "alembic": false,
+    "adminWrite": false,
+    "secretEmbeddedInFrontend": false,
+    "customDomainOrDns": false,
+    "paymentMethodChange": false,
+    "automaticDeployOrRetry": false,
+    "failurePolicy": "stop-with-current-provider-state-preserved-and-request-review"
+  },
+  "executionOrder": [
+    "verify-clean-pushed-main-exact-sha",
+    "connect-private-github-repository",
+    "create-free-static-site-with-auto-deploy-disabled",
+    "deploy-static-site-from-approved-exact-commit-once",
+    "confirm-exact-onrender-origin",
+    "set-backend-cors-origins-to-the-exact-static-origin",
+    "save-and-deploy-backend-cors-configuration-once",
+    "verify-index-admin-browser-cors-and-read-only-api",
+    "record-sanitized-evidence"
+  ],
+  "approvalGate": {
+    "preparationReady": true,
+    "exactPreparationShaApprovalRequired": true,
+    "exactPreparationShaApproved": false,
+    "approvedPreparationSha": null,
+    "staticSiteCreated": false,
+    "staticDeployExecuted": false,
+    "backendCorsApplied": false,
+    "backendCorsDeployExecuted": false,
+    "browserIntegrationVerified": false
+  },
+  "possibleUserAction": {
+    "requiredNow": false,
+    "actionIfPrompted": "confirm Render GitHub App access to the private upgrade-rpg repository",
+    "newExtensionOrLocalPackageRequired": false
+  }
+}

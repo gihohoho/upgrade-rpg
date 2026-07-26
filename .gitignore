@@ -27,6 +27,7 @@ backend/.env
 node_modules/
 dist/
 build/
+/frontend/legacy-dist/
 
 # Logs
 *.log

@@ -1,3 +1,10 @@
+# v348.frontend-static-deployment-preparation-ready-exact-sha-gated
+
+- 실제 legacy 게임/관리자 화면을 Render Free Static Site로 배포하기 위한 exact-SHA-gated 계획과 fail-closed checker를 추가했습니다.
+- 공개 묶음은 `index.html`, `admin.html`, `src/**/*.js`, `src/**/*.css`만 허용하고 문서·backend·deploy·tools·환경파일과 secret 형태 문자열을 차단합니다.
+- local host에서는 기존 local API를 유지하고 non-local host에서만 Render public backend를 사용하는 `runtime-config.js`를 추가했습니다.
+- Static Site 생성, backend CORS 변경·재배포, admin write는 실행하지 않았습니다.
+
 # v347.render-service-created-initial-deploy-verified
 
 - 승인된 v346 exact SHA로 Render Free Web Service `upgrade-rpg-api`를 Singapore에 생성하고 승인 env 14개와 exact image로 첫 deploy를 한 번 실행했습니다.

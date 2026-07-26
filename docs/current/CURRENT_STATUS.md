@@ -1,12 +1,14 @@
-# Current Status — v347
+# Current Status — v348
 
 ## 현재 결과
 
 ```txt
-latest: v347.render-service-created-initial-deploy-verified
-strict result: render-service-created-initial-deploy-verified
-next safe stage: review-render-live-service-and-prepare-frontend-deployment-plan
+latest: v348.frontend-static-deployment-preparation-ready-exact-sha-gated
+strict result: frontend-static-deployment-preparation-ready-exact-sha-gated
+next safe stage: owner-approve-frontend-static-deployment-preparation-sha
+frontend plan: v348.frontend-static-deployment-preparation-ready-exact-sha-gated
 render plan: v347.render-service-created-initial-deploy-verified
+render prior next stage (completed): review-render-live-service-and-prepare-frontend-deployment-plan
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
@@ -73,15 +75,14 @@ Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 col
 - Direct/Pooler 모두 PostgreSQL 16.14, TLS 1.3 인증서·호스트 검증, read-only transaction 통과
 - sanitized evidence: `deploy/review/neon-readonly-connectivity-v336.json`
 
-## 아직 하지 않은 것
+## 아직 남은 것
 
-- Render Web Service 생성
-- 계획상 `rpg_game` 데이터베이스 생성
-- JWT/admin secret 생성·주입
-- production CORS origin 확정
-- production deploy
+- Render Static Site 생성과 frontend 최초 deploy
+- exact frontend origin을 사용하는 backend CORS 설정과 CORS deploy
+- frontend browser read-only 통합 검증
+- custom domain/DNS와 SLA production 전환은 보류
 
-Neon DB/schema/data 초기화는 완료됐지만 Render resource 생성, 배포 플랫폼 secret 주입, production CORS/public URL 확정이 남아 있으므로 v334 deployment plan의 required input은 계속 `unresolved`입니다.
+Neon DB/schema/data 초기화와 Render backend public preview 배포는 완료됐습니다. v334 generic SLA production plan의 별도 host·domain·edge·rollback 입력은 계속 `unresolved`이며, 현재 v348 단계는 비용 $0의 frontend public preview 준비입니다.
 
 ## Render account checkpoint — 2026-07-22
 
@@ -131,3 +132,18 @@ Neon DB/schema/data 초기화는 완료됐지만 Render resource 생성, 배포 
 Render 내부 health와 공개 `/api/v1/health`, Neon read-only `/api/v1/health/db`가 모두 HTTP 200 `status=ok`입니다. DB/Alembic write, image 변경, custom domain/DNS, 결제수단, 자동 retry·두 번째 deploy는 실행하지 않았습니다. 다음 단계는 live backend 확인과 frontend 배포/CORS origin 계획 검토입니다.
 
 현재 필요한 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.
+
+## Frontend static 배포 준비 — v348
+
+- 실제 배포 대상: legacy `index.html`, `admin.html`, `src/**/*.js`, `src/**/*.css`
+- Render Free Static Site 추천 이름: `gihohoho-upgrade-rpg`
+- 예상 게임/관리자 주소: `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`
+- production API: `https://upgrade-rpg-api.onrender.com/api/v1`
+- local `127.0.0.1:5500`: 기존 local backend 유지
+- packaging: `node tools/build_legacy_static_site.mjs` → `frontend/legacy-dist`
+- public admin: secret 없는 read-only preview, admin write 미승인
+- static site/backend CORS mutation: 미실행/미실행
+- 다음 단계: v348 준비 commit의 정확한 40자리 SHA owner 승인
+- 승인 뒤 범위: Static Site 최초 deploy 1회 + exact origin CORS backend deploy 1회 + browser read-only 검증
+- 현재 extension·설치: 없음
+- 가능한 사용자 조치: Render가 private repository 접근을 다시 확인할 때 GitHub App 접근 확인

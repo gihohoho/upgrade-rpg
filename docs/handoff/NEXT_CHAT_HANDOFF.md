@@ -1,12 +1,14 @@
-# Upgrade RPG Codex handoff — v347
+# Upgrade RPG Codex handoff — v348
 
 ## 현재 상태
 
 ```txt
-latest: v347.render-service-created-initial-deploy-verified
-strict result: render-service-created-initial-deploy-verified
-next safe stage: review-render-live-service-and-prepare-frontend-deployment-plan
+latest: v348.frontend-static-deployment-preparation-ready-exact-sha-gated
+strict result: frontend-static-deployment-preparation-ready-exact-sha-gated
+next safe stage: owner-approve-frontend-static-deployment-preparation-sha
+frontend plan: v348.frontend-static-deployment-preparation-ready-exact-sha-gated
 render plan: v347.render-service-created-initial-deploy-verified
+render prior next stage (completed): review-render-live-service-and-prepare-frontend-deployment-plan
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
@@ -23,7 +25,7 @@ provider selection: Render Free Singapore + Neon Free PostgreSQL 16 Singapore
 fixed monthly cost: USD 0
 Neon project/read-only connectivity: created/verified
 Render account/plan/payment: connected/Hobby (legacy)/no card
-Render registry credential/service/deploy: present/not created/not executed
+Render registry credential/service/deploy: present/created/executed
 Render credential action ready/approved/executed: yes/yes/yes
 production deployment approval ready/approved/executed: no/no/no
 Render public preview deployment ready/approved/executed: yes/yes/yes
@@ -99,7 +101,7 @@ Render workspace는 `Hobby (legacy)`, 결제수단 없음, active service 0개�
 
 ## 유지할 안전 경계
 
-- Render Web Service 생성과 `Deploy Web Service` 실행 금지
+- 추가 Render Web Service 생성, 자동 deploy, 승인되지 않은 추가 deploy 금지
 - Render payment method 추가 금지
 - actual Neon URL, JWT/admin secret, CORS origin의 Render 주입 금지
 - DB create/delete/restore/reset/seed/write와 Alembic mutation 금지
@@ -119,6 +121,12 @@ verified local rehearsal은 `Asia/Seoul`, Neon은 `GMT`이며 양쪽에 44개 `t
 
 공개 `/api/v1/health`와 한 번 요청한 `/api/v1/health/db`가 모두 HTTP 200 `status=ok`입니다. DB/Alembic write, image 변경, custom domain/DNS, 결제, 자동 retry·두 번째 deploy는 없었습니다. 다음은 live backend 검토와 frontend 배포/CORS origin 계획이며 필요한 extension·권한·새 설치는 현재 없습니다.
 
+v348에서 실제 legacy `index.html`, `admin.html`, `src/**/*.js`, `src/**/*.css`만 묶는 Render Free Static Site 계획을 준비했습니다. 추천 이름은 `gihohoho-upgrade-rpg`, 예상 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`과 `/admin.html`입니다. local host는 기존 local API를 유지하고 non-local host만 `https://upgrade-rpg-api.onrender.com/api/v1`에 연결합니다.
+
+Static Site 생성·최초 deploy, backend exact `CORS_ORIGINS`, backend CORS deploy는 모두 미실행입니다. 다음 단계는 v348 준비 commit의 정확한 40자리 SHA owner 승인입니다. 승인 뒤 private GitHub repo 연결 → static deploy 1회 → exact origin 확인 → backend CORS 설정/deploy 1회 → 브라우저 read-only 통합 검증 순서만 허용합니다. admin key, DB/Alembic write, admin write, 자동 retry, custom domain/DNS/payment는 포함하지 않습니다.
+
+현재 필요한 extension·설치는 없습니다. Render가 private `upgrade-rpg` repository 접근을 다시 확인하라고 표시할 때만 기호가 GitHub App 접근을 확인해야 합니다.
+
 ## 첫 검사
 
 실행 위치: 프로젝트 루트
@@ -126,6 +134,8 @@ Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.ex
 새 설치 여부: 없음
 
 ```bash
+python tools/check_frontend_static_deployment_plan.py --strict
+node tools/smoke/frontend/smoke_legacy_static_deployment_preparation.js
 python tools/prepare_render_local_environment.py --inspect-local
 python tools/smoke/backend/smoke_render_service_creation_preparation.py
 python tools/initialize_neon_database.py
@@ -140,6 +150,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v347 기대 결과는 `render-service-created-initial-deploy-verified`, 다음 단계는 `review-render-live-service-and-prepare-frontend-deployment-plan`입니다. v345 Neon 완료, v342 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline을 계속 보존합니다.
+v348 기대 결과는 `frontend-static-deployment-preparation-ready-exact-sha-gated`, 다음 단계는 `owner-approve-frontend-static-deployment-preparation-sha`입니다. v347 backend, v345 Neon 완료, v342 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline을 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

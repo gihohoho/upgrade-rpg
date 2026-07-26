@@ -6,6 +6,7 @@
 
 - `current/CURRENT_STATUS.md`: 지금 완료된 상태와 안전 경계
 - `current/PRODUCTION_DEPLOYMENT_PLAN.md`: 검토된 운영 배포 순서·승인·복구 계약
+- `current/FRONTEND_STATIC_DEPLOYMENT_PLAN.md`: legacy 게임·관리자 Render Static Site 배포와 exact CORS 승인 계획
 - `current/ROADMAP.md`: 다음 진행 순서
 - `current/PROJECT_STRUCTURE.md`: 저장소 구조
 - `current/SECURITY_ROTATION_AND_GITHUB_GATES.md`: 보안 권한과 나중에 회전할 항목

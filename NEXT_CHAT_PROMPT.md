@@ -1,4 +1,4 @@
-# Upgrade RPG Codex next prompt — v347
+# Upgrade RPG Codex next prompt — v348
 
 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽고 계속 지켜주세요. 기호는 코딩을 거의 모르므로 한국어로 쉽게 설명하고, 모든 터미널 명령 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension·권한·설치는 해결될 때까지 요청해주세요.
 
@@ -7,10 +7,12 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 ## 현재 고정값
 
 ```txt
-latest: v347.render-service-created-initial-deploy-verified
-strict result: render-service-created-initial-deploy-verified
-next safe stage: review-render-live-service-and-prepare-frontend-deployment-plan
+latest: v348.frontend-static-deployment-preparation-ready-exact-sha-gated
+strict result: frontend-static-deployment-preparation-ready-exact-sha-gated
+next safe stage: owner-approve-frontend-static-deployment-preparation-sha
+frontend plan: v348.frontend-static-deployment-preparation-ready-exact-sha-gated
 render plan: v347.render-service-created-initial-deploy-verified
+render prior next stage (completed): review-render-live-service-and-prepare-frontend-deployment-plan
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
@@ -29,7 +31,7 @@ fixed monthly cost: USD 0
 Neon account/project: connected/created (PostgreSQL 16, AWS Singapore)
 Neon read-only connectivity: direct/pooled verified with TLS 1.3 hostname verification
 Render account/plan/payment: connected/Hobby (legacy)/no card
-Render registry credential/service/deploy: present/not created/not executed
+Render registry credential/service/deploy: present/created/executed
 Render credential action ready/approved/executed: yes/yes/yes
 production deployment approval ready/approved/executed: no/no/no
 Render public preview deployment ready/approved/executed: yes/yes/yes
@@ -37,7 +39,7 @@ Render public preview deployment ready/approved/executed: yes/yes/yes
 
 Render 전용 GitHub classic PAT는 `read:packages` only, 만료일 2027-07-23으로 만들고 `upgrade-rpg-ghcr-read` credential에 저장했습니다. 첫 PAT는 브라우저 검사 출력에 노출된 것을 감지해 Render에 저장하지 않고 즉시 GitHub에서 폐기했습니다. 교체 PAT 값은 채팅·파일·Git·로그에 기록하지 않았습니다.
 
-verified exact digest는 Render `Existing Image`에서 `Connect`에 성공했고 서비스 설정 화면까지 열렸습니다. `Deploy Web Service`는 누르지 않았으므로 Web Service 생성과 배포는 모두 없습니다. sanitized evidence는 `deploy/review/render-private-ghcr-connect-v338.json`입니다.
+v338 checkpoint 당시 verified exact digest는 Render `Existing Image`에서 `Connect`에 성공했고 서비스 설정 화면까지 열렸지만 `Deploy Web Service`는 누르지 않았습니다. 이후 v347에서 backend Web Service 최초 배포를 완료했습니다. v338 sanitized evidence는 `deploy/review/render-private-ghcr-connect-v338.json`입니다.
 
 ## 로컬 코드 리뷰 보조 도구 — v339
 
@@ -87,6 +89,10 @@ Render 실행 준비는 완료됐습니다. Git/Docker 제외 `deploy/.env.produ
 
 Render 내부 health, 공개 `/api/v1/health`, 단 한 번 요청한 `/api/v1/health/db`가 모두 HTTP 200 `status=ok`입니다. 최초 deploy 승인은 소비됐고 retry·두 번째 deploy는 금지합니다. 다음은 live backend 검토와 frontend 배포 위치, exact CORS origin, frontend API base URL 계획입니다.
 
+v348에서 실제 legacy 화면을 Render Free Static Site `gihohoho-upgrade-rpg`로 배포하는 fail-closed 계획을 준비했습니다. 예상 공개 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`과 `/admin.html`이며 `node tools/build_legacy_static_site.mjs`는 HTML/JS/CSS만 `frontend/legacy-dist`에 묶습니다. 로컬 `127.0.0.1:5500`은 local API를 유지하고 공개 host에서만 `https://upgrade-rpg-api.onrender.com/api/v1`을 사용합니다.
+
+Static Site 생성·최초 deploy와 backend `CORS_ORIGINS=["https://gihohoho-upgrade-rpg.onrender.com"]` 설정·backend deploy는 아직 실행하지 않았습니다. v348 준비 commit의 정확한 40자리 SHA 승인 뒤 문서에 적힌 순서로 각각 한 번만 실행합니다. 공개 `admin.html`은 key를 포함하지 않는 read-only preview입니다. 현재 필요한 extension·설치는 없고, Render가 private repository 접근 확인을 요구할 때만 기호의 GitHub App 확인이 필요할 수 있습니다.
+
 ## 첫 검사
 
 실행 위치: 프로젝트 루트
@@ -94,6 +100,8 @@ Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.ex
 새 설치 여부: 없음
 
 ```bash
+python tools/check_frontend_static_deployment_plan.py --strict
+node tools/smoke/frontend/smoke_legacy_static_deployment_preparation.js
 python tools/prepare_render_local_environment.py --inspect-local
 python tools/smoke/backend/smoke_render_service_creation_preparation.py
 python tools/initialize_neon_database.py
@@ -108,6 +116,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-첫 검사의 v347 기대 결과는 `render-service-created-initial-deploy-verified`, 다음 단계는 `review-render-live-service-and-prepare-frontend-deployment-plan`입니다. v345 Neon 완료, v342 image, v338 Render Connect, v335 provider selection, v334 generic deployment baseline을 보존합니다.
+첫 검사의 v348 기대 결과는 `frontend-static-deployment-preparation-ready-exact-sha-gated`, 다음 단계는 `owner-approve-frontend-static-deployment-preparation-sha`입니다. v347 backend, v345 Neon 완료, v342 image, v338 Render Connect, v335 provider selection, v334 generic deployment baseline을 보존합니다.
 
 별도 승인 전에는 추가 deploy, Render env 변경, DB/Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스를 변경하지 않습니다.

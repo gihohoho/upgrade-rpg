@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v347
+# Upgrade RPG Codex working rules — v348
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -42,10 +42,12 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v347.render-service-created-initial-deploy-verified
-strict result: render-service-created-initial-deploy-verified
-next safe stage: review-render-live-service-and-prepare-frontend-deployment-plan
+latest: v348.frontend-static-deployment-preparation-ready-exact-sha-gated
+strict result: frontend-static-deployment-preparation-ready-exact-sha-gated
+next safe stage: owner-approve-frontend-static-deployment-preparation-sha
+frontend plan: v348.frontend-static-deployment-preparation-ready-exact-sha-gated
 render plan: v347.render-service-created-initial-deploy-verified
+render prior next stage (completed): review-render-live-service-and-prepare-frontend-deployment-plan
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
 render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
 render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
@@ -79,7 +81,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 - Render `Hobby (legacy)` workspace는 연결됐고 결제수단·billing 정보가 없습니다. 기존 service 1개는 owner-suspended이며 active service는 0개입니다.
 - GitHub `Confirm access`는 사용자가 완료했고 Render 전용 classic PAT는 `read:packages` only, 만료일 2027-07-23으로 생성해 `upgrade-rpg-ghcr-read` credential에 저장했습니다. 실제 값은 Git·파일·채팅에 기록하지 않습니다.
 - 브라우저 검사 출력에 노출된 첫 PAT는 Render에 저장하지 않고 즉시 GitHub에서 폐기했습니다. 교체 PAT는 값 출력 없이 전달했으며 회전 기록은 `docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md`에 있습니다.
-- verified exact digest를 Render `Existing Image`에서 `Connect`해 private GHCR 접근과 서비스 설정 화면 진입을 확인했습니다. Web Service 생성, env 주입, deploy는 실행하지 않았습니다.
+- v338 checkpoint에서 verified exact digest를 Render `Existing Image`로 `Connect`해 private GHCR 접근과 서비스 설정 화면 진입을 확인했으며, 그 시점에는 Web Service 생성·env 주입·deploy를 실행하지 않았습니다.
 - Render 서비스 이름은 `upgrade-rpg-api`로 기호가 확정했습니다.
 - v341 source는 production SQLAlchemy/Alembic에 system-CA hostname-verifying SSLContext를 공유 주입하고 Render env inventory를 분리했습니다.
 - 실제 Neon direct URL을 프로세스에만 주입한 read-only bootstrap에서 TLS 연결과 빈 `neondb` 상태를 재확인했습니다.
@@ -89,6 +91,12 @@ Alembic current: v295_initial_schema / new revision needed: no
 - Git/Docker 제외 `deploy/.env.production`에는 Render용 direct asyncpg `DATABASE_URL`과 서로 다른 강한 JWT/admin secret이 준비됐습니다. 값은 출력·문서화·커밋하지 않습니다.
 - 승인된 v346 SHA `81d1c4faa59194e8928d54fbecac28694ab139ab`로 서비스 1개 생성, env 14개 주입, exact image 최초 deploy를 한 번 실행했습니다. 재사용·자동 retry·두 번째 deploy는 금지합니다.
 - 공개 주소는 `https://upgrade-rpg-api.onrender.com`이며 `/api/v1/health`와 `/api/v1/health/db`가 각각 HTTP 200 `status=ok`를 반환했습니다.
+- 첫 공개 frontend는 실제 legacy 화면을 Render Free Static Site `gihohoho-upgrade-rpg`로 배포하는 계획입니다. 예상 주소는 `/index.html`, `/admin.html`이며 Vue shell은 이번 배포 대상이 아닙니다.
+- `tools/build_legacy_static_site.mjs`는 `index.html`, `admin.html`, `src/**/*.js`, `src/**/*.css`만 `frontend/legacy-dist`에 묶고 secret·DB endpoint 형태가 있으면 실패합니다.
+- `src/api/runtime-config.js`는 로컬 host에서는 기존 local API를 유지하고 그 밖의 host에서만 `https://upgrade-rpg-api.onrender.com/api/v1`을 사용합니다.
+- frontend Static Site 생성과 backend exact CORS origin 설정·재배포는 아직 실행하지 않았으며 v348 준비 commit의 정확한 SHA 승인 뒤에만 실행합니다.
+- 공개 `admin.html`에는 admin write key를 넣지 않으며 read-only public preview로만 취급합니다.
+- 현재 필요한 extension·설치는 없습니다. 실행 시 Render가 private repository 접근을 다시 확인하면 기호의 GitHub App 접근 확인이 필요할 수 있습니다.
 - Windows PostgreSQL 16/OpenSSL의 `sslrootcert=system` 오류는 Windows 시스템 공개 CA를 Git 제외 로컬 PEM으로 내보내 `verify-full`에 전달하는 방식으로 해결했고, asyncpg와 libpq read-only preflight가 모두 통과했습니다.
 - 승인된 v343 commit `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 Neon restore를 한 번 실행했고 22 application tables / 748 rows / schema digest가 일치했습니다. legacy data digest는 session timezone 차이로 실패해 stamp 전에 안전하게 중단했습니다.
 - v343 안전 중단 시점에 aware datetime을 UTC로 정규화한 digest `4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c`가 verified rehearsal과 Neon에서 일치했고, 당시 `alembic_version`은 없었습니다.
@@ -128,6 +136,8 @@ Alembic current: v295_initial_schema / new revision needed: no
 프로젝트 루트에서 `backend/.venv` Python으로 먼저 실행합니다.
 
 ```bash
+python tools/check_frontend_static_deployment_plan.py --strict
+node tools/smoke/frontend/smoke_legacy_static_deployment_preparation.js
 python tools/check_render_neon_separated_plan.py --strict
 python tools/smoke/backend/smoke_neon_production_database_bootstrap.py
 python tools/check_neon_readonly_connectivity.py --evidence

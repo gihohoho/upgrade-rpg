@@ -42,3 +42,5 @@ production deployment approval/execution: no/no
 기존 capacity 계약의 PostgreSQL `max_connections` review 후보 40과 external reverse proxy 경계를 유지합니다. image pull/build의 공급망 단계는 완료됐지만 production host의 실제 pull과 Compose 적용은 아직 실행하지 않았습니다.
 
 실제 배포 전에는 `docs/current/PRODUCTION_DEPLOYMENT_PLAN.md`의 입력을 모두 확정하고, 실행 준비 commit의 정확한 SHA를 기호가 별도 승인해야 합니다. DB/Alembic mutation, volume 삭제, 자동 deploy는 포함하지 않습니다.
+
+legacy frontend의 Render Free Static Site 준비 계약은 `render-static-site.example.json`, 설명은 `docs/current/FRONTEND_STATIC_DEPLOYMENT_PLAN.md`입니다. Static Site 생성과 backend exact CORS 배포는 v348 준비 commit의 정확한 SHA owner 승인 전에는 실행하지 않습니다.
