@@ -1,4 +1,4 @@
-# Frontend Static Deployment Result and Recovery Plan — v349
+# Frontend Static Deployment and CORS Recovery Result — v350
 
 ## 결론
 
@@ -13,7 +13,7 @@
 - auto-deploy: 꺼짐
 - custom domain/DNS/payment: 변경 없음
 
-Static Site `srv-d9iu337aqgkc73am4lh0`와 deploy `dep-d9iu33faqgkc73am4m3g`는 exact commit `b13b1775093716800d7361ee1e8f94d8112eefc1`로 Live입니다. backend CORS deploy도 승인 범위에서 정확히 한 번 실행했지만 값이 적용되지 않아 회복이 필요합니다.
+Static Site `srv-d9iu337aqgkc73am4lh0`와 deploy `dep-d9iu33faqgkc73am4m3g`는 exact commit `b13b1775093716800d7361ee1e8f94d8112eefc1`로 Live입니다. v349 recovery SHA 승인 뒤 backend CORS deploy도 정확히 한 번 실행해 exact origin 적용에 성공했습니다.
 
 ## 안전한 공개 묶음
 
@@ -39,7 +39,9 @@ backend, deploy, docs, tools, Git 정보, `.env`, production secret, `src/**/*.m
 
 ## CORS와 관리자 경계
 
-Static Site의 exact origin은 확정됐습니다. backend Render 환경변수 `CORS_ORIGINS`에 `["https://gihohoho-upgrade-rpg.onrender.com"]`을 입력하고 deploy `dep-d9iu4g3rjlhs73fiv570`를 한 번 실행했지만, 배포 뒤 실제 값은 `[]`로 남았습니다. 그래서 preflight는 HTTP 400 `Disallowed CORS origin`이고 공개 게임은 backend API 대신 기존 JS 데이터로 폴백합니다.
+backend Render 환경변수 `CORS_ORIGINS`는 `["https://gihohoho-upgrade-rpg.onrender.com"]`으로 저장됐습니다. recovery deploy `dep-d9ivfmvlk1mc73fbcv40`는 40.1초 만에 Live가 됐고 health GET과 OPTIONS preflight는 모두 200이며 exact `Access-Control-Allow-Origin`을 반환합니다.
+
+공개 게임의 CORS 오류는 해결됐습니다. 다만 `/api/v1/game/master-data` 464,098-byte 응답이 연속 약 1.98초와 1.83초 걸려 frontend의 1.5초 제한을 초과합니다. 게임은 아직 기존 JS 데이터로 폴백하므로 browser master-data 통합은 미완료입니다.
 
 `admin.html` 자체는 공개되지만 frontend에는 `ADMIN_WRITE_DEV_KEY`를 넣지 않습니다. 공개 관리자 화면은 read-only 확인 용도입니다. 실제 관리 write는 승인하지 않았고, 공개 운영 관리자 인증/RBAC를 별도로 설계하기 전에는 production write 도구로 취급하지 않습니다.
 
@@ -58,12 +60,23 @@ Static Site의 exact origin은 확정됐습니다. backend Render 환경변수 `
 
 실패 정책에 따라 현재 provider 상태를 보존하고 중단했습니다. 자동 retry, 추가 deploy, DB/Alembic write, admin write, secret 주입, custom domain/DNS, payment 변경은 실행하지 않았습니다.
 
-## 다음 exact-SHA 회복 범위
+## v350 recovery 실행 결과
 
-새 준비 commit의 정확한 40자리 SHA를 기호가 승인하기 전에는 backend 환경변수나 배포를 다시 변경하지 않습니다. 다음 승인 범위는 CORS 행의 현재 값을 먼저 표시해 `[]`를 확인하고, Edit에서 exact origin으로 전체 교체한 뒤 포커스를 이동해 Render 폼 상태에 반영됐는지 재확인하고, `Save and deploy`를 정확히 한 번 실행하는 focused recovery입니다.
+기호가 exact SHA `e64d42d812d78de023dc6cbd7f960263bc1c2d15`를 승인했습니다. CORS 행의 현재 `[]`를 먼저 표시하고, Edit에서 exact origin으로 전체 교체한 뒤 포커스를 이동해 폼 값과 14개 unique key를 재확인했습니다. `Save and deploy`는 정확히 한 번 실행했고 추가 retry는 없었습니다.
 
-이전 시도는 masked 값 상태에서 textarea DOM에는 새 값이 보였지만 Render가 저장할 form state에 반영되지 않은 것으로 추정합니다. 이는 원인 추정이며, 회복 실행 전·후 actual value와 preflight를 다시 확인합니다. 관리자 `RpgAdminFieldHelp is not loaded` 관찰도 같은 브라우저 검증에서 재확인하되 frontend 재배포는 별도 승인 없이는 하지 않습니다.
+배포 뒤 actual value와 preflight를 재확인해 recovery 성공을 확정했습니다. 공개 관리자 새 탭에서는 이전 `RpgAdminFieldHelp is not loaded` 로그가 재현되지 않았습니다. frontend 재배포는 실행하지 않았습니다.
+
+추가 Render 환경변수 변경이나 provider deploy가 필요해지면 새 준비 commit의 정확한 40자리 SHA를 기호가 승인한 뒤에만 실행합니다.
+
+## 콘텐츠 작업 시작 기준
+
+아직 콘텐츠 추가·수정을 시작하기 좋은 시점은 아닙니다. backend DB 콘텐츠가 바뀌어도 공개 게임이 1.5초 timeout 뒤 기존 JS 데이터로 폴백하면 새 콘텐츠가 사용자 화면에 안정적으로 반영되지 않기 때문입니다.
+
+다음 두 조건이 충족되는 즉시 기호에게 콘텐츠 작업 시작 시점이라고 먼저 알립니다.
+
+1. 공개 게임이 backend master-data를 timeout·폴백 없이 로드
+2. 관리자 guarded 콘텐츠 작업 흐름이 안전하게 검증됨
 
 ## 필요할 수 있는 사용자 조치
 
-지금 필요한 extension이나 설치는 없습니다. GitHub App의 `upgrade-rpg` 단일 저장소 접근 확인도 완료됐습니다. 필요한 사용자 조치는 새 v349 회복 준비 commit의 정확한 40자리 SHA 승인뿐입니다.
+지금 필요한 extension·권한·설치는 없습니다. 다음은 frontend master-data timeout focused fix 준비와 콘텐츠 준비도 재검토입니다.

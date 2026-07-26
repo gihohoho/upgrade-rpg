@@ -1,12 +1,12 @@
-# Current Status — v349
+# Current Status — v350
 
 ## 현재 결과
 
 ```txt
-latest: v349.frontend-static-live-cors-apply-failed-recovery-required
-strict result: frontend-static-live-cors-apply-failed-recovery-required
-next safe stage: prepare-and-owner-approve-backend-cors-recovery-sha
-frontend plan: v349.frontend-static-live-cors-apply-failed-recovery-required
+latest: v350.backend-cors-recovered-browser-timeout-followup-required
+strict result: backend-cors-recovered-browser-timeout-followup-required
+next safe stage: prepare-frontend-master-data-timeout-fix-and-content-readiness-review
+frontend plan: v350.backend-cors-recovered-browser-timeout-followup-required
 render plan: v347.render-service-created-initial-deploy-verified
 render prior next stage (completed): review-render-live-service-and-prepare-frontend-deployment-plan
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
@@ -77,12 +77,12 @@ Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 col
 
 ## 아직 남은 것
 
-- backend `CORS_ORIGINS` exact origin 회복과 승인된 deploy 1회
-- frontend browser read-only API 통합 검증
-- 공개 관리자 `RpgAdminFieldHelp` 로드 오류 재확인
+- frontend 1.5초 master-data timeout focused fix
+- 공개 게임의 backend master-data 무폴백 통합 검증
+- 관리자 guarded 콘텐츠 작업 흐름 검증과 콘텐츠 준비도 재검토
 - custom domain/DNS와 SLA production 전환은 보류
 
-Neon DB/schema/data 초기화, Render backend public preview, frontend Static Site 최초 배포는 완료됐습니다. v334 generic SLA production plan의 별도 host·domain·edge·rollback 입력은 계속 `unresolved`이며, 현재 v349 단계는 비용 $0 public preview의 CORS 회복 준비입니다.
+Neon DB/schema/data 초기화, Render backend public preview, frontend Static Site 최초 배포와 CORS recovery는 완료됐습니다. v334 generic SLA production plan의 별도 host·domain·edge·rollback 입력은 계속 `unresolved`이며, 현재 v350 단계는 frontend master-data timeout 후속 조치입니다.
 
 ## Render account checkpoint — 2026-07-22
 
@@ -133,7 +133,7 @@ Render 내부 health와 공개 `/api/v1/health`, Neon read-only `/api/v1/health/
 
 현재 필요한 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.
 
-## Frontend static 배포 결과 — v349
+## Frontend static/CORS recovery 결과 — v350
 
 - 실제 배포 대상: legacy `index.html`, `admin.html`, `src/**/*.js`, `src/**/*.css`
 - Render Free Static Site: `gihohoho-upgrade-rpg`, service `srv-d9iu337aqgkc73am4lh0`
@@ -144,13 +144,15 @@ Render 내부 health와 공개 `/api/v1/health`, Neon read-only `/api/v1/health/
 - public admin: secret 없는 read-only preview, admin write 미승인
 - approved/deployed SHA: `b13b1775093716800d7361ee1e8f94d8112eefc1`
 - static deploy: `dep-d9iu33faqgkc73am4m3g` Live, auto-deploy Off
-- backend CORS deploy: `dep-d9iu4g3rjlhs73fiv570` Live, 실제 `CORS_ORIGINS=[]`
-- preflight/browser API integration: HTTP 400/실패
+- backend CORS recovery deploy: `dep-d9ivfmvlk1mc73fbcv40` Live, 실제 exact `CORS_ORIGINS`
+- health/preflight CORS: HTTP 200/exact allow-origin
 - static raw bytes: 핵심 자산 세 개 모두 approved source SHA-256과 일치
-- 관리자 browser check: 화면 HTTP 200, `RpgAdminFieldHelp is not loaded` 미해결
-- 자동 retry·두 번째 deploy: 없음
-- 다음 단계: v349 회복 준비 commit의 정확한 40자리 SHA owner 승인
-- 승인 뒤 범위: exact CORS 값 저장 확인 + backend deploy 1회 + browser read-only 재검증
+- game master-data: HTTP 200, 464,098 bytes, 약 1.98초/1.83초
+- browser game integration: frontend 1.5초 timeout으로 JS fallback, 미완료
+- 관리자 browser check: 화면 렌더링, 이전 `RpgAdminFieldHelp` 오류 로그 미재현
+- recovery 자동 retry·두 번째 deploy: 없음
+- 다음 단계: frontend timeout focused fix 준비와 콘텐츠 준비도 재검토
+- 콘텐츠 준비도: 아직 아님; public master-data 무폴백 + admin guarded workflow 검증 시 기호에게 먼저 알림
 - 현재 extension·설치: 없음
 - GitHub App: `gihohoho/upgrade-rpg` 단일 저장소 접근 확인 완료
-- 필요한 사용자 조치: 새 v349 회복 준비 SHA 승인
+- 필요한 사용자 조치: 현재 없음

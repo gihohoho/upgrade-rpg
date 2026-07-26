@@ -1,3 +1,12 @@
+# v350.backend-cors-recovered-browser-timeout-followup-required
+
+- exact recovery SHA `e64d42d812d78de023dc6cbd7f960263bc1c2d15` 승인으로 backend CORS deploy `dep-d9ivfmvlk1mc73fbcv40`를 정확히 한 번 실행해 Live를 확인했습니다.
+- `CORS_ORIGINS` actual value가 exact frontend origin 배열이고 health/preflight 200과 exact allow-origin을 확인했습니다.
+- 공개 게임의 CORS 오류는 사라졌지만 464,098-byte master-data 응답이 약 1.98초/1.83초로 frontend 1.5초 timeout을 넘어 JS fallback이 계속됨을 확인했습니다.
+- 공개 관리자 새 탭에서는 이전 `RpgAdminFieldHelp is not loaded` 오류 로그가 재현되지 않았습니다.
+- 콘텐츠 준비도는 아직 false이며, public master-data 무폴백 로드와 admin guarded workflow 검증 뒤 기호에게 먼저 알리도록 규칙과 handoff에 기록했습니다.
+- DB/Alembic/admin write, 콘텐츠·밸런스 변경, frontend 재배포, 자동 retry, secret 기록은 없었습니다.
+
 # v349.frontend-static-live-cors-apply-failed-recovery-required
 
 - approved SHA `b13b1775093716800d7361ee1e8f94d8112eefc1`로 Render Free Static Site `gihohoho-upgrade-rpg`를 생성하고 최초 deploy를 한 번 실행해 Live를 확인했습니다.

@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v349
+# Upgrade RPG Codex working rules — v350
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -9,6 +9,7 @@
 - backend 가상환경은 `backend/.venv`입니다. Git Bash에서는 `backend`에서 `source .venv/Scripts/activate`로 켭니다.
 - Vue/npm은 `frontend/vue-app`에서 실행하며 Python `.venv`가 필요 없습니다.
 - 필요한 extension, GitHub/repository/app 권한, 설치가 있으면 기호에게 요청하고 해결될 때까지 `NEXT_CHAT_PROMPT.md`, `NEXT_CHAT_HANDOFF.md`에도 반복 기록합니다.
+- 공개 게임이 backend master-data를 폴백 없이 로드하고 관리자 guarded 콘텐츠 작업 흐름이 검증되어 콘텐츠 추가·수정을 시작하기 좋은 시점이 되면 기호에게 먼저 명확히 알립니다.
 - 매 작업에서 루트 `NEXT_CHAT_PROMPT.md`, `NEXT_CHAT_HANDOFF.md`와 `docs/handoff/` mirror를 동기화합니다.
 - 변경·검증 뒤 Codex가 `git status`, `git add`, `git commit`, `git push`를 직접 실행합니다. Git 명령 안내와 ZIP은 기호가 별도로 요구하지 않는 한 제공하지 않습니다.
 
@@ -42,10 +43,10 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v349.frontend-static-live-cors-apply-failed-recovery-required
-strict result: frontend-static-live-cors-apply-failed-recovery-required
-next safe stage: prepare-and-owner-approve-backend-cors-recovery-sha
-frontend plan: v349.frontend-static-live-cors-apply-failed-recovery-required
+latest: v350.backend-cors-recovered-browser-timeout-followup-required
+strict result: backend-cors-recovered-browser-timeout-followup-required
+next safe stage: prepare-frontend-master-data-timeout-fix-and-content-readiness-review
+frontend plan: v350.backend-cors-recovered-browser-timeout-followup-required
 render plan: v347.render-service-created-initial-deploy-verified
 render prior next stage (completed): review-render-live-service-and-prepare-frontend-deployment-plan
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
@@ -75,16 +76,17 @@ Alembic current: v295_initial_schema / new revision needed: no
 - Render GitHub App은 `gihohoho/upgrade-rpg` 단일 저장소만 접근하도록 연결됐습니다.
 - frontend Static Site `gihohoho-upgrade-rpg`는 approved commit `b13b1775093716800d7361ee1e8f94d8112eefc1`로 Live이며 auto-deploy는 꺼져 있습니다.
 - 공개 게임/관리자 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`이고 둘 다 HTTP 200입니다.
-- 승인된 backend CORS deploy 1회는 Live로 끝났지만 실제 `CORS_ORIGINS`가 `[]`로 남아 preflight 400이며 브라우저 API 연동은 실패했습니다.
-- 승인된 1회 deploy는 소비됐고 자동 retry나 두 번째 deploy는 실행하지 않았습니다. 다음 backend CORS 회복은 새 exact-SHA owner 승인이 필요합니다.
-- 공개 정적 자산 세 개의 raw byte SHA-256은 approved source와 일치합니다. 관리자 `RpgAdminFieldHelp` 로드 오류는 별도 미해결 브라우저 검증 항목입니다.
+- 승인된 recovery SHA `e64d42d812d78de023dc6cbd7f960263bc1c2d15`로 backend CORS deploy `dep-d9ivfmvlk1mc73fbcv40`를 정확히 한 번 실행했고 Live입니다.
+- 실제 `CORS_ORIGINS`는 exact frontend origin 배열로 저장됐으며 health/preflight 200과 exact `Access-Control-Allow-Origin`을 확인했습니다.
+- 공개 게임의 CORS 오류는 사라졌지만 464,098-byte master-data 응답이 1.5초 frontend timeout보다 느려 기존 JS 데이터로 폴백합니다. 다음은 timeout focused fix와 콘텐츠 준비도 재검토입니다.
+- 공개 정적 자산 세 개의 raw byte SHA-256은 approved source와 일치합니다. 새 관리자 탭에서는 이전 `RpgAdminFieldHelp` 오류 로그가 재현되지 않았습니다.
 - 비용 최소 공급자는 Render Free Web Service Singapore + Neon Free PostgreSQL 16 Singapore로 선택했습니다.
 - 첫 공개 주소는 Render `onrender.com` managed HTTPS이며 custom domain과 DNS 변경은 보류합니다.
 - 무료 구성은 SLA production이 아닌 개인용 public preview이고 월 고정비 $0, idle cold start 허용 조건입니다.
 - Neon Free PostgreSQL 16 AWS Singapore 프로젝트는 생성됐고 Neon Auth는 사용하지 않습니다. 채팅에 노출된 최초 `neondb_owner` 비밀번호는 2026-07-22에 재설정해 폐기했습니다.
 - 새 Neon direct/pooled URL은 앱·배포 플랫폼에 아직 주입하지 않고 Git/Docker 제외 경로 `deploy/.env.production`에만 보관합니다.
 - Direct/Pooler 모두 PostgreSQL 16.14, TLS 1.3 인증서·호스트 검증, read-only transaction을 통과했습니다. sanitized evidence는 `deploy/review/neon-readonly-connectivity-v336.json`입니다.
-- Render `Hobby (legacy)` workspace는 연결됐고 결제수단·billing 정보가 없습니다. 기존 service 1개는 owner-suspended이며 active service는 0개입니다.
+- Render `Hobby (legacy)` workspace는 연결됐고 결제수단·billing 정보가 없습니다. 현재 backend Web Service와 frontend Static Site가 각각 1개씩 있습니다.
 - GitHub `Confirm access`는 사용자가 완료했고 Render 전용 classic PAT는 `read:packages` only, 만료일 2027-07-23으로 생성해 `upgrade-rpg-ghcr-read` credential에 저장했습니다. 실제 값은 Git·파일·채팅에 기록하지 않습니다.
 - 브라우저 검사 출력에 노출된 첫 PAT는 Render에 저장하지 않고 즉시 GitHub에서 폐기했습니다. 교체 PAT는 값 출력 없이 전달했으며 회전 기록은 `docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md`에 있습니다.
 - v338 checkpoint에서 verified exact digest를 Render `Existing Image`로 `Connect`해 private GHCR 접근과 서비스 설정 화면 진입을 확인했으며, 그 시점에는 Web Service 생성·env 주입·deploy를 실행하지 않았습니다.
@@ -100,9 +102,9 @@ Alembic current: v295_initial_schema / new revision needed: no
 - 첫 공개 frontend는 실제 legacy 화면을 Render Free Static Site `gihohoho-upgrade-rpg`로 배포하는 계획입니다. 예상 주소는 `/index.html`, `/admin.html`이며 Vue shell은 이번 배포 대상이 아닙니다.
 - `tools/build_legacy_static_site.mjs`는 `index.html`, `admin.html`, `src/**/*.js`, `src/**/*.css`만 `frontend/legacy-dist`에 묶고 secret·DB endpoint 형태가 있으면 실패합니다.
 - `src/api/runtime-config.js`는 로컬 host에서는 기존 local API를 유지하고 그 밖의 host에서만 `https://upgrade-rpg-api.onrender.com/api/v1`을 사용합니다.
-- frontend Static Site 최초 배포와 backend CORS deploy 1회는 실행됐습니다. CORS actual value가 `[]`로 남았으므로 새 exact-SHA 승인 전에는 회복 deploy를 실행하지 않습니다.
+- frontend Static Site 최초 배포와 backend CORS recovery deploy는 완료됐습니다. recovery 1회 승인은 소비됐고 추가 provider deploy는 새 승인 전 실행하지 않습니다.
 - 공개 `admin.html`에는 admin write key를 넣지 않으며 read-only public preview로만 취급합니다.
-- 현재 필요한 extension·설치는 없습니다. 실행 시 Render가 private repository 접근을 다시 확인하면 기호의 GitHub App 접근 확인이 필요할 수 있습니다.
+- 현재 필요한 extension·권한·설치는 없습니다.
 - Windows PostgreSQL 16/OpenSSL의 `sslrootcert=system` 오류는 Windows 시스템 공개 CA를 Git 제외 로컬 PEM으로 내보내 `verify-full`에 전달하는 방식으로 해결했고, asyncpg와 libpq read-only preflight가 모두 통과했습니다.
 - 승인된 v343 commit `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 Neon restore를 한 번 실행했고 22 application tables / 748 rows / schema digest가 일치했습니다. legacy data digest는 session timezone 차이로 실패해 stamp 전에 안전하게 중단했습니다.
 - v343 안전 중단 시점에 aware datetime을 UTC로 정규화한 digest `4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c`가 verified rehearsal과 Neon에서 일치했고, 당시 `alembic_version`은 없었습니다.

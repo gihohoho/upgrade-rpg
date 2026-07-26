@@ -1,8 +1,8 @@
 {
-  "schemaVersion": "v349.frontend-static-live-cors-apply-failed-recovery-required",
-  "preparedAtUtc": "2026-07-26T10:45:00Z",
-  "result": "frontend-static-live-cors-apply-failed-recovery-required",
-  "nextSafeStage": "prepare-and-owner-approve-backend-cors-recovery-sha",
+  "schemaVersion": "v350.backend-cors-recovered-browser-timeout-followup-required",
+  "preparedAtUtc": "2026-07-26T12:08:00Z",
+  "result": "backend-cors-recovered-browser-timeout-followup-required",
+  "nextSafeStage": "prepare-frontend-master-data-timeout-fix-and-content-readiness-review",
   "productionResourcesMutated": true,
   "site": {
     "provider": "render",
@@ -51,9 +51,9 @@
     "backendCorsExactOriginRequired": true,
     "backendCorsEnvironmentKey": "CORS_ORIGINS",
     "backendCorsExpectedValue": "[\"https://gihohoho-upgrade-rpg.onrender.com\"]",
-    "backendCorsActualValueAfterDeploy": "[]",
-    "backendCorsApplied": false,
-    "backendCorsDeployId": "dep-d9iu4g3rjlhs73fiv570",
+    "backendCorsActualValueAfterDeploy": "[\"https://gihohoho-upgrade-rpg.onrender.com\"]",
+    "backendCorsApplied": true,
+    "backendCorsDeployId": "dep-d9ivfmvlk1mc73fbcv40",
     "backendCorsDeployStatus": "live",
     "backendService": "upgrade-rpg-api",
     "backendServiceId": "srv-d9iro458nd3s73acgmsg"
@@ -104,26 +104,40 @@
     "approvedPreparationSha": "b13b1775093716800d7361ee1e8f94d8112eefc1",
     "staticSiteCreated": true,
     "staticDeployExecuted": true,
-    "backendCorsApplied": false,
+    "backendCorsApplied": true,
     "backendCorsDeployExecuted": true,
     "browserIntegrationVerified": false,
     "approvedOneShotBackendDeployConsumed": true,
     "automaticRetryExecuted": false,
-    "recoveryExactShaApprovalRequired": true
+    "recoveryExactShaApprovalRequired": true,
+    "recoveryExactShaApproved": true,
+    "approvedRecoverySha": "e64d42d812d78de023dc6cbd7f960263bc1c2d15",
+    "recoveryDeployExecuted": true,
+    "recoveryDeployId": "dep-d9ivfmvlk1mc73fbcv40",
+    "recoveryDeployStatus": "live",
+    "recoveryOneShotConsumed": true
   },
   "validation": {
     "gameHttp200": true,
     "adminHttp200": true,
     "staticAssetRawBytesMatchApprovedSource": true,
-    "corsPreflightStatus": 400,
-    "corsPreflightResult": "disallowed-cors-origin",
+    "corsPreflightStatus": 200,
+    "corsPreflightResult": "exact-origin-allowed",
+    "corsBrowserIntegrationVerified": true,
     "gameReadOnlyApiIntegration": false,
-    "adminModuleIntegrationVerified": false,
-    "sanitizedEvidence": "deploy/review/render-frontend-static-and-cors-attempt-v349.json"
+    "gameFallbackReason": "master-data-request-exceeded-1500ms-timeout",
+    "masterDataHttpStatus": 200,
+    "masterDataResponseBytes": 464098,
+    "masterDataMeasuredMilliseconds": [
+      1980,
+      1829
+    ],
+    "adminPreviousModuleErrorReproduced": false,
+    "sanitizedEvidence": "deploy/review/render-backend-cors-recovery-v350.json"
   },
   "possibleUserAction": {
-    "requiredNow": true,
-    "actionIfPrompted": "approve the exact v349 recovery preparation SHA before one focused backend CORS retry",
+    "requiredNow": false,
+    "actionIfPrompted": "none until the frontend master-data timeout fix is prepared and reviewed",
     "newExtensionOrLocalPackageRequired": false
   }
 }

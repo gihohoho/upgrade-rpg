@@ -1,4 +1,4 @@
-# Upgrade RPG Codex next prompt — v349
+# Upgrade RPG Codex next prompt — v350
 
 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽고 계속 지켜주세요. 기호는 코딩을 거의 모르므로 한국어로 쉽게 설명하고, 모든 터미널 명령 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension·권한·설치는 해결될 때까지 요청해주세요.
 
@@ -7,10 +7,10 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 ## 현재 고정값
 
 ```txt
-latest: v349.frontend-static-live-cors-apply-failed-recovery-required
-strict result: frontend-static-live-cors-apply-failed-recovery-required
-next safe stage: prepare-and-owner-approve-backend-cors-recovery-sha
-frontend plan: v349.frontend-static-live-cors-apply-failed-recovery-required
+latest: v350.backend-cors-recovered-browser-timeout-followup-required
+strict result: backend-cors-recovered-browser-timeout-followup-required
+next safe stage: prepare-frontend-master-data-timeout-fix-and-content-readiness-review
+frontend plan: v350.backend-cors-recovered-browser-timeout-followup-required
 render plan: v347.render-service-created-initial-deploy-verified
 render prior next stage (completed): review-render-live-service-and-prepare-frontend-deployment-plan
 neon plan: v345.neon-initialization-completed-verified-render-preparation-required
@@ -93,9 +93,11 @@ Render 내부 health, 공개 `/api/v1/health`, 단 한 번 요청한 `/api/v1/he
 
 Render GitHub App은 `gihohoho/upgrade-rpg` 단일 private repository만 접근하도록 기호가 Confirm access를 완료했습니다. 핵심 정적 자산 세 개의 remote raw byte SHA-256은 approved source와 모두 일치합니다.
 
-승인된 backend CORS deploy도 정확히 한 번 실행했고 deploy `dep-d9iu4g3rjlhs73fiv570`는 Live지만, 저장 뒤 실제 `CORS_ORIGINS`는 `[]`로 남았습니다. preflight는 HTTP 400 `Disallowed CORS origin`이고 공개 게임은 `Failed to fetch` 뒤 기존 JS 데이터로 폴백합니다. 공개 관리자 화면은 렌더링되지만 `RpgAdminFieldHelp is not loaded`가 미해결입니다. 승인된 1회 deploy는 소비됐으며 자동 retry·두 번째 deploy는 실행하지 않았습니다.
+승인된 recovery SHA `e64d42d812d78de023dc6cbd7f960263bc1c2d15`로 backend CORS deploy `dep-d9ivfmvlk1mc73fbcv40`를 정확히 한 번 실행했습니다. deploy는 40.1초 만에 Live가 됐고 actual `CORS_ORIGINS`는 exact frontend origin 배열입니다. health와 preflight는 모두 HTTP 200이며 exact `Access-Control-Allow-Origin`을 반환합니다.
 
-다음은 v349 회복 준비 commit의 정확한 40자리 SHA owner 승인입니다. 승인 전에는 Render env나 deploy를 변경하지 않습니다. 승인 뒤에는 CORS 현재값 표시 → Edit에서 exact origin 전체 교체 → 포커스 이동 뒤 폼 값 재확인 → backend `Save and deploy` 1회 → actual CORS/preflight/browser read-only 재검증만 허용합니다. frontend 재배포, DB/Alembic/admin write, secret, custom domain/DNS/payment는 포함하지 않습니다. 현재 필요한 extension·권한·새 설치는 없습니다.
+공개 게임의 CORS 오류는 사라졌지만 `/game/master-data` 464,098-byte 응답이 약 1.98초/1.83초 걸려 frontend 1.5초 timeout을 넘습니다. 따라서 게임은 아직 기존 JS 데이터로 폴백합니다. 공개 관리자 새 탭에서는 이전 `RpgAdminFieldHelp is not loaded` 오류 로그가 재현되지 않았습니다.
+
+다음은 frontend master-data timeout focused fix 준비와 콘텐츠 준비도 재검토입니다. 아직 콘텐츠 추가·수정을 시작하기 좋은 시점은 아닙니다. 공개 게임이 backend master-data를 폴백 없이 로드하고 관리자 guarded 콘텐츠 작업 흐름이 검증되는 즉시 기호에게 먼저 명확히 알립니다. 현재 필요한 사용자 조치, extension, 권한, 새 설치는 없습니다.
 
 ## 첫 검사
 
@@ -120,6 +122,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-첫 검사의 v349 기대 결과는 `frontend-static-live-cors-apply-failed-recovery-required`, 다음 단계는 `prepare-and-owner-approve-backend-cors-recovery-sha`입니다. v348 approved execution, v347 backend, v345 Neon 완료, v342 image, v338 Render Connect, v335 provider selection, v334 generic deployment baseline을 보존합니다.
+첫 검사의 v350 기대 결과는 `backend-cors-recovered-browser-timeout-followup-required`, 다음 단계는 `prepare-frontend-master-data-timeout-fix-and-content-readiness-review`입니다. v349 recovery, v348 static deploy, v347 backend, v345 Neon 완료, v342 image, v338 Render Connect, v335 provider selection, v334 generic deployment baseline을 보존합니다.
 
 별도 승인 전에는 추가 deploy, Render env 변경, DB/Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스를 변경하지 않습니다.
