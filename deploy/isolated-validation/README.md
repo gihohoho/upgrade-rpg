@@ -1,4 +1,4 @@
-# Isolated production validation plan and evidence — v342
+# Isolated production validation plan and evidence — v353
 
 이 폴더는 승인 경계와 안전한 검사 도구만 보관합니다. 실제 production secret, CA, certificate, key, registry credential 또는 production env 파일을 두지 않습니다.
 
@@ -115,4 +115,4 @@ production runtime/deploy applied: no/no
 next safe stage: review-isolated-validation-and-approve-production-deploy-plan
 ```
 
-현재 sanitized evidence는 `deploy/review/isolated-image-pull-validation-v342.json`에 있습니다. v333 evidence는 이전 verified image 기록으로 보존합니다. GitHub CLI/Docker credential store의 실제 credential 값은 기록하지 않습니다.
+새 v351 candidate의 sanitized evidence는 `deploy/review/isolated-image-pull-validation-v353.json`에 있습니다. v342는 현재 Render live image, v333은 그 이전 verified image 기록으로 보존합니다. GitHub CLI/Docker credential store의 실제 credential 값은 기록하지 않습니다.

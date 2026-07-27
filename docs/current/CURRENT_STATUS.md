@@ -1,11 +1,13 @@
-# Current Status — v352
+# Current Status — v354
 
 ## 현재 결과
 
 ```txt
-latest: v352.v351-public-release-gates-prepared-backend-image-approval-required
-strict result: v351-backend-image-preparation-closed-owner-approval-required
-next safe stage: owner-approve-v352-v351-backend-image-preparation-sha
+latest: v354.v351-provider-release-prepared-exact-sha-approval-required
+strict result: v351-provider-release-prepared-exact-sha-approval-required
+next safe stage: owner-approve-v354-v351-provider-release-preparation-sha
+v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
+v352 preparation checkpoint: v352.v351-public-release-gates-prepared-backend-image-approval-required
 v351 source checkpoint: v351.master-data-latency-focused-fix-blocking-io-audited / master-data-latency-fix-blocking-io-audit-ready
 v351 source next stage (completed): prepare-v351-image-and-static-release-exact-sha-gates
 frontend plan: v351.master-data-latency-focused-fix-blocking-io-audited
@@ -81,9 +83,9 @@ Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 col
 
 ## 아직 남은 것
 
-- v352 backend image preparation SHA owner 승인
-- 승인 뒤 backend image 1회 게시·공급망·isolated validation
-- 새 digest 확인 뒤 별도 backend exact-image + frontend static provider release 준비
+- v354 provider release preparation SHA owner 승인
+- 승인 뒤 기존 backend 서비스의 exact-image deploy 1회
+- 승인 뒤 기존 frontend Static Site의 v351 exact-source deploy 1회
 - 공개 게임의 backend master-data 무폴백 통합 검증
 - 관리자 guarded 콘텐츠 작업 흐름 검증과 콘텐츠 준비도 재검토
 - custom domain/DNS와 SLA production 전환은 보류
@@ -117,21 +119,25 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 
 - exact reference: `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1`
 - GitHub Actions run `30180738530`: SBOM, Trivy HIGH/CRITICAL 0, provenance, Cosign sign/verify 성공
-- isolated evidence: `deploy/review/isolated-image-pull-validation-v342.json`
+- current live isolated evidence: `deploy/review/isolated-image-pull-validation-v342.json`
+- new v351 candidate isolated evidence: `deploy/review/isolated-image-pull-validation-v353.json`
 - source-controlled lifecycle gate: `deploy/github-actions-ghcr-publish-lifecycle.json`
 - historical v341 lifecycle: `attempt-recorded`, `publishReviewerGateReady=false`; current history의 여섯 번째 성공 기록으로 보존
 - CI credential: GitHub Actions `GITHUB_TOKEN`
 - 개인 비공개 저장소 required reviewer는 없으므로 exact-SHA owner approval을 유지
 
-## v351 공개 release gate 준비 — v352
+## v351 image 게시·isolated 완료와 provider release 준비 — v353/v354
 
 - source baseline: `81beaa0864c3422fb9fc2071b9c4965936ecafac`
-- lifecycle: `preparation-closed` / gate `false` / approval `null`
-- prior attempt history: 6건, v341 성공 run 포함
+- lifecycle: `attempt-recorded` / gate `false` / approved preparation `b48dfd0751b12b1b3afb6474f9d35359ba2f8177`
+- workflow run: `30226905547` / run_attempt=1 / success / rerun 금지
+- exact image: `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac`
+- supply chain: local/registry Trivy HIGH·CRITICAL 0, SLSA provenance, SPDX-2.3, Cosign verify 통과
+- isolated: linux/amd64, UID 65532, CA 119, read-only rootfs, health 200, cleanup 통과
 - GitHub live settings: selected actions/full SHA/read permissions/main-only environment 유지
-- new workflow dispatch/registry mutation/Render deploy: 없음/없음/없음
-- 이번 승인 범위: backend image 게시·공급망·isolated 검증만
-- backend exact-image deploy와 frontend static deploy: 새 digest 뒤 별도 exact-SHA 승인
+- workflow dispatch/registry mutation/Render deploy: 1회/실행/미실행
+- provider preparation: backend exact-image + frontend v351 exact-source, 둘 다 미승인·미실행
+- 다음 승인 범위: 기존 Render backend/static 서비스 각각 수동 deploy 1회와 read-only 검증
 - contract/checker: `deploy/v351-public-release-gates.example.json` / `tools/check_v351_public_release_gates.py`
 
 ## 안전 경계
@@ -148,7 +154,7 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 
 Render 내부 health와 공개 `/api/v1/health`, Neon read-only `/api/v1/health/db`가 모두 HTTP 200 `status=ok`입니다. DB/Alembic write, image 변경, custom domain/DNS, 결제수단, 자동 retry·두 번째 deploy는 실행하지 않았습니다. 다음 단계는 live backend 확인과 frontend 배포/CORS origin 계획 검토입니다.
 
-현재는 push된 v352 preparation commit의 정확한 40자리 SHA를 기호가 승인하는 단계입니다. 승인 전에는 workflow dispatch, GHCR mutation, Docker isolated 실행, Render backend/static deploy를 하지 않습니다. 승인 뒤에도 이번 범위는 backend image 게시와 공급망·isolated 검증까지만이며 provider deploy는 별도 승인을 받습니다.
+현재는 push될 v354 provider release preparation commit의 정확한 40자리 SHA를 기호가 승인하는 단계입니다. 승인 전에는 Render backend image 변경·deploy와 Static Site deploy를 하지 않습니다. 승인 뒤에도 기존 두 서비스의 수동 deploy 각 1회와 read-only 검증만 허용하며 DB/Alembic/admin write/콘텐츠 변경/자동 retry는 하지 않습니다.
 
 현재 필요한 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.
 

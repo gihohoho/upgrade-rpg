@@ -13,13 +13,18 @@ NEXT_SAFE_STAGE = "select-production-targets-and-complete-executable-deploy-plan
 REMOTE = "https://github.com/gihohoho/upgrade-rpg.git"
 REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 PREPARATION = "fb231afa5081f5bfd7b459081a58bc5acd6699df"
-AUTHORIZATION = "f5d69c1bbef101cc9124b9dede18c844ef80b59c"
-CLOSURE = "ebb5ef46e3115bc358d62d93a64002b8711f4232"
-RECORD = "cf9e0bab121186d2ac51f889f807348cc46f192c"
-RUN_ID = 30180738530
-ARTIFACT_IDS = [8625485901, 8625478503]
-IMAGE_DIGEST = "sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
-PRODUCTION_REFERENCE = f"{REPOSITORY}@{IMAGE_DIGEST}"
+APPROVED_PREPARATION = "b48dfd0751b12b1b3afb6474f9d35359ba2f8177"
+AUTHORIZATION = "7578eb665c03ee0fcb9399929328ce684cdd1b31"
+CLOSURE = "5d547126322dbe3c235e855cc9c2f7337342ae36"
+RECORD = "5c842deec6d1f496679a144897f485b07428810b"
+RUN_ID = 30226905547
+ARTIFACT_IDS = [8638838292, 8638825538]
+IMAGE_DIGEST = "sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac"
+VERIFIED_CANDIDATE_REFERENCE = f"{REPOSITORY}@{IMAGE_DIGEST}"
+PRODUCTION_REFERENCE = f"{REPOSITORY}@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
+CURRENT_VERSION = "v354.v351-provider-release-prepared-exact-sha-approval-required"
+CURRENT_RESULT = "v351-provider-release-prepared-exact-sha-approval-required"
+CURRENT_NEXT_STAGE = "owner-approve-v354-v351-provider-release-preparation-sha"
 REVISION_SHA256 = "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa"
 
 
@@ -47,7 +52,7 @@ def main() -> int:
         "NEXT_CHAT_HANDOFF.md",
         "docs/current/CURRENT_STATUS.md",
     ):
-        contains(relative, VERSION, REMOTE, REPOSITORY)
+        contains(relative, VERSION, CURRENT_VERSION, CURRENT_RESULT, CURRENT_NEXT_STAGE, REMOTE, REPOSITORY)
 
     contains(
         "NEXT_CHAT_PROMPT.md",
@@ -60,9 +65,9 @@ def main() -> int:
         "closureCommitSha",
         "attempt-recorded",
         "Neon restore",
-        "deploy/review/isolated-image-pull-validation-v342.json",
+        "deploy/review/isolated-image-pull-validation-v353.json",
         "deploy/production-deploy-plan.example.json",
-        PREPARATION,
+        APPROVED_PREPARATION,
         str(RUN_ID),
         *(str(value) for value in ARTIFACT_IDS),
     )
@@ -73,7 +78,7 @@ def main() -> int:
         "GITHUB_TOKEN",
         "required reviewer",
         "Trivy",
-        PREPARATION,
+        APPROVED_PREPARATION,
         AUTHORIZATION,
         CLOSURE,
         RECORD,
@@ -86,14 +91,16 @@ def main() -> int:
     assert policy["preparedOnly"] is False
     assert (
         policy["ownerOnlyApprovalPhase"]
-        == "v352-v351-backend-image-preparation-closed-owner-approval-required"
+        == "v354-v351-provider-release-prepared-exact-sha-approval-required"
     )
-    assert policy["publishLifecycleState"] == "preparation-closed"
-    assert policy["approvedPreparationSha"] is None
-    assert policy["exactPreparationShaApproved"] is False
+    assert policy["publishLifecycleState"] == "attempt-recorded"
+    assert policy["approvedPreparationSha"] == APPROVED_PREPARATION
+    assert policy["exactPreparationShaApproved"] is True
     assert policy["sourceControlledPublishGateReady"] is False
     assert policy["actualRegistryMutationExecuted"] is True
     assert policy["productionReference"] == PRODUCTION_REFERENCE
+    assert policy["verifiedCandidateReference"] == VERIFIED_CANDIDATE_REFERENCE
+    assert policy["verifiedCandidateAppliedToRender"] is False
     assert policy["productionReferenceStaticPrepared"] is True
     assert policy["productionReferenceAppliedToRuntime"] is False
     assert policy["localCredentialStrategy"] == "github-cli-oauth-read-packages"
@@ -129,20 +136,20 @@ def main() -> int:
 
     lifecycle = json.loads(read("deploy/github-actions-ghcr-publish-lifecycle.json"))
     assert lifecycle["schemaVersion"] == "v352.owner-only-publish-lifecycle-with-six-attempt-history"
-    assert lifecycle["state"] == "preparation-closed"
+    assert lifecycle["state"] == "attempt-recorded"
     assert lifecycle["publishReviewerGateReady"] is False
-    assert lifecycle["approvedPreparationSha"] is None
-    assert lifecycle["ownerApproval"]["recorded"] is False
-    assert lifecycle["closure"]["authorizationSourceSha"] is None
-    assert lifecycle["closure"]["closureCommitSha"] is None
-    assert lifecycle["observedAttempt"]["runId"] is None
-    assert lifecycle["observedAttempt"]["status"] == "not-dispatched"
-    assert lifecycle["observedAttempt"]["conclusion"] is None
-    assert lifecycle["observedAttempt"]["imageDigest"] is None
-    assert lifecycle["observedAttempt"]["signatureVerified"] is False
+    assert lifecycle["approvedPreparationSha"] == APPROVED_PREPARATION
+    assert lifecycle["ownerApproval"]["recorded"] is True
+    assert lifecycle["closure"]["authorizationSourceSha"] == AUTHORIZATION
+    assert lifecycle["closure"]["closureCommitSha"] == CLOSURE
+    assert lifecycle["observedAttempt"]["runId"] == RUN_ID
+    assert lifecycle["observedAttempt"]["status"] == "completed"
+    assert lifecycle["observedAttempt"]["conclusion"] == "success"
+    assert lifecycle["observedAttempt"]["imageDigest"] == IMAGE_DIGEST
+    assert lifecycle["observedAttempt"]["signatureVerified"] is True
     assert lifecycle["attemptHistory"][-1]["preparationSha"] == PREPARATION
-    assert lifecycle["attemptHistory"][-1]["runId"] == RUN_ID
-    assert lifecycle["attemptHistory"][-1]["imageDigest"] == IMAGE_DIGEST
+    assert lifecycle["attemptHistory"][-1]["runId"] == 30180738530
+    assert lifecycle["attemptHistory"][-1]["imageDigest"] == "sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
     assert lifecycle["attemptHistory"][-1]["signatureVerified"] is True
 
     static_plan = json.loads(read("deploy/github-actions-ghcr-static-plan.example.json"))
@@ -173,13 +180,14 @@ def main() -> int:
     if hashlib.sha256(revision.read_bytes()).hexdigest() != REVISION_SHA256:
         raise AssertionError("reviewed Alembic revision SHA-256 differs")
 
-    evidence = json.loads(read("deploy/review/isolated-image-pull-validation-v342.json"))
-    assert evidence["imageReference"] == PRODUCTION_REFERENCE
+    evidence = json.loads(read("deploy/review/isolated-image-pull-validation-v353.json"))
+    assert evidence["imageReference"] == VERIFIED_CANDIDATE_REFERENCE
     assert evidence["runtimeValidation"]["healthOk"] is True
     assert evidence["cleanup"]["containerRemoved"] is True
     assert evidence["cleanup"]["internalNetworkRemoved"] is True
     assert evidence["cleanup"]["localImageRemoved"] is True
-    assert evidence["productionDeploymentExecuted"] is False
+    assert evidence["renderBackendDeployExecuted"] is False
+    assert evidence["renderStaticDeployExecuted"] is False
 
     plan = json.loads(read("deploy/production-deploy-plan.example.json"))
     assert plan["schemaVersion"] == VERSION

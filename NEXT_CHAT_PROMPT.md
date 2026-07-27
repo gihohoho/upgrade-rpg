@@ -1,4 +1,4 @@
-# Upgrade RPG Codex next prompt — v352
+# Upgrade RPG Codex next prompt — v354
 
 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽고 계속 지켜주세요. 기호는 코딩을 거의 모르므로 한국어로 쉽게 설명하고, 모든 터미널 명령 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension·권한·설치는 해결될 때까지 요청해주세요.
 
@@ -7,9 +7,11 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 ## 현재 고정값
 
 ```txt
-latest: v352.v351-public-release-gates-prepared-backend-image-approval-required
-strict result: v351-backend-image-preparation-closed-owner-approval-required
-next safe stage: owner-approve-v352-v351-backend-image-preparation-sha
+latest: v354.v351-provider-release-prepared-exact-sha-approval-required
+strict result: v351-provider-release-prepared-exact-sha-approval-required
+next safe stage: owner-approve-v354-v351-provider-release-preparation-sha
+v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
+v352 preparation checkpoint: v352.v351-public-release-gates-prepared-backend-image-approval-required
 v351 source checkpoint: v351.master-data-latency-focused-fix-blocking-io-audited / master-data-latency-fix-blocking-io-audit-ready
 v351 source next stage (completed): prepare-v351-image-and-static-release-exact-sha-gates
 frontend plan: v351.master-data-latency-focused-fix-blocking-io-audited
@@ -69,14 +71,16 @@ v341 source를 포함한 새 image는 게시와 isolated Alpine system CA store,
 
 - CI credential: GitHub Actions `GITHUB_TOKEN`
 - source-controlled lifecycle gate: `deploy/github-actions-ghcr-publish-lifecycle.json`
-- lifecycle: `preparation-closed` / `publishReviewerGateReady=false` / approval `null` / prior six attempts preserved
+- lifecycle: `attempt-recorded` / `publishReviewerGateReady=false` / approved preparation `b48dfd0751b12b1b3afb6474f9d35359ba2f8177`
 - lifecycle state machine: `preparation-closed` → `authorization-open` → `authorization-closed-awaiting-evidence` → `attempt-recorded`
-- run `30180738530`: provenance/SBOM, exact-digest Trivy 0건, Cosign sign/verify 성공
-- current preparation/authorization/closure/evidence: `fb231afa5081f5bfd7b459081a58bc5acd6699df` / `f5d69c1bbef101cc9124b9dede18c844ef80b59c` / `ebb5ef46e3115bc358d62d93a64002b8711f4232` / `cf9e0bab121186d2ac51f889f807348cc46f192c`
-- current artifact IDs: `8625485901`, `8625478503`
+- run `30226905547`: run_attempt=1, provenance/SBOM, exact-digest Trivy 0건, Cosign sign/verify 성공
+- current preparation/authorization/closure/evidence: `b48dfd0751b12b1b3afb6474f9d35359ba2f8177` / `7578eb665c03ee0fcb9399929328ce684cdd1b31` / `5d547126322dbe3c235e855cc9c2f7337342ae36` / `5c842deec6d1f496679a144897f485b07428810b`
+- current artifact IDs: `8638838292`, `8638825538`
+- verified v351 candidate: `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac`
 - single-run policy: `run_attempt=1`, single dispatch, immediate closure, `closureCommitSha`, rerun 금지
 - 역사 결과 `review-recorded-workflow-attempt-evidence` 보존
-- isolated evidence: `deploy/review/isolated-image-pull-validation-v342.json`
+- new candidate isolated evidence: `deploy/review/isolated-image-pull-validation-v353.json`
+- current live image isolated evidence: `deploy/review/isolated-image-pull-validation-v342.json`
 - production plan: `deploy/production-deploy-plan.example.json`
 - historical preparation/authorization/closure/record SHA: `36e8720a53ef7ff6a8334de6bc99646998d63fc9` / `26a11356e33c978afa8cd8a4881500fa62cdbc5c` / `1c4a982b2a35d3d45f59e7d9faefcdecca69e6c5` / `1f0340ddfcf3c8a74cf14110d5957627d4c5d38a`
 - historical artifact IDs: `8525220616`, `8525254543`
@@ -104,9 +108,9 @@ Render GitHub App은 `gihohoho/upgrade-rpg` 단일 private repository만 접근�
 
 v351 source에서 frontend master-data 기본 timeout을 5초로 늘리고 backend 1KB 이상 응답에 GZip level 5를 적용했습니다. 전체 runtime blocking-I/O audit는 sync FastAPI route 0, async 내부 blocking 호출 0, frontend blocking 호출 0으로 통과했습니다. offline tooling은 Python 148 files/371 blocking calls와 JavaScript 94 files/126 sync calls를 별도 확인하고 `intentional-one-shot-cli`로 분류했습니다. master-data의 11개 DB 조회는 하나의 `AsyncSession`을 공유하므로 위험한 동시 task로 바꾸지 않고 순차 await를 유지했습니다.
 
-v352에서 v351 source baseline `81beaa0864c3422fb9fc2071b9c4965936ecafac`의 backend image publish lifecycle을 `preparation-closed`, gate false, approval null, not-dispatched로 준비했습니다. v341 성공 run은 여섯 번째 history로 보존했습니다.
+v352 준비 SHA 승인 뒤 v351 backend image workflow를 정확히 한 번 실행했습니다. run `30226905547`은 성공했고 새 exact digest의 Trivy·SLSA provenance·SPDX SBOM·Cosign과 v353 isolated runtime/CA-store/cleanup이 모두 통과했습니다. lifecycle은 `attempt-recorded`, gate false이며 rerun은 금지합니다.
 
-다음은 push된 v352 preparation commit의 정확한 40자리 SHA를 기호가 승인하는 단계입니다. 이번 승인은 backend image의 workflow 1회 게시와 공급망·isolated 검증까지만 포함합니다. Render backend exact-image deploy와 frontend Static Site deploy는 새 digest 확인 뒤 별도 준비 commit·별도 exact-SHA 승인을 받습니다. 실제 공개 게임의 무폴백 로드와 관리자 guarded 콘텐츠 흐름을 확인하기 전까지 콘텐츠 추가·수정 시작 시점은 아닙니다.
+v354에서 기존 Render backend 서비스의 새 exact-image 수동 deploy 1회와 기존 Static Site의 v351 exact-source 수동 deploy 1회를 묶은 fail-closed provider release 계약을 준비했습니다. 다음은 push된 v354 preparation commit의 정확한 40자리 SHA를 기호가 승인하는 단계입니다. 승인 전에는 Render를 변경하지 않습니다. 실제 공개 게임의 무폴백 로드와 관리자 guarded 콘텐츠 흐름을 확인하기 전까지 콘텐츠 추가·수정 시작 시점은 아닙니다.
 
 현재 필요한 사용자 조치, extension, 권한, 새 설치는 없습니다.
 
@@ -138,6 +142,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v352 기대 결과는 `v351-backend-image-preparation-closed-owner-approval-required`, 다음 단계는 `owner-approve-v352-v351-backend-image-preparation-sha`입니다. v351의 `runtime-blocking-io-audit-passed`와 `prepare-v351-image-and-static-release-exact-sha-gates`는 완료된 source checkpoint로 보존합니다. v350 recovery, v348 static deploy, v347 backend, v345 Neon 완료, v342 image, v338 Render Connect, v335 provider selection, v334 generic deployment baseline도 보존합니다.
+v354 기대 결과는 `v351-provider-release-prepared-exact-sha-approval-required`, 다음 단계는 `owner-approve-v354-v351-provider-release-preparation-sha`입니다. v353의 `v351-image-publish-and-isolated-validation-complete`, v351의 `runtime-blocking-io-audit-passed`, v350 recovery, v348 static deploy, v347 backend, v345 Neon 완료, v342 live image, v338 Render Connect, v335 provider selection, v334 generic deployment baseline도 보존합니다.
 
 별도 승인 전에는 추가 deploy, Render env 변경, DB/Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스를 변경하지 않습니다.

@@ -1,3 +1,18 @@
+# v354.v351-provider-release-prepared-exact-sha-approval-required
+
+- 새 verified backend exact image와 v351 frontend exact source를 기존 Render 서비스 2개의 수동 release 입력으로 고정했습니다.
+- backend/static deploy는 각각 준비 완료지만 미승인·미실행이며 auto-deploy와 automatic retry는 계속 꺼져 있습니다.
+- 별도 exact-SHA 승인 범위는 기존 backend image update/deploy 1회, 기존 Static Site deploy 1회, read-only 공개 검증과 sanitized evidence 기록뿐입니다.
+- DB/Alembic/admin write, 콘텐츠·밸런스, custom domain/DNS, 결제, 추가 Actions dispatch/rerun은 승인 범위에서 제외했습니다.
+
+# v353.v351-image-publish-and-isolated-validation-complete
+
+- 승인 preparation `b48dfd0751b12b1b3afb6474f9d35359ba2f8177`로 owner-only lifecycle authorization/closure/evidence 전이를 완료했습니다.
+- workflow run `30226905547`은 run_attempt=1 단일 실행으로 성공했고 rerun은 금지했습니다.
+- exact digest `sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac`의 Trivy HIGH·CRITICAL 0, SLSA provenance, SPDX-2.3 SBOM, Cosign OIDC sign/verify를 확인했습니다.
+- private GHCR exact pull과 isolated linux/amd64 non-root/read-only/internal-network runtime health 200, system CA 119, cleanup을 확인했습니다.
+- Render backend/static deploy, DB/Alembic/admin write, 콘텐츠·밸런스 변경은 실행하지 않았습니다.
+
 # v352.v351-public-release-gates-prepared-backend-image-approval-required
 
 - v351 source baseline을 backend image와 frontend static 공개 release 입력으로 고정했습니다.

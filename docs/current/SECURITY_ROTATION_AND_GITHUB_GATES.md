@@ -157,3 +157,14 @@
 - v352 준비 SHA 승인 전에는 workflow dispatch, GHCR mutation, Docker isolated 실행, Render deploy를 하지 않습니다.
 - 승인 후에도 범위는 backend image 1회 게시와 SBOM·Trivy·provenance·Cosign·isolated 검증까지입니다. Render backend exact-image와 frontend static 배포는 새 digest 확인 뒤 별도 exact-SHA 승인을 받습니다.
 - 실제 token/PAT/secret 값은 조회 결과, 문서, Git, 로그, artifact에 기록하지 않았습니다.
+
+## v353 v351 backend image 게시·isolated 완료 — 2026-07-27
+
+- 승인 preparation `b48dfd0751b12b1b3afb6474f9d35359ba2f8177`을 authorization `7578eb665c03ee0fcb9399929328ce684cdd1b31`에서 정확히 사용했습니다.
+- workflow run `30226905547`은 run_attempt=1, actor `gihohoho`, conclusion `success`이며 같은 authorization SHA의 추가 run은 없습니다.
+- gate는 run 접수 직후 closure `5d547126322dbe3c235e855cc9c2f7337342ae36`에서 닫혔고 evidence `5c842deec6d1f496679a144897f485b07428810b`에 최종 결과를 기록했습니다.
+- exact digest `sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac`은 Trivy HIGH·CRITICAL 0, SLSA provenance, SPDX-2.3 SBOM, Cosign OIDC sign/verify를 통과했습니다.
+- private GHCR pull과 isolated non-root/read-only/internal-network runtime 검증 후 임시 container/network/local image를 제거했습니다. 기존 PostgreSQL은 healthy입니다.
+- 실제 token/PAT/secret/격리용 환경값은 Git·문서·채팅·artifact에 기록하지 않았습니다.
+- Render backend/static deploy, DB/Alembic/admin write, 콘텐츠 변경은 실행하지 않았습니다.
+- 다음 provider release는 별도 v354 준비 commit의 정확한 SHA 승인을 요구합니다.

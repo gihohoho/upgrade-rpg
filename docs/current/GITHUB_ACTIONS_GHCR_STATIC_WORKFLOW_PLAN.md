@@ -225,9 +225,9 @@ production reference 자동 갱신과 deploy는 하지 않습니다.
 
 v341 게시 lifecycle은 preparation `fb231afa5081f5bfd7b459081a58bc5acd6699df` → authorization `f5d69c1bbef101cc9124b9dede18c844ef80b59c` → closure `ebb5ef46e3115bc358d62d93a64002b8711f4232` → evidence `cf9e0bab121186d2ac51f889f807348cc46f192c` 전이를 완료한 과거 성공 기록입니다. run `30180738530`의 verified digest `sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1`은 v342 isolated 검증까지 통과했고, 여섯 번째 `attemptHistory` 항목으로 보존합니다.
 
-현재 v351 소스 게시 lifecycle은 새 시도로 초기화한 `preparation-closed`이며 gate는 `false`, approval은 `null`, observed attempt는 `not-dispatched`입니다. v352 준비 commit의 정확한 SHA를 기호가 승인하기 전에는 authorization commit, workflow dispatch, GHCR login/build/push를 실행하지 않습니다. 승인 범위도 backend image 1회 게시와 공급망·isolated 검증까지만이며 Render backend/frontend 배포는 새 digest 확인 뒤 별도 승인으로 분리합니다.
+v351 소스 게시 lifecycle은 authorization `7578eb665c03ee0fcb9399929328ce684cdd1b31` → closure `5d547126322dbe3c235e855cc9c2f7337342ae36` → evidence `5c842deec6d1f496679a144897f485b07428810b` 전이를 완료했습니다. run `30226905547`은 run_attempt=1, success이며 exact digest `sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac`의 Trivy·provenance·SBOM·Cosign과 isolated 검증이 통과했습니다. lifecycle은 `attempt-recorded`, gate `false`이며 rerun은 금지합니다.
 
 ```txt
-result: github-actions-ghcr-owner-only-provenance-path-preparation-ready-publish-gated
-next safe stage: owner-approve-v352-v351-backend-image-preparation-sha
+result: github-actions-ghcr-owner-only-attempt-recorded-publish-gated
+next safe stage: prepare-v351-provider-release-exact-sha-approval
 ```

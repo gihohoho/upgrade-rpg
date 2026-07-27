@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Focused fail-closed smoke for the v351 public release gate contract."""
+"""Focused fail-closed smoke for the v351 provider release gate contract."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ def expect_blocked(module, plan: dict, mutate) -> None:
         module.validate_contract(candidate)
     except module.ReleaseGateError:
         return
-    raise AssertionError("unsafe v351 public release contract was accepted")
+    raise AssertionError("unsafe v351 provider release contract was accepted")
 
 
 def main() -> int:
@@ -41,26 +41,29 @@ def main() -> int:
         lambda p: p.update({"productionResourcesMutated": True}),
         lambda p: p["githubActions"].update({"lifecycleState": "authorization-open"}),
         lambda p: p["githubActions"].update({"publishReviewerGateReady": True}),
-        lambda p: p["githubActions"].update({"approvedPreparationSha": "a" * 40}),
-        lambda p: p["githubActions"].update({"ownerApprovalRecorded": True}),
-        lambda p: p["githubActions"].update({"newWorkflowDispatchExecuted": True}),
-        lambda p: p["githubActions"].update({"newRegistryMutationExecuted": True}),
-        lambda p: p["backendRelease"].update({"newImageReference": module.CURRENT_IMAGE}),
-        lambda p: p["backendRelease"].update({"renderExactImageDeployPreparationReady": True}),
+        lambda p: p["githubActions"].update({"workflowRunAttempt": 2}),
+        lambda p: p["githubActions"].update({"workflowConclusion": "failure"}),
+        lambda p: p["githubActions"].update({"signatureVerified": False}),
+        lambda p: p["backendRelease"].update({"newImageReference": module.OLD_IMAGE}),
+        lambda p: p["backendRelease"].update({"isolatedRuntimeValidationComplete": False}),
         lambda p: p["backendRelease"].update({"renderDeployApproved": True}),
+        lambda p: p["backendRelease"].update({"renderDeployExecuted": True}),
+        lambda p: p["backendRelease"].update({"automaticRetry": True}),
         lambda p: p["frontendRelease"].update({"autoDeploy": True}),
-        lambda p: p["frontendRelease"].update({"staticDeployPreparationReady": True}),
         lambda p: p["frontendRelease"].update({"staticDeployApproved": True}),
+        lambda p: p["frontendRelease"].update({"staticDeployExecuted": True}),
+        lambda p: p["approvalScopeAfterExactSha"].update({"databaseWrite": True}),
+        lambda p: p["approvalScopeAfterExactSha"].update({"adminWrite": True}),
     )
     for mutate in mutations:
         expect_blocked(module, plan, mutate)
 
-    print("v351 public release gate smoke")
-    print("- preparation self-approval/open gate/dispatch/registry mutation: rejected")
-    print("- premature backend Render deploy: rejected")
-    print("- premature frontend static deploy or auto-deploy: rejected")
-    print("- database/admin/content mutation scope: absent")
-    print("- result: v351-public-release-gates-fail-closed")
+    print("v351 provider release gate smoke")
+    print("- workflow rerun/open gate/unverified image: rejected")
+    print("- premature backend or static deploy: rejected")
+    print("- provider auto-deploy/retry: rejected")
+    print("- database/Alembic/admin/content mutation: rejected")
+    print("- result: v351-provider-release-gates-fail-closed")
     return 0
 
 

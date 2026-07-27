@@ -1,15 +1,15 @@
-# Backend image GHCR policy — v352
+# Backend image GHCR policy — v354
 
 ## 고정값
 
 ```txt
-version: v352.v351-public-release-gates-prepared-backend-image-approval-required
+version: v354.v351-provider-release-prepared-exact-sha-approval-required
 remote: https://github.com/gihohoho/upgrade-rpg.git
 repository: ghcr.io/gihohoho/upgrade-rpg-backend
 visibility/platform: private / linux/amd64
 CI credential: GitHub Actions GITHUB_TOKEN
 reference mode: digest-only
-publish lifecycle: preparation-closed / publishReviewerGateReady=false / prior six attempts preserved
+publish lifecycle: attempt-recorded / publishReviewerGateReady=false / current run recorded
 ```
 
 verified production reference:
@@ -28,4 +28,4 @@ image publish는 `owner-only-source-controlled-two-step`과 `deploy/github-actio
 
 actual secret을 repository에 넣지 않고, tag·unsigned digest·미검증 digest를 production reference로 사용하지 않습니다. root build context는 env 파일을 제외하며 Trivy `--ignore-unfixed=false`를 유지합니다. byte-for-byte deterministic image라고 주장하지 않습니다.
 
-현재 다음 단계는 v352 준비 commit의 정확한 SHA에 대한 owner 승인입니다. 이 승인은 v351 backend image 1회 게시와 공급망·isolated 검증까지만 허용하며 Render 배포는 포함하지 않습니다.
+v351 새 image는 run `30226905547`에서 게시·공급망 검증을 통과했고 v353 isolated 검증과 cleanup까지 완료했습니다. 새 verified candidate는 `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac`입니다. 다음 단계는 backend/static provider release 준비 commit의 정확한 SHA owner 승인입니다.

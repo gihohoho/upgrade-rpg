@@ -30,7 +30,7 @@ EXPECTED_REFERENCE = EXPECTED_REPOSITORY + "@sha256:f3bf6eed45e46e9d2022df4ab62e
 EXPECTED_BASE = "python:3.11.15-alpine3.23@sha256:ac0151f0eec4b7ba78bc47d337f328c6db706e7255b35b2327c2749f058c82fe"
 WORKFLOW_PATH = ".github/workflows/publish-backend-ghcr.yml"
 LIFECYCLE_PATH = "deploy/github-actions-ghcr-publish-lifecycle.json"
-ISOLATED_EVIDENCE_PATH = "deploy/review/isolated-image-pull-validation-v342.json"
+ISOLATED_EVIDENCE_PATH = "deploy/review/isolated-image-pull-validation-v353.json"
 PRODUCTION_DEPLOY_PLAN_PATH = "deploy/production-deploy-plan.example.json"
 LIFECYCLE_SCHEMA_VERSION = "v352.owner-only-publish-lifecycle-with-six-attempt-history"
 PRIOR_APPROVED_PREPARATION_SHA = "36e8720a53ef7ff6a8334de6bc99646998d63fc9"
@@ -130,14 +130,19 @@ ATTEMPT_HISTORY = [
         "signatureVerified": True,
     },
 ]
-APPROVED_PREPARATION_SHA = "fb231afa5081f5bfd7b459081a58bc5acd6699df"
-AUTHORIZATION_SHA = "f5d69c1bbef101cc9124b9dede18c844ef80b59c"
-CLOSURE_SHA = "ebb5ef46e3115bc358d62d93a64002b8711f4232"
-RECORD_COMMIT_SHA = "cf9e0bab121186d2ac51f889f807348cc46f192c"
-CURRENT_RUN_ID = 30180738530
+APPROVED_PREPARATION_SHA = "b48dfd0751b12b1b3afb6474f9d35359ba2f8177"
+AUTHORIZATION_SHA = "7578eb665c03ee0fcb9399929328ce684cdd1b31"
+CLOSURE_SHA = "5d547126322dbe3c235e855cc9c2f7337342ae36"
+RECORD_COMMIT_SHA = "5c842deec6d1f496679a144897f485b07428810b"
+CURRENT_RUN_ID = 30226905547
 CURRENT_RUN_URL = f"https://github.com/gihohoho/upgrade-rpg/actions/runs/{CURRENT_RUN_ID}"
-CURRENT_ARTIFACT_IDS = [8625485901, 8625478503]
-CURRENT_IMAGE_DIGEST = "sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
+CURRENT_ARTIFACT_IDS = [8638838292, 8638825538]
+CURRENT_ARTIFACT_DIGESTS = [
+    "sha256:9d23b748aed34152afe979e678bc99d7246e47e4b95dae6d7da21be6f6f24ae3",
+    "sha256:db7046ca2a94d8794e6aa56df7bb331049d1b9ed1bb2a4c189f33a7ffa3ed2e6",
+]
+CURRENT_IMAGE_DIGEST = "sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac"
+VERIFIED_CANDIDATE_REFERENCE = EXPECTED_REPOSITORY + "@" + CURRENT_IMAGE_DIGEST
 LIFECYCLE_SUPPORTED_STATES = (
     "preparation-closed",
     "authorization-open",
@@ -204,7 +209,7 @@ def _inspect_publish_lifecycle(root: Path) -> dict[str, Any]:
         "publish lifecycle top-level schema changed",
     )
     _require(lifecycle.get("schemaVersion") == LIFECYCLE_SCHEMA_VERSION, "publish lifecycle schemaVersion changed")
-    _require(lifecycle.get("state") == "preparation-closed", "root handoff lifecycle must be preparation-closed")
+    _require(lifecycle.get("state") == "attempt-recorded", "root handoff lifecycle must be attempt-recorded")
     _require(_bool(lifecycle, "publishReviewerGateReady") is False, "root handoff publish lifecycle gate must be false")
     _require(
         lifecycle.get("priorApprovedPreparationSha") == PRIOR_APPROVED_PREPARATION_SHA,
@@ -212,7 +217,10 @@ def _inspect_publish_lifecycle(root: Path) -> dict[str, Any]:
     )
     _require(lifecycle.get("priorAttemptEvidence") == PRIOR_ATTEMPT_EVIDENCE, "prior attempt evidence changed")
     _require(lifecycle.get("attemptHistory") == ATTEMPT_HISTORY, "prior six-attempt history changed")
-    _require(lifecycle.get("approvedPreparationSha") is None, "preparation must not self-approve")
+    _require(
+        lifecycle.get("approvedPreparationSha") == APPROVED_PREPARATION_SHA,
+        "approved preparation SHA changed",
+    )
 
     owner_approval = lifecycle.get("ownerApproval")
     _require(isinstance(owner_approval, dict), "ownerApproval must be an object")
@@ -220,8 +228,8 @@ def _inspect_publish_lifecycle(root: Path) -> dict[str, Any]:
         set(owner_approval) == {"recorded", "recordedAtUtc", "evidence"},
         "ownerApproval schema changed",
     )
-    _require(_bool(owner_approval, "recorded") is False, "preparation must await owner approval")
-    _require(owner_approval.get("recordedAtUtc") is None, "preparation approval timestamp must be empty")
+    _require(_bool(owner_approval, "recorded") is True, "recorded attempt must retain owner approval")
+    _require(owner_approval.get("recordedAtUtc") == "2026-07-27T00:11:00Z", "owner approval timestamp changed")
     _require(
         owner_approval.get("evidence") == "exact-40-character-sha-user-message",
         "owner approval evidence type changed",
@@ -319,10 +327,10 @@ def _inspect_publish_lifecycle(root: Path) -> dict[str, Any]:
         "closure schema changed",
     )
     _require(closure == {
-        "authorizationSourceSha": None,
-        "closureCommitSha": None,
-        "preparedAtUtc": None,
-    }, "preparation closure evidence must be empty")
+        "authorizationSourceSha": AUTHORIZATION_SHA,
+        "closureCommitSha": CLOSURE_SHA,
+        "preparedAtUtc": "2026-07-27T00:12:23Z",
+    }, "verified attempt closure evidence changed")
 
     observed = lifecycle.get("observedAttempt")
     _require(isinstance(observed, dict), "observedAttempt must be an object")
@@ -339,14 +347,14 @@ def _inspect_publish_lifecycle(root: Path) -> dict[str, Any]:
         "observedAttempt schema changed",
     )
     _require(observed == {
-        "runId": None,
-        "runUrl": None,
-        "runAttempt": None,
-        "status": "not-dispatched",
-        "conclusion": None,
-        "imageDigest": None,
-        "signatureVerified": False,
-    }, "preparation attempt evidence must be empty")
+        "runId": CURRENT_RUN_ID,
+        "runUrl": CURRENT_RUN_URL,
+        "runAttempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "imageDigest": CURRENT_IMAGE_DIGEST,
+        "signatureVerified": True,
+    }, "verified candidate attempt evidence changed")
     return lifecycle
 
 
@@ -472,11 +480,11 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     )
     _require(
         policy.get("ownerOnlyApprovalPhase")
-        == "v352-v351-backend-image-preparation-closed-owner-approval-required",
+        == "v354-v351-provider-release-prepared-exact-sha-approval-required",
         "owner-only phase changed",
     )
     _require(policy.get("publishLifecyclePath") == LIFECYCLE_PATH, "publish lifecycle path changed")
-    _require(policy.get("publishLifecycleState") == "preparation-closed", "policy lifecycle must be preparation-closed")
+    _require(policy.get("publishLifecycleState") == "attempt-recorded", "policy lifecycle must be attempt-recorded")
     _require(
         policy.get("publishLifecycleSupportedStates") == list(LIFECYCLE_SUPPORTED_STATES),
         "policy lifecycle supported-state list changed",
@@ -500,7 +508,10 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         {key: item[key] for key in ("recordCommitSha", "runId", "conclusion", "registryLoginExecuted", "imageBuildExecuted", "imagePushExecuted")}
         for item in ATTEMPT_HISTORY
     ], "policy six-attempt history changed")
-    _require(policy.get("approvedPreparationSha") is None, "policy preparation must not self-approve")
+    _require(
+        policy.get("approvedPreparationSha") == APPROVED_PREPARATION_SHA,
+        "policy approved preparation SHA changed",
+    )
     _require(policy.get("currentAttemptEvidence") == {
         "authorizationSha": AUTHORIZATION_SHA,
         "closureSha": CLOSURE_SHA,
@@ -529,6 +540,14 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require(policy.get("productionReferenceMode") == "digest-only", "production reference must remain digest-only")
     _require(policy.get("productionReferenceTemplate") == EXPECTED_REFERENCE_TEMPLATE, "production reference template changed")
     _require(policy.get("productionReference") == EXPECTED_REFERENCE, "verified production reference changed")
+    _require(
+        policy.get("verifiedCandidateReference") == VERIFIED_CANDIDATE_REFERENCE,
+        "verified candidate reference changed",
+    )
+    _require(
+        _bool(policy, "verifiedCandidateAppliedToRender") is False,
+        "verified candidate must not be applied to Render before approval",
+    )
     _require(_bool(policy, "productionReferenceStaticPrepared") is True, "production reference static preparation is missing")
     _require(_bool(policy, "productionReferenceAppliedToRuntime") is False, "production reference must not be applied to runtime yet")
     _require(policy.get("targetPlatform") == "linux/amd64", "target platform changed")
@@ -542,17 +561,19 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     )
     _require(policy.get("isolatedValidationEvidence") == ISOLATED_EVIDENCE_PATH, "isolated validation evidence path changed")
     _require(isolated_evidence == {
-        "schemaVersion": "v342.v341-image-isolated-runtime-validation",
-        "completedAtUtc": "2026-07-26T00:19:24Z",
+        "schemaVersion": "v353.v351-image-isolated-runtime-validation",
+        "completedAtUtc": "2026-07-27T00:21:22Z",
         "approvedByUserMessage": True,
         "workflowRunId": CURRENT_RUN_ID,
         "workflowRunAttempt": 1,
         "workflowConclusion": "success",
         "sourceCommitSha": AUTHORIZATION_SHA,
         "preparationCommitSha": APPROVED_PREPARATION_SHA,
+        "closureCommitSha": CLOSURE_SHA,
         "recordCommitSha": RECORD_COMMIT_SHA,
         "artifactIds": CURRENT_ARTIFACT_IDS,
-        "imageReference": EXPECTED_REFERENCE,
+        "artifactDigests": CURRENT_ARTIFACT_DIGESTS,
+        "imageReference": VERIFIED_CANDIDATE_REFERENCE,
         "imageId": CURRENT_IMAGE_DIGEST,
         "platform": "linux/amd64",
         "supplyChainValidation": {
@@ -605,14 +626,16 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
             "existingPostgresContainerHealthyAfterCleanup": True,
         },
         "productionRuntimeApplied": False,
-        "neonInitializationApproved": False,
-        "neonRestoreExecuted": False,
-        "neonStampExecuted": False,
-        "renderServiceCreationApproved": False,
-        "renderServiceCreated": False,
-        "productionDeploymentExecuted": False,
-        "result": "v341-image-publish-and-isolated-validation-complete",
-        "nextSafeStage": "prepare-neon-database-initialization-exact-sha-approval",
+        "renderBackendDeployApproved": False,
+        "renderBackendDeployExecuted": False,
+        "renderStaticDeployApproved": False,
+        "renderStaticDeployExecuted": False,
+        "databaseWriteExecuted": False,
+        "alembicMutationExecuted": False,
+        "adminWriteExecuted": False,
+        "contentOrBalanceChanged": False,
+        "result": "v351-image-publish-and-isolated-validation-complete",
+        "nextSafeStage": "prepare-v351-provider-release-exact-sha-approval",
     }, "isolated image pull/runtime evidence changed")
 
     for key in (
@@ -643,6 +666,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "localDockerLoginApproved",
         "localImagePullApproved",
         "containerStartApproved",
+        "exactPreparationShaApproved",
         "isolatedImagePullExecuted",
         "isolatedContainerExecutionExecuted",
         "isolatedCleanupExecuted",
@@ -661,7 +685,6 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "sourceControlledPublishGateReady",
         "publishEnvironmentConfigured",
         "localImagePushApproved",
-        "exactPreparationShaApproved",
         "productionDeploymentApproved",
         "productionDeploymentExecuted",
         "productionDeploymentApprovalReady",
@@ -680,16 +703,16 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     )
     _require(policy.get("productionDeploymentPlan") == PRODUCTION_DEPLOY_PLAN_PATH, "production deployment plan path changed")
     _require(
-        policy.get("nextSafeStage") == "owner-approve-v352-v351-backend-image-preparation-sha",
+        policy.get("nextSafeStage") == "owner-approve-v354-v351-provider-release-preparation-sha",
         "unexpected image-policy next safe stage",
     )
     _require(
-        actions_result.get("publishLifecycleState") == "preparation-closed",
-        "root handoff must use the closed preparation state",
+        actions_result.get("publishLifecycleState") == "attempt-recorded",
+        "root handoff must use the recorded attempt state",
     )
     _require(
-        actions_result.get("result") == PREPARATION_READY_RESULT,
-        "root workflow lifecycle must await exact-SHA approval",
+        actions_result.get("result") == ATTEMPT_RECORDED_RESULT,
+        "root workflow lifecycle must preserve the verified recorded attempt",
     )
 
     env = _env_inventory(env_example)
@@ -820,6 +843,8 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "currentRunId": CURRENT_RUN_ID,
         "currentArtifactIds": CURRENT_ARTIFACT_IDS,
         "productionReference": EXPECTED_REFERENCE,
+        "verifiedCandidateReference": VERIFIED_CANDIDATE_REFERENCE,
+        "verifiedCandidateAppliedToRender": False,
         "productionReferenceStaticPrepared": True,
         "productionReferenceAppliedToRuntime": False,
         "isolatedImagePullExecuted": True,
@@ -856,20 +881,21 @@ def render(result: dict[str, Any]) -> str:
         "- workflow file/creation approved: yes/yes",
         f"- reviewed workflow source SHA-256: {result['workflowSourceSha256']}",
         f"- reviewed workflow semantic SHA-256: {result['workflowSemanticSha256']}",
-        "- prior workflow execution history: six runs recorded; latest prior run succeeded",
-        "- action allowlist/full SHA enforcement: configured/configured (live rechecked 2026-07-26)",
+        "- workflow execution history: six prior attempts + one current successful attempt",
+        "- action allowlist/full SHA enforcement: configured/configured (live rechecked 2026-07-27)",
         "- CI login/build/push approved/executed: yes/yes/yes / yes/yes/yes",
-        "- publish environment/main-only: present/configured (live rechecked 2026-07-26)",
+        "- publish environment/main-only: present/configured (live rechecked 2026-07-27)",
         "- native required reviewer/current private plan: missing/unavailable",
-        "- publish approval model: owner-only-source-controlled-two-step (new preparation closed; gate closed)",
+        "- publish approval model: owner-only-source-controlled-two-step (attempt recorded; gate closed)",
         f"- publish lifecycle: {result['publishLifecycleState']} / gate={result['publishGateReady']}",
         f"- lifecycle states: {', '.join(result['publishLifecycleSupportedStates'])}",
         f"- prior approved preparation SHA: {result['priorApprovedPreparationSha']}",
-        f"- new approved preparation SHA: {result['approvedPreparationSha']}",
-        f"- prior authorization/closure/record SHA: {result['authorizationSha']} / {result['closureSha']} / {result['recordCommitSha']}",
-        f"- prior latest run/artifact IDs: {result['currentRunId']} / {result['currentArtifactIds']}",
+        f"- approved preparation SHA: {result['approvedPreparationSha']}",
+        f"- authorization/closure/record SHA: {result['authorizationSha']} / {result['closureSha']} / {result['recordCommitSha']}",
+        f"- current run/artifact IDs: {result['currentRunId']} / {result['currentArtifactIds']}",
         f"- verified image digest: {CURRENT_IMAGE_DIGEST}",
-        f"- production reference: {EXPECTED_REFERENCE}",
+        f"- current production reference: {EXPECTED_REFERENCE}",
+        f"- verified candidate reference: {result['verifiedCandidateReference']}",
         "- production reference static/runtime applied: yes/no",
         "- isolated pull/container/cleanup executed: yes/yes/yes",
         "- production deploy plan reviewed / approval ready: yes/no",
