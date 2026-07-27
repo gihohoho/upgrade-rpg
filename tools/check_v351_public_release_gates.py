@@ -17,13 +17,15 @@ ROOT = Path(__file__).resolve().parents[1]
 PLAN_PATH = ROOT / "deploy/v351-public-release-gates.example.json"
 LIFECYCLE_PATH = ROOT / "deploy/github-actions-ghcr-publish-lifecycle.json"
 ISOLATED_EVIDENCE_PATH = ROOT / "deploy/review/isolated-image-pull-validation-v353.json"
+PROVIDER_EVIDENCE_PATH = ROOT / "deploy/review/render-v351-provider-release-v355.json"
 BACKEND_POLICY_PATH = ROOT / "deploy/backend-image-ghcr-policy.example.json"
 STATIC_PLAN_PATH = ROOT / "deploy/render-static-site.example.json"
 
-VERSION = "v354.v351-provider-release-prepared-exact-sha-approval-required"
-RESULT = "v351-provider-release-prepared-exact-sha-approval-required"
-NEXT_STAGE = "owner-approve-v354-v351-provider-release-preparation-sha"
+VERSION = "v355.v351-provider-release-deployed-verified-content-ready"
+RESULT = "v351-provider-release-deployed-verified-content-ready"
+NEXT_STAGE = "select-first-content-and-balance-change-scope"
 BASELINE = "81beaa0864c3422fb9fc2071b9c4965936ecafac"
+PROVIDER_PREPARATION_SHA = "05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62"
 LIFECYCLE_VERSION = "v352.owner-only-publish-lifecycle-with-six-attempt-history"
 PREPARATION_SHA = "b48dfd0751b12b1b3afb6474f9d35359ba2f8177"
 AUTHORIZATION_SHA = "7578eb665c03ee0fcb9399929328ce684cdd1b31"
@@ -79,13 +81,20 @@ def validate_contract(plan: dict[str, Any]) -> None:
     require(plan.get("schemaVersion") == VERSION, "release gate version differs")
     require(plan.get("result") == RESULT, "release gate result differs")
     require(plan.get("nextSafeStage") == NEXT_STAGE, "release next stage differs")
-    require(plan.get("productionResourcesMutated") is False, "provider mutation flag must be false")
+    require(plan.get("productionResourcesMutated") is True, "provider mutation completion flag must be true")
+    require(plan.get("providerReleaseExecuted") is True, "provider release completion is missing")
 
     source = plan.get("source") or {}
     require(source.get("baselineCommit") == BASELINE, "v351 source baseline differs")
     require(source.get("branch") == "main", "release branch must be main")
     require(source.get("cleanPushedPreparationRequired") is True, "clean pushed preparation is required")
+    require(source.get("cleanPushedPreparationSha") == PROVIDER_PREPARATION_SHA, "provider preparation SHA differs")
     require(source.get("runtimeFiles") == EXPECTED_HASHES, "runtime file hash contract differs")
+
+    approval = plan.get("ownerApproval") or {}
+    require(approval.get("approvedPreparationSha") == PROVIDER_PREPARATION_SHA, "provider approval SHA differs")
+    require(approval.get("recordedByUserMessage") is True, "provider approval record is missing")
+    require(approval.get("scopeConsumed") is True, "provider approval scope must be consumed")
 
     actions = plan.get("githubActions") or {}
     require(actions.get("trigger") == "workflow_dispatch-only", "workflow trigger differs")
@@ -106,7 +115,8 @@ def validate_contract(plan: dict[str, Any]) -> None:
 
     backend = plan.get("backendRelease") or {}
     require(backend.get("serviceId") == "srv-d9iro458nd3s73acgmsg", "backend service differs")
-    require(backend.get("currentLiveImage") == OLD_IMAGE, "current live image differs")
+    require(backend.get("previousLiveImage") == OLD_IMAGE, "previous live image differs")
+    require(backend.get("currentLiveImage") == NEW_IMAGE, "current live image differs")
     require(backend.get("newImageReference") == NEW_IMAGE, "new exact image differs")
     require(backend.get("supplyChainValidationComplete") is True, "supply-chain validation is incomplete")
     require(backend.get("isolatedRuntimeValidationComplete") is True, "isolated validation is incomplete")
@@ -115,8 +125,12 @@ def validate_contract(plan: dict[str, Any]) -> None:
         "isolated evidence path differs",
     )
     require(backend.get("renderExactImageDeployPreparationReady") is True, "backend deploy is not prepared")
-    require(backend.get("renderDeployApproved") is False, "backend deploy must be unapproved")
-    require(backend.get("renderDeployExecuted") is False, "backend deploy must be unexecuted")
+    require(backend.get("renderDeployApproved") is True, "backend deploy approval is missing")
+    require(backend.get("renderDeployExecuted") is True, "backend deploy completion is missing")
+    require(backend.get("renderDeployId") == "dep-d9jeuf3eo5us73ba6cgg", "backend deploy ID differs")
+    require(backend.get("renderDeployStatus") == "live", "backend deploy is not live")
+    require(backend.get("renderDeployTrigger") == "image-updated", "backend deploy trigger differs")
+    require(backend.get("renderDeployCount") == 1, "backend deploy count differs")
     require(backend.get("singleManualDeployOnly") is True, "backend deploy must be single/manual")
     require(backend.get("automaticRetry") is False, "backend automatic retry must be off")
 
@@ -124,9 +138,14 @@ def validate_contract(plan: dict[str, Any]) -> None:
     require(frontend.get("serviceId") == "srv-d9iu337aqgkc73am4lh0", "static service differs")
     require(frontend.get("autoDeploy") is False, "static auto-deploy must remain off")
     require(frontend.get("releaseSourceBaseline") == BASELINE, "static release baseline differs")
+    require(frontend.get("currentLiveSourceCommit") == BASELINE, "static live source differs")
     require(frontend.get("staticDeployPreparationReady") is True, "static deploy is not prepared")
-    require(frontend.get("staticDeployApproved") is False, "static deploy must be unapproved")
-    require(frontend.get("staticDeployExecuted") is False, "static deploy must be unexecuted")
+    require(frontend.get("staticDeployApproved") is True, "static deploy approval is missing")
+    require(frontend.get("staticDeployExecuted") is True, "static deploy completion is missing")
+    require(frontend.get("staticDeployId") == "dep-d9jev7gu01pc73favje0", "static deploy ID differs")
+    require(frontend.get("staticDeployStatus") == "live", "static deploy is not live")
+    require(frontend.get("staticDeployTrigger") == "manual-specific-commit", "static deploy trigger differs")
+    require(frontend.get("staticDeployCount") == 1, "static deploy count differs")
     require(frontend.get("singleManualDeployOnly") is True, "static deploy must be single/manual")
     require(frontend.get("automaticRetry") is False, "static automatic retry must be off")
 
@@ -151,6 +170,19 @@ def validate_contract(plan: dict[str, Any]) -> None:
         "automaticDeployOrRetry",
     ):
         require(scope.get(key) is False, f"forbidden provider scope differs: {key}")
+
+    validation = plan.get("validation") or {}
+    require(validation.get("evidence") == "deploy/review/render-v351-provider-release-v355.json", "provider evidence path differs")
+    require(validation.get("backendHealthStatus") == 200, "backend health result differs")
+    require(validation.get("databaseHealthStatus") == 200, "database health result differs")
+    require(validation.get("databaseHealthRequestCount") == 1, "database health request count differs")
+    require(validation.get("indexStatus") == 200 and validation.get("adminStatus") == 200, "public page status differs")
+    require(validation.get("corsAllowOrigin") == "https://gihohoho-upgrade-rpg.onrender.com", "CORS origin differs")
+    require(validation.get("masterDataStatus") == 200, "master-data status differs")
+    require(validation.get("masterDataMilliseconds") == 1346, "master-data timing differs")
+    require(validation.get("masterDataContentEncoding") == "gzip", "master-data encoding differs")
+    for key in ("browserMasterDataAppliedWithoutFallback", "adminGuardedReadOnlyVerified", "contentReadiness"):
+        require(validation.get(key) is True, f"provider validation differs: {key}")
 
     forbidden = plan.get("forbiddenBeforeExactShaApproval") or []
     for marker in (
@@ -179,6 +211,10 @@ def git(*args: str) -> str:
 def verify_repository(plan: dict[str, Any]) -> None:
     require(re.fullmatch(r"[0-9a-f]{40}", BASELINE) is not None, "baseline SHA shape differs")
     require(git("merge-base", "--is-ancestor", BASELINE, "HEAD") == "", "v351 baseline is not an ancestor")
+    require(
+        git("merge-base", "--is-ancestor", PROVIDER_PREPARATION_SHA, "HEAD") == "",
+        "provider preparation SHA is not an ancestor",
+    )
     for relative, expected in EXPECTED_HASHES.items():
         path = ROOT / relative
         require(path.is_file(), f"missing pinned source: {relative}")
@@ -246,12 +282,56 @@ def verify_repository(plan: dict[str, Any]) -> None:
     require(policy.get("sourceControlledPublishGateReady") is False, "backend publish gate is open")
     require(policy.get("productionReference") == OLD_IMAGE, "backend live reference differs")
     require(policy.get("verifiedCandidateReference") == NEW_IMAGE, "backend verified candidate differs")
-    require(policy.get("verifiedCandidateAppliedToRender") is False, "verified candidate was applied early")
+    require(policy.get("verifiedCandidateAppliedToRender") is True, "verified candidate Render application is missing")
+    require(policy.get("renderLiveReference") == NEW_IMAGE, "Render live reference differs")
+    require(policy.get("renderProviderReleaseApprovedPreparationSha") == PROVIDER_PREPARATION_SHA, "Render approval differs")
+    require(policy.get("renderProviderReleaseDeployId") == "dep-d9jeuf3eo5us73ba6cgg", "Render deploy record differs")
+    require(
+        policy.get("renderProviderReleaseEvidence") == "deploy/review/render-v351-provider-release-v355.json",
+        "Render provider evidence differs",
+    )
     require(
         policy.get("isolatedValidationEvidence") == "deploy/review/isolated-image-pull-validation-v353.json",
         "backend isolated evidence differs",
     )
     require(policy.get("nextSafeStage") == NEXT_STAGE, "backend policy next stage differs")
+
+    provider = load_json(PROVIDER_EVIDENCE_PATH)
+    require(provider.get("schemaVersion") == VERSION, "provider evidence version differs")
+    require(provider.get("result") == RESULT, "provider evidence result differs")
+    require(provider.get("nextSafeStage") == NEXT_STAGE, "provider evidence next stage differs")
+    owner = provider.get("ownerApproval") or {}
+    require(owner.get("approvedPreparationSha") == PROVIDER_PREPARATION_SHA, "provider evidence approval differs")
+    require(owner.get("scopeConsumed") is True, "provider evidence approval is not consumed")
+    backend_live = provider.get("backend") or {}
+    require(backend_live.get("liveImageReference") == NEW_IMAGE, "provider evidence backend image differs")
+    require(backend_live.get("deployId") == "dep-d9jeuf3eo5us73ba6cgg", "provider evidence backend deploy differs")
+    require(backend_live.get("status") == "live" and backend_live.get("deployCount") == 1, "provider backend deploy state differs")
+    require((backend_live.get("health") or {}).get("status") == 200, "provider backend health differs")
+    db_health = backend_live.get("databaseHealth") or {}
+    require(db_health.get("status") == 200 and db_health.get("requestCount") == 1, "provider DB health differs")
+    frontend_live = provider.get("frontend") or {}
+    require(frontend_live.get("liveSourceCommit") == BASELINE, "provider frontend source differs")
+    require(frontend_live.get("deployId") == "dep-d9jev7gu01pc73favje0", "provider frontend deploy differs")
+    require(frontend_live.get("status") == "live" and frontend_live.get("deployCount") == 1, "provider frontend deploy state differs")
+    require(frontend_live.get("autoDeploy") is False, "provider frontend auto-deploy is on")
+    integration = provider.get("integration") or {}
+    master = integration.get("masterData") or {}
+    require(master.get("status") == 200 and master.get("contentEncoding") == "gzip", "provider master-data differs")
+    require(master.get("browserRuntimeAppliedLogObserved") is True, "browser runtime apply evidence is missing")
+    require(master.get("browserFallbackWarningObserved") is False, "browser fallback was observed")
+    admin = integration.get("admin") or {}
+    require(admin.get("readOnly") is True and admin.get("generalWriteUi") == "blocked", "admin guard differs")
+    require(admin.get("writeActionExecuted") is False, "admin write was executed")
+    rotation = provider.get("securityRotation") or {}
+    require(rotation.get("backendDeployHookRotated") is True, "backend deploy hook was not rotated")
+    require(rotation.get("staticSiteDeployHookRotated") is True, "static deploy hook was not rotated")
+    require(rotation.get("rotatedValuesRecorded") is False, "rotated hook value must not be recorded")
+    forbidden_results = provider.get("forbiddenMutationResults") or {}
+    for key, value in forbidden_results.items():
+        require(value is False, f"forbidden provider mutation executed: {key}")
+    readiness = provider.get("contentReadiness") or {}
+    require(readiness.get("readyToSelectFirstContentAndBalanceScope") is True, "content readiness differs")
 
     static = load_json(STATIC_PLAN_PATH)
     require((static.get("site") or {}).get("autoDeploy") is False, "provider static auto-deploy is on")
@@ -289,12 +369,13 @@ def main() -> int:
         print(f"v351 public release gate verification failed: {exc}", file=sys.stderr)
         return 1
 
-    print("v351 provider release gate verification (static, no provider mutation)")
+    print("v351 provider release verification (completed, sanitized evidence)")
     print(f"- source baseline: {BASELINE}")
     print(f"- backend exact image: {NEW_IMAGE}")
     print(f"- workflow: run {RUN_ID} / attempt=1 / success / gate closed")
     print("- supply chain + isolated runtime + cleanup: verified")
-    print("- backend/static provider deploy approved/executed: no/no")
+    print("- backend/static provider deploy approved/executed/live: yes/yes/yes")
+    print("- public integration: health/db/index/admin/CORS/master-data/admin guard verified")
     print(f"- result: {RESULT}")
     print(f"- next safe stage: {NEXT_STAGE}")
     return 0

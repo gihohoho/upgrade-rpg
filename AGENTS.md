@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v354
+# Upgrade RPG Codex working rules — v355
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -43,9 +43,9 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v354.v351-provider-release-prepared-exact-sha-approval-required
-strict result: v351-provider-release-prepared-exact-sha-approval-required
-next safe stage: owner-approve-v354-v351-provider-release-preparation-sha
+latest: v355.v351-provider-release-deployed-verified-content-ready
+strict result: v351-provider-release-deployed-verified-content-ready
+next safe stage: select-first-content-and-balance-change-scope
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
 v352 preparation checkpoint: v352.v351-public-release-gates-prepared-backend-image-approval-required
 v351 source checkpoint: v351.master-data-latency-focused-fix-blocking-io-audited / master-data-latency-fix-blocking-io-audit-ready
@@ -68,6 +68,7 @@ GHCR repository: ghcr.io/gihohoho/upgrade-rpg-backend (private)
 target: linux/amd64
 verified production reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1
 verified v351 candidate: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac
+Render live reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac
 architecture: managed PostgreSQL + verify-full + provider-managed HTTPS ingress + backend 1/1
 Alembic current: v295_initial_schema / new revision needed: no
 ```
@@ -76,20 +77,22 @@ Alembic current: v295_initial_schema / new revision needed: no
 - image publish model은 `owner-only-source-controlled-two-step`입니다.
 - source-controlled lifecycle gate는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `attempt-recorded`, `publishReviewerGateReady=false`입니다. 이전 run 6건은 `attemptHistory`에 보존하고 현재 run은 `observedAttempt`에 기록합니다.
 - run `30226905547`은 run_attempt=1 단일 실행으로 build/SBOM/Trivy/provenance/Cosign을 통과했고 exact digest `sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac`은 v353 isolated runtime/CA-store/cleanup까지 통과했습니다.
-- 과거 run `30180738530`과 digest `sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1`은 현재 Render live image의 공급망·v342 isolated 증거로 보존합니다.
+- 과거 run `30180738530`과 digest `sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1`은 이전 Render live image의 공급망·v342 isolated 증거로 보존합니다.
 - 운영 배포 계획은 `deploy/production-deploy-plan.example.json`과 `docs/current/PRODUCTION_DEPLOYMENT_PLAN.md`에서 검토 완료했습니다.
 - production host, managed DB, provider CA, reverse proxy/domain/certificate, secret injection, edge network, first-deploy rollback 입력은 아직 미확정입니다.
 - production deployment approval ready/approved/executed는 `no/no/no`입니다.
 - Render public preview deployment ready/approved/executed는 `yes/yes/yes`입니다.
 - Render GitHub App은 `gihohoho/upgrade-rpg` 단일 저장소만 접근하도록 연결됐습니다.
-- frontend Static Site `gihohoho-upgrade-rpg`는 approved commit `b13b1775093716800d7361ee1e8f94d8112eefc1`로 Live이며 auto-deploy는 꺼져 있습니다.
+- frontend Static Site `gihohoho-upgrade-rpg`는 v351 exact source `81beaa0864c3422fb9fc2071b9c4965936ecafac`로 Live이며 auto-deploy는 꺼져 있습니다.
 - 공개 게임/관리자 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`이고 둘 다 HTTP 200입니다.
 - 승인된 recovery SHA `e64d42d812d78de023dc6cbd7f960263bc1c2d15`로 backend CORS deploy `dep-d9ivfmvlk1mc73fbcv40`를 정확히 한 번 실행했고 Live입니다.
 - 실제 `CORS_ORIGINS`는 exact frontend origin 배열로 저장됐으며 health/preflight 200과 exact `Access-Control-Allow-Origin`을 확인했습니다.
-- v351 source는 master-data 기본 timeout을 5초로 늘리고 backend 1KB 이상 응답에 GZip을 적용했습니다. 아직 새 image/static deploy 전이므로 공개 게임은 v350 동작을 유지합니다.
+- v351 source는 master-data 기본 timeout을 5초로 늘리고 backend 1KB 이상 응답에 GZip을 적용했습니다. 새 image/static deploy 뒤 공개 master-data는 1,346ms, gzip, no-fallback으로 검증됐습니다.
 - v352 준비 SHA 승인으로 authorization `7578eb665c03ee0fcb9399929328ce684cdd1b31` → closure `5d547126322dbe3c235e855cc9c2f7337342ae36` → evidence `5c842deec6d1f496679a144897f485b07428810b` 전이를 완료했습니다.
-- v354 provider release 계약은 기존 Render backend 서비스에 새 exact image를 한 번 적용하고 기존 Static Site를 v351 source로 한 번 배포하는 범위만 준비합니다. 둘 다 아직 미승인·미실행입니다.
-- backend/static provider deploy는 push된 v354 준비 commit의 정확한 SHA를 기호가 별도 승인한 뒤에만 실행합니다. DB/Alembic/admin write/콘텐츠 변경/자동 retry는 포함하지 않습니다.
+- 기호가 exact v354 준비 SHA `05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62`를 승인했고, backend image update deploy `dep-d9jeuf3eo5us73ba6cgg`와 Static Site v351 deploy `dep-d9jev7gu01pc73favje0`가 각각 정확히 한 번 실행되어 Live입니다.
+- `/api/v1/health`, `/api/v1/health/db`, `/index.html`, `/admin.html`, exact CORS, gzip master-data no-fallback, 관리자 guarded read-only 흐름이 모두 검증됐습니다. DB health는 한 번만 요청했고 DB/Alembic/admin write/콘텐츠 변경/자동 retry는 실행하지 않았습니다.
+- sanitized provider evidence는 `deploy/review/render-v351-provider-release-v355.json`입니다.
+- 공개 게임과 관리자 보호 흐름이 검증됐으므로 이제 기호와 첫 콘텐츠·밸런스 변경 범위를 고르기 좋은 시점입니다. 실제 콘텐츠 변경은 선택된 별도 범위 안에서만 진행합니다.
 - 전체 runtime blocking-I/O audit는 sync FastAPI route 0, async 내부 blocking 호출 0, frontend entrypoint·source blocking 호출 0으로 통과했습니다.
 - offline tooling은 Python 148 files/371 blocking calls, JavaScript 94 files/126 sync calls를 별도 확인했고 서버·브라우저 event loop 밖의 `intentional-one-shot-cli`로 분류했습니다.
 - master-data의 11개 async DB 조회는 하나의 `AsyncSession`을 공유하므로 동시 task로 바꾸지 않고 안전한 순차 실행을 유지합니다.
@@ -103,6 +106,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 - Render `Hobby (legacy)` workspace는 연결됐고 결제수단·billing 정보가 없습니다. 현재 backend Web Service와 frontend Static Site가 각각 1개씩 있습니다.
 - GitHub `Confirm access`는 사용자가 완료했고 Render 전용 classic PAT는 `read:packages` only, 만료일 2027-07-23으로 생성해 `upgrade-rpg-ghcr-read` credential에 저장했습니다. 실제 값은 Git·파일·채팅에 기록하지 않습니다.
 - 브라우저 검사 출력에 노출된 첫 PAT는 Render에 저장하지 않고 즉시 GitHub에서 폐기했습니다. 교체 PAT는 값 출력 없이 전달했으며 회전 기록은 `docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md`에 있습니다.
+- v355 Render 설정 검사 출력에 backend/static deploy hook 값이 포함돼 두 hook을 즉시 재발급했습니다. 새 값은 기록하지 않았고 회전은 추가 deploy를 만들지 않았습니다.
 - v338 checkpoint에서 verified exact digest를 Render `Existing Image`로 `Connect`해 private GHCR 접근과 서비스 설정 화면 진입을 확인했으며, 그 시점에는 Web Service 생성·env 주입·deploy를 실행하지 않았습니다.
 - Render 서비스 이름은 `upgrade-rpg-api`로 기호가 확정했습니다.
 - v341 source는 production SQLAlchemy/Alembic에 system-CA hostname-verifying SSLContext를 공유 주입하고 Render env inventory를 분리했습니다.

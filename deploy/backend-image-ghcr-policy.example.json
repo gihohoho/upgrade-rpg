@@ -2,7 +2,7 @@
   "schemaVersion": "v334.production-deploy-plan-reviewed-inputs-blocked",
   "preparedOnly": false,
   "publishApprovalModel": "owner-only-source-controlled-two-step",
-  "ownerOnlyApprovalPhase": "v354-v351-provider-release-prepared-exact-sha-approval-required",
+  "ownerOnlyApprovalPhase": "v355-v351-provider-release-deployed-verified-content-ready",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
   "publishLifecycleState": "attempt-recorded",
   "publishLifecycleSupportedStates": [
@@ -104,7 +104,11 @@
   "productionReferenceTemplate": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:<approved-64-hex-digest>",
   "productionReference": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1",
   "verifiedCandidateReference": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac",
-  "verifiedCandidateAppliedToRender": false,
+  "verifiedCandidateAppliedToRender": true,
+  "renderLiveReference": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac",
+  "renderProviderReleaseApprovedPreparationSha": "05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62",
+  "renderProviderReleaseDeployId": "dep-d9jeuf3eo5us73ba6cgg",
+  "renderProviderReleaseEvidence": "deploy/review/render-v351-provider-release-v355.json",
   "productionReferenceStaticPrepared": true,
   "productionReferenceAppliedToRuntime": false,
   "targetPlatform": "linux/amd64",
@@ -163,5 +167,5 @@
   "actualDockerCommandExecuted": true,
   "actualDatabaseRestoreExecuted": true,
   "actualDatabaseAlembicMutationExecuted": true,
-  "nextSafeStage": "owner-approve-v354-v351-provider-release-preparation-sha"
+  "nextSafeStage": "select-first-content-and-balance-change-scope"
 }

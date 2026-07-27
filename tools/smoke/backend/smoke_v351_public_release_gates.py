@@ -38,7 +38,8 @@ def main() -> int:
     module.validate_contract(plan)
 
     mutations = (
-        lambda p: p.update({"productionResourcesMutated": True}),
+        lambda p: p.update({"productionResourcesMutated": False}),
+        lambda p: p["ownerApproval"].update({"scopeConsumed": False}),
         lambda p: p["githubActions"].update({"lifecycleState": "authorization-open"}),
         lambda p: p["githubActions"].update({"publishReviewerGateReady": True}),
         lambda p: p["githubActions"].update({"workflowRunAttempt": 2}),
@@ -46,12 +47,16 @@ def main() -> int:
         lambda p: p["githubActions"].update({"signatureVerified": False}),
         lambda p: p["backendRelease"].update({"newImageReference": module.OLD_IMAGE}),
         lambda p: p["backendRelease"].update({"isolatedRuntimeValidationComplete": False}),
-        lambda p: p["backendRelease"].update({"renderDeployApproved": True}),
-        lambda p: p["backendRelease"].update({"renderDeployExecuted": True}),
+        lambda p: p["backendRelease"].update({"renderDeployApproved": False}),
+        lambda p: p["backendRelease"].update({"renderDeployExecuted": False}),
+        lambda p: p["backendRelease"].update({"renderDeployCount": 2}),
         lambda p: p["backendRelease"].update({"automaticRetry": True}),
         lambda p: p["frontendRelease"].update({"autoDeploy": True}),
-        lambda p: p["frontendRelease"].update({"staticDeployApproved": True}),
-        lambda p: p["frontendRelease"].update({"staticDeployExecuted": True}),
+        lambda p: p["frontendRelease"].update({"staticDeployApproved": False}),
+        lambda p: p["frontendRelease"].update({"staticDeployExecuted": False}),
+        lambda p: p["frontendRelease"].update({"staticDeployCount": 2}),
+        lambda p: p["validation"].update({"browserMasterDataAppliedWithoutFallback": False}),
+        lambda p: p["validation"].update({"adminGuardedReadOnlyVerified": False}),
         lambda p: p["approvalScopeAfterExactSha"].update({"databaseWrite": True}),
         lambda p: p["approvalScopeAfterExactSha"].update({"adminWrite": True}),
     )
@@ -60,8 +65,9 @@ def main() -> int:
 
     print("v351 provider release gate smoke")
     print("- workflow rerun/open gate/unverified image: rejected")
-    print("- premature backend or static deploy: rejected")
+    print("- missing approval, non-live deploy, or duplicate deploy: rejected")
     print("- provider auto-deploy/retry: rejected")
+    print("- fallback or unverified admin guard: rejected")
     print("- database/Alembic/admin/content mutation: rejected")
     print("- result: v351-provider-release-gates-fail-closed")
     return 0

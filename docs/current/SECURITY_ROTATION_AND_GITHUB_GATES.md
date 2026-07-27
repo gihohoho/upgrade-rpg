@@ -168,3 +168,12 @@
 - 실제 token/PAT/secret/격리용 환경값은 Git·문서·채팅·artifact에 기록하지 않았습니다.
 - Render backend/static deploy, DB/Alembic/admin write, 콘텐츠 변경은 실행하지 않았습니다.
 - 다음 provider release는 별도 v354 준비 commit의 정확한 SHA 승인을 요구합니다.
+
+## v355 Render deploy hook 회전 — 2026-07-27
+
+- Render backend와 Static Site 설정 화면이 마스킹된 deploy hook 값을 브라우저 검사 출력에 포함하는 것을 감지했습니다.
+- 두 값은 Git·파일·정제 evidence에 저장하거나 deploy에 사용하지 않았습니다.
+- backend deploy hook과 Static Site deploy hook을 각각 즉시 재발급해 검사 출력에 포함된 이전 값을 폐기했습니다.
+- 재발급된 새 값은 조회·복사·기록하지 않았습니다.
+- hook 재발급으로 추가 deploy는 발생하지 않았습니다.
+- 관련 sanitized evidence: `deploy/review/render-v351-provider-release-v355.json`

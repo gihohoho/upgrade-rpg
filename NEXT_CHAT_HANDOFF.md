@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v354
+# Upgrade RPG Codex handoff — v355
 
 ## 현재 상태
 
 ```txt
-latest: v354.v351-provider-release-prepared-exact-sha-approval-required
-strict result: v351-provider-release-prepared-exact-sha-approval-required
-next safe stage: owner-approve-v354-v351-provider-release-preparation-sha
+latest: v355.v351-provider-release-deployed-verified-content-ready
+strict result: v351-provider-release-deployed-verified-content-ready
+next safe stage: select-first-content-and-balance-change-scope
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
 v352 preparation checkpoint: v352.v351-public-release-gates-prepared-backend-image-approval-required
 v351 source checkpoint: v351.master-data-latency-focused-fix-blocking-io-audited / master-data-latency-fix-blocking-io-audit-ready
@@ -27,6 +27,7 @@ baseline next stage marker: select-production-targets-and-complete-executable-de
 GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
 GHCR repository: ghcr.io/gihohoho/upgrade-rpg-backend
 verified reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1
+Render live reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac
 provider selection: Render Free Singapore + Neon Free PostgreSQL 16 Singapore
 fixed monthly cost: USD 0
 Neon project/read-only connectivity: created/verified
@@ -142,9 +143,13 @@ v351 source에서 frontend master-data 기본 timeout을 5초로 늘리고 backe
 
 v352 준비 SHA 승인 뒤 v351 backend image workflow를 정확히 한 번 실행했습니다. run `30226905547`은 성공했고 새 exact digest의 Trivy·SLSA provenance·SPDX SBOM·Cosign과 v353 isolated runtime/CA-store/cleanup이 모두 통과했습니다. lifecycle은 `attempt-recorded`, gate false이며 rerun은 금지합니다.
 
-v354에서 기존 Render backend 서비스의 새 exact-image 수동 deploy 1회와 기존 Static Site의 v351 exact-source 수동 deploy 1회를 묶은 fail-closed provider release 계약을 준비했습니다. 다음은 push된 v354 preparation commit의 정확한 40자리 SHA를 기호가 승인하는 단계입니다. 승인 전에는 Render를 변경하지 않습니다.
+기호가 exact v354 준비 SHA `05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62`를 승인했습니다. backend image update deploy `dep-d9jeuf3eo5us73ba6cgg`와 Static Site v351 exact-source deploy `dep-d9jev7gu01pc73favje0`를 각각 정확히 한 번 실행했고 둘 다 Live입니다. auto-deploy와 automatic retry는 계속 Off입니다.
 
-실제 공개 게임의 무폴백 로드와 관리자 guarded 콘텐츠 흐름을 확인하기 전까지 콘텐츠 추가·수정 시작 시점은 아닙니다. 현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다.
+공개 health/DB health/index/admin/CORS/gzip master-data를 검증했습니다. master-data는 1,346ms, `gzip`, HTTP 200이며 게임 runtime applied 로그가 있고 fallback 경고·브라우저 오류는 없습니다. 관리자는 read-only, 11 domains/729 rows, 전체 쓰기 UI blocked, write key missing이며 어떤 write 버튼도 실행하지 않았습니다. sanitized evidence는 `deploy/review/render-v351-provider-release-v355.json`입니다.
+
+Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 즉시 재발급했고 새 값은 기록하지 않았습니다. DB/Alembic/admin write/콘텐츠·밸런스 변경/custom domain/DNS/payment/추가 Actions·두 번째 deploy는 없었습니다.
+
+공개 게임의 무폴백 로드와 관리자 guarded read-only 흐름이 검증됐으므로 이제 첫 콘텐츠·밸런스 변경 범위를 기호와 고르기 좋은 시점입니다. 현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다.
 
 ## 첫 검사
 
@@ -174,6 +179,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v354 기대 결과는 `v351-provider-release-prepared-exact-sha-approval-required`, 다음 단계는 `owner-approve-v354-v351-provider-release-preparation-sha`입니다. v353의 `v351-image-publish-and-isolated-validation-complete`, v351의 `runtime-blocking-io-audit-passed`, v350 recovery, v348 static deploy, v347 backend, v345 Neon 완료, v342 live image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
+v355 기대 결과는 `v351-provider-release-deployed-verified-content-ready`, 다음 단계는 `select-first-content-and-balance-change-scope`입니다. v353의 `v351-image-publish-and-isolated-validation-complete`, v351의 `runtime-blocking-io-audit-passed`, v350 recovery, v348 static deploy, v347 backend, v345 Neon 완료, v342 이전 live image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

@@ -1,11 +1,11 @@
-# Current Status — v354
+# Current Status — v355
 
 ## 현재 결과
 
 ```txt
-latest: v354.v351-provider-release-prepared-exact-sha-approval-required
-strict result: v351-provider-release-prepared-exact-sha-approval-required
-next safe stage: owner-approve-v354-v351-provider-release-preparation-sha
+latest: v355.v351-provider-release-deployed-verified-content-ready
+strict result: v351-provider-release-deployed-verified-content-ready
+next safe stage: select-first-content-and-balance-change-scope
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
 v352 preparation checkpoint: v352.v351-public-release-gates-prepared-backend-image-approval-required
 v351 source checkpoint: v351.master-data-latency-focused-fix-blocking-io-audited / master-data-latency-fix-blocking-io-audit-ready
@@ -83,14 +83,11 @@ Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 col
 
 ## 아직 남은 것
 
-- v354 provider release preparation SHA owner 승인
-- 승인 뒤 기존 backend 서비스의 exact-image deploy 1회
-- 승인 뒤 기존 frontend Static Site의 v351 exact-source deploy 1회
-- 공개 게임의 backend master-data 무폴백 통합 검증
-- 관리자 guarded 콘텐츠 작업 흐름 검증과 콘텐츠 준비도 재검토
+- 첫 콘텐츠·밸런스 변경 범위를 기호와 선택
+- 선택한 범위의 별도 구현·검증
 - custom domain/DNS와 SLA production 전환은 보류
 
-Neon DB/schema/data 초기화, Render backend public preview, frontend Static Site 최초 배포와 CORS recovery는 완료됐습니다. v334 generic SLA production plan의 별도 host·domain·edge·rollback 입력은 계속 `unresolved`입니다. v351 source는 latency fix와 blocking-I/O 감사를 통과했지만 아직 공개 환경에는 배포하지 않았습니다.
+Neon DB/schema/data 초기화, Render backend public preview, frontend Static Site v351 배포와 CORS/no-fallback 검증은 완료됐습니다. v334 generic SLA production plan의 별도 host·domain·edge·rollback 입력은 계속 `unresolved`입니다.
 
 ## Render account checkpoint — 2026-07-22
 
@@ -154,9 +151,27 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 
 Render 내부 health와 공개 `/api/v1/health`, Neon read-only `/api/v1/health/db`가 모두 HTTP 200 `status=ok`입니다. DB/Alembic write, image 변경, custom domain/DNS, 결제수단, 자동 retry·두 번째 deploy는 실행하지 않았습니다. 다음 단계는 live backend 확인과 frontend 배포/CORS origin 계획 검토입니다.
 
-현재는 push될 v354 provider release preparation commit의 정확한 40자리 SHA를 기호가 승인하는 단계입니다. 승인 전에는 Render backend image 변경·deploy와 Static Site deploy를 하지 않습니다. 승인 뒤에도 기존 두 서비스의 수동 deploy 각 1회와 read-only 검증만 허용하며 DB/Alembic/admin write/콘텐츠 변경/자동 retry는 하지 않습니다.
+기호가 push된 v354 provider release preparation commit `05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62`를 승인했습니다. 기존 두 서비스의 deploy를 각각 정확히 한 번 실행하고 read-only 검증까지 완료했습니다. DB/Alembic/admin write/콘텐츠 변경/자동 retry는 실행하지 않았습니다.
 
 현재 필요한 extension이나 설치는 없습니다. 서버 재시작도 필요하지 않습니다.
+
+## v351 provider release 배포·공개 검증 완료 — v355
+
+- backend service/image: `srv-d9iro458nd3s73acgmsg` / `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac`
+- backend deploy: `dep-d9jeuf3eo5us73ba6cgg` / image updated / Live / 40.2초 / 정확히 1회
+- frontend service/source: `srv-d9iu337aqgkc73am4lh0` / `81beaa0864c3422fb9fc2071b9c4965936ecafac`
+- frontend deploy: `dep-d9jev7gu01pc73favje0` / manual specific commit / Live / 19.6초 / 정확히 1회
+- Static Site auto-deploy: Off
+- backend health: HTTP 200, 483ms
+- Neon DB health: HTTP 200, 131ms, read-only 요청 1회
+- index/admin: HTTP 200 / 200
+- CORS: exact `https://gihohoho-upgrade-rpg.onrender.com`
+- master-data: HTTP 200, 1,346ms, decoded 559,786 bytes, gzip, `game.master_data`
+- browser game: backend master-data runtime applied 로그 확인, fallback 경고 0, 오류·경고 0
+- public admin: read-only, 11 domains / 729 rows, general write UI blocked, write key missing
+- 콘텐츠 준비도: 공개 no-fallback + 관리자 guarded read-only 확인 완료, 첫 콘텐츠·밸런스 범위를 고르기 좋은 시점
+- Render 설정 검사 출력에 포함된 backend/static deploy hook은 즉시 재발급했고 새 값은 기록하지 않음
+- sanitized evidence: `deploy/review/render-v351-provider-release-v355.json`
 
 ## Frontend static/CORS recovery 결과 — v350
 

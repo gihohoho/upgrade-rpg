@@ -31,6 +31,7 @@ EXPECTED_BASE = "python:3.11.15-alpine3.23@sha256:ac0151f0eec4b7ba78bc47d337f328
 WORKFLOW_PATH = ".github/workflows/publish-backend-ghcr.yml"
 LIFECYCLE_PATH = "deploy/github-actions-ghcr-publish-lifecycle.json"
 ISOLATED_EVIDENCE_PATH = "deploy/review/isolated-image-pull-validation-v353.json"
+PROVIDER_RELEASE_EVIDENCE_PATH = "deploy/review/render-v351-provider-release-v355.json"
 PRODUCTION_DEPLOY_PLAN_PATH = "deploy/production-deploy-plan.example.json"
 LIFECYCLE_SCHEMA_VERSION = "v352.owner-only-publish-lifecycle-with-six-attempt-history"
 PRIOR_APPROVED_PREPARATION_SHA = "36e8720a53ef7ff6a8334de6bc99646998d63fc9"
@@ -143,6 +144,9 @@ CURRENT_ARTIFACT_DIGESTS = [
 ]
 CURRENT_IMAGE_DIGEST = "sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac"
 VERIFIED_CANDIDATE_REFERENCE = EXPECTED_REPOSITORY + "@" + CURRENT_IMAGE_DIGEST
+PROVIDER_RELEASE_PREPARATION_SHA = "05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62"
+PROVIDER_RELEASE_DEPLOY_ID = "dep-d9jeuf3eo5us73ba6cgg"
+PROVIDER_RELEASE_NEXT_STAGE = "select-first-content-and-balance-change-scope"
 LIFECYCLE_SUPPORTED_STATES = (
     "preparation-closed",
     "authorization-open",
@@ -480,7 +484,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     )
     _require(
         policy.get("ownerOnlyApprovalPhase")
-        == "v354-v351-provider-release-prepared-exact-sha-approval-required",
+        == "v355-v351-provider-release-deployed-verified-content-ready",
         "owner-only phase changed",
     )
     _require(policy.get("publishLifecyclePath") == LIFECYCLE_PATH, "publish lifecycle path changed")
@@ -545,8 +549,21 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "verified candidate reference changed",
     )
     _require(
-        _bool(policy, "verifiedCandidateAppliedToRender") is False,
-        "verified candidate must not be applied to Render before approval",
+        _bool(policy, "verifiedCandidateAppliedToRender") is True,
+        "verified candidate Render application is missing",
+    )
+    _require(policy.get("renderLiveReference") == VERIFIED_CANDIDATE_REFERENCE, "Render live reference changed")
+    _require(
+        policy.get("renderProviderReleaseApprovedPreparationSha") == PROVIDER_RELEASE_PREPARATION_SHA,
+        "Render provider-release approval changed",
+    )
+    _require(
+        policy.get("renderProviderReleaseDeployId") == PROVIDER_RELEASE_DEPLOY_ID,
+        "Render provider-release deploy changed",
+    )
+    _require(
+        policy.get("renderProviderReleaseEvidence") == PROVIDER_RELEASE_EVIDENCE_PATH,
+        "Render provider-release evidence changed",
     )
     _require(_bool(policy, "productionReferenceStaticPrepared") is True, "production reference static preparation is missing")
     _require(_bool(policy, "productionReferenceAppliedToRuntime") is False, "production reference must not be applied to runtime yet")
@@ -703,7 +720,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     )
     _require(policy.get("productionDeploymentPlan") == PRODUCTION_DEPLOY_PLAN_PATH, "production deployment plan path changed")
     _require(
-        policy.get("nextSafeStage") == "owner-approve-v354-v351-provider-release-preparation-sha",
+        policy.get("nextSafeStage") == PROVIDER_RELEASE_NEXT_STAGE,
         "unexpected image-policy next safe stage",
     )
     _require(
@@ -844,7 +861,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "currentArtifactIds": CURRENT_ARTIFACT_IDS,
         "productionReference": EXPECTED_REFERENCE,
         "verifiedCandidateReference": VERIFIED_CANDIDATE_REFERENCE,
-        "verifiedCandidateAppliedToRender": False,
+        "verifiedCandidateAppliedToRender": True,
         "productionReferenceStaticPrepared": True,
         "productionReferenceAppliedToRuntime": False,
         "isolatedImagePullExecuted": True,
@@ -896,7 +913,8 @@ def render(result: dict[str, Any]) -> str:
         f"- verified image digest: {CURRENT_IMAGE_DIGEST}",
         f"- current production reference: {EXPECTED_REFERENCE}",
         f"- verified candidate reference: {result['verifiedCandidateReference']}",
-        "- production reference static/runtime applied: yes/no",
+        "- generic production reference static/runtime applied: yes/no",
+        "- Render public preview verified candidate applied: yes",
         "- isolated pull/container/cleanup executed: yes/yes/yes",
         "- production deploy plan reviewed / approval ready: yes/no",
         "- latest result: provenance/SBOM, exact-digest Trivy 0 findings, Cosign sign/verify passed",

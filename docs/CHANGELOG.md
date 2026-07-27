@@ -1,3 +1,11 @@
+# v355.v351-provider-release-deployed-verified-content-ready
+
+- 승인 SHA `05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62`로 backend exact-image deploy `dep-d9jeuf3eo5us73ba6cgg`와 Static Site v351 exact-source deploy `dep-d9jev7gu01pc73favje0`를 각각 정확히 한 번 실행해 Live를 확인했습니다.
+- health/DB health/index/admin/CORS와 1,346ms gzip master-data를 확인했고, 공개 게임은 backend runtime applied·fallback 경고 0, 관리자는 read-only·write UI blocked·write key missing입니다.
+- DB/Alembic/admin write, 콘텐츠·밸런스 변경, automatic retry, 추가 Actions, 두 번째 provider deploy는 실행하지 않았습니다.
+- Render 설정 검사 출력에 포함된 backend/static deploy hook은 즉시 재발급했고 새 값은 기록하지 않았습니다.
+- sanitized evidence는 `deploy/review/render-v351-provider-release-v355.json`이며 다음 단계는 첫 콘텐츠·밸런스 변경 범위 선택입니다.
+
 # v354.v351-provider-release-prepared-exact-sha-approval-required
 
 - 새 verified backend exact image와 v351 frontend exact source를 기존 Render 서비스 2개의 수동 release 입력으로 고정했습니다.

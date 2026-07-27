@@ -9,7 +9,7 @@
 - 브라우저 master-data 기본 timeout: 1,500ms → 5,000ms
 - backend 1KB 이상 응답: Starlette `GZipMiddleware`로 압축, `compresslevel=5`
 
-아직 Render에는 배포하지 않았으므로 공개 사이트는 계속 v350 동작을 사용합니다.
+v355에서 새 backend exact image와 v351 Static Site source를 Render에 각각 한 번 배포했고, 공개 master-data가 1,346ms·gzip·no-fallback으로 적용되는 것을 검증했습니다.
 
 ## 왜 모든 sync 함수를 async로 바꾸지 않았나
 

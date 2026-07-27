@@ -1,19 +1,27 @@
 {
-  "schemaVersion": "v354.v351-provider-release-prepared-exact-sha-approval-required",
+  "schemaVersion": "v355.v351-provider-release-deployed-verified-content-ready",
   "preparedAtUtc": "2026-07-27T00:21:22Z",
-  "result": "v351-provider-release-prepared-exact-sha-approval-required",
-  "nextSafeStage": "owner-approve-v354-v351-provider-release-preparation-sha",
-  "productionResourcesMutated": false,
+  "completedAtUtc": "2026-07-27T05:46:16Z",
+  "result": "v351-provider-release-deployed-verified-content-ready",
+  "nextSafeStage": "select-first-content-and-balance-change-scope",
+  "productionResourcesMutated": true,
+  "providerReleaseExecuted": true,
   "source": {
     "baselineCommit": "81beaa0864c3422fb9fc2071b9c4965936ecafac",
     "branch": "main",
     "cleanPushedPreparationRequired": true,
+    "cleanPushedPreparationSha": "05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62",
     "runtimeFiles": {
       "backend/app/main.py": "61c34c329b19cea8568296317b2649ddfef191a7ff003348e845f37882d754d4",
       "src/api/master-data-boot-policy.js": "4c230b5adde411c5ca7710d8582f3ff0871521ab554c89be47eebc3e718a53ec",
       "src/api/master-data-runtime-switch.js": "701334af14edbb025389857a7802c07314ce18ac423fe28941dc2fa66f499a39",
       "tools/build_legacy_static_site.mjs": "e05dfcb7e3ddb3782463ec3064acc45c60c8d5db2df2dfeee2312a3486ff501c"
     }
+  },
+  "ownerApproval": {
+    "approvedPreparationSha": "05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62",
+    "recordedByUserMessage": true,
+    "scopeConsumed": true
   },
   "githubActions": {
     "workflow": ".github/workflows/publish-backend-ghcr.yml",
@@ -37,28 +45,38 @@
   "backendRelease": {
     "service": "upgrade-rpg-api",
     "serviceId": "srv-d9iro458nd3s73acgmsg",
-    "currentLiveImage": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1",
+    "previousLiveImage": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1",
+    "currentLiveImage": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac",
     "newImageReference": "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac",
     "supplyChainValidationComplete": true,
     "isolatedRuntimeValidationComplete": true,
     "isolatedEvidence": "deploy/review/isolated-image-pull-validation-v353.json",
     "renderExactImageDeployPreparationReady": true,
-    "renderDeployApproved": false,
-    "renderDeployExecuted": false,
+    "renderDeployApproved": true,
+    "renderDeployExecuted": true,
+    "renderDeployId": "dep-d9jeuf3eo5us73ba6cgg",
+    "renderDeployStatus": "live",
+    "renderDeployTrigger": "image-updated",
+    "renderDeployCount": 1,
     "singleManualDeployOnly": true,
     "automaticRetry": false
   },
   "frontendRelease": {
     "service": "gihohoho-upgrade-rpg",
     "serviceId": "srv-d9iu337aqgkc73am4lh0",
-    "currentLiveSourceCommit": "b13b1775093716800d7361ee1e8f94d8112eefc1",
+    "previousLiveSourceCommit": "b13b1775093716800d7361ee1e8f94d8112eefc1",
+    "currentLiveSourceCommit": "81beaa0864c3422fb9fc2071b9c4965936ecafac",
     "releaseSourceBaseline": "81beaa0864c3422fb9fc2071b9c4965936ecafac",
     "autoDeploy": false,
     "buildCommand": "node tools/build_legacy_static_site.mjs",
     "publishDirectory": "frontend/legacy-dist",
     "staticDeployPreparationReady": true,
-    "staticDeployApproved": false,
-    "staticDeployExecuted": false,
+    "staticDeployApproved": true,
+    "staticDeployExecuted": true,
+    "staticDeployId": "dep-d9jev7gu01pc73favje0",
+    "staticDeployStatus": "live",
+    "staticDeployTrigger": "manual-specific-commit",
+    "staticDeployCount": 1,
     "singleManualDeployOnly": true,
     "automaticRetry": false
   },
@@ -80,6 +98,21 @@
     "paymentMethodChange": false,
     "automaticDeployOrRetry": false,
     "failurePolicy": "stop-with-current-provider-state-preserved-and-request-review"
+  },
+  "validation": {
+    "evidence": "deploy/review/render-v351-provider-release-v355.json",
+    "backendHealthStatus": 200,
+    "databaseHealthStatus": 200,
+    "databaseHealthRequestCount": 1,
+    "indexStatus": 200,
+    "adminStatus": 200,
+    "corsAllowOrigin": "https://gihohoho-upgrade-rpg.onrender.com",
+    "masterDataStatus": 200,
+    "masterDataMilliseconds": 1346,
+    "masterDataContentEncoding": "gzip",
+    "browserMasterDataAppliedWithoutFallback": true,
+    "adminGuardedReadOnlyVerified": true,
+    "contentReadiness": true
   },
   "orderedStages": [
     "owner approves the exact v354 provider-release preparation SHA",
