@@ -321,6 +321,7 @@ const EXACT_TIER_OPTION_CONFIG = {
 		baseAtk: 4 * UNIT_B,
 		atk20: 69.1 * UNIT_B,
 		baseSdmg: 120,
+		sdmg20: 607,
 		baseAllDmg: 60,
 		baseAtkInc: 65,
 		baseNdmg: 275,
@@ -464,6 +465,14 @@ function highTierBaseSdmg(tier) {
 	return 10 * tier;
 }
 
+function highTierSkillDmgEnhanceScale() {
+	const anchorTier = 12;
+	const anchor = EXACT_TIER_OPTION_CONFIG[anchorTier];
+	const level20Delta = enhanceTable[20].sdmg - enhanceTable[0].sdmg;
+	const anchorTierGrowth = 1.0 + 0.6 * (anchorTier - 1);
+	return (anchor.sdmg20 - anchor.baseSdmg) / (level20Delta * anchorTierGrowth);
+}
+
 function highTierBaseAllDmg(tier) {
 	if (EXACT_TIER_OPTION_CONFIG[tier] && EXACT_TIER_OPTION_CONFIG[tier].baseAllDmg !== undefined) {
 		return EXACT_TIER_OPTION_CONFIG[tier].baseAllDmg;
@@ -535,7 +544,10 @@ function calcItemStats(item) {
 	if (st.baseSdmg || st.baseAllDmg) {
 		let sdmgMult = 1.0 + 0.6 * (tier - 1);
 		let alldmgMult = 1.0 + 0.3 * (tier - 1);
-		st.skillDmgInc = st.baseSdmg ? parseFloat((st.baseSdmg + dSdmg * sdmgMult).toFixed(1)) : 0;
+		// 12단계 +20의 확정 607%를 기준으로 고티어 스킬피해 강화분만 같은 비율로 상향한다.
+		// +0 기본값과 1~11단계, 모든피해 및 다른 장비 옵션은 그대로 유지한다.
+		let highTierSdmgScale = tier >= 12 ? highTierSkillDmgEnhanceScale() : 1.0;
+		st.skillDmgInc = st.baseSdmg ? parseFloat((st.baseSdmg + dSdmg * sdmgMult * highTierSdmgScale).toFixed(1)) : 0;
 		st.allDmgInc = st.baseAllDmg ? parseFloat((st.baseAllDmg + dAlldmg * alldmgMult).toFixed(1)) : 0;
 	} else {
 		st.skillDmgInc = 0;

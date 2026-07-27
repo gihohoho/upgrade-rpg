@@ -1,13 +1,33 @@
-# Next Steps — v338
+# Next Steps — v356
 
-현재 production image와 isolated runtime 검증은 완료됐고 운영 배포 계획도 검토했습니다. 비용 최소 공급자는 Render Free Web Service Singapore + Neon Free PostgreSQL 16 Singapore로 선택했습니다.
+## 현재 위치
 
-Neon Free PostgreSQL 16 AWS Singapore 프로젝트 생성과 Direct/Pooler read-only TLS 검증은 완료했습니다. Render는 `Hobby (legacy)`이고 결제수단이 없으며, `Existing Image`와 GitHub registry credential 양식까지 읽기 전용으로 확인했습니다.
+- Render backend와 Static Site는 v351 공개 버전으로 Live입니다.
+- Neon PostgreSQL 16 초기화와 exact v295 상태는 완료됐습니다.
+- 첫 콘텐츠·밸런스 변경으로 12단계 이후 스킬 피해 공식을 수정했습니다.
+- 12-1 `-초월- 어둠을 지배하는 고리 +20`은 `69.1B / 607% / 기존 모든 피해 173.9%`입니다.
+- 1~12단계 일반 장비 60종과 12~39단계 새 스킬 피해 공식을 검증했습니다.
+- generated seed, Neon DB, backend image는 변경하지 않았습니다.
+- v356 static-only 배포 gate는 아직 준비되지 않았고, 공개 배포도 승인·실행되지 않았습니다.
+- v356 정적 소스는 아직 공개 Static Site에 배포하지 않았습니다.
 
-GitHub `Confirm access`, Render 전용 `read:packages` classic PAT 저장, verified exact digest `Connect`까지 완료했습니다. Render는 서비스 설정 화면에 있으며 Web Service 생성/deploy는 하지 않았습니다.
+## 바로 다음 순서
 
-다음에는 Render Free Singapore 서비스의 이름·리전·instance·health check·환경변수 inventory·auto-deploy 차단값을 정적으로 검토합니다. 동시에 현재 Neon 기본 `neondb`와 계획상 `rpg_game` 차이를 포함한 DB 초기화·이식 계획을 별도 문서로 확정합니다. 이 검토 단계에서는 `Deploy Web Service`, DB write, Alembic mutation을 실행하지 않습니다.
+1. v356 장비 공식 commit을 검증하고 `main`에 push합니다.
+2. 기존 Static Site ID, exact source commit, auto-deploy Off, 수동 deploy 1회와 금지 범위를 고정하는 static-only fail-closed 계약/checker를 별도 준비합니다.
+3. 기호가 그 gate 준비 commit의 정확한 40자리 SHA를 별도 승인할지 결정합니다.
+4. 승인되면 기존 Render Static Site를 계약에 고정한 exact commit으로 수동 배포 한 번 실행합니다.
+5. 공개 게임에서 12단계 `607%`, 13단계 이후 증가값, backend master-data 무폴백 상태를 read-only로 확인합니다.
+6. sanitized 배포 증거와 handoff를 갱신합니다.
+7. 이후 기호가 선택하는 다음 콘텐츠·밸런스 범위를 별도 작업으로 진행합니다.
 
-모든 입력이 준비되기 전에는 deploy 승인을 열지 않습니다. 입력을 반영한 실행 준비 commit을 만든 뒤 기호가 정확한 40자리 SHA를 별도 승인하면, 그 문서에 적힌 범위에서만 실제 deploy합니다.
+## 이번 다음 단계에 포함되지 않는 것
 
-Neon의 현재 DB는 기본 `neondb`이고 계획상 운영 DB는 `rpg_game`입니다. DB 생성과 schema/data 초기화·이식은 backend 공개 deploy와 분리해 별도 실행 계획과 승인으로 진행합니다. 세부 목록은 `PRODUCTION_PROVIDER_SELECTION.md`, `PRODUCTION_DEPLOYMENT_PLAN.md`, 전체 순서는 `ROADMAP.md`를 봅니다.
+- backend image build/push/deploy
+- Neon DB write, seed import, schema 변경, Alembic mutation
+- Render env·secret 변경
+- 관리자 write 기능 실행
+- 자동 deploy, 자동 retry, custom domain/DNS
+- 이번 요청 밖의 장비·게임 밸런스 변경
+
+공식과 감사 세부 내용은 `EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`를 봅니다.

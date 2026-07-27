@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v355
+# Upgrade RPG Codex working rules — v356
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -19,6 +19,7 @@
 - backend `127.0.0.1:8000`, Vue `127.0.0.1:5173`, legacy static `127.0.0.1:5500`이 정상이면 재시작하지 않습니다.
 - legacy 통합 확인은 `http://127.0.0.1:5500/index.html`, `/admin.html`을 사용합니다. `file://`는 origin이 `null`이라 API 통합 검증에 사용하지 않습니다.
 - 기존 local PostgreSQL dependency의 단순 시작·중지는 가능하지만 reset·recreate·volume 삭제·seed·restore·migration은 별도 요청 전 금지합니다.
+- Windows 전역 환경변수 `DEBUG=release`는 backend의 boolean `DEBUG`와 충돌합니다. backend/core 검사는 시스템 값을 바꾸지 말고 해당 자식 프로세스에서만 `DEBUG`를 unset하거나 `DEBUG=false`로 덮어씁니다.
 - 서버를 재시작하지 않았으면 완료 답변에 “서버 재시작 불필요”라고 적습니다.
 
 ## 최소 구현 원칙
@@ -43,9 +44,11 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v355.v351-provider-release-deployed-verified-content-ready
-strict result: v351-provider-release-deployed-verified-content-ready
-next safe stage: select-first-content-and-balance-change-scope
+latest: v356.tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required
+strict result: tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required
+next safe stage: prepare-v356-static-content-deploy-exact-sha-gate
+v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
+v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
 v352 preparation checkpoint: v352.v351-public-release-gates-prepared-backend-image-approval-required
 v351 source checkpoint: v351.master-data-latency-focused-fix-blocking-io-audited / master-data-latency-fix-blocking-io-audit-ready
@@ -92,7 +95,11 @@ Alembic current: v295_initial_schema / new revision needed: no
 - 기호가 exact v354 준비 SHA `05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62`를 승인했고, backend image update deploy `dep-d9jeuf3eo5us73ba6cgg`와 Static Site v351 deploy `dep-d9jev7gu01pc73favje0`가 각각 정확히 한 번 실행되어 Live입니다.
 - `/api/v1/health`, `/api/v1/health/db`, `/index.html`, `/admin.html`, exact CORS, gzip master-data no-fallback, 관리자 guarded read-only 흐름이 모두 검증됐습니다. DB health는 한 번만 요청했고 DB/Alembic/admin write/콘텐츠 변경/자동 retry는 실행하지 않았습니다.
 - sanitized provider evidence는 `deploy/review/render-v351-provider-release-v355.json`입니다.
-- 공개 게임과 관리자 보호 흐름이 검증됐으므로 이제 기호와 첫 콘텐츠·밸런스 변경 범위를 고르기 좋은 시점입니다. 실제 콘텐츠 변경은 선택된 별도 범위 안에서만 진행합니다.
+- v356에서 첫 콘텐츠·밸런스 범위로 장비 스킬 피해 공식을 수정했습니다. 12-1 `-초월- 어둠을 지배하는 고리 +20`은 공격력 `69.1B`, 스킬 피해 `607%`, 기존 모든 피해 내부값 `173.9%`입니다.
+- 12단계 이상 `skill_all` 장비는 +0 기본값을 유지하고 스킬 피해 강화 증가분만 `1.321215409658...`배 보정합니다. 13단계 `655.4%`부터 39단계 `1915.1%`까지 같은 공식이며 앞으로 추가될 고단계에도 자동 적용됩니다.
+- 1~12단계 일반 장비 60종과 탈리스만 5종을 감사했고 누락·중복은 없습니다. 전체 장비 단일 공식은 없으며 1~11 고정 데이터와 옵션별 구간·예외 공식, 12+ 생성·보간 공식이 함께 사용됩니다.
+- 공격력, 모든 피해, 1~11단계, 나머지 4개 장비 그룹, generated seed, Neon DB와 backend는 변경하지 않았습니다. 상세 근거는 `docs/current/EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`입니다.
+- v356 공개 반영은 backend image나 DB 작업 없이 기존 Render Static Site 수동 배포 1회만 필요합니다. 먼저 static-only fail-closed 계약/checker를 별도 준비한 뒤, 그 gate 준비 commit의 정확한 40자리 SHA를 기호가 승인하기 전에는 실행하지 않습니다.
 - 전체 runtime blocking-I/O audit는 sync FastAPI route 0, async 내부 blocking 호출 0, frontend entrypoint·source blocking 호출 0으로 통과했습니다.
 - offline tooling은 Python 148 files/371 blocking calls, JavaScript 94 files/126 sync calls를 별도 확인했고 서버·브라우저 event loop 밖의 `intentional-one-shot-cli`로 분류했습니다.
 - master-data의 11개 async DB 조회는 하나의 `AsyncSession`을 공유하므로 동시 task로 바꾸지 않고 안전한 순차 실행을 유지합니다.
@@ -127,7 +134,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 - 승인된 v343 commit `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 Neon restore를 한 번 실행했고 22 application tables / 748 rows / schema digest가 일치했습니다. legacy data digest는 session timezone 차이로 실패해 stamp 전에 안전하게 중단했습니다.
 - v343 안전 중단 시점에 aware datetime을 UTC로 정규화한 digest `4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c`가 verified rehearsal과 Neon에서 일치했고, 당시 `alembic_version`은 없었습니다.
 - 승인된 v344 commit `cf0f506b6ae9dc9d4c02f3ab5313ca68be32676c`로 복원 상태를 재검증하고 exact v295 stamp만 실행했습니다. application digest는 불변이며 최종 23/749 검증을 통과했습니다.
-- 복원·stamp·Render 최초 deploy 재실행은 금지합니다. 다음은 live backend 검토와 frontend 배포/CORS origin 계획입니다.
+- 복원·stamp·Render 최초 deploy 재실행은 금지합니다. 당시 다음 단계였던 live backend·frontend·CORS 검토는 v347~v355에서 완료됐습니다.
 - 이번 image 게시 approval은 모두 소비됐으며 Neon restore/stamp나 Render 생성·배포 권한으로 재사용하지 않습니다.
 - v343 Neon 초기화 approval도 restore 시도와 안전 중단으로 소비됐으며 stamp 권한으로 재사용하지 않습니다.
 - v344 stamp recovery approval도 성공 실행으로 소비됐으며 Render 생성·배포 권한으로 재사용하지 않습니다.
@@ -162,6 +169,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 프로젝트 루트에서 `backend/.venv` Python으로 먼저 실행합니다.
 
 ```bash
+node tools/smoke/game/smoke_equipment_progression_formulas.js
 python tools/check_v351_public_release_gates.py --strict
 python tools/smoke/backend/smoke_v351_public_release_gates.py
 python tools/check_runtime_blocking_io.py --strict

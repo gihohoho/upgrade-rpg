@@ -1,11 +1,13 @@
-# Current Status — v355
+# Current Status — v356
 
 ## 현재 결과
 
 ```txt
-latest: v355.v351-provider-release-deployed-verified-content-ready
-strict result: v351-provider-release-deployed-verified-content-ready
-next safe stage: select-first-content-and-balance-change-scope
+latest: v356.tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required
+strict result: tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required
+next safe stage: prepare-v356-static-content-deploy-exact-sha-gate
+v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
+v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
 v352 preparation checkpoint: v352.v351-public-release-gates-prepared-backend-image-approval-required
 v351 source checkpoint: v351.master-data-latency-focused-fix-blocking-io-audited / master-data-latency-fix-blocking-io-audit-ready
@@ -83,8 +85,11 @@ Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 col
 
 ## 아직 남은 것
 
-- 첫 콘텐츠·밸런스 변경 범위를 기호와 선택
-- 선택한 범위의 별도 구현·검증
+- v356 장비 공식 준비 commit push
+- 기존 Static Site와 exact source를 고정하는 v356 static-only fail-closed 계약/checker 준비
+- gate 준비 commit의 exact SHA 승인 시 기존 Render Static Site 수동 deploy 1회
+- 공개 게임에서 12단계 607%와 13+ 증가 공식 read-only 확인
+- 다음 콘텐츠·밸런스 변경은 기호가 별도로 요청한 범위에서 진행
 - custom domain/DNS와 SLA production 전환은 보류
 
 Neon DB/schema/data 초기화, Render backend public preview, frontend Static Site v351 배포와 CORS/no-fallback 검증은 완료됐습니다. v334 generic SLA production plan의 별도 host·domain·edge·rollback 입력은 계속 `unresolved`입니다.
@@ -145,11 +150,31 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 - 인증/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스 변경 금지
 - resource 생성과 실제 deploy 전 실행 준비 commit의 정확한 40자리 SHA 승인 필요
 
+## 장비 스킬 피해 공식 변경과 전체 감사 — v356
+
+- 12-1 `-초월- 어둠을 지배하는 고리 +20`
+  - 공격력: `69.1B` 유지
+  - 스킬 피해: `488.6%` → `607.0%`
+  - 모든 피해: 내부 `173.9%` 유지, 현재 UI 세 자리 유효숫자 표시는 `174%`
+- 12단계 이상 `skill_all` 장비는 +0 기본값을 유지하고 스킬 피해 강화 증가분만 `1.321215409658...`배 보정
+- 13단계 +20 `655.4%`, 39단계 +20 `1915.1%`
+- 1~12단계 일반 장비 60종과 탈리스만 5종, 단계별 5개 일반 장비 그룹의 +0/+20 결과 감사 완료
+- 0~20 강화 단조 증가와 12~39단계 새 공식 검증 완료
+- 1~39단계 source/template/drop seed 기본 스킬·모든 피해 3중 일치
+- 변경하지 않음: 1~11단계, 공격력, 모든 피해, 나머지 4그룹, generated seed, Neon DB, backend image/API
+- 전체 장비 단일 공식은 없지만 누락은 없음: 1~11 고정값과 옵션별 구간·예외 공식, 12+ 생성·보간 공식 사용
+- 공식 문서: `docs/current/EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`
+- 회귀 검사: `tools/smoke/game/smoke_equipment_progression_formulas.js`
+- 실제 공개 반영: v356 static-only gate 준비와 그 준비 commit의 별도 exact-SHA 승인 전 미실행, 기존 Render Static Site 1회만 필요
+- 로컬 환경: Windows 전역 `DEBUG=release`가 backend boolean 설정과 충돌하므로 core 검사 자식 프로세스에서만 unset하고 시스템 값은 변경하지 않음
+
 ## 다음 단계
+
+v356 장비 계산식과 회귀 검사는 준비 완료이며 아직 공개 Static Site에는 배포하지 않았습니다. 다음 단계에서 Codex가 static-only fail-closed 계약/checker를 준비하고 push합니다. 기호가 그 gate 준비 commit의 정확한 40자리 SHA를 별도 승인하면 기존 Static Site를 exact source로 수동 deploy 한 번 실행하고 게임 화면을 read-only로 검증합니다. backend image 게시·배포, Neon DB write, seed import는 필요하지 않습니다.
 
 승인된 v346 SHA로 Render Free Web Service `upgrade-rpg-api`를 Singapore에 만들고 승인된 env 14개와 exact image를 사용해 최초 deploy를 한 번 실행했습니다. service `srv-d9iro458nd3s73acgmsg`, deploy `dep-d9iro4l8nd3s73acgnmg`는 Live이며 공개 주소는 `https://upgrade-rpg-api.onrender.com`입니다.
 
-Render 내부 health와 공개 `/api/v1/health`, Neon read-only `/api/v1/health/db`가 모두 HTTP 200 `status=ok`입니다. DB/Alembic write, image 변경, custom domain/DNS, 결제수단, 자동 retry·두 번째 deploy는 실행하지 않았습니다. 다음 단계는 live backend 확인과 frontend 배포/CORS origin 계획 검토입니다.
+Render 내부 health와 공개 `/api/v1/health`, Neon read-only `/api/v1/health/db`가 모두 HTTP 200 `status=ok`입니다. DB/Alembic write, image 변경, custom domain/DNS, 결제수단, 자동 retry·두 번째 deploy는 실행하지 않았습니다. 당시 다음 단계였던 live backend 확인과 frontend 배포/CORS origin 검토는 v347~v355에서 완료했습니다.
 
 기호가 push된 v354 provider release preparation commit `05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62`를 승인했습니다. 기존 두 서비스의 deploy를 각각 정확히 한 번 실행하고 read-only 검증까지 완료했습니다. DB/Alembic/admin write/콘텐츠 변경/자동 retry는 실행하지 않았습니다.
 
@@ -169,7 +194,7 @@ Render 내부 health와 공개 `/api/v1/health`, Neon read-only `/api/v1/health/
 - master-data: HTTP 200, 1,346ms, decoded 559,786 bytes, gzip, `game.master_data`
 - browser game: backend master-data runtime applied 로그 확인, fallback 경고 0, 오류·경고 0
 - public admin: read-only, 11 domains / 729 rows, general write UI blocked, write key missing
-- 콘텐츠 준비도: 공개 no-fallback + 관리자 guarded read-only 확인 완료, 첫 콘텐츠·밸런스 범위를 고르기 좋은 시점
+- 콘텐츠 준비도: 공개 no-fallback + 관리자 guarded read-only 확인 완료, 당시 첫 콘텐츠 범위 선택 준비 완료; v356에서 첫 장비 공식 변경 완료
 - Render 설정 검사 출력에 포함된 backend/static deploy hook은 즉시 재발급했고 새 값은 기록하지 않음
 - sanitized evidence: `deploy/review/render-v351-provider-release-v355.json`
 
@@ -188,11 +213,11 @@ Render 내부 health와 공개 `/api/v1/health`, Neon read-only `/api/v1/health/
 - health/preflight CORS: HTTP 200/exact allow-origin
 - static raw bytes: 핵심 자산 세 개 모두 approved source SHA-256과 일치
 - game master-data: HTTP 200, 464,098 bytes, 약 1.98초/1.83초
-- browser game integration: frontend 1.5초 timeout으로 JS fallback, 미완료
+- browser game integration: v350 당시 frontend 1.5초 timeout으로 JS fallback, v355에서 해결
 - 관리자 browser check: 화면 렌더링, 이전 `RpgAdminFieldHelp` 오류 로그 미재현
 - recovery 자동 retry·두 번째 deploy: 없음
-- 다음 단계: frontend timeout focused fix 준비와 콘텐츠 준비도 재검토
-- 콘텐츠 준비도: 아직 아님; public master-data 무폴백 + admin guarded workflow 검증 시 기호에게 먼저 알림
+- 당시 다음 단계: frontend timeout focused fix와 콘텐츠 준비도 재검토, v351~v355에서 완료
+- 당시 콘텐츠 준비도: 미완료였으나 v355 no-fallback/admin guarded 검증으로 완료
 - 현재 extension·설치: 없음
 - GitHub App: `gihohoho/upgrade-rpg` 단일 저장소 접근 확인 완료
 - 필요한 사용자 조치: 현재 없음
@@ -209,5 +234,5 @@ Render 내부 health와 공개 `/api/v1/health`, Neon read-only `/api/v1/health/
 - master-data 11개 DB 조회: 동일 `AsyncSession`의 안전한 순차 await 유지
 - sanitized evidence: `deploy/review/master-data-latency-blocking-io-audit-v351.json`
 - provider deploy·DB/Alembic/admin write·콘텐츠 변경: 없음
-- 다음 단계: v351 backend image와 frontend static release의 exact-SHA gate 준비
-- 콘텐츠 준비도: 아직 아님; 실제 public 무폴백과 admin guarded workflow 검증 뒤 기호에게 알림
+- 당시 다음 단계: v351 backend image와 frontend static release gate 준비, v352~v355에서 완료
+- 당시 콘텐츠 준비도: 미완료였으나 v355에서 실제 public no-fallback과 admin guarded 검증 완료

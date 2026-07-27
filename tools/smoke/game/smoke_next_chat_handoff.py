@@ -22,9 +22,12 @@ ARTIFACT_IDS = [8638838292, 8638825538]
 IMAGE_DIGEST = "sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac"
 VERIFIED_CANDIDATE_REFERENCE = f"{REPOSITORY}@{IMAGE_DIGEST}"
 PRODUCTION_REFERENCE = f"{REPOSITORY}@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
-CURRENT_VERSION = "v354.v351-provider-release-prepared-exact-sha-approval-required"
-CURRENT_RESULT = "v351-provider-release-prepared-exact-sha-approval-required"
-CURRENT_NEXT_STAGE = "owner-approve-v354-v351-provider-release-preparation-sha"
+CURRENT_VERSION = "v356.tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required"
+CURRENT_RESULT = "tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required"
+CURRENT_NEXT_STAGE = "prepare-v356-static-content-deploy-exact-sha-gate"
+PRIOR_PROVIDER_VERSION = "v355.v351-provider-release-deployed-verified-content-ready"
+PRIOR_PROVIDER_RESULT = "v351-provider-release-deployed-verified-content-ready"
+PRIOR_PROVIDER_NEXT_STAGE = "select-first-content-and-balance-change-scope"
 REVISION_SHA256 = "24a30adb216e3a9809cb38c7b844be3020415978fd1e1dcb8b5f6482f85eabfa"
 
 
@@ -52,7 +55,18 @@ def main() -> int:
         "NEXT_CHAT_HANDOFF.md",
         "docs/current/CURRENT_STATUS.md",
     ):
-        contains(relative, VERSION, CURRENT_VERSION, CURRENT_RESULT, CURRENT_NEXT_STAGE, REMOTE, REPOSITORY)
+        contains(
+            relative,
+            VERSION,
+            CURRENT_VERSION,
+            CURRENT_RESULT,
+            CURRENT_NEXT_STAGE,
+            PRIOR_PROVIDER_VERSION,
+            PRIOR_PROVIDER_RESULT,
+            PRIOR_PROVIDER_NEXT_STAGE,
+            REMOTE,
+            REPOSITORY,
+        )
 
     contains(
         "NEXT_CHAT_PROMPT.md",
@@ -91,7 +105,7 @@ def main() -> int:
     assert policy["preparedOnly"] is False
     assert (
         policy["ownerOnlyApprovalPhase"]
-        == "v354-v351-provider-release-prepared-exact-sha-approval-required"
+        == "v355-v351-provider-release-deployed-verified-content-ready"
     )
     assert policy["publishLifecycleState"] == "attempt-recorded"
     assert policy["approvedPreparationSha"] == APPROVED_PREPARATION
@@ -100,7 +114,7 @@ def main() -> int:
     assert policy["actualRegistryMutationExecuted"] is True
     assert policy["productionReference"] == PRODUCTION_REFERENCE
     assert policy["verifiedCandidateReference"] == VERIFIED_CANDIDATE_REFERENCE
-    assert policy["verifiedCandidateAppliedToRender"] is False
+    assert policy["verifiedCandidateAppliedToRender"] is True
     assert policy["productionReferenceStaticPrepared"] is True
     assert policy["productionReferenceAppliedToRuntime"] is False
     assert policy["localCredentialStrategy"] == "github-cli-oauth-read-packages"
@@ -196,7 +210,7 @@ def main() -> int:
     assert plan["approvalContract"]["productionDeploymentExecuted"] is False
     assert plan["nextSafeStage"] == NEXT_SAFE_STAGE
 
-    print("OK: v334 deployment plan and handoff documents are synchronized")
+    print("OK: current deployment checkpoints and handoff documents are synchronized")
     return 0
 
 

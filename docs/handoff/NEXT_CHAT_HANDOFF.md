@@ -1,11 +1,13 @@
-# Upgrade RPG Codex handoff — v355
+# Upgrade RPG Codex handoff — v356
 
 ## 현재 상태
 
 ```txt
-latest: v355.v351-provider-release-deployed-verified-content-ready
-strict result: v351-provider-release-deployed-verified-content-ready
-next safe stage: select-first-content-and-balance-change-scope
+latest: v356.tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required
+strict result: tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required
+next safe stage: prepare-v356-static-content-deploy-exact-sha-gate
+v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
+v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
 v352 preparation checkpoint: v352.v351-public-release-gates-prepared-backend-image-approval-required
 v351 source checkpoint: v351.master-data-latency-focused-fix-blocking-io-audited / master-data-latency-fix-blocking-io-audit-ready
@@ -129,7 +131,7 @@ verified local rehearsal은 `Asia/Seoul`, Neon은 `GMT`이며 양쪽에 44개 `t
 
 승인된 v346 SHA `81d1c4faa59194e8928d54fbecac28694ab139ab`로 Render Free Web Service `upgrade-rpg-api`를 Singapore에 생성하고 env 14개와 exact image로 첫 deploy를 한 번 실행했습니다. service `srv-d9iro458nd3s73acgmsg`, deploy `dep-d9iro4l8nd3s73acgnmg`는 Live입니다.
 
-공개 `/api/v1/health`와 한 번 요청한 `/api/v1/health/db`가 모두 HTTP 200 `status=ok`입니다. DB/Alembic write, image 변경, custom domain/DNS, 결제, 자동 retry·두 번째 deploy는 없었습니다. 다음은 live backend 검토와 frontend 배포/CORS origin 계획이며 필요한 extension·권한·새 설치는 현재 없습니다.
+공개 `/api/v1/health`와 한 번 요청한 `/api/v1/health/db`가 모두 HTTP 200 `status=ok`입니다. DB/Alembic write, image 변경, custom domain/DNS, 결제, 자동 retry·두 번째 deploy는 없었습니다. 당시 다음 단계였던 live backend·frontend·CORS 검토는 v348~v355에서 완료됐습니다.
 
 승인된 v348 SHA `b13b1775093716800d7361ee1e8f94d8112eefc1`로 Render Free Static Site `gihohoho-upgrade-rpg`를 만들고 exact commit 최초 deploy를 한 번 실행했습니다. service `srv-d9iu337aqgkc73am4lh0`, deploy `dep-d9iu33faqgkc73am4m3g`는 Live이고 auto-deploy는 Off입니다. 공개 주소 `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`은 둘 다 HTTP 200입니다.
 
@@ -137,7 +139,7 @@ Render GitHub App은 `gihohoho/upgrade-rpg` 단일 private repository만 접근�
 
 승인된 recovery SHA `e64d42d812d78de023dc6cbd7f960263bc1c2d15`로 backend CORS deploy `dep-d9ivfmvlk1mc73fbcv40`를 정확히 한 번 실행했습니다. deploy는 40.1초 만에 Live가 됐고 actual `CORS_ORIGINS`는 exact frontend origin 배열입니다. health와 preflight는 모두 HTTP 200이며 exact allow-origin을 반환합니다.
 
-공개 게임의 CORS 오류는 사라졌지만 `/game/master-data` 464,098-byte 응답이 약 1.98초/1.83초 걸려 frontend 1.5초 timeout을 넘고 기존 JS 데이터로 폴백합니다. 공개 관리자 새 탭에서는 이전 `RpgAdminFieldHelp is not loaded` 오류 로그가 재현되지 않았습니다.
+v350 당시 공개 게임은 `/game/master-data` 464,098-byte 응답이 약 1.98초/1.83초로 1.5초 timeout을 넘어 기존 JS 데이터로 폴백했습니다. 이 문제는 v351 수정과 v355 배포에서 1,346ms·gzip·no-fallback으로 해결됐고 공개 관리자 오류 로그도 재현되지 않았습니다.
 
 v351 source에서 frontend master-data 기본 timeout을 5초로 늘리고 backend 1KB 이상 응답에 GZip level 5를 적용했습니다. 전체 runtime blocking-I/O audit는 sync FastAPI route 0, async 내부 blocking 호출 0, frontend blocking 호출 0으로 통과했습니다. offline tooling은 Python 148 files/371 blocking calls와 JavaScript 94 files/126 sync calls를 별도 확인하고 `intentional-one-shot-cli`로 분류했습니다. master-data의 11개 DB 조회는 하나의 `AsyncSession`을 공유하므로 위험한 동시 task로 바꾸지 않고 순차 await를 유지했습니다.
 
@@ -149,7 +151,24 @@ v352 준비 SHA 승인 뒤 v351 backend image workflow를 정확히 한 번 실�
 
 Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 즉시 재발급했고 새 값은 기록하지 않았습니다. DB/Alembic/admin write/콘텐츠·밸런스 변경/custom domain/DNS/payment/추가 Actions·두 번째 deploy는 없었습니다.
 
-공개 게임의 무폴백 로드와 관리자 guarded read-only 흐름이 검증됐으므로 이제 첫 콘텐츠·밸런스 변경 범위를 기호와 고르기 좋은 시점입니다. 현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다.
+## 장비 스킬 피해 공식 변경과 전체 감사 — v356
+
+- 12-1 `-초월- 어둠을 지배하는 고리 +20`: 공격력 `69.1B`, 스킬 피해 `607%`, 모든 피해 내부값 `173.9%`
+- 변경 전 스킬 피해: `488.6%`
+- 12단계 이상 공식: +0 기본값은 유지하고 스킬 피해 강화 증가분만 `1.321215409658...`배
+- 13단계 +20: `655.4%`
+- 39단계 +20: `1915.1%`
+- 대상: 12~39단계에서 각 단계 첫 번째 `skill_all` 장비 28종, 그중 사용자 요청의 13+는 27종
+- 비대상: 1~11단계, 공격력, 모든 피해, 공격력 추가, 평타 피해, 추가 스킬, 평타 치명
+- 감사: 1~12단계 일반 장비 60종 + 탈리스만 5종, 단계별 5그룹, +0/+20과 0~20 단조 증가, seed 3중 일치, 12~39 비대상 2,940조합 해시 불변
+- 공식 판단: 모든 옵션 단일 공식은 없지만 누락은 없으며 1~11 고정·구간별 공식과 12+ 생성 공식이 명시적으로 존재
+- 계산식·기본값 변경 없음: `boss-factories.js`(실제 범위를 설명하는 주석만 정정), generated seed, Neon DB, backend image/API
+- 상세 문서: `docs/current/EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`
+- 공개 반영: 다음 단계에서 v356 static-only fail-closed gate를 먼저 준비하고, 그 gate 준비 commit의 exact SHA 승인 뒤 기존 Render Static Site 수동 deploy 1회와 read-only 검증만 허용
+
+현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 Codex가 v356 static-only 배포 계약/checker를 준비하는 것이며, 그 준비 commit이 push된 뒤에만 기호에게 exact SHA 승인을 요청합니다.
+
+로컬 검사 주의: Windows 전역 `DEBUG=release`는 backend의 boolean `DEBUG`와 충돌합니다. 시스템 환경변수는 바꾸지 말고 backend/core 검사 자식 프로세스에서만 `DEBUG`를 unset하거나 `DEBUG=false`로 덮어씁니다.
 
 ## 첫 검사
 
@@ -158,6 +177,7 @@ Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.ex
 새 설치 여부: 없음
 
 ```bash
+node tools/smoke/game/smoke_equipment_progression_formulas.js
 python tools/check_v351_public_release_gates.py --strict
 python tools/smoke/backend/smoke_v351_public_release_gates.py
 python tools/check_runtime_blocking_io.py --strict
@@ -179,6 +199,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v355 기대 결과는 `v351-provider-release-deployed-verified-content-ready`, 다음 단계는 `select-first-content-and-balance-change-scope`입니다. v353의 `v351-image-publish-and-isolated-validation-complete`, v351의 `runtime-blocking-io-audit-passed`, v350 recovery, v348 static deploy, v347 backend, v345 Neon 완료, v342 이전 live image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
+v356 장비 smoke 기대 결과는 `tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required`, 다음 단계는 `prepare-v356-static-content-deploy-exact-sha-gate`입니다. v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

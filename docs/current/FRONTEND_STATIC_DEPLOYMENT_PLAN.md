@@ -1,4 +1,4 @@
-# Frontend Static Deployment and CORS Recovery Result — v350
+# Frontend Static Deployment and CORS Recovery Result — v355
 
 ## 결론
 
@@ -41,7 +41,7 @@ backend, deploy, docs, tools, Git 정보, `.env`, production secret, `src/**/*.m
 
 backend Render 환경변수 `CORS_ORIGINS`는 `["https://gihohoho-upgrade-rpg.onrender.com"]`으로 저장됐습니다. recovery deploy `dep-d9ivfmvlk1mc73fbcv40`는 40.1초 만에 Live가 됐고 health GET과 OPTIONS preflight는 모두 200이며 exact `Access-Control-Allow-Origin`을 반환합니다.
 
-공개 게임의 CORS 오류는 해결됐습니다. 다만 `/api/v1/game/master-data` 464,098-byte 응답이 연속 약 1.98초와 1.83초 걸려 frontend의 1.5초 제한을 초과합니다. 게임은 아직 기존 JS 데이터로 폴백하므로 browser master-data 통합은 미완료입니다.
+v350 당시 공개 게임의 CORS 오류는 해결됐지만 `/api/v1/game/master-data` 464,098-byte 응답이 약 1.98초와 1.83초로 frontend의 1.5초 제한을 초과해 기존 JS 데이터로 폴백했습니다. v351에서 timeout을 5초로 늘리고 backend gzip을 적용한 뒤 v355 공개 배포에서 1,346ms·gzip·no-fallback을 확인해 browser master-data 통합을 완료했습니다.
 
 `admin.html` 자체는 공개되지만 frontend에는 `ADMIN_WRITE_DEV_KEY`를 넣지 않습니다. 공개 관리자 화면은 read-only 확인 용도입니다. 실제 관리 write는 승인하지 않았고, 공개 운영 관리자 인증/RBAC를 별도로 설계하기 전에는 production write 도구로 취급하지 않습니다.
 
@@ -68,15 +68,13 @@ backend Render 환경변수 `CORS_ORIGINS`는 `["https://gihohoho-upgrade-rpg.on
 
 추가 Render 환경변수 변경이나 provider deploy가 필요해지면 새 준비 commit의 정확한 40자리 SHA를 기호가 승인한 뒤에만 실행합니다.
 
-## 콘텐츠 작업 시작 기준
+## 콘텐츠 작업 시작 기준 — v355 충족
 
-아직 콘텐츠 추가·수정을 시작하기 좋은 시점은 아닙니다. backend DB 콘텐츠가 바뀌어도 공개 게임이 1.5초 timeout 뒤 기존 JS 데이터로 폴백하면 새 콘텐츠가 사용자 화면에 안정적으로 반영되지 않기 때문입니다.
+v350 당시에는 콘텐츠 추가·수정을 시작하기 좋은 시점이 아니었습니다. 아래 두 조건은 v355에서 모두 충족됐고 v356에서 첫 장비 공식 변경을 시작했습니다.
 
-다음 두 조건이 충족되는 즉시 기호에게 콘텐츠 작업 시작 시점이라고 먼저 알립니다.
-
-1. 공개 게임이 backend master-data를 timeout·폴백 없이 로드
-2. 관리자 guarded 콘텐츠 작업 흐름이 안전하게 검증됨
+1. 공개 게임이 backend master-data를 timeout·폴백 없이 로드: 완료
+2. 관리자 guarded 콘텐츠 작업 흐름이 안전하게 검증됨: 완료
 
 ## 필요할 수 있는 사용자 조치
 
-지금 필요한 extension·권한·설치는 없습니다. 다음은 frontend master-data timeout focused fix 준비와 콘텐츠 준비도 재검토입니다.
+지금 필요한 extension·권한·설치는 없습니다. 최신 다음 단계는 `CURRENT_STATUS.md`의 v356 static-only 배포 gate 준비를 따릅니다.

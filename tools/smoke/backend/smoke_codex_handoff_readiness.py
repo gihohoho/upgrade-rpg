@@ -117,7 +117,7 @@ def main() -> int:
     assert result["reproducibleBuildReady"] is True
     assert result["productionReference"] == module.EXPECTED_REFERENCE
     assert result["verifiedCandidateReference"] == module.VERIFIED_CANDIDATE_REFERENCE
-    assert result["verifiedCandidateAppliedToRender"] is False
+    assert result["verifiedCandidateAppliedToRender"] is True
     assert result["productionReferenceStaticPrepared"] is True
     assert result["productionReferenceAppliedToRuntime"] is False
     assert result["isolatedImagePullExecuted"] is True
@@ -162,6 +162,7 @@ def main() -> int:
         ("actualDockerCommandExecuted", False),
         ("ownerOnlyApprovalPhase", "authorization-open"),
         ("productionReference", "ghcr.io/gihohoho/upgrade-rpg-backend@sha256:" + "0" * 64),
+        ("verifiedCandidateAppliedToRender", False),
         ("productionReferenceStaticPrepared", False),
         ("productionReferenceAppliedToRuntime", True),
         ("publishLifecycleState", "authorization-open"),
@@ -248,7 +249,7 @@ def main() -> int:
         evidence_path.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         expect_blocked(module, temp)
 
-    print("OK: v334 reviewed production deployment plan handoff smoke passed")
+    print("OK: Codex handoff readiness fail-closed smoke passed")
     return 0
 
 

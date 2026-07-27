@@ -1,3 +1,12 @@
+# v356.tier12-skill-damage-anchor-high-tier-formula-audited
+
+- 12-1 `-초월- 어둠을 지배하는 고리 +20`의 스킬 피해를 기존 `488.6%`에서 요청 기준 `607.0%`로 조정했습니다.
+- 12단계 이상은 +0 기본값을 유지하면서 스킬 피해 강화 증가분만 `1.321215409658...`배 보정해 13~39단계와 향후 고단계에 같은 공식을 적용했습니다.
+- 1~12단계 일반 장비 60종과 탈리스만 5종, 옵션별 구간·예외 공식을 감사했고, 전체 장비 단일 공식은 없지만 누락·중복·계산 불일치는 없음을 확인했습니다.
+- 공격력, 모든 피해, 1~11단계, 나머지 4개 장비 그룹, generated seed, Neon DB와 backend는 변경하지 않았습니다.
+- 전용 smoke가 60종 +0/+20, 전체 강화 레벨, 12~39단계 새 공식, 비대상 불변과 source/template/drop seed 일치를 고정합니다.
+- 공개 반영은 v356 static-only fail-closed gate를 별도 준비하고 그 gate 준비 commit의 exact-SHA 승인을 받은 뒤 기존 Render Static Site 수동 배포 1회만 실행합니다.
+
 # v355.v351-provider-release-deployed-verified-content-ready
 
 - 승인 SHA `05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62`로 backend exact-image deploy `dep-d9jeuf3eo5us73ba6cgg`와 Static Site v351 exact-source deploy `dep-d9jev7gu01pc73favje0`를 각각 정확히 한 번 실행해 Live를 확인했습니다.
@@ -70,7 +79,7 @@
 - service `srv-d9iro458nd3s73acgmsg`, deploy `dep-d9iro4l8nd3s73acgnmg`, public URL `https://upgrade-rpg-api.onrender.com`을 secret 없는 evidence에 기록했습니다.
 - Render 내부 health, 공개 `/api/v1/health`, 단 한 번의 `/api/v1/health/db`가 모두 HTTP 200 `status=ok`를 반환했습니다.
 - DB/Alembic write, image 변경, custom domain/DNS, 결제수단, 자동 retry·두 번째 deploy는 실행하지 않았습니다.
-- 다음 단계는 live backend 검토와 frontend 배포/CORS origin 계획입니다.
+- 당시 다음 단계였던 live backend 검토와 frontend 배포/CORS origin 계획은 v347~v355에서 완료했습니다.
 
 # v345.neon-initialization-completed-verified-render-preparation-required
 

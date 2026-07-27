@@ -1,30 +1,27 @@
-# Roadmap — v338
+# Roadmap — v356
 
-## 현재 위치
+## 현재 체크포인트
 
 ```txt
-verified GHCR image: complete
-isolated pull/runtime/cleanup: complete
-production deploy plan review: complete
-cost-minimum provider selection: Render Free + Neon Free Singapore
-Neon project/read-only connectivity: created/verified
-Render account/plan/payment: connected/Hobby (legacy)/no card
-Render registry credential/resource: created/not created
-Render exact-digest Connect: verified
-deployment approval/execution: no/no
+Neon PostgreSQL 16 initialization: complete
+Render backend v351: Live
+Render Static Site v351: Live
+public master-data no-fallback: verified
+first content change: implemented and locally verified
+v356 static-only deployment gate: not prepared
+v356 static deployment: not approved / not executed
+next safe stage: prepare-v356-static-content-deploy-exact-sha-gate
 ```
 
-v338 strict result는 `render-ghcr-read-credential-exact-digest-connect-verified`, 다음 단계는 `review-render-service-settings-and-database-initialization-plan`입니다. v337 account readiness, v336 Neon 연결 증거, v335 공급자 선택, v334 실행 안전 baseline은 계속 보존합니다.
+## 진행 순서
 
-## 다음 순서
+1. v356 장비 공식 commit을 `main`에 push합니다.
+2. v356 static-only fail-closed 배포 계약/checker를 별도 준비합니다.
+3. gate 준비 commit의 exact SHA 승인 전에는 공개 배포를 실행하지 않습니다.
+4. 승인되면 기존 Static Site에만 exact source 수동 deploy 1회를 실행합니다.
+5. 공개 게임에서 장비 수치와 무폴백 master-data를 read-only로 검증합니다.
+6. 결과를 sanitized evidence와 handoff에 기록합니다.
+7. 다음 콘텐츠·밸런스 요청을 별도 범위로 구현합니다.
+8. custom domain/DNS와 SLA production 전환은 계속 보류합니다.
 
-1. Render Free image-backed Web Service Singapore 생성 직전 설정을 검토합니다.
-2. 현재 `neondb`와 계획상 `rpg_game` 차이를 포함한 DB 생성·초기화·이식 계획을 별도로 검토합니다.
-3. resource 생성 범위와 DB 초기화/이식 범위를 분리해 승인합니다.
-4. actual URL은 Git 밖 Render secret에 넣고 `verify-full` 동등 TLS 설정을 live 확인합니다.
-5. Render `onrender.com` HTTPS origin을 CORS에 고정하고 health check를 준비합니다.
-6. Codex가 placeholder 없는 실행 준비 계획을 만들고 정적 검증합니다.
-7. 기호가 그 준비 commit의 정확한 40자리 SHA를 한 번 승인합니다.
-8. 승인 범위에서만 실제 deploy하고 sanitized evidence를 기록합니다.
-
-DB/Alembic mutation, volume 삭제, 자동 deploy/retry는 이 순서에 포함하지 않습니다. 코드나 image 포함 콘텐츠가 바뀌면 현재 digest를 재사용하지 않고 새 공급망 검증부터 진행합니다.
+코드 또는 backend dependency가 바뀌는 후속 작업은 새 image 공급망 절차를 다시 적용합니다. 이번 v356 변경은 legacy Static Site JavaScript 계산식만 바뀌므로 backend image와 DB 작업이 필요하지 않습니다.

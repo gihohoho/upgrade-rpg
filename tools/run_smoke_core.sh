@@ -8,6 +8,7 @@ cd "$ROOT_DIR"
 
 echo "[core smoke] project root: $ROOT_DIR"
 
+node tools/smoke/game/smoke_equipment_progression_formulas.js
 python tools/check_runtime_blocking_io.py --strict
 python tools/smoke/backend/smoke_master_data_latency_guard.py
 node tools/smoke/game/smoke_master_data_auto_boot_policy.js

@@ -1,4 +1,4 @@
-# Upgrade RPG Codex next prompt — v355
+# Upgrade RPG Codex next prompt — v356
 
 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽고 계속 지켜주세요. 기호는 코딩을 거의 모르므로 한국어로 쉽게 설명하고, 모든 터미널 명령 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension·권한·설치는 해결될 때까지 요청해주세요.
 
@@ -7,9 +7,11 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 ## 현재 고정값
 
 ```txt
-latest: v355.v351-provider-release-deployed-verified-content-ready
-strict result: v351-provider-release-deployed-verified-content-ready
-next safe stage: select-first-content-and-balance-change-scope
+latest: v356.tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required
+strict result: tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required
+next safe stage: prepare-v356-static-content-deploy-exact-sha-gate
+v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
+v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
 v352 preparation checkpoint: v352.v351-public-release-gates-prepared-backend-image-approval-required
 v351 source checkpoint: v351.master-data-latency-focused-fix-blocking-io-audited / master-data-latency-fix-blocking-io-audit-ready
@@ -97,7 +99,7 @@ Render 실행 준비는 완료됐습니다. Git/Docker 제외 `deploy/.env.produ
 
 승인된 v346 SHA `81d1c4faa59194e8928d54fbecac28694ab139ab`로 Render Free Web Service `upgrade-rpg-api`를 Singapore에 생성하고 env 14개와 exact image로 최초 deploy를 한 번 실행했습니다. service `srv-d9iro458nd3s73acgmsg`, deploy `dep-d9iro4l8nd3s73acgnmg`는 Live이며 공개 주소는 `https://upgrade-rpg-api.onrender.com`입니다.
 
-Render 내부 health, 공개 `/api/v1/health`, 단 한 번 요청한 `/api/v1/health/db`가 모두 HTTP 200 `status=ok`입니다. 최초 deploy 승인은 소비됐고 retry·두 번째 deploy는 금지합니다. 다음은 live backend 검토와 frontend 배포 위치, exact CORS origin, frontend API base URL 계획입니다.
+Render 내부 health, 공개 `/api/v1/health`, 단 한 번 요청한 `/api/v1/health/db`가 모두 HTTP 200 `status=ok`입니다. 최초 deploy 승인은 소비됐고 retry·두 번째 deploy는 금지합니다. 당시 다음 단계였던 live backend·frontend 위치·CORS/API base 검토는 v348~v355에서 완료됐습니다.
 
 승인된 v348 SHA `b13b1775093716800d7361ee1e8f94d8112eefc1`로 Render Free Static Site `gihohoho-upgrade-rpg`를 만들고 exact commit 최초 deploy를 한 번 실행했습니다. service `srv-d9iu337aqgkc73am4lh0`, deploy `dep-d9iu33faqgkc73am4m3g`는 Live이고 auto-deploy는 Off입니다. 공개 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`과 `/admin.html`이며 둘 다 HTTP 200입니다.
 
@@ -105,7 +107,7 @@ Render GitHub App은 `gihohoho/upgrade-rpg` 단일 private repository만 접근�
 
 승인된 recovery SHA `e64d42d812d78de023dc6cbd7f960263bc1c2d15`로 backend CORS deploy `dep-d9ivfmvlk1mc73fbcv40`를 정확히 한 번 실행했습니다. deploy는 40.1초 만에 Live가 됐고 actual `CORS_ORIGINS`는 exact frontend origin 배열입니다. health와 preflight는 모두 HTTP 200이며 exact `Access-Control-Allow-Origin`을 반환합니다.
 
-공개 게임의 CORS 오류는 사라졌지만 `/game/master-data` 464,098-byte 응답이 약 1.98초/1.83초 걸려 frontend 1.5초 timeout을 넘습니다. 따라서 게임은 아직 기존 JS 데이터로 폴백합니다. 공개 관리자 새 탭에서는 이전 `RpgAdminFieldHelp is not loaded` 오류 로그가 재현되지 않았습니다.
+v350 당시 CORS 오류는 사라졌지만 `/game/master-data` 464,098-byte 응답이 약 1.98초/1.83초로 1.5초 timeout을 넘어 기존 JS 데이터로 폴백했습니다. 이 문제는 v351 수정과 v355 배포에서 1,346ms·gzip·no-fallback으로 해결됐고, 공개 관리자 오류 로그도 재현되지 않았습니다.
 
 v351 source에서 frontend master-data 기본 timeout을 5초로 늘리고 backend 1KB 이상 응답에 GZip level 5를 적용했습니다. 전체 runtime blocking-I/O audit는 sync FastAPI route 0, async 내부 blocking 호출 0, frontend blocking 호출 0으로 통과했습니다. offline tooling은 Python 148 files/371 blocking calls와 JavaScript 94 files/126 sync calls를 별도 확인하고 `intentional-one-shot-cli`로 분류했습니다. master-data의 11개 DB 조회는 하나의 `AsyncSession`을 공유하므로 위험한 동시 task로 바꾸지 않고 순차 await를 유지했습니다.
 
@@ -113,9 +115,15 @@ v352 준비 SHA 승인 뒤 v351 backend image workflow를 정확히 한 번 실�
 
 기호가 v354 준비 SHA `05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62`를 승인했습니다. Render backend는 새 exact image로 deploy `dep-d9jeuf3eo5us73ba6cgg`, Static Site는 v351 exact source로 deploy `dep-d9jev7gu01pc73favje0`를 각각 정확히 한 번 실행했고 둘 다 Live입니다. health/DB health/index/admin/CORS/gzip master-data를 확인했으며 게임 runtime은 backend master-data 적용 로그와 fallback 경고 0건, 관리자는 read-only·전체 쓰기 UI blocked·write key missing을 확인했습니다. DB/Alembic/admin write/콘텐츠 변경/자동 retry는 없었습니다.
 
-공개 게임의 무폴백 로드와 관리자 guarded read-only 흐름이 검증됐으므로, 이제 첫 콘텐츠·밸런스 변경 범위를 기호와 고르기 좋은 시점입니다. sanitized evidence는 `deploy/review/render-v351-provider-release-v355.json`입니다. Render 설정 검사에 노출된 backend/static deploy hook은 즉시 재발급했고 새 값은 기록하지 않았습니다.
+v356에서 첫 콘텐츠·밸런스 변경으로 12단계 이후 `skill_all` 장비의 스킬 피해 공식을 조정했습니다. 12-1 `-초월- 어둠을 지배하는 고리 +20`은 공격력 `69.1B`, 스킬 피해 `607%`, 기존 모든 피해 내부값 `173.9%`입니다. 13단계 `655.4%`부터 39단계 `1915.1%`까지 같은 공식이며 1~11단계와 공격력·모든 피해·나머지 장비 옵션은 바뀌지 않았습니다.
+
+1~12단계 일반 장비 60종과 탈리스만 5종을 감사했습니다. 전체 장비 단일 공식은 없고 1~11 고정값·옵션별 예외 공식과 12+ 생성 공식이 함께 사용되지만 누락·중복·비의도 불일치는 없습니다. 상세 문서는 `docs/current/EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`, 회귀 검사는 `tools/smoke/game/smoke_equipment_progression_formulas.js`입니다.
+
+generated seed, Neon DB, backend image는 변경하지 않았습니다. 다음 단계에서는 기존 Static Site, exact source commit, auto-deploy Off, 수동 deploy 1회, backend/DB/env 무변경과 read-only 검증을 고정하는 v356 static-only fail-closed gate를 먼저 준비합니다. 그 gate 준비 commit의 정확한 40자리 SHA를 기호가 별도 승인하기 전에는 공개 배포하지 않습니다. sanitized provider evidence `deploy/review/render-v351-provider-release-v355.json`과 재발급된 deploy hook 보안 상태는 계속 보존합니다.
 
 현재 필요한 사용자 조치, extension, 권한, 새 설치는 없습니다.
+
+기호 PC의 Windows 전역 `DEBUG=release`는 backend boolean 설정과 충돌합니다. backend/core 검사에서는 시스템 값을 변경하지 말고 해당 자식 프로세스에서만 `DEBUG`를 unset하거나 `DEBUG=false`로 덮어쓰세요.
 
 ## 첫 검사
 
@@ -124,6 +132,7 @@ Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.ex
 새 설치 여부: 없음
 
 ```bash
+node tools/smoke/game/smoke_equipment_progression_formulas.js
 python tools/check_v351_public_release_gates.py --strict
 python tools/smoke/backend/smoke_v351_public_release_gates.py
 python tools/check_runtime_blocking_io.py --strict
@@ -145,6 +154,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v355 기대 결과는 `v351-provider-release-deployed-verified-content-ready`, 다음 단계는 `select-first-content-and-balance-change-scope`입니다. v353의 `v351-image-publish-and-isolated-validation-complete`, v351의 `runtime-blocking-io-audit-passed`, v350 recovery, v348 static deploy, v347 backend, v345 Neon 완료, v342 이전 live image, v338 Render Connect, v335 provider selection, v334 generic deployment baseline도 보존합니다.
+v356 장비 smoke 기대 결과는 `tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required`, 다음 단계는 `prepare-v356-static-content-deploy-exact-sha-gate`입니다. v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection, v334 generic deployment baseline도 보존합니다.
 
 별도 승인 전에는 추가 deploy, Render env 변경, DB/Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스를 변경하지 않습니다.

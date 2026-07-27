@@ -1,10 +1,11 @@
-# Docs Index — v334
+# Docs Index — v356
 
 문서는 역할별로 한 곳에만 둡니다. 현재 판단과 과거 기록이 충돌하면 `current/`를 우선합니다.
 
 ## 현재 판단
 
 - `current/CURRENT_STATUS.md`: 지금 완료된 상태와 안전 경계
+- `current/EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`: 1~12단계 장비 공식 감사와 12단계 이후 스킬 피해 성장 기준
 - `current/PRODUCTION_DEPLOYMENT_PLAN.md`: 검토된 운영 배포 순서·승인·복구 계약
 - `current/FRONTEND_STATIC_DEPLOYMENT_PLAN.md`: legacy 게임·관리자 Render Static Site 배포와 exact CORS 승인 계획
 - `current/ROADMAP.md`: 다음 진행 순서
