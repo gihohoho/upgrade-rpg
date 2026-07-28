@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v356
+# Upgrade RPG Codex working rules — v357
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -44,9 +44,9 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v356.tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required
-strict result: tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required
-next safe stage: prepare-v356-static-content-deploy-exact-sha-gate
+latest: v357.tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required
+strict result: tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required
+next safe stage: prepare-v357-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -95,11 +95,14 @@ Alembic current: v295_initial_schema / new revision needed: no
 - 기호가 exact v354 준비 SHA `05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62`를 승인했고, backend image update deploy `dep-d9jeuf3eo5us73ba6cgg`와 Static Site v351 deploy `dep-d9jev7gu01pc73favje0`가 각각 정확히 한 번 실행되어 Live입니다.
 - `/api/v1/health`, `/api/v1/health/db`, `/index.html`, `/admin.html`, exact CORS, gzip master-data no-fallback, 관리자 guarded read-only 흐름이 모두 검증됐습니다. DB health는 한 번만 요청했고 DB/Alembic/admin write/콘텐츠 변경/자동 retry는 실행하지 않았습니다.
 - sanitized provider evidence는 `deploy/review/render-v351-provider-release-v355.json`입니다.
-- v356에서 첫 콘텐츠·밸런스 범위로 장비 스킬 피해 공식을 수정했습니다. 12-1 `-초월- 어둠을 지배하는 고리 +20`은 공격력 `69.1B`, 스킬 피해 `607%`, 기존 모든 피해 내부값 `173.9%`입니다.
-- 12단계 이상 `skill_all` 장비는 +0 기본값을 유지하고 스킬 피해 강화 증가분만 `1.321215409658...`배 보정합니다. 13단계 `655.4%`부터 39단계 `1915.1%`까지 같은 공식이며 앞으로 추가될 고단계에도 자동 적용됩니다.
+- v356에서 12단계 `607%` 기준을 반영했고, v357에서 16단계 `무의식 : 넥스의 몽환의 어둠 +20 = 2121%` 실측 기준을 추가해 고단계 공식을 다시 조정했습니다.
+- 12단계 이상 `skill_all` 장비는 +0 기본값을 유지합니다. +20 목표는 12단계 `607%`와 16단계 `2121%`를 단계당 `1.36721871444...`배 기하 보간·외삽하고, +1~+19는 기존 `enhanceTable.sdmg` 진행률을 그대로 사용합니다.
+- +20 스킬 피해는 13단계 `829.9%`, 14단계 `1134.7%`, 15단계 `1551.3%`, 17단계 `2899.9%`, 18단계 `3964.8%`, 39단계 `2823673.9%`입니다. 17단계 이후 실제 스킬 피해 실측값은 저장소에 없어 새 기준이 생기기 전까지 위 비율을 추정 외삽합니다.
+- 사용자 교차 기준인 16단계 공격력 `369B`·기존 모든 피해 내부값 `225.8%`, 17단계 추가 스킬 계수 `2097179%`·치명 피해 `803447%`, 18단계 공격력 `851B`·평타 피해 `7506%`는 변경 없이 정확히 일치합니다.
 - 1~12단계 일반 장비 60종과 탈리스만 5종을 감사했고 누락·중복은 없습니다. 전체 장비 단일 공식은 없으며 1~11 고정 데이터와 옵션별 구간·예외 공식, 12+ 생성·보간 공식이 함께 사용됩니다.
 - 공격력, 모든 피해, 1~11단계, 나머지 4개 장비 그룹, generated seed, Neon DB와 backend는 변경하지 않았습니다. 상세 근거는 `docs/current/EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`입니다.
-- v356 공개 반영은 backend image나 DB 작업 없이 기존 Render Static Site 수동 배포 1회만 필요합니다. 먼저 static-only fail-closed 계약/checker를 별도 준비한 뒤, 그 gate 준비 commit의 정확한 40자리 SHA를 기호가 승인하기 전에는 실행하지 않습니다.
+- 별도 감사에서 추가 스킬 계수의 기존 2차 외삽이 22단계부터 감소하고 33단계부터 음수가 되는 문제를 확인했습니다. 이번 스킬 피해 전용 범위에서는 바꾸지 않으며 실제 고단계 기준을 받아 별도 작업으로 다룹니다.
+- v357 공개 반영은 backend image나 DB 작업 없이 기존 Render Static Site 수동 배포 1회만 필요합니다. 먼저 static-only fail-closed 계약/checker를 별도 준비한 뒤, 그 gate 준비 commit의 정확한 40자리 SHA를 기호가 승인하기 전에는 실행하지 않습니다.
 - 전체 runtime blocking-I/O audit는 sync FastAPI route 0, async 내부 blocking 호출 0, frontend entrypoint·source blocking 호출 0으로 통과했습니다.
 - offline tooling은 Python 148 files/371 blocking calls, JavaScript 94 files/126 sync calls를 별도 확인했고 서버·브라우저 event loop 밖의 `intentional-one-shot-cli`로 분류했습니다.
 - master-data의 11개 async DB 조회는 하나의 `AsyncSession`을 공유하므로 동시 task로 바꾸지 않고 안전한 순차 실행을 유지합니다.

@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v356
+# Upgrade RPG Codex handoff — v357
 
 ## 현재 상태
 
 ```txt
-latest: v356.tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required
-strict result: tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required
-next safe stage: prepare-v356-static-content-deploy-exact-sha-gate
+latest: v357.tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required
+strict result: tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required
+next safe stage: prepare-v357-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -151,22 +151,25 @@ v352 준비 SHA 승인 뒤 v351 backend image workflow를 정확히 한 번 실�
 
 Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 즉시 재발급했고 새 값은 기록하지 않았습니다. DB/Alembic/admin write/콘텐츠·밸런스 변경/custom domain/DNS/payment/추가 Actions·두 번째 deploy는 없었습니다.
 
-## 장비 스킬 피해 공식 변경과 전체 감사 — v356
+## 장비 스킬 피해 공식 변경과 전체 감사 — v357
 
 - 12-1 `-초월- 어둠을 지배하는 고리 +20`: 공격력 `69.1B`, 스킬 피해 `607%`, 모든 피해 내부값 `173.9%`
-- 변경 전 스킬 피해: `488.6%`
-- 12단계 이상 공식: +0 기본값은 유지하고 스킬 피해 강화 증가분만 `1.321215409658...`배
-- 13단계 +20: `655.4%`
-- 39단계 +20: `1915.1%`
+- 16단계 `무의식 : 넥스의 몽환의 어둠 +20`: 공격력 `369B`, 스킬 피해 `2121%`, 기존 모든 피해 내부값 `225.8%`
+- +20 단계 공식: 12단계 `607%`와 16단계 `2121%`를 단계당 `1.36721871444...`배 기하 보간하고 17단계 이후 같은 비율로 외삽
+- 강화 공식: +0 기본값 `10 × 단계`를 유지하고 +1~+19는 기존 `enhanceTable.sdmg` 진행률로 해당 단계 +20 목표까지 보간
+- +20 결과: 13단계 `829.9%`, 14단계 `1134.7%`, 15단계 `1551.3%`, 17단계 `2899.9%`, 18단계 `3964.8%`, 39단계 `2823673.9%`
+- 17단계 이후 실제 스킬 피해 실측 기준은 저장소에 없으므로 새 기준이 생기기 전까지 위 기하비율을 추정 외삽
 - 대상: 12~39단계에서 각 단계 첫 번째 `skill_all` 장비 28종, 그중 사용자 요청의 13+는 27종
 - 비대상: 1~11단계, 공격력, 모든 피해, 공격력 추가, 평타 피해, 추가 스킬, 평타 치명
-- 감사: 1~12단계 일반 장비 60종 + 탈리스만 5종, 단계별 5그룹, +0/+20과 0~20 단조 증가, seed 3중 일치, 12~39 비대상 2,940조합 해시 불변
+- 비대상 교차 기준: 17단계 스태프 추가 스킬 계수 `2097179%`, 창 치명 피해 `803447%`, 18단계 보석 공격력 `851B`·평타 피해 `7506%` 정확히 유지
+- 감사: 1~12단계 일반 장비 60종 + 탈리스만 5종, 12~39단계 스킬 장비 전 강화, 16단계 +0~+20 명시값, seed 3중 일치, 12~39 비대상 2,940조합 해시 불변
 - 공식 판단: 모든 옵션 단일 공식은 없지만 누락은 없으며 1~11 고정·구간별 공식과 12+ 생성 공식이 명시적으로 존재
-- 계산식·기본값 변경 없음: `boss-factories.js`(실제 범위를 설명하는 주석만 정정), generated seed, Neon DB, backend image/API
+- 별도 발견: 추가 스킬 계수의 기존 2차 외삽은 22단계부터 감소하고 33단계부터 음수가 되며 이번 스킬 피해 전용 작업에서는 변경하지 않음
+- 계산식·기본값 변경 없음: `boss-factories.js`, generated seed, Neon DB, backend image/API
 - 상세 문서: `docs/current/EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`
-- 공개 반영: 다음 단계에서 v356 static-only fail-closed gate를 먼저 준비하고, 그 gate 준비 commit의 exact SHA 승인 뒤 기존 Render Static Site 수동 deploy 1회와 read-only 검증만 허용
+- 공개 반영: 다음 단계에서 v357 static-only fail-closed gate를 먼저 준비하고, 그 gate 준비 commit의 exact SHA 승인 뒤 기존 Render Static Site 수동 deploy 1회와 read-only 검증만 허용
 
-현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 Codex가 v356 static-only 배포 계약/checker를 준비하는 것이며, 그 준비 commit이 push된 뒤에만 기호에게 exact SHA 승인을 요청합니다.
+현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 Codex가 v357 static-only 배포 계약/checker를 준비하는 것이며, 그 준비 commit이 push된 뒤에만 기호에게 exact SHA 승인을 요청합니다.
 
 로컬 검사 주의: Windows 전역 `DEBUG=release`는 backend의 boolean `DEBUG`와 충돌합니다. 시스템 환경변수는 바꾸지 말고 backend/core 검사 자식 프로세스에서만 `DEBUG`를 unset하거나 `DEBUG=false`로 덮어씁니다.
 
@@ -199,6 +202,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v356 장비 smoke 기대 결과는 `tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required`, 다음 단계는 `prepare-v356-static-content-deploy-exact-sha-gate`입니다. v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
+v357 장비 smoke 기대 결과는 `tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required`, 다음 단계는 `prepare-v357-static-content-deploy-exact-sha-gate`입니다. v356 첫 장비 기준, v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

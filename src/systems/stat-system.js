@@ -307,6 +307,7 @@ const extraSmult = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 6, 10, 15, 21, 28, 36
 const KNOWN_HIGH_TIER_BASE_ATK_B = { 12: 4, 18: 49.4 };
 const KNOWN_HIGH_TIER_ATK20_B = { 12: 69.1, 16: 369, 17: 560, 18: 851 };
 const KNOWN_HIGH_TIER_ATK11_B = { 18: 141 };
+const KNOWN_HIGH_TIER_SDMG20 = { 12: 607, 16: 2121 };
 const KNOWN_HIGH_TIER_BASE_SMULT = { 12: 45450, 18: 104540 };
 const KNOWN_HIGH_TIER_SMULT20 = { 12: 1057562, 16: 1957654, 17: 2097179 };
 const KNOWN_HIGH_TIER_BASE_CRIT = { 12: 5809, 18: 35162 };
@@ -321,7 +322,6 @@ const EXACT_TIER_OPTION_CONFIG = {
 		baseAtk: 4 * UNIT_B,
 		atk20: 69.1 * UNIT_B,
 		baseSdmg: 120,
-		sdmg20: 607,
 		baseAllDmg: 60,
 		baseAtkInc: 65,
 		baseNdmg: 275,
@@ -465,12 +465,16 @@ function highTierBaseSdmg(tier) {
 	return 10 * tier;
 }
 
-function highTierSkillDmgEnhanceScale() {
-	const anchorTier = 12;
-	const anchor = EXACT_TIER_OPTION_CONFIG[anchorTier];
-	const level20Delta = enhanceTable[20].sdmg - enhanceTable[0].sdmg;
-	const anchorTierGrowth = 1.0 + 0.6 * (anchorTier - 1);
-	return (anchor.sdmg20 - anchor.baseSdmg) / (level20Delta * anchorTierGrowth);
+function highTierSdmg20(tier) {
+	if (KNOWN_HIGH_TIER_SDMG20[tier] !== undefined) return KNOWN_HIGH_TIER_SDMG20[tier];
+	// 확정 +20 기준 12→16의 단계별 비율을 사이 단계와 이후 단계에도 유지한다.
+	return parseFloat(expBetween(
+		KNOWN_HIGH_TIER_SDMG20[12],
+		KNOWN_HIGH_TIER_SDMG20[16],
+		12,
+		16,
+		tier,
+	).toFixed(1));
 }
 
 function highTierBaseAllDmg(tier) {
@@ -544,10 +548,14 @@ function calcItemStats(item) {
 	if (st.baseSdmg || st.baseAllDmg) {
 		let sdmgMult = 1.0 + 0.6 * (tier - 1);
 		let alldmgMult = 1.0 + 0.3 * (tier - 1);
-		// 12단계 +20의 확정 607%를 기준으로 고티어 스킬피해 강화분만 같은 비율로 상향한다.
-		// +0 기본값과 1~11단계, 모든피해 및 다른 장비 옵션은 그대로 유지한다.
-		let highTierSdmgScale = tier >= 12 ? highTierSkillDmgEnhanceScale() : 1.0;
-		st.skillDmgInc = st.baseSdmg ? parseFloat((st.baseSdmg + dSdmg * sdmgMult * highTierSdmgScale).toFixed(1)) : 0;
+		if (st.baseSdmg && tier >= 12) {
+			// +0 기본값은 유지하고, 기존 강화표 진행률로 해당 단계의 확정/보간 +20 목표까지 올린다.
+			const progress = dSdmg10[lvl] / dSdmg10[20];
+			const target20 = highTierSdmg20(tier);
+			st.skillDmgInc = parseFloat((st.baseSdmg + (target20 - st.baseSdmg) * progress).toFixed(1));
+		} else {
+			st.skillDmgInc = st.baseSdmg ? parseFloat((st.baseSdmg + dSdmg * sdmgMult).toFixed(1)) : 0;
+		}
 		st.allDmgInc = st.baseAllDmg ? parseFloat((st.baseAllDmg + dAlldmg * alldmgMult).toFixed(1)) : 0;
 	} else {
 		st.skillDmgInc = 0;

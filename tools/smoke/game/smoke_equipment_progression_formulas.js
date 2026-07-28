@@ -144,17 +144,20 @@ assert(
 );
 
 const anchorTier = 12;
-const anchorBase = 120;
 const anchorTarget20 = 607;
+const tier16Target20 = 2121;
 const level20Delta = enhanceTable[20].sdmg - enhanceTable[0].sdmg;
-const anchorGrowth = 1 + 0.6 * (anchorTier - 1);
-const highTierScale = (anchorTarget20 - anchorBase) / (level20Delta * anchorGrowth);
+const highTierTargetRatio = Math.pow(tier16Target20 / anchorTarget20, 1 / (16 - anchorTier));
+
+function expectedHighTierSkillDamage20(tier) {
+  return round1(anchorTarget20 * Math.pow(highTierTargetRatio, tier - anchorTier));
+}
 
 function expectedHighTierSkillDamage(tier, level) {
   const base = 10 * tier;
   const delta = enhanceTable[level].sdmg - enhanceTable[0].sdmg;
-  const growth = 1 + 0.6 * (tier - 1);
-  return round1(base + delta * growth * highTierScale);
+  const progress = delta / level20Delta;
+  return round1(base + (expectedHighTierSkillDamage20(tier) - base) * progress);
 }
 
 let previousTier20 = 0;
@@ -225,8 +228,53 @@ assertEqual(
 );
 
 assertEqual(expectedHighTierSkillDamage(12, 20), 607, "tier 12 anchor");
-assertEqual(expectedHighTierSkillDamage(13, 20), 655.4, "tier 13 projection");
-assertEqual(expectedHighTierSkillDamage(39, 20), 1915.1, "tier 39 projection");
+assertEqual(expectedHighTierSkillDamage(13, 20), 829.9, "tier 13 projection");
+assertEqual(expectedHighTierSkillDamage(14, 20), 1134.7, "tier 14 projection");
+assertEqual(expectedHighTierSkillDamage(15, 20), 1551.3, "tier 15 projection");
+assertEqual(expectedHighTierSkillDamage(16, 20), 2121, "tier 16 anchor");
+assertEqual(expectedHighTierSkillDamage(17, 20), 2899.9, "tier 17 projection");
+assertEqual(expectedHighTierSkillDamage(18, 20), 3964.8, "tier 18 projection");
+assertEqual(expectedHighTierSkillDamage(39, 20), 2823673.9, "tier 39 projection");
+
+const tier16Drops = normalDropsForTier(16);
+const tier16Skill = tier16Drops.find((item) => getEquipGroup(item) === "skill_all");
+const tier16At20 = calcItemStats({ ...tier16Skill, level: 20 });
+const tier16ExpectedByLevel = [
+  160, 164, 172.1, 184.3, 200.4, 220.6, 244.9,
+  273.2, 305.6, 341.9, 382.4, 447.1, 536, 649.2,
+  786.7, 948.4, 1134.4, 1344.7, 1579.2, 1838, 2121,
+];
+assertEqual(tier16Skill.name, "무의식 : 넥스의 몽환의 어둠", "tier 16 skill item name");
+assertEqual(tier16At20.attack, 3690000, "tier 16 skill item attack +20");
+assertEqual(tier16At20.skillDmgInc, 2121, "tier 16 skill item skill damage +20");
+assertEqual(tier16At20.allDmgInc, 225.8, "tier 16 skill item unchanged all damage +20");
+for (let level = 0; level <= 20; level += 1) {
+  assertEqual(
+    calcItemStats({ ...tier16Skill, level }).skillDmgInc,
+    tier16ExpectedByLevel[level],
+    `tier 16 skill item explicit progression +${level}`,
+  );
+}
+
+const tier17Drops = normalDropsForTier(17);
+const tier17SkillChanceItem = tier17Drops.find((item) => getEquipGroup(item) === "skill_chance");
+const tier17NormalCritItem = tier17Drops.find((item) => getEquipGroup(item) === "normal_crit");
+const tier17SkillChance = calcItemStats({ ...tier17SkillChanceItem, level: 20 });
+const tier17NormalCrit = calcItemStats({ ...tier17NormalCritItem, level: 20 });
+assertEqual(tier17SkillChanceItem.name, "-진- 원초의 꿈 : 스태프", "tier 17 staff name");
+assertEqual(tier17NormalCritItem.name, "-진- 원초의 꿈 : 창", "tier 17 spear name");
+assertEqual(tier17SkillChance.skillDmgInc, 0, "tier 17 staff unchanged skill damage +20");
+assertEqual(tier17NormalCrit.skillDmgInc, 0, "tier 17 spear unchanged skill damage +20");
+assertEqual(tier17SkillChance.addSkillAtkMult, 2097179, "tier 17 staff extra skill multiplier +20");
+assertEqual(tier17NormalCrit.basicCritDmg, 803447, "tier 17 spear normal crit damage +20");
+
+const tier18Drops = normalDropsForTier(18);
+const tier18NormalDamageItem = tier18Drops.find((item) => getEquipGroup(item) === "normal_dmg");
+const tier18NormalDamageAt20 = calcItemStats({ ...tier18NormalDamageItem, level: 20 });
+assertEqual(tier18NormalDamageItem.name, "★연옥★ 군신의 가호가 담긴 보석", "tier 18 normal damage item name");
+assertEqual(tier18NormalDamageAt20.attack, 8510000, "tier 18 normal damage item attack +20");
+assertEqual(tier18NormalDamageAt20.skillDmgInc, 0, "tier 18 normal damage item unchanged skill damage +20");
+assertEqual(tier18NormalDamageAt20.basicAtkDmgInc, 7506, "tier 18 normal damage +20");
 
 const futureTier40Item = {
   name: "합성 40단계 스킬 피해 장비",
@@ -242,7 +290,7 @@ const futureTier40At20 = calcItemStats({ ...futureTier40Item, level: 20 });
 assertEqual(futureTier40At0.skillDmgInc, 400, "future tier 40: skill damage +0");
 assertEqual(futureTier40At0.allDmgInc, 200, "future tier 40: all damage +0");
 assertEqual(futureTier40At20.skillDmgInc, expectedHighTierSkillDamage(40, 20), "future tier 40: skill damage +20");
-assertEqual(expectedHighTierSkillDamage(40, 20), 1963.5, "future tier 40 projection");
+assertEqual(expectedHighTierSkillDamage(40, 20), 3860579.8, "future tier 40 projection");
 
 const itemTemplates = JSON.parse(read("backend/seeds/generated/item_templates.json"));
 const dropTableItems = JSON.parse(read("backend/seeds/generated/drop_table_items.json"));
@@ -274,14 +322,19 @@ for (let tier = 1; tier <= 39; tier += 1) {
 
 console.log(JSON.stringify({
   ok: true,
-  result: "tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required",
+  result: "tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required",
   auditedEquipment: 60,
   auditedSpecialEquipment: 5,
   highTierSkillEquipment: 28,
   seedSkillEquipment: 39,
   highTierNonTargetDigest,
   tier12: { attackRaw: 691000, attackDisplayB: 69.1, skillDamage: 607, allDamage: 173.9 },
-  tier13SkillDamage20: 655.4,
-  tier39SkillDamage20: 1915.1,
-  futureTier40SkillDamage20: 1963.5,
+  tier13SkillDamage20: 829.9,
+  tier14SkillDamage20: 1134.7,
+  tier15SkillDamage20: 1551.3,
+  tier16: { attackRaw: 3690000, attackDisplayB: 369, skillDamage: 2121, allDamage: 225.8 },
+  tier17: { skillDamage: 2899.9, extraSkillMultiplier: 2097179, normalCritDamage: 803447 },
+  tier18: { attackRaw: 8510000, attackDisplayB: 851, skillDamage: 3964.8, normalDamage: 7506 },
+  tier39SkillDamage20: 2823673.9,
+  futureTier40SkillDamage20: 3860579.8,
 }));

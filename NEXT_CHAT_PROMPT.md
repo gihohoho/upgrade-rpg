@@ -1,4 +1,4 @@
-# Upgrade RPG Codex next prompt — v356
+# Upgrade RPG Codex next prompt — v357
 
 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽고 계속 지켜주세요. 기호는 코딩을 거의 모르므로 한국어로 쉽게 설명하고, 모든 터미널 명령 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension·권한·설치는 해결될 때까지 요청해주세요.
 
@@ -7,9 +7,9 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 ## 현재 고정값
 
 ```txt
-latest: v356.tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required
-strict result: tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required
-next safe stage: prepare-v356-static-content-deploy-exact-sha-gate
+latest: v357.tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required
+strict result: tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required
+next safe stage: prepare-v357-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -115,11 +115,13 @@ v352 준비 SHA 승인 뒤 v351 backend image workflow를 정확히 한 번 실�
 
 기호가 v354 준비 SHA `05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62`를 승인했습니다. Render backend는 새 exact image로 deploy `dep-d9jeuf3eo5us73ba6cgg`, Static Site는 v351 exact source로 deploy `dep-d9jev7gu01pc73favje0`를 각각 정확히 한 번 실행했고 둘 다 Live입니다. health/DB health/index/admin/CORS/gzip master-data를 확인했으며 게임 runtime은 backend master-data 적용 로그와 fallback 경고 0건, 관리자는 read-only·전체 쓰기 UI blocked·write key missing을 확인했습니다. DB/Alembic/admin write/콘텐츠 변경/자동 retry는 없었습니다.
 
-v356에서 첫 콘텐츠·밸런스 변경으로 12단계 이후 `skill_all` 장비의 스킬 피해 공식을 조정했습니다. 12-1 `-초월- 어둠을 지배하는 고리 +20`은 공격력 `69.1B`, 스킬 피해 `607%`, 기존 모든 피해 내부값 `173.9%`입니다. 13단계 `655.4%`부터 39단계 `1915.1%`까지 같은 공식이며 1~11단계와 공격력·모든 피해·나머지 장비 옵션은 바뀌지 않았습니다.
+v356에서 12단계 `607%` 기준을 반영했고 v357에서 16단계 `무의식 : 넥스의 몽환의 어둠 +20 = 2121%` 기준을 추가해 12단계 이후 `skill_all` 장비 공식을 다시 조정했습니다. +20 목표는 두 기준점을 단계당 `1.36721871444...`배 기하 보간·외삽하고 +1~+19는 기존 강화표 진행률을 사용합니다. 13/14/15/17/18단계 +20은 각각 `829.9 / 1134.7 / 1551.3 / 2899.9 / 3964.8%`입니다. 17단계 이후 실제 스킬 피해 기준은 저장소에 없어 새 실측값이 생기기 전까지 추정 외삽임을 유지합니다.
+
+별도 공식 감사에서 추가 스킬 계수의 기존 2차 외삽이 22단계부터 감소하고 33단계부터 음수가 되는 문제를 확인했습니다. 이번 요청은 스킬 피해 증가만이므로 그 옵션은 바꾸지 않았습니다. 실제 18단계 이후 추가 스킬 계수 기준을 받기 전에는 임의 수정하지 않습니다.
 
 1~12단계 일반 장비 60종과 탈리스만 5종을 감사했습니다. 전체 장비 단일 공식은 없고 1~11 고정값·옵션별 예외 공식과 12+ 생성 공식이 함께 사용되지만 누락·중복·비의도 불일치는 없습니다. 상세 문서는 `docs/current/EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`, 회귀 검사는 `tools/smoke/game/smoke_equipment_progression_formulas.js`입니다.
 
-generated seed, Neon DB, backend image는 변경하지 않았습니다. 다음 단계에서는 기존 Static Site, exact source commit, auto-deploy Off, 수동 deploy 1회, backend/DB/env 무변경과 read-only 검증을 고정하는 v356 static-only fail-closed gate를 먼저 준비합니다. 그 gate 준비 commit의 정확한 40자리 SHA를 기호가 별도 승인하기 전에는 공개 배포하지 않습니다. sanitized provider evidence `deploy/review/render-v351-provider-release-v355.json`과 재발급된 deploy hook 보안 상태는 계속 보존합니다.
+공격력·모든 피해·나머지 4그룹·generated seed·Neon DB·backend image는 변경하지 않았습니다. 17단계 추가 스킬 계수 `2097179%`·치명 피해 `803447%`, 18단계 `851B / 평타 피해 7506%`도 기존값을 고정했습니다. 다음 단계에서는 기존 Static Site, exact source commit, auto-deploy Off, 수동 deploy 1회, backend/DB/env 무변경과 read-only 검증을 고정하는 v357 static-only fail-closed gate를 먼저 준비합니다. 그 gate 준비 commit의 정확한 40자리 SHA를 기호가 별도 승인하기 전에는 공개 배포하지 않습니다. sanitized provider evidence `deploy/review/render-v351-provider-release-v355.json`과 재발급된 deploy hook 보안 상태는 계속 보존합니다.
 
 현재 필요한 사용자 조치, extension, 권한, 새 설치는 없습니다.
 
@@ -154,6 +156,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v356 장비 smoke 기대 결과는 `tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required`, 다음 단계는 `prepare-v356-static-content-deploy-exact-sha-gate`입니다. v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection, v334 generic deployment baseline도 보존합니다.
+v357 장비 smoke 기대 결과는 `tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required`, 다음 단계는 `prepare-v357-static-content-deploy-exact-sha-gate`입니다. v356 첫 장비 기준, v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection, v334 generic deployment baseline도 보존합니다.
 
 별도 승인 전에는 추가 deploy, Render env 변경, DB/Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스를 변경하지 않습니다.

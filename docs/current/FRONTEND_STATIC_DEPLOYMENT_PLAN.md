@@ -77,4 +77,4 @@ v350 당시에는 콘텐츠 추가·수정을 시작하기 좋은 시점이 아�
 
 ## 필요할 수 있는 사용자 조치
 
-지금 필요한 extension·권한·설치는 없습니다. 최신 다음 단계는 `CURRENT_STATUS.md`의 v356 static-only 배포 gate 준비를 따릅니다.
+지금 필요한 extension·권한·설치는 없습니다. 최신 다음 단계는 `CURRENT_STATUS.md`의 v357 static-only 배포 gate 준비를 따릅니다.

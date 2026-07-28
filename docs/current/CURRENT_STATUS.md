@@ -1,11 +1,11 @@
-# Current Status — v356
+# Current Status — v357
 
 ## 현재 결과
 
 ```txt
-latest: v356.tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required
-strict result: tier12-skill-damage-anchor-high-tier-formula-audited-static-deploy-gate-preparation-required
-next safe stage: prepare-v356-static-content-deploy-exact-sha-gate
+latest: v357.tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required
+strict result: tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required
+next safe stage: prepare-v357-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -85,10 +85,9 @@ Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 col
 
 ## 아직 남은 것
 
-- v356 장비 공식 준비 commit push
-- 기존 Static Site와 exact source를 고정하는 v356 static-only fail-closed 계약/checker 준비
+- 기존 Static Site와 exact source를 고정하는 v357 static-only fail-closed 계약/checker 준비
 - gate 준비 commit의 exact SHA 승인 시 기존 Render Static Site 수동 deploy 1회
-- 공개 게임에서 12단계 607%와 13+ 증가 공식 read-only 확인
+- 공개 게임에서 12단계 `607%`, 16단계 `2121%`와 13+ 증가 공식 read-only 확인
 - 다음 콘텐츠·밸런스 변경은 기호가 별도로 요청한 범위에서 진행
 - custom domain/DNS와 SLA production 전환은 보류
 
@@ -150,27 +149,35 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 - 인증/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스 변경 금지
 - resource 생성과 실제 deploy 전 실행 준비 commit의 정확한 40자리 SHA 승인 필요
 
-## 장비 스킬 피해 공식 변경과 전체 감사 — v356
+## 장비 스킬 피해 공식 변경과 전체 감사 — v357
 
 - 12-1 `-초월- 어둠을 지배하는 고리 +20`
   - 공격력: `69.1B` 유지
   - 스킬 피해: `488.6%` → `607.0%`
   - 모든 피해: 내부 `173.9%` 유지, 현재 UI 세 자리 유효숫자 표시는 `174%`
-- 12단계 이상 `skill_all` 장비는 +0 기본값을 유지하고 스킬 피해 강화 증가분만 `1.321215409658...`배 보정
-- 13단계 +20 `655.4%`, 39단계 +20 `1915.1%`
+- 16단계 `무의식 : 넥스의 몽환의 어둠 +20`
+  - 공격력: `369B` 유지
+  - 스킬 피해: `800.8%` → `2121.0%`
+  - 모든 피해: 내부 `225.8%` 유지
+- +20 목표는 12단계 `607%`와 16단계 `2121%`를 단계당 `1.36721871444...`배 기하 보간·외삽
+- +1~+19는 +0 기본값 `10 × 단계`와 각 단계 +20 목표 사이를 기존 `enhanceTable.sdmg` 진행률로 보간
+- 13/14/15/17/18단계 +20 `829.9 / 1134.7 / 1551.3 / 2899.9 / 3964.8%`, 39단계 `2823673.9%`
+- 17단계 이후 실제 스킬 피해 실측값은 저장소에 없어 새 기준을 받기 전까지 위 기하비율을 추정 외삽
+- 17단계 스태프 추가 스킬 계수 `2097179%`, 창 치명 피해 `803447%`, 18단계 보석 공격력 `851B`·평타 피해 `7506%`는 정확히 유지
 - 1~12단계 일반 장비 60종과 탈리스만 5종, 단계별 5개 일반 장비 그룹의 +0/+20 결과 감사 완료
-- 0~20 강화 단조 증가와 12~39단계 새 공식 검증 완료
+- 0~20 강화 단조 증가, 16단계 +0~+20 명시값과 12~39단계 새 공식 검증 완료
 - 1~39단계 source/template/drop seed 기본 스킬·모든 피해 3중 일치
 - 변경하지 않음: 1~11단계, 공격력, 모든 피해, 나머지 4그룹, generated seed, Neon DB, backend image/API
 - 전체 장비 단일 공식은 없지만 누락은 없음: 1~11 고정값과 옵션별 구간·예외 공식, 12+ 생성·보간 공식 사용
+- 별도 감사 결과 추가 스킬 계수의 기존 2차 외삽은 22단계부터 감소하고 33단계부터 음수가 됨. 이번 스킬 피해 전용 변경에서는 건드리지 않았으며 실제 고단계 기준이 필요한 후속 항목
 - 공식 문서: `docs/current/EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`
 - 회귀 검사: `tools/smoke/game/smoke_equipment_progression_formulas.js`
-- 실제 공개 반영: v356 static-only gate 준비와 그 준비 commit의 별도 exact-SHA 승인 전 미실행, 기존 Render Static Site 1회만 필요
+- 실제 공개 반영: v357 static-only gate 준비와 그 준비 commit의 별도 exact-SHA 승인 전 미실행, 기존 Render Static Site 1회만 필요
 - 로컬 환경: Windows 전역 `DEBUG=release`가 backend boolean 설정과 충돌하므로 core 검사 자식 프로세스에서만 unset하고 시스템 값은 변경하지 않음
 
 ## 다음 단계
 
-v356 장비 계산식과 회귀 검사는 준비 완료이며 아직 공개 Static Site에는 배포하지 않았습니다. 다음 단계에서 Codex가 static-only fail-closed 계약/checker를 준비하고 push합니다. 기호가 그 gate 준비 commit의 정확한 40자리 SHA를 별도 승인하면 기존 Static Site를 exact source로 수동 deploy 한 번 실행하고 게임 화면을 read-only로 검증합니다. backend image 게시·배포, Neon DB write, seed import는 필요하지 않습니다.
+v357 장비 계산식과 회귀 검사는 준비 완료이며 아직 공개 Static Site에는 배포하지 않았습니다. 다음 단계에서 Codex가 static-only fail-closed 계약/checker를 준비하고 push합니다. 기호가 그 gate 준비 commit의 정확한 40자리 SHA를 별도 승인하면 기존 Static Site를 exact source로 수동 deploy 한 번 실행하고 게임 화면을 read-only로 검증합니다. backend image 게시·배포, Neon DB write, seed import는 필요하지 않습니다.
 
 승인된 v346 SHA로 Render Free Web Service `upgrade-rpg-api`를 Singapore에 만들고 승인된 env 14개와 exact image를 사용해 최초 deploy를 한 번 실행했습니다. service `srv-d9iro458nd3s73acgmsg`, deploy `dep-d9iro4l8nd3s73acgnmg`는 Live이며 공개 주소는 `https://upgrade-rpg-api.onrender.com`입니다.
 
@@ -194,7 +201,7 @@ Render 내부 health와 공개 `/api/v1/health`, Neon read-only `/api/v1/health/
 - master-data: HTTP 200, 1,346ms, decoded 559,786 bytes, gzip, `game.master_data`
 - browser game: backend master-data runtime applied 로그 확인, fallback 경고 0, 오류·경고 0
 - public admin: read-only, 11 domains / 729 rows, general write UI blocked, write key missing
-- 콘텐츠 준비도: 공개 no-fallback + 관리자 guarded read-only 확인 완료, 당시 첫 콘텐츠 범위 선택 준비 완료; v356에서 첫 장비 공식 변경 완료
+- 콘텐츠 준비도: 공개 no-fallback + 관리자 guarded read-only 확인 완료, 당시 첫 콘텐츠 범위 선택 준비 완료; v356 첫 장비 기준과 v357 두 번째 실측 기준 반영 완료
 - Render 설정 검사 출력에 포함된 backend/static deploy hook은 즉시 재발급했고 새 값은 기록하지 않음
 - sanitized evidence: `deploy/review/render-v351-provider-release-v355.json`
 
