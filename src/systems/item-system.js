@@ -2,6 +2,13 @@ function getBaseStackName(item) {
 	return item && item.name ? item.name.replace(/\s*\+0$/, "") : "";
 }
 
+let pendingSpecialReset = null;
+
+function getSpecialResetRefundCount(level) {
+	let normalizedLevel = Math.max(0, parseInt(level) || 0);
+	return Math.pow(2, normalizedLevel);
+}
+
 function isEmblemStackItem(item) {
 	return !!(item && (item.isEmblem || (item.name && item.name.includes("빛나는 휘장"))));
 }
@@ -493,7 +500,7 @@ function actionDismantleSpecialToZero() {
 	let item = pack.item;
 	let level = parseInt(item && item.level) || 0;
 	if (!item || (!isTalismanStackItem(item) && !isEmblemStackItem(item)) || level <= 0) {
-		addLog(`[시스템] 강화된 탈리스만/휘장만 +0으로 분해할 수 있습니다.`);
+		addLog(`[시스템] 강화된 탈리스만/휘장만 +0으로 초기화할 수 있습니다.`);
 		return;
 	}
 	if (selectedSlot.type === "trash") {
@@ -502,17 +509,70 @@ function actionDismantleSpecialToZero() {
 	}
 
 	let baseName = getBaseStackName(item);
-	if (typeof window !== "undefined" && typeof window.confirm === "function") {
-		let accepted = window.confirm(`${baseName} +${level} 1개를 +0 1개로 되돌릴까요?\n강화에 사용한 재료는 환급되지 않습니다.`);
-		if (!accepted) return;
+	let refundCount = getSpecialResetRefundCount(level);
+	let modal = typeof document !== "undefined" ? document.getElementById("special-reset-modal") : null;
+	if (!modal) {
+		addLog(`[시스템] 강화 초기화 확인창을 열 수 없습니다. 화면을 새로고침한 뒤 다시 시도해 주세요.`);
+		return;
 	}
 
+	pendingSpecialReset = {
+		item,
+		slotType: selectedSlot.type,
+		slotIndex: selectedSlot.index,
+		level,
+		baseName,
+		refundCount,
+	};
+
+	let subtitle = document.getElementById("special-reset-subtitle");
+	let before = document.getElementById("special-reset-before");
+	let refund = document.getElementById("special-reset-refund");
+	let description = document.getElementById("special-reset-description");
+	if (subtitle) subtitle.innerText = `${baseName} +${level}을(를) 초기화할까요?`;
+	if (before) before.innerText = `+${level} 1개`;
+	if (refund) refund.innerText = `+0 ${refundCount}개`;
+	if (description) description.innerText = `강화에 사용된 원본 수량을 계산해 ${baseName} +0 ${refundCount}개로 돌려드립니다.`;
+	modal.style.display = "flex";
+}
+
+function closeSpecialResetModal() {
+	let modal = typeof document !== "undefined" ? document.getElementById("special-reset-modal") : null;
+	if (modal) modal.style.display = "none";
+	pendingSpecialReset = null;
+}
+
+function confirmSpecialReset() {
+	let pending = pendingSpecialReset;
+	if (!pending) return;
+
+	let pack = getSelectedItemPack();
+	let item = pack.item;
+	let level = parseInt(item && item.level) || 0;
+	let isSameSelection =
+		item === pending.item &&
+		selectedSlot.type === pending.slotType &&
+		selectedSlot.index === pending.slotIndex &&
+		level === pending.level;
+
+	if (!isSameSelection) {
+		closeSpecialResetModal();
+		addLog(`[시스템] 선택한 장비가 달라져 강화 초기화를 취소했습니다.`);
+		return;
+	}
+
+	closeSpecialResetModal();
+	applySpecialResetToZero(item, level, pending.refundCount);
+}
+
+function applySpecialResetToZero(item, level, refundCount) {
+	let baseName = getBaseStackName(item);
 	let zeroItem = prepareStackableItem({
 		...item,
 		id: Date.now() + Math.random(),
 		name: baseName,
 		level: 0,
-		count: 1,
+		count: refundCount,
 	});
 	let destinationArray;
 	let destinationType;
@@ -522,11 +582,11 @@ function actionDismantleSpecialToZero() {
 		destinationType = "inv";
 		let found = destinationArray.find((it) => isSameStackableItem(it, zeroItem));
 		if (!found && destinationArray.length >= player.maxInventorySize) {
-			addLog(`[시스템] 가방이 꽉 차서 장착 중인 ${baseName}을 +0으로 분해할 수 없습니다.`);
+			addLog(`[시스템] 가방이 꽉 차서 장착 중인 ${baseName}을 +0으로 초기화할 수 없습니다.`);
 			return;
 		}
 		player.equipment[selectedSlot.index] = null;
-		if (found) found.count = (found.count || 1) + 1;
+		if (found) found.count = (found.count || 1) + refundCount;
 		else destinationArray.push(zeroItem);
 		selectedSlot = { type: destinationType, index: destinationArray.indexOf(found || zeroItem) };
 	} else {
@@ -545,12 +605,12 @@ function actionDismantleSpecialToZero() {
 		if (selectedCount > 1) item.count = selectedCount - 1;
 		else if (sourceIndex !== -1) destinationArray.splice(sourceIndex, 1);
 
-		if (found) found.count = (found.count || 1) + 1;
+		if (found) found.count = (found.count || 1) + refundCount;
 		else destinationArray.push(zeroItem);
 		selectedSlot = { type: destinationType, index: destinationArray.indexOf(found || zeroItem) };
 	}
 
-	addLog(`♻️ [분해] ${baseName} +${level} 1개를 +0 1개로 되돌렸습니다. (강화 재료 환급 없음)`, true);
+	addLog(`♻️ [강화 초기화] ${baseName} +${level} 1개를 +0 ${refundCount}개로 되돌렸습니다.`, true);
 	updateFullUI();
 	refreshActionPanelStats();
 }

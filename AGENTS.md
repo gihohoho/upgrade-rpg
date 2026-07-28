@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v358
+# Upgrade RPG Codex working rules — v359
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -26,6 +26,8 @@
 
 - 새 추상화·의존성·파일을 만들기 전에 기존 코드, Python/JavaScript 표준 기능, 브라우저·DB·프레임워크 기본 기능으로 해결할 수 있는지 먼저 확인합니다.
 - 요청하지 않은 미래용 구조·설정·scaffolding은 만들지 않으며, 안전·보안·검증·접근성 요구는 단순화를 이유로 생략하지 않습니다.
+- 사용자에게 보이는 버튼·기능을 추가하거나 바꿀 때 기능만 연결하지 않고 기존 화면의 시각 위계, 버튼 배치, 간격, 문구, 반응형 동작까지 함께 완성하고 실제 브라우저에서 확인합니다.
+- 파괴적이거나 되돌리기 어려운 동작에는 브라우저 기본 `alert`/`confirm`을 쓰지 않고 기존 게임 UI와 일관된 확인·취소 모달을 사용하며, 결과와 반환 수량을 실행 전에 명확히 보여줍니다.
 
 ## Code Review Graph 제한 시험
 
@@ -44,9 +46,9 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v358.avatar-enhancement-item-qol-field-gain-halved-cache-refresh-ready-static-deploy-gate-preparation-required
-strict result: avatar-enhancement-item-qol-field-gain-halved-cache-refresh-ready-static-deploy-gate-preparation-required
-next safe stage: prepare-v358-static-content-deploy-exact-sha-gate
+latest: v359.avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required
+strict result: avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required
+next safe stage: prepare-v359-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete

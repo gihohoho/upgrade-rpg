@@ -22,9 +22,9 @@ ARTIFACT_IDS = [8638838292, 8638825538]
 IMAGE_DIGEST = "sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac"
 VERIFIED_CANDIDATE_REFERENCE = f"{REPOSITORY}@{IMAGE_DIGEST}"
 PRODUCTION_REFERENCE = f"{REPOSITORY}@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
-CURRENT_VERSION = "v358.avatar-enhancement-item-qol-field-gain-halved-cache-refresh-ready-static-deploy-gate-preparation-required"
-CURRENT_RESULT = "avatar-enhancement-item-qol-field-gain-halved-cache-refresh-ready-static-deploy-gate-preparation-required"
-CURRENT_NEXT_STAGE = "prepare-v358-static-content-deploy-exact-sha-gate"
+CURRENT_VERSION = "v359.avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required"
+CURRENT_RESULT = "avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required"
+CURRENT_NEXT_STAGE = "prepare-v359-static-content-deploy-exact-sha-gate"
 PRIOR_PROVIDER_VERSION = "v355.v351-provider-release-deployed-verified-content-ready"
 PRIOR_PROVIDER_RESULT = "v351-provider-release-deployed-verified-content-ready"
 PRIOR_PROVIDER_NEXT_STAGE = "select-first-content-and-balance-change-scope"
@@ -99,6 +99,23 @@ def main() -> int:
         str(RUN_ID),
         *(str(value) for value in ARTIFACT_IDS),
     )
+    contains(
+        "AGENTS.md",
+        "시각 위계",
+        "반응형 동작",
+        "브라우저 기본 `alert`/`confirm`",
+        "결과와 반환 수량",
+    )
+    for relative in ("NEXT_CHAT_PROMPT.md", "NEXT_CHAT_HANDOFF.md", "docs/current/CURRENT_STATUS.md"):
+        contains(
+            relative,
+            "[무기 아바타]",
+            "[오라 아바타]",
+            "[클론 레어 아바타]",
+            "2^강화단계",
+            "33개",
+            "?v=359",
+        )
 
     policy = json.loads(read("deploy/backend-image-ghcr-policy.example.json"))
     assert policy["schemaVersion"] == VERSION

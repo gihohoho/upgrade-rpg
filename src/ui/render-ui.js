@@ -87,6 +87,27 @@ function getCleanStackName(item) {
 	return item && item.name ? item.name.replace(/\s*\+0$/, "") : "";
 }
 
+function getSpecialEquipCategoryPresentation(item) {
+	let name = String(item && item.name ? item.name : "");
+	let avatarCategory = "";
+	if (name.includes("클론 레어 아바타")) avatarCategory = "클론 레어 아바타";
+	else if (name.includes("무기 아바타")) avatarCategory = "무기 아바타";
+	else if (name.includes("오라 아바타")) avatarCategory = "오라 아바타";
+
+	if (avatarCategory) {
+		return {
+			label: `[${avatarCategory}]`,
+			color: "#6eb4ff",
+			description: `${avatarCategory} 슬롯 전용 장비입니다.`,
+		};
+	}
+	return {
+		label: "[특수 장비]",
+		color: "#ff66cc",
+		description: "특수 슬롯에 장착 가능한 아이템입니다.",
+	};
+}
+
 function isEmblemLike(item) {
 	return !!(item && (item.isEmblem || (item.name && item.name.includes("빛나는 휘장"))));
 }
@@ -425,7 +446,8 @@ function showItemTooltip(item) {
 	if (item.type === "special_equip") {
 		let statsHtml = buildSpecialEquipStatsHtml(item);
 		let ampNote = item.name && (item.name.includes("반지") || item.name.includes("목걸이")) ? `<div style="color:#ffcc00; margin-top:8px;">※ 해당 추가증가는 스탯창의 증폭수치로 적용됩니다.</div>` : "";
-		ui.tooltip.innerHTML = `<div style="font-size: 13px; font-weight: bold; line-height: 1.4;"><div style="color: #ffcc00; font-size: 15px; margin-bottom: 5px;">${getDisplayNameWithLevel(item)}</div><div style="color: #ff66cc; margin-bottom: 8px;">[특수 장비]</div>${statsHtml}${ampNote}<div style="color: #fff; margin-top:10px;">클릭하여 관리창을 열고<br>전용 슬롯에 장착 및 해제할 수 있습니다.</div></div>`;
+		let category = getSpecialEquipCategoryPresentation(item);
+		ui.tooltip.innerHTML = `<div style="font-size: 13px; font-weight: bold; line-height: 1.4;"><div style="color: #ffcc00; font-size: 15px; margin-bottom: 5px;">${getDisplayNameWithLevel(item)}</div><div style="color: ${category.color}; margin-bottom: 8px;">${category.label}</div>${statsHtml}${ampNote}<div style="color: #fff; margin-top:10px;">클릭하여 관리창을 열고<br>전용 슬롯에 장착 및 해제할 수 있습니다.</div></div>`;
 		ui.tooltip.style.display = "block";
 		return;
 	}
@@ -469,6 +491,7 @@ function hideTooltip() {
 function closeActionPanel() {
 	selectedSlot = { type: null, index: -1 };
 	if (ui.apEnhanceLog) ui.apEnhanceLog.innerHTML = "";
+	if (ui.apPanel) ui.apPanel.classList.remove("is-stack-special-action");
 	if (ui.apPanel) ui.apPanel.style.display = "none";
 	renderUI();
 }
@@ -506,6 +529,7 @@ function refreshActionPanelStats() {
 
 	let item = targetArray[selectedSlot.index];
 	if (!item) return;
+	ui.apPanel.classList.remove("is-stack-special-action");
 
 	let isTown = true;
 	const btn20 = document.getElementById("btn-ap-reinforce20");
@@ -573,14 +597,13 @@ function refreshActionPanelStats() {
 	if (isTalismanLike(item) || isEmblemLike(item)) {
 		let baseName = getCleanStackName(item);
 		let info = getTalismanCategoryInfo(item);
+		ui.apPanel.classList.add("is-stack-special-action");
 
 		if (ui.apStats) ui.apStats.innerHTML = `<span style="color:#ff66cc;">${info.typeName} / ${info.slotName} 슬롯 전용 장비입니다.</span><br><br>${info.statsHtml}`;
 
 		[btn20, ui.btnApReinforce50, ui.btnApReinforce200].forEach((btn) => {
 			if (btn) {
-				const count = btn === btn20 ? 20 : btn === ui.btnApReinforce50 ? 50 : 200;
-				btn.style.display = "block";
-				btn.innerHTML = `강화 ${count}회<br><span style="font-size:11px; color:#aaa;">1회씩만 가능</span>`;
+				btn.style.display = "none";
 				btn.disabled = true;
 			}
 		});
@@ -601,9 +624,10 @@ function refreshActionPanelStats() {
 			}
 		}
 		if (btnDismantleZero && item.level > 0 && selectedSlot.type !== "trash") {
+			let refundCount = Math.pow(2, parseInt(item.level) || 0);
 			btnDismantleZero.style.display = "block";
 			btnDismantleZero.disabled = false;
-			btnDismantleZero.innerText = "+0으로 분해";
+			btnDismantleZero.innerHTML = `강화 초기화<br><span class="special-reset-refund-preview">+0 ${refundCount}개로 복원</span>`;
 		}
 	} else if (item.type === "skill_book") {
 		if (ui.apStats) ui.apStats.innerHTML = buildSkillBookActionHtml(item);
@@ -628,9 +652,10 @@ function refreshActionPanelStats() {
 		let nextSt = item.level < 20 ? calcSpecialEquipStats({ ...item, level: item.level + 1 }) : st;
 		let cost = getEnhanceCost(item);
 		let canEnhance = isEnhanceableSpecialEquip(item);
+		let category = getSpecialEquipCategoryPresentation(item);
 
 		if (ui.apStats) {
-			let statsHtml = `<div style="color:#ff66cc; margin-bottom:8px;">특수 슬롯에 장착 가능한 아이템입니다.</div><div class="ap-stat-list">${buildSpecialEquipStatsHtml(item, true)}</div>`;
+			let statsHtml = `<div style="color:${category.color}; margin-bottom:8px;">${category.label} ${category.description}</div><div class="ap-stat-list">${buildSpecialEquipStatsHtml(item, true)}</div>`;
 			if (canEnhance) {
 				statsHtml += item.level >= 20 ? `<div class="ap-enhance-prob">강화 MAX</div>` : `<div class="ap-enhance-prob">강화 성공 확률: ${getEnhanceProbDisplay(item.level, item)}</div>`;
 				if (item.level < 20 && nextSt) {

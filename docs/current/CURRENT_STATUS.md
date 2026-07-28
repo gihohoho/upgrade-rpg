@@ -1,11 +1,11 @@
-# Current Status — v358
+# Current Status — v359
 
 ## 현재 결과
 
 ```txt
-latest: v358.avatar-enhancement-item-qol-field-gain-halved-cache-refresh-ready-static-deploy-gate-preparation-required
-strict result: avatar-enhancement-item-qol-field-gain-halved-cache-refresh-ready-static-deploy-gate-preparation-required
-next safe stage: prepare-v358-static-content-deploy-exact-sha-gate
+latest: v359.avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required
+strict result: avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required
+next safe stage: prepare-v359-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -177,7 +177,21 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 
 ## 다음 단계
 
-v358 게임 변경과 회귀 검사는 준비 완료이며 아직 공개 Static Site에는 배포하지 않았습니다. 다음 단계에서 Codex가 static-only fail-closed 계약/checker를 준비하고 push합니다. 기호가 그 gate 준비 commit의 정확한 40자리 SHA를 별도 승인하면 기존 Static Site를 exact source로 수동 deploy 한 번 실행하고 게임 화면을 read-only로 검증합니다. backend image 게시·배포, Neon DB write, seed import는 필요하지 않습니다.
+v359 게임 변경과 회귀 검사는 준비 완료이며 아직 공개 Static Site에는 배포하지 않았습니다. 다음 단계에서 Codex가 static-only fail-closed 계약/checker를 준비하고 push합니다. 기호가 그 gate 준비 commit의 정확한 40자리 SHA를 별도 승인하면 기존 Static Site를 exact source로 수동 deploy 한 번 실행하고 게임 화면을 read-only로 검증합니다. backend image 게시·배포, Neon DB write, seed import는 필요하지 않습니다.
+
+## 아바타 분류·강화 초기화 인터페이스·필드 전수 감사 — v359
+
+- 아바타 특수장비 툴팁과 관리창의 분류를 각각 `[무기 아바타]`, `[오라 아바타]`, `[클론 레어 아바타]`로 표시하고 파란색 계열 `#6eb4ff`로 통일했습니다.
+- 강화된 탈리스만/휘장 초기화는 원본 +0 재료 수량을 `2^강화단계`로 복원합니다. +1/+2/+3/+4/+5/+6은 각각 2/4/8/16/32/64개입니다.
+- 브라우저 기본 `confirm`을 제거하고 선택 장비, `강화품 1개 → +0 반환 개수`, 되돌릴 수 없다는 경고를 보여주는 게임 내부 모달로 교체했습니다.
+- 초기화 확인 사이 선택 장비나 강화 단계가 달라지면 실행을 취소하는 재검증을 추가했습니다.
+- 탈리스만/휘장 관리창에서는 쓸 수 없는 20/50/200회 강화 버튼을 숨기고 장착, 1회 강화·초기화, 보관함, 휴지통 순서로 재배치했습니다. 좁은 화면에서는 한 열로 접힙니다.
+- 앞으로 사용자에게 보이는 버튼·기능은 시각 위계, 간격, 문구, 반응형, 확인·취소 흐름을 함께 완성하고 브라우저에서 확인한다는 상시 규칙을 `AGENTS.md`에 추가했습니다.
+- 필드 데이터는 정적 source 40개와 backend generated 40개가 모두 일치하며, 순수공격력 보상이 있는 8~40단계 33개가 전부 같은 공통 지급 경로의 `0.5` 배율을 통과합니다. 1~7단계는 원래 해당 보상이 없습니다.
+- 로컬 Chrome 실측에서 +0 2개와 +3 1개가 초기화 뒤 +0 10개로 합쳐졌고, 경고창과 새 버튼 배치, 무기 아바타의 파란 분류 표시를 확인했습니다.
+- 캐시 키는 CSS와 변경 JavaScript 모두 `?v=359`입니다.
+- 변경 없음: generated seed 내용, Neon DB, backend image/API, Render 서비스.
+- 검증: JavaScript 문법, focused runtime smoke, 로컬 브라우저 UI/동작 검사 통과.
 
 ## 아바타 강화·아이템 편의·필드 성장·캐시 보정 — v358
 

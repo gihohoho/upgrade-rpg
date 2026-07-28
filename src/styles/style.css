@@ -2666,3 +2666,97 @@ body {
 	color: #ffdd66;
 	font-weight: 900;
 }
+
+
+/* ===== v359: talisman reset flow / action-panel visual hierarchy ===== */
+#item-action-panel.is-stack-special-action .action-btns {
+	grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+	gap: 9px !important;
+}
+#item-action-panel.is-stack-special-action #btn-ap-use {
+	order: 1 !important;
+	grid-column: 1 / -1 !important;
+}
+#item-action-panel.is-stack-special-action #btn-ap-reinforce1 {
+	order: 2 !important;
+	grid-column: auto !important;
+}
+#item-action-panel.is-stack-special-action #btn-ap-dismantle-zero {
+	order: 3 !important;
+	grid-column: auto !important;
+}
+#item-action-panel.is-stack-special-action #btn-ap-move {
+	order: 4 !important;
+	grid-column: 1 / -1 !important;
+}
+#item-action-panel.is-stack-special-action #btn-ap-sell {
+	order: 5 !important;
+	grid-column: 1 / -1 !important;
+}
+#item-action-panel.is-stack-special-action #btn-ap-reinforce20,
+#item-action-panel.is-stack-special-action #btn-ap-reinforce50,
+#item-action-panel.is-stack-special-action #btn-ap-reinforce200 {
+	display: none !important;
+}
+#item-action-panel .btn-special-reset {
+	border: 1px solid #d3a35e !important;
+	background: linear-gradient(180deg, #8a6235 0%, #624322 100%) !important;
+	color: #fff5da !important;
+}
+#item-action-panel .btn-special-reset:hover {
+	filter: brightness(1.14);
+}
+.special-reset-refund-preview {
+	display: block;
+	margin-top: 3px;
+	color: #ffe49a;
+	font-size: 11px;
+	line-height: 1.2;
+}
+.special-reset-modal {
+	border-color: #d3a35e !important;
+	background: linear-gradient(180deg, #252333 0%, #12141d 100%) !important;
+}
+.special-reset-title {
+	color: #ffd06a !important;
+}
+.special-reset-summary {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 12px;
+	padding: 12px;
+	border: 1px solid rgba(110, 180, 255, 0.28);
+	border-radius: 6px;
+	background: rgba(25, 73, 117, 0.2);
+	text-align: center;
+	font-size: 16px;
+	font-weight: 900;
+}
+#special-reset-before {
+	color: #ffcf8a;
+}
+.special-reset-arrow {
+	color: #8b9ab0;
+	font-size: 20px;
+}
+#special-reset-refund {
+	color: #78c2ff;
+}
+.special-reset-confirm {
+	background: linear-gradient(180deg, #94652f, #68431f) !important;
+}
+@media (max-width: 520px) {
+	#item-action-panel.is-stack-special-action .action-btns {
+		grid-template-columns: 1fr !important;
+	}
+	#item-action-panel.is-stack-special-action #btn-ap-reinforce1,
+	#item-action-panel.is-stack-special-action #btn-ap-dismantle-zero {
+		grid-column: 1 !important;
+	}
+	.special-reset-summary {
+		gap: 7px;
+		font-size: 14px;
+	}
+}

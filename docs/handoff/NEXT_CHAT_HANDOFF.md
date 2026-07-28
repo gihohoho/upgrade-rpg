@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v358
+# Upgrade RPG Codex handoff — v359
 
 ## 현재 상태
 
 ```txt
-latest: v358.avatar-enhancement-item-qol-field-gain-halved-cache-refresh-ready-static-deploy-gate-preparation-required
-strict result: avatar-enhancement-item-qol-field-gain-halved-cache-refresh-ready-static-deploy-gate-preparation-required
-next safe stage: prepare-v358-static-content-deploy-exact-sha-gate
+latest: v359.avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required
+strict result: avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required
+next safe stage: prepare-v359-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -188,7 +188,19 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 - runtime/master-data source만 변경했으며 generated seed, Neon DB, backend image/API는 변경하지 않았습니다.
 - 회귀 검사: `smoke_equipment_progression_formulas.js`, `smoke_runtime_item_quality_of_life.js`
 
-현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 Codex가 v358 static-only 배포 계약/checker를 준비하는 것이며, 그 준비 commit이 push된 뒤에만 기호에게 exact SHA 승인을 요청합니다.
+## 아바타 분류·강화 초기화 UI·필드 전수 감사 — v359
+
+- 특수장비로 뭉뚱그리던 아바타 설명을 이름에 따라 `[무기 아바타]`, `[오라 아바타]`, `[클론 레어 아바타]`로 구분하고 분류 색상을 파란 계열 `#6eb4ff`로 변경했습니다. `찬란한 ... 아바타`도 이름에 해당 분류가 있으면 같은 분류를 표시합니다.
+- 탈리스만/휘장 강화 초기화 반환량은 `2^강화단계`입니다. +1/+2/+3/+4/+5/+6 → +0 2/4/8/16/32/64개입니다.
+- 브라우저 기본 `confirm`을 제거하고 휴지통 경고창 계열의 게임 내부 모달을 추가했습니다. 모달은 대상, 변환 전후 수량, 되돌릴 수 없음 경고를 보여주며 확인 직전에 선택 상태도 재검증합니다.
+- 탈리스만/휘장에서는 불필요한 20/50/200회 버튼을 숨기고 장착, 강화·초기화, 보관함, 휴지통 순으로 정리했습니다. 초기화 버튼 자체에도 반환 개수를 표시하고 좁은 화면은 한 열로 접힙니다.
+- UI 상시 규칙: 앞으로 사용자에게 보이는 버튼·기능을 추가·변경할 때 시각 위계, 배치, 간격, 문구, 반응형, 확인·취소 흐름을 기능과 함께 완성하고 실제 브라우저에서 확인합니다. 파괴적 동작에는 브라우저 기본 alert/confirm을 사용하지 않습니다.
+- 필드 전수 감사: source 40개와 generated 40개가 동일하고, 보상이 있는 8~40단계 33개가 모두 공통 `gain *= 0.5` 지급 경로를 통과합니다. 1~7단계는 원래 순수공격력 보상이 없습니다.
+- 로컬 Chrome에서 +0 2개와 +3 1개를 초기화해 +0 10개가 되는 실제 동작, 전용 경고창, 새 버튼 배치, 아바타 파란 분류를 확인했습니다.
+- CSS/변경 JavaScript 캐시 키: `?v=359`
+- generated seed 내용, Neon DB, backend image/API, Render 서비스는 변경하지 않았습니다.
+
+현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 Codex가 v359 static-only 배포 계약/checker를 준비하는 것이며, 그 준비 commit이 push된 뒤에만 기호에게 exact SHA 승인을 요청합니다.
 
 로컬 검사 주의: Windows 전역 `DEBUG=release`는 backend의 boolean `DEBUG`와 충돌합니다. 시스템 환경변수는 바꾸지 말고 backend/core 검사 자식 프로세스에서만 `DEBUG`를 unset하거나 `DEBUG=false`로 덮어씁니다.
 
@@ -222,6 +234,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v358 focused smoke는 아바타 3종 +0~+20, 강화권 창 유지, 탈리스만/휘장 +0 분해, 필드 절반, 스킬 치명타 실적용과 v357의 16단계 `2121%` 회귀를 함께 고정합니다. 다음 단계는 `prepare-v358-static-content-deploy-exact-sha-gate`입니다. v357 장비 공식, v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
+v359 focused smoke는 v358 회귀 항목과 함께 탈리스만/휘장 `2^강화단계` 환급, 게임 내부 확인 모달, 아바타 개별 파란 분류, 33개 보상 필드 전체의 공통 절반 지급 경로를 고정합니다. 다음 단계는 `prepare-v359-static-content-deploy-exact-sha-gate`입니다. v357 장비 공식, v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

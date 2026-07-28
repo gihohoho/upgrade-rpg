@@ -22,16 +22,34 @@ function assertContains(file, patterns) {
 assertContains("src/systems/item-system.js", [
   'requestUiRefresh(result, "refreshActionPanelStats")',
   'requestUiRefresh(result, "consumedSkillBook"',
+  "function getSpecialResetRefundCount(level)",
   "function actionDismantleSpecialToZero()",
-  "강화에 사용한 재료는 환급되지 않습니다.",
+  "function closeSpecialResetModal()",
+  "function confirmSpecialReset()",
+  "function applySpecialResetToZero(item, level, refundCount)",
+  "선택한 장비가 달라져 강화 초기화를 취소했습니다.",
 ]);
 assertContains("src/ui/render-ui.js", [
   "function showConsumedSkillBookPanel(item)",
-  'btnDismantleZero.innerText = "+0으로 분해"',
+  "function getSpecialEquipCategoryPresentation(item)",
+  'label: `[${avatarCategory}]`',
+  'color: "#6eb4ff"',
+  "ui.apPanel.classList.add(\"is-stack-special-action\")",
+  "btn.style.display = \"none\"",
+  "강화 초기화",
+  "+0 ${refundCount}개로 복원",
 ]);
 assertContains("index.html", [
   'id="btn-ap-dismantle-zero"',
   'onclick="actionDismantleSpecialToZero()"',
+  'id="special-reset-modal"',
+  'onclick="confirmSpecialReset()"',
+  'onclick="closeSpecialResetModal()"',
+]);
+assertContains("src/styles/style.css", [
+  "#item-action-panel.is-stack-special-action .action-btns",
+  ".special-reset-summary",
+  ".special-reset-confirm",
 ]);
 assertContains("src/systems/combat-system.js", [
   "gain *= 0.5;",
@@ -43,7 +61,6 @@ const context = {
   console,
   Date,
   Math,
-  window: { confirm: () => true },
   player: {
     inventory: [],
     storage: [],
@@ -59,6 +76,15 @@ const context = {
 };
 vm.createContext(context);
 vm.runInContext(read("src/systems/item-system.js"), context, { filename: "src/systems/item-system.js" });
+
+const refundCounts = vm.runInContext(
+  "[1, 2, 3, 4, 5, 6].map((level) => getSpecialResetRefundCount(level))",
+  context
+);
+assert(
+  JSON.stringify(Array.from(refundCounts)) === JSON.stringify([2, 4, 8, 16, 32, 64]),
+  "reset refund must reconstruct all +0 source items with 2^level"
+);
 
 const enhancedStack = {
   name: "찬란한 힘의 탈리스만",
@@ -78,9 +104,9 @@ const zeroStack = {
 };
 context.player.inventory = [enhancedStack, zeroStack];
 context.selectedSlot = { type: "inv", index: 0 };
-vm.runInContext("actionDismantleSpecialToZero()", context);
-assert(enhancedStack.count === 1, "dismantling one enhanced stack item must leave the other enhanced item");
-assert(zeroStack.count === 5, "dismantled item must merge into the existing +0 stack");
+vm.runInContext("applySpecialResetToZero(player.inventory[0], 3, getSpecialResetRefundCount(3))", context);
+assert(enhancedStack.count === 1, "resetting one enhanced stack item must leave the other enhanced item");
+assert(zeroStack.count === 12, "+3 reset must merge eight reconstructed +0 items into the existing stack");
 assert(context.selectedSlot.index === 1, "selection must move to the resulting +0 stack");
 
 const equippedEmblem = {
@@ -102,10 +128,42 @@ const zeroEmblem = {
 context.player.inventory = [zeroEmblem];
 context.player.equipment[14] = equippedEmblem;
 context.selectedSlot = { type: "equip", index: 14 };
-vm.runInContext("actionDismantleSpecialToZero()", context);
-assert(context.player.equipment[14] === null, "equipped emblem must be removed after dismantling");
-assert(zeroEmblem.count === 3, "equipped emblem must merge into the inventory +0 stack");
+vm.runInContext("applySpecialResetToZero(player.equipment[14], 6, getSpecialResetRefundCount(6))", context);
+assert(context.player.equipment[14] === null, "equipped emblem must be removed after reset");
+assert(zeroEmblem.count === 66, "+6 reset must merge sixty-four reconstructed +0 items");
 assert(context.selectedSlot.type === "inv" && context.selectedSlot.index === 0, "resulting +0 emblem must remain selected");
-assert(logs.some((message) => message.includes("강화 재료 환급 없음")), "dismantle result log must explain no material refund");
+assert(logs.some((message) => message.includes("+0 64개로 되돌렸습니다")), "reset log must report the reconstructed count");
 
-console.log("runtime item quality-of-life smoke test passed");
+const zoneContext = { Math };
+vm.createContext(zoneContext);
+vm.runInContext(`${read("src/data/zones.js")};this.__zones = customZones;`, zoneContext, {
+  filename: "src/data/zones.js",
+});
+const sourceZones = Array.from(zoneContext.__zones);
+const generatedZones = JSON.parse(read("backend/seeds/generated/field_zones.json"));
+assert(sourceZones.length === 40 && generatedZones.length === 40, "both field datasets must contain all 40 zones");
+
+let farmZoneCount = 0;
+for (let index = 0; index < sourceZones.length; index += 1) {
+  const sourceFarm = sourceZones[index].farm || null;
+  const generatedFarm = generatedZones[index].farm || null;
+  assert(
+    JSON.stringify(sourceFarm) === JSON.stringify(generatedFarm),
+    `field ${index + 1} farm rule differs between static and generated data`
+  );
+  if (sourceFarm) farmZoneCount += 1;
+}
+assert(farmZoneCount === 33, "fields 8 through 40 must all have a pure-attack reward rule");
+
+const combatSource = read("src/systems/combat-system.js");
+assert(
+  /if \(f\.specialThreshold[\s\S]*?gain \*= 1 \+[\s\S]*?gain = Math\.floor\(gain\);[\s\S]*?gain \*= 0\.5;[\s\S]*?player\.farmAtkBonus \+= gain;/.test(combatSource),
+  "every zoneData.farm reward must pass threshold, bonus, floor, and common 50% reduction before being granted"
+);
+assertContains("src/api/master-data-adapter.js", [
+  "farm: farmRules && Object.keys(farmRules).length ? cloneJson(farmRules) : null",
+]);
+
+console.log(
+  `runtime item quality-of-life smoke test passed (reset refunds 2^level; field rewards halved for all ${farmZoneCount} farm-enabled fields)`
+);

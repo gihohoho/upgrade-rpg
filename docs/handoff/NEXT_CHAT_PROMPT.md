@@ -1,4 +1,4 @@
-# Upgrade RPG Codex next prompt — v358
+# Upgrade RPG Codex next prompt — v359
 
 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽고 계속 지켜주세요. 기호는 코딩을 거의 모르므로 한국어로 쉽게 설명하고, 모든 터미널 명령 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension·권한·설치는 해결될 때까지 요청해주세요.
 
@@ -7,9 +7,9 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 ## 현재 고정값
 
 ```txt
-latest: v358.avatar-enhancement-item-qol-field-gain-halved-cache-refresh-ready-static-deploy-gate-preparation-required
-strict result: avatar-enhancement-item-qol-field-gain-halved-cache-refresh-ready-static-deploy-gate-preparation-required
-next safe stage: prepare-v358-static-content-deploy-exact-sha-gate
+latest: v359.avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required
+strict result: avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required
+next safe stage: prepare-v359-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -91,16 +91,19 @@ v341 source를 포함한 새 image는 게시와 isolated Alpine system CA store,
 
 ## 다음 작업
 
-v358에서 다음을 완료했습니다.
+v359까지 다음을 완료했습니다.
 
-- 16단계 `무의식 : 넥스의 몽환의 어둠 +20`은 로컬 계산 `369B / 2121% / 225.8%`이며, Chrome 구형 캐시 재현 후 변경 스크립트에 최종 `?v=358.1` 캐시 식별자를 추가했습니다.
-- 공개 Render Static Site는 아직 v351이므로 v357/v358 수치가 없습니다.
-- 스킬강화권 창 유지, 강화 탈리스만/휘장 `+0으로 분해`, 모든 필드 순수공격력 지급 절반을 구현했습니다.
+- 16단계 `무의식 : 넥스의 몽환의 어둠 +20`은 로컬 계산 `369B / 2121% / 225.8%`이며, 변경 CSS/JavaScript의 최종 캐시 식별자는 `?v=359`입니다.
+- 공개 Render Static Site는 아직 v351이므로 v357~v359 변경이 없는 것이 정상입니다.
+- 스킬강화권 창 유지와 모든 보상 필드의 순수공격력 지급 절반을 구현했습니다. source/generated 40개를 대조했고 보상이 있는 8~40단계 33개 전체가 공통 절반 경로를 사용합니다.
 - 무기/오라/클론 레어 아바타 +0~+20 성장과 +20 `88.2B`, 각각 `평타 치명 피해 증폭 33%` / `추가 스킬공격 계수 증폭 33%` / `스킬 치명 10%·150%`를 구현했습니다.
+- 아바타 분류를 `[무기 아바타]`, `[오라 아바타]`, `[클론 레어 아바타]`로 나누고 파란색 계열로 변경했습니다.
+- 탈리스만/휘장 강화 초기화는 `2^강화단계`만큼 +0을 반환합니다. 전용 게임 내부 확인 모달과 정리된 버튼 배치를 사용하며 +3 실측에서 +0 8개 반환을 확인했습니다.
+- 상시 UI 규칙: 새 버튼·기능은 시각 위계, 배치, 간격, 문구, 반응형, 확인·취소 흐름까지 함께 완성하고 실제 브라우저에서 검증합니다. 파괴적 기능은 브라우저 기본 alert/confirm을 쓰지 않습니다.
 - 스킬 치명타 확률/피해를 실제 스킬 피해 계산에 연결했습니다.
 - generated seed, Neon DB, backend image/API는 변경하지 않았습니다.
 
-다음 단계에서는 v358 static-only fail-closed 배포 계약/checker를 준비하고 push합니다. 그 준비 commit의 exact SHA를 기호가 별도 승인하기 전에는 Render Static Site deploy를 실행하지 않습니다.
+다음 단계에서는 v359 static-only fail-closed 배포 계약/checker를 준비하고 push합니다. 그 준비 commit의 exact SHA를 기호가 별도 승인하기 전에는 Render Static Site deploy를 실행하지 않습니다.
 
 승인된 v343 SHA `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 Neon restore를 한 번 실행했습니다. 22 application tables / 748 rows / schema digest가 일치했고 stamp 전에 legacy data digest 비교가 session timezone 차이로 멈췄습니다. UTC-normalized digest는 verified rehearsal과 Neon이 정확히 일치하며 `alembic_version`은 없습니다.
 
