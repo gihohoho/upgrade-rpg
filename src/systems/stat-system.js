@@ -162,6 +162,11 @@ const TRANSCEND_STAFF_SUB_BY_LEVEL = scaleSpecialArrayToLast(ABYSS_STAFF_SUB_BY_
 const TRANSCEND_STAFF_BUFF_BY_LEVEL = scaleSpecialArrayToLast(ABYSS_STAFF_BUFF_BY_LEVEL, 42.1, 1);
 const TRANSCEND_STAFF_CLONE_ASPD_BY_LEVEL = scaleSpecialArrayToLast(ABYSS_STAFF_CLONE_ASPD_BY_LEVEL, 630, 1);
 const TRANSCEND_STAFF_MAX_ASPD_CAP_BY_LEVEL = scaleSpecialArrayToLast(ABYSS_STAFF_MAX_ASPD_CAP_BY_LEVEL, 46.3, 1);
+const AVATAR_ATTACK_BY_LEVEL = scaleSpecialIntegerArrayToLast(SPECIAL_EQUIP_ATTACK_BY_LEVEL, 882000); // +20 = 88.2B
+const AVATAR_AMP_BY_LEVEL = scaleSpecialArrayToLast(ABYSS_RING_NECK_AMP_BY_LEVEL, 33.0, 1);
+const AVATAR_SKILL_CRIT_CHANCE_BY_LEVEL = scaleSpecialArrayToLast(ABYSS_RING_NECK_AMP_BY_LEVEL, 10.0, 1);
+const AVATAR_SKILL_CRIT_DMG_BY_LEVEL = scaleSpecialArrayToLast(ABYSS_RING_NECK_AMP_BY_LEVEL, 150.0, 1);
+const ENHANCEABLE_AVATAR_NAMES = new Set(["무기 아바타", "오라 아바타", "클론 레어 아바타"]);
 
 function clampEnhanceLevel(level) {
 	let lvl = parseInt(level) || 0;
@@ -180,8 +185,13 @@ function isTranscendAbyssFragmentSpecialEquip(itemOrName) {
 	return name.includes("-초월-") && isAbyssFragmentSpecialEquip(name);
 }
 
+function isEnhanceableAvatarSpecialEquip(itemOrName) {
+	let name = typeof itemOrName === "string" ? itemOrName : (itemOrName && itemOrName.name) || "";
+	return ENHANCEABLE_AVATAR_NAMES.has(name);
+}
+
 function isEnhanceableSpecialEquip(item) {
-	return !!(item && item.type === "special_equip" && isAbyssFragmentSpecialEquip(item));
+	return !!(item && item.type === "special_equip" && (isAbyssFragmentSpecialEquip(item) || isEnhanceableAvatarSpecialEquip(item)));
 }
 
 function getSpecialEquipEnhanceCost(item) {
@@ -208,9 +218,13 @@ function calcSpecialEquipStats(item) {
 		atkInc: 0,
 		allDmgInc: 0,
 		basicAtkDmgAmp: 0,
+		basicCritDmgAmp: 0,
 		skillDmgAmp: 0,
+		skillCritChance: 0,
+		skillCritDmg: 0,
 		skillProcChanceInc: 0,
 		skillCoefficientInc: 0,
+		addSkillAtkMultAmp: 0,
 		skillCooldownReductionInc: 0,
 		allSkillDamageInc: 0,
 		allBuffValueInc: 0,
@@ -252,6 +266,17 @@ function calcSpecialEquipStats(item) {
 			st.maxAttackSpeedCapInc = staffMaxAspdTable[lvl];
 			return st;
 		}
+	}
+
+	if (isEnhanceableAvatarSpecialEquip(item)) {
+		st.attack = AVATAR_ATTACK_BY_LEVEL[lvl];
+		if (name === "무기 아바타") st.basicCritDmgAmp = AVATAR_AMP_BY_LEVEL[lvl];
+		else if (name === "오라 아바타") st.addSkillAtkMultAmp = AVATAR_AMP_BY_LEVEL[lvl];
+		else if (name === "클론 레어 아바타") {
+			st.skillCritChance = AVATAR_SKILL_CRIT_CHANCE_BY_LEVEL[lvl];
+			st.skillCritDmg = AVATAR_SKILL_CRIT_DMG_BY_LEVEL[lvl];
+		}
+		return st;
 	}
 
 	if (item.isEmblem || name.includes("빛나는 휘장")) {
@@ -696,9 +721,11 @@ function getTotals() {
 		skillCritChance: player.skillCritChance || 0,
 		skillCritDmg: player.skillCritDmg || 0,
 		basicAtkDmgAmp: 0,
+		basicCritDmgAmp: 0,
 		skillDmgAmp: 0,
 		skillProcChanceInc: 0,
 		skillCoefficientInc: 0,
+		addSkillAtkMultAmp: 0,
 		skillCooldownReductionInc: 0,
 		allSkillDamageInc: 0,
 		allBuffValueInc: 0,
@@ -730,9 +757,13 @@ function getTotals() {
 					t.atkInc += sp.atkInc || 0;
 					t.allDmgInc += sp.allDmgInc || 0;
 					t.basicAtkDmgAmp += sp.basicAtkDmgAmp || 0;
+					t.basicCritDmgAmp = addPercentMultiplicative(t.basicCritDmgAmp, sp.basicCritDmgAmp || 0);
 					t.skillDmgAmp += sp.skillDmgAmp || 0;
+					t.skillCritChance += sp.skillCritChance || 0;
+					t.skillCritDmg += sp.skillCritDmg || 0;
 					t.skillProcChanceInc = addPercentMultiplicative(t.skillProcChanceInc, sp.skillProcChanceInc || 0);
 					t.skillCoefficientInc = addPercentMultiplicative(t.skillCoefficientInc, sp.skillCoefficientInc || 0);
+					t.addSkillAtkMultAmp = addPercentMultiplicative(t.addSkillAtkMultAmp, sp.addSkillAtkMultAmp || 0);
 					t.skillCooldownReductionInc = addPercentMultiplicative(t.skillCooldownReductionInc, sp.skillCooldownReductionInc || 0);
 					t.allSkillDamageInc = addPercentMultiplicative(t.allSkillDamageInc, sp.allSkillDamageInc || 0);
 					t.allBuffValueInc = addPercentMultiplicative(t.allBuffValueInc, sp.allBuffValueInc || 0);
@@ -762,6 +793,8 @@ function getTotals() {
 	t.rawSkillDmgInc = t.skillDmgInc;
 	t.basicAtkDmgInc *= 1 + t.basicAtkDmgAmp / 100;
 	t.skillDmgInc *= 1 + t.skillDmgAmp / 100;
+	t.basicCritDmg *= 1 + t.basicCritDmgAmp / 100;
+	t.addSkillAtkMult *= 1 + t.addSkillAtkMultAmp / 100;
 
 	t.equipAttack = equipAttackTotal;
 	t.attack += equipAttackTotal;

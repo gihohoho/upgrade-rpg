@@ -58,6 +58,7 @@ node tools/smoke/frontend/smoke_admin_post_edit_api_verify.js
 node tools/smoke/frontend/smoke_admin_master_api_verify.js
 node tools/smoke/game/smoke_runtime_stacked_enhance_space_guard.js
 node tools/smoke/game/smoke_runtime_stackable_items.js
+node tools/smoke/game/smoke_runtime_item_quality_of_life.js
 node tools/smoke/game/smoke_save_data_integrity_verify.js
 node tools/smoke/game/smoke_save_data_restore_reload_lock.js
 node tools/smoke/game/smoke_save_data_restore_guard.js

@@ -42,6 +42,7 @@ const ui = {
 	btnApReinforce20: document.getElementById("btn-ap-reinforce20"),
 	btnApReinforce50: document.getElementById("btn-ap-reinforce50"),
 	btnApReinforce200: document.getElementById("btn-ap-reinforce200"),
+	btnApDismantleZero: document.getElementById("btn-ap-dismantle-zero"),
 	btnApSell: document.getElementById("btn-ap-sell"),
 	btnApUse: document.getElementById("btn-ap-use"),
 	storagePanel: document.getElementById("storage-panel"),
@@ -272,7 +273,10 @@ function buildSpecialEquipStatsHtml(item, compact = false) {
 	if (st.atkInc) addRow("공격력 추가증가", formatPercentSmart(st.atkInc, 1), "#ff6666");
 	if (st.allDmgInc) addRow("모든 피해 증가", formatPercentSmart(st.allDmgInc, 1), "#d26cff");
 	if (st.basicAtkDmgAmp) addRow("평타피해 추가증가", formatPercentSmart(st.basicAtkDmgAmp, 3), "#ff3333");
+	if (st.basicCritDmgAmp) addRow("평타 치명타 피해 증폭", formatPercentSmart(st.basicCritDmgAmp, 1), "#ff9900");
 	if (st.skillDmgAmp) addRow("스킬피해 추가증가", formatPercentSmart(st.skillDmgAmp, 3), "#3366ff");
+	if (st.skillCritChance) addRow("스킬 치명타 확률", formatPercentSmart(st.skillCritChance, 1), "#3399ff");
+	if (st.skillCritDmg) addRow("스킬 치명타 피해 배율", formatPercentSmart(st.skillCritDmg, 1), "#3399ff");
 	if (isAbyssStaff) {
 		if (st.skillProcChanceInc) addRow("스킬발동확률 증가", formatPercentSmart(st.skillProcChanceInc, 3), "#ff00aa", false);
 		if (st.skillCoefficientInc) addRow("스킬계수 증가", formatPercentSmart(st.skillCoefficientInc, 3), "#ff00aa", true);
@@ -286,6 +290,7 @@ function buildSpecialEquipStatsHtml(item, compact = false) {
 	} else {
 		if (st.skillProcChanceInc) addRow("스킬발동확률 증가", formatPercentSmart(st.skillProcChanceInc, 3), "#ff00aa");
 		if (st.skillCoefficientInc) addRow("스킬계수 증가", formatPercentSmart(st.skillCoefficientInc, 3), "#ff00aa");
+		if (st.addSkillAtkMultAmp) addRow("추가 스킬공격 계수 증폭", formatPercentSmart(st.addSkillAtkMultAmp, 1), "#00ffff");
 		if (st.skillCooldownReductionInc) addRow("스킬쿨타임 감소", formatPercentSmart(st.skillCooldownReductionInc, 3), "#ff00aa");
 		if (st.allSkillDamageInc) addRow("모든스킬 데미지 증가", formatPercentSmart(st.allSkillDamageInc, 2), "#ff00aa");
 		if (st.allBuffValueInc) addRow("모든버프수치 증가", formatPercentSmart(st.allBuffValueInc, 3), "#ff00aa");
@@ -468,6 +473,29 @@ function closeActionPanel() {
 	renderUI();
 }
 
+function showConsumedSkillBookPanel(item) {
+	selectedSlot = { type: null, index: -1 };
+	if (ui.apName) ui.apName.innerText = `${item.name} (모두 사용함)`;
+	if (ui.apImg && item.img) ui.apImg.src = item.img;
+	if (ui.apStats) ui.apStats.innerHTML = `${buildSkillBookActionHtml(item)}<div style="color:#88ff88; margin-top:10px;">보유한 강화권을 모두 사용했습니다.</div>`;
+	[ui.btnApReinforce1, ui.btnApReinforce20, ui.btnApReinforce50, ui.btnApReinforce200, ui.btnApSell].forEach((btn) => {
+		if (btn) {
+			btn.style.display = "block";
+			btn.disabled = true;
+		}
+	});
+	if (ui.btnApUse) {
+		ui.btnApUse.style.display = "block";
+		ui.btnApUse.disabled = true;
+		ui.btnApUse.innerText = "모두 사용함";
+	}
+	if (ui.btnApDismantleZero) ui.btnApDismantleZero.style.display = "none";
+	const btnMove = document.getElementById("btn-ap-move");
+	if (btnMove) btnMove.style.display = "none";
+	if (ui.apPanel) ui.apPanel.style.display = "block";
+	renderUI();
+}
+
 function refreshActionPanelStats() {
 	if (selectedSlot.index === -1 || !ui.apPanel) return;
 
@@ -483,6 +511,7 @@ function refreshActionPanelStats() {
 	const btn20 = document.getElementById("btn-ap-reinforce20");
 	const btn200 = document.getElementById("btn-ap-reinforce200");
 	const btnUse = document.getElementById("btn-ap-use");
+	const btnDismantleZero = ui.btnApDismantleZero;
 	const btnSell = ui.btnApSell;
 
 	// 버튼 표시 초기화
@@ -498,6 +527,10 @@ function refreshActionPanelStats() {
 	if (ui.btnApReinforce50) ui.btnApReinforce50.style.display = "block";
 	if (ui.btnApReinforce200) ui.btnApReinforce200.style.display = "block";
 	if (ui.btnApReinforce1) ui.btnApReinforce1.style.display = "block";
+	if (btnDismantleZero) {
+		btnDismantleZero.style.display = "none";
+		btnDismantleZero.disabled = true;
+	}
 	if (btnUse) {
 		btnUse.style.display = "block";
 		btnUse.disabled = selectedSlot.type === "storage" || selectedSlot.type === "trash";
@@ -567,6 +600,11 @@ function refreshActionPanelStats() {
 				ui.btnApReinforce1.disabled = false;
 			}
 		}
+		if (btnDismantleZero && item.level > 0 && selectedSlot.type !== "trash") {
+			btnDismantleZero.style.display = "block";
+			btnDismantleZero.disabled = false;
+			btnDismantleZero.innerText = "+0으로 분해";
+		}
 	} else if (item.type === "skill_book") {
 		if (ui.apStats) ui.apStats.innerHTML = buildSkillBookActionHtml(item);
 		if (ui.btnApReinforce1) {
@@ -606,6 +644,10 @@ function refreshActionPanelStats() {
 					addDiff("공격력", "attack");
 					addDiff("스킬피해", "skillDmgAmp");
 					addDiff("평타피해", "basicAtkDmgAmp");
+					addDiff("평타치명증폭", "basicCritDmgAmp");
+					addDiff("스킬치명확률", "skillCritChance");
+					addDiff("스킬치명피해", "skillCritDmg");
+					addDiff("추가스킬계수증폭", "addSkillAtkMultAmp");
 					addDiff("스킬발동", "skillProcChanceInc");
 					if (diffs.length) statsHtml += `<div style="margin-top:7px; line-height:1.45;">${diffs.join("<br>")}</div>`;
 				}

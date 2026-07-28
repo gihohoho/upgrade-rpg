@@ -37,13 +37,15 @@ for (const file of [
 }
 
 vm.runInContext(
-  "globalThis.__bossList = bossList; globalThis.__calcItemStats = calcItemStats; globalThis.__calcSpecialEquipStats = calcSpecialEquipStats; globalThis.__getEquipGroup = getEquipGroup; globalThis.__enhanceTable = enhanceTable;",
+  "globalThis.__bossList = bossList; globalThis.__specialBossList = specialBossList; globalThis.__calcItemStats = calcItemStats; globalThis.__calcSpecialEquipStats = calcSpecialEquipStats; globalThis.__isEnhanceableSpecialEquip = isEnhanceableSpecialEquip; globalThis.__getEquipGroup = getEquipGroup; globalThis.__enhanceTable = enhanceTable;",
   context,
 );
 
 const bossList = context.__bossList;
+const specialBossList = context.__specialBossList;
 const calcItemStats = context.__calcItemStats;
 const calcSpecialEquipStats = context.__calcSpecialEquipStats;
+const isEnhanceableSpecialEquip = context.__isEnhanceableSpecialEquip;
 const getEquipGroup = context.__getEquipGroup;
 const enhanceTable = context.__enhanceTable;
 const expectedGroups = ["skill_all", "atk_inc", "normal_dmg", "skill_chance", "normal_crit"];
@@ -276,6 +278,57 @@ assertEqual(tier18NormalDamageAt20.attack, 8510000, "tier 18 normal damage item 
 assertEqual(tier18NormalDamageAt20.skillDmgInc, 0, "tier 18 normal damage item unchanged skill damage +20");
 assertEqual(tier18NormalDamageAt20.basicAtkDmgInc, 7506, "tier 18 normal damage +20");
 
+const avatarTargets = {
+  "무기 아바타": { basicCritDmgAmp: 33.0 },
+  "오라 아바타": { addSkillAtkMultAmp: 33.0 },
+  "클론 레어 아바타": { skillCritChance: 10.0, skillCritDmg: 150.0 },
+};
+const avatarItems = specialBossList
+  .flatMap((boss) => boss.drops || [])
+  .filter((item) => Object.prototype.hasOwnProperty.call(avatarTargets, item.name));
+assertEqual(avatarItems.length, 3, "base avatar equipment count");
+for (const item of avatarItems) {
+  assert(isEnhanceableSpecialEquip(item), `${item.name}: must be enhanceable`);
+  let previous = calcSpecialEquipStats({ ...item, level: 0 });
+  for (let level = 1; level <= 20; level += 1) {
+    const current = calcSpecialEquipStats({ ...item, level });
+    assert(current.attack >= previous.attack, `${item.name}: attack decreased at +${level}`);
+    for (const key of Object.keys(avatarTargets[item.name])) {
+      assert(current[key] >= previous[key], `${item.name}: ${key} decreased at +${level}`);
+    }
+    previous = current;
+  }
+  const at20 = calcSpecialEquipStats({ ...item, level: 20 });
+  assertEqual(at20.attack, 882000, `${item.name}: attack +20`);
+  for (const [key, value] of Object.entries(avatarTargets[item.name])) {
+    assertEqual(at20[key], value, `${item.name}: ${key} +20`);
+  }
+}
+
+context.player = {
+  farmAtkBonus: 0,
+  addAttackSpeed: 150,
+  basicAtkDmgInc: 0,
+  skillDmgInc: 0,
+  allDmgInc: 0,
+  addSkillAtkChance: 0,
+  addSkillAtkMult: 1000,
+  basicCritChance: 0,
+  basicCritDmg: 200,
+  skillCritChance: 0,
+  skillCritDmg: 0,
+  equipment: new Array(15).fill(null),
+};
+context.activeBuffs = {};
+for (const item of avatarItems) {
+  context.player.equipment[item.specialSlotIdx] = { ...item, level: 20 };
+}
+vm.runInContext("globalThis.__avatarTotals = getTotals();", context);
+assertEqual(context.__avatarTotals.basicCritDmg, 266, "weapon avatar final normal crit damage amplification");
+assertEqual(context.__avatarTotals.addSkillAtkMult, 1330, "aura avatar final extra skill coefficient amplification");
+assertEqual(context.__avatarTotals.skillCritChance, 10, "clone rare avatar final skill crit chance");
+assertEqual(context.__avatarTotals.skillCritDmg, 150, "clone rare avatar final skill crit damage");
+
 const futureTier40Item = {
   name: "합성 40단계 스킬 피해 장비",
   type: "normal",
@@ -322,9 +375,10 @@ for (let tier = 1; tier <= 39; tier += 1) {
 
 console.log(JSON.stringify({
   ok: true,
-  result: "tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required",
+  result: "avatar-enhancement-item-qol-field-gain-halved-cache-refresh-ready-static-deploy-gate-preparation-required",
   auditedEquipment: 60,
   auditedSpecialEquipment: 5,
+  auditedAvatarEquipment: avatarItems.length,
   highTierSkillEquipment: 28,
   seedSkillEquipment: 39,
   highTierNonTargetDigest,

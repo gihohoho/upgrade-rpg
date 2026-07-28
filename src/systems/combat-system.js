@@ -109,11 +109,13 @@ function playerAttack() {
 
 	function addSkillDamage(label, damage, showText = true) {
 		if (isNaN(damage) || damage <= 0) return;
-		totalDamage += damage;
+		const isSkillCrit = Math.random() <= t.skillCritChance / 100;
+		const finalDamage = damage * (isSkillCrit ? 1 + t.skillCritDmg / 100 : 1);
+		totalDamage += finalDamage;
 		if (!showText) return;
-		skillDamageToShow += damage;
-		skillDamageLabels.push({ label, damage });
-		if (typeof addCombatSkillHit === "function") addCombatSkillHit(attackResult, label, damage);
+		skillDamageToShow += finalDamage;
+		skillDamageLabels.push({ label, damage: finalDamage });
+		if (typeof addCombatSkillHit === "function") addCombatSkillHit(attackResult, label, finalDamage);
 	}
 
 	function getShortSkillLabel(label) {
@@ -507,6 +509,7 @@ function killEnemy(zoneData) {
 				if (f.specialThreshold && pureAtk <= f.specialThreshold) gain *= f.specialMult;
 				gain *= 1 + ((t && t.farmGainInc) || 0) / 100;
 				gain = Math.floor(gain);
+				gain *= 0.5;
 
 				if (!player.farmAtkBonus) player.farmAtkBonus = 0;
 				if (player.farmAtkBonus < f.cap) {

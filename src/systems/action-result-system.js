@@ -119,6 +119,7 @@ function applyActionResultUi(result) {
 	if (result.ui && result.ui.updateFullUI && typeof updateFullUI === "function") updateFullUI();
 	if (result.ui && result.ui.renderUI && typeof renderUI === "function") renderUI();
 	if (result.ui && result.ui.refreshActionPanelStats && typeof refreshActionPanelStats === "function") refreshActionPanelStats();
+	if (result.ui && result.ui.consumedSkillBook && typeof showConsumedSkillBookPanel === "function") showConsumedSkillBookPanel(result.ui.consumedSkillBook);
 	if (result.ui && result.ui.startAutoAttack && typeof startAutoAttack === "function") startAutoAttack();
 
 	return result;

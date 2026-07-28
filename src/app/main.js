@@ -583,8 +583,13 @@ function getStatTooltipHTML(key) {
 		basicCritChance: 0,
 		basicCritDmg: 0,
 		basicAtkDmgAmp: 0,
+		basicCritDmgAmp: 0,
 		skillDmgAmp: 0,
 		skillProcChanceInc: 0,
+		skillCoefficientInc: 0,
+		addSkillAtkMultAmp: 0,
+		skillCritChance: 0,
+		skillCritDmg: 0,
 	};
 
 	if (player.equipment && Array.isArray(player.equipment)) {
@@ -597,8 +602,13 @@ function getStatTooltipHTML(key) {
 					eq.atkInc += sp.atkInc || 0;
 					eq.allDmgInc += sp.allDmgInc || 0;
 					eq.basicAtkDmgAmp += sp.basicAtkDmgAmp || 0;
+					eq.basicCritDmgAmp = combinePercentIncForTooltip(eq.basicCritDmgAmp, sp.basicCritDmgAmp || 0);
 					eq.skillDmgAmp += sp.skillDmgAmp || 0;
 					eq.skillProcChanceInc = combinePercentIncForTooltip(eq.skillProcChanceInc, sp.skillProcChanceInc || 0);
+					eq.skillCoefficientInc = combinePercentIncForTooltip(eq.skillCoefficientInc, sp.skillCoefficientInc || 0);
+					eq.addSkillAtkMultAmp = combinePercentIncForTooltip(eq.addSkillAtkMultAmp, sp.addSkillAtkMultAmp || 0);
+					eq.skillCritChance += sp.skillCritChance || 0;
+					eq.skillCritDmg += sp.skillCritDmg || 0;
 				}
 				return;
 			}
@@ -623,12 +633,12 @@ function getStatTooltipHTML(key) {
 	}
 	if (key === "aspd") return buildStatHtml("추가 공격속도", "#3399ff", t.aspd + "%", `${t.aspd}%`, "0%", "", `<span style="color:#ffcc00;">최종 공격속도:</span> <span style="color:#ffffff;">${(t.aspdMs / 1000).toFixed(3)}초/공격</span><br><span style="color:#ff3333;">@수치 중첩 제한. (최대 400%)</span><br><span style="color:#ffcc00;">@필드 몬스터 처치 시 공격속도 +1%, 기본 공격력도 함께 성장합니다.</span>`);
 	if (key === "ndmg") return buildStatHtml("평타 피해 증가", "#ff0000", formatPercentSmart(t.basicAtkDmgInc), "0%", formatPercentSmart(eq.basicAtkDmgInc), "", "", true, t.basicAtkDmgAmp || 0);
-	if (key === "ncdmg") return buildStatHtml("평타 치명타 피해", "#ff9900", formatPercentSmart(t.basicCritDmg), "0%", formatPercentSmart(eq.basicCritDmg), "", "", false);
+	if (key === "ncdmg") return buildStatHtml("평타 치명타 피해", "#ff9900", formatPercentSmart(t.basicCritDmg), "0%", formatPercentSmart(eq.basicCritDmg), "", "", true, t.basicCritDmgAmp || 0);
 	if (key === "ncrate") return buildStatHtml("평타 치명타 확률", "#ffcc00", formatPercentSmart(t.basicCritChance), "0%", formatPercentSmart(eq.basicCritChance), "", `<span style="color:#ff3333;">@수치 중첩 제한. (최대 50.0%)</span>`, false);
 	if (key === "sdmg") return buildStatHtml("스킬 피해 증가", "#3399ff", formatPercentSmart(t.skillDmgInc), "0%", formatPercentSmart(eq.skillDmgInc), "", "", true, t.skillDmgAmp || 0);
-	if (key === "scrate") return buildStatHtml("스킬 치명타 확률", "#3399ff", formatPercentSmart(t.skillCritChance), "0%", "0%", "", `<span style="color:#ff3333;">@수치 중첩 제한. (최대 50.0%)</span>`, false);
+	if (key === "scrate") return buildStatHtml("스킬 치명타 확률", "#3399ff", formatPercentSmart(t.skillCritChance), "0%", formatPercentSmart(eq.skillCritChance), "", `<span style="color:#ff3333;">@수치 중첩 제한. (최대 50.0%)</span>`, false);
 	if (key === "alldmg") return buildStatHtml("모든 피해 증가", "#cc66ff", formatPercentSmart(t.allDmgInc), "0%", formatPercentSmart(eq.allDmgInc), "", "", true, 0);
-	if (key === "scdmg") return buildStatHtml("스킬 치명타 피해", "#3399ff", formatPercentSmart(t.skillCritDmg), "0%", "0%", "", "", false);
+	if (key === "scdmg") return buildStatHtml("스킬 치명타 피해", "#3399ff", formatPercentSmart(t.skillCritDmg), "0%", formatPercentSmart(eq.skillCritDmg), "", "", false);
 	if (key === "schance") return buildStatHtml("추가 스킬피해 확률", "#00ffff", formatPercentSmart(t.addSkillAtkChance), "0%", formatPercentSmart(eq.addSkillAtkChance), "", `<span style="color:#ff3333;">@수치 중첩 제한. (최대 30.0%)</span>`, false);
 	if (key === "unique") {
 		return getUniqueTooltipHTML();
@@ -636,7 +646,7 @@ function getStatTooltipHTML(key) {
 
 	if (key === "smult") {
 		// 🌟 추가 스킬피해 계수 단위를 퍼센트(%)로 통일
-		return buildStatHtml("추가 스킬피해 계수", "#00ffff", t.addSkillAtkMult + "%", "0%", eq.addSkillAtkMult + "%", "", `<span style="color:#ffcc00;">@스킬 피해 증가, 스킬 치명타 피해<br>증가, 모든 피해 증가 스탯이 별도<br>적용됩니다.</span>`, true, 0);
+		return buildStatHtml("추가 스킬피해 계수", "#00ffff", t.addSkillAtkMult + "%", "0%", eq.addSkillAtkMult + "%", "", `<span style="color:#ffcc00;">@스킬 피해 증가, 스킬 치명타 피해<br>증가, 모든 피해 증가 스탯이 별도<br>적용됩니다.</span>`, true, t.addSkillAtkMultAmp || 0);
 	}
 
 	let buffValStr = window.isTestBuffMode ? "400%" : "0%";

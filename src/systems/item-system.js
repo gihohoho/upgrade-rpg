@@ -320,7 +320,8 @@ function actionEquipDirect(invIndex) {
 			} else {
 				addResultLog(result, `✨ [스킬강화] ${item.name}을 사용하여 스킬 레벨이 상승했습니다!`, true);
 			}
-			requestUiRefresh(result, "closeActionPanel");
+			if (afterCount > 0) requestUiRefresh(result, "refreshActionPanelStats");
+			else requestUiRefresh(result, "consumedSkillBook", { name: item.name, img: item.img });
 			requestUiRefresh(result, "renderSkills");
 			requestUiRefresh(result, "updateFullUI");
 			return applyActionResultUi(result);
@@ -332,9 +333,10 @@ function actionEquipDirect(invIndex) {
 			addLog(`✨ [스킬강화] ${item.name}을 사용하여 스킬 레벨이 상승했습니다!`, true);
 		}
 
-		closeActionPanel();
 		renderSkills();
 		updateFullUI();
+		if (afterCount > 0) refreshActionPanelStats();
+		else if (typeof showConsumedSkillBookPanel === "function") showConsumedSkillBookPanel({ name: item.name, img: item.img });
 		return;
 	}
 
@@ -484,6 +486,73 @@ function actionUseSelected() {
 	else if (selectedSlot.type === "equip") actionUnequipDirect(selectedSlot.index);
 	else if (selectedSlot.type === "storage") addLog(`[시스템] 보관함 아이템은 먼저 가방으로 꺼낸 뒤 사용할 수 있습니다.`);
 	else if (selectedSlot.type === "trash") addLog(`[시스템] 휴지통 아이템은 먼저 가방으로 복구한 뒤 사용할 수 있습니다.`);
+}
+
+function actionDismantleSpecialToZero() {
+	let pack = getSelectedItemPack();
+	let item = pack.item;
+	let level = parseInt(item && item.level) || 0;
+	if (!item || (!isTalismanStackItem(item) && !isEmblemStackItem(item)) || level <= 0) {
+		addLog(`[시스템] 강화된 탈리스만/휘장만 +0으로 분해할 수 있습니다.`);
+		return;
+	}
+	if (selectedSlot.type === "trash") {
+		addLog(`[시스템] 휴지통 아이템은 먼저 가방으로 복구해 주세요.`);
+		return;
+	}
+
+	let baseName = getBaseStackName(item);
+	if (typeof window !== "undefined" && typeof window.confirm === "function") {
+		let accepted = window.confirm(`${baseName} +${level} 1개를 +0 1개로 되돌릴까요?\n강화에 사용한 재료는 환급되지 않습니다.`);
+		if (!accepted) return;
+	}
+
+	let zeroItem = prepareStackableItem({
+		...item,
+		id: Date.now() + Math.random(),
+		name: baseName,
+		level: 0,
+		count: 1,
+	});
+	let destinationArray;
+	let destinationType;
+
+	if (selectedSlot.type === "equip") {
+		destinationArray = player.inventory;
+		destinationType = "inv";
+		let found = destinationArray.find((it) => isSameStackableItem(it, zeroItem));
+		if (!found && destinationArray.length >= player.maxInventorySize) {
+			addLog(`[시스템] 가방이 꽉 차서 장착 중인 ${baseName}을 +0으로 분해할 수 없습니다.`);
+			return;
+		}
+		player.equipment[selectedSlot.index] = null;
+		if (found) found.count = (found.count || 1) + 1;
+		else destinationArray.push(zeroItem);
+		selectedSlot = { type: destinationType, index: destinationArray.indexOf(found || zeroItem) };
+	} else {
+		destinationArray = selectedSlot.type === "storage" ? player.storage : player.inventory;
+		destinationType = selectedSlot.type === "storage" ? "storage" : "inv";
+		let maxSize = destinationType === "storage" ? player.maxStorageSize : player.maxInventorySize;
+		let sourceIndex = destinationArray.indexOf(item);
+		let found = destinationArray.find((it) => it !== item && isSameStackableItem(it, zeroItem));
+		let selectedCount = item.count || 1;
+
+		if (selectedCount > 1 && !found && destinationArray.length >= maxSize) {
+			addLog(`[시스템] ${baseName} +0을 담을 빈 공간이 필요합니다.`);
+			return;
+		}
+
+		if (selectedCount > 1) item.count = selectedCount - 1;
+		else if (sourceIndex !== -1) destinationArray.splice(sourceIndex, 1);
+
+		if (found) found.count = (found.count || 1) + 1;
+		else destinationArray.push(zeroItem);
+		selectedSlot = { type: destinationType, index: destinationArray.indexOf(found || zeroItem) };
+	}
+
+	addLog(`♻️ [분해] ${baseName} +${level} 1개를 +0 1개로 되돌렸습니다. (강화 재료 환급 없음)`, true);
+	updateFullUI();
+	refreshActionPanelStats();
 }
 
 function getSelectedItemPack() {

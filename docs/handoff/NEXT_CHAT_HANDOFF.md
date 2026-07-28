@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v357
+# Upgrade RPG Codex handoff — v358
 
 ## 현재 상태
 
 ```txt
-latest: v357.tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required
-strict result: tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required
-next safe stage: prepare-v357-static-content-deploy-exact-sha-gate
+latest: v358.avatar-enhancement-item-qol-field-gain-halved-cache-refresh-ready-static-deploy-gate-preparation-required
+strict result: avatar-enhancement-item-qol-field-gain-halved-cache-refresh-ready-static-deploy-gate-preparation-required
+next safe stage: prepare-v358-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -167,9 +167,28 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 - 별도 발견: 추가 스킬 계수의 기존 2차 외삽은 22단계부터 감소하고 33단계부터 음수가 되며 이번 스킬 피해 전용 작업에서는 변경하지 않음
 - 계산식·기본값 변경 없음: `boss-factories.js`, generated seed, Neon DB, backend image/API
 - 상세 문서: `docs/current/EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`
-- 공개 반영: 다음 단계에서 v357 static-only fail-closed gate를 먼저 준비하고, 그 gate 준비 commit의 exact SHA 승인 뒤 기존 Render Static Site 수동 deploy 1회와 read-only 검증만 허용
+- 공개 반영: 다음 단계에서 v358 static-only fail-closed gate를 먼저 준비하고, 그 gate 준비 commit의 exact SHA 승인 뒤 기존 Render Static Site 수동 deploy 1회와 read-only 검증만 허용
 
-현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 Codex가 v357 static-only 배포 계약/checker를 준비하는 것이며, 그 준비 commit이 push된 뒤에만 기호에게 exact SHA 승인을 요청합니다.
+## 아바타 강화·아이템 편의·필드 성장·캐시 보정 — v358
+
+- 로컬 파일과 5500 HTTP에는 v357의 16단계 `2121%`가 있었지만 기존 Chrome 탭이 이전 `stat-system.js`를 캐시해 구버전 수치를 표시하는 현상을 재현했습니다.
+- 공개 `https://gihohoho-upgrade-rpg.onrender.com/index.html`은 아직 승인된 v351 Static Site라 v357/v358 콘텐츠가 없는 것이 정상입니다.
+- 변경된 여섯 JavaScript 태그에 최종 캐시 키 `?v=358.1`을 붙여 일반 새로고침에서도 최신 계산/UI 코드가 로드되게 했습니다.
+- 세 기본 아바타만 +0~+20 강화 가능으로 연결했습니다. `찬란한 ... 아바타`는 이번 범위에서 제외했습니다.
+- 세 아바타 +20 공통 공격력은 `88.2B`입니다.
+- `무기 아바타 +20`: 평타 치명타 피해 배율 자체를 곱연산하는 증폭 `33.0%`
+- `오라 아바타 +20`: 추가 스킬공격 계수 곱연산 증폭 `33.0%`
+- `클론 레어 아바타 +20`: 스킬 치명타 확률 `10.0%`, 스킬 치명타 피해 배율 `150.0%`
+- +0~+19는 기존 심연 특수장비의 21단계 성장 진행률로 보간하며 상세 표는 `docs/current/EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`에 있습니다.
+- 기존에 표시만 되던 스킬 치명타 확률/피해를 실제 스킬 피해 계산에 연결했습니다.
+- 스킬강화권은 남은 묶음이 있으면 창을 유지하며 연속 사용하고, 마지막 1장을 쓰면 “모두 사용함” 상태로 창을 유지합니다.
+- 강화된 탈리스만/휘장에는 `+0으로 분해` 버튼이 보입니다. 선택한 강화품 1개를 같은 종류 +0 한 개로 되돌리며 강화 재료는 환급하지 않습니다.
+- 모든 필드 순수공격력 지급은 기존 최종 정수 지급값의 정확히 절반입니다. 첫 필드도 `1 → 0.5`로 성장 정지가 없습니다.
+- 로컬 Chrome에서 무기 아바타 +0 `3.889B / 1.2%`, 강화 가능 버튼, 장착 +2 탈리스만의 분해 버튼을 확인했습니다.
+- runtime/master-data source만 변경했으며 generated seed, Neon DB, backend image/API는 변경하지 않았습니다.
+- 회귀 검사: `smoke_equipment_progression_formulas.js`, `smoke_runtime_item_quality_of_life.js`
+
+현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 Codex가 v358 static-only 배포 계약/checker를 준비하는 것이며, 그 준비 commit이 push된 뒤에만 기호에게 exact SHA 승인을 요청합니다.
 
 로컬 검사 주의: Windows 전역 `DEBUG=release`는 backend의 boolean `DEBUG`와 충돌합니다. 시스템 환경변수는 바꾸지 말고 backend/core 검사 자식 프로세스에서만 `DEBUG`를 unset하거나 `DEBUG=false`로 덮어씁니다.
 
@@ -181,6 +200,7 @@ Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.ex
 
 ```bash
 node tools/smoke/game/smoke_equipment_progression_formulas.js
+node tools/smoke/game/smoke_runtime_item_quality_of_life.js
 python tools/check_v351_public_release_gates.py --strict
 python tools/smoke/backend/smoke_v351_public_release_gates.py
 python tools/check_runtime_blocking_io.py --strict
@@ -202,6 +222,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v357 장비 smoke 기대 결과는 `tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required`, 다음 단계는 `prepare-v357-static-content-deploy-exact-sha-gate`입니다. v356 첫 장비 기준, v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
+v358 focused smoke는 아바타 3종 +0~+20, 강화권 창 유지, 탈리스만/휘장 +0 분해, 필드 절반, 스킬 치명타 실적용과 v357의 16단계 `2121%` 회귀를 함께 고정합니다. 다음 단계는 `prepare-v358-static-content-deploy-exact-sha-gate`입니다. v357 장비 공식, v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

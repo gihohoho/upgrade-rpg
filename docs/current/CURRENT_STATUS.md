@@ -1,11 +1,11 @@
-# Current Status — v357
+# Current Status — v358
 
 ## 현재 결과
 
 ```txt
-latest: v357.tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required
-strict result: tier16-skill-damage-anchor-geometric-high-tier-formula-audited-static-deploy-gate-preparation-required
-next safe stage: prepare-v357-static-content-deploy-exact-sha-gate
+latest: v358.avatar-enhancement-item-qol-field-gain-halved-cache-refresh-ready-static-deploy-gate-preparation-required
+strict result: avatar-enhancement-item-qol-field-gain-halved-cache-refresh-ready-static-deploy-gate-preparation-required
+next safe stage: prepare-v358-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -85,7 +85,7 @@ Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 col
 
 ## 아직 남은 것
 
-- 기존 Static Site와 exact source를 고정하는 v357 static-only fail-closed 계약/checker 준비
+- 기존 Static Site와 exact source를 고정하는 v358 static-only fail-closed 계약/checker 준비
 - gate 준비 commit의 exact SHA 승인 시 기존 Render Static Site 수동 deploy 1회
 - 공개 게임에서 12단계 `607%`, 16단계 `2121%`와 13+ 증가 공식 read-only 확인
 - 다음 콘텐츠·밸런스 변경은 기호가 별도로 요청한 범위에서 진행
@@ -172,12 +172,31 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 - 별도 감사 결과 추가 스킬 계수의 기존 2차 외삽은 22단계부터 감소하고 33단계부터 음수가 됨. 이번 스킬 피해 전용 변경에서는 건드리지 않았으며 실제 고단계 기준이 필요한 후속 항목
 - 공식 문서: `docs/current/EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`
 - 회귀 검사: `tools/smoke/game/smoke_equipment_progression_formulas.js`
-- 실제 공개 반영: v357 static-only gate 준비와 그 준비 commit의 별도 exact-SHA 승인 전 미실행, 기존 Render Static Site 1회만 필요
+- 실제 공개 반영: v358 static-only gate 준비와 그 준비 commit의 별도 exact-SHA 승인 전 미실행, 기존 Render Static Site 1회만 필요
 - 로컬 환경: Windows 전역 `DEBUG=release`가 backend boolean 설정과 충돌하므로 core 검사 자식 프로세스에서만 unset하고 시스템 값은 변경하지 않음
 
 ## 다음 단계
 
-v357 장비 계산식과 회귀 검사는 준비 완료이며 아직 공개 Static Site에는 배포하지 않았습니다. 다음 단계에서 Codex가 static-only fail-closed 계약/checker를 준비하고 push합니다. 기호가 그 gate 준비 commit의 정확한 40자리 SHA를 별도 승인하면 기존 Static Site를 exact source로 수동 deploy 한 번 실행하고 게임 화면을 read-only로 검증합니다. backend image 게시·배포, Neon DB write, seed import는 필요하지 않습니다.
+v358 게임 변경과 회귀 검사는 준비 완료이며 아직 공개 Static Site에는 배포하지 않았습니다. 다음 단계에서 Codex가 static-only fail-closed 계약/checker를 준비하고 push합니다. 기호가 그 gate 준비 commit의 정확한 40자리 SHA를 별도 승인하면 기존 Static Site를 exact source로 수동 deploy 한 번 실행하고 게임 화면을 read-only로 검증합니다. backend image 게시·배포, Neon DB write, seed import는 필요하지 않습니다.
+
+## 아바타 강화·아이템 편의·필드 성장·캐시 보정 — v358
+
+- v357 16단계 `2121%`는 disk/5500 HTTP에 있었지만 Chrome의 이전 `stat-system.js` 캐시로 구버전 수치를 표시하는 현상을 재현했습니다.
+- 변경된 여섯 JavaScript 태그에 최종 `?v=358.1`을 붙여 일반 새로고침으로 최신 코드가 로드됩니다.
+- 공개 Static Site는 아직 v351 exact source이며 v357/v358은 별도 exact-SHA 승인 전 미배포입니다.
+- 세 기본 아바타만 +0~+20 강화 가능:
+  - 공통 +20 공격력 `88.2B`
+  - 무기 아바타: 평타 치명타 피해 증폭 `33.0%`
+  - 오라 아바타: 추가 스킬공격 계수 증폭 `33.0%`
+  - 클론 레어 아바타: 스킬 치명타 확률 `10.0%`, 피해 배율 `150.0%`
+- +0~+19는 기존 심연 특수장비 진행률을 재사용하며 상세 표는 공식 감사 문서에 있습니다.
+- 스킬 치명타 확률/피해가 실제 각 스킬 피해에 적용됩니다.
+- 강화권은 묶음이 남아 있으면 같은 창에서 계속 사용하고, 마지막 사용 후에도 “모두 사용함” 상태로 창을 유지합니다.
+- 강화된 탈리스만/휘장은 강화창의 `+0으로 분해`로 1개를 +0 한 개로 되돌립니다. 재료 환급은 없습니다.
+- 필드 순수공격력은 기존 최종 정수 지급량을 절반으로 지급하며 첫 필드는 `0.5`를 지급합니다.
+- 로컬 Chrome에서 무기 아바타 +0 강화창과 장착 +2 탈리스만 분해 버튼을 확인했습니다.
+- 변경 없음: generated seed, Neon DB, backend image/API
+- focused smoke와 JavaScript 문법 검사 통과
 
 승인된 v346 SHA로 Render Free Web Service `upgrade-rpg-api`를 Singapore에 만들고 승인된 env 14개와 exact image를 사용해 최초 deploy를 한 번 실행했습니다. service `srv-d9iro458nd3s73acgmsg`, deploy `dep-d9iro4l8nd3s73acgnmg`는 Live이며 공개 주소는 `https://upgrade-rpg-api.onrender.com`입니다.
 
