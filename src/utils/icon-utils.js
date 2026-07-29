@@ -21,6 +21,7 @@ function iconTextUrl(text, bg = "333", fg = "FFF") {
 }
 
 const SPECIAL_EQUIP_ASSET_BASE = "src/assets/special-equipment";
+const SPECIAL_EQUIP_ASSET_VERSION = "361";
 
 function getSpecialEquipIconInfo(item) {
 	const name = (item && item.name) || "";
@@ -71,7 +72,7 @@ function getSpecialEquipIconAssetName(item) {
 
 function getSpecialEquipIconUrl(item) {
 	const assetName = getSpecialEquipIconAssetName(item);
-	if (assetName) return `${SPECIAL_EQUIP_ASSET_BASE}/${assetName}`;
+	if (assetName) return `${SPECIAL_EQUIP_ASSET_BASE}/${assetName}?v=${SPECIAL_EQUIP_ASSET_VERSION}`;
 	const icon = getSpecialEquipIconInfo(item);
 	return iconTextUrl(icon.text, icon.bg, icon.fg);
 }

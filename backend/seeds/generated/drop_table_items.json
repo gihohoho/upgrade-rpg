@@ -1186,7 +1186,7 @@
       "type": "special_equip",
       "isTalisman": true,
       "specialSlotIdx": 12,
-      "img": "src/assets/special-equipment/talisman-basic.png",
+      "img": "src/assets/special-equipment/talisman-basic.png?v=361",
       "sellPrice": 0,
       "tier": 8
     }
@@ -1349,7 +1349,7 @@
       "type": "special_equip",
       "isTalisman": true,
       "specialSlotIdx": 12,
-      "img": "src/assets/special-equipment/talisman-basic.png",
+      "img": "src/assets/special-equipment/talisman-basic.png?v=361",
       "sellPrice": 0,
       "tier": 9
     }
@@ -1493,7 +1493,7 @@
       "type": "special_equip",
       "isTalisman": true,
       "specialSlotIdx": 12,
-      "img": "src/assets/special-equipment/talisman-basic.png",
+      "img": "src/assets/special-equipment/talisman-basic.png?v=361",
       "sellPrice": 0,
       "tier": 10
     }
@@ -1637,7 +1637,7 @@
       "type": "special_equip",
       "isTalisman": true,
       "specialSlotIdx": 13,
-      "img": "src/assets/special-equipment/talisman-transcendent.png",
+      "img": "src/assets/special-equipment/talisman-transcendent.png?v=361",
       "sellPrice": 0,
       "tier": 11
     }
@@ -1787,7 +1787,7 @@
       "tier": 12,
       "isTalisman": true,
       "specialSlotIdx": 13,
-      "img": "src/assets/special-equipment/talisman-transcendent.png",
+      "img": "src/assets/special-equipment/talisman-transcendent.png?v=361",
       "sellPrice": 0
     }
   },
@@ -1936,7 +1936,7 @@
       "tier": 13,
       "isTalisman": true,
       "specialSlotIdx": 13,
-      "img": "src/assets/special-equipment/talisman-transcendent.png",
+      "img": "src/assets/special-equipment/talisman-transcendent.png?v=361",
       "sellPrice": 0
     }
   },
@@ -2085,7 +2085,7 @@
       "tier": 14,
       "isTalisman": true,
       "specialSlotIdx": 13,
-      "img": "src/assets/special-equipment/talisman-transcendent.png",
+      "img": "src/assets/special-equipment/talisman-transcendent.png?v=361",
       "sellPrice": 0
     }
   },
@@ -2234,7 +2234,7 @@
       "tier": 15,
       "isTalisman": true,
       "specialSlotIdx": 13,
-      "img": "src/assets/special-equipment/talisman-transcendent.png",
+      "img": "src/assets/special-equipment/talisman-transcendent.png?v=361",
       "sellPrice": 0
     }
   },
@@ -2384,7 +2384,7 @@
       "isEmblem": true,
       "specialSlotIdx": 14,
       "individualDropRate": 0.002,
-      "img": "src/assets/special-equipment/emblem.png",
+      "img": "src/assets/special-equipment/emblem.png?v=361",
       "sellPrice": 0
     }
   },
@@ -2534,7 +2534,7 @@
       "isEmblem": true,
       "specialSlotIdx": 14,
       "individualDropRate": 0.002,
-      "img": "src/assets/special-equipment/emblem.png",
+      "img": "src/assets/special-equipment/emblem.png?v=361",
       "sellPrice": 0
     }
   },
@@ -2684,7 +2684,7 @@
       "isEmblem": true,
       "specialSlotIdx": 14,
       "individualDropRate": 0.004,
-      "img": "src/assets/special-equipment/emblem.png",
+      "img": "src/assets/special-equipment/emblem.png?v=361",
       "sellPrice": 0
     }
   },
@@ -2834,7 +2834,7 @@
       "isEmblem": true,
       "specialSlotIdx": 14,
       "individualDropRate": 0.006,
-      "img": "src/assets/special-equipment/emblem.png",
+      "img": "src/assets/special-equipment/emblem.png?v=361",
       "sellPrice": 0
     }
   },
@@ -2984,7 +2984,7 @@
       "isEmblem": true,
       "specialSlotIdx": 14,
       "individualDropRate": 0.008,
-      "img": "src/assets/special-equipment/emblem.png",
+      "img": "src/assets/special-equipment/emblem.png?v=361",
       "sellPrice": 0
     }
   },
@@ -3134,7 +3134,7 @@
       "isEmblem": true,
       "specialSlotIdx": 14,
       "individualDropRate": 0.02,
-      "img": "src/assets/special-equipment/emblem.png",
+      "img": "src/assets/special-equipment/emblem.png?v=361",
       "sellPrice": 0
     }
   },
@@ -3283,7 +3283,7 @@
       "tier": 22,
       "isTalisman": true,
       "specialSlotIdx": 12,
-      "img": "src/assets/special-equipment/talisman-radiant.png",
+      "img": "src/assets/special-equipment/talisman-radiant.png?v=361",
       "sellPrice": 0
     }
   },
@@ -3432,7 +3432,7 @@
       "tier": 23,
       "isTalisman": true,
       "specialSlotIdx": 12,
-      "img": "src/assets/special-equipment/talisman-radiant.png",
+      "img": "src/assets/special-equipment/talisman-radiant.png?v=361",
       "sellPrice": 0
     }
   },
@@ -3581,7 +3581,7 @@
       "tier": 24,
       "isTalisman": true,
       "specialSlotIdx": 12,
-      "img": "src/assets/special-equipment/talisman-radiant.png",
+      "img": "src/assets/special-equipment/talisman-radiant.png?v=361",
       "sellPrice": 0
     }
   },
@@ -5266,7 +5266,7 @@
       "tier": 37,
       "isTalisman": true,
       "specialSlotIdx": 13,
-      "img": "src/assets/special-equipment/talisman-luminous.png",
+      "img": "src/assets/special-equipment/talisman-luminous.png?v=361",
       "sellPrice": 0
     }
   },
@@ -5415,7 +5415,7 @@
       "tier": 38,
       "isTalisman": true,
       "specialSlotIdx": 13,
-      "img": "src/assets/special-equipment/talisman-luminous.png",
+      "img": "src/assets/special-equipment/talisman-luminous.png?v=361",
       "sellPrice": 0
     }
   },
@@ -5564,7 +5564,7 @@
       "tier": 39,
       "isTalisman": true,
       "specialSlotIdx": 13,
-      "img": "src/assets/special-equipment/talisman-luminous.png",
+      "img": "src/assets/special-equipment/talisman-luminous.png?v=361",
       "sellPrice": 0
     }
   },
@@ -5583,7 +5583,7 @@
       "name": "심연의 편린 반지",
       "type": "special_equip",
       "specialSlotIdx": 8,
-      "img": "src/assets/special-equipment/ring-basic.png",
+      "img": "src/assets/special-equipment/ring-basic.png?v=361",
       "sellPrice": 0,
       "specialStats": {
         "attack": 3417,
@@ -5606,7 +5606,7 @@
       "name": "심연의 편린 목걸이",
       "type": "special_equip",
       "specialSlotIdx": 7,
-      "img": "src/assets/special-equipment/necklace-basic.png",
+      "img": "src/assets/special-equipment/necklace-basic.png?v=361",
       "sellPrice": 0,
       "specialStats": {
         "attack": 3417,
@@ -5629,7 +5629,7 @@
       "name": "심연의 편린 스태프",
       "type": "special_equip",
       "specialSlotIdx": 6,
-      "img": "src/assets/special-equipment/weapon-basic.png",
+      "img": "src/assets/special-equipment/weapon-basic.png?v=361",
       "sellPrice": 0,
       "specialStats": {
         "attack": 3417,
@@ -5677,7 +5677,7 @@
       "name": "-초월- 심연의 편린 반지",
       "type": "special_equip",
       "specialSlotIdx": 8,
-      "img": "src/assets/special-equipment/ring-transcendent.png",
+      "img": "src/assets/special-equipment/ring-transcendent.png?v=361",
       "sellPrice": 0,
       "specialStats": {
         "attack": 3417,
@@ -5700,7 +5700,7 @@
       "name": "-초월- 심연의 편린 목걸이",
       "type": "special_equip",
       "specialSlotIdx": 7,
-      "img": "src/assets/special-equipment/necklace-transcendent.png",
+      "img": "src/assets/special-equipment/necklace-transcendent.png?v=361",
       "sellPrice": 0,
       "specialStats": {
         "attack": 3417,
@@ -5723,7 +5723,7 @@
       "name": "-초월- 심연의 편린 스태프",
       "type": "special_equip",
       "specialSlotIdx": 6,
-      "img": "src/assets/special-equipment/weapon-transcendent.png",
+      "img": "src/assets/special-equipment/weapon-transcendent.png?v=361",
       "sellPrice": 0,
       "specialStats": {
         "attack": 3417,
@@ -5771,7 +5771,7 @@
       "name": "무기 아바타",
       "type": "special_equip",
       "specialSlotIdx": 9,
-      "img": "src/assets/special-equipment/weapon-avatar-basic.png",
+      "img": "src/assets/special-equipment/weapon-avatar-basic.png?v=361",
       "sellPrice": 0
     }
   },
@@ -5790,7 +5790,7 @@
       "name": "오라 아바타",
       "type": "special_equip",
       "specialSlotIdx": 10,
-      "img": "src/assets/special-equipment/aura-avatar-basic.png",
+      "img": "src/assets/special-equipment/aura-avatar-basic.png?v=361",
       "sellPrice": 0
     }
   },
@@ -5809,7 +5809,7 @@
       "name": "클론 레어 아바타",
       "type": "special_equip",
       "specialSlotIdx": 11,
-      "img": "src/assets/special-equipment/clone-rare-avatar-basic.png",
+      "img": "src/assets/special-equipment/clone-rare-avatar-basic.png?v=361",
       "sellPrice": 0
     }
   },
@@ -5828,7 +5828,7 @@
       "name": "-해방- 심연의 편린 반지",
       "type": "special_equip",
       "specialSlotIdx": 8,
-      "img": "src/assets/special-equipment/ring-liberated.png",
+      "img": "src/assets/special-equipment/ring-liberated.png?v=361",
       "sellPrice": 0,
       "specialStats": {
         "attack": 3417,
@@ -5851,7 +5851,7 @@
       "name": "-해방- 심연의 편린 목걸이",
       "type": "special_equip",
       "specialSlotIdx": 7,
-      "img": "src/assets/special-equipment/necklace-liberated.png",
+      "img": "src/assets/special-equipment/necklace-liberated.png?v=361",
       "sellPrice": 0,
       "specialStats": {
         "attack": 3417,
@@ -5874,7 +5874,7 @@
       "name": "-해방- 심연의 편린 스태프",
       "type": "special_equip",
       "specialSlotIdx": 6,
-      "img": "src/assets/special-equipment/weapon-liberated.png",
+      "img": "src/assets/special-equipment/weapon-liberated.png?v=361",
       "sellPrice": 0,
       "specialStats": {
         "attack": 3417,
@@ -5922,7 +5922,7 @@
       "name": "찬란한 무기 아바타",
       "type": "special_equip",
       "specialSlotIdx": 9,
-      "img": "src/assets/special-equipment/weapon-avatar-radiant.png",
+      "img": "src/assets/special-equipment/weapon-avatar-radiant.png?v=361",
       "sellPrice": 0
     }
   },
@@ -5941,7 +5941,7 @@
       "name": "찬란한 오라 아바타",
       "type": "special_equip",
       "specialSlotIdx": 10,
-      "img": "src/assets/special-equipment/aura-avatar-radiant.png",
+      "img": "src/assets/special-equipment/aura-avatar-radiant.png?v=361",
       "sellPrice": 0
     }
   },
@@ -5960,7 +5960,7 @@
       "name": "찬란한 클론 레어 아바타",
       "type": "special_equip",
       "specialSlotIdx": 11,
-      "img": "src/assets/special-equipment/clone-rare-avatar-radiant.png",
+      "img": "src/assets/special-equipment/clone-rare-avatar-radiant.png?v=361",
       "sellPrice": 0
     }
   },
@@ -5979,7 +5979,7 @@
       "name": "짙은 심연의 편린 반지",
       "type": "special_equip",
       "specialSlotIdx": 8,
-      "img": "src/assets/special-equipment/ring-dark.png",
+      "img": "src/assets/special-equipment/ring-dark.png?v=361",
       "sellPrice": 0,
       "specialStats": {
         "attack": 3417,
@@ -6002,7 +6002,7 @@
       "name": "짙은 심연의 편린 목걸이",
       "type": "special_equip",
       "specialSlotIdx": 7,
-      "img": "src/assets/special-equipment/necklace-dark.png",
+      "img": "src/assets/special-equipment/necklace-dark.png?v=361",
       "sellPrice": 0,
       "specialStats": {
         "attack": 3417,
@@ -6025,7 +6025,7 @@
       "name": "짙은 심연의 편린 스태프",
       "type": "special_equip",
       "specialSlotIdx": 6,
-      "img": "src/assets/special-equipment/weapon-dark.png",
+      "img": "src/assets/special-equipment/weapon-dark.png?v=361",
       "sellPrice": 0,
       "specialStats": {
         "attack": 3417,

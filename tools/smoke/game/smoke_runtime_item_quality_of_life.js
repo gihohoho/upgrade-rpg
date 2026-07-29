@@ -201,7 +201,7 @@ const iconCases = [
 ];
 for (const [item, expectedFile] of iconCases) {
   const actual = vm.runInContext(`getSpecialEquipIconUrl(${JSON.stringify(item)})`, iconContext);
-  assert(actual.endsWith(`/${expectedFile}`), `${item.name}: expected ${expectedFile}, got ${actual}`);
+  assert(actual.endsWith(`/${expectedFile}?v=361`), `${item.name}: expected ${expectedFile}?v=361, got ${actual}`);
 }
 
 const assetDir = path.join(root, "src", "assets", "special-equipment");
@@ -224,6 +224,13 @@ for (const file of expectedAssets) {
 assertContains("src/rules/boss-display-rules.js", [
   'if (drop.type === "special_equip")',
   "drop.img = getSpecialEquipIconUrl(drop);",
+]);
+assertContains("AGENTS.md", [
+  "테두리, 프레임, 카드판, inset panel, margin band",
+  "여백 없이 채우며",
+  "일부가 잘리는 close-up 구도",
+  "던전앤파이터풍",
+  "실제 브라우저의 슬롯 크기",
 ]);
 
 console.log(

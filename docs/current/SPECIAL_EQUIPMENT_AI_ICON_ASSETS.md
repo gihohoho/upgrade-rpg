@@ -1,31 +1,41 @@
-# Special Equipment AI Icon Assets — v360
+# Special Equipment AI Icon Assets — v361
 
 ## 생성 방식
 
 - 생성 도구: Codex built-in `image_gen`
 - use case: `stylized-concept`
-- 대상: 64×64 슬롯에 축소되는 2D fantasy game UI icon
+- 대상: 64×64 슬롯에 축소되는 고전 한국식 횡스크롤 액션 RPG·던전앤파이터풍 2D game UI icon
 - 최종 파일: `src/assets/special-equipment/*.png`
 - 최종 크기: 23 files / 각 256×256 PNG
-- 공통 제한: 텍스트·숫자·캐릭터·로고·워터마크 없음, 실사보다 단순한 hand-painted/cel-painted 스타일, 짙은 남색 배경과 작은 슬롯에서도 읽히는 실루엣
+- 공통 제한: 텍스트·숫자·캐릭터·로고·워터마크 없음, 작은 슬롯에서도 즉시 종류를 알아볼 수 있는 선명한 hand-painted 아이콘
+
+## 모든 생성형 아이템 이미지의 상시 규칙
+
+1. 테두리, 프레임, 카드판, 사각 backing plate, inset panel, rounded rectangle, margin band를 이미지 안에 그리지 않습니다.
+2. 모든 파일은 동일한 1:1 정사각형 크기이며 현재 최종 규격은 256×256 PNG입니다.
+3. 아이템 실루엣과 마력 효과가 네 변 가까이 닿도록 정사각형 전체를 여백 없이 채웁니다. 슬롯 안에 작은 카드가 다시 들어간 것처럼 보이면 실패입니다.
+4. 전체 물체를 억지로 다 넣지 않습니다. 반지·펜던트·무기·갑옷처럼 종류가 즉시 보이면 가장자리 일부나 체인·손잡이·광채가 잘리는 close-up을 허용합니다.
+5. 같은 계열은 기본 실루엣, 카메라 방향, 중심 정렬과 크기를 유지하고 상위 등급에서 색, 금속 장식, 보석, 룬, 광채만 발전시킵니다.
+6. 고전 한국식 횡스크롤 액션 RPG·던전앤파이터 인벤토리처럼 작은 크기에서 강한 실루엣과 색 대비를 우선합니다. 실사 제품 사진이나 세로 카드 일러스트처럼 만들지 않습니다.
+7. 파일 크기와 정사각형 여부만 검사하지 않고 실제 게임 브라우저의 슬롯 크기에서 테두리, 빈 여백, 크기·중심 정렬, 종류 인식 여부를 확인합니다.
 
 ## 최종 프롬프트 세트
 
 ### 특수무기·목걸이·반지
 
-3행×4열 progression atlas. 같은 무기/목걸이/반지 실루엣을 유지하면서 기본 보라·강철 → 초월 인디고·은장 → 해방 청백 에너지·금장 → 짙은 흑보라 코어·청록 광채 순으로 강화합니다. 셀 간 겹침 없이 정면 inventory icon으로 생성합니다.
+각 계열을 독립적인 1:1 close-up으로 생성합니다. 같은 무기/목걸이/반지 실루엣과 구도를 유지하면서 기본 보라·강철 → 초월 금장·청색 보석 → 해방 자홍·청색 방출 에너지 → 짙은 흑보라 코어·청록 번개 순으로 강화합니다.
 
 ### 아바타 3종
 
-3행×2열 progression atlas. 무기 아바타는 spectral sword, 오라 아바타는 circular magical crest, 클론 레어 아바타는 사람이 없는 armored costume torso로 표현합니다. 기본 은장·보라/파랑 → 찬란한 금장·청록/자홍 광채와 작은 sparkle 순으로 강화하며 같은 실루엣을 유지합니다.
+무기 아바타는 화면을 가로지르는 spectral sword, 오라 아바타는 네 변 가까이 닿는 circular magical crest, 클론 레어 아바타는 어깨가 좌우 끝에서 잘리는 armored costume torso close-up으로 표현합니다. 기본 은장·보라/파랑 → 찬란한 금장·청록/자홍 광채 순으로 강화하며 같은 실루엣과 크기를 유지합니다.
 
 ### 탈리스만
 
-1행×4열 progression atlas. 마름모 rune charm과 아래 ribbon 실루엣을 유지하면서 기본 은장 보라 → 초월 인디고·은빛 날개 장식 → 찬란한 자홍·금장 → 영롱한 청보라 crystal core·겹 halo 순으로 강화합니다.
+마름모 rune charm이 정사각형을 크게 채우는 구도를 유지하면서 기본 은장 보라 → 초월 청색 보석·금은장 → 찬란한 자홍·금장 → 영롱한 백금·무지갯빛 crystal core와 겹 starburst 순으로 강화합니다.
 
 ### 휘장
 
-단일 정면 emblem. 네 방향이 짧게 뻗은 원형 금빛 crest, 중앙 star crystal, 청보라 enamel, 아래 짧은 ribbon으로 구성합니다.
+단일 정면 emblem close-up. 네 방향이 화면 가장자리에 닿는 원형 금빛 crest, 중앙 star crystal, 청보라 enamel, 아래 짧은 ribbon으로 구성합니다.
 
 ## 이름별 매핑
 
@@ -34,4 +44,4 @@
 - 탈리스만: `basic`, `transcendent`, `radiant`, `luminous`
 - 휘장: `emblem.png`
 
-`src/utils/icon-utils.js`가 장비 이름과 `specialSlotIdx`를 함께 판별합니다. 저장 데이터에 남아 있는 이전 placeholder URL은 로드 시 `normalizeSpecialStackItem()`이 새 경로로 교체합니다.
+`src/utils/icon-utils.js`가 장비 이름과 `specialSlotIdx`를 함께 판별하며 이미지 캐시는 `?v=361`로 갱신합니다. 저장 데이터에 남아 있는 이전 placeholder URL은 로드 시 `normalizeSpecialStackItem()`이 새 경로로 교체합니다.

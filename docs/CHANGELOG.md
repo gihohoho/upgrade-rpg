@@ -1,3 +1,11 @@
+# v361.borderless-square-full-bleed-dnf-style-special-equipment-icons-ready-static-deploy-gate-preparation-required
+
+- 특수장비 AI 아이콘 23개를 모두 프레임·카드판·테두리가 없는 1:1 full-bleed close-up으로 다시 생성했습니다.
+- 반지·목걸이·무기·갑옷·문양이 작은 슬롯에서 즉시 구분되도록 아이템과 효과가 정사각형의 90~100%를 차지하며 일부 가장자리 크롭을 허용했습니다.
+- 같은 계열은 기본 실루엣·구도·중심 정렬을 유지하고 등급별 색·장식·룬·광채만 발전시켰습니다.
+- 고전 한국식 횡스크롤 액션 RPG·던전앤파이터풍 인벤토리 아이콘 규칙을 `AGENTS.md`와 이미지 자산 문서에 상시 규칙으로 기록했습니다.
+- 같은 파일명의 브라우저 캐시를 무효화하도록 특수장비 이미지 URL을 `?v=361`로 갱신했습니다.
+
 # v360.field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required
 
 - 필드 순수공격력 보상을 표시 상승량 100%로 되돌리고, 보상이 있는 8~40단계 33개 필드의 성공 확률을 50%로 통일했습니다.

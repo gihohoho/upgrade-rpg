@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v360
+# Upgrade RPG Codex working rules — v361
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -29,6 +29,7 @@
 - 사용자에게 보이는 버튼·기능을 추가하거나 바꿀 때 기능만 연결하지 않고 기존 화면의 시각 위계, 버튼 배치, 간격, 문구, 반응형 동작까지 함께 완성하고 실제 브라우저에서 확인합니다.
 - 파괴적이거나 되돌리기 어려운 동작에는 브라우저 기본 `alert`/`confirm`을 쓰지 않고 기존 게임 UI와 일관된 확인·취소 모달을 사용하며, 결과와 반환 수량을 실행 전에 명확히 보여줍니다.
 - 동작·수치·상태를 바꾸면 연관된 화면 제목, 고정 설명, 툴팁, 모달 안내, 버튼 문구, 로그, 캐시 키, source/generated seed, 회귀 검사와 현재 문서를 함께 전수 검색해 실제 동작과 같은 내용으로 동기화합니다.
+- 생성형 인벤토리·아이템 이미지는 모두 동일한 정사각형 크기로 만들고 테두리, 프레임, 카드판, inset panel, margin band를 넣지 않습니다. 아이템과 효과가 네 변 가까이 닿도록 화면을 여백 없이 채우며, 종류를 한눈에 알아볼 수 있다면 일부가 잘리는 close-up 구도를 허용합니다. 고전 한국식 횡스크롤 액션 RPG·던전앤파이터풍의 선명한 작은 슬롯 아이콘을 기준으로 하고, 같은 계열은 기본 실루엣·정렬을 유지한 채 등급별 색·장식·마력 효과만 발전시킵니다. 최종 파일의 크기·정사각형 여부뿐 아니라 실제 브라우저의 슬롯 크기에서 테두리, 여백, 정렬과 직관성을 확인합니다.
 
 ## Code Review Graph 제한 시험
 
@@ -47,9 +48,9 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v360.field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required
-strict result: field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required
-next safe stage: prepare-v360-static-content-deploy-exact-sha-gate
+latest: v361.borderless-square-full-bleed-dnf-style-special-equipment-icons-ready-static-deploy-gate-preparation-required
+strict result: borderless-square-full-bleed-dnf-style-special-equipment-icons-ready-static-deploy-gate-preparation-required
+next safe stage: prepare-v361-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete

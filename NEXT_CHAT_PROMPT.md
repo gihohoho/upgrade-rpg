@@ -1,4 +1,4 @@
-# Upgrade RPG Codex next prompt — v360
+# Upgrade RPG Codex next prompt — v361
 
 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽고 계속 지켜주세요. 기호는 코딩을 거의 모르므로 한국어로 쉽게 설명하고, 모든 터미널 명령 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension·권한·설치는 해결될 때까지 요청해주세요.
 
@@ -7,9 +7,9 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 ## 현재 고정값
 
 ```txt
-latest: v360.field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required
-strict result: field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required
-next safe stage: prepare-v360-static-content-deploy-exact-sha-gate
+latest: v361.borderless-square-full-bleed-dnf-style-special-equipment-icons-ready-static-deploy-gate-preparation-required
+strict result: borderless-square-full-bleed-dnf-style-special-equipment-icons-ready-static-deploy-gate-preparation-required
+next safe stage: prepare-v361-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -91,10 +91,10 @@ v341 source를 포함한 새 image는 게시와 isolated Alpine system CA store,
 
 ## 다음 작업
 
-v360까지 다음을 완료했습니다.
+v361까지 다음을 완료했습니다.
 
-- 16단계 `무의식 : 넥스의 몽환의 어둠 +20`은 로컬 계산 `369B / 2121% / 225.8%`이며, 변경 CSS/JavaScript의 최종 캐시 식별자는 `?v=360`입니다.
-- 공개 Render Static Site는 아직 v351이므로 v357~v360 변경이 없는 것이 정상입니다.
+- 16단계 `무의식 : 넥스의 몽환의 어둠 +20`은 로컬 계산 `369B / 2121% / 225.8%`이며, 특수장비 이미지 최종 캐시 식별자는 `?v=361`입니다.
+- 공개 Render Static Site는 아직 v351이므로 v357~v361 변경이 없는 것이 정상입니다.
 - 스킬강화권 창 유지와 모든 보상 필드의 순수공격력 **표시 상승량 100%·성공 확률 50%**를 구현했습니다. source/generated 40개를 대조했고 보상이 있는 8~40단계 33개 전체가 공통 50% 판정 경로를 사용합니다.
 - 필드존 선택 고정 설명과 각 필드 툴팁에 `처치 시 50% / 성공 시 표시 상승량 100% / 실패 시 상승 없음`을 함께 표시합니다.
 - 무기/오라/클론 레어 아바타 +0~+20 성장과 +20 `88.2B`, 각각 `평타 치명 피해 증폭 33%` / `추가 스킬공격 계수 증폭 33%` / `스킬 치명 10%·150%`를 구현했습니다.
@@ -103,12 +103,15 @@ v360까지 다음을 완료했습니다.
 - 상시 UI 규칙: 새 버튼·기능은 시각 위계, 배치, 간격, 문구, 반응형, 확인·취소 흐름까지 함께 완성하고 실제 브라우저에서 검증합니다. 파괴적 기능은 브라우저 기본 alert/confirm을 쓰지 않습니다.
 - 상시 동기화 규칙: 동작·수치·상태를 바꾸면 관련 화면 제목, 고정 설명, 툴팁, 모달 안내, 버튼 문구, 로그, 캐시 키, source/generated seed, 회귀 검사와 현재 문서를 함께 전수 검색해 실제 동작과 같은 내용으로 맞춥니다.
 - built-in `image_gen`으로 특수무기·목걸이·반지 4단계, 아바타 3종 2단계, 탈리스만 4단계, 휘장 단일 이미지를 만들었습니다. 최종 23개 256×256 PNG가 특수장비 38개에 계열·등급별로 연결됩니다.
+- 23개 아이콘은 v361에서 모두 다시 생성했습니다. 이미지 안쪽의 세로 카드·테두리·빈 여백을 없애고, 아이템과 효과가 정사각형의 약 90~100%를 채우는 full-bleed close-up으로 통일했습니다. 일부 크롭은 종류를 즉시 알아볼 수 있을 때 허용합니다.
+- 고정 판정 문구는 `테두리 없음·여백 없이 정사각형을 채움`입니다.
+- 상시 이미지 규칙: 동일 정사각형 크기, 테두리·프레임·카드판 금지, 여백 없는 구도, 고전 한국식 횡스크롤 액션 RPG·던전앤파이터풍, 같은 계열 실루엣·정렬 유지, 실제 브라우저 슬롯 크기 검수입니다.
 - 이미지 생성 조건·계열별 프롬프트·파일 매핑은 `docs/current/SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md`에 기록했습니다.
 - 정적 배포 빌드는 기존 JS/CSS에 `src/assets/**/*.png`만 추가 허용하며, 23개 PNG 포함 여부와 PNG signature를 fail-closed smoke로 검사합니다.
 - 스킬 치명타 확률/피해를 실제 스킬 피해 계산에 연결했습니다.
 - generated field/item/drop seed는 동기화했지만 Neon DB write, backend image/API, Render 서비스는 변경하지 않았습니다.
 
-다음 단계에서는 v360 static-only fail-closed 배포 계약/checker를 준비하고 push합니다. 그 준비 commit의 exact SHA를 기호가 별도 승인하기 전에는 Render Static Site deploy를 실행하지 않습니다.
+다음 단계에서는 v361 static-only fail-closed 배포 계약/checker를 준비하고 push합니다. 그 준비 commit의 exact SHA를 기호가 별도 승인하기 전에는 Render Static Site deploy를 실행하지 않습니다.
 
 승인된 v343 SHA `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 Neon restore를 한 번 실행했습니다. 22 application tables / 748 rows / schema digest가 일치했고 stamp 전에 legacy data digest 비교가 session timezone 차이로 멈췄습니다. UTC-normalized digest는 verified rehearsal과 Neon이 정확히 일치하며 `alembic_version`은 없습니다.
 
@@ -176,6 +179,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v360 focused smoke는 v358/v359 회귀 항목과 함께 33개 보상 필드의 표시 상승량 100%·성공 확률 50%, 필드 설명 동기화, 23개 AI PNG와 38개 특수장비 매핑, 정적 배포 PNG 포함을 고정합니다. v358 당시 필드 절반 규칙은 v360에서 대체됐습니다. 다음 단계는 `prepare-v360-static-content-deploy-exact-sha-gate`입니다. v357 장비 공식, v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection, v334 generic deployment baseline도 보존합니다.
+v361 focused smoke는 v360 회귀 항목과 함께 동일한 23개 256×256 PNG, `?v=361` 이미지 캐시, borderless/full-bleed/DNF풍 상시 규칙, 38개 특수장비 매핑과 정적 배포 PNG 포함을 고정합니다. 다음 단계는 `prepare-v361-static-content-deploy-exact-sha-gate`입니다. v357 장비 공식, v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection, v334 generic deployment baseline도 보존합니다.
 
 별도 승인 전에는 추가 deploy, Render env 변경, DB/Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스를 변경하지 않습니다.

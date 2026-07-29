@@ -22,9 +22,9 @@ ARTIFACT_IDS = [8638838292, 8638825538]
 IMAGE_DIGEST = "sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac"
 VERIFIED_CANDIDATE_REFERENCE = f"{REPOSITORY}@{IMAGE_DIGEST}"
 PRODUCTION_REFERENCE = f"{REPOSITORY}@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
-CURRENT_VERSION = "v360.field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required"
-CURRENT_RESULT = "field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required"
-CURRENT_NEXT_STAGE = "prepare-v360-static-content-deploy-exact-sha-gate"
+CURRENT_VERSION = "v361.borderless-square-full-bleed-dnf-style-special-equipment-icons-ready-static-deploy-gate-preparation-required"
+CURRENT_RESULT = "borderless-square-full-bleed-dnf-style-special-equipment-icons-ready-static-deploy-gate-preparation-required"
+CURRENT_NEXT_STAGE = "prepare-v361-static-content-deploy-exact-sha-gate"
 PRIOR_PROVIDER_VERSION = "v355.v351-provider-release-deployed-verified-content-ready"
 PRIOR_PROVIDER_RESULT = "v351-provider-release-deployed-verified-content-ready"
 PRIOR_PROVIDER_NEXT_STAGE = "select-first-content-and-balance-change-scope"
@@ -108,6 +108,9 @@ def main() -> int:
         "고정 설명",
         "source/generated seed",
         "src/assets/**/*.png",
+        "던전앤파이터풍",
+        "일부가 잘리는 close-up 구도",
+        "실제 브라우저의 슬롯 크기",
     )
     for relative in ("NEXT_CHAT_PROMPT.md", "NEXT_CHAT_HANDOFF.md", "docs/current/CURRENT_STATUS.md"):
         contains(
@@ -122,7 +125,9 @@ def main() -> int:
             "23개",
             "SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md",
             "src/assets/**/*.png",
-            "?v=360",
+            "테두리 없음",
+            "여백 없이",
+            "?v=361",
         )
 
     frontend_plan = json.loads(read("deploy/render-static-site.example.json"))

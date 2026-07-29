@@ -1,11 +1,11 @@
-# Current Status — v360
+# Current Status — v361
 
 ## 현재 결과
 
 ```txt
-latest: v360.field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required
-strict result: field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required
-next safe stage: prepare-v360-static-content-deploy-exact-sha-gate
+latest: v361.borderless-square-full-bleed-dnf-style-special-equipment-icons-ready-static-deploy-gate-preparation-required
+strict result: borderless-square-full-bleed-dnf-style-special-equipment-icons-ready-static-deploy-gate-preparation-required
+next safe stage: prepare-v361-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -177,7 +177,19 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 
 ## 다음 단계
 
-v360 게임 변경과 회귀 검사는 준비 완료이며 아직 공개 Static Site에는 배포하지 않았습니다. 다음 단계에서 Codex가 static-only fail-closed 계약/checker를 준비하고 push합니다. 기호가 그 gate 준비 commit의 정확한 40자리 SHA를 별도 승인하면 기존 Static Site를 exact source로 수동 deploy 한 번 실행하고 게임 화면을 read-only로 검증합니다. backend image 게시·배포, Neon DB write, seed import는 필요하지 않습니다.
+v361 게임 변경과 회귀 검사는 준비 완료이며 아직 공개 Static Site에는 배포하지 않았습니다. 다음 단계에서 Codex가 static-only fail-closed 계약/checker를 준비하고 push합니다. 기호가 그 gate 준비 commit의 정확한 40자리 SHA를 별도 승인하면 기존 Static Site를 exact source로 수동 deploy 한 번 실행하고 게임 화면을 read-only로 검증합니다. backend image 게시·배포, Neon DB write, seed import는 필요하지 않습니다.
+
+## 테두리 없는 정사각형 full-bleed 특수장비 아이콘 — v361
+
+- v360 아이콘의 정사각형 파일 안에 세로 카드 프레임·inset panel·빈 여백이 다시 들어가 실제 가방 슬롯에서 크기와 정렬이 어긋나 보이는 문제를 재현했습니다.
+- built-in `image_gen` 편집으로 23개를 모두 독립적인 1:1 아이콘으로 다시 만들었습니다. 최종 파일은 같은 256×256 PNG이며 테두리·프레임·카드판·rounded rectangle·margin band가 없습니다.
+- 고정 판정 문구는 `테두리 없음·여백 없이 정사각형을 채움`입니다.
+- 아이템과 마력 효과는 정사각형의 약 90~100%를 차지합니다. 반지·목걸이·무기·갑옷·문양의 종류가 즉시 보이면 체인, 손잡이, 어깨, 광채 일부가 가장자리에서 잘리는 close-up을 허용합니다.
+- 특수무기·목걸이·반지는 기본 → 초월 → 해방 → 짙은, 아바타 3종은 기본 → 찬란한, 탈리스만은 기본 → 초월 → 찬란한 → 영롱한 순서로 기본 실루엣·구도·정렬을 유지하고 색·장식·룬·마력 효과만 발전시켰습니다.
+- 고전 한국식 횡스크롤 액션 RPG·던전앤파이터풍의 작은 인벤토리 아이콘을 상시 기준으로 삼는 규칙을 `AGENTS.md`에 추가했습니다.
+- 브라우저가 같은 파일명의 v360 이미지를 재사용하지 않도록 `getSpecialEquipIconUrl()` 결과와 `icon-utils.js` 로드 키를 `?v=361`로 갱신했습니다.
+- 생성·검수 규칙과 계열별 프롬프트: `docs/current/SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md`
+- 변경 없음: 장비 스펙·밸런스, 필드 1배·50% 규칙, Neon DB, backend API/image, Render 서비스.
 
 ## 필드 1배·50% 규칙과 AI 특수장비 아이콘 — v360
 

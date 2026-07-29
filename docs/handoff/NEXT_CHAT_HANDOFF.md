@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v360
+# Upgrade RPG Codex handoff — v361
 
 ## 현재 상태
 
 ```txt
-latest: v360.field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required
-strict result: field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required
-next safe stage: prepare-v360-static-content-deploy-exact-sha-gate
+latest: v361.borderless-square-full-bleed-dnf-style-special-equipment-icons-ready-static-deploy-gate-preparation-required
+strict result: borderless-square-full-bleed-dnf-style-special-equipment-icons-ready-static-deploy-gate-preparation-required
+next safe stage: prepare-v361-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -212,7 +212,19 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 - 최종 캐시 키는 `?v=360`입니다. generated field/item/drop seed는 동기화했지만 Neon DB write, backend image/API, Render deploy는 실행하지 않았습니다.
 - 이미지 프롬프트·매핑 문서: `docs/current/SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md`
 
-현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 Codex가 v360 static-only 배포 계약/checker를 준비하는 것이며, 그 준비 commit이 push된 뒤에만 기호에게 exact SHA 승인을 요청합니다.
+## 테두리 없는 정사각형 full-bleed 특수장비 아이콘 — v361
+
+- v360 아이콘 23개 안쪽에 있던 세로 카드 프레임·inset panel·빈 여백을 제거하고 모두 독립적인 1:1 close-up으로 다시 생성했습니다.
+- 최종 파일은 동일한 256×256 PNG이며 테두리, 프레임, 카드판, rounded rectangle, margin band가 없습니다.
+- 고정 판정 문구는 `테두리 없음·여백 없이 정사각형을 채움`입니다.
+- 아이템과 마력 효과가 정사각형의 약 90~100%를 채웁니다. 종류가 즉시 보이면 체인·손잡이·어깨·광채 일부가 잘리는 구도를 허용합니다.
+- 같은 계열은 기본 실루엣, 카메라 방향, 중심 정렬과 크기를 유지하고 상위 등급에서 색·장식·룬·광채만 발전시켰습니다.
+- 고전 한국식 횡스크롤 액션 RPG·던전앤파이터풍, 동일 정사각형 크기, 테두리·카드판 금지, 여백 없는 full-bleed, 실제 브라우저 슬롯 검수를 앞으로의 상시 이미지 규칙으로 `AGENTS.md`에 기록했습니다.
+- 같은 파일명의 이전 브라우저 캐시를 피하도록 이미지 URL과 `icon-utils.js` 로드 키를 `?v=361`로 갱신했습니다.
+- 상세 생성·검수 규칙: `docs/current/SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md`
+- 장비 스펙·필드 규칙·Neon DB·backend API/image·Render 서비스는 변경하지 않았습니다.
+
+현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 Codex가 v361 static-only 배포 계약/checker를 준비하는 것이며, 그 준비 commit이 push된 뒤에만 기호에게 exact SHA 승인을 요청합니다.
 
 로컬 검사 주의: Windows 전역 `DEBUG=release`는 backend의 boolean `DEBUG`와 충돌합니다. 시스템 환경변수는 바꾸지 말고 backend/core 검사 자식 프로세스에서만 `DEBUG`를 unset하거나 `DEBUG=false`로 덮어씁니다.
 
@@ -246,6 +258,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v360 focused smoke는 v358/v359 회귀 항목과 함께 33개 보상 필드의 표시 상승량 100%·성공 확률 50%, 필드 설명 동기화, 23개 AI PNG와 38개 특수장비 매핑, 정적 배포 PNG 포함을 고정합니다. 다음 단계는 `prepare-v360-static-content-deploy-exact-sha-gate`입니다. v357 장비 공식, v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
+v361 focused smoke는 v360 회귀 항목과 함께 동일한 23개 256×256 PNG, `?v=361` 이미지 캐시, borderless/full-bleed/DNF풍 상시 규칙, 38개 특수장비 매핑과 정적 배포 PNG 포함을 고정합니다. 다음 단계는 `prepare-v361-static-content-deploy-exact-sha-gate`입니다. v357 장비 공식, v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.
