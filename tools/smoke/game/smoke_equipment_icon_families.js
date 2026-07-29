@@ -49,7 +49,7 @@ assert.equal(new Set(rows.map((row) => row.img)).size, 195, "every normal equipm
 for (const row of rows) {
 	const assetKey = groupAssetKeys.get(row.group);
 	assert(assetKey, `${row.name}: unknown equipment group ${row.group}`);
-	const expected = `src/assets/equipment/tier-${String(row.tier).padStart(2, "0")}-${assetKey}.png?v=367`;
+	const expected = `src/assets/equipment/tier-${String(row.tier).padStart(2, "0")}-${assetKey}.png?v=368`;
 	assert.equal(row.img, expected, `${row.name}: tier/group icon mapping differs`);
 }
 
@@ -114,9 +114,69 @@ assert.equal(
 	"all six four-element crystal progression images must remain distinct",
 );
 
+const replacedV363DescendantHashes = new Map([
+	["tier-10-normal-crit.png", "7dfb92e6d9b876f6063f388f04f88624d6c39630aa0f13bc05201c0248e0768b"],
+	["tier-10-normal-dmg.png", "024574bf69411a1c69f9e7449a03463de05a6d75cd260ae40e4f809521e9830e"],
+	["tier-10-skill-chance.png", "2813ee94e42e3a3fad201931748f56ad3c17259f3ca1e79ab7c41466e5de62fa"],
+	["tier-11-normal-crit.png", "a4867c64f2c0e96279b82a829918b388c4ef1631fd47e2532dcd00d558cfe8d7"],
+	["tier-11-normal-dmg.png", "ddecf687dc12ae290ffe3d13aa9e067bae62d9351be67d87e65d4a571bfb768b"],
+	["tier-11-skill-chance.png", "44f3eaa2b5edd61ab24aef69fb5276605d0a8b73cf4c23e31cd6678267ac0dad"],
+	["tier-12-normal-crit.png", "202c0dfa43cb4e2c4c67aad811d9de16e518c4022baf26eb28a520aef9c63f5f"],
+	["tier-12-normal-dmg.png", "789868a2651385c97e1722cefe08654461fe07a8b55af87d897bbe02c28be1fd"],
+	["tier-12-skill-chance.png", "4499cc00efa921ddf76a39c675ab4e05f1dcaa6d25304e0964f311af0aa37cd4"],
+	["tier-13-atk-inc.png", "eaa378e3132b536bdbfbf18b5c7dd098cacb22ce7bda6f152253d8a660034776"],
+	["tier-13-normal-crit.png", "9ed7ee12f48070706680a735da6bf78e198ba2ffff9588513dfd04cd1c981636"],
+	["tier-13-normal-dmg.png", "a2f961a951bbab55d87778f5aaa0e8d2546ce816a5a9e721f83b601b2da74fce"],
+	["tier-13-skill-all.png", "85803072b451207a5f04abe18cc5bd7b3cb0f77c0a8a6ee3faf252efee0e4788"],
+	["tier-13-skill-chance.png", "9b7bd30d3e986a006d0a59ea6a7031d9cff62e97795daad2eb85b9905628cf26"],
+	["tier-14-atk-inc.png", "7bc1b697b9c5107a2e7849d96ed25858d3e7b2b07cf6b8fca66f38a78d76f0e5"],
+	["tier-14-normal-crit.png", "9e1794e8ea91e452a0dc8f64845feaf342765cff0fa5a98e2b7beb8ee67a4ed1"],
+	["tier-14-normal-dmg.png", "1a2abed39d95fd9ccddd64474062ca1eaa688d5dbcd6dafcf1e0f6b27d9126e8"],
+	["tier-14-skill-all.png", "c636933eb5502efd443494d16d7a5c88ace4b0e1d3fcecd9e9a86b1d151238ea"],
+	["tier-14-skill-chance.png", "612e0773280642c63c3aa92755b7d463c44d6cdcbe36c76062cb8f82a6722b4f"],
+	["tier-15-atk-inc.png", "8f413570157067dc9936dc274fdea1dd8b6a04f75b1ed4c4bd5581ce5d337d11"],
+	["tier-15-normal-crit.png", "21e6cca41c06199bfabd55962fcd55a7d88bda68f9861134c0839b194b5d774e"],
+	["tier-15-normal-dmg.png", "84fabbbcc7a622b3e85b7920d108004b2f2fecd33dce1d1e9bd9607eeb4e294f"],
+	["tier-15-skill-all.png", "e6319c4c7578df9c9471eea4cac9bb75192b0a73f31c699ccee779b38c7ab47c"],
+	["tier-15-skill-chance.png", "0665f2f99baafb948c65e13fc5960668df1f72967ab10ca91602281aeda83ba8"],
+	["tier-16-atk-inc.png", "08247fbfe6be98cfc3fb987847637137f143cd97f48cd40d052a3f5687b2dab6"],
+	["tier-16-normal-crit.png", "79b649f0abfa7d6cc457425759781bea3a60ac4a7eb88093d8f750a336fe011c"],
+	["tier-16-normal-dmg.png", "c0028bbb1d5f7373c4f82538a56664a9bae47befcd986cf352799e53ad6700da"],
+	["tier-16-skill-all.png", "fa2a62eca30fec5759cab63a8cb2628c3ef5cd87bc2248256b3f64f8c2f839ee"],
+	["tier-16-skill-chance.png", "7923e3d895abd761926ef81c04cbd3ec1bf2aa44ed688f913402774ad2872bb8"],
+	["tier-17-atk-inc.png", "93d55e3f230ab2fc89516aaa5c660dfd47cfa549235e461f5e98179c1e0beeb9"],
+	["tier-17-normal-crit.png", "a21ee861fcd9a320ec37178dfbba2aa36068efc3a94d64ea04078209baf95541"],
+	["tier-17-normal-dmg.png", "eb4d8ea541f1ea05687ba23fe7c59596d564a49d2d4ea68921da1d7c2494a289"],
+	["tier-17-skill-all.png", "817fc9b9cbe504640c5544fec60b3841b5b776aa2e54baf097288d1aa641e0e0"],
+	["tier-17-skill-chance.png", "843dfdf57ec78dea4fe5126095ea8605c937f1ceccd056227325bc6c384bb3d1"],
+	["tier-18-normal-crit.png", "d938f01ef72bd5680511bbc3f4c01e392d0cf3e10bfdb027cfdcb723b87aa77e"],
+	["tier-18-normal-dmg.png", "e99031271c46615f45918b64491ff220f9d5625c3b13e65d0f109cfd69d779ce"],
+	["tier-18-skill-chance.png", "b17de9ac7248dc4e45f75b57aa3f9bb70dccc008ef4c32b680ac1243fea321e3"],
+	["tier-19-normal-crit.png", "dd7d5fe3e85ebd751d93cf9d5bd530c0e5df6d507dc981ec1b9126a074e806d4"],
+	["tier-19-normal-dmg.png", "342ba166ab6631dafe9215e5c0216f95dd281f4febf0b5b23a2748e50d13ed2d"],
+	["tier-19-skill-chance.png", "37a96128f0d29af19ba1eee7c636c8cf0a76dbd06e32ee62e3fc0881f2e55bd3"],
+	["tier-20-normal-crit.png", "82d3751c98731d5f3c45b11bd4856b1628787b7e2cd3df1d12aa06be13f642e1"],
+	["tier-20-normal-dmg.png", "5f7800389636e87831c6dd61f96f6beb20a7d9989843c9cf89939d8a37e09bfa"],
+	["tier-20-skill-chance.png", "e865e1ed4225306ce2d9b4c7e2920c3bdcee7c0fea49f90c18b93859ef9e7c6f"],
+]);
+for (const [file, expectedHash] of replacedV363DescendantHashes) {
+	const actualHash = crypto
+		.createHash("sha256")
+		.update(fs.readFileSync(path.join(iconDirectory, file)))
+		.digest("hex");
+	assert.equal(actualHash, expectedHash, `${file}: approved v368 replacement artwork differs`);
+}
+assert.equal(replacedV363DescendantHashes.size, 43, "v368 must protect all 43 remaining v363 descendants");
+assert.equal(
+	new Set(replacedV363DescendantHashes.values()).size,
+	replacedV363DescendantHashes.size,
+	"all 43 v368 replacement images must remain distinct",
+);
+
 console.log("equipment icon family smoke passed");
 console.log("- covered tiers / items / tier icon files: 1-39 / 195 / 195");
 console.log("- mapping: one separate 256x256 PNG per tier and equipment group");
 console.log("- elemental crystal: approved four-element progression at T10/T11/T12/T18/T19/T20");
+console.log("- v363 crystal drafts: all remaining 43 descendants replaced with 13 recognizable equipment families");
 console.log("- family frames: T23/T26=transcendent, T35=transcendent, T36=liberated");
-console.log("- cache key: v367");
+console.log("- cache key: v368");

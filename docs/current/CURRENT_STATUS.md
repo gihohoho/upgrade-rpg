@@ -1,11 +1,11 @@
-# Current Status — v367
+# Current Status — v368
 
 ## 현재 결과
 
 ```txt
-latest: v367.elemental-crystal-family-and-equipment-family-frames-fixed
-strict result: elemental-crystal-family-and-equipment-family-frames-fixed
-next safe stage: owner-review-v367-local-equipment-icons-and-select-next-content-step
+latest: v368.v363-crystal-draft-descendants-fully-replaced
+strict result: v363-crystal-draft-descendants-fully-replaced
+next safe stage: owner-review-v368-local-equipment-icons-and-select-next-content-step
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -177,11 +177,23 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 
 ## 다음 단계
 
-1~39단계 일반 장비 195개는 장비마다 별도 PNG를 사용합니다. 같은 계열은 파일을 공유하지 않고 기본 실루엣·각도·구도를 유지한 발전형으로 만듭니다. v367에서 `올 엘리멘탈 크리스탈` 6단계와 계열별 테두리 판정 오류를 바로잡았습니다. 다음 단계는 로컬에서 v367 결과를 검토한 뒤 남은 장비 이미지 또는 별도 static release 범위를 선택하는 것입니다. 기존 Render Static Site의 v351 공개본은 그대로 유지합니다.
+1~39단계 일반 장비 195개는 장비마다 별도 PNG를 사용합니다. 같은 계열은 파일을 공유하지 않고 기본 실루엣·각도·구도를 유지한 발전형으로 만듭니다. v368에서 v363 단순 결정 시안에서 파생된 나머지 43장을 모두 교체해, v363의 55개 현재 후손은 반지 6장·4원소 크리스탈 6장·이번 43장까지 전부 새 그림이 됐습니다. 다음 단계는 로컬에서 v368 결과를 검토한 뒤 남은 장비 이미지 또는 별도 static release 범위를 선택하는 것입니다. 기존 Render Static Site의 v351 공개본은 그대로 유지합니다.
+
+## v363 단순 결정 시안 후손 43장 전체 교체 — v368
+
+- 기준 commit `a696e1be3fe27beddc545cbba01e1e438573b7cc`에서 추가된 단순 파랑·금색 결정 원본 15개와, v365에서 티어별로 파생된 현재 파일을 Git 이력으로 다시 추적했습니다.
+- 현재 10~20단계에 남은 후손은 총 55장이었습니다. v364에서 반지 `skill_all` 6장, v367에서 4원소 크리스탈 `atk_inc` 6장을 이미 교체했고, 이번에는 나머지 **13계열 43장**을 모두 새로 생성·적용했습니다.
+- 10·11·12·18·19·20단계 3계열: `군신의 가호가 담긴 보석`은 전쟁신 루비 메달, `루나 베네딕티오`는 초승달 진주 부적, `영창 : 불멸의 혼`은 영혼 불꽃 흑마도서로 교체했습니다.
+- 13·14·15단계 5계열: `마음을 새긴 바다`는 조개 펜던트, `종말의 시간`은 금 간 회중시계, `광란을 품은 자`는 갑주 악마 심장, `세계수의 뿌리`는 살아 있는 나무뿌리, `어나이얼레이터`는 흑적 마력포로 교체했습니다.
+- 16·17단계 5계열: 넥스의 몽환의 어둠은 꿈의 눈 부적, 검은 기운은 봉인된 암흑 소용돌이 장치, 잠식된 의복은 타락한 망토, 원초의 꿈 스태프·창은 각각 초승달 지팡이와 넓은 창날 무기로 교체했습니다.
+- 같은 계열의 다음 단계는 바로 전 단계 PNG를 편집 원본으로 사용해 물체 정체성·실루엣·각도·크롭을 유지하고 재질·룬·오라만 발전시켰습니다. 43장은 모두 별도 256×256 PNG이며 SHA-256 중복은 0건입니다.
+- `tools/smoke/game/smoke_equipment_icon_families.js`에 43장 전체 SHA-256을 fail-closed로 고정했습니다. 기존 반지/4원소 교체와 합쳐 v363 시안에서 파생되어 현재 사용되는 단순 결정 PNG는 0개입니다.
+- 일반 장비 URL과 `icon-utils.js` 로드 캐시는 `?v=368`입니다. 검토용 43장 모음판은 Git 제외 `local-review-artifacts/v368-v363-descendants-43-icons.png`에 보존했습니다.
+- 장비 전용 smoke와 legacy static 배포 smoke가 통과했습니다. 로컬 Chrome에서 `icon-utils.js?v=368`, 일반 장비 URL `?v=368`, 원본 256×256 → 화면 61×61 정사각형 렌더링, 콘솔 오류 0건을 확인했습니다. 공개 Render Static Site는 계속 v351이며 이번 v368은 배포하지 않았습니다.
 
 ## 4원소 크리스탈 6단계·계열 테두리 동기화 — v367
 
-- 이전의 단순 파랑·금색 결정 시안은 더 이상 사용하지 않습니다. 10·11·12·18·19·20단계 `올 엘리멘탈 크리스탈`을 사용자가 확인한 불·물·바람·빛 사분할 보석 기본형에서 이어지는 6개의 별도 256×256 PNG로 모두 다시 생성했습니다.
+- v367 당시에는 10·11·12·18·19·20단계 `올 엘리멘탈 크리스탈` 6장만 사용자가 확인한 불·물·바람·빛 사분할 보석 발전형으로 교체했습니다. 같은 v363 묶음의 나머지 단순 결정 후손 43장은 v368에서 추가로 전부 교체했습니다.
 - 여섯 이미지는 같은 사분할 실루엣, 원소 위치, 발톱 위치, 카메라 각도와 크롭을 유지하고 청은색 룬 → 초월 마력선 → 흑보라 연옥 금속 → 금색 최종 장식 순으로 발전합니다.
 - 이름 키워드만으로 CSS 등급을 추측하던 누락을 보완했습니다. 일반 장비는 확인된 계열 단계표를 먼저 사용합니다.
 - 21·22·23단계와 24·25·26단계는 각각 `basic → rare → transcendent`입니다. 따라서 `끝없는` T23과 `영원한` T26도 초월 테두리입니다.

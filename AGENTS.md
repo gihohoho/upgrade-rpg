@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v367
+# Upgrade RPG Codex working rules — v368
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -35,6 +35,7 @@
 - 일반 장비 계열은 `-현-`, `-진-`, `-초월-`, `★심연★`, `★연옥★`, `★진 연옥★`, `★초월 연옥★` 같은 승급 표식을 제거한 이름이 같으면 같은 계열입니다. 또한 `끝없는 절망 : 티아매트의 불신`이 `절망 : 티아매트의 불신`을, `영원한 파멸 : 베리아스의 불신`이 `파멸 : 베리아스의 불신`을 포함하는 것처럼 더 긴 상위 이름 안에 기본 장비 이름 전체가 들어 있으면 같은 계열로 봅니다. 여러 후보가 있으면 가장 긴 기본 이름을 우선하며 불명확하면 사용자에게 확인합니다.
 - 같은 계열 여부와 단계 순서는 이름 앞의 고정 접두어만으로 제한하지 않습니다. `끝없는`, `영원한`, `선 :`처럼 다른 수식어가 붙거나 기본 이름이 상위 이름에 포함되는 경우도 이미 확정된 단계표를 우선합니다. 특히 21→22→23, 24→25→26은 `basic → rare → transcendent`, 30→31→35→36은 `basic → rare → transcendent → liberated`로 이미지와 CSS 테두리를 함께 발전시킵니다.
 - 사용자가 승인한 계열 기본 이미지를 교체하면 그 기본형에서 파생된 모든 상위 단계 PNG도 같은 작업에서 새 기본형을 바탕으로 다시 생성·적용합니다. 일부 단계에 이전 시안을 남기거나 이미지 발전 단계와 CSS 테두리 단계를 서로 다르게 적용하지 않습니다.
+- 과거 이미지 묶음이나 특정 commit의 시안을 폐기해 달라는 요청은 대표 파일 한 장이나 한 계열만 뜻하는 것으로 축소하지 않습니다. 해당 commit에서 추가된 원본 파일 목록과 이후 tier별 복제·파생 이력을 Git으로 역추적해 현재 사용 중인 모든 후손 PNG를 범위로 잡고, 교체 완료 전에는 “전부 폐기”라고 기록하지 않습니다.
 - 일반 장비 CSS 등급은 이름 맨 앞의 명시 승급 표식이 내부 단어보다 항상 우선합니다. 예를 들어 `-초월- ... 천공`은 내부의 `천공` 때문에 `luminous`가 되지 않고 반드시 `transcendent`입니다. 이미지 연결·등급 판정 JavaScript를 바꾸면 이미지 URL뿐 아니라 해당 `<script>` 캐시 키도 함께 갱신하고 실제 브라우저에서 확인합니다.
 - 게임 UI에서는 이미지 파일과 별개로 모든 아이템에 등급별 CSS 테두리를 일관되게 적용합니다. 기본 등급은 효과 없는 흰색 테두리이고, 강력·빛나는·초월·해방·찬란·짙은·영롱 등 상위 단계는 색상, 이중선, 광채와 절제된 애니메이션을 점진적으로 강화합니다. 이 판정은 장착칸, 가방, 보관함, 휴지통, 관리창과 지급 미리보기 등 아이템이 표시되는 모든 위치에서 유지하며 실제 브라우저 슬롯 크기와 `prefers-reduced-motion`에서도 확인합니다.
 - 가방·보관함·휴지통에서 아이템을 이동·사용·장착해제·삭제해도 뒤 아이템을 자동으로 당기지 않고 원래 칸을 빈 칸으로 유지합니다. 새 아이템은 가장 앞의 빈 칸을 사용하고, 사용자가 각 패널의 `위로 정렬` 버튼을 눌렀을 때만 기존 상대 순서를 보존한 채 빈 칸을 제거합니다.
@@ -56,9 +57,9 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v367.elemental-crystal-family-and-equipment-family-frames-fixed
-strict result: elemental-crystal-family-and-equipment-family-frames-fixed
-next safe stage: owner-review-v367-local-equipment-icons-and-select-next-content-step
+latest: v368.v363-crystal-draft-descendants-fully-replaced
+strict result: v363-crystal-draft-descendants-fully-replaced
+next safe stage: owner-review-v368-local-equipment-icons-and-select-next-content-step
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -116,6 +117,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 - 별도 감사에서 추가 스킬 계수의 기존 2차 외삽이 22단계부터 감소하고 33단계부터 음수가 되는 문제를 확인했습니다. 이번 스킬 피해 전용 범위에서는 바꾸지 않으며 실제 고단계 기준을 받아 별도 작업으로 다룹니다.
 - v358은 세 기본 아바타 +0~+20 성장과 +20 `88.2B`, 무기 평타 치명 피해 증폭 `33%`, 오라 추가 스킬공격 계수 증폭 `33%`, 클론 스킬 치명 `10%/150%`를 실제 전투 합산까지 연결합니다.
 - v358에서 스킬강화권 창 유지와 강화 탈리스만/휘장 `+0으로 분해`를 추가했고, v359에서 분해 반환량을 `2^강화단계`로 보완했습니다. v358의 필드 절반 지급은 v360에서 표시 상승량 100%·성공 확률 50% 규칙으로 대체됐습니다.
+- v363 commit `a696e1be3fe27beddc545cbba01e1e438573b7cc`의 단순 파랑·금색 결정 시안 15개는 이후 10~20단계 55개 PNG로 파생됐습니다. v364 반지 6개와 v367 올 엘리멘탈 크리스탈 6개에 이어 v368에서 남은 13계열 43개를 모두 이름이 식별되는 장비 발전형으로 교체해, 해당 v363 시안의 현재 사용 후손은 0개입니다.
 - Chrome 구형 JavaScript 캐시를 재현해 변경 스크립트에 최종 `?v=358.1` 캐시 키를 붙였습니다. 공개 Static Site는 아직 v351이므로 v357/v358 콘텐츠는 미배포입니다.
 - v358 공개 반영은 backend image나 DB 작업 없이 기존 Render Static Site 수동 배포 1회만 필요합니다. 먼저 static-only fail-closed 계약/checker를 별도 준비한 뒤, 그 gate 준비 commit의 정확한 40자리 SHA를 기호가 승인하기 전에는 실행하지 않습니다.
 - 전체 runtime blocking-I/O audit는 sync FastAPI route 0, async 내부 blocking 호출 0, frontend entrypoint·source blocking 호출 0으로 통과했습니다.

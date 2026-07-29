@@ -1,4 +1,4 @@
-# Upgrade RPG Codex next prompt — v367
+# Upgrade RPG Codex next prompt — v368
 
 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽고 계속 지켜주세요. 기호는 코딩을 거의 모르므로 한국어로 쉽게 설명하고, 모든 터미널 명령 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension·권한·설치는 해결될 때까지 요청해주세요.
 
@@ -7,9 +7,9 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 ## 현재 고정값
 
 ```txt
-latest: v367.elemental-crystal-family-and-equipment-family-frames-fixed
-strict result: elemental-crystal-family-and-equipment-family-frames-fixed
-next safe stage: owner-review-v367-local-equipment-icons-and-select-next-content-step
+latest: v368.v363-crystal-draft-descendants-fully-replaced
+strict result: v363-crystal-draft-descendants-fully-replaced
+next safe stage: owner-review-v368-local-equipment-icons-and-select-next-content-step
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -91,18 +91,22 @@ v341 source를 포함한 새 image는 게시와 isolated Alpine system CA store,
 
 ## 다음 작업
 
-v367까지 다음을 완료했습니다.
+v368까지 다음을 완료했습니다.
 
 - 16단계 `무의식 : 넥스의 몽환의 어둠 +20`은 로컬 계산 `369B / 2121% / 225.8%`이며, 특수장비 이미지 최종 캐시 식별자는 `?v=361`입니다.
-- 공개 Render Static Site는 아직 v351이므로 v357~v367 변경이 없는 것이 정상입니다.
+- 공개 Render Static Site는 아직 v351이므로 v357~v368 변경이 없는 것이 정상입니다.
 - 1~39단계 일반 장비 195개는 각각 별도 PNG를 사용합니다. 같은 계열도 파일을 공유하지 않고 기본 실루엣·각도·구도를 유지한 발전형으로 만듭니다.
 - 승급 표식을 제거한 이름이 같거나 더 긴 상위 이름에 기본 이름 전체가 포함되면 같은 계열입니다. `끝없는 절망 …`은 `절망 …`, `영원한 파멸 …`은 `파멸 …`의 상위 단계입니다.
 - v365에서 1~39단계 × 다섯 장비 종류, 총 195개의 서로 다른 256×256 PNG를 완성하고 `tier + equipGroup`으로 정확히 연결했습니다.
-- 일반 장비 이미지와 `icon-utils.js` 캐시 식별자는 `?v=367`이며, 변경하지 않은 특수장비 PNG는 `?v=361`을 유지합니다.
+- 일반 장비 이미지와 `icon-utils.js` 캐시 식별자는 `?v=368`이며, 변경하지 않은 특수장비 PNG는 `?v=361`을 유지합니다.
 - `src/assets/equipment/`에는 실제 사용 중인 `tier-01-*`부터 `tier-39-*`까지 195개만 남겼고, 이전 이름 기반 임시 이미지 20개는 제거했습니다.
 - 같은 계열은 파일을 공유하지 않으며 실루엣·각도·구도를 이어받고 상위 단계에서 재질·색·장식·마력 효과가 발전합니다.
 - v366에서 9단계 `-초월- ... 천공` 두 장비가 `luminous`로 잘못 표시되던 등급 판정 충돌을 고쳤습니다. 9단계 5개는 실제 브라우저에서 모두 동일한 `transcendent` 청록 테두리이며 오류 로그는 0건입니다.
-- v367에서 이전 단순 파랑·금색 결정 시안을 폐기하고 10·11·12·18·19·20단계 `올 엘리멘탈 크리스탈`을 사용자가 확인한 불·물·바람·빛 사분할 보석의 단계별 발전형 6개로 전부 다시 생성·적용했습니다.
+- v367에서는 10·11·12·18·19·20단계 `올 엘리멘탈 크리스탈` 6장만 불·물·바람·빛 사분할 보석 발전형으로 교체했습니다.
+- v368에서 기준 commit `a696e1be3fe27beddc545cbba01e1e438573b7cc`의 15개 단순 결정 원본과 이후 파생 파일을 다시 추적했습니다. 현재 55개 후손 중 v364 반지 6장과 v367 4원소 6장을 제외한 나머지 13계열 43장을 전부 새로 생성·적용해 v363 단순 결정 시안의 현재 사용 후손은 0개입니다.
+- 새 13계열은 전쟁신 루비 메달·초승달 진주 부적·영혼 불꽃 흑마도서·조개 펜던트·금 간 회중시계·갑주 악마 심장·세계수 뿌리·흑적 마력포·넥스 꿈의 눈·봉인된 암흑 소용돌이·타락한 망토·원초의 꿈 스태프·창입니다. 각 상위 단계는 바로 전 단계 이미지를 편집 원본으로 사용해 같은 물체의 발전형을 유지합니다.
+- 로컬 Chrome에서 `icon-utils.js?v=368`, 일반 장비 URL `?v=368`, 원본 256×256 → 화면 61×61 정사각형 렌더링과 콘솔 오류 0건을 확인했습니다.
+- 앞으로 특정 commit이나 이미지 묶음의 시안을 폐기할 때는 대표 파일만 보지 않고 Git 이력에서 모든 tier별 복제·파생 후손을 추적해 함께 교체합니다.
 - 일반 장비의 확정 계열 단계표를 이름 키워드보다 우선하도록 했습니다. T21→22→23과 T24→25→26은 `basic → rare → transcendent`, T30→31→35→36은 `basic → rare → transcendent → liberated`입니다.
 - 앞으로 승인된 기본형 이미지를 교체하면 파생된 상위 단계 PNG도 같은 작업에서 모두 다시 만들고, 이미지 발전 단계와 CSS 테두리 단계를 항상 함께 맞춥니다.
 - 생성 원본 236개에는 초기 합본·교체 시안도 포함됩니다. 게임 최종본은 `src/assets/equipment/` 195개이며 채팅에서 확인한 최종 반지 승급 6장과 1단계 회중시계가 포함됩니다.
@@ -126,7 +130,7 @@ v367까지 다음을 완료했습니다.
 - 스킬 치명타 확률/피해를 실제 스킬 피해 계산에 연결했습니다.
 - generated field/item/drop seed는 동기화했지만 Neon DB write, backend image/API, Render 서비스는 변경하지 않았습니다.
 
-다음 단계에서는 로컬 v367 결과를 기호가 확인한 뒤, 남은 장비 이미지 보완 또는 별도 static release 준비 중 하나를 선택합니다. 현재 작업만으로 Render Static Site deploy는 실행하지 않습니다.
+다음 단계에서는 로컬 v368 결과를 기호가 확인한 뒤, 남은 장비 이미지 보완 또는 별도 static release 준비 중 하나를 선택합니다. 현재 작업만으로 Render Static Site deploy는 실행하지 않습니다.
 
 승인된 v343 SHA `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 Neon restore를 한 번 실행했습니다. 22 application tables / 748 rows / schema digest가 일치했고 stamp 전에 legacy data digest 비교가 session timezone 차이로 멈췄습니다. UTC-normalized digest는 verified rehearsal과 Neon이 정확히 일치하며 `alembic_version`은 없습니다.
 
@@ -195,6 +199,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v367 focused smoke는 1~39단계 일반 장비 195개의 서로 다른 로컬 이미지 URL, 정확한 `tier + equipGroup` 매핑, 전체 195개 PNG의 signature·256×256, 4원소 크리스탈 6개 SHA-256, T23/T26/T35/T36 상위 테두리와 `icon-utils.js?v=367` 정적 배포 포함을 고정합니다. 다음 단계는 로컬에서 v367 이미지를 검토하고 다음 콘텐츠 작업 또는 별도 static release 범위를 선택하는 것입니다. 공개 Render Static Site는 계속 v351로 유지합니다. v362 인벤토리, v361 특수장비 이미지, v357 장비 공식과 이전 배포·공급자 baseline도 보존합니다.
+v368 focused smoke는 1~39단계 일반 장비 195개의 서로 다른 로컬 이미지 URL, 정확한 `tier + equipGroup` 매핑, 전체 195개 PNG의 signature·256×256, 4원소 크리스탈 6개와 v368 교체 43개의 SHA-256, T23/T26/T35/T36 상위 테두리와 `icon-utils.js?v=368` 정적 배포 포함을 고정합니다. 다음 단계는 로컬에서 v368 이미지를 검토하고 다음 콘텐츠 작업 또는 별도 static release 범위를 선택하는 것입니다. 공개 Render Static Site는 계속 v351로 유지합니다. v362 인벤토리, v361 특수장비 이미지, v357 장비 공식과 이전 배포·공급자 baseline도 보존합니다.
 
 별도 승인 전에는 추가 deploy, Render env 변경, DB/Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스를 변경하지 않습니다.

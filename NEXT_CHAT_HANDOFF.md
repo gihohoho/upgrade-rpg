@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v367
+# Upgrade RPG Codex handoff — v368
 
 ## 현재 상태
 
 ```txt
-latest: v367.elemental-crystal-family-and-equipment-family-frames-fixed
-strict result: elemental-crystal-family-and-equipment-family-frames-fixed
-next safe stage: owner-review-v367-local-equipment-icons-and-select-next-content-step
+latest: v368.v363-crystal-draft-descendants-fully-replaced
+strict result: v363-crystal-draft-descendants-fully-replaced
+next safe stage: owner-review-v368-local-equipment-icons-and-select-next-content-step
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -224,14 +224,29 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 - 상세 생성·검수 규칙: `docs/current/SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md`
 - 장비 스펙·필드 규칙·Neon DB·backend API/image·Render 서비스는 변경하지 않았습니다.
 
+## v363 단순 결정 시안 후손 43장 전체 교체 — v368
+
+- 사용자가 지적한 범위는 `올 엘리멘탈 크리스탈` 한 계열이 아니라 commit `a696e1be3fe27beddc545cbba01e1e438573b7cc`에서 추가된 단순 파랑·금색 결정 시안 묶음 전체입니다.
+- 해당 commit의 원본 15개와 v365의 티어별 파생 파일을 Git 이력으로 다시 추적했습니다. 현재 10~20단계에서 이어지는 후손은 55장이며, v364 반지 6장과 v367 4원소 크리스탈 6장을 제외한 나머지는 **13계열 43장**이었습니다.
+- 10·11·12·18·19·20단계 3계열은 전쟁신 루비 메달, 초승달 진주 부적, 영혼 불꽃 흑마도서로 교체했습니다.
+- 13·14·15단계 5계열은 조개 펜던트, 금 간 회중시계, 갑주 악마 심장, 살아 있는 세계수 뿌리, 흑적 마력포로 교체했습니다.
+- 16·17단계 5계열은 넥스 꿈의 눈 부적, 봉인된 암흑 소용돌이 장치, 타락한 망토, 원초의 꿈 스태프, 원초의 꿈 창으로 교체했습니다.
+- 모든 상위 단계는 같은 계열의 바로 전 단계 PNG를 built-in `image_gen` 편집 원본으로 사용했습니다. 물체 정체성·실루엣·각도·크롭을 유지하고 재질·룬·오라만 발전시켰습니다.
+- 최종 43장은 모두 별도 256×256 PNG이고 SHA-256 중복은 0건입니다. `tools/smoke/game/smoke_equipment_icon_families.js`에 43장 전체 해시를 fail-closed로 고정했습니다.
+- v364/v367 교체분을 합쳐 v363 단순 결정 시안에서 파생되어 현재 게임이 사용하는 PNG는 0개입니다. 일반 장비와 `icon-utils.js` 캐시는 `?v=368`입니다.
+- 검토용 모음판은 Git 제외 `local-review-artifacts/v368-v363-descendants-43-icons.png`에 보존했습니다. 장비 전용 smoke와 legacy static 배포 smoke가 통과했습니다.
+- 로컬 Chrome에서 `icon-utils.js?v=368`, 일반 장비 URL `?v=368`, 원본 256×256 → 화면 61×61 정사각형 렌더링과 콘솔 오류 0건을 확인했습니다.
+- 앞으로 과거 commit·이미지 묶음의 시안을 폐기할 때는 대표 파일이나 한 계열만 보지 않고, 원본 추가 목록과 모든 tier별 복제·파생 후손을 Git으로 역추적해 함께 처리합니다.
+- 변경 없음: 장비 능력치·강화 공식·드롭률, CSS 테두리 규칙, backend API/image, Neon DB, Render 서비스와 공개 v351 Static Site.
+
 ## 4원소 크리스탈 6단계·계열 테두리 동기화 — v367
 
-- 이전의 단순 파랑·금색 결정 시안은 폐기했고 어떤 단계에서도 더 이상 사용하지 않습니다.
+- v367 당시에는 단순 파랑·금색 결정 시안 중 `올 엘리멘탈 크리스탈` 6장만 교체했습니다. 같은 v363 묶음의 나머지 43장은 v368에서 추가로 전부 교체했습니다.
 - 10·11·12·18·19·20단계 `올 엘리멘탈 크리스탈`은 사용자가 확인한 불·물·바람·빛 사분할 보석을 기본형으로 삼아, 같은 실루엣·원소 위치·발톱·각도·크롭을 유지한 별도 256×256 발전형 PNG 6개로 다시 생성·적용했습니다.
 - 여섯 파일은 `tier-{10,11,12,18,19,20}-atk-inc.png`이며 단계별 SHA-256을 focused smoke에 고정했습니다.
 - 확정된 계열 단계가 이름 키워드보다 먼저 CSS 등급을 결정합니다. T21→22→23과 T24→25→26은 `basic → rare → transcendent`, T30→31→35→36은 `basic → rare → transcendent → liberated`입니다.
 - 따라서 `끝없는` T23과 `영원한` T26은 초월, T35는 초월, T36은 해방 테두리입니다. 일반 이름 기반 판정은 다른 장비의 fallback으로 유지합니다.
-- 일반 장비 이미지와 `icon-utils.js` 캐시 식별자는 `?v=367`입니다.
+- v367 당시 일반 장비 이미지와 `icon-utils.js` 캐시 식별자는 `?v=367`이었고, 현재는 v368 교체 때문에 `?v=368`입니다.
 - 로컬 브라우저 DOM에서 새 캐시 경로와 T23 `item-frame-transcendent`를 확인했고, 기본·최종 4원소 PNG를 원본 크기로 직접 확인했습니다.
 - 기본형 시안을 바꾸면 그 계열의 모든 파생 단계 PNG를 같은 작업에서 함께 다시 만들고, 이미지 단계와 CSS 테두리 단계를 항상 같이 맞추는 규칙을 `AGENTS.md`에 추가했습니다.
 - 변경 없음: 장비 능력치·강화 공식·드롭률, backend API/image, Neon DB, Render 서비스와 공개 v351 Static Site.
@@ -335,6 +350,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v367 focused smoke는 1~39단계 일반 장비 195개의 서로 다른 로컬 이미지 URL, 정확한 `tier + equipGroup` 매핑, 전체 195개 PNG의 signature·256×256, 4원소 크리스탈 6개 SHA-256, T23/T26/T35/T36 상위 테두리와 `icon-utils.js?v=367` 정적 배포 포함을 고정합니다. 다음 단계는 로컬에서 v367 이미지를 검토하고 다음 콘텐츠 작업 또는 별도 static release 범위를 선택하는 것입니다. 공개 Render Static Site는 계속 v351로 유지합니다. v362 인벤토리, v361 특수장비 이미지, v357 장비 공식과 이전 배포·공급자 baseline도 계속 보존합니다.
+v368 focused smoke는 1~39단계 일반 장비 195개의 서로 다른 로컬 이미지 URL, 정확한 `tier + equipGroup` 매핑, 전체 195개 PNG의 signature·256×256, 4원소 크리스탈 6개와 v368 교체 43개의 SHA-256, T23/T26/T35/T36 상위 테두리와 `icon-utils.js?v=368` 정적 배포 포함을 고정합니다. 다음 단계는 로컬에서 v368 이미지를 검토하고 다음 콘텐츠 작업 또는 별도 static release 범위를 선택하는 것입니다. 공개 Render Static Site는 계속 v351로 유지합니다. v362 인벤토리, v361 특수장비 이미지, v357 장비 공식과 이전 배포·공급자 baseline도 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

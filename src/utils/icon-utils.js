@@ -23,7 +23,7 @@ function iconTextUrl(text, bg = "333", fg = "FFF") {
 const SPECIAL_EQUIP_ASSET_BASE = "src/assets/special-equipment";
 const SPECIAL_EQUIP_ASSET_VERSION = "361";
 const NORMAL_EQUIP_ASSET_BASE = "src/assets/equipment";
-const NORMAL_EQUIP_ASSET_VERSION = "367";
+const NORMAL_EQUIP_ASSET_VERSION = "368";
 const NORMAL_EQUIP_GROUP_ASSET_KEYS = Object.freeze({
 	skill_all: "skill-all",
 	atk_inc: "atk-inc",
