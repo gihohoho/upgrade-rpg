@@ -89,6 +89,11 @@ def verify_plan(plan: dict[str, Any]) -> None:
     require(source.get("buildCommand") == "node tools/build_legacy_static_site.mjs", "build command differs")
     require(source.get("publishDirectory") == "frontend/legacy-dist", "publish directory differs")
     require(source.get("cleanPushedExactShaRequired") is True, "exact SHA gate must remain enabled")
+    require(
+        source.get("publishedSourceAllowlist")
+        == ["index.html", "admin.html", "src/**/*.js", "src/**/*.css", "src/assets/**/*.png"],
+        "published source allowlist differs",
+    )
 
     runtime = plan.get("runtime") or {}
     require(runtime.get("productionApiBaseUrl") == BACKEND_API, "production API differs")
@@ -227,7 +232,9 @@ def verify_sources() -> None:
     builder = BUILDER_PATH.read_text(encoding="utf-8")
     for marker in (
         'path.resolve(projectRoot, "frontend", "legacy-dist")',
-        'publishedExtensions = new Set([".js", ".css"])',
+        'publishedExtensions = new Set([".js", ".css", ".png"])',
+        'publishedAssetDirectory = path.join(sourceDirectory, "assets")',
+        'extension === ".png" && !sourcePath.startsWith',
         "outputDirectory !== expectedOutputDirectory",
         "forbiddenTextPatterns",
     ):
@@ -260,7 +267,7 @@ def main() -> int:
         print(f"frontend static deployment plan verification failed: {exc}", file=sys.stderr)
         return 1
     print("frontend static deployment result verification (static, no provider mutation)")
-    print("- publish allowlist: index.html / admin.html / src/**/*.js / src/**/*.css")
+    print("- publish allowlist: index.html / admin.html / src/**/*.js / src/**/*.css / src/assets/**/*.png")
     print("- local/public API: local preserved / Render backend pinned")
     print("- static site/backend CORS deploy: live/executed-once")
     print(f'- backend CORS actual/applied: ["{FRONTEND_ORIGIN}"]/yes')

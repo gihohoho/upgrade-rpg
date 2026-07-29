@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>강화RPG v0.22 (특수보스 & 장비슬롯 개편)</title>
-    <link rel="stylesheet" href="src/styles/style.css?v=359" />
+    <link rel="stylesheet" href="src/styles/style.css?v=360" />
   </head>
   <body>
     <div id="tooltip"></div>
@@ -747,6 +747,10 @@
           <span>필드존 선택 (골드 전용 / 아이템 드랍 불가)</span
           ><button class="close-btn" onclick="toggleFieldZone()">✖</button>
         </div>
+        <div class="field-reward-policy">
+          <strong>순수공격력 보상</strong>
+          <span>몬스터 처치 시 50% 확률 · 성공하면 각 필드에 표시된 상승량을 100% 적용 · 실패하면 상승 없음</span>
+        </div>
         <div id="field-list-container"></div>
       </div>
 
@@ -856,20 +860,20 @@
     <script src="src/api/master-data-boot-policy.js"></script>
     <script src="src/data/skills.js"></script>
     <script src="src/state/game-state.js"></script>
-    <script src="src/utils/icon-utils.js"></script>
+    <script src="src/utils/icon-utils.js?v=360"></script>
     <script src="src/data/boss-factories.js"></script>
     <script src="src/data/bosses.js"></script>
     <script src="src/rules/abyss-fragment-rules.js"></script>
-    <script src="src/rules/boss-display-rules.js"></script>
+    <script src="src/rules/boss-display-rules.js?v=360"></script>
     <script src="src/rules/boss-drop-rules.js"></script>
     <script src="src/data/boss-bootstrap.js"></script>
-    <script src="src/data/zones.js"></script>
-    <script src="src/systems/stat-system.js?v=359"></script>
-    <script src="src/ui/render-ui.js?v=359"></script>
-    <script src="src/systems/action-result-system.js?v=359"></script>
-    <script src="src/systems/item-system.js?v=359"></script>
-    <script src="src/systems/combat-system.js?v=359"></script>
-    <script src="src/app/main.js?v=359"></script>
+    <script src="src/data/zones.js?v=360"></script>
+    <script src="src/systems/stat-system.js?v=360"></script>
+    <script src="src/ui/render-ui.js?v=360"></script>
+    <script src="src/systems/action-result-system.js?v=360"></script>
+    <script src="src/systems/item-system.js?v=360"></script>
+    <script src="src/systems/combat-system.js?v=360"></script>
+    <script src="src/app/main.js?v=360"></script>
     <script src="src/api/master-data-runtime-switch.js"></script>
     <script src="src/api/master-data-runtime-validator.js"></script>
     <script src="src/api/master-data-browser-checklist.js"></script>

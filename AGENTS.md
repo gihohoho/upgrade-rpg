@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v359
+# Upgrade RPG Codex working rules — v360
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -28,6 +28,7 @@
 - 요청하지 않은 미래용 구조·설정·scaffolding은 만들지 않으며, 안전·보안·검증·접근성 요구는 단순화를 이유로 생략하지 않습니다.
 - 사용자에게 보이는 버튼·기능을 추가하거나 바꿀 때 기능만 연결하지 않고 기존 화면의 시각 위계, 버튼 배치, 간격, 문구, 반응형 동작까지 함께 완성하고 실제 브라우저에서 확인합니다.
 - 파괴적이거나 되돌리기 어려운 동작에는 브라우저 기본 `alert`/`confirm`을 쓰지 않고 기존 게임 UI와 일관된 확인·취소 모달을 사용하며, 결과와 반환 수량을 실행 전에 명확히 보여줍니다.
+- 동작·수치·상태를 바꾸면 연관된 화면 제목, 고정 설명, 툴팁, 모달 안내, 버튼 문구, 로그, 캐시 키, source/generated seed, 회귀 검사와 현재 문서를 함께 전수 검색해 실제 동작과 같은 내용으로 동기화합니다.
 
 ## Code Review Graph 제한 시험
 
@@ -46,9 +47,9 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v359.avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required
-strict result: avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required
-next safe stage: prepare-v359-static-content-deploy-exact-sha-gate
+latest: v360.field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required
+strict result: field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required
+next safe stage: prepare-v360-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -105,7 +106,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 - 공격력, 모든 피해, 1~11단계, 나머지 4개 장비 그룹, generated seed, Neon DB와 backend는 변경하지 않았습니다. 상세 근거는 `docs/current/EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`입니다.
 - 별도 감사에서 추가 스킬 계수의 기존 2차 외삽이 22단계부터 감소하고 33단계부터 음수가 되는 문제를 확인했습니다. 이번 스킬 피해 전용 범위에서는 바꾸지 않으며 실제 고단계 기준을 받아 별도 작업으로 다룹니다.
 - v358은 세 기본 아바타 +0~+20 성장과 +20 `88.2B`, 무기 평타 치명 피해 증폭 `33%`, 오라 추가 스킬공격 계수 증폭 `33%`, 클론 스킬 치명 `10%/150%`를 실제 전투 합산까지 연결합니다.
-- 스킬강화권 창 유지, 강화 탈리스만/휘장 `+0으로 분해`, 모든 필드 순수공격력 지급 절반을 적용했습니다. 분해는 선택 장비 1개를 +0 한 개로 되돌리고 재료를 환급하지 않습니다.
+- v358에서 스킬강화권 창 유지와 강화 탈리스만/휘장 `+0으로 분해`를 추가했고, v359에서 분해 반환량을 `2^강화단계`로 보완했습니다. v358의 필드 절반 지급은 v360에서 표시 상승량 100%·성공 확률 50% 규칙으로 대체됐습니다.
 - Chrome 구형 JavaScript 캐시를 재현해 변경 스크립트에 최종 `?v=358.1` 캐시 키를 붙였습니다. 공개 Static Site는 아직 v351이므로 v357/v358 콘텐츠는 미배포입니다.
 - v358 공개 반영은 backend image나 DB 작업 없이 기존 Render Static Site 수동 배포 1회만 필요합니다. 먼저 static-only fail-closed 계약/checker를 별도 준비한 뒤, 그 gate 준비 commit의 정확한 40자리 SHA를 기호가 승인하기 전에는 실행하지 않습니다.
 - 전체 runtime blocking-I/O audit는 sync FastAPI route 0, async 내부 blocking 호출 0, frontend entrypoint·source blocking 호출 0으로 통과했습니다.
@@ -133,7 +134,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 - 승인된 v346 SHA `81d1c4faa59194e8928d54fbecac28694ab139ab`로 서비스 1개 생성, env 14개 주입, exact image 최초 deploy를 한 번 실행했습니다. 재사용·자동 retry·두 번째 deploy는 금지합니다.
 - 공개 주소는 `https://upgrade-rpg-api.onrender.com`이며 `/api/v1/health`와 `/api/v1/health/db`가 각각 HTTP 200 `status=ok`를 반환했습니다.
 - 첫 공개 frontend는 실제 legacy 화면을 Render Free Static Site `gihohoho-upgrade-rpg`로 배포하는 계획입니다. 예상 주소는 `/index.html`, `/admin.html`이며 Vue shell은 이번 배포 대상이 아닙니다.
-- `tools/build_legacy_static_site.mjs`는 `index.html`, `admin.html`, `src/**/*.js`, `src/**/*.css`만 `frontend/legacy-dist`에 묶고 secret·DB endpoint 형태가 있으면 실패합니다.
+- `tools/build_legacy_static_site.mjs`는 `index.html`, `admin.html`, `src/**/*.js`, `src/**/*.css`, `src/assets/**/*.png`만 `frontend/legacy-dist`에 묶고 secret·DB endpoint 형태가 있으면 실패합니다.
 - `src/api/runtime-config.js`는 로컬 host에서는 기존 local API를 유지하고 그 밖의 host에서만 `https://upgrade-rpg-api.onrender.com/api/v1`을 사용합니다.
 - frontend Static Site 최초 배포와 backend CORS recovery deploy는 완료됐습니다. recovery 1회 승인은 소비됐고 추가 provider deploy는 새 승인 전 실행하지 않습니다.
 - 공개 `admin.html`에는 admin write key를 넣지 않으며 read-only public preview로만 취급합니다.

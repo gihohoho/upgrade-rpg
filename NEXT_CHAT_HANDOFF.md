@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v359
+# Upgrade RPG Codex handoff — v360
 
 ## 현재 상태
 
 ```txt
-latest: v359.avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required
-strict result: avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required
-next safe stage: prepare-v359-static-content-deploy-exact-sha-gate
+latest: v360.field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required
+strict result: field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required
+next safe stage: prepare-v360-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -183,7 +183,7 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 - 기존에 표시만 되던 스킬 치명타 확률/피해를 실제 스킬 피해 계산에 연결했습니다.
 - 스킬강화권은 남은 묶음이 있으면 창을 유지하며 연속 사용하고, 마지막 1장을 쓰면 “모두 사용함” 상태로 창을 유지합니다.
 - 강화된 탈리스만/휘장에는 `+0으로 분해` 버튼이 보입니다. 선택한 강화품 1개를 같은 종류 +0 한 개로 되돌리며 강화 재료는 환급하지 않습니다.
-- 모든 필드 순수공격력 지급은 기존 최종 정수 지급값의 정확히 절반입니다. 첫 필드도 `1 → 0.5`로 성장 정지가 없습니다.
+- v358 당시 모든 필드 순수공격력 지급을 기존 최종 정수 지급값의 절반으로 바꿨지만, 이 규칙은 v360에서 **표시 상승량 100%·성공 확률 50%**로 대체됐습니다.
 - 로컬 Chrome에서 무기 아바타 +0 `3.889B / 1.2%`, 강화 가능 버튼, 장착 +2 탈리스만의 분해 버튼을 확인했습니다.
 - runtime/master-data source만 변경했으며 generated seed, Neon DB, backend image/API는 변경하지 않았습니다.
 - 회귀 검사: `smoke_equipment_progression_formulas.js`, `smoke_runtime_item_quality_of_life.js`
@@ -195,12 +195,24 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 - 브라우저 기본 `confirm`을 제거하고 휴지통 경고창 계열의 게임 내부 모달을 추가했습니다. 모달은 대상, 변환 전후 수량, 되돌릴 수 없음 경고를 보여주며 확인 직전에 선택 상태도 재검증합니다.
 - 탈리스만/휘장에서는 불필요한 20/50/200회 버튼을 숨기고 장착, 강화·초기화, 보관함, 휴지통 순으로 정리했습니다. 초기화 버튼 자체에도 반환 개수를 표시하고 좁은 화면은 한 열로 접힙니다.
 - UI 상시 규칙: 앞으로 사용자에게 보이는 버튼·기능을 추가·변경할 때 시각 위계, 배치, 간격, 문구, 반응형, 확인·취소 흐름을 기능과 함께 완성하고 실제 브라우저에서 확인합니다. 파괴적 동작에는 브라우저 기본 alert/confirm을 사용하지 않습니다.
-- 필드 전수 감사: source 40개와 generated 40개가 동일하고, 보상이 있는 8~40단계 33개가 모두 공통 `gain *= 0.5` 지급 경로를 통과합니다. 1~7단계는 원래 순수공격력 보상이 없습니다.
+- v359 당시 필드 전수 감사에서 source/generated 40개와 33개 보상 필드의 공통 `gain *= 0.5` 경로를 확인했습니다. 이 절반 지급 규칙은 바로 아래 v360의 표시 상승량 100%·성공 확률 50% 규칙으로 대체됐습니다.
 - 로컬 Chrome에서 +0 2개와 +3 1개를 초기화해 +0 10개가 되는 실제 동작, 전용 경고창, 새 버튼 배치, 아바타 파란 분류를 확인했습니다.
 - CSS/변경 JavaScript 캐시 키: `?v=359`
 - generated seed 내용, Neon DB, backend image/API, Render 서비스는 변경하지 않았습니다.
 
-현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 Codex가 v359 static-only 배포 계약/checker를 준비하는 것이며, 그 준비 commit이 push된 뒤에만 기호에게 exact SHA 승인을 요청합니다.
+## 필드 1배·50% 설명 동기화·AI 특수장비 아이콘 — v360
+
+- 순수공격력 보상이 있는 8~40단계 33개 필드는 처치 시 50% 확률로 각 필드에 표시된 상승량을 100% 지급합니다. 실패 시 상승량은 없습니다.
+- source/generated field는 모두 `prob=0.5`이며, 과거 backend master-data의 `prob=1`이 남아 있어도 공통 런타임 helper가 50%로 고정합니다.
+- 필드존 선택 고정 설명과 각 필드 툴팁은 확률·성공·실패·최대 누적을 실제 동작과 같은 문구로 표시합니다.
+- 동작·수치·상태 변경 시 관련 제목, 고정 설명, 툴팁, 모달, 버튼, 로그, 캐시, source/generated seed, 검사와 현재 문서를 함께 전수 검색·동기화하는 상시 규칙을 `AGENTS.md`에 추가했습니다.
+- built-in `image_gen`으로 특수무기·목걸이·반지 4단계, 아바타 3종 2단계, 탈리스만 4단계, 휘장 단일 이미지를 만들었습니다.
+- 23개 256×256 PNG는 `src/assets/special-equipment/`에 있고 특수장비 38개가 이름·슬롯·등급에 따라 공유합니다. 기존 저장 placeholder와 보스 테스트 지급도 정규화됩니다.
+- 정적 배포 허용 목록에 `src/assets/**/*.png`만 추가했고, 23개 PNG 포함과 signature를 fail-closed smoke로 고정했습니다.
+- 최종 캐시 키는 `?v=360`입니다. generated field/item/drop seed는 동기화했지만 Neon DB write, backend image/API, Render deploy는 실행하지 않았습니다.
+- 이미지 프롬프트·매핑 문서: `docs/current/SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md`
+
+현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 Codex가 v360 static-only 배포 계약/checker를 준비하는 것이며, 그 준비 commit이 push된 뒤에만 기호에게 exact SHA 승인을 요청합니다.
 
 로컬 검사 주의: Windows 전역 `DEBUG=release`는 backend의 boolean `DEBUG`와 충돌합니다. 시스템 환경변수는 바꾸지 말고 backend/core 검사 자식 프로세스에서만 `DEBUG`를 unset하거나 `DEBUG=false`로 덮어씁니다.
 
@@ -234,6 +246,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v359 focused smoke는 v358 회귀 항목과 함께 탈리스만/휘장 `2^강화단계` 환급, 게임 내부 확인 모달, 아바타 개별 파란 분류, 33개 보상 필드 전체의 공통 절반 지급 경로를 고정합니다. 다음 단계는 `prepare-v359-static-content-deploy-exact-sha-gate`입니다. v357 장비 공식, v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
+v360 focused smoke는 v358/v359 회귀 항목과 함께 33개 보상 필드의 표시 상승량 100%·성공 확률 50%, 필드 설명 동기화, 23개 AI PNG와 38개 특수장비 매핑, 정적 배포 PNG 포함을 고정합니다. 다음 단계는 `prepare-v360-static-content-deploy-exact-sha-gate`입니다. v357 장비 공식, v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

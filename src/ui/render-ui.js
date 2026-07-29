@@ -1991,8 +1991,14 @@ function renderFieldZone() {
 
 				if (field.farm) {
 					let specHtml = field.farm.specialText ? `<div style="color: #ff99ff; margin-left: 10px;">${field.farm.specialText}</div>` : "";
-					html += `<div style="color: #00ffff; margin-bottom: 2px;">공격력 상승량</div>
-            <div style="color: #00ffff; margin-left: 10px;">${field.farm.prob * 100}% 확률로 ${field.farm.gain} 증가 (최대 ${field.farm.capText})</div>
+					let rewardProbability = typeof getFieldFarmRewardProbability === "function" ? getFieldFarmRewardProbability(field.farm) : field.farm.prob;
+					html += `<div class="field-reward-title">순수공격력 보상</div>
+            <div class="field-reward-summary">
+              <span class="field-reward-chance">처치 시 ${rewardProbability * 100}% 확률</span>
+              <span class="field-reward-success">성공: +${field.farm.gain} (표시 상승량 100% 적용)</span>
+              <span class="field-reward-fail">실패: 상승 없음</span>
+              <span class="field-reward-cap">최대 누적: ${field.farm.capText}</span>
+            </div>
             ${specHtml}`;
 				}
 

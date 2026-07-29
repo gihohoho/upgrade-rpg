@@ -113,7 +113,7 @@
       "gain": 1,
       "cap": 120000,
       "capText": "12B",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -132,7 +132,7 @@
       "gain": 5,
       "cap": 120000,
       "capText": "12B",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -151,7 +151,7 @@
       "gain": 20,
       "cap": 120000,
       "capText": "12B",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -170,7 +170,7 @@
       "gain": 50,
       "cap": 120000,
       "capText": "12B",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -189,7 +189,7 @@
       "gain": 2,
       "cap": 600000,
       "capText": "60B",
-      "prob": 1,
+      "prob": 0.5,
       "specialText": "※순수 공격력이 12B 이하면 상승치 40배 (80 증가)",
       "specialThreshold": 120000,
       "specialMult": 40
@@ -211,7 +211,7 @@
       "gain": 10,
       "cap": 600000,
       "capText": "60B",
-      "prob": 1,
+      "prob": 0.5,
       "specialText": "※순수 공격력이 12B 이하면 상승치 40배 (400 증가)",
       "specialThreshold": 120000,
       "specialMult": 40
@@ -233,7 +233,7 @@
       "gain": 40,
       "cap": 600000,
       "capText": "60B",
-      "prob": 1,
+      "prob": 0.5,
       "specialText": "※순수 공격력이 12B 이하면 상승치 40배 (1600 증가)",
       "specialThreshold": 120000,
       "specialMult": 40
@@ -255,7 +255,7 @@
       "gain": 200,
       "cap": 600000,
       "capText": "60B",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -274,7 +274,7 @@
       "gain": 6,
       "cap": 2600000,
       "capText": "260B",
-      "prob": 1,
+      "prob": 0.5,
       "specialText": "※순수 공격력이 60B 이하면 상승치 30배 (180 증가)",
       "specialThreshold": 600000,
       "specialMult": 30
@@ -296,7 +296,7 @@
       "gain": 30,
       "cap": 2600000,
       "capText": "260B",
-      "prob": 1,
+      "prob": 0.5,
       "specialText": "※순수 공격력이 60B 이하면 상승치 30배 (900 증가)",
       "specialThreshold": 600000,
       "specialMult": 30
@@ -318,7 +318,7 @@
       "gain": 60,
       "cap": 2600000,
       "capText": "260B",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -337,7 +337,7 @@
       "gain": 120,
       "cap": 2600000,
       "capText": "260B",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -356,7 +356,7 @@
       "gain": 600,
       "cap": 2600000,
       "capText": "260B",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -375,7 +375,7 @@
       "gain": 6,
       "cap": 20000000,
       "capText": "2000B",
-      "prob": 1,
+      "prob": 0.5,
       "specialText": "※순수 공격력이 260B 이하면 상승치 50배 (300 증가)",
       "specialThreshold": 2600000,
       "specialMult": 50
@@ -397,7 +397,7 @@
       "gain": 30,
       "cap": 20000000,
       "capText": "2000B",
-      "prob": 1,
+      "prob": 0.5,
       "specialText": "※순수 공격력이 260B 이하면 상승치 50배 (1500 증가)",
       "specialThreshold": 2600000,
       "specialMult": 50
@@ -419,7 +419,7 @@
       "gain": 120,
       "cap": 20000000,
       "capText": "2000B",
-      "prob": 1,
+      "prob": 0.5,
       "specialText": "※순수 공격력이 260B 이하면 상승치 50배 (6000 증가)",
       "specialThreshold": 2600000,
       "specialMult": 50
@@ -441,7 +441,7 @@
       "gain": 600,
       "cap": 20000000,
       "capText": "2000B",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -460,7 +460,7 @@
       "gain": 3000,
       "cap": 20000000,
       "capText": "2000B",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -479,7 +479,7 @@
       "gain": 60,
       "cap": 250000000,
       "capText": "2C 5000B",
-      "prob": 1,
+      "prob": 0.5,
       "specialText": "※순수 공격력이 2000B 이하면 상승치 50배 (3000 증가)",
       "specialThreshold": 20000000,
       "specialMult": 50
@@ -501,7 +501,7 @@
       "gain": 240,
       "cap": 250000000,
       "capText": "2C 5000B",
-      "prob": 1,
+      "prob": 0.5,
       "specialText": "※순수 공격력이 2000B 이하면 상승치 50배 (12000 증가)",
       "specialThreshold": 20000000,
       "specialMult": 50
@@ -523,7 +523,7 @@
       "gain": 1200,
       "cap": 250000000,
       "capText": "2C 5000B",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -542,7 +542,7 @@
       "gain": 4800,
       "cap": 250000000,
       "capText": "2C 5000B",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -561,7 +561,7 @@
       "gain": 24000,
       "cap": 250000000,
       "capText": "2C 5000B",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -580,7 +580,7 @@
       "gain": 100,
       "cap": 20000000000,
       "capText": "200C",
-      "prob": 1,
+      "prob": 0.5,
       "specialText": "※순수 공격력이 2C 5000B 이하면 상승치 50배 (5000 증가)",
       "specialThreshold": 250000000,
       "specialMult": 50
@@ -602,7 +602,7 @@
       "gain": 500,
       "cap": 20000000000,
       "capText": "200C",
-      "prob": 1,
+      "prob": 0.5,
       "specialText": "※순수 공격력이 2C 5000B 이하면 상승치 50배 (25000 증가)",
       "specialThreshold": 250000000,
       "specialMult": 50
@@ -624,7 +624,7 @@
       "gain": 2000,
       "cap": 20000000000,
       "capText": "200C",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -643,7 +643,7 @@
       "gain": 10000,
       "cap": 20000000000,
       "capText": "200C",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -662,7 +662,7 @@
       "gain": 40000,
       "cap": 20000000000,
       "capText": "200C",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -681,7 +681,7 @@
       "gain": 800,
       "cap": 1000000000000,
       "capText": "1D",
-      "prob": 1,
+      "prob": 0.5,
       "specialText": "※순수 공격력이 40C 이하면 상승치 50배 (4B 증가)",
       "specialThreshold": 4000000000,
       "specialMult": 50
@@ -703,7 +703,7 @@
       "gain": 4000,
       "cap": 1000000000000,
       "capText": "1D",
-      "prob": 1,
+      "prob": 0.5,
       "specialText": "※순수 공격력이 40C 이하면 상승치 50배 (20B 증가)",
       "specialThreshold": 4000000000,
       "specialMult": 50
@@ -725,7 +725,7 @@
       "gain": 16000,
       "cap": 1000000000000,
       "capText": "1D",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -744,7 +744,7 @@
       "gain": 80000,
       "cap": 1000000000000,
       "capText": "1D",
-      "prob": 1
+      "prob": 0.5
     }
   },
   {
@@ -763,7 +763,7 @@
       "gain": 400000,
       "cap": 1000000000000,
       "capText": "0",
-      "prob": 1
+      "prob": 0.5
     }
   }
 ]

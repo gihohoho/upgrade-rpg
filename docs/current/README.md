@@ -1,9 +1,10 @@
-# Current Documents — v357
+# Current Documents — v360
 
 현재 판단은 이 폴더와 루트 `AGENTS.md`를 우선합니다.
 
 - `CURRENT_STATUS.md`: 현재 완료 상태와 금지 경계
 - `EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`: 1~12단계 장비 공식 감사와 12단계 이후 스킬 피해 공식
+- `SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md`: AI 특수장비 아이콘의 생성 조건·계열별 프롬프트·23개 파일 매핑
 - `RENDER_SERVICE_SETTINGS_PLAN.md`: Render Existing Image Web Service 생성 직전 설정과 차단 gate
 - `NEON_DATABASE_INITIALIZATION_MIGRATION_PLAN.md`: 빈 `neondb` restore·v295 stamp의 별도 승인 계획
 - `PRODUCTION_DEPLOYMENT_PLAN.md`: 운영 배포 계획·입력·승인·rollback

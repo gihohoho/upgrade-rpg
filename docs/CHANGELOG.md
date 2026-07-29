@@ -1,3 +1,12 @@
+# v360.field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required
+
+- 필드 순수공격력 보상을 표시 상승량 100%로 되돌리고, 보상이 있는 8~40단계 33개 필드의 성공 확률을 50%로 통일했습니다.
+- 필드존 선택 고정 설명과 툴팁을 확률·성공 지급량·실패·최대 누적까지 실제 동작과 같은 문구로 동기화했습니다.
+- built-in `image_gen`으로 특수무기·목걸이·반지 4단계, 아바타 3종 2단계, 탈리스만 4단계, 휘장 단일 아이콘을 만들고 23개 256×256 PNG를 특수장비 38개에 연결했습니다.
+- 정적 배포 허용 목록에 `src/assets/**/*.png`만 추가하고 23개 아이콘 포함·PNG signature를 fail-closed smoke로 고정했습니다.
+- 동작·수치·상태 변경 시 관련 설명·툴팁·모달·버튼·로그·캐시·source/generated seed·검사·문서를 함께 동기화하는 상시 규칙을 추가했습니다.
+- generated field/item/drop seed는 동기화했지만 Neon DB write, backend image/API, Render deploy는 실행하지 않았습니다.
+
 # v357.tier16-skill-damage-anchor-geometric-high-tier-formula-audited
 
 - 16단계 `무의식 : 넥스의 몽환의 어둠 +20`의 새 실측 기준 `369B / 스킬 피해 2121% / 기존 모든 피해 내부 225.8%`를 반영했습니다.

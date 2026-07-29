@@ -22,6 +22,7 @@ Static Site `srv-d9iu337aqgkc73am4lh0`와 deploy `dep-d9iu33faqgkc73am4m3g`는 e
 - `index.html`
 - `admin.html`
 - `src/` 아래 `.js`, `.css`
+- `src/assets/` 아래 `.png`(현재 AI 특수장비 아이콘 23개 포함)
 
 backend, deploy, docs, tools, Git 정보, `.env`, production secret, `src/**/*.md`는 공개 묶음에 들어가지 않습니다. 출력 폴더는 Git과 Docker build context에서도 제외합니다. 빌드는 symlink, 출력 폴더 밖 참조, 빠진 local asset, token·DB endpoint 형태 문자열을 발견하면 실패합니다.
 

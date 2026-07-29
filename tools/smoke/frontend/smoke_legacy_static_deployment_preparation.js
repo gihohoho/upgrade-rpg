@@ -42,11 +42,19 @@ function walk(directory) {
   }
 }
 walk(output);
-assert(files.every((file) => file === "index.html" || file === "admin.html" || /\.(?:js|css)$/.test(file)));
+assert(files.every((file) => file === "index.html" || file === "admin.html" || /\.(?:js|css|png)$/.test(file)));
+assert(!files.some((file) => file.endsWith(".png") && !file.startsWith("src/assets/")), "PNG files outside src/assets must not be published");
 assert(!files.some((file) => /(?:^|\/)(?:backend|deploy|docs|tools|\.git)(?:\/|$)/.test(file)));
 assert(!files.some((file) => /\.md$/i.test(file)), "documentation must not be published");
+const specialEquipmentAssets = files.filter((file) => file.startsWith("src/assets/special-equipment/") && file.endsWith(".png"));
+assert.equal(specialEquipmentAssets.length, 23, "all 23 generated special-equipment icons must be published");
+for (const relative of specialEquipmentAssets) {
+  const bytes = fs.readFileSync(path.join(output, relative));
+  assert(bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), `${relative}: invalid PNG signature`);
+}
 
 console.log("legacy static deployment preparation smoke passed");
 console.log(`- public entries: index.html/admin.html`);
 console.log(`- packaged runtime files: ${files.length}`);
+console.log(`- generated special-equipment PNG assets: ${specialEquipmentAssets.length}`);
 console.log("- local API preserved / non-local API pinned / admin secret embedded: yes/yes/no");

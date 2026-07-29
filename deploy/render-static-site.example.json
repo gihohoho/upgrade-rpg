@@ -30,7 +30,8 @@
       "index.html",
       "admin.html",
       "src/**/*.js",
-      "src/**/*.css"
+      "src/**/*.css",
+      "src/assets/**/*.png"
     ],
     "excludedFromPublish": [
       "backend",

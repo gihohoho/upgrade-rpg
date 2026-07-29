@@ -22,9 +22,9 @@ ARTIFACT_IDS = [8638838292, 8638825538]
 IMAGE_DIGEST = "sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac"
 VERIFIED_CANDIDATE_REFERENCE = f"{REPOSITORY}@{IMAGE_DIGEST}"
 PRODUCTION_REFERENCE = f"{REPOSITORY}@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
-CURRENT_VERSION = "v359.avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required"
-CURRENT_RESULT = "avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required"
-CURRENT_NEXT_STAGE = "prepare-v359-static-content-deploy-exact-sha-gate"
+CURRENT_VERSION = "v360.field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required"
+CURRENT_RESULT = "field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required"
+CURRENT_NEXT_STAGE = "prepare-v360-static-content-deploy-exact-sha-gate"
 PRIOR_PROVIDER_VERSION = "v355.v351-provider-release-deployed-verified-content-ready"
 PRIOR_PROVIDER_RESULT = "v351-provider-release-deployed-verified-content-ready"
 PRIOR_PROVIDER_NEXT_STAGE = "select-first-content-and-balance-change-scope"
@@ -105,6 +105,9 @@ def main() -> int:
         "반응형 동작",
         "브라우저 기본 `alert`/`confirm`",
         "결과와 반환 수량",
+        "고정 설명",
+        "source/generated seed",
+        "src/assets/**/*.png",
     )
     for relative in ("NEXT_CHAT_PROMPT.md", "NEXT_CHAT_HANDOFF.md", "docs/current/CURRENT_STATUS.md"):
         contains(
@@ -114,8 +117,22 @@ def main() -> int:
             "[클론 레어 아바타]",
             "2^강화단계",
             "33개",
-            "?v=359",
+            "표시 상승량 100%",
+            "성공 확률 50%",
+            "23개",
+            "SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md",
+            "src/assets/**/*.png",
+            "?v=360",
         )
+
+    frontend_plan = json.loads(read("deploy/render-static-site.example.json"))
+    assert frontend_plan["source"]["publishedSourceAllowlist"] == [
+        "index.html",
+        "admin.html",
+        "src/**/*.js",
+        "src/**/*.css",
+        "src/assets/**/*.png",
+    ]
 
     policy = json.loads(read("deploy/backend-image-ghcr-policy.example.json"))
     assert policy["schemaVersion"] == VERSION

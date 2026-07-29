@@ -2760,3 +2760,59 @@ body {
 		font-size: 14px;
 	}
 }
+
+
+/* ===== v360: field reward policy / generated special-equipment art ===== */
+.field-reward-policy {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 8px 12px;
+	align-items: center;
+	margin: 10px 12px 12px;
+	padding: 10px 12px;
+	border: 1px solid rgba(84, 204, 255, 0.38);
+	border-radius: 6px;
+	background: linear-gradient(180deg, rgba(20, 77, 105, 0.55), rgba(9, 35, 54, 0.72));
+	color: #d8f5ff;
+	font-size: 12px;
+	line-height: 1.45;
+}
+.field-reward-policy strong {
+	color: #65dcff;
+	white-space: nowrap;
+}
+.field-reward-title {
+	color: #65dcff;
+	margin-bottom: 5px;
+	font-weight: 900;
+}
+.field-reward-summary {
+	display: grid;
+	gap: 3px;
+	margin-left: 10px;
+	padding: 7px 9px;
+	border-left: 2px solid #3bbfe8;
+	background: rgba(35, 154, 195, 0.08);
+}
+.field-reward-chance {
+	color: #7fe5ff;
+	font-weight: 900;
+}
+.field-reward-success {
+	color: #8ff0ad;
+}
+.field-reward-fail {
+	color: #b7becb;
+}
+.field-reward-cap {
+	color: #ffd36e;
+}
+@media (max-width: 520px) {
+	#field-panel {
+		width: calc(100vw - 24px) !important;
+	}
+	.field-reward-policy {
+		grid-template-columns: 1fr;
+		gap: 3px;
+	}
+}

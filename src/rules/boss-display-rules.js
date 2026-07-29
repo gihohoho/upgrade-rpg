@@ -13,7 +13,6 @@ function applyGeneratedThumbnails() {
 		boss.img = iconTextUrl(`T${boss.id}`, "1b2f44", "ffffff");
 
 		let normalEquipNo = 1;
-		let specialEquipNo = 6;
 		boss.drops.forEach((drop) => {
 			if (drop.type === "skill_book") {
 				drop.img = iconTextUrl(getSkillBookIconText(drop.name), "ffd700", "000000");
@@ -27,12 +26,7 @@ function applyGeneratedThumbnails() {
 			}
 
 			if (drop.type === "special_equip") {
-				if (drop.isTalisman || drop.isEmblem || (drop.name && (drop.name.includes("탈리스만") || drop.name.includes("빛나는 휘장")))) {
-					drop.img = getSpecialEquipIconUrl(drop);
-				} else {
-					drop.img = iconTextUrl(`T${boss.id}-${specialEquipNo}`, "552266", "ffffff");
-					specialEquipNo++;
-				}
+				drop.img = getSpecialEquipIconUrl(drop);
 			}
 		});
 	});
@@ -41,18 +35,14 @@ function applyGeneratedThumbnails() {
 		const stNo = idx + 1;
 		boss.img = iconTextUrl(`ST${stNo}`, "402255", "ffffff");
 
-		let specialDropNo = 1;
 		boss.drops.forEach((drop) => {
 			if (drop.type === "skill_book") {
 				drop.img = iconTextUrl(getSkillBookIconText(drop.name), "ffd700", "000000");
 				return;
 			}
 
-			if (drop.isTalisman || drop.isEmblem || (drop.name && (drop.name.includes("탈리스만") || drop.name.includes("빛나는 휘장")))) {
+			if (drop.type === "special_equip") {
 				drop.img = getSpecialEquipIconUrl(drop);
-			} else {
-				drop.img = iconTextUrl(`ST${stNo}-${specialDropNo}`, "555555", "ffffff");
-				specialDropNo++;
 			}
 		});
 	});

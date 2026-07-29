@@ -17,7 +17,8 @@ const outputDirectory = path.resolve(projectRoot, "frontend", "legacy-dist");
 const expectedOutputDirectory = path.join(projectRoot, "frontend", "legacy-dist");
 const sourceDirectory = path.join(projectRoot, "src");
 const entrypoints = ["index.html", "admin.html"];
-const publishedExtensions = new Set([".js", ".css"]);
+const publishedExtensions = new Set([".js", ".css", ".png"]);
+const publishedAssetDirectory = path.join(sourceDirectory, "assets");
 const forbiddenTextPatterns = [
   /\bpostgres(?:ql)?\:\/\//i,
   /\bnpg_[a-z0-9]+\b/i,
@@ -42,9 +43,11 @@ async function copyRuntimeFiles(source, destination) {
       await copyRuntimeFiles(sourcePath, destinationPath);
       continue;
     }
-    if (!entry.isFile() || !publishedExtensions.has(path.extname(entry.name).toLowerCase())) {
+    const extension = path.extname(entry.name).toLowerCase();
+    if (!entry.isFile() || !publishedExtensions.has(extension)) {
       continue;
     }
+    if (extension === ".png" && !sourcePath.startsWith(`${publishedAssetDirectory}${path.sep}`)) continue;
     await mkdir(path.dirname(destinationPath), { recursive: true });
     await copyFile(sourcePath, destinationPath);
   }

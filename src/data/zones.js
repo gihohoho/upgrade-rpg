@@ -422,6 +422,14 @@ const customZones = [
   },
 ];
 
+const FIELD_FARM_REWARD_PROBABILITY = 0.5;
+function getFieldFarmRewardProbability(farm) {
+  return farm ? FIELD_FARM_REWARD_PROBABILITY : 0;
+}
+customZones.forEach((zone) => {
+  if (zone.farm) zone.farm.prob = getFieldFarmRewardProbability(zone.farm);
+});
+
 const zones = customZones.map((z, i) => ({
   level: i + 1,
   enemyName: "",

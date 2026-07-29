@@ -1,11 +1,11 @@
-# Current Status — v359
+# Current Status — v360
 
 ## 현재 결과
 
 ```txt
-latest: v359.avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required
-strict result: avatar-category-reset-refund-interface-polished-field-gain-halving-audited-static-deploy-gate-preparation-required
-next safe stage: prepare-v359-static-content-deploy-exact-sha-gate
+latest: v360.field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required
+strict result: field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required
+next safe stage: prepare-v360-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -177,7 +177,22 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 
 ## 다음 단계
 
-v359 게임 변경과 회귀 검사는 준비 완료이며 아직 공개 Static Site에는 배포하지 않았습니다. 다음 단계에서 Codex가 static-only fail-closed 계약/checker를 준비하고 push합니다. 기호가 그 gate 준비 commit의 정확한 40자리 SHA를 별도 승인하면 기존 Static Site를 exact source로 수동 deploy 한 번 실행하고 게임 화면을 read-only로 검증합니다. backend image 게시·배포, Neon DB write, seed import는 필요하지 않습니다.
+v360 게임 변경과 회귀 검사는 준비 완료이며 아직 공개 Static Site에는 배포하지 않았습니다. 다음 단계에서 Codex가 static-only fail-closed 계약/checker를 준비하고 push합니다. 기호가 그 gate 준비 commit의 정확한 40자리 SHA를 별도 승인하면 기존 Static Site를 exact source로 수동 deploy 한 번 실행하고 게임 화면을 read-only로 검증합니다. backend image 게시·배포, Neon DB write, seed import는 필요하지 않습니다.
+
+## 필드 1배·50% 규칙과 AI 특수장비 아이콘 — v360
+
+- 필드 순수공격력 성공 보상에서 `gain *= 0.5`를 제거해 각 필드에 표시된 상승량을 100% 지급합니다.
+- 순수공격력 보상이 있는 8~40단계 33개 필드의 최종 성공 확률은 모두 50%입니다. 1~7단계는 원래 순수공격력 보상이 없습니다.
+- 정적 source와 generated field seed 모두 `prob=0.5`이며, 기존 backend master-data가 과거 `prob=1`을 보내도 공통 `getFieldFarmRewardProbability()`가 런타임을 50%로 고정합니다.
+- 필드존 선택 패널에 `처치 시 50% / 성공 시 표시 상승량 100% / 실패 시 상승 없음` 고정 안내를 추가하고 각 필드 툴팁도 확률·성공·실패·최대 누적을 분리 표시합니다.
+- 변경 연관 항목을 빠짐없이 맞추도록 제목·설명·툴팁·모달·버튼·로그·캐시·source/seed·검사·문서를 함께 검색하고 동기화하는 상시 규칙을 `AGENTS.md`에 추가했습니다.
+- built-in `image_gen`으로 특수무기·목걸이·반지 4단계, 아바타 3종 2단계, 탈리스만 4단계, 휘장 단일 아이콘을 생성했습니다.
+- 최종 에셋은 23개 256×256 PNG이며 `src/assets/special-equipment/`에 저장했습니다.
+- 특수장비 38개가 이름/슬롯 판별을 통해 23개 파일을 공유합니다. 기존 저장 데이터 placeholder와 보스/테스트 지급 화면도 새 아이콘으로 정규화됩니다.
+- 캐시 키는 관련 CSS/JavaScript 모두 `?v=360`입니다.
+- generated field/item/drop seed는 동기화했지만 local/Neon DB write, backend image/API, Render 서비스는 변경하지 않았습니다.
+- 이미지 생성 프롬프트와 매핑: `docs/current/SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md`
+- 검증: JavaScript 문법, focused runtime/seed smoke, 23개 PNG signature·256×256·이름 매핑, local Chrome static mode 필드 설명과 특수보스 6단계 아이콘 확인 통과.
 
 ## 아바타 분류·강화 초기화 인터페이스·필드 전수 감사 — v359
 
@@ -187,7 +202,7 @@ v359 게임 변경과 회귀 검사는 준비 완료이며 아직 공개 Static 
 - 초기화 확인 사이 선택 장비나 강화 단계가 달라지면 실행을 취소하는 재검증을 추가했습니다.
 - 탈리스만/휘장 관리창에서는 쓸 수 없는 20/50/200회 강화 버튼을 숨기고 장착, 1회 강화·초기화, 보관함, 휴지통 순서로 재배치했습니다. 좁은 화면에서는 한 열로 접힙니다.
 - 앞으로 사용자에게 보이는 버튼·기능은 시각 위계, 간격, 문구, 반응형, 확인·취소 흐름을 함께 완성하고 브라우저에서 확인한다는 상시 규칙을 `AGENTS.md`에 추가했습니다.
-- 필드 데이터는 정적 source 40개와 backend generated 40개가 모두 일치하며, 순수공격력 보상이 있는 8~40단계 33개가 전부 같은 공통 지급 경로의 `0.5` 배율을 통과합니다. 1~7단계는 원래 해당 보상이 없습니다.
+- v359 당시 필드 데이터 40개와 공통 `0.5` 지급 배율을 확인했지만, 이 절반 지급 규칙은 v360에서 표시 상승량 100%·성공 확률 50%로 대체됐습니다.
 - 로컬 Chrome 실측에서 +0 2개와 +3 1개가 초기화 뒤 +0 10개로 합쳐졌고, 경고창과 새 버튼 배치, 무기 아바타의 파란 분류 표시를 확인했습니다.
 - 캐시 키는 CSS와 변경 JavaScript 모두 `?v=359`입니다.
 - 변경 없음: generated seed 내용, Neon DB, backend image/API, Render 서비스.
@@ -207,7 +222,7 @@ v359 게임 변경과 회귀 검사는 준비 완료이며 아직 공개 Static 
 - 스킬 치명타 확률/피해가 실제 각 스킬 피해에 적용됩니다.
 - 강화권은 묶음이 남아 있으면 같은 창에서 계속 사용하고, 마지막 사용 후에도 “모두 사용함” 상태로 창을 유지합니다.
 - 강화된 탈리스만/휘장은 강화창의 `+0으로 분해`로 1개를 +0 한 개로 되돌립니다. 재료 환급은 없습니다.
-- 필드 순수공격력은 기존 최종 정수 지급량을 절반으로 지급하며 첫 필드는 `0.5`를 지급합니다.
+- v358 당시 필드 순수공격력을 기존 최종 정수 지급량의 절반으로 바꿨지만, 이 규칙은 v360에서 표시 상승량 100%·성공 확률 50%로 대체됐습니다.
 - 로컬 Chrome에서 무기 아바타 +0 강화창과 장착 +2 탈리스만 분해 버튼을 확인했습니다.
 - 변경 없음: generated seed, Neon DB, backend image/API
 - focused smoke와 JavaScript 문법 검사 통과
@@ -240,7 +255,7 @@ Render 내부 health와 공개 `/api/v1/health`, Neon read-only `/api/v1/health/
 
 ## Frontend static/CORS recovery 결과 — v350
 
-- 실제 배포 대상: legacy `index.html`, `admin.html`, `src/**/*.js`, `src/**/*.css`
+- 실제 배포 대상: legacy `index.html`, `admin.html`, `src/**/*.js`, `src/**/*.css`, `src/assets/**/*.png`
 - Render Free Static Site: `gihohoho-upgrade-rpg`, service `srv-d9iu337aqgkc73am4lh0`
 - 게임/관리자 주소: `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`
 - production API: `https://upgrade-rpg-api.onrender.com/api/v1`

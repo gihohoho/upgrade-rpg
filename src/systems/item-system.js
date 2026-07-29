@@ -55,7 +55,7 @@ function ensureSpecialStackIdentity(item) {
 function normalizeSpecialStackItem(item) {
 	if (!item || item.type !== "special_equip") return item;
 	ensureSpecialStackIdentity(item);
-	if (typeof getSpecialEquipIconUrl === "function" && (isTalismanStackItem(item) || isEmblemStackItem(item))) {
+	if (typeof getSpecialEquipIconUrl === "function") {
 		item.img = getSpecialEquipIconUrl(item);
 	}
 	return item;

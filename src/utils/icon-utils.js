@@ -20,6 +20,7 @@ function iconTextUrl(text, bg = "333", fg = "FFF") {
 	return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
+const SPECIAL_EQUIP_ASSET_BASE = "src/assets/special-equipment";
 
 function getSpecialEquipIconInfo(item) {
 	const name = (item && item.name) || "";
@@ -31,7 +32,46 @@ function getSpecialEquipIconInfo(item) {
 	return { text: "SP", bg: "552266", fg: "ffffff" };
 }
 
+function getSpecialEquipIconAssetName(item) {
+	const name = String((item && item.name) || "");
+	const slot = parseInt(item && item.specialSlotIdx);
+
+	if ((item && item.isEmblem) || name.includes("빛나는 휘장")) return "emblem.png";
+
+	if (name.includes("탈리스만") || (item && item.isTalisman)) {
+		if (name.includes("영롱")) return "talisman-luminous.png";
+		if (name.includes("찬란한")) return "talisman-radiant.png";
+		if (name.includes("초월")) return "talisman-transcendent.png";
+		return "talisman-basic.png";
+	}
+
+	const isRadiantAvatar = name.includes("찬란한");
+	if (name.includes("클론 레어 아바타") || slot === 11) {
+		return `clone-rare-avatar-${isRadiantAvatar ? "radiant" : "basic"}.png`;
+	}
+	if (name.includes("무기 아바타") || slot === 9) {
+		return `weapon-avatar-${isRadiantAvatar ? "radiant" : "basic"}.png`;
+	}
+	if (name.includes("오라 아바타") || slot === 10) {
+		return `aura-avatar-${isRadiantAvatar ? "radiant" : "basic"}.png`;
+	}
+
+	let equipmentType = "";
+	if (name.includes("스태프") || slot === 6) equipmentType = "weapon";
+	else if (name.includes("목걸이") || slot === 7) equipmentType = "necklace";
+	else if (name.includes("반지") || slot === 8) equipmentType = "ring";
+	if (!equipmentType) return "";
+
+	let tier = "basic";
+	if (name.includes("짙은")) tier = "dark";
+	else if (name.includes("해방")) tier = "liberated";
+	else if (name.includes("초월")) tier = "transcendent";
+	return `${equipmentType}-${tier}.png`;
+}
+
 function getSpecialEquipIconUrl(item) {
+	const assetName = getSpecialEquipIconAssetName(item);
+	if (assetName) return `${SPECIAL_EQUIP_ASSET_BASE}/${assetName}`;
 	const icon = getSpecialEquipIconInfo(item);
 	return iconTextUrl(icon.text, icon.bg, icon.fg);
 }

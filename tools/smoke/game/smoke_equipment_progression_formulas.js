@@ -375,7 +375,7 @@ for (let tier = 1; tier <= 39; tier += 1) {
 
 console.log(JSON.stringify({
   ok: true,
-  result: "avatar-enhancement-item-qol-field-gain-halved-cache-refresh-ready-static-deploy-gate-preparation-required",
+  result: "field-full-gain-half-chance-descriptions-synced-generated-special-equipment-icons-ready-static-deploy-gate-preparation-required",
   auditedEquipment: 60,
   auditedSpecialEquipment: 5,
   auditedAvatarEquipment: avatarItems.length,

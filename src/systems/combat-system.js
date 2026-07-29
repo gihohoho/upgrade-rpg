@@ -502,14 +502,14 @@ function killEnemy(zoneData) {
 
 		if (zoneData.farm) {
 			let f = zoneData.farm;
-			if (Math.random() <= f.prob) {
+			let rewardProbability = typeof getFieldFarmRewardProbability === "function" ? getFieldFarmRewardProbability(f) : f.prob;
+			if (Math.random() <= rewardProbability) {
 				let pureAtk = player.farmAtkBonus || 0;
 				let gain = f.gain;
 
 				if (f.specialThreshold && pureAtk <= f.specialThreshold) gain *= f.specialMult;
 				gain *= 1 + ((t && t.farmGainInc) || 0) / 100;
 				gain = Math.floor(gain);
-				gain *= 0.5;
 
 				if (!player.farmAtkBonus) player.farmAtkBonus = 0;
 				if (player.farmAtkBonus < f.cap) {

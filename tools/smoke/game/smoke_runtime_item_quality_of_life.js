@@ -38,6 +38,9 @@ assertContains("src/ui/render-ui.js", [
   "btn.style.display = \"none\"",
   "강화 초기화",
   "+0 ${refundCount}개로 복원",
+  "처치 시 ${rewardProbability * 100}% 확률",
+  "성공: +${field.farm.gain} (표시 상승량 100% 적용)",
+  "실패: 상승 없음",
 ]);
 assertContains("index.html", [
   'id="btn-ap-dismantle-zero"',
@@ -45,16 +48,20 @@ assertContains("index.html", [
   'id="special-reset-modal"',
   'onclick="confirmSpecialReset()"',
   'onclick="closeSpecialResetModal()"',
+  "몬스터 처치 시 50% 확률",
+  "표시된 상승량을 100% 적용",
 ]);
 assertContains("src/styles/style.css", [
   "#item-action-panel.is-stack-special-action .action-btns",
   ".special-reset-summary",
   ".special-reset-confirm",
+  ".field-reward-policy",
+  ".field-reward-summary",
 ]);
 assertContains("src/systems/combat-system.js", [
-  "gain *= 0.5;",
   "const isSkillCrit = Math.random() <= t.skillCritChance / 100;",
 ]);
+assert(!read("src/systems/combat-system.js").includes("gain *= 0.5;"), "field reward amount must not be halved");
 
 const logs = [];
 const context = {
@@ -140,6 +147,10 @@ vm.runInContext(`${read("src/data/zones.js")};this.__zones = customZones;`, zone
   filename: "src/data/zones.js",
 });
 const sourceZones = Array.from(zoneContext.__zones);
+assert(
+  vm.runInContext("getFieldFarmRewardProbability({ prob: 1 })", zoneContext) === 0.5,
+  "runtime must enforce 50% even when previously stored master-data still says 100%"
+);
 const generatedZones = JSON.parse(read("backend/seeds/generated/field_zones.json"));
 assert(sourceZones.length === 40 && generatedZones.length === 40, "both field datasets must contain all 40 zones");
 
@@ -151,19 +162,70 @@ for (let index = 0; index < sourceZones.length; index += 1) {
     JSON.stringify(sourceFarm) === JSON.stringify(generatedFarm),
     `field ${index + 1} farm rule differs between static and generated data`
   );
-  if (sourceFarm) farmZoneCount += 1;
+  if (sourceFarm) {
+    farmZoneCount += 1;
+    assert(sourceFarm.prob === 0.5, `field ${index + 1} pure-attack reward probability must be 50%`);
+  }
 }
 assert(farmZoneCount === 33, "fields 8 through 40 must all have a pure-attack reward rule");
 
 const combatSource = read("src/systems/combat-system.js");
 assert(
-  /if \(f\.specialThreshold[\s\S]*?gain \*= 1 \+[\s\S]*?gain = Math\.floor\(gain\);[\s\S]*?gain \*= 0\.5;[\s\S]*?player\.farmAtkBonus \+= gain;/.test(combatSource),
-  "every zoneData.farm reward must pass threshold, bonus, floor, and common 50% reduction before being granted"
+  combatSource.includes('getFieldFarmRewardProbability(f)'),
+  "combat must use the common 50% field reward probability"
+);
+assert(
+  /if \(f\.specialThreshold[\s\S]*?gain \*= 1 \+[\s\S]*?gain = Math\.floor\(gain\);[\s\S]*?player\.farmAtkBonus \+= gain;/.test(combatSource),
+  "every successful zoneData.farm reward must grant the full calculated amount after threshold, bonus, and floor"
 );
 assertContains("src/api/master-data-adapter.js", [
   "farm: farmRules && Object.keys(farmRules).length ? cloneJson(farmRules) : null",
 ]);
 
+const iconContext = {};
+vm.createContext(iconContext);
+vm.runInContext(read("src/utils/icon-utils.js"), iconContext, { filename: "src/utils/icon-utils.js" });
+const iconCases = [
+  [{ name: "심연의 편린 스태프", specialSlotIdx: 6 }, "weapon-basic.png"],
+  [{ name: "-초월- 심연의 편린 스태프", specialSlotIdx: 6 }, "weapon-transcendent.png"],
+  [{ name: "-해방- 심연의 편린 목걸이", specialSlotIdx: 7 }, "necklace-liberated.png"],
+  [{ name: "짙은 심연의 편린 반지", specialSlotIdx: 8 }, "ring-dark.png"],
+  [{ name: "무기 아바타", specialSlotIdx: 9 }, "weapon-avatar-basic.png"],
+  [{ name: "찬란한 오라 아바타", specialSlotIdx: 10 }, "aura-avatar-radiant.png"],
+  [{ name: "찬란한 클론 레어 아바타", specialSlotIdx: 11 }, "clone-rare-avatar-radiant.png"],
+  [{ name: "탈리스만 +0", isTalisman: true }, "talisman-basic.png"],
+  [{ name: "-초월- 탈리스만 +0", isTalisman: true }, "talisman-transcendent.png"],
+  [{ name: "찬란한 탈리스만 +0", isTalisman: true }, "talisman-radiant.png"],
+  [{ name: "영롱한 탈리스만 +0", isTalisman: true }, "talisman-luminous.png"],
+  [{ name: "빛나는 휘장 +0", isEmblem: true }, "emblem.png"],
+];
+for (const [item, expectedFile] of iconCases) {
+  const actual = vm.runInContext(`getSpecialEquipIconUrl(${JSON.stringify(item)})`, iconContext);
+  assert(actual.endsWith(`/${expectedFile}`), `${item.name}: expected ${expectedFile}, got ${actual}`);
+}
+
+const assetDir = path.join(root, "src", "assets", "special-equipment");
+const expectedAssets = [
+  ...["weapon", "necklace", "ring"].flatMap((type) =>
+    ["basic", "transcendent", "liberated", "dark"].map((tier) => `${type}-${tier}.png`)
+  ),
+  ...["weapon-avatar", "aura-avatar", "clone-rare-avatar"].flatMap((type) =>
+    ["basic", "radiant"].map((tier) => `${type}-${tier}.png`)
+  ),
+  ...["basic", "transcendent", "radiant", "luminous"].map((tier) => `talisman-${tier}.png`),
+  "emblem.png",
+].flat();
+assert(expectedAssets.length === 23, "special-equipment asset inventory must contain 23 icons");
+for (const file of expectedAssets) {
+  const buffer = fs.readFileSync(path.join(assetDir, file));
+  assert(buffer.toString("ascii", 1, 4) === "PNG", `${file}: expected PNG signature`);
+  assert(buffer.readUInt32BE(16) === 256 && buffer.readUInt32BE(20) === 256, `${file}: expected 256x256 dimensions`);
+}
+assertContains("src/rules/boss-display-rules.js", [
+  'if (drop.type === "special_equip")',
+  "drop.img = getSpecialEquipIconUrl(drop);",
+]);
+
 console.log(
-  `runtime item quality-of-life smoke test passed (reset refunds 2^level; field rewards halved for all ${farmZoneCount} farm-enabled fields)`
+  `runtime item quality-of-life smoke test passed (reset refunds 2^level; ${farmZoneCount} field rewards use 50% chance/full gain; ${expectedAssets.length} generated icons mapped)`
 );
