@@ -25,6 +25,8 @@ for (const entrypoint of ["index.html", "admin.html"]) {
   assert(configIndex >= 0, `${entrypoint}: runtime-config.js is missing`);
   assert(clientIndex > configIndex, `${entrypoint}: runtime config must load before the API client`);
 }
+const gameHtml = fs.readFileSync(path.join(output, "index.html"), "utf8");
+assert(gameHtml.includes('src="src/utils/icon-utils.js?v=366"'), "normal equipment icon utility cache key differs");
 
 const runtimeConfig = fs.readFileSync(path.join(output, "src", "api", "runtime-config.js"), "utf8");
 assert(runtimeConfig.includes(productionApi), "production API base URL differs");

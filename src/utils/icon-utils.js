@@ -47,8 +47,10 @@ function getItemFrameGrade(item) {
 	if (name.startsWith("★초월 연옥★")) return "luminous";
 	if (name.startsWith("★진 연옥★") || name.startsWith("★심연★")) return "dark";
 	if (name.startsWith("★연옥★")) return "radiant";
+	if (name.startsWith("-초월-")) return "transcendent";
 	if (name.startsWith("-진-")) return "rare";
 	if (name.startsWith("-현-")) return "uncommon";
+	if (name.startsWith("[기본]")) return "basic";
 	if (name.includes("영롱") || name.includes("천공") || name.includes("진 각성")) return "luminous";
 	if (name.includes("짙은") || name === "심연의 스킬강화권") return "dark";
 	if (name.includes("찬란") || name.includes("화려")) return "radiant";

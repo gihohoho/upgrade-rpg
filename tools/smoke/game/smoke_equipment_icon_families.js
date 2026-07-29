@@ -52,6 +52,13 @@ for (const row of rows) {
 	assert.equal(row.img, expected, `${row.name}: tier/group icon mapping differs`);
 }
 
+const tier9Rows = rows.filter((row) => row.tier === 9);
+assert.equal(tier9Rows.length, 5, "tier 9 must contain five normal equipment drops");
+assert(
+	tier9Rows.every((row) => row.grade === "transcendent"),
+	"tier 9 -transcendent- prefixes must outrank inner words such as sky",
+);
+
 const iconDirectory = path.join(root, "src", "assets", "equipment");
 const tierIconPattern = /^tier-\d{2}-(?:skill-all|atk-inc|normal-dmg|skill-chance|normal-crit)\.png$/;
 const iconFiles = fs.readdirSync(iconDirectory).filter((file) => tierIconPattern.test(file)).sort();

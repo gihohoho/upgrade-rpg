@@ -1,4 +1,4 @@
-# Upgrade RPG Codex next prompt — v365
+# Upgrade RPG Codex next prompt — v366
 
 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽고 계속 지켜주세요. 기호는 코딩을 거의 모르므로 한국어로 쉽게 설명하고, 모든 터미널 명령 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension·권한·설치는 해결될 때까지 요청해주세요.
 
@@ -7,9 +7,9 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 ## 현재 고정값
 
 ```txt
-latest: v365.normal-equipment-icons-all-tiers-applied
-strict result: normal-equipment-icons-all-tiers-applied
-next safe stage: review-v365-local-equipment-icons-and-select-next-content-step
+latest: v366.normal-equipment-tier9-frame-cache-audit-fixed
+strict result: normal-equipment-tier9-frame-cache-audit-fixed
+next safe stage: owner-review-v366-local-equipment-icons-and-select-next-content-step
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -91,16 +91,19 @@ v341 source를 포함한 새 image는 게시와 isolated Alpine system CA store,
 
 ## 다음 작업
 
-v365까지 다음을 완료했습니다.
+v366까지 다음을 완료했습니다.
 
 - 16단계 `무의식 : 넥스의 몽환의 어둠 +20`은 로컬 계산 `369B / 2121% / 225.8%`이며, 특수장비 이미지 최종 캐시 식별자는 `?v=361`입니다.
-- 공개 Render Static Site는 아직 v351이므로 v357~v365 변경이 없는 것이 정상입니다.
+- 공개 Render Static Site는 아직 v351이므로 v357~v366 변경이 없는 것이 정상입니다.
 - 1~39단계 일반 장비 195개는 각각 별도 PNG를 사용합니다. 같은 계열도 파일을 공유하지 않고 기본 실루엣·각도·구도를 유지한 발전형으로 만듭니다.
 - 승급 표식을 제거한 이름이 같거나 더 긴 상위 이름에 기본 이름 전체가 포함되면 같은 계열입니다. `끝없는 절망 …`은 `절망 …`, `영원한 파멸 …`은 `파멸 …`의 상위 단계입니다.
 - v365에서 1~39단계 × 다섯 장비 종류, 총 195개의 서로 다른 256×256 PNG를 완성하고 `tier + equipGroup`으로 정확히 연결했습니다.
 - 일반 장비 이미지 캐시 식별자는 `?v=365`이며, 변경하지 않은 특수장비 PNG는 `?v=361`을 유지합니다.
 - `src/assets/equipment/`에는 실제 사용 중인 `tier-01-*`부터 `tier-39-*`까지 195개만 남겼고, 이전 이름 기반 임시 이미지 20개는 제거했습니다.
 - 같은 계열은 파일을 공유하지 않으며 실루엣·각도·구도를 이어받고 상위 단계에서 재질·색·장식·마력 효과가 발전합니다.
+- v366에서 9단계 `-초월- ... 천공` 두 장비가 `luminous`로 잘못 표시되던 등급 판정 충돌을 고쳤습니다. 9단계 5개는 실제 브라우저에서 모두 동일한 `transcendent` 청록 테두리이며 오류 로그는 0건입니다.
+- `icon-utils.js` HTML 캐시 키는 `?v=366`, 일반 장비 PNG 캐시 키는 이미지 미변경으로 `?v=365`입니다.
+- 생성 원본 236개에는 초기 합본·교체 시안도 포함됩니다. 게임 최종본은 `src/assets/equipment/` 195개이며 채팅에서 확인한 최종 반지 승급 6장과 1단계 회중시계가 포함됩니다.
 - 전체 계열 규칙, 공통 프롬프트와 단계별 파일 매핑은 `docs/current/NORMAL_EQUIPMENT_AI_ICON_ASSETS.md`에 있습니다.
 - 스킬강화권 창 유지와 모든 보상 필드의 순수공격력 **표시 상승량 100%·성공 확률 50%**를 구현했습니다. source/generated 40개를 대조했고 보상이 있는 8~40단계 33개 전체가 공통 50% 판정 경로를 사용합니다.
 - 필드존 선택 고정 설명과 각 필드 툴팁에 `처치 시 50% / 성공 시 표시 상승량 100% / 실패 시 상승 없음`을 함께 표시합니다.
@@ -190,6 +193,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v365 focused smoke는 1~39단계 일반 장비 195개의 서로 다른 로컬 이미지 URL, 정확한 `tier + equipGroup` 매핑, 전체 195개 PNG의 signature·256×256과 정적 배포 포함을 고정합니다. 다음 단계는 로컬에서 v365 이미지를 검토하고 다음 콘텐츠 작업 또는 별도 static release 범위를 선택하는 것입니다. 공개 Render Static Site는 계속 v351로 유지합니다. v362 인벤토리, v361 특수장비 이미지, v357 장비 공식과 이전 배포·공급자 baseline도 보존합니다.
+v366 focused smoke는 1~39단계 일반 장비 195개의 서로 다른 로컬 이미지 URL, 정확한 `tier + equipGroup` 매핑, 전체 195개 PNG의 signature·256×256, 9단계 초월 테두리 5/5와 `icon-utils.js?v=366` 정적 배포 포함을 고정합니다. 다음 단계는 로컬에서 v366 이미지를 검토하고 다음 콘텐츠 작업 또는 별도 static release 범위를 선택하는 것입니다. 공개 Render Static Site는 계속 v351로 유지합니다. v362 인벤토리, v361 특수장비 이미지, v357 장비 공식과 이전 배포·공급자 baseline도 보존합니다.
 
 별도 승인 전에는 추가 deploy, Render env 변경, DB/Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스를 변경하지 않습니다.

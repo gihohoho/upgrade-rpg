@@ -1,11 +1,11 @@
-# Current Status — v365
+# Current Status — v366
 
 ## 현재 결과
 
 ```txt
-latest: v365.normal-equipment-icons-all-tiers-applied
-strict result: normal-equipment-icons-all-tiers-applied
-next safe stage: review-v365-local-equipment-icons-and-select-next-content-step
+latest: v366.normal-equipment-tier9-frame-cache-audit-fixed
+strict result: normal-equipment-tier9-frame-cache-audit-fixed
+next safe stage: owner-review-v366-local-equipment-icons-and-select-next-content-step
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -178,6 +178,16 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 ## 다음 단계
 
 1~39단계 일반 장비 195개는 장비마다 별도 PNG를 사용합니다. 같은 계열은 파일을 공유하지 않고 기본 실루엣·각도·구도를 유지한 발전형으로 만듭니다. v364에서 가장 긴 `어둠을 지배하는 고리` 계열 6단계를 새 화풍으로 완료했습니다. 다음 단계는 같은 6단계 구조의 나머지 4계열 24개입니다. 전체 아이콘 작업이 끝날 때까지 기존 Render Static Site의 v351 공개본은 그대로 두고 별도 배포를 실행하지 않습니다.
+
+## 9단계 초월 테두리·아이콘 원본 감사 — v366
+
+- 9단계 `-초월- 흑염 : 잠식되는 천공`, `-초월- 흑조 : 갈라지는 천공`이 내부 단어 `천공` 때문에 `luminous`로 잘못 표시되는 충돌을 확인했습니다.
+- `-초월-` 명시 표식을 내부의 `영롱`·`천공`·`진 각성`보다 먼저 판정하도록 수정했습니다. `[기본]` 표식도 내부 키워드보다 우선해 `basic`을 유지합니다.
+- 1~39단계 일반 장비 195개의 명시 승급 표식을 전수 감사했고 같은 충돌은 위 2건뿐이었습니다.
+- `icon-utils.js`의 HTML 캐시 키를 `?v=363`에서 `?v=366`으로 갱신하고 정적 배포 smoke에 고정했습니다. 일반 장비 PNG 자체는 변경하지 않아 이미지 URL `?v=365`를 유지합니다.
+- 실제 Chrome에서 9단계 다섯 장비 모두 `item-frame-transcendent`, 2px 청록 테두리, 동일 box-shadow, 원본 256×256 → 화면 40×40, 브라우저 오류 0건을 확인했습니다.
+- 195개 PNG를 5개 전체 검토표로 확대 감사했으며 이미지 파일 내부의 직사각형 카드·액자·바깥 테두리는 추가로 발견되지 않았습니다.
+- Codex 생성 원본 폴더에는 초기 시안·합본·재생성 후보를 포함해 236개가 남아 있습니다. 프로젝트가 실제 사용하는 최종본은 `src/assets/equipment/`의 195개입니다. 최종 반지 승급 6장과 1단계 회중시계는 프로젝트에 적용됐고, 합본 비교판과 교체 전 시안은 슬롯 자산으로 사용하지 않습니다.
 
 ## 일반 장비 1~39단계 AI 이미지 전체 적용 — v365
 

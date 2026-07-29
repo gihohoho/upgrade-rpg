@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v365
+# Upgrade RPG Codex handoff — v366
 
 ## 현재 상태
 
 ```txt
-latest: v365.normal-equipment-icons-all-tiers-applied
-strict result: normal-equipment-icons-all-tiers-applied
-next safe stage: review-v365-local-equipment-icons-and-select-next-content-step
+latest: v366.normal-equipment-tier9-frame-cache-audit-fixed
+strict result: normal-equipment-tier9-frame-cache-audit-fixed
+next safe stage: owner-review-v366-local-equipment-icons-and-select-next-content-step
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -224,6 +224,16 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 - 상세 생성·검수 규칙: `docs/current/SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md`
 - 장비 스펙·필드 규칙·Neon DB·backend API/image·Render 서비스는 변경하지 않았습니다.
 
+## 9단계 초월 테두리·아이콘 원본 감사 — v366
+
+- 9단계 `-초월- 흑염 : 잠식되는 천공`, `-초월- 흑조 : 갈라지는 천공`이 내부 단어 `천공` 때문에 `luminous`로 잘못 표시되는 충돌을 확인했습니다.
+- `-초월-` 명시 표식을 내부의 `영롱`·`천공`·`진 각성`보다 먼저 판정하도록 수정했습니다. `[기본]` 표식도 내부 키워드보다 우선해 `basic`을 유지합니다.
+- 1~39단계 일반 장비 195개의 명시 승급 표식을 전수 감사했고 같은 충돌은 위 2건뿐이었습니다.
+- `icon-utils.js`의 HTML 캐시 키를 `?v=363`에서 `?v=366`으로 갱신하고 정적 배포 smoke에 고정했습니다. 일반 장비 PNG 자체는 변경하지 않아 이미지 URL `?v=365`를 유지합니다.
+- 실제 Chrome에서 9단계 다섯 장비 모두 `item-frame-transcendent`, 2px 청록 테두리, 동일 box-shadow, 원본 256×256 → 화면 40×40, 브라우저 오류 0건을 확인했습니다.
+- 195개 PNG를 5개 전체 검토표로 확대 감사했으며 이미지 파일 내부의 직사각형 카드·액자·바깥 테두리는 추가로 발견되지 않았습니다.
+- Codex 생성 원본 폴더에는 초기 시안·합본·재생성 후보를 포함해 236개가 남아 있습니다. 프로젝트가 실제 사용하는 최종본은 `src/assets/equipment/`의 195개입니다. 최종 반지 승급 6장과 1단계 회중시계는 프로젝트에 적용됐고, 합본 비교판과 교체 전 시안은 슬롯 자산으로 사용하지 않습니다.
+
 ## 일반 장비 1~39단계 AI 이미지 전체 적용 — v365
 
 - 일반 보스 1~39단계의 다섯 장비 종류에 각각 별도 256×256 PNG를 적용해 총 195개를 완성했습니다.
@@ -313,6 +323,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v365 focused smoke는 1~39단계 일반 장비 195개의 서로 다른 로컬 이미지 URL, 정확한 `tier + equipGroup` 매핑, 전체 195개 PNG의 signature·256×256과 정적 배포 포함을 고정합니다. 다음 단계는 로컬에서 v365 이미지를 검토하고 다음 콘텐츠 작업 또는 별도 static release 범위를 선택하는 것입니다. 공개 Render Static Site는 계속 v351로 유지합니다. v362 인벤토리, v361 특수장비 이미지, v357 장비 공식과 이전 배포·공급자 baseline도 계속 보존합니다.
+v366 focused smoke는 1~39단계 일반 장비 195개의 서로 다른 로컬 이미지 URL, 정확한 `tier + equipGroup` 매핑, 전체 195개 PNG의 signature·256×256, 9단계 초월 테두리 5/5와 `icon-utils.js?v=366` 정적 배포 포함을 고정합니다. 다음 단계는 로컬에서 v366 이미지를 검토하고 다음 콘텐츠 작업 또는 별도 static release 범위를 선택하는 것입니다. 공개 Render Static Site는 계속 v351로 유지합니다. v362 인벤토리, v361 특수장비 이미지, v357 장비 공식과 이전 배포·공급자 baseline도 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.
