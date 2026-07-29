@@ -1,11 +1,11 @@
-# Current Status — v363
+# Current Status — v364
 
 ## 현재 결과
 
 ```txt
-latest: v363.normal-equipment-icon-families-batch-10-20-ready
-strict result: normal-equipment-icon-families-batch-10-20-ready
-next safe stage: generate-v364-normal-equipment-icon-batch-tiers-1-9
+latest: v364.normal-equipment-tiered-icon-rule-ring-family-ready
+strict result: normal-equipment-tiered-icon-rule-ring-family-ready
+next safe stage: generate-v365-normal-equipment-tiered-icons-tier10-family-remainder
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -177,9 +177,22 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 
 ## 다음 단계
 
-1~39단계 일반 장비 195개에 필요한 고유 이미지 115개 중 v363에서 15개를 완성했습니다. 다음 단계는 1~9단계 묶음입니다. 1~5단계는 각각 단독 5개, 6↔8단계와 7↔9단계는 승급 표식을 제거한 같은 이름끼리 이미지를 공유하므로 새 PNG 35개가 필요합니다. 전체 아이콘 작업이 끝날 때까지 기존 Render Static Site의 v351 공개본은 그대로 두고 별도 배포를 실행하지 않습니다.
+1~39단계 일반 장비 195개는 장비마다 별도 PNG를 사용합니다. 같은 계열은 파일을 공유하지 않고 기본 실루엣·각도·구도를 유지한 발전형으로 만듭니다. v364에서 가장 긴 `어둠을 지배하는 고리` 계열 6단계를 새 화풍으로 완료했습니다. 다음 단계는 같은 6단계 구조의 나머지 4계열 24개입니다. 전체 아이콘 작업이 끝날 때까지 기존 Render Static Site의 v351 공개본은 그대로 두고 별도 배포를 실행하지 않습니다.
+
+## 일반 장비 단계별 발전 이미지 규칙과 반지 6단계 — v364
+
+- 이전의 “같은 계열은 PNG 하나를 공유하고 CSS 테두리만 변경” 규칙을 폐기했습니다. 최종 목표는 일반 장비 195개에 각각 별도 PNG 195개입니다.
+- 같은 계열은 기본 물체의 정체성, 실루엣, 카메라 각도, 크롭과 주요 부품을 유지하고 단계마다 재질·중심색·기존 장식·룬·마력 효과를 점진적으로 발전시킵니다.
+- 승급 표식을 제거한 이름이 같으면 같은 계열이며, 더 긴 상위 이름 안에 기본 이름 전체가 포함돼도 같은 계열입니다. 기호가 고친 21·22·23단계와 24·25·26단계 통합 분류를 보존했습니다.
+- `어둠을 지배하는 고리`의 기본 → 진 → 초월 → 연옥 → 진 연옥 → 초월 연옥 6개를 굵은 외곽선과 만화식 명암의 새 화풍으로 다시 생성했습니다. 기본 형상은 유지하면서 은색·청색 룬 → 보라·청록 에너지 → 검붉은 연옥 → 금색·청록 최종 장식으로 발전합니다.
+- 새 반지 6개 모두 `src/assets/equipment/`의 서로 다른 256×256 PNG이며 일반 장비 캐시 식별자는 `?v=364`입니다. 기존 14계열 기본 이미지는 다음 묶음에서 단계별로 교체할 때까지 안전한 fallback으로 유지합니다.
+- 실제 Chrome `http://127.0.0.1:5500/index.html`에서 10·11·12·18단계 반지를 지급했습니다. 가방에서 서로 다른 이미지가 정사각형 슬롯을 채우고 기본·진·초월·연옥 CSS 테두리가 함께 적용됐으며, DOM에서도 `dark-dominion-ring[-단계].png?v=364`와 `item-frame-radiant`를 확인했습니다.
+- 집중 검사: 10~20단계 로컬 이미지 55/55, 반지 단계 이미지 6/6 고유, 전체 에셋 20개 PNG signature·256×256, 정적 배포 산출물 포함 통과.
+- 변경 없음: 장비 스펙·강화 공식·드롭률, 필드 규칙, backend API/image, Neon DB, Render 서비스.
 
 ## 일반 장비 이미지 계열 분류와 10~20단계 첫 묶음 — v363
+
+> 아래는 v363 당시 기록입니다. 이미지 공유·115개 목표·`?v=363` 규칙은 v364에서 폐기됐으며 현재 판단에는 사용하지 않습니다.
 
 - 1~39단계 일반 장비 195개를 전수 추출했습니다. 승인된 승급 표식만 제거해 같은 이름을 묶으면 고유 이미지 115개가 필요합니다.
 - `-현-`, `-진-`, `-초월-`, `★심연★`, `★연옥★`, `★진 연옥★`, `★초월 연옥★`만 계열 표식으로 제거합니다. `끝없는 절망`, `영원한 파멸`처럼 실제 이름이 바뀌는 경우는 별도 계열입니다.

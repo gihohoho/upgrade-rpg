@@ -23,9 +23,16 @@ function iconTextUrl(text, bg = "333", fg = "FFF") {
 const SPECIAL_EQUIP_ASSET_BASE = "src/assets/special-equipment";
 const SPECIAL_EQUIP_ASSET_VERSION = "361";
 const NORMAL_EQUIP_ASSET_BASE = "src/assets/equipment";
-const NORMAL_EQUIP_ASSET_VERSION = "363";
+const NORMAL_EQUIP_ASSET_VERSION = "364";
 const NORMAL_EQUIP_ICON_ASSETS = Object.freeze({
-	"어둠을 지배하는 고리": "dark-dominion-ring.png",
+	"어둠을 지배하는 고리": Object.freeze({
+		basic: "dark-dominion-ring.png",
+		jin: "dark-dominion-ring-jin.png",
+		transcendent: "dark-dominion-ring-transcendent.png",
+		purgatory: "dark-dominion-ring-purgatory.png",
+		"true-purgatory": "dark-dominion-ring-true-purgatory.png",
+		"transcendent-purgatory": "dark-dominion-ring-transcendent-purgatory.png",
+	}),
 	"올 엘리멘탈 크리스탈": "all-elemental-crystal.png",
 	"군신의 가호가 담긴 보석": "war-god-blessing-jewel.png",
 	"루나 베네딕티오": "luna-benedictio.png",
@@ -49,6 +56,10 @@ const NORMAL_EQUIP_RANK_PREFIXES = [
 	/^-초월-\s*/,
 	/^-진-\s*/,
 	/^-현-\s*/,
+	/^\[기본\]\s*/,
+	/^끝없는\s+/,
+	/^영원한\s+/,
+	/^선\s*:\s*/,
 ];
 const ITEM_FRAME_GRADE_CLASSES = [
 	"item-frame-basic",
@@ -92,13 +103,35 @@ function getNormalEquipmentFamilyName(name) {
 			}
 		}
 	}
-	return familyName;
+	const knownFamily = Object.keys(NORMAL_EQUIP_ICON_ASSETS)
+		.filter((baseName) => familyName.includes(baseName))
+		.sort((left, right) => right.length - left.length)[0];
+	return knownFamily || familyName;
+}
+
+function getNormalEquipmentRankKey(name) {
+	const itemName = String(name || "").trim();
+	if (itemName.startsWith("★초월 연옥★")) return "transcendent-purgatory";
+	if (itemName.startsWith("★진 연옥★")) return "true-purgatory";
+	if (itemName.startsWith("★연옥★")) return "purgatory";
+	if (itemName.startsWith("★심연★")) return "abyss";
+	if (itemName.startsWith("-초월-")) return "transcendent";
+	if (itemName.startsWith("-진-")) return "jin";
+	if (itemName.startsWith("-현-")) return "hyun";
+	if (itemName.startsWith("끝없는 ")) return "endless";
+	if (itemName.startsWith("영원한 ")) return "eternal";
+	if (itemName.startsWith("선 : ")) return "sun";
+	return "basic";
 }
 
 function getNormalEquipmentIconAssetName(item) {
 	if (!item || item.type !== "normal") return "";
 	const familyName = getNormalEquipmentFamilyName(item.name);
-	return NORMAL_EQUIP_ICON_ASSETS[familyName] || "";
+	const familyAssets = NORMAL_EQUIP_ICON_ASSETS[familyName];
+	if (!familyAssets) return "";
+	if (typeof familyAssets === "string") return familyAssets;
+	const rankKey = getNormalEquipmentRankKey(item.name);
+	return familyAssets[rankKey] || familyAssets.basic || "";
 }
 
 function getNormalEquipmentIconUrl(item) {

@@ -29,9 +29,10 @@
 - 사용자에게 보이는 버튼·기능을 추가하거나 바꿀 때 기능만 연결하지 않고 기존 화면의 시각 위계, 버튼 배치, 간격, 문구, 반응형 동작까지 함께 완성하고 실제 브라우저에서 확인합니다.
 - 파괴적이거나 되돌리기 어려운 동작에는 브라우저 기본 `alert`/`confirm`을 쓰지 않고 기존 게임 UI와 일관된 확인·취소 모달을 사용하며, 결과와 반환 수량을 실행 전에 명확히 보여줍니다.
 - 동작·수치·상태를 바꾸면 연관된 화면 제목, 고정 설명, 툴팁, 모달 안내, 버튼 문구, 로그, 캐시 키, source/generated seed, 회귀 검사와 현재 문서를 함께 전수 검색해 실제 동작과 같은 내용으로 동기화합니다.
-- 생성형 인벤토리·아이템 이미지는 모두 동일한 정사각형 크기로 만듭니다. 이미지 파일 자체에는 테두리, 프레임, 카드판, inset panel, margin band를 넣지 않고 아이템과 효과가 네 변 가까이 닿도록 화면을 여백 없이 채우며, 종류를 한눈에 알아볼 수 있다면 일부가 잘리는 close-up 구도를 허용합니다. 고전 한국식 횡스크롤 액션 RPG·던전앤파이터풍의 선명하고 심플한 작은 슬롯 아이콘을 기준으로 하며 같은 계열은 기본 실루엣·정렬을 유지한 채 등급별 색·장식·마력 효과를 발전시킵니다.
-- 일반 장비 생성형 이미지는 복잡한 콘셉트 아트가 아니라 64px에서도 종류가 보이는 단일 물체, 굵은 실루엣, 2~3개 중심 색, 절제된 명암을 사용합니다. 이미지 안에 글자·숫자·로고·희귀도 테두리·날개·입자·과도한 광채·복잡한 세공을 넣지 않습니다.
-- 일반 장비 계열은 `-현-`, `-진-`, `-초월-`, `★심연★`, `★연옥★`, `★진 연옥★`, `★초월 연옥★`처럼 승인된 승급 표식만 제거했을 때 남은 이름이 정확히 같은 경우에만 같은 PNG를 공유합니다. `끝없는 절망`, `영원한 파멸`처럼 실제 장비 이름이 달라진 경우는 임의로 같은 계열이라 추측하지 않습니다. 같은 PNG를 쓰는 승급 장비는 이미지 자체를 화려하게 다시 만들지 않고 CSS 등급 테두리로 차이를 표현합니다.
+- 생성형 인벤토리·아이템 이미지는 모두 동일한 정사각형 크기로 만듭니다. 이미지 파일 자체에는 테두리, 프레임, 카드판, inset panel, margin band를 넣지 않고 아이템과 효과가 네 변 가까이 닿도록 화면을 여백 없이 채우며, 종류를 한눈에 알아볼 수 있다면 일부가 잘리는 close-up 구도를 허용합니다. 고전 한국식 횡스크롤 액션 RPG·던전앤파이터풍의 굵은 외곽선, 선명한 만화식 명암, 작은 슬롯 판독성을 기준으로 합니다.
+- 일반 장비 생성형 이미지는 64px에서도 종류가 보이는 단일 물체와 굵은 실루엣을 유지하되, 너무 밋밋하지 않도록 2~3개의 목적 있는 장식, 금속 하이라이트, 보석과 절제된 마력 효과를 허용합니다. 이미지 안에 글자·숫자·로고·희귀도 테두리·무관한 날개·과도한 입자·물체를 가리는 광채·복잡한 세공을 넣지 않습니다.
+- 같은 일반 장비 계열도 승급 단계마다 별도 PNG를 만듭니다. 기본 이미지의 물체 정체성, 실루엣, 카메라 각도, 배치와 주요 부품을 유지한 채 단계가 오를수록 재질, 중심색, 기존 부품의 장식, 룬과 마력 효과를 점진적으로 발전시킵니다. 전혀 다른 물체로 재설계하거나 CSS 테두리만 바꿔 승급 이미지를 대신하지 않습니다.
+- 일반 장비 계열은 `-현-`, `-진-`, `-초월-`, `★심연★`, `★연옥★`, `★진 연옥★`, `★초월 연옥★` 같은 승급 표식을 제거한 이름이 같으면 같은 계열입니다. 또한 `끝없는 절망 : 티아매트의 불신`이 `절망 : 티아매트의 불신`을, `영원한 파멸 : 베리아스의 불신`이 `파멸 : 베리아스의 불신`을 포함하는 것처럼 더 긴 상위 이름 안에 기본 장비 이름 전체가 들어 있으면 같은 계열로 봅니다. 여러 후보가 있으면 가장 긴 기본 이름을 우선하며 불명확하면 사용자에게 확인합니다.
 - 게임 UI에서는 이미지 파일과 별개로 모든 아이템에 등급별 CSS 테두리를 일관되게 적용합니다. 기본 등급은 효과 없는 흰색 테두리이고, 강력·빛나는·초월·해방·찬란·짙은·영롱 등 상위 단계는 색상, 이중선, 광채와 절제된 애니메이션을 점진적으로 강화합니다. 이 판정은 장착칸, 가방, 보관함, 휴지통, 관리창과 지급 미리보기 등 아이템이 표시되는 모든 위치에서 유지하며 실제 브라우저 슬롯 크기와 `prefers-reduced-motion`에서도 확인합니다.
 - 가방·보관함·휴지통에서 아이템을 이동·사용·장착해제·삭제해도 뒤 아이템을 자동으로 당기지 않고 원래 칸을 빈 칸으로 유지합니다. 새 아이템은 가장 앞의 빈 칸을 사용하고, 사용자가 각 패널의 `위로 정렬` 버튼을 눌렀을 때만 기존 상대 순서를 보존한 채 빈 칸을 제거합니다.
 
@@ -52,9 +53,9 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v363.normal-equipment-icon-families-batch-10-20-ready
-strict result: normal-equipment-icon-families-batch-10-20-ready
-next safe stage: generate-v364-normal-equipment-icon-batch-tiers-1-9
+latest: v364.normal-equipment-tiered-icon-rule-ring-family-ready
+strict result: normal-equipment-tiered-icon-rule-ring-family-ready
+next safe stage: generate-v365-normal-equipment-tiered-icons-tier10-family-remainder
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete

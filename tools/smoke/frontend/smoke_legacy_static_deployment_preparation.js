@@ -49,7 +49,7 @@ assert(!files.some((file) => /\.md$/i.test(file)), "documentation must not be pu
 const specialEquipmentAssets = files.filter((file) => file.startsWith("src/assets/special-equipment/") && file.endsWith(".png"));
 assert.equal(specialEquipmentAssets.length, 23, "all 23 generated special-equipment icons must be published");
 const normalEquipmentAssets = files.filter((file) => file.startsWith("src/assets/equipment/") && file.endsWith(".png"));
-assert.equal(normalEquipmentAssets.length, 15, "all 15 first-batch normal-equipment icons must be published");
+assert.equal(normalEquipmentAssets.length, 20, "all 20 v364 normal-equipment icons must be published");
 for (const relative of [...specialEquipmentAssets, ...normalEquipmentAssets]) {
 	const bytes = fs.readFileSync(path.join(output, relative));
 	assert(bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), `${relative}: invalid PNG signature`);

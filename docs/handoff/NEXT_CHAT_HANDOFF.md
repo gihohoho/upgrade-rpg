@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v363
+# Upgrade RPG Codex handoff — v364
 
 ## 현재 상태
 
 ```txt
-latest: v363.normal-equipment-icon-families-batch-10-20-ready
-strict result: normal-equipment-icon-families-batch-10-20-ready
-next safe stage: generate-v364-normal-equipment-icon-batch-tiers-1-9
+latest: v364.normal-equipment-tiered-icon-rule-ring-family-ready
+strict result: normal-equipment-tiered-icon-rule-ring-family-ready
+next safe stage: generate-v365-normal-equipment-tiered-icons-tier10-family-remainder
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -224,7 +224,21 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 - 상세 생성·검수 규칙: `docs/current/SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md`
 - 장비 스펙·필드 규칙·Neon DB·backend API/image·Render 서비스는 변경하지 않았습니다.
 
+## 일반 장비 단계별 발전 이미지 규칙과 반지 6단계 — v364
+
+- 일반 장비 195개는 최종적으로 각각 별도 PNG를 사용합니다. 같은 계열도 PNG를 공유하지 않고 기본 실루엣·카메라 각도·구도와 주요 부품을 유지한 채 단계별 재질·색·장식·룬·마력 효과를 발전시킵니다.
+- 승급 표식을 제거한 이름이 같거나 더 긴 상위 이름 안에 기본 이름 전체가 포함되면 같은 계열입니다. 기호가 직접 고친 21·22·23 및 24·25·26단계 통합 표를 보존했습니다.
+- v364에서는 `어둠을 지배하는 고리` 기본·진·초월·연옥·진 연옥·초월 연옥 6개를 굵은 외곽선과 만화식 명암의 별도 256×256 PNG로 완성했습니다.
+- `src/assets/equipment/`에는 새 반지 6개와 다음 묶음에서 재생성할 기존 기본 이미지 14개, 총 20개가 있습니다. 일반 장비 캐시 키는 `?v=364`입니다.
+- 전용 smoke는 10~20단계 55개 로컬 이미지, 반지 단계 6/6 별도 파일, 전체 20개 PNG signature·256×256과 정적 산출물 포함을 확인했습니다.
+- 실제 Chrome에서 10·11·12·18단계 반지를 지급해 서로 다른 이미지와 기본·진·초월·연옥 CSS 테두리의 공통 적용을 확인했습니다.
+- 다음 묶음은 10·11·12·18·19·20단계 나머지 4계열 24개입니다. 이전 단계 PNG를 편집 원본으로 사용해 같은 계열의 형태를 유지합니다.
+- 전체 규칙·파일 매핑: `docs/current/NORMAL_EQUIPMENT_AI_ICON_ASSETS.md`
+- 장비 수치·강화 공식·드롭률, 필드 규칙, backend API/image, Neon DB, Render 서비스는 변경하지 않았습니다.
+
 ## 일반 장비 이미지 계열 분류와 10~20단계 첫 묶음 — v363
+
+> 아래는 v363 당시 기록입니다. 이미지 공유·115개 목표·`?v=363` 규칙은 v364에서 폐기됐으며 현재 판단에는 사용하지 않습니다.
 
 - 일반 보스 1~39단계 장비 195개를 전수 분류했습니다. 승인된 승급 표식을 제거해 같은 이름을 묶으면 고유 PNG는 115개가 필요합니다.
 - 계열 표식은 `-현-`, `-진-`, `-초월-`, `★심연★`, `★연옥★`, `★진 연옥★`, `★초월 연옥★`입니다. `끝없는 절망`, `영원한 파멸`처럼 실제 이름이 바뀌는 경우는 별도 계열입니다.
@@ -251,7 +265,7 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 - CSS와 변경 JavaScript 로드 키는 `?v=362`입니다. 이미지 파일과 이미지 URL `?v=361`은 원본 미변경 때문에 유지합니다.
 - 변경 없음: PNG 원본, 장비 수치·밸런스, 필드 규칙, Neon DB, backend API/image, Render 서비스.
 
-현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 1~9단계 일반 장비용 새 PNG 35개를 같은 단순 디자인 규칙으로 생성·적용하는 것입니다. 전체 이미지 작업이 끝날 때까지 Render Static Site deploy는 실행하지 않습니다.
+현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 10·11·12·18·19·20단계의 나머지 4계열을 같은 실루엣의 단계별 발전형 24개 PNG로 생성·적용하는 것입니다. 전체 이미지 작업이 끝날 때까지 Render Static Site deploy는 실행하지 않습니다.
 
 로컬 검사 주의: Windows 전역 `DEBUG=release`는 backend의 boolean `DEBUG`와 충돌합니다. 시스템 환경변수는 바꾸지 말고 backend/core 검사 자식 프로세스에서만 `DEBUG`를 unset하거나 `DEBUG=false`로 덮어씁니다.
 
@@ -286,6 +300,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v363 focused smoke는 10~20단계 일반 장비 55개가 15개 계열 PNG를 공유하는 규칙, 승인된 승급 표식 정규화, CSS 등급 순서, 모든 새 PNG의 signature·256×256과 정적 배포 포함을 고정합니다. 다음 단계는 `generate-v364-normal-equipment-icon-batch-tiers-1-9`이며 공개 Render Static Site는 계속 v351로 유지합니다. v362 인벤토리, v361 특수장비 이미지, v357 장비 공식과 이전 배포·공급자 baseline도 계속 보존합니다.
+v364 focused smoke는 10~20단계 일반 장비 55개의 로컬 이미지, 반지 계열 6단계의 서로 다른 파일, 전체 20개 PNG의 signature·256×256과 정적 배포 포함을 고정합니다. 다음 단계는 `generate-v365-normal-equipment-tiered-icons-tier10-family-remainder`이며 공개 Render Static Site는 계속 v351로 유지합니다. v362 인벤토리, v361 특수장비 이미지, v357 장비 공식과 이전 배포·공급자 baseline도 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.
