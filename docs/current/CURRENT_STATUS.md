@@ -1,11 +1,11 @@
-# Current Status — v366
+# Current Status — v367
 
 ## 현재 결과
 
 ```txt
-latest: v366.normal-equipment-tier9-frame-cache-audit-fixed
-strict result: normal-equipment-tier9-frame-cache-audit-fixed
-next safe stage: owner-review-v366-local-equipment-icons-and-select-next-content-step
+latest: v367.elemental-crystal-family-and-equipment-family-frames-fixed
+strict result: elemental-crystal-family-and-equipment-family-frames-fixed
+next safe stage: owner-review-v367-local-equipment-icons-and-select-next-content-step
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -177,7 +177,20 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 
 ## 다음 단계
 
-1~39단계 일반 장비 195개는 장비마다 별도 PNG를 사용합니다. 같은 계열은 파일을 공유하지 않고 기본 실루엣·각도·구도를 유지한 발전형으로 만듭니다. v364에서 가장 긴 `어둠을 지배하는 고리` 계열 6단계를 새 화풍으로 완료했습니다. 다음 단계는 같은 6단계 구조의 나머지 4계열 24개입니다. 전체 아이콘 작업이 끝날 때까지 기존 Render Static Site의 v351 공개본은 그대로 두고 별도 배포를 실행하지 않습니다.
+1~39단계 일반 장비 195개는 장비마다 별도 PNG를 사용합니다. 같은 계열은 파일을 공유하지 않고 기본 실루엣·각도·구도를 유지한 발전형으로 만듭니다. v367에서 `올 엘리멘탈 크리스탈` 6단계와 계열별 테두리 판정 오류를 바로잡았습니다. 다음 단계는 로컬에서 v367 결과를 검토한 뒤 남은 장비 이미지 또는 별도 static release 범위를 선택하는 것입니다. 기존 Render Static Site의 v351 공개본은 그대로 유지합니다.
+
+## 4원소 크리스탈 6단계·계열 테두리 동기화 — v367
+
+- 이전의 단순 파랑·금색 결정 시안은 더 이상 사용하지 않습니다. 10·11·12·18·19·20단계 `올 엘리멘탈 크리스탈`을 사용자가 확인한 불·물·바람·빛 사분할 보석 기본형에서 이어지는 6개의 별도 256×256 PNG로 모두 다시 생성했습니다.
+- 여섯 이미지는 같은 사분할 실루엣, 원소 위치, 발톱 위치, 카메라 각도와 크롭을 유지하고 청은색 룬 → 초월 마력선 → 흑보라 연옥 금속 → 금색 최종 장식 순으로 발전합니다.
+- 이름 키워드만으로 CSS 등급을 추측하던 누락을 보완했습니다. 일반 장비는 확인된 계열 단계표를 먼저 사용합니다.
+- 21·22·23단계와 24·25·26단계는 각각 `basic → rare → transcendent`입니다. 따라서 `끝없는` T23과 `영원한` T26도 초월 테두리입니다.
+- 30·31·35·36단계는 같은 기본형 계열이며 `basic → rare → transcendent → liberated`입니다. 따라서 T35는 초월, T36은 해방 테두리입니다.
+- 이름 기반 기존 판정은 다른 장비의 fallback으로 유지하고, 위 확정 계열만 tier 기반 단계표로 먼저 판정합니다.
+- 일반 장비 이미지와 `icon-utils.js` 캐시 식별자를 모두 `?v=367`로 갱신했습니다.
+- focused smoke는 1~39단계 195개 URL·PNG 규격, 4원소 6개 SHA-256과 상이성, T21~23·T24~26·T30/31/35/36의 등급 순서를 fail-closed로 고정합니다.
+- 로컬 브라우저 DOM에서 `?v=367` 로딩과 T23 `item-frame-transcendent`를 확인했고, 기본형과 최종형 PNG를 직접 확대 확인했습니다.
+- 변경 없음: 장비 능력치·강화 공식·드롭률, field 규칙, backend API/image, Neon DB, Render 서비스와 공개 v351 Static Site.
 
 ## 9단계 초월 테두리·아이콘 원본 감사 — v366
 

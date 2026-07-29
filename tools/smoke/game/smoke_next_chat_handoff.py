@@ -22,9 +22,9 @@ ARTIFACT_IDS = [8638838292, 8638825538]
 IMAGE_DIGEST = "sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac"
 VERIFIED_CANDIDATE_REFERENCE = f"{REPOSITORY}@{IMAGE_DIGEST}"
 PRODUCTION_REFERENCE = f"{REPOSITORY}@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
-CURRENT_VERSION = "v366.normal-equipment-tier9-frame-cache-audit-fixed"
-CURRENT_RESULT = "normal-equipment-tier9-frame-cache-audit-fixed"
-CURRENT_NEXT_STAGE = "owner-review-v366-local-equipment-icons-and-select-next-content-step"
+CURRENT_VERSION = "v367.elemental-crystal-family-and-equipment-family-frames-fixed"
+CURRENT_RESULT = "elemental-crystal-family-and-equipment-family-frames-fixed"
+CURRENT_NEXT_STAGE = "owner-review-v367-local-equipment-icons-and-select-next-content-step"
 PRIOR_PROVIDER_VERSION = "v355.v351-provider-release-deployed-verified-content-ready"
 PRIOR_PROVIDER_RESULT = "v351-provider-release-deployed-verified-content-ready"
 PRIOR_PROVIDER_NEXT_STAGE = "select-first-content-and-balance-change-scope"
@@ -138,7 +138,7 @@ def main() -> int:
             "흰색 테두리",
             "↑ 위로 정렬",
             "첫 빈 칸",
-            "?v=365",
+            "?v=367",
             "NORMAL_EQUIPMENT_AI_ICON_ASSETS.md",
             "195개",
             "tier + equipGroup",

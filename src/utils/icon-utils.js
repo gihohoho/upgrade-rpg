@@ -23,13 +23,25 @@ function iconTextUrl(text, bg = "333", fg = "FFF") {
 const SPECIAL_EQUIP_ASSET_BASE = "src/assets/special-equipment";
 const SPECIAL_EQUIP_ASSET_VERSION = "361";
 const NORMAL_EQUIP_ASSET_BASE = "src/assets/equipment";
-const NORMAL_EQUIP_ASSET_VERSION = "365";
+const NORMAL_EQUIP_ASSET_VERSION = "367";
 const NORMAL_EQUIP_GROUP_ASSET_KEYS = Object.freeze({
 	skill_all: "skill-all",
 	atk_inc: "atk-inc",
 	normal_dmg: "normal-dmg",
 	skill_chance: "skill-chance",
 	normal_crit: "normal-crit",
+});
+const NORMAL_EQUIPMENT_FAMILY_STAGE_GRADES = Object.freeze({
+	21: "basic",
+	22: "rare",
+	23: "transcendent",
+	24: "basic",
+	25: "rare",
+	26: "transcendent",
+	30: "basic",
+	31: "rare",
+	35: "transcendent",
+	36: "liberated",
 });
 const ITEM_FRAME_GRADE_CLASSES = [
 	"item-frame-basic",
@@ -44,6 +56,11 @@ const ITEM_FRAME_GRADE_CLASSES = [
 
 function getItemFrameGrade(item) {
 	const name = String((item && item.name) || "");
+	const tier = Number(item && item.tier);
+	if (item && item.type === "normal" && Number.isInteger(tier)) {
+		const familyStageGrade = NORMAL_EQUIPMENT_FAMILY_STAGE_GRADES[tier];
+		if (familyStageGrade) return familyStageGrade;
+	}
 	if (name.startsWith("★초월 연옥★")) return "luminous";
 	if (name.startsWith("★진 연옥★") || name.startsWith("★심연★")) return "dark";
 	if (name.startsWith("★연옥★")) return "radiant";

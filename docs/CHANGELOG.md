@@ -1,3 +1,11 @@
+# v367.elemental-crystal-family-and-equipment-family-frames-fixed
+
+- 이전 단순 파랑·금색 결정 시안을 폐기하고 10·11·12·18·19·20단계 `올 엘리멘탈 크리스탈`을 사용자가 확인한 불·물·바람·빛 사분할 기본형의 단계별 발전 이미지 6개로 모두 교체했습니다.
+- 확정된 장비 계열 단계표가 이름 키워드보다 CSS 등급 판정에서 우선하도록 했습니다.
+- 21→22→23과 24→25→26은 `basic → rare → transcendent`, 30→31→35→36은 `basic → rare → transcendent → liberated` 테두리를 사용합니다.
+- 기본형 이미지 교체 시 모든 파생 단계 이미지도 같은 작업에서 다시 만들고 이미지·테두리 발전 단계를 함께 맞추는 규칙을 문서와 handoff에 고정했습니다.
+- 일반 장비 이미지와 `icon-utils.js` 캐시 식별자를 `?v=367`로 갱신했으며 장비 능력치·강화 공식·드롭률, backend, Neon, Render 공개본은 변경하지 않았습니다.
+
 # v362.item-grade-frames-stable-manual-compact-inventory-ready-static-deploy-gate-preparation-required
 
 - 기존 23개 PNG를 다시 만들지 않고 모든 아이템 표시 위치에 이름 기반 CSS 등급 프레임을 추가했습니다. 기본은 효과 없는 흰색 테두리이며 상위 단계는 색·이중선·광채·절제된 애니메이션이 점진적으로 강화됩니다.
