@@ -22,9 +22,9 @@ ARTIFACT_IDS = [8638838292, 8638825538]
 IMAGE_DIGEST = "sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac"
 VERIFIED_CANDIDATE_REFERENCE = f"{REPOSITORY}@{IMAGE_DIGEST}"
 PRODUCTION_REFERENCE = f"{REPOSITORY}@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1"
-CURRENT_VERSION = "v362.item-grade-frames-stable-manual-compact-inventory-ready-static-deploy-gate-preparation-required"
-CURRENT_RESULT = "item-grade-frames-stable-manual-compact-inventory-ready-static-deploy-gate-preparation-required"
-CURRENT_NEXT_STAGE = "prepare-v362-static-content-deploy-exact-sha-gate"
+CURRENT_VERSION = "v363.normal-equipment-icon-families-batch-10-20-ready"
+CURRENT_RESULT = "normal-equipment-icon-families-batch-10-20-ready"
+CURRENT_NEXT_STAGE = "generate-v364-normal-equipment-icon-batch-tiers-1-9"
 PRIOR_PROVIDER_VERSION = "v355.v351-provider-release-deployed-verified-content-ready"
 PRIOR_PROVIDER_RESULT = "v351-provider-release-deployed-verified-content-ready"
 PRIOR_PROVIDER_NEXT_STAGE = "select-first-content-and-balance-change-scope"
@@ -113,6 +113,8 @@ def main() -> int:
         "실제 브라우저 슬롯 크기",
         "기본 등급은 효과 없는 흰색 테두리",
         "등급별 CSS 테두리",
+        "승급 표식",
+        "복잡한 세공",
         "`위로 정렬` 버튼",
     )
     for relative in ("NEXT_CHAT_PROMPT.md", "NEXT_CHAT_HANDOFF.md", "docs/current/CURRENT_STATUS.md"):
@@ -134,7 +136,9 @@ def main() -> int:
             "흰색 테두리",
             "↑ 위로 정렬",
             "첫 빈 칸",
-            "?v=362",
+            "?v=363",
+            "NORMAL_EQUIPMENT_AI_ICON_ASSETS.md",
+            "115개",
         )
 
     frontend_plan = json.loads(read("deploy/render-static-site.example.json"))

@@ -1012,7 +1012,7 @@ function renderTestItemList(boss) {
 		btn.style.height = "auto";
 		btn.style.padding = "10px";
 		btn.innerHTML = `
-      <img class="special-drop-item-icon" src="${drop.img}" alt="">
+      <img class="special-drop-item-icon" src="${previewItem.img}" alt="">
       <span style="font-size:12px; color:#fff;">${typeof getDisplayNameWithLevel === "function" ? getDisplayNameWithLevel(typeof prepareStackableItem === "function" ? prepareStackableItem(drop) : drop) : drop.name}</span>
     `;
 		if (typeof applyItemFrameClass === "function") applyItemFrameClass(btn.querySelector(".special-drop-item-icon"), previewItem);
@@ -1038,7 +1038,7 @@ function renderTestItemList(boss) {
 
 			if (hasEmptyItemSlot(player.inventory, player.maxInventorySize)) {
 				let newItem = { ...giveItem, id: Date.now() };
-				if (typeof normalizeSpecialStackItem === "function") normalizeSpecialStackItem(newItem);
+				if (typeof normalizeItemIcon === "function") normalizeItemIcon(newItem);
 				placeItemInFirstEmptySlot(player.inventory, newItem, player.maxInventorySize);
 				addLog(`🎁 [테스트 지급] ${newItem.name} 아이템을 ${giveCount}개 받았습니다.`, true);
 				renderUI();

@@ -1,4 +1,4 @@
-# Upgrade RPG Codex next prompt — v362
+# Upgrade RPG Codex next prompt — v363
 
 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽고 계속 지켜주세요. 기호는 코딩을 거의 모르므로 한국어로 쉽게 설명하고, 모든 터미널 명령 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension·권한·설치는 해결될 때까지 요청해주세요.
 
@@ -7,9 +7,9 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 ## 현재 고정값
 
 ```txt
-latest: v362.item-grade-frames-stable-manual-compact-inventory-ready-static-deploy-gate-preparation-required
-strict result: item-grade-frames-stable-manual-compact-inventory-ready-static-deploy-gate-preparation-required
-next safe stage: prepare-v362-static-content-deploy-exact-sha-gate
+latest: v363.normal-equipment-icon-families-batch-10-20-ready
+strict result: normal-equipment-icon-families-batch-10-20-ready
+next safe stage: generate-v364-normal-equipment-icon-batch-tiers-1-9
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -91,10 +91,18 @@ v341 source를 포함한 새 image는 게시와 isolated Alpine system CA store,
 
 ## 다음 작업
 
-v362까지 다음을 완료했습니다.
+v363까지 다음을 완료했습니다.
 
 - 16단계 `무의식 : 넥스의 몽환의 어둠 +20`은 로컬 계산 `369B / 2121% / 225.8%`이며, 특수장비 이미지 최종 캐시 식별자는 `?v=361`입니다.
-- 공개 Render Static Site는 아직 v351이므로 v357~v362 변경이 없는 것이 정상입니다.
+- 공개 Render Static Site는 아직 v351이므로 v357~v363 변경이 없는 것이 정상입니다.
+- 1~39단계 일반 장비 195개를 전수 분류했습니다. 승인된 승급 표식만 제거해 같은 이름을 묶으면 고유 이미지 115개가 필요합니다.
+- v363에서 10~20단계 장비 55개에 사용할 고유 이미지 15개를 built-in `image_gen`으로 생성하고 `src/assets/equipment/`에 256×256 PNG로 저장했습니다.
+- 일반 장비 이미지와 관련 JavaScript 캐시 식별자는 `?v=363`이며, 변경하지 않은 특수장비 PNG는 `?v=361`을 유지합니다.
+- `마음을 새긴 바다`의 기본·`-진-`·`★심연★`, 그리고 `어둠을 지배하는 고리`의 기본·진·초월·연옥·진 연옥·초월 연옥은 같은 PNG를 공유하고 CSS 등급 프레임만 점진적으로 강화합니다.
+- 실제 Chrome에서 13·14·15단계가 같은 `engraved-sea-heart.png?v=363`을 사용하고 프레임만 `basic / rare / dark`로 바뀌며 브라우저 오류가 없는 것을 확인했습니다.
+- 일반 장비 이미지는 글자·숫자·내장 테두리·입자·날개·과도한 광채·복잡한 세공 없이 단일 물체, 굵은 실루엣, 2~3개 중심 색의 단순한 작은 슬롯 아이콘으로 만듭니다.
+- `끝없는 절망`, `영원한 파멸`처럼 실제 장비 이름이 달라지면 자동으로 같은 계열이라고 추측하지 않습니다.
+- 전체 1~39단계 계열표, 공통 프롬프트와 v363 파일 매핑은 `docs/current/NORMAL_EQUIPMENT_AI_ICON_ASSETS.md`에 있습니다.
 - 스킬강화권 창 유지와 모든 보상 필드의 순수공격력 **표시 상승량 100%·성공 확률 50%**를 구현했습니다. source/generated 40개를 대조했고 보상이 있는 8~40단계 33개 전체가 공통 50% 판정 경로를 사용합니다.
 - 필드존 선택 고정 설명과 각 필드 툴팁에 `처치 시 50% / 성공 시 표시 상승량 100% / 실패 시 상승 없음`을 함께 표시합니다.
 - 무기/오라/클론 레어 아바타 +0~+20 성장과 +20 `88.2B`, 각각 `평타 치명 피해 증폭 33%` / `추가 스킬공격 계수 증폭 33%` / `스킬 치명 10%·150%`를 구현했습니다.
@@ -114,7 +122,7 @@ v362까지 다음을 완료했습니다.
 - 스킬 치명타 확률/피해를 실제 스킬 피해 계산에 연결했습니다.
 - generated field/item/drop seed는 동기화했지만 Neon DB write, backend image/API, Render 서비스는 변경하지 않았습니다.
 
-다음 단계에서는 v362 static-only fail-closed 배포 계약/checker를 준비하고 push합니다. 그 준비 commit의 exact SHA를 기호가 별도 승인하기 전에는 Render Static Site deploy를 실행하지 않습니다.
+다음 단계에서는 1~9단계 일반 장비 이미지를 만듭니다. 1~5단계 단독 25개와 6↔8·7↔9 공유 계열 10개로 새 PNG 35개가 필요합니다. 전체 장비 이미지 작업이 끝날 때까지 Render Static Site deploy를 실행하지 않습니다.
 
 승인된 v343 SHA `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 Neon restore를 한 번 실행했습니다. 22 application tables / 748 rows / schema digest가 일치했고 stamp 전에 legacy data digest 비교가 session timezone 차이로 멈췄습니다. UTC-normalized digest는 verified rehearsal과 Neon이 정확히 일치하며 `alembic_version`은 없습니다.
 
@@ -146,7 +154,7 @@ v356에서 12단계 `607%` 기준을 반영했고 v357에서 16단계 `무의식
 
 1~12단계 일반 장비 60종과 탈리스만 5종을 감사했습니다. 전체 장비 단일 공식은 없고 1~11 고정값·옵션별 예외 공식과 12+ 생성 공식이 함께 사용되지만 누락·중복·비의도 불일치는 없습니다. 상세 문서는 `docs/current/EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`, 회귀 검사는 `tools/smoke/game/smoke_equipment_progression_formulas.js`입니다.
 
-공격력·모든 피해·나머지 4그룹·generated seed·Neon DB·backend image는 변경하지 않았습니다. 17단계 추가 스킬 계수 `2097179%`·치명 피해 `803447%`, 18단계 `851B / 평타 피해 7506%`도 기존값을 고정했습니다. 다음 단계에서는 기존 Static Site, exact source commit, auto-deploy Off, 수동 deploy 1회, backend/DB/env 무변경과 read-only 검증을 고정하는 v358 static-only fail-closed gate를 먼저 준비합니다. 그 gate 준비 commit의 정확한 40자리 SHA를 기호가 별도 승인하기 전에는 공개 배포하지 않습니다. sanitized provider evidence `deploy/review/render-v351-provider-release-v355.json`과 재발급된 deploy hook 보안 상태는 계속 보존합니다.
+공격력·모든 피해·나머지 4그룹·generated seed·Neon DB·backend image는 변경하지 않았습니다. 17단계 추가 스킬 계수 `2097179%`·치명 피해 `803447%`, 18단계 `851B / 평타 피해 7506%`도 기존값을 고정했습니다. 다음 단계는 1~9단계 일반 장비 이미지 35개 생성·적용이며, 전체 이미지 작업이 끝날 때까지 공개 배포하지 않습니다. sanitized provider evidence `deploy/review/render-v351-provider-release-v355.json`과 재발급된 deploy hook 보안 상태는 계속 보존합니다.
 
 현재 필요한 사용자 조치, extension, 권한, 새 설치는 없습니다.
 
@@ -161,6 +169,7 @@ Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.ex
 ```bash
 node tools/smoke/game/smoke_equipment_progression_formulas.js
 node tools/smoke/game/smoke_runtime_item_quality_of_life.js
+node tools/smoke/game/smoke_equipment_icon_families.js
 python tools/check_v351_public_release_gates.py --strict
 python tools/smoke/backend/smoke_v351_public_release_gates.py
 python tools/check_runtime_blocking_io.py --strict
@@ -182,6 +191,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v362 focused smoke는 v361 이미지 회귀와 함께 등급 프레임 판정, 기본 흰색 테두리, 세 저장 공간의 빈 칸 유지, 첫 빈 칸 배치, 수동 위로 정렬과 세 버튼을 고정합니다. PNG 원본과 이미지 URL은 v361 그대로이며 CSS·관련 JavaScript 로드 키는 `?v=362`입니다. 다음 단계는 `prepare-v362-static-content-deploy-exact-sha-gate`입니다. v357 장비 공식, v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection, v334 generic deployment baseline도 보존합니다.
+v363 focused smoke는 10~20단계 일반 장비 55개가 15개 계열 PNG를 공유하는 규칙, 승인된 승급 표식 정규화, CSS 등급 순서, 새 PNG의 signature·256×256과 정적 배포 포함을 고정합니다. 다음 단계는 `generate-v364-normal-equipment-icon-batch-tiers-1-9`이며 공개 Render Static Site는 계속 v351로 유지합니다. v362 인벤토리, v361 특수장비 이미지, v357 장비 공식과 이전 배포·공급자 baseline도 보존합니다.
 
 별도 승인 전에는 추가 deploy, Render env 변경, DB/Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스를 변경하지 않습니다.

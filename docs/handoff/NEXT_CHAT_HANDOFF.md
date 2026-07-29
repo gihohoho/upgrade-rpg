@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v362
+# Upgrade RPG Codex handoff — v363
 
 ## 현재 상태
 
 ```txt
-latest: v362.item-grade-frames-stable-manual-compact-inventory-ready-static-deploy-gate-preparation-required
-strict result: item-grade-frames-stable-manual-compact-inventory-ready-static-deploy-gate-preparation-required
-next safe stage: prepare-v362-static-content-deploy-exact-sha-gate
+latest: v363.normal-equipment-icon-families-batch-10-20-ready
+strict result: normal-equipment-icon-families-batch-10-20-ready
+next safe stage: generate-v364-normal-equipment-icon-batch-tiers-1-9
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -224,6 +224,20 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 - 상세 생성·검수 규칙: `docs/current/SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md`
 - 장비 스펙·필드 규칙·Neon DB·backend API/image·Render 서비스는 변경하지 않았습니다.
 
+## 일반 장비 이미지 계열 분류와 10~20단계 첫 묶음 — v363
+
+- 일반 보스 1~39단계 장비 195개를 전수 분류했습니다. 승인된 승급 표식을 제거해 같은 이름을 묶으면 고유 PNG는 115개가 필요합니다.
+- 계열 표식은 `-현-`, `-진-`, `-초월-`, `★심연★`, `★연옥★`, `★진 연옥★`, `★초월 연옥★`입니다. `끝없는 절망`, `영원한 파멸`처럼 실제 이름이 바뀌는 경우는 별도 계열입니다.
+- v363에서는 10~20단계 장비 55개에 필요한 고유 이미지 15개를 built-in `image_gen`으로 만들었습니다. 모두 `src/assets/equipment/`의 256×256 PNG입니다.
+- 같은 계열은 PNG를 공유하고 CSS 프레임만 강화합니다. `마음을 새긴 바다` 계열은 기본 → 진 → 심연, `어둠을 지배하는 고리` 계열은 기본 → 진 → 초월 → 연옥 → 진 연옥 → 초월 연옥 순서입니다.
+- 새 아이콘은 글자·숫자·로고·내장 테두리·입자·날개·과도한 광채·복잡한 세공 없이 단일 물체와 굵은 실루엣, 2~3개 중심 색으로 단순하게 만들었습니다.
+- 보스 드롭 원본, 신규 획득과 기존 저장 데이터의 가방·보관함·휴지통·장착칸·우편에서 같은 로컬 이미지 경로를 사용합니다.
+- 일반 장비 에셋과 관련 JavaScript 캐시 식별자는 `?v=363`입니다. 특수장비 PNG와 URL은 `?v=361` 그대로입니다.
+- 전용 smoke에서 10~20단계 55개 전체의 로컬 이미지, 고유 15계열, 승급 이름/등급 공유, PNG signature·256×256과 정적 배포 포함을 확인했습니다.
+- 실제 Chrome에서 13·14·15단계 `마음을 새긴 바다`가 동일한 `engraved-sea-heart.png?v=363`을 사용하고 CSS 등급만 `basic / rare / dark`로 바뀌는 것을 확인했습니다. 원본 256×256, 목록 렌더링 40×40, 브라우저 오류 0건입니다.
+- 전체 계열표·프롬프트·파일 매핑: `docs/current/NORMAL_EQUIPMENT_AI_ICON_ASSETS.md`
+- 변경 없음: 장비 수치·강화 공식·드롭률, 필드 규칙, Neon DB, backend API/image, Render 서비스.
+
 ## 등급 CSS 테두리·위치 유지·수동 위로 정렬 — v362
 
 - 사용자 요청에 따라 “게임 화면에서 테두리 없음” 정책은 취소했습니다. 23개 PNG 파일 자체는 다시 만들거나 수정하지 않고 v361 full-bleed 원본을 그대로 사용합니다.
@@ -237,7 +251,7 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 - CSS와 변경 JavaScript 로드 키는 `?v=362`입니다. 이미지 파일과 이미지 URL `?v=361`은 원본 미변경 때문에 유지합니다.
 - 변경 없음: PNG 원본, 장비 수치·밸런스, 필드 규칙, Neon DB, backend API/image, Render 서비스.
 
-현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 Codex가 v362 static-only 배포 계약/checker를 준비하는 것이며, 그 준비 commit이 push된 뒤에만 기호에게 exact SHA 승인을 요청합니다.
+현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 1~9단계 일반 장비용 새 PNG 35개를 같은 단순 디자인 규칙으로 생성·적용하는 것입니다. 전체 이미지 작업이 끝날 때까지 Render Static Site deploy는 실행하지 않습니다.
 
 로컬 검사 주의: Windows 전역 `DEBUG=release`는 backend의 boolean `DEBUG`와 충돌합니다. 시스템 환경변수는 바꾸지 말고 backend/core 검사 자식 프로세스에서만 `DEBUG`를 unset하거나 `DEBUG=false`로 덮어씁니다.
 
@@ -250,6 +264,7 @@ Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.ex
 ```bash
 node tools/smoke/game/smoke_equipment_progression_formulas.js
 node tools/smoke/game/smoke_runtime_item_quality_of_life.js
+node tools/smoke/game/smoke_equipment_icon_families.js
 python tools/check_v351_public_release_gates.py --strict
 python tools/smoke/backend/smoke_v351_public_release_gates.py
 python tools/check_runtime_blocking_io.py --strict
@@ -271,6 +286,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v362 focused smoke는 v361 이미지 회귀와 함께 등급 프레임 판정, 기본 흰색 테두리, 세 저장 공간의 빈 칸 유지, 첫 빈 칸 배치, 수동 위로 정렬과 세 버튼을 고정합니다. PNG 원본과 이미지 URL은 v361 그대로이며 CSS·관련 JavaScript 로드 키는 `?v=362`입니다. 다음 단계는 `prepare-v362-static-content-deploy-exact-sha-gate`입니다. v357 장비 공식, v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
+v363 focused smoke는 10~20단계 일반 장비 55개가 15개 계열 PNG를 공유하는 규칙, 승인된 승급 표식 정규화, CSS 등급 순서, 모든 새 PNG의 signature·256×256과 정적 배포 포함을 고정합니다. 다음 단계는 `generate-v364-normal-equipment-icon-batch-tiers-1-9`이며 공개 Render Static Site는 계속 v351로 유지합니다. v362 인벤토리, v361 특수장비 이미지, v357 장비 공식과 이전 배포·공급자 baseline도 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

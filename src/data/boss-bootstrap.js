@@ -14,4 +14,5 @@
 applyAbyssFragmentStats();
 applyGeneratedThumbnails();
 applyBossDropRates();
+if (typeof applyEquipmentIconAssets === "function") applyEquipmentIconAssets();
 stripBossTitleShortcuts();

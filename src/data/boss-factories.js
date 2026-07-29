@@ -77,6 +77,10 @@ function makeHighNormalDrop(tier, name, group, imgText) {
 		baseCost: bossHighBaseCost(tier),
 		baseIlv: bossHighBaseIlv(tier),
 	};
+	const localIconUrl = typeof getNormalEquipmentIconUrl === "function"
+		? getNormalEquipmentIconUrl(common)
+		: "";
+	if (localIconUrl) common.img = localIconUrl;
 
 	if (group === "skill_all") {
 		common.baseSdmg = 10 * tier;

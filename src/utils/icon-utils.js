@@ -22,6 +22,34 @@ function iconTextUrl(text, bg = "333", fg = "FFF") {
 
 const SPECIAL_EQUIP_ASSET_BASE = "src/assets/special-equipment";
 const SPECIAL_EQUIP_ASSET_VERSION = "361";
+const NORMAL_EQUIP_ASSET_BASE = "src/assets/equipment";
+const NORMAL_EQUIP_ASSET_VERSION = "363";
+const NORMAL_EQUIP_ICON_ASSETS = Object.freeze({
+	"어둠을 지배하는 고리": "dark-dominion-ring.png",
+	"올 엘리멘탈 크리스탈": "all-elemental-crystal.png",
+	"군신의 가호가 담긴 보석": "war-god-blessing-jewel.png",
+	"루나 베네딕티오": "luna-benedictio.png",
+	"영창 : 불멸의 혼": "immortal-soul-chant.png",
+	"마음을 새긴 바다": "engraved-sea-heart.png",
+	"종말의 시간": "time-of-end.png",
+	"광란을 품은 자": "embracing-frenzy.png",
+	"세계수의 뿌리": "world-tree-root.png",
+	"어나이얼레이터": "annihilator.png",
+	"무의식 : 넥스의 몽환의 어둠": "nex-dream-darkness.png",
+	"환영 : 넥스의 검은 기운": "nex-black-energy.png",
+	"환영 : 넥스의 잠식된 의복": "nex-corrupted-garment.png",
+	"원초의 꿈 : 스태프": "primal-dream-staff.png",
+	"원초의 꿈 : 창": "primal-dream-spear.png",
+});
+const NORMAL_EQUIP_RANK_PREFIXES = [
+	/^★초월 연옥★\s*/,
+	/^★진 연옥★\s*/,
+	/^★연옥★\s*/,
+	/^★심연★\s*/,
+	/^-초월-\s*/,
+	/^-진-\s*/,
+	/^-현-\s*/,
+];
 const ITEM_FRAME_GRADE_CLASSES = [
 	"item-frame-basic",
 	"item-frame-uncommon",
@@ -35,6 +63,11 @@ const ITEM_FRAME_GRADE_CLASSES = [
 
 function getItemFrameGrade(item) {
 	const name = String((item && item.name) || "");
+	if (name.startsWith("★초월 연옥★")) return "luminous";
+	if (name.startsWith("★진 연옥★") || name.startsWith("★심연★")) return "dark";
+	if (name.startsWith("★연옥★")) return "radiant";
+	if (name.startsWith("-진-")) return "rare";
+	if (name.startsWith("-현-")) return "uncommon";
 	if (name.includes("영롱") || name.includes("천공") || name.includes("진 각성")) return "luminous";
 	if (name.includes("짙은") || name === "심연의 스킬강화권") return "dark";
 	if (name.includes("찬란") || name.includes("화려")) return "radiant";
@@ -43,6 +76,59 @@ function getItemFrameGrade(item) {
 	if (name.includes("빛나는")) return "rare";
 	if (name.includes("강력한")) return "uncommon";
 	return "basic";
+}
+
+function getNormalEquipmentFamilyName(name) {
+	let familyName = String(name || "").trim();
+	let changed = true;
+	while (changed && familyName) {
+		changed = false;
+		for (const prefix of NORMAL_EQUIP_RANK_PREFIXES) {
+			const nextName = familyName.replace(prefix, "").trim();
+			if (nextName !== familyName) {
+				familyName = nextName;
+				changed = true;
+				break;
+			}
+		}
+	}
+	return familyName;
+}
+
+function getNormalEquipmentIconAssetName(item) {
+	if (!item || item.type !== "normal") return "";
+	const familyName = getNormalEquipmentFamilyName(item.name);
+	return NORMAL_EQUIP_ICON_ASSETS[familyName] || "";
+}
+
+function getNormalEquipmentIconUrl(item) {
+	const assetName = getNormalEquipmentIconAssetName(item);
+	return assetName ? `${NORMAL_EQUIP_ASSET_BASE}/${assetName}?v=${NORMAL_EQUIP_ASSET_VERSION}` : "";
+}
+
+function normalizeItemIcon(item) {
+	if (!item) return item;
+	if (item.type === "special_equip" && typeof getSpecialEquipIconUrl === "function") {
+		item.img = getSpecialEquipIconUrl(item);
+		return item;
+	}
+	if (item.type === "normal") {
+		const normalIconUrl = getNormalEquipmentIconUrl(item);
+		if (normalIconUrl) item.img = normalIconUrl;
+	}
+	return item;
+}
+
+function applyEquipmentIconAssets() {
+	const bossCollections = [];
+	if (typeof bossList !== "undefined" && Array.isArray(bossList)) bossCollections.push(bossList);
+	if (typeof specialBossList !== "undefined" && Array.isArray(specialBossList)) bossCollections.push(specialBossList);
+	bossCollections.forEach((bossList) => {
+		bossList.forEach((boss) => {
+			if (!boss || !Array.isArray(boss.drops)) return;
+			boss.drops.forEach((drop) => normalizeItemIcon(drop));
+		});
+	});
 }
 
 function applyItemFrameClass(element, item) {

@@ -53,10 +53,12 @@ function ensureSpecialStackIdentity(item) {
 }
 
 function normalizeSpecialStackItem(item) {
-	if (!item || item.type !== "special_equip") return item;
-	ensureSpecialStackIdentity(item);
-	if (typeof getSpecialEquipIconUrl === "function") {
-		item.img = getSpecialEquipIconUrl(item);
+	if (!item) return item;
+	if (item.type === "special_equip") {
+		ensureSpecialStackIdentity(item);
+	}
+	if (typeof normalizeItemIcon === "function") {
+		normalizeItemIcon(item);
 	}
 	return item;
 }
@@ -108,6 +110,7 @@ function prepareStackableItem(rawItem) {
 	item.count = item.count || 1;
 	if (item.stackable !== undefined) item.stackable = isTruthyStackableFlag(item.stackable);
 	ensureSpecialStackIdentity(item);
+	if (typeof normalizeItemIcon === "function") normalizeItemIcon(item);
 	return item;
 }
 

@@ -1,11 +1,11 @@
-# Current Status — v362
+# Current Status — v363
 
 ## 현재 결과
 
 ```txt
-latest: v362.item-grade-frames-stable-manual-compact-inventory-ready-static-deploy-gate-preparation-required
-strict result: item-grade-frames-stable-manual-compact-inventory-ready-static-deploy-gate-preparation-required
-next safe stage: prepare-v362-static-content-deploy-exact-sha-gate
+latest: v363.normal-equipment-icon-families-batch-10-20-ready
+strict result: normal-equipment-icon-families-batch-10-20-ready
+next safe stage: generate-v364-normal-equipment-icon-batch-tiers-1-9
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -177,7 +177,23 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 
 ## 다음 단계
 
-v362 게임 변경과 회귀 검사는 준비 완료이며 아직 공개 Static Site에는 배포하지 않았습니다. 다음 단계에서 Codex가 static-only fail-closed 계약/checker를 준비하고 push합니다. 기호가 그 gate 준비 commit의 정확한 40자리 SHA를 별도 승인하면 기존 Static Site를 exact source로 수동 deploy 한 번 실행하고 게임 화면을 read-only로 검증합니다. backend image 게시·배포, Neon DB write, seed import는 필요하지 않습니다.
+1~39단계 일반 장비 195개에 필요한 고유 이미지 115개 중 v363에서 15개를 완성했습니다. 다음 단계는 1~9단계 묶음입니다. 1~5단계는 각각 단독 5개, 6↔8단계와 7↔9단계는 승급 표식을 제거한 같은 이름끼리 이미지를 공유하므로 새 PNG 35개가 필요합니다. 전체 아이콘 작업이 끝날 때까지 기존 Render Static Site의 v351 공개본은 그대로 두고 별도 배포를 실행하지 않습니다.
+
+## 일반 장비 이미지 계열 분류와 10~20단계 첫 묶음 — v363
+
+- 1~39단계 일반 장비 195개를 전수 추출했습니다. 승인된 승급 표식만 제거해 같은 이름을 묶으면 고유 이미지 115개가 필요합니다.
+- `-현-`, `-진-`, `-초월-`, `★심연★`, `★연옥★`, `★진 연옥★`, `★초월 연옥★`만 계열 표식으로 제거합니다. `끝없는 절망`, `영원한 파멸`처럼 실제 이름이 바뀌는 경우는 별도 계열입니다.
+- v363 첫 묶음은 10~20단계 일반 장비 55개를 대상으로 했습니다. 10계열 5개, 13계열 5개, 16계열 5개로 고유 PNG 15개를 만들었습니다.
+- built-in `image_gen`을 사용했으며 새 API 키·extension·dependency 설치는 없습니다. 최종 파일은 `src/assets/equipment/`의 동일한 256×256 PNG입니다.
+- 아이콘은 단일 물체, 굵은 실루엣, 2~3개 중심 색, 절제된 명암과 짙은 남색 full-bleed 배경을 사용합니다. 글자·숫자·로고·내장 테두리·입자·날개·과도한 광채와 복잡한 세공은 넣지 않았습니다.
+- `마음을 새긴 바다`·`-진- 마음을 새긴 바다`·`★심연★ 마음을 새긴 바다`는 같은 조개 펜던트 PNG를 공유하고, 기본 흰색 → 진 파란색 → 심연 보라색 CSS 프레임으로 승급을 나타냅니다.
+- `어둠을 지배하는 고리` 계열은 10·11·12·18·19·20단계가 같은 PNG를 공유하며 기본 → 진 → 초월 → 연옥 → 진 연옥 → 초월 연옥 순서로 CSS 프레임이 강화됩니다.
+- 보스 드롭 원본, 신규 획득 준비 단계와 기존 저장 데이터의 가방·보관함·휴지통·장착칸·우편을 같은 이미지 정규화 경로로 갱신합니다.
+- 브라우저 캐시 식별자는 일반 장비 이미지와 관련 JavaScript 모두 `?v=363`입니다. 특수장비 PNG는 변경하지 않아 `?v=361`을 유지합니다.
+- 전체 분류, 공통 프롬프트와 파일 매핑: `docs/current/NORMAL_EQUIPMENT_AI_ICON_ASSETS.md`
+- 집중 검사: 55개 대상의 로컬 이미지 55/55, 고유 이미지 15개, 공유 계열/등급 순서, PNG signature·256×256, 정적 배포 포함 여부 통과.
+- 실제 Chrome에서 13·14·15단계 `마음을 새긴 바다`가 동일한 `engraved-sea-heart.png?v=363`을 사용하고 CSS 등급만 `basic / rare / dark`로 바뀌는 것을 확인했습니다. 원본은 256×256, 지급 목록 렌더링은 40×40이며 브라우저 오류는 0건입니다.
+- 변경 없음: 장비 스펙·강화 공식·드롭률, 필드 규칙, backend API/image, Neon DB, Render 서비스.
 
 ## 등급 테두리·위치 유지 인벤토리·수동 위로 정렬 — v362
 
