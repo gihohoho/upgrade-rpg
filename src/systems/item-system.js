@@ -153,9 +153,9 @@ function addStackableItemToInventory(rawItem) {
 		if (typeof recordItemAcquired === "function") recordItemAcquired(item);
 		return { ok: true, item: found, stacked: true };
 	}
-	if (player.inventory.length >= player.maxInventorySize) return { ok: false, item, stacked: false };
+	if (!hasEmptyItemSlot(player.inventory, player.maxInventorySize)) return { ok: false, item, stacked: false };
 	item.id = item.id || Date.now() + Math.random();
-	player.inventory.push(item);
+	placeItemInFirstEmptySlot(player.inventory, item, player.maxInventorySize);
 	if (typeof recordItemAcquired === "function") recordItemAcquired(item);
 	return { ok: true, item, stacked: false };
 }
@@ -172,6 +172,34 @@ function mergeStackableIntoArray(item, targetArr) {
 		return true;
 	}
 	return false;
+}
+
+function getPlayerItemContainerConfig(type) {
+	if (type === "inv") return { type, label: "가방", items: player.inventory, maxSize: player.maxInventorySize };
+	if (type === "storage") return { type, label: "보관함", items: player.storage, maxSize: player.maxStorageSize };
+	if (type === "trash") return { type, label: "휴지통", items: player.trash, maxSize: player.maxStorageSize };
+	return null;
+}
+
+function compactPlayerItemContainer(type) {
+	const config = getPlayerItemContainerConfig(type);
+	if (!config || !Array.isArray(config.items)) return;
+
+	const selectedItem = selectedSlot.type === type ? config.items[selectedSlot.index] : null;
+	const result = compactItemSlots(config.items);
+
+	if (selectedItem) {
+		const nextIndex = config.items.indexOf(selectedItem);
+		if (nextIndex === -1) closeActionPanel();
+		else selectedSlot = { type, index: nextIndex };
+	}
+
+	if (result.occupied === 0) addLog(`[정렬] ${config.label}이 비어 있습니다.`);
+	else if (result.moved === 0) addLog(`[정렬] ${config.label}은 이미 위쪽부터 정렬되어 있습니다.`);
+	else addLog(`[정렬] ${config.label}의 빈 칸을 없애고 ${result.occupied}개 아이템을 위쪽부터 정렬했습니다.`);
+
+	updateFullUI();
+	if (selectedItem && selectedSlot.type === type) refreshActionPanelStats();
 }
 
 
@@ -311,7 +339,7 @@ function actionEquipDirect(invIndex) {
 		let beforeCount = item.count || 1;
 		let afterCount = beforeCount > 1 ? beforeCount - 1 : 0;
 		if (item.count && item.count > 1) item.count--;
-		else player.inventory.splice(invIndex, 1);
+		else clearItemSlot(player.inventory, invIndex);
 
 		if (result) {
 			result.data.beforeLevel = beforeLevel;
@@ -371,6 +399,18 @@ function actionEquipDirect(invIndex) {
 
 	if (targetIdx !== -1) {
 		let oldEquip = player.equipment[targetIdx];
+		let sourceWillLeaveEmptySlot = !(item.count && item.count > 1);
+		let oldEquipCanMerge = oldEquip && isZeroLevelStackableItem(oldEquip) && !!findStackableItem(oldEquip, [player.inventory]);
+		if (oldEquip && !sourceWillLeaveEmptySlot && !oldEquipCanMerge && !hasEmptyItemSlot(player.inventory, player.maxInventorySize)) {
+			if (result) {
+				result.ok = false;
+				result.data.reason = "inventory_full_for_replaced_item";
+				addResultLog(result, `[시스템] 교체할 장비를 돌려놓을 가방 빈 칸이 필요합니다.`);
+				return applyActionResultUi(result);
+			}
+			addLog(`[시스템] 교체할 장비를 돌려놓을 가방 빈 칸이 필요합니다.`);
+			return;
+		}
 
 		// 🔥 스택 장비(탈리스만) 장착 시 1개만 분리
 		let newEquip;
@@ -380,7 +420,7 @@ function actionEquipDirect(invIndex) {
 			newEquip = { ...item, count: 1 }; // 장착창에는 1개만 복사해서 투입
 			splitFromStack = true;
 		} else {
-			newEquip = player.inventory.splice(invIndex, 1)[0];
+			newEquip = clearItemSlot(player.inventory, invIndex);
 		}
 
 		// 장착 중이던 장비를 인벤토리로 되돌리기 (겹침 처리 포함)
@@ -388,7 +428,7 @@ function actionEquipDirect(invIndex) {
 		let mergedOldEquip = false;
 		if (oldEquip !== null) {
 			if (!mergeStackableIntoArray(oldEquip, player.inventory)) {
-				player.inventory.push(oldEquip);
+				placeItemInFirstEmptySlot(player.inventory, oldEquip, player.maxInventorySize);
 				returnedOldEquip = true;
 			} else {
 				mergedOldEquip = true;
@@ -456,9 +496,9 @@ function actionUnequipDirect(equipIndex) {
 		return;
 	}
 
-	if (player.inventory.length < player.maxInventorySize) {
+	if (hasEmptyItemSlot(player.inventory, player.maxInventorySize)) {
 		player.equipment[equipIndex] = null;
-		player.inventory.push(item);
+		placeItemInFirstEmptySlot(player.inventory, item, player.maxInventorySize);
 		if (result) {
 			result.data.mergedIntoInventory = false;
 			result.data.item = { name: item.name, level: item.level || 0, count: item.count || 1, type: item.type || null };
@@ -472,7 +512,7 @@ function actionUnequipDirect(equipIndex) {
 		closeActionPanel();
 		updateFullUI();
 		if (currentZoneType !== "town" && currentZoneType !== "boss_empty") startAutoAttack();
-	} else if (player.inventory.length >= player.maxInventorySize) {
+	} else {
 		if (result) {
 			result.ok = false;
 			result.data.reason = "inventory_full";
@@ -581,13 +621,13 @@ function applySpecialResetToZero(item, level, refundCount) {
 		destinationArray = player.inventory;
 		destinationType = "inv";
 		let found = destinationArray.find((it) => isSameStackableItem(it, zeroItem));
-		if (!found && destinationArray.length >= player.maxInventorySize) {
+		if (!found && !hasEmptyItemSlot(destinationArray, player.maxInventorySize)) {
 			addLog(`[시스템] 가방이 꽉 차서 장착 중인 ${baseName}을 +0으로 초기화할 수 없습니다.`);
 			return;
 		}
 		player.equipment[selectedSlot.index] = null;
 		if (found) found.count = (found.count || 1) + refundCount;
-		else destinationArray.push(zeroItem);
+		else placeItemInFirstEmptySlot(destinationArray, zeroItem, player.maxInventorySize);
 		selectedSlot = { type: destinationType, index: destinationArray.indexOf(found || zeroItem) };
 	} else {
 		destinationArray = selectedSlot.type === "storage" ? player.storage : player.inventory;
@@ -597,16 +637,16 @@ function applySpecialResetToZero(item, level, refundCount) {
 		let found = destinationArray.find((it) => it !== item && isSameStackableItem(it, zeroItem));
 		let selectedCount = item.count || 1;
 
-		if (selectedCount > 1 && !found && destinationArray.length >= maxSize) {
+		if (selectedCount > 1 && !found && !hasEmptyItemSlot(destinationArray, maxSize)) {
 			addLog(`[시스템] ${baseName} +0을 담을 빈 공간이 필요합니다.`);
 			return;
 		}
 
 		if (selectedCount > 1) item.count = selectedCount - 1;
-		else if (sourceIndex !== -1) destinationArray.splice(sourceIndex, 1);
+		else if (sourceIndex !== -1) clearItemSlot(destinationArray, sourceIndex);
 
 		if (found) found.count = (found.count || 1) + refundCount;
-		else destinationArray.push(zeroItem);
+		else placeItemInFirstEmptySlot(destinationArray, zeroItem, maxSize);
 		selectedSlot = { type: destinationType, index: destinationArray.indexOf(found || zeroItem) };
 	}
 
@@ -644,7 +684,7 @@ function consumeZeroLevelMaterials(baseName, amount, protectedItem) {
 				let take = Math.min(currentCount, remaining);
 				it.count = currentCount - take;
 				remaining -= take;
-				if (it.count <= 0) arr.splice(i, 1);
+				if (it.count <= 0) clearItemSlot(arr, i);
 				if (remaining <= 0) return 0;
 			}
 		}
@@ -666,7 +706,7 @@ function renderEnhanceResultLog(title, rows, goldSpent = 0) {
 function getStackedEnhanceSpaceBlockReason(item, sourceArr, maxSize) {
 	if (!item || (item.count || 1) <= 1) return "";
 	if (!Array.isArray(sourceArr)) return "source_missing";
-	if (sourceArr.length >= maxSize) return "space_required";
+	if (!hasEmptyItemSlot(sourceArr, maxSize)) return "space_required";
 	return "";
 }
 
@@ -689,7 +729,7 @@ function splitGenericStackableForEnhanceIfNeeded(item) {
 	item.count = (item.count || 1) - 1;
 	const remainingCount = item.count;
 	const splitItem = { ...item, id: Date.now() + Math.random(), count: 1, level: parseInt(item.level) || 0 };
-	sourceArr.push(splitItem);
+	placeItemInFirstEmptySlot(sourceArr, splitItem, maxSize);
 	selectedSlot = { type: selectedSlot.type === "storage" ? "storage" : "inv", index: sourceArr.indexOf(splitItem) };
 	return { ok: true, item: splitItem, split: true, remainingCount };
 }
@@ -782,7 +822,7 @@ function actionReinforce(times) {
 				currentItem.count = (currentItem.count || 1) - 1;
 				if (currentItem.count <= 0) {
 					let idx = sourceArr.indexOf(currentItem);
-					if (idx !== -1) sourceArr.splice(idx, 1);
+					if (idx !== -1) clearItemSlot(sourceArr, idx);
 				}
 
 				let remaining = consumeZeroLevelMaterials(baseName, cost, null);
@@ -807,7 +847,7 @@ function actionReinforce(times) {
 						isTalisman,
 						isEmblem,
 					});
-					sourceArr.push(currentItem);
+					placeItemInFirstEmptySlot(sourceArr, currentItem, sourceMaxSize);
 				}
 
 				if (typeof recordItemAcquired === "function") recordItemAcquired({ ...currentItem, level: nextLevel, count: 1 });
@@ -983,28 +1023,28 @@ function actionSell() {
 	if (!item) return;
 
 	if (!player.trash) player.trash = [];
-	if (player.trash.length >= player.maxStorageSize && !(isZeroLevelStackableItem(item) && findStackableItem(item, [player.trash]))) {
+	if (!hasEmptyItemSlot(player.trash, player.maxStorageSize) && !(isZeroLevelStackableItem(item) && findStackableItem(item, [player.trash]))) {
 		addLog("[시스템] 휴지통이 꽉 찼습니다. 휴지통을 비워 주세요.");
 		return;
 	}
 
 	let movedItem;
 	if (isZeroLevelStackableItem(item)) {
-		movedItem = targetArray.splice(selectedSlot.index, 1)[0];
+		movedItem = clearItemSlot(targetArray, selectedSlot.index);
 		if (mergeStackableIntoArray(movedItem, player.trash)) {
 			addLog(`🗑️ [휴지통] ${getBaseStackName(movedItem)} +${parseInt(movedItem.level) || 0} ${movedItem.count || 1}개를 휴지통에 겹쳐 넣었습니다.`);
 		} else {
-			player.trash.push(movedItem);
+			placeItemInFirstEmptySlot(player.trash, movedItem, player.maxStorageSize);
 			addLog(`🗑️ [휴지통] ${getBaseStackName(movedItem)} +${parseInt(movedItem.level) || 0} ${movedItem.count || 1}개를 휴지통으로 이동했습니다.`);
 		}
 	} else if (item.count && item.count > 1) {
 		item.count--;
 		movedItem = { ...item, count: 1, id: Date.now() + Math.random() };
-		player.trash.push(movedItem);
+		placeItemInFirstEmptySlot(player.trash, movedItem, player.maxStorageSize);
 		addLog(`🗑️ [휴지통] ${item.name} 1개를 휴지통으로 이동했습니다. (남은 수량: ${item.count}개)`);
 	} else {
-		movedItem = targetArray.splice(selectedSlot.index, 1)[0];
-		player.trash.push(movedItem);
+		movedItem = clearItemSlot(targetArray, selectedSlot.index);
+		placeItemInFirstEmptySlot(player.trash, movedItem, player.maxStorageSize);
 		addLog(`🗑️ [휴지통] ${movedItem.name}을(를) 휴지통으로 이동했습니다.`);
 	}
 
@@ -1017,7 +1057,7 @@ function actionBulkSell() {
 }
 
 function bulkMoveInventoryToTrash() {
-	if (!player.inventory || player.inventory.length === 0) {
+	if (!player.inventory || countOccupiedItemSlots(player.inventory) === 0) {
 		addLog("[시스템] 가방에 이동할 아이템이 없습니다.");
 		return;
 	}
@@ -1032,16 +1072,16 @@ function closeBulkTrashModal() {
 
 function confirmBulkMoveInventoryToTrash() {
 	if (!player.trash) player.trash = [];
-	if (!player.inventory || player.inventory.length === 0) {
+	if (!player.inventory || countOccupiedItemSlots(player.inventory) === 0) {
 		closeBulkTrashModal();
 		addLog("[시스템] 가방에 이동할 아이템이 없습니다.");
 		return;
 	}
 
 	let movedCount = 0;
-	let remainInventory = [];
 
-	for (let invItem of player.inventory) {
+	for (let index = 0; index < player.inventory.length; index++) {
+		let invItem = player.inventory[index];
 		// 보관함 아이템은 이 함수에서 절대 건드리지 않습니다.
 		// 인벤토리 안의 모든 아이템만 휴지통으로 이동합니다.
 		if (!invItem) continue;
@@ -1049,20 +1089,19 @@ function confirmBulkMoveInventoryToTrash() {
 		if (isZeroLevelStackableItem(invItem)) {
 			if (mergeStackableIntoArray(invItem, player.trash)) {
 				movedCount += invItem.count || 1;
+				player.inventory[index] = null;
 				continue;
 			}
 		}
 
-		if (player.trash.length >= player.maxStorageSize) {
-			remainInventory.push(invItem);
-			continue;
-		}
+		if (!hasEmptyItemSlot(player.trash, player.maxStorageSize)) continue;
 
-		player.trash.push(invItem);
+		placeItemInFirstEmptySlot(player.trash, invItem, player.maxStorageSize);
+		player.inventory[index] = null;
 		movedCount += invItem.count || 1;
 	}
 
-	player.inventory = remainInventory;
+	trimTrailingEmptyItemSlots(player.inventory);
 	closeBulkTrashModal();
 
 	if (movedCount > 0) {
@@ -1089,7 +1128,7 @@ function actionMoveStorage() {
 		sourceArr = player.inventory;
 		item = sourceArr[selectedSlot.index];
 		if (!item) return;
-		if (player.storage.length >= player.maxStorageSize && !(isZeroLevelStackableItem(item) && findStackableItem(item, [player.storage]))) {
+		if (!hasEmptyItemSlot(player.storage, player.maxStorageSize) && !(isZeroLevelStackableItem(item) && findStackableItem(item, [player.storage]))) {
 			addLog("[시스템] 보관함이 꽉 찼습니다.");
 			return;
 		}
@@ -1098,7 +1137,7 @@ function actionMoveStorage() {
 		sourceArr = player.storage;
 		item = sourceArr[selectedSlot.index];
 		if (!item) return;
-		if (player.inventory.length >= player.maxInventorySize && !(isZeroLevelStackableItem(item) && findStackableItem(item, [player.inventory]))) {
+		if (!hasEmptyItemSlot(player.inventory, player.maxInventorySize) && !(isZeroLevelStackableItem(item) && findStackableItem(item, [player.inventory]))) {
 			addLog("[시스템] 가방이 꽉 찼습니다.");
 			return;
 		}
@@ -1107,7 +1146,7 @@ function actionMoveStorage() {
 		sourceArr = player.trash;
 		item = sourceArr[selectedSlot.index];
 		if (!item) return;
-		if (player.inventory.length >= player.maxInventorySize && !(isZeroLevelStackableItem(item) && findStackableItem(item, [player.inventory]))) {
+		if (!hasEmptyItemSlot(player.inventory, player.maxInventorySize) && !(isZeroLevelStackableItem(item) && findStackableItem(item, [player.inventory]))) {
 			addLog("[시스템] 가방이 꽉 찼습니다.");
 			return;
 		}
@@ -1116,15 +1155,16 @@ function actionMoveStorage() {
 	}
 
 	if (isZeroLevelStackableItem(item) && mergeStackableIntoArray(item, targetArr)) {
-		sourceArr.splice(selectedSlot.index, 1);
+		clearItemSlot(sourceArr, selectedSlot.index);
 		addLog(`[이동] ${item.name}을(를) 이동하여 겹쳤습니다.`);
 		closeActionPanel();
 		updateFullUI();
 		return;
 	}
 
-	let moved = sourceArr.splice(selectedSlot.index, 1)[0];
-	targetArr.push(moved);
+	let moved = clearItemSlot(sourceArr, selectedSlot.index);
+	let targetMaxSize = selectedSlot.type === "inv" ? player.maxStorageSize : player.maxInventorySize;
+	placeItemInFirstEmptySlot(targetArr, moved, targetMaxSize);
 
 	if (selectedSlot.type === "inv") addLog(`[보관] ${moved.name}을(를) 보관함에 넣었습니다.`);
 	else if (selectedSlot.type === "storage") addLog(`[이동] ${moved.name}을(를) 가방으로 꺼냈습니다.`);
@@ -1135,7 +1175,7 @@ function actionMoveStorage() {
 }
 
 function emptyTrash() {
-	if (!player.trash || player.trash.length === 0) {
+	if (!player.trash || countOccupiedItemSlots(player.trash) === 0) {
 		addLog("[시스템] 휴지통이 비어 있습니다.");
 		return;
 	}
@@ -1149,12 +1189,12 @@ function closeTrashEmptyModal() {
 }
 
 function confirmEmptyTrash() {
-	if (!player.trash || player.trash.length === 0) {
+	if (!player.trash || countOccupiedItemSlots(player.trash) === 0) {
 		closeTrashEmptyModal();
 		addLog("[시스템] 휴지통이 비어 있습니다.");
 		return;
 	}
-	const removed = player.trash.length;
+	const removed = countOccupiedItemSlots(player.trash);
 	player.trash = [];
 	if (selectedSlot.type === "trash") closeActionPanel();
 	closeTrashEmptyModal();

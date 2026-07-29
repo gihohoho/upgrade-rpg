@@ -383,32 +383,23 @@ function killEnemy(zoneData) {
 				let tName = randomTali.name.replace(" +0", "");
 				let tSlot = (tName.includes("초월") || tName.includes("영롱")) ? 13 : 12; // 인덱스 정상화
 
-				// 인벤토리와 보관함에서 동일한 0강 탈리스만 탐색
-				let found = player.inventory.find((it) => it.name === tName && it.level === 0);
-				if (!found) found = player.storage.find((it) => it.name === tName && it.level === 0);
+				const newTali = {
+					...randomTali,
+					id: Date.now() + 2,
+					name: tName,
+					level: 0,
+					count: 1,
+					specialSlotIdx: tSlot,
+				};
+				const result = typeof addStackableItemToInventory === "function"
+					? addStackableItemToInventory(newTali)
+					: null;
 
-				if (found) {
-					found.count = (found.count || 1) + 1;
-					if (typeof recordItemAcquired === "function") recordItemAcquired({ ...found, name: tName, level: 0, count: 1 });
-					addDropLog(tName, `🎉 [득템] ${tName} 획득! (현재 겹침: ${found.count}개)`, { stacked: true, dropType: "talisman" });
+				if (result && result.ok) {
+					addDropLog(tName, result.stacked ? `🎉 [득템] ${tName} 획득! (현재 겹침: ${result.item.count}개)` : `🎉 [득템] ${tName} 획득!`, { stacked: result.stacked, dropType: "talisman" });
 					dropped = true;
 				} else {
-					if (player.inventory.length < player.maxInventorySize) {
-						const newTali = {
-							...randomTali,
-							id: Date.now() + 2,
-							name: tName,
-							level: 0,
-							count: 1,
-							specialSlotIdx: tSlot,
-						};
-						player.inventory.push(newTali);
-						if (typeof recordItemAcquired === "function") recordItemAcquired(newTali);
-						addDropLog(tName, `🎉 [득템] ${tName} 획득!`, { dropType: "talisman" });
-						dropped = true;
-					} else {
-						addBlockedLog(`[시스템] 가방이 꽉 차서 탈리스만을 획득하지 못했습니다.`, "inventory_full_talisman");
-					}
+					addBlockedLog(`[시스템] 가방이 꽉 차서 탈리스만을 획득하지 못했습니다.`, "inventory_full_talisman");
 				}
 			}
 		}

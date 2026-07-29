@@ -737,7 +737,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 function giveBeginnerItem() {
-	if (player.inventory.length >= player.maxInventorySize) {
+	if (!hasEmptyItemSlot(player.inventory, player.maxInventorySize)) {
 		addLog("[시스템] 가방이 꽉 찼습니다.");
 		return;
 	}
@@ -755,7 +755,7 @@ function giveBeginnerItem() {
 		enhanceStats: [100, 107, 121, 142, 170, 205, 247, 296, 352, 415, 485, 618, 814, 1073, 1395, 1780, 2228, 2739, 3313, 3950, 4650],
 	};
 
-	player.inventory.push(beginnerItem);
+	placeItemInFirstEmptySlot(player.inventory, beginnerItem, player.maxInventorySize);
 	if (typeof recordItemAcquired === "function") recordItemAcquired(beginnerItem);
 	addLog(`🎁 [초보자 지원] ${beginnerItem.name}을(를) 받았습니다!`);
 	renderUI();
@@ -1007,17 +1007,18 @@ function renderTestItemList(boss) {
 
 	boss.drops.filter(isTestDropForMode).forEach((drop) => {
 		let btn = document.createElement("button");
+		const previewItem = typeof prepareStackableItem === "function" ? prepareStackableItem(drop) : { ...drop, level: drop.level || 0, count: drop.count || 1 };
 		btn.className = "sys-btn";
 		btn.style.height = "auto";
 		btn.style.padding = "10px";
 		btn.innerHTML = `
-      <img src="${drop.img}" style="width:40px; height:40px; display:block; margin:0 auto 5px; border: 1px solid #555;">
+      <img class="special-drop-item-icon" src="${drop.img}" alt="">
       <span style="font-size:12px; color:#fff;">${typeof getDisplayNameWithLevel === "function" ? getDisplayNameWithLevel(typeof prepareStackableItem === "function" ? prepareStackableItem(drop) : drop) : drop.name}</span>
     `;
+		if (typeof applyItemFrameClass === "function") applyItemFrameClass(btn.querySelector(".special-drop-item-icon"), previewItem);
 
 		// 지급 모달에서도 인벤토리처럼 장비 정보 툴팁 표시
 		btn.onmouseenter = () => {
-			const previewItem = typeof prepareStackableItem === "function" ? prepareStackableItem(drop) : { ...drop, level: drop.level || 0, count: drop.count || 1 };
 			showItemTooltip(previewItem);
 		};
 		btn.onmouseleave = () => hideTooltip();
@@ -1035,10 +1036,10 @@ function renderTestItemList(boss) {
 				return;
 			}
 
-			if (player.inventory.length < player.maxInventorySize) {
+			if (hasEmptyItemSlot(player.inventory, player.maxInventorySize)) {
 				let newItem = { ...giveItem, id: Date.now() };
 				if (typeof normalizeSpecialStackItem === "function") normalizeSpecialStackItem(newItem);
-				player.inventory.push(newItem);
+				placeItemInFirstEmptySlot(player.inventory, newItem, player.maxInventorySize);
 				addLog(`🎁 [테스트 지급] ${newItem.name} 아이템을 ${giveCount}개 받았습니다.`, true);
 				renderUI();
 			} else {

@@ -22,6 +22,38 @@ function iconTextUrl(text, bg = "333", fg = "FFF") {
 
 const SPECIAL_EQUIP_ASSET_BASE = "src/assets/special-equipment";
 const SPECIAL_EQUIP_ASSET_VERSION = "361";
+const ITEM_FRAME_GRADE_CLASSES = [
+	"item-frame-basic",
+	"item-frame-uncommon",
+	"item-frame-rare",
+	"item-frame-transcendent",
+	"item-frame-liberated",
+	"item-frame-radiant",
+	"item-frame-dark",
+	"item-frame-luminous",
+];
+
+function getItemFrameGrade(item) {
+	const name = String((item && item.name) || "");
+	if (name.includes("영롱") || name.includes("천공") || name.includes("진 각성")) return "luminous";
+	if (name.includes("짙은") || name === "심연의 스킬강화권") return "dark";
+	if (name.includes("찬란") || name.includes("화려")) return "radiant";
+	if (name.includes("해방")) return "liberated";
+	if (name.includes("초월")) return "transcendent";
+	if (name.includes("빛나는")) return "rare";
+	if (name.includes("강력한")) return "uncommon";
+	return "basic";
+}
+
+function applyItemFrameClass(element, item) {
+	if (!element || !element.classList) return "";
+	element.classList.remove("item-grade-frame", ...ITEM_FRAME_GRADE_CLASSES);
+	if (!item) return "";
+	const grade = getItemFrameGrade(item);
+	element.classList.add("item-grade-frame", `item-frame-${grade}`);
+	element.dataset.itemFrameGrade = grade;
+	return grade;
+}
 
 function getSpecialEquipIconInfo(item) {
 	const name = (item && item.name) || "";

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>강화RPG v0.22 (특수보스 & 장비슬롯 개편)</title>
-    <link rel="stylesheet" href="src/styles/style.css?v=360" />
+    <link rel="stylesheet" href="src/styles/style.css?v=362" />
   </head>
   <body>
     <div id="tooltip"></div>
@@ -301,10 +301,18 @@
 
       <div id="inv-panel" class="window-panel">
         <div class="inv-header">
-          <span
+          <span class="inv-header-title"
             >가방: <span id="inventory-count">0</span>/60</span
           >
-          <button class="close-btn" onclick="toggleInv()">✖</button>
+          <div class="inv-header-actions">
+            <button
+              class="inventory-compact-btn"
+              onclick="compactPlayerItemContainer('inv')"
+              title="아이템 순서를 유지하면서 빈 칸만 없애고 위쪽부터 정렬합니다."
+              aria-label="가방 아이템 위로 정렬"
+            >↑ 위로 정렬</button>
+            <button class="close-btn" onclick="toggleInv()" aria-label="가방 닫기">✖</button>
+          </div>
         </div>
         <div
           id="inventory-container"
@@ -371,10 +379,18 @@
         "
       >
         <div class="inv-header">
-          <span
+          <span class="inv-header-title"
             >보관함: <span id="storage-count">0</span>/60</span
           >
-          <button class="close-btn" onclick="toggleStorage()">✖</button>
+          <div class="inv-header-actions">
+            <button
+              class="inventory-compact-btn"
+              onclick="compactPlayerItemContainer('storage')"
+              title="아이템 순서를 유지하면서 빈 칸만 없애고 위쪽부터 정렬합니다."
+              aria-label="보관함 아이템 위로 정렬"
+            >↑ 위로 정렬</button>
+            <button class="close-btn" onclick="toggleStorage()" aria-label="보관함 닫기">✖</button>
+          </div>
         </div>
         <div
           id="storage-container"
@@ -399,10 +415,18 @@
         "
       >
         <div class="inv-header">
-          <span
+          <span class="inv-header-title"
             >휴지통: <span id="trash-count">0</span>/60</span
           >
-          <button class="close-btn" onclick="toggleTrash()">✖</button>
+          <div class="inv-header-actions">
+            <button
+              class="inventory-compact-btn"
+              onclick="compactPlayerItemContainer('trash')"
+              title="아이템 순서를 유지하면서 빈 칸만 없애고 위쪽부터 정렬합니다."
+              aria-label="휴지통 아이템 위로 정렬"
+            >↑ 위로 정렬</button>
+            <button class="close-btn" onclick="toggleTrash()" aria-label="휴지통 닫기">✖</button>
+          </div>
         </div>
         <div
           id="trash-container"
@@ -859,21 +883,21 @@
     <script src="src/api/master-data-adapter.js"></script>
     <script src="src/api/master-data-boot-policy.js"></script>
     <script src="src/data/skills.js"></script>
-    <script src="src/state/game-state.js"></script>
-    <script src="src/utils/icon-utils.js?v=361"></script>
+    <script src="src/state/game-state.js?v=362"></script>
+    <script src="src/utils/icon-utils.js?v=362"></script>
     <script src="src/data/boss-factories.js"></script>
     <script src="src/data/bosses.js"></script>
     <script src="src/rules/abyss-fragment-rules.js"></script>
     <script src="src/rules/boss-display-rules.js?v=360"></script>
-    <script src="src/rules/boss-drop-rules.js"></script>
+    <script src="src/rules/boss-drop-rules.js?v=362"></script>
     <script src="src/data/boss-bootstrap.js"></script>
     <script src="src/data/zones.js?v=360"></script>
     <script src="src/systems/stat-system.js?v=360"></script>
-    <script src="src/ui/render-ui.js?v=360"></script>
+    <script src="src/ui/render-ui.js?v=362"></script>
     <script src="src/systems/action-result-system.js?v=360"></script>
-    <script src="src/systems/item-system.js?v=360"></script>
-    <script src="src/systems/combat-system.js?v=360"></script>
-    <script src="src/app/main.js?v=360"></script>
+    <script src="src/systems/item-system.js?v=362"></script>
+    <script src="src/systems/combat-system.js?v=362"></script>
+    <script src="src/app/main.js?v=362"></script>
     <script src="src/api/master-data-runtime-switch.js"></script>
     <script src="src/api/master-data-runtime-validator.js"></script>
     <script src="src/api/master-data-browser-checklist.js"></script>

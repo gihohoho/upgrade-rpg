@@ -203,6 +203,57 @@ bindNestedStateAlias("equipDropEnabled", gameState, ["runtime", "combat", "equip
 bindNestedStateAlias("attackInterval", gameState, ["runtime", "combat", "attackInterval"]);
 bindNestedStateAlias("currentEnemy", gameState, ["runtime", "field", "currentEnemy"]);
 
+function countOccupiedItemSlots(items) {
+	if (!Array.isArray(items)) return 0;
+	return items.reduce((count, item) => count + (item ? 1 : 0), 0);
+}
+
+function trimTrailingEmptyItemSlots(items) {
+	if (!Array.isArray(items)) return items;
+	while (items.length > 0 && !items[items.length - 1]) items.pop();
+	return items;
+}
+
+function findFirstEmptyItemSlot(items, maxSize) {
+	if (!Array.isArray(items)) return -1;
+	const safeMaxSize = Math.max(0, parseInt(maxSize) || 0);
+	for (let index = 0; index < safeMaxSize; index++) {
+		if (!items[index]) return index;
+	}
+	return -1;
+}
+
+function hasEmptyItemSlot(items, maxSize) {
+	return findFirstEmptyItemSlot(items, maxSize) !== -1;
+}
+
+function placeItemInFirstEmptySlot(items, item, maxSize) {
+	if (!item || !Array.isArray(items)) return -1;
+	const index = findFirstEmptyItemSlot(items, maxSize);
+	if (index === -1) return -1;
+	items[index] = item;
+	return index;
+}
+
+function clearItemSlot(items, index) {
+	if (!Array.isArray(items) || index < 0 || !items[index]) return null;
+	const item = items[index];
+	items[index] = null;
+	trimTrailingEmptyItemSlots(items);
+	return item;
+}
+
+function compactItemSlots(items) {
+	if (!Array.isArray(items)) return { moved: 0, occupied: 0 };
+	const occupiedItems = items.filter(Boolean);
+	let moved = 0;
+	occupiedItems.forEach((item, index) => {
+		if (items[index] !== item) moved++;
+	});
+	items.splice(0, items.length, ...occupiedItems);
+	return { moved, occupied: occupiedItems.length };
+}
+
 function ensurePlayerStateShape(targetPlayer = player) {
 	const defaults = createDefaultPlayerState();
 	if (!targetPlayer || typeof targetPlayer !== "object") targetPlayer = {};

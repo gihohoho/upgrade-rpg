@@ -61,9 +61,9 @@ function grantFirstEquipSkillBookIfNeeded(boss, skillDrops, actionResult) {
 	}
 
 	// 장비 획득으로 가방이 꽉 찬 경우에도 보장 드랍이 사라지지 않도록 보관함으로 보냅니다.
-	if (player.storage && player.storage.length < player.maxStorageSize) {
+	if (player.storage && hasEmptyItemSlot(player.storage, player.maxStorageSize)) {
 		const storedSkill = { ...randomSkill, id: Date.now() + 5, count: randomSkill.count || 1 };
-		player.storage.push(storedSkill);
+		placeItemInFirstEmptySlot(player.storage, storedSkill, player.maxStorageSize);
 		if (typeof recordItemAcquired === "function") recordItemAcquired(storedSkill);
 		markFirstEquipSkillBookGranted(boss);
 		const message = `🎉 [최초 장비 보너스] ${randomSkill.name} 추가 획득! (가방이 꽉 차 보관함으로 이동)`;
@@ -149,4 +149,3 @@ function applyBossDropRates() {
 	applyNormalBossDropRates();
 	applySpecialBossDropRates();
 }
-

@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v361
+# Upgrade RPG Codex handoff — v362
 
 ## 현재 상태
 
 ```txt
-latest: v361.borderless-square-full-bleed-dnf-style-special-equipment-icons-ready-static-deploy-gate-preparation-required
-strict result: borderless-square-full-bleed-dnf-style-special-equipment-icons-ready-static-deploy-gate-preparation-required
-next safe stage: prepare-v361-static-content-deploy-exact-sha-gate
+latest: v362.item-grade-frames-stable-manual-compact-inventory-ready-static-deploy-gate-preparation-required
+strict result: item-grade-frames-stable-manual-compact-inventory-ready-static-deploy-gate-preparation-required
+next safe stage: prepare-v362-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -224,7 +224,20 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 - 상세 생성·검수 규칙: `docs/current/SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md`
 - 장비 스펙·필드 규칙·Neon DB·backend API/image·Render 서비스는 변경하지 않았습니다.
 
-현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 Codex가 v361 static-only 배포 계약/checker를 준비하는 것이며, 그 준비 commit이 push된 뒤에만 기호에게 exact SHA 승인을 요청합니다.
+## 등급 CSS 테두리·위치 유지·수동 위로 정렬 — v362
+
+- 사용자 요청에 따라 “게임 화면에서 테두리 없음” 정책은 취소했습니다. 23개 PNG 파일 자체는 다시 만들거나 수정하지 않고 v361 full-bleed 원본을 그대로 사용합니다.
+- `getItemFrameGrade()`는 기본·강력·빛나는·초월·해방·찬란·짙은·영롱/천공/진 각성을 구분합니다. 기본은 효과 없는 흰색 테두리이고 상위 단계는 녹색·파란색·청록·금색·분홍·보라 계열의 이중선과 광채를 점진적으로 적용합니다.
+- 높은 등급 호흡 효과는 `prefers-reduced-motion`에서 꺼집니다. 장착칸, 가방, 보관함, 휴지통, 관리창과 테스트 지급 미리보기가 같은 `applyItemFrameClass()`를 사용합니다.
+- 가방·보관함·휴지통의 이동·사용·장착·강화 분리·+0 복원·휴지통 경로는 `clearItemSlot()`로 원래 칸을 `null`로 남기고, 신규·이동 아이템은 `placeItemInFirstEmptySlot()`로 첫 빈 칸에 둡니다. 공간 판정과 카운트는 실제 채워진 칸 수를 사용합니다.
+- 세 패널 헤더에 `↑ 위로 정렬` 버튼을 배치했습니다. `compactPlayerItemContainer()`는 사용자가 버튼을 눌렀을 때만 아이템의 상대 순서를 유지하며 빈 칸을 제거합니다.
+- focused runtime smoke에서 가방·보관함·휴지통의 중간 칸 유지, 수동 압축, 등급 판정과 기존 스택·강화 공간 회귀를 통과했습니다.
+- 로컬 Chrome에서 가방 5번째 초월 목걸이를 보관함과 휴지통으로 각각 옮겼을 때 5번째 칸은 비고 6번째 초월 무기는 그대로 유지됐습니다. 보관함 `가방으로`와 휴지통 `가방으로 복구`는 첫 빈 칸인 원래 5번째 칸으로 돌려놓았습니다.
+- 브라우저 검증 뒤 가방 25/60, 보관함 0/60, 휴지통 0/60과 원래 순서를 복구했습니다. 기본 흰색부터 영롱 다색까지 실제 64×64 렌더링, 관리창·장착칸 공통 프레임과 세 버튼 표시도 확인했습니다.
+- CSS와 변경 JavaScript 로드 키는 `?v=362`입니다. 이미지 파일과 이미지 URL `?v=361`은 원본 미변경 때문에 유지합니다.
+- 변경 없음: PNG 원본, 장비 수치·밸런스, 필드 규칙, Neon DB, backend API/image, Render 서비스.
+
+현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 Codex가 v362 static-only 배포 계약/checker를 준비하는 것이며, 그 준비 commit이 push된 뒤에만 기호에게 exact SHA 승인을 요청합니다.
 
 로컬 검사 주의: Windows 전역 `DEBUG=release`는 backend의 boolean `DEBUG`와 충돌합니다. 시스템 환경변수는 바꾸지 말고 backend/core 검사 자식 프로세스에서만 `DEBUG`를 unset하거나 `DEBUG=false`로 덮어씁니다.
 
@@ -258,6 +271,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v361 focused smoke는 v360 회귀 항목과 함께 동일한 23개 256×256 PNG, `?v=361` 이미지 캐시, borderless/full-bleed/DNF풍 상시 규칙, 38개 특수장비 매핑과 정적 배포 PNG 포함을 고정합니다. 다음 단계는 `prepare-v361-static-content-deploy-exact-sha-gate`입니다. v357 장비 공식, v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
+v362 focused smoke는 v361 이미지 회귀와 함께 등급 프레임 판정, 기본 흰색 테두리, 세 저장 공간의 빈 칸 유지, 첫 빈 칸 배치, 수동 위로 정렬과 세 버튼을 고정합니다. PNG 원본과 이미지 URL은 v361 그대로이며 CSS·관련 JavaScript 로드 키는 `?v=362`입니다. 다음 단계는 `prepare-v362-static-content-deploy-exact-sha-gate`입니다. v357 장비 공식, v355 provider release, v353 image, v351 blocking-I/O, v350 recovery, v348 static deploy, v347 backend, v345 Neon, v342 이전 image, v338 Render Connect, v335 provider selection과 v334 generic deployment baseline도 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

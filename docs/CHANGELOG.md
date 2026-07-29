@@ -1,3 +1,13 @@
+# v362.item-grade-frames-stable-manual-compact-inventory-ready-static-deploy-gate-preparation-required
+
+- 기존 23개 PNG를 다시 만들지 않고 모든 아이템 표시 위치에 이름 기반 CSS 등급 프레임을 추가했습니다. 기본은 효과 없는 흰색 테두리이며 상위 단계는 색·이중선·광채·절제된 애니메이션이 점진적으로 강화됩니다.
+- 장착칸, 가방, 보관함, 휴지통, 관리창과 테스트 지급 미리보기가 같은 등급 판정을 사용합니다. 높은 단계 애니메이션은 `prefers-reduced-motion`을 존중합니다.
+- 가방·보관함·휴지통에서 아이템이 빠져도 뒤 항목을 자동으로 당기지 않고 원래 칸을 비워 둡니다. 신규·이동 아이템은 첫 빈 칸을 사용합니다.
+- 세 패널 헤더에 `↑ 위로 정렬` 버튼을 추가했으며 사용자가 눌렀을 때만 기존 상대 순서를 유지하면서 빈 칸을 제거합니다.
+- 기존 획득·스택·장착·해제·강화 분리·+0 복원·개별/일괄 휴지통·보관함·보스 드롭 경로의 공간 판정을 실제 사용 칸 기준으로 동기화했습니다.
+- Chrome에서 중간 아이템의 보관함/휴지통 이동 후 빈 칸 유지, 다음 칸 고정, 원래 칸 복구, 등급 프레임과 세 정렬 버튼을 확인했습니다.
+- 23개 PNG 원본, 게임 수치·밸런스, Neon DB, backend image/API, Render 서비스는 변경하지 않았습니다.
+
 # v361.borderless-square-full-bleed-dnf-style-special-equipment-icons-ready-static-deploy-gate-preparation-required
 
 - 특수장비 AI 아이콘 23개를 모두 프레임·카드판·테두리가 없는 1:1 full-bleed close-up으로 다시 생성했습니다.

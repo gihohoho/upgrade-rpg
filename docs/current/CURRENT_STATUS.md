@@ -1,11 +1,11 @@
-# Current Status — v361
+# Current Status — v362
 
 ## 현재 결과
 
 ```txt
-latest: v361.borderless-square-full-bleed-dnf-style-special-equipment-icons-ready-static-deploy-gate-preparation-required
-strict result: borderless-square-full-bleed-dnf-style-special-equipment-icons-ready-static-deploy-gate-preparation-required
-next safe stage: prepare-v361-static-content-deploy-exact-sha-gate
+latest: v362.item-grade-frames-stable-manual-compact-inventory-ready-static-deploy-gate-preparation-required
+strict result: item-grade-frames-stable-manual-compact-inventory-ready-static-deploy-gate-preparation-required
+next safe stage: prepare-v362-static-content-deploy-exact-sha-gate
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -177,7 +177,20 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 
 ## 다음 단계
 
-v361 게임 변경과 회귀 검사는 준비 완료이며 아직 공개 Static Site에는 배포하지 않았습니다. 다음 단계에서 Codex가 static-only fail-closed 계약/checker를 준비하고 push합니다. 기호가 그 gate 준비 commit의 정확한 40자리 SHA를 별도 승인하면 기존 Static Site를 exact source로 수동 deploy 한 번 실행하고 게임 화면을 read-only로 검증합니다. backend image 게시·배포, Neon DB write, seed import는 필요하지 않습니다.
+v362 게임 변경과 회귀 검사는 준비 완료이며 아직 공개 Static Site에는 배포하지 않았습니다. 다음 단계에서 Codex가 static-only fail-closed 계약/checker를 준비하고 push합니다. 기호가 그 gate 준비 commit의 정확한 40자리 SHA를 별도 승인하면 기존 Static Site를 exact source로 수동 deploy 한 번 실행하고 게임 화면을 read-only로 검증합니다. backend image 게시·배포, Neon DB write, seed import는 필요하지 않습니다.
+
+## 등급 테두리·위치 유지 인벤토리·수동 위로 정렬 — v362
+
+- v361의 23개 256×256 이미지 파일은 다시 생성하거나 수정하지 않았습니다. 파일 내부의 full-bleed 그림은 유지하고, 게임 UI에서 CSS 등급 프레임을 별도로 적용합니다.
+- 이름 기준 등급은 기본 → 강력 → 빛나는 → 초월 → 해방 → 찬란 → 짙은 → 영롱 순으로 판별합니다. 기본은 장식·광채·애니메이션 없는 흰색 테두리이며 상위 단계에서 색, 이중선, 광채와 절제된 애니메이션이 점진적으로 강화됩니다.
+- 등급 프레임은 장착칸, 가방, 보관함, 휴지통, 아이템 관리창과 테스트 지급 미리보기에서 같은 `getItemFrameGrade()`·`applyItemFrameClass()`를 사용합니다. 높은 단계 애니메이션은 `prefers-reduced-motion`에서 꺼집니다.
+- 가방·보관함·휴지통은 아이템 이동·사용·장착·휴지통 이동 후 중간 항목을 자동으로 당기지 않습니다. 원래 위치는 빈 칸으로 남고 새 아이템은 가장 앞의 빈 칸을 사용합니다.
+- 세 패널 헤더에 `↑ 위로 정렬` 버튼을 추가했습니다. 버튼을 눌렀을 때만 기존 아이템의 상대 순서를 유지하면서 빈 칸을 제거합니다.
+- 실제 Chrome에서 가방 5번째 아이템을 보관함과 휴지통으로 각각 이동했을 때 5번째 칸은 비고 6번째 아이템은 그대로 유지됐습니다. `가방으로`·`가방으로 복구`를 누르면 첫 빈 칸인 원래 5번째 칸으로 돌아왔고 원래 25/60·보관함 0·휴지통 0 상태로 복구했습니다.
+- 실제 렌더링에서 기본 흰색, 초월 청록, 해방 금색, 찬란 분홍·청록, 짙은 보라, 영롱 다색 테두리와 관리창·장착칸 공통 적용을 확인했습니다.
+- CSS와 변경 JavaScript 로드 키는 `?v=362`이며, 다시 만들지 않은 PNG 원본의 이미지 URL은 `?v=361`을 유지합니다.
+- 상시 규칙은 `AGENTS.md`에 기록했습니다. 이미지 파일 자체에는 카드형 프레임을 넣지 않되 게임 UI의 등급별 CSS 테두리는 항상 유지합니다.
+- 변경 없음: 23개 PNG 원본, 장비 스펙·밸런스, 필드 규칙, Neon DB, backend API/image, Render 서비스.
 
 ## 테두리 없는 정사각형 full-bleed 특수장비 아이콘 — v361
 

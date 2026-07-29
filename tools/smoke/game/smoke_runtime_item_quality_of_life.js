@@ -27,6 +27,9 @@ assertContains("src/systems/item-system.js", [
   "function closeSpecialResetModal()",
   "function confirmSpecialReset()",
   "function applySpecialResetToZero(item, level, refundCount)",
+  "function compactPlayerItemContainer(type)",
+  "clearItemSlot(sourceArr, selectedSlot.index)",
+  "placeItemInFirstEmptySlot(targetArr, moved, targetMaxSize)",
   "선택한 장비가 달라져 강화 초기화를 취소했습니다.",
 ]);
 assertContains("src/ui/render-ui.js", [
@@ -48,6 +51,10 @@ assertContains("index.html", [
   'id="special-reset-modal"',
   'onclick="confirmSpecialReset()"',
   'onclick="closeSpecialResetModal()"',
+  "compactPlayerItemContainer('inv')",
+  "compactPlayerItemContainer('storage')",
+  "compactPlayerItemContainer('trash')",
+  "↑ 위로 정렬",
   "몬스터 처치 시 50% 확률",
   "표시된 상승량을 100% 적용",
 ]);
@@ -57,6 +64,13 @@ assertContains("src/styles/style.css", [
   ".special-reset-confirm",
   ".field-reward-policy",
   ".field-reward-summary",
+  ".item-frame-basic",
+  ".item-frame-transcendent",
+  ".item-frame-liberated",
+  ".item-frame-radiant",
+  ".item-frame-dark",
+  ".item-frame-luminous",
+  ".inventory-compact-btn",
 ]);
 assertContains("src/systems/combat-system.js", [
   "const isSkillCrit = Math.random() <= t.skillCritChance / 100;",
@@ -64,24 +78,33 @@ assertContains("src/systems/combat-system.js", [
 assert(!read("src/systems/combat-system.js").includes("gain *= 0.5;"), "field reward amount must not be halved");
 
 const logs = [];
+const initialPlayer = {
+  inventory: [],
+  storage: [],
+  trash: [],
+  equipment: new Array(15).fill(null),
+  maxInventorySize: 60,
+  maxStorageSize: 60,
+};
+const initialSelectedSlot = { type: "inv", index: 0 };
 const context = {
   console,
   Date,
   Math,
-  player: {
-    inventory: [],
-    storage: [],
-    trash: [],
-    equipment: new Array(15).fill(null),
-    maxInventorySize: 60,
-    maxStorageSize: 60,
-  },
-  selectedSlot: { type: "inv", index: 0 },
+  player: initialPlayer,
+  selectedSlot: initialSelectedSlot,
   addLog: (message) => logs.push(message),
   updateFullUI: () => {},
   refreshActionPanelStats: () => {},
+  closeActionPanel: () => {},
+  currentZoneType: "town",
 };
+context.window = context;
 vm.createContext(context);
+vm.runInContext(read("src/state/game-state.js"), context, { filename: "src/state/game-state.js" });
+context.player = initialPlayer;
+context.selectedSlot = initialSelectedSlot;
+context.currentZoneType = "town";
 vm.runInContext(read("src/systems/item-system.js"), context, { filename: "src/systems/item-system.js" });
 
 const refundCounts = vm.runInContext(
@@ -140,6 +163,40 @@ assert(context.player.equipment[14] === null, "equipped emblem must be removed a
 assert(zeroEmblem.count === 66, "+6 reset must merge sixty-four reconstructed +0 items");
 assert(context.selectedSlot.type === "inv" && context.selectedSlot.index === 0, "resulting +0 emblem must remain selected");
 assert(logs.some((message) => message.includes("+0 64개로 되돌렸습니다")), "reset log must report the reconstructed count");
+
+const invFirst = { name: "첫 번째 아이템", type: "normal", level: 0 };
+const invMiddle = { name: "가운데 아이템", type: "normal", level: 0 };
+const invLast = { name: "마지막 아이템", type: "normal", level: 0 };
+context.player.inventory = [invFirst, invMiddle, invLast];
+context.player.storage = [];
+context.player.trash = [];
+context.selectedSlot = { type: "inv", index: 1 };
+vm.runInContext("actionMoveStorage()", context);
+assert(context.player.inventory[0] === invFirst, "moving a middle inventory item must preserve the first slot");
+assert(context.player.inventory[1] === null, "moving a middle inventory item must leave its original slot empty");
+assert(context.player.inventory[2] === invLast, "moving a middle inventory item must not pull the next item forward");
+assert(context.player.storage[0] === invMiddle, "moved inventory item must use the first empty storage slot");
+
+vm.runInContext("compactPlayerItemContainer('inv')", context);
+assert(context.player.inventory.length === 2, "manual inventory compact must remove empty positions");
+assert(context.player.inventory[0] === invFirst && context.player.inventory[1] === invLast, "manual inventory compact must preserve relative item order");
+
+const storageFirst = { name: "보관함 첫 번째", type: "normal", level: 0 };
+const storageMiddle = { name: "보관함 가운데", type: "normal", level: 0 };
+const storageLast = { name: "보관함 마지막", type: "normal", level: 0 };
+context.player.storage = [storageFirst, storageMiddle, storageLast];
+context.selectedSlot = { type: "storage", index: 1 };
+vm.runInContext("actionMoveStorage()", context);
+assert(context.player.storage[1] === null && context.player.storage[2] === storageLast, "storage removal must preserve its empty middle slot");
+
+context.player.inventory = [invFirst, invMiddle, invLast];
+context.player.trash = [{ name: "휴지통 첫 번째", type: "normal", level: 0 }];
+context.selectedSlot = { type: "inv", index: 1 };
+vm.runInContext("actionSell()", context);
+assert(context.player.inventory[1] === null && context.player.inventory[2] === invLast, "moving to trash must preserve the inventory hole");
+assert(context.player.trash[1] === invMiddle, "trash must receive the item in its first empty slot");
+vm.runInContext("compactPlayerItemContainer('trash')", context);
+assert(context.player.trash[0].name === "휴지통 첫 번째" && context.player.trash[1] === invMiddle, "trash compact must preserve relative item order");
 
 const zoneContext = { Math };
 vm.createContext(zoneContext);
@@ -203,6 +260,18 @@ for (const [item, expectedFile] of iconCases) {
   const actual = vm.runInContext(`getSpecialEquipIconUrl(${JSON.stringify(item)})`, iconContext);
   assert(actual.endsWith(`/${expectedFile}?v=361`), `${item.name}: expected ${expectedFile}?v=361, got ${actual}`);
 }
+const frameCases = [
+  [{ name: "심연의 편린 반지" }, "basic"],
+  [{ name: "-초월- 심연의 편린 반지" }, "transcendent"],
+  [{ name: "-해방- 심연의 편린 반지" }, "liberated"],
+  [{ name: "찬란한 오라 아바타" }, "radiant"],
+  [{ name: "짙은 심연의 편린 반지" }, "dark"],
+  [{ name: "영롱한 탈리스만" }, "luminous"],
+];
+for (const [item, expectedGrade] of frameCases) {
+  const actual = vm.runInContext(`getItemFrameGrade(${JSON.stringify(item)})`, iconContext);
+  assert(actual === expectedGrade, `${item.name}: expected frame ${expectedGrade}, got ${actual}`);
+}
 
 const assetDir = path.join(root, "src", "assets", "special-equipment");
 const expectedAssets = [
@@ -226,13 +295,15 @@ assertContains("src/rules/boss-display-rules.js", [
   "drop.img = getSpecialEquipIconUrl(drop);",
 ]);
 assertContains("AGENTS.md", [
-  "테두리, 프레임, 카드판, inset panel, margin band",
+  "이미지 파일 자체에는 테두리, 프레임, 카드판, inset panel, margin band",
+  "기본 등급은 효과 없는 흰색 테두리",
+  "등급별 CSS 테두리",
   "여백 없이 채우며",
   "일부가 잘리는 close-up 구도",
   "던전앤파이터풍",
-  "실제 브라우저의 슬롯 크기",
+  "실제 브라우저 슬롯 크기",
 ]);
 
 console.log(
-  `runtime item quality-of-life smoke test passed (reset refunds 2^level; ${farmZoneCount} field rewards use 50% chance/full gain; ${expectedAssets.length} generated icons mapped)`
+  `runtime item quality-of-life smoke test passed (stable inventory/storage/trash slots; manual compact; grade frames; reset refunds 2^level; ${farmZoneCount} field rewards use 50% chance/full gain; ${expectedAssets.length} generated icons mapped)`
 );

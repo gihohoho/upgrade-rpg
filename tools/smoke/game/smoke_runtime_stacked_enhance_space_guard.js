@@ -45,7 +45,13 @@ const context = {
   },
   selectedSlot: { type: "inv", index: 0 },
 };
+const initialPlayer = context.player;
+const initialSelectedSlot = context.selectedSlot;
+context.window = context;
 vm.createContext(context);
+vm.runInContext(read("src/state/game-state.js"), context);
+context.player = initialPlayer;
+context.selectedSlot = initialSelectedSlot;
 vm.runInContext(read("src/systems/item-system.js"), context);
 
 const stacked = { name: "찬란한 힘의 탈리스만", type: "special_equip", level: 0, count: 2 };

@@ -55,7 +55,11 @@ const context = {
     maxStorageSize: 3,
   },
 };
+const initialPlayer = context.player;
+context.window = context;
 vm.createContext(context);
+vm.runInContext(read("src/state/game-state.js"), context);
+context.player = initialPlayer;
 vm.runInContext(read("src/systems/item-system.js"), context);
 
 const stackableItem = {

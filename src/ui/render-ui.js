@@ -500,6 +500,7 @@ function showConsumedSkillBookPanel(item) {
 	selectedSlot = { type: null, index: -1 };
 	if (ui.apName) ui.apName.innerText = `${item.name} (모두 사용함)`;
 	if (ui.apImg && item.img) ui.apImg.src = item.img;
+	if (ui.apImg && typeof ui.apImg.closest === "function" && typeof applyItemFrameClass === "function") applyItemFrameClass(ui.apImg.closest(".action-icon"), item);
 	if (ui.apStats) ui.apStats.innerHTML = `${buildSkillBookActionHtml(item)}<div style="color:#88ff88; margin-top:10px;">보유한 강화권을 모두 사용했습니다.</div>`;
 	[ui.btnApReinforce1, ui.btnApReinforce20, ui.btnApReinforce50, ui.btnApReinforce200, ui.btnApSell].forEach((btn) => {
 		if (btn) {
@@ -831,6 +832,7 @@ function selectItem(type, index, isRefresh = false) {
 		return;
 	}
 	if (ui.apImg) ui.apImg.src = item.img;
+	if (ui.apImg && typeof ui.apImg.closest === "function" && typeof applyItemFrameClass === "function") applyItemFrameClass(ui.apImg.closest(".action-icon"), item);
 	refreshActionPanelStats();
 	if (ui.apPanel) ui.apPanel.style.display = "block";
 	renderUI();
@@ -890,6 +892,7 @@ function renderUI() {
 			let lvBadge = getSlotBadgeHtml(item, true);
 
 			slot.innerHTML = `<img src="${item.img}" alt="item">${lvBadge}`;
+			if (typeof applyItemFrameClass === "function") applyItemFrameClass(slot, item);
 			if (selectedSlot.type === "equip" && selectedSlot.index === i) slot.classList.add("selected");
 			slot.onmouseenter = () => showItemTooltip(item);
 			slot.onmouseleave = hideTooltip;
@@ -911,10 +914,11 @@ function renderUI() {
 		for (let i = 0; i < player.maxInventorySize; i++) {
 			let slot = document.createElement("div");
 			slot.className = "item-slot empty-inv";
-			if (i < player.inventory.length) {
-				let item = player.inventory[i];
+			let item = player.inventory[i];
+			if (item) {
 				let lvText = getSlotBadgeHtml(item, false);
 				slot.innerHTML = `<img src="${item.img}" alt="item">${lvText}`;
+				if (typeof applyItemFrameClass === "function") applyItemFrameClass(slot, item);
 				if (selectedSlot.type === "inv" && selectedSlot.index === i) slot.classList.add("selected");
 				slot.onmouseenter = () => showItemTooltip(item);
 				slot.onmouseleave = hideTooltip;
@@ -928,7 +932,7 @@ function renderUI() {
 
 			// 클릭: 관리창 열기. 장착/사용은 관리창 버튼으로 처리
 			slot.onclick = () => {
-				if (i < player.inventory.length) selectItem("inv", i);
+				if (player.inventory[i]) selectItem("inv", i);
 			};
 
 			ui.inventoryContainer.appendChild(slot);
@@ -936,8 +940,9 @@ function renderUI() {
 	}
 
 	if (ui.inventoryCount) {
-		ui.inventoryCount.innerText = player.inventory.length;
-		if (player.inventory.length >= player.maxInventorySize) {
+		const inventoryCount = typeof countOccupiedItemSlots === "function" ? countOccupiedItemSlots(player.inventory) : player.inventory.filter(Boolean).length;
+		ui.inventoryCount.innerText = inventoryCount;
+		if (inventoryCount >= player.maxInventorySize) {
 			ui.inventoryCount.style.color = "#ff4444";
 			ui.inventoryCount.style.fontWeight = "bold";
 		} else {
@@ -951,11 +956,12 @@ function renderUI() {
 		for (let i = 0; i < player.maxStorageSize; i++) {
 			let slot = document.createElement("div");
 			slot.className = "item-slot empty-inv";
-			if (i < player.storage.length) {
-				let item = player.storage[i];
+			let item = player.storage[i];
+			if (item) {
 				let lvText = getSlotBadgeHtml(item, false);
 
 				slot.innerHTML = `<img src="${item.img}" alt="item">${lvText}`;
+				if (typeof applyItemFrameClass === "function") applyItemFrameClass(slot, item);
 				if (selectedSlot.type === "storage" && selectedSlot.index === i) slot.classList.add("selected");
 				slot.onmouseenter = () => showItemTooltip(item);
 				slot.onmouseleave = hideTooltip;
@@ -967,23 +973,24 @@ function renderUI() {
 				slot.oncontextmenu = (e) => e.preventDefault();
 			}
 			slot.onclick = () => {
-				if (i < player.storage.length) selectItem("storage", i);
+				if (player.storage[i]) selectItem("storage", i);
 			};
 			ui.storageContainer.appendChild(slot);
 		}
 	}
 
-	if (ui.storageCount) ui.storageCount.innerText = player.storage.length;
+	if (ui.storageCount) ui.storageCount.innerText = typeof countOccupiedItemSlots === "function" ? countOccupiedItemSlots(player.storage) : player.storage.filter(Boolean).length;
 
 	if (ui.trashContainer) {
 		ui.trashContainer.innerHTML = "";
 		for (let i = 0; i < player.maxStorageSize; i++) {
 			let slot = document.createElement("div");
 			slot.className = "item-slot empty-inv trash-slot";
-			if (i < player.trash.length) {
-				let item = player.trash[i];
+			let item = player.trash[i];
+			if (item) {
 				let lvText = getSlotBadgeHtml(item, false);
 				slot.innerHTML = `<img src="${item.img}" alt="item">${lvText}`;
+				if (typeof applyItemFrameClass === "function") applyItemFrameClass(slot, item);
 				if (selectedSlot.type === "trash" && selectedSlot.index === i) slot.classList.add("selected");
 				slot.onmouseenter = () => showItemTooltip(item);
 				slot.onmouseleave = hideTooltip;
@@ -995,13 +1002,13 @@ function renderUI() {
 				slot.oncontextmenu = (e) => e.preventDefault();
 			}
 			slot.onclick = () => {
-				if (i < player.trash.length) selectItem("trash", i);
+				if (player.trash[i]) selectItem("trash", i);
 			};
 			ui.trashContainer.appendChild(slot);
 		}
 	}
 
-	if (ui.trashCount) ui.trashCount.innerText = player.trash.length;
+	if (ui.trashCount) ui.trashCount.innerText = typeof countOccupiedItemSlots === "function" ? countOccupiedItemSlots(player.trash) : player.trash.filter(Boolean).length;
 
 	renderMailbox();
 }
