@@ -53,9 +53,9 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v364.normal-equipment-tiered-icon-rule-ring-family-ready
-strict result: normal-equipment-tiered-icon-rule-ring-family-ready
-next safe stage: generate-v365-normal-equipment-tiered-icons-tier10-family-remainder
+latest: v365.normal-equipment-icons-all-tiers-applied
+strict result: normal-equipment-icons-all-tiers-applied
+next safe stage: review-v365-local-equipment-icons-and-select-next-content-step
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete

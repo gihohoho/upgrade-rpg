@@ -1,11 +1,11 @@
-# Current Status — v364
+# Current Status — v365
 
 ## 현재 결과
 
 ```txt
-latest: v364.normal-equipment-tiered-icon-rule-ring-family-ready
-strict result: normal-equipment-tiered-icon-rule-ring-family-ready
-next safe stage: generate-v365-normal-equipment-tiered-icons-tier10-family-remainder
+latest: v365.normal-equipment-icons-all-tiers-applied
+strict result: normal-equipment-icons-all-tiers-applied
+next safe stage: review-v365-local-equipment-icons-and-select-next-content-step
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -178,6 +178,19 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 ## 다음 단계
 
 1~39단계 일반 장비 195개는 장비마다 별도 PNG를 사용합니다. 같은 계열은 파일을 공유하지 않고 기본 실루엣·각도·구도를 유지한 발전형으로 만듭니다. v364에서 가장 긴 `어둠을 지배하는 고리` 계열 6단계를 새 화풍으로 완료했습니다. 다음 단계는 같은 6단계 구조의 나머지 4계열 24개입니다. 전체 아이콘 작업이 끝날 때까지 기존 Render Static Site의 v351 공개본은 그대로 두고 별도 배포를 실행하지 않습니다.
+
+## 일반 장비 1~39단계 AI 이미지 전체 적용 — v365
+
+- 일반 보스 1~39단계의 다섯 장비 종류에 각각 별도 256×256 PNG를 적용해 총 195개를 완성했습니다.
+- 파일은 `src/assets/equipment/tier-{2자리 단계}-{장비 종류}.png` 규칙이며 폴더에는 실제 사용 중인 195개만 남겼습니다.
+- 게임은 이름의 승급 표식을 추측하지 않고 `tier + equipGroup`으로 정확한 파일을 선택합니다. 모든 URL은 `?v=365` 캐시 식별자를 사용합니다.
+- 같은 계열도 PNG를 공유하지 않습니다. 기본 실루엣·각도·구도와 주요 부품을 유지하면서 상위 단계에서 재질·색·장식·룬·마력 효과가 점진적으로 발전합니다.
+- 13~15, 21~23, 24~26단계를 포함해 이름이 같거나 `[기본]` 이름을 바탕으로 한 상위 장비의 계열 관계를 이미지 디자인에 반영했습니다.
+- 모든 PNG는 1:1 정사각형, 256×256, 이미지 내부 카드·테두리·문자 없음, full-bleed close-up과 굵은 만화형 외곽선을 사용합니다. 등급 테두리는 기존 CSS가 모든 인벤토리 화면에서 별도로 적용합니다.
+- 검사 결과: 39단계 / 195장비 / 195고유 URL / 195 PNG signature·256×256 통과. 정적 배포 산출물의 195개 포함 여부도 별도 smoke로 고정했습니다.
+- 실제 Chrome `http://127.0.0.1:5500/index.html`에서 1단계와 39단계의 다섯 장비를 확인했습니다. 모두 `?v=365`, 원본 256×256, 화면 40×40 정사각형으로 로드됐고 브라우저 오류는 0건입니다.
+- 변경 없음: 장비 능력치·강화 공식·드롭률, 필드 규칙, backend API/image, Neon DB, Render 서비스.
+- 전체 규칙과 파일 계약: `docs/current/NORMAL_EQUIPMENT_AI_ICON_ASSETS.md`
 
 ## 일반 장비 단계별 발전 이미지 규칙과 반지 6단계 — v364
 

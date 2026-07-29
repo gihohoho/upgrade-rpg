@@ -23,44 +23,14 @@ function iconTextUrl(text, bg = "333", fg = "FFF") {
 const SPECIAL_EQUIP_ASSET_BASE = "src/assets/special-equipment";
 const SPECIAL_EQUIP_ASSET_VERSION = "361";
 const NORMAL_EQUIP_ASSET_BASE = "src/assets/equipment";
-const NORMAL_EQUIP_ASSET_VERSION = "364";
-const NORMAL_EQUIP_ICON_ASSETS = Object.freeze({
-	"어둠을 지배하는 고리": Object.freeze({
-		basic: "dark-dominion-ring.png",
-		jin: "dark-dominion-ring-jin.png",
-		transcendent: "dark-dominion-ring-transcendent.png",
-		purgatory: "dark-dominion-ring-purgatory.png",
-		"true-purgatory": "dark-dominion-ring-true-purgatory.png",
-		"transcendent-purgatory": "dark-dominion-ring-transcendent-purgatory.png",
-	}),
-	"올 엘리멘탈 크리스탈": "all-elemental-crystal.png",
-	"군신의 가호가 담긴 보석": "war-god-blessing-jewel.png",
-	"루나 베네딕티오": "luna-benedictio.png",
-	"영창 : 불멸의 혼": "immortal-soul-chant.png",
-	"마음을 새긴 바다": "engraved-sea-heart.png",
-	"종말의 시간": "time-of-end.png",
-	"광란을 품은 자": "embracing-frenzy.png",
-	"세계수의 뿌리": "world-tree-root.png",
-	"어나이얼레이터": "annihilator.png",
-	"무의식 : 넥스의 몽환의 어둠": "nex-dream-darkness.png",
-	"환영 : 넥스의 검은 기운": "nex-black-energy.png",
-	"환영 : 넥스의 잠식된 의복": "nex-corrupted-garment.png",
-	"원초의 꿈 : 스태프": "primal-dream-staff.png",
-	"원초의 꿈 : 창": "primal-dream-spear.png",
+const NORMAL_EQUIP_ASSET_VERSION = "365";
+const NORMAL_EQUIP_GROUP_ASSET_KEYS = Object.freeze({
+	skill_all: "skill-all",
+	atk_inc: "atk-inc",
+	normal_dmg: "normal-dmg",
+	skill_chance: "skill-chance",
+	normal_crit: "normal-crit",
 });
-const NORMAL_EQUIP_RANK_PREFIXES = [
-	/^★초월 연옥★\s*/,
-	/^★진 연옥★\s*/,
-	/^★연옥★\s*/,
-	/^★심연★\s*/,
-	/^-초월-\s*/,
-	/^-진-\s*/,
-	/^-현-\s*/,
-	/^\[기본\]\s*/,
-	/^끝없는\s+/,
-	/^영원한\s+/,
-	/^선\s*:\s*/,
-];
 const ITEM_FRAME_GRADE_CLASSES = [
 	"item-frame-basic",
 	"item-frame-uncommon",
@@ -89,49 +59,12 @@ function getItemFrameGrade(item) {
 	return "basic";
 }
 
-function getNormalEquipmentFamilyName(name) {
-	let familyName = String(name || "").trim();
-	let changed = true;
-	while (changed && familyName) {
-		changed = false;
-		for (const prefix of NORMAL_EQUIP_RANK_PREFIXES) {
-			const nextName = familyName.replace(prefix, "").trim();
-			if (nextName !== familyName) {
-				familyName = nextName;
-				changed = true;
-				break;
-			}
-		}
-	}
-	const knownFamily = Object.keys(NORMAL_EQUIP_ICON_ASSETS)
-		.filter((baseName) => familyName.includes(baseName))
-		.sort((left, right) => right.length - left.length)[0];
-	return knownFamily || familyName;
-}
-
-function getNormalEquipmentRankKey(name) {
-	const itemName = String(name || "").trim();
-	if (itemName.startsWith("★초월 연옥★")) return "transcendent-purgatory";
-	if (itemName.startsWith("★진 연옥★")) return "true-purgatory";
-	if (itemName.startsWith("★연옥★")) return "purgatory";
-	if (itemName.startsWith("★심연★")) return "abyss";
-	if (itemName.startsWith("-초월-")) return "transcendent";
-	if (itemName.startsWith("-진-")) return "jin";
-	if (itemName.startsWith("-현-")) return "hyun";
-	if (itemName.startsWith("끝없는 ")) return "endless";
-	if (itemName.startsWith("영원한 ")) return "eternal";
-	if (itemName.startsWith("선 : ")) return "sun";
-	return "basic";
-}
-
 function getNormalEquipmentIconAssetName(item) {
 	if (!item || item.type !== "normal") return "";
-	const familyName = getNormalEquipmentFamilyName(item.name);
-	const familyAssets = NORMAL_EQUIP_ICON_ASSETS[familyName];
-	if (!familyAssets) return "";
-	if (typeof familyAssets === "string") return familyAssets;
-	const rankKey = getNormalEquipmentRankKey(item.name);
-	return familyAssets[rankKey] || familyAssets.basic || "";
+	const tier = Number(item.tier);
+	const groupKey = NORMAL_EQUIP_GROUP_ASSET_KEYS[String(item.equipGroup || "")];
+	if (!Number.isInteger(tier) || tier < 1 || tier > 39 || !groupKey) return "";
+	return `tier-${String(tier).padStart(2, "0")}-${groupKey}.png`;
 }
 
 function getNormalEquipmentIconUrl(item) {
