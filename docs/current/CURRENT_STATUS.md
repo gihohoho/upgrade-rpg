@@ -1,11 +1,11 @@
-# Current Status — v368
+# Current Status — v369
 
 ## 현재 결과
 
 ```txt
-latest: v368.v363-crystal-draft-descendants-fully-replaced
-strict result: v363-crystal-draft-descendants-fully-replaced
-next safe stage: owner-review-v368-local-equipment-icons-and-select-next-content-step
+latest: v369.starter-skill-book-and-weapon-master-skill-icons-applied
+strict result: starter-skill-book-and-weapon-master-skill-icons-applied
+next safe stage: owner-review-v369-local-icons-and-select-next-character-step
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -177,7 +177,19 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 
 ## 다음 단계
 
-1~39단계 일반 장비 195개는 장비마다 별도 PNG를 사용합니다. 같은 계열은 파일을 공유하지 않고 기본 실루엣·각도·구도를 유지한 발전형으로 만듭니다. v368에서 v363 단순 결정 시안에서 파생된 나머지 43장을 모두 교체해, v363의 55개 현재 후손은 반지 6장·4원소 크리스탈 6장·이번 43장까지 전부 새 그림이 됐습니다. 다음 단계는 로컬에서 v368 결과를 검토한 뒤 남은 장비 이미지 또는 별도 static release 범위를 선택하는 것입니다. 기존 Render Static Site의 v351 공개본은 그대로 유지합니다.
+v369에서 초보자 무기와 스킬강화권, 현재 검신 스킬까지 로컬 아이콘 범위를 넓혔습니다. 다음 단계는 로컬 `http://127.0.0.1:5500/index.html`에서 v369의 21개 아이콘을 기호가 확인한 뒤, 다음 캐릭터의 스킬 이미지 또는 별도 static release 범위를 선택하는 것입니다. 기존 Render Static Site의 v351 공개본은 그대로 유지합니다.
+
+## 초보자 무기·스킬강화권·검신 스킬 아이콘 — v369
+
+- 초보자 무기 `리버레이션 스태프` 1장, 스킬강화권 10장, 검신(`weapon_master`) 스킬 10장을 각각 별도 256×256 PNG와 `?v=369` 캐시로 적용했습니다.
+- 스킬강화권은 `Q → W → E → R → T → F → D → SQ → SW → M` 순서의 한 계열입니다. Q 기본형부터 바로 전 단계를 직접 편집해 같은 책의 실루엣·구도와 중심 문양을 유지하면서 재질·룬·오라만 절제되게 발전시킵니다.
+- 검신 기본 스킬 중 `Q`·`W`·`R`·`T`·`F`·`D`는 초록색 자동·패시브, `E`는 파란색 버프입니다. `SQ`·`SW`·`M`은 기능 유형과 관계없이 보라색 강화·진각성 계열입니다. 현재 검신에는 사용자가 직접 누르는 기본 액티브 스킬이 없습니다.
+- 스킬 아이콘은 사용자가 제시한 예시처럼 어두운 배경, 굵고 단순한 단일 문양·동작 실루엣과 작은 슬롯 판독성을 기준으로 합니다. 파일 안에는 `Q`·`W` 같은 키 문자, 숫자, 이름과 설명을 넣지 않고 UI에서 따로 표시합니다.
+- 추후 추가할 캐릭터는 같은 슬롯 키라도 검신 이미지를 공유하지 않고 캐릭터별 전용 폴더와 별도 PNG를 사용합니다. 장비·강화권·스킬 이미지 내부 프레임과 UI의 등급별 CSS 테두리도 계속 분리합니다.
+- 프로젝트 파일은 `src/assets/equipment/liberation-staff.png`, `src/assets/skill-books/`의 10장, `src/assets/skills/weapon-master/`의 10장입니다. built-in `image_gen` 작업 원본은 Git 밖 `C:\Users\HOME\.codex\generated_images\019f64cb-07a2-7bb3-81e9-e66fdced3b76`에 보존합니다.
+- 장비 능력치·강화 공식, 스킬 수치·발동 확률·전투 로직, backend API/image, Neon DB와 Render 서비스는 변경하지 않았습니다. 공개 Static Site는 계속 v351입니다.
+- 정적 generated seed 4개(`skills`, `item_templates`, `drop_table_items`, `manifest`)는 현재 로컬 이미지 URL로 재추출했습니다. 실제 DB write·seed 실행·migration은 하지 않았습니다.
+- 전체 파일·색 분류·발전 규칙은 `docs/current/STARTER_SKILL_BOOK_AND_SKILL_AI_ICON_ASSETS.md`에 기록했습니다. v369 전용/관련 smoke와 core smoke가 통과했고, 실제 Chrome 게임 화면의 기본 스킬 8개와 별도 21개 검수 화면이 256→68px 정사각형으로 로드됐으며 브라우저 오류는 0건입니다.
 
 ## v363 단순 결정 시안 후손 43장 전체 교체 — v368
 

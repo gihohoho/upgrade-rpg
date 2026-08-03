@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v368
+# Upgrade RPG Codex working rules — v369
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -30,6 +30,10 @@
 - 파괴적이거나 되돌리기 어려운 동작에는 브라우저 기본 `alert`/`confirm`을 쓰지 않고 기존 게임 UI와 일관된 확인·취소 모달을 사용하며, 결과와 반환 수량을 실행 전에 명확히 보여줍니다.
 - 동작·수치·상태를 바꾸면 연관된 화면 제목, 고정 설명, 툴팁, 모달 안내, 버튼 문구, 로그, 캐시 키, source/generated seed, 회귀 검사와 현재 문서를 함께 전수 검색해 실제 동작과 같은 내용으로 동기화합니다.
 - 생성형 인벤토리·아이템 이미지는 모두 동일한 정사각형 크기로 만듭니다. 이미지 파일 자체에는 테두리, 프레임, 카드판, inset panel, margin band를 넣지 않고 아이템과 효과가 네 변 가까이 닿도록 화면을 여백 없이 채우며, 종류를 한눈에 알아볼 수 있다면 일부가 잘리는 close-up 구도를 허용합니다. 고전 한국식 횡스크롤 액션 RPG·던전앤파이터풍의 굵은 외곽선, 선명한 만화식 명암, 작은 슬롯 판독성을 기준으로 합니다.
+- 스킬 아이콘은 사용자가 제시한 작은 슬롯용 예시처럼 어두운 배경 위에 굵고 단순한 단일 문양·동작 실루엣을 크게 배치하고, 정사각형 full-bleed와 작은 크기 판독성을 지킵니다. 기본 스킬의 자동·패시브형은 초록색, 버프형은 파란색, 액티브형은 노란색 계열이며, `SQ`·`SW`·`M` 강화·진각성 스킬은 기능 유형과 관계없이 보라색 계열입니다.
+- 스킬 이미지 파일 안에는 `Q`·`W` 같은 키 문자, 숫자, 스킬명과 설명을 넣지 않습니다. 키와 이름은 UI가 별도로 표시합니다. 추후 캐릭터를 추가할 때는 같은 슬롯 키라는 이유로 검신 아이콘을 재사용하지 않고 캐릭터별 고유 파일을 만듭니다.
+- 스킬강화권은 `Q → W → E → R → T → F → D → SQ → SW → M` 순서의 한 계열입니다. `Q` 기본형을 만든 뒤 바로 전 단계 이미지를 직접 편집해 같은 책·강화권의 정체성, 실루엣, 각도, 구도를 유지하고 재질·룬·오라만 절제되게 발전시킵니다. 이미지 안에는 키 문자·숫자·희귀도 테두리를 넣지 않으며 UI의 CSS 프레임을 이미지와 분리합니다.
+- 초보자 무기를 포함한 같은 장비 계열의 상위 이미지는 기본형을 직접 편집해 같은 물체의 실루엣과 구도를 유지합니다. 장비·강화권·스킬 PNG 내부 프레임과 게임 UI의 등급별 CSS 테두리를 혼합하지 않습니다.
 - 일반 장비 생성형 이미지는 64px에서도 종류가 보이는 단일 물체와 굵은 실루엣을 유지하되, 너무 밋밋하지 않도록 2~3개의 목적 있는 장식, 금속 하이라이트, 보석과 절제된 마력 효과를 허용합니다. 이미지 안에 글자·숫자·로고·희귀도 테두리·무관한 날개·과도한 입자·물체를 가리는 광채·복잡한 세공을 넣지 않습니다.
 - 같은 일반 장비 계열도 승급 단계마다 별도 PNG를 만듭니다. 기본 이미지의 물체 정체성, 실루엣, 카메라 각도, 배치와 주요 부품을 유지한 채 단계가 오를수록 재질, 중심색, 기존 부품의 장식, 룬과 마력 효과를 점진적으로 발전시킵니다. 전혀 다른 물체로 재설계하거나 CSS 테두리만 바꿔 승급 이미지를 대신하지 않습니다.
 - 일반 장비 계열은 `-현-`, `-진-`, `-초월-`, `★심연★`, `★연옥★`, `★진 연옥★`, `★초월 연옥★` 같은 승급 표식을 제거한 이름이 같으면 같은 계열입니다. 또한 `끝없는 절망 : 티아매트의 불신`이 `절망 : 티아매트의 불신`을, `영원한 파멸 : 베리아스의 불신`이 `파멸 : 베리아스의 불신`을 포함하는 것처럼 더 긴 상위 이름 안에 기본 장비 이름 전체가 들어 있으면 같은 계열로 봅니다. 여러 후보가 있으면 가장 긴 기본 이름을 우선하며 불명확하면 사용자에게 확인합니다.
@@ -57,9 +61,9 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v368.v363-crystal-draft-descendants-fully-replaced
-strict result: v363-crystal-draft-descendants-fully-replaced
-next safe stage: owner-review-v368-local-equipment-icons-and-select-next-content-step
+latest: v369.starter-skill-book-and-weapon-master-skill-icons-applied
+strict result: starter-skill-book-and-weapon-master-skill-icons-applied
+next safe stage: owner-review-v369-local-icons-and-select-next-character-step
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -118,6 +122,9 @@ Alembic current: v295_initial_schema / new revision needed: no
 - v358은 세 기본 아바타 +0~+20 성장과 +20 `88.2B`, 무기 평타 치명 피해 증폭 `33%`, 오라 추가 스킬공격 계수 증폭 `33%`, 클론 스킬 치명 `10%/150%`를 실제 전투 합산까지 연결합니다.
 - v358에서 스킬강화권 창 유지와 강화 탈리스만/휘장 `+0으로 분해`를 추가했고, v359에서 분해 반환량을 `2^강화단계`로 보완했습니다. v358의 필드 절반 지급은 v360에서 표시 상승량 100%·성공 확률 50% 규칙으로 대체됐습니다.
 - v363 commit `a696e1be3fe27beddc545cbba01e1e438573b7cc`의 단순 파랑·금색 결정 시안 15개는 이후 10~20단계 55개 PNG로 파생됐습니다. v364 반지 6개와 v367 올 엘리멘탈 크리스탈 6개에 이어 v368에서 남은 13계열 43개를 모두 이름이 식별되는 장비 발전형으로 교체해, 해당 v363 시안의 현재 사용 후손은 0개입니다.
+- v369에서 초보자 무기 `리버레이션 스태프` 1장, `Q → W → E → R → T → F → D → SQ → SW → M` 스킬강화권 발전형 10장, 검신(`weapon_master`) 스킬 10장의 256×256 프로젝트 PNG를 `?v=369` 캐시로 적용했습니다. 검신의 `Q`·`W`·`R`·`T`·`F`·`D`는 초록색 자동·패시브, `E`는 파란색 버프, `SQ`·`SW`·`M`은 보라색 강화·진각성 계열이며 장비 능력치와 스킬 수치는 변경하지 않았습니다.
+- v369 정적 seed는 `skills.json`, `item_templates.json`, `drop_table_items.json`, `manifest.json`을 현재 로컬 이미지 URL로 다시 추출했습니다. 이는 Git 파일 동기화일 뿐 DB write·seed 실행·migration은 하지 않았습니다. 전용 smoke와 관련 core smoke, 실제 Chrome 256→68px 렌더링, 브라우저 오류 0건을 확인했습니다.
+- v369 생성 원본은 Git 밖 `C:\Users\HOME\.codex\generated_images\019f64cb-07a2-7bb3-81e9-e66fdced3b76`에 보존합니다. 공개 Render Static Site는 계속 v351이며 v369 로컬 자산은 배포하지 않았습니다.
 - Chrome 구형 JavaScript 캐시를 재현해 변경 스크립트에 최종 `?v=358.1` 캐시 키를 붙였습니다. 공개 Static Site는 아직 v351이므로 v357/v358 콘텐츠는 미배포입니다.
 - v358 공개 반영은 backend image나 DB 작업 없이 기존 Render Static Site 수동 배포 1회만 필요합니다. 먼저 static-only fail-closed 계약/checker를 별도 준비한 뒤, 그 gate 준비 commit의 정확한 40자리 SHA를 기호가 승인하기 전에는 실행하지 않습니다.
 - 전체 runtime blocking-I/O audit는 sync FastAPI route 0, async 내부 blocking 호출 0, frontend entrypoint·source blocking 호출 0으로 통과했습니다.
@@ -189,6 +196,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 프로젝트 루트에서 `backend/.venv` Python으로 먼저 실행합니다.
 
 ```bash
+node tools/smoke/game/smoke_v369_item_and_skill_icons.js
 node tools/smoke/game/smoke_equipment_progression_formulas.js
 python tools/check_v351_public_release_gates.py --strict
 python tools/smoke/backend/smoke_v351_public_release_gates.py

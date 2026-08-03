@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v368
+# Upgrade RPG Codex handoff — v369
 
 ## 현재 상태
 
 ```txt
-latest: v368.v363-crystal-draft-descendants-fully-replaced
-strict result: v363-crystal-draft-descendants-fully-replaced
-next safe stage: owner-review-v368-local-equipment-icons-and-select-next-content-step
+latest: v369.starter-skill-book-and-weapon-master-skill-icons-applied
+strict result: starter-skill-book-and-weapon-master-skill-icons-applied
+next safe stage: owner-review-v369-local-icons-and-select-next-character-step
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -224,6 +224,20 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 - 상세 생성·검수 규칙: `docs/current/SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md`
 - 장비 스펙·필드 규칙·Neon DB·backend API/image·Render 서비스는 변경하지 않았습니다.
 
+## 초보자 무기·스킬강화권·검신 스킬 아이콘 — v369
+
+- 초보자 무기 `리버레이션 스태프` 1장을 `src/assets/equipment/liberation-staff.png`에 적용했습니다. 이번 21개 자산 URL의 캐시 식별자는 `?v=369`입니다.
+- `스킬강화권`, `강력한 스킬강화권`, `빛나는 스킬강화권`, `화려한 스킬강화권`, `찬란한 스킬강화권`, `해방된 스킬강화권`, `천공의 스킬강화권`, `심연의 스킬강화권`, `-초월-심연의 스킬강화권`, `진 각성 스킬강화권`은 각각 `Q → W → E → R → T → F → D → SQ → SW → M`에 대응하는 별도 PNG 10장을 사용합니다.
+- 파일은 `src/assets/skill-books/skill-book-{q,w,e,r,t,f,d,sq,sw,m}.png`입니다. Q가 기본형이며 이후 단계는 항상 바로 전 단계 파일을 built-in `image_gen`의 편집 원본으로 사용해 같은 책의 실루엣·각도·구도와 중심 문양을 유지하고 재질·룬·오라만 발전시켰습니다.
+- 검신(`weapon_master`)은 `src/assets/skills/weapon-master/` 아래에 Q/W/E/R/T/F/D/SQ/SW/M별 별도 256×256 PNG 10장을 사용합니다.
+- 현재 색 분류는 `Q`·`W`·`R`·`T`·`F`·`D` 초록색 자동·패시브, `E` 파란색 버프, `SQ`·`SW`·`M` 보라색 강화·진각성입니다. 현재 검신에는 사용자가 직접 누르는 기본 액티브 스킬이 없습니다.
+- 스킬 이미지는 사용자가 제시한 작은 슬롯 예시처럼 어두운 배경과 굵고 단순한 단일 문양·동작 실루엣을 사용합니다. 키 문자·숫자·이름은 PNG에 넣지 않고 UI가 표시합니다.
+- 추후 캐릭터는 같은 키 슬롯이라도 검신 파일을 재사용하지 않고 캐릭터별 고유 PNG를 만듭니다. 장비·강화권·스킬 이미지 내부 프레임과 UI의 CSS 등급 테두리는 계속 분리합니다.
+- 생성 원본은 1254px이며 Git 밖 `C:\Users\HOME\.codex\generated_images\019f64cb-07a2-7bb3-81e9-e66fdced3b76`에 보존합니다. 프로젝트에는 256×256 파생본 21장만 사용합니다.
+- 장비 능력치·강화 공식, 스킬 수치·발동 확률·전투 로직, backend API/image, Neon DB와 Render 서비스는 변경하지 않았습니다. 공개 Static Site는 계속 v351입니다.
+- 정적 generated seed 4개(`skills`, `item_templates`, `drop_table_items`, `manifest`)는 현재 로컬 이미지 URL로 재추출했습니다. 실제 DB write·seed 실행·migration은 하지 않았습니다.
+- 전체 파일표와 영구 규칙은 `docs/current/STARTER_SKILL_BOOK_AND_SKILL_AI_ICON_ASSETS.md`입니다. v369 전용/관련 smoke와 core smoke가 통과했고, 실제 Chrome 게임 화면의 기본 스킬 8개와 별도 21개 검수 화면이 256→68px 정사각형으로 로드됐으며 브라우저 오류는 0건입니다.
+
 ## v363 단순 결정 시안 후손 43장 전체 교체 — v368
 
 - 사용자가 지적한 범위는 `올 엘리멘탈 크리스탈` 한 계열이 아니라 commit `a696e1be3fe27beddc545cbba01e1e438573b7cc`에서 추가된 단순 파랑·금색 결정 시안 묶음 전체입니다.
@@ -282,7 +296,7 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 - `src/assets/equipment/`에는 새 반지 6개와 다음 묶음에서 재생성할 기존 기본 이미지 14개, 총 20개가 있습니다. 일반 장비 캐시 키는 `?v=364`입니다.
 - 전용 smoke는 10~20단계 55개 로컬 이미지, 반지 단계 6/6 별도 파일, 전체 20개 PNG signature·256×256과 정적 산출물 포함을 확인했습니다.
 - 실제 Chrome에서 10·11·12·18단계 반지를 지급해 서로 다른 이미지와 기본·진·초월·연옥 CSS 테두리의 공통 적용을 확인했습니다.
-- 다음 묶음은 10·11·12·18·19·20단계 나머지 4계열 24개입니다. 이전 단계 PNG를 편집 원본으로 사용해 같은 계열의 형태를 유지합니다.
+- v364 당시 다음 묶음은 10·11·12·18·19·20단계 나머지 4계열 24개였으며, 이 후속 범위는 v365~v368에서 완료했습니다.
 - 전체 규칙·파일 매핑: `docs/current/NORMAL_EQUIPMENT_AI_ICON_ASSETS.md`
 - 장비 수치·강화 공식·드롭률, 필드 규칙, backend API/image, Neon DB, Render 서비스는 변경하지 않았습니다.
 
@@ -315,7 +329,7 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 - CSS와 변경 JavaScript 로드 키는 `?v=362`입니다. 이미지 파일과 이미지 URL `?v=361`은 원본 미변경 때문에 유지합니다.
 - 변경 없음: PNG 원본, 장비 수치·밸런스, 필드 규칙, Neon DB, backend API/image, Render 서비스.
 
-현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 10·11·12·18·19·20단계의 나머지 4계열을 같은 실루엣의 단계별 발전형 24개 PNG로 생성·적용하는 것입니다. 전체 이미지 작업이 끝날 때까지 Render Static Site deploy는 실행하지 않습니다.
+현재 필요한 사용자 조치·extension·권한·새 설치는 없습니다. 다음 단계는 로컬 `http://127.0.0.1:5500/index.html`에서 v369 초보자 무기·스킬강화권·검신 스킬 아이콘을 확인하고, 다음 캐릭터의 스킬 이미지 또는 별도 static release 범위를 선택하는 것입니다. 로컬 검토가 끝날 때까지 Render Static Site deploy는 실행하지 않습니다.
 
 로컬 검사 주의: Windows 전역 `DEBUG=release`는 backend의 boolean `DEBUG`와 충돌합니다. 시스템 환경변수는 바꾸지 말고 backend/core 검사 자식 프로세스에서만 `DEBUG`를 unset하거나 `DEBUG=false`로 덮어씁니다.
 
@@ -326,6 +340,7 @@ Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.ex
 새 설치 여부: 없음
 
 ```bash
+node tools/smoke/game/smoke_v369_item_and_skill_icons.js
 node tools/smoke/game/smoke_equipment_progression_formulas.js
 node tools/smoke/game/smoke_runtime_item_quality_of_life.js
 node tools/smoke/game/smoke_equipment_icon_families.js
@@ -350,6 +365,6 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v368 focused smoke는 1~39단계 일반 장비 195개의 서로 다른 로컬 이미지 URL, 정확한 `tier + equipGroup` 매핑, 전체 195개 PNG의 signature·256×256, 4원소 크리스탈 6개와 v368 교체 43개의 SHA-256, T23/T26/T35/T36 상위 테두리와 `icon-utils.js?v=368` 정적 배포 포함을 고정합니다. 다음 단계는 로컬에서 v368 이미지를 검토하고 다음 콘텐츠 작업 또는 별도 static release 범위를 선택하는 것입니다. 공개 Render Static Site는 계속 v351로 유지합니다. v362 인벤토리, v361 특수장비 이미지, v357 장비 공식과 이전 배포·공급자 baseline도 계속 보존합니다.
+v368 focused smoke는 1~39단계 일반 장비 195개의 서로 다른 로컬 이미지 URL, 정확한 `tier + equipGroup` 매핑, 전체 195개 PNG의 signature·256×256, 4원소 크리스탈 6개와 v368 교체 43개의 SHA-256, T23/T26/T35/T36 상위 테두리와 `icon-utils.js?v=368` 정적 배포 포함을 계속 고정합니다. v369 전용 smoke는 초보자 무기 1장·강화권 10장·검신 스킬 10장의 승인 SHA-256, PNG 규격, 저장 데이터 정규화, backend master-data 재적용과 legacy 정적 산출물 포함을 통과했습니다. 실제 Chrome 게임 화면과 21개 검수 화면은 모두 256→68px 정사각형으로 로드됐고 브라우저 오류는 0건입니다. 다음 단계는 로컬 v369 아이콘을 검토하고 다음 캐릭터 또는 별도 static release 범위를 선택하는 것입니다. 공개 Render Static Site는 계속 v351로 유지합니다. v362 인벤토리, v361 특수장비 이미지, v357 장비 공식과 이전 배포·공급자 baseline도 계속 보존합니다.
 
 서버 재시작은 필요하지 않습니다.

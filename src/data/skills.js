@@ -16,6 +16,25 @@
  */
 
 const DEFAULT_CHARACTER_ID = "weapon_master";
+const WEAPON_MASTER_SKILL_ICON_ASSET_BASE = "src/assets/skills/weapon-master";
+const WEAPON_MASTER_SKILL_ICON_ASSET_VERSION = "369";
+const WEAPON_MASTER_SKILL_ICON_FILES = Object.freeze({
+	lightsabre: "q-lightsabre-mastery.png",
+	lightsabre_sq: "sq-meteor-fall.png",
+	ironStrike: "w-iron-cutting.png",
+	ironStrike_sw: "sw-formless-slash.png",
+	overdrive: "e-overdrive.png",
+	baldo: "r-quick-draw.png",
+	illusionSword: "t-illusion-sword.png",
+	deepSword: "f-mind-sword.png",
+	tempestStrike: "d-tempest.png",
+	heavenlyStrike: "m-heavenly-flash.png",
+});
+
+function getWeaponMasterSkillIconUrl(skillId) {
+	const assetName = WEAPON_MASTER_SKILL_ICON_FILES[String(skillId || "")];
+	return assetName ? `${WEAPON_MASTER_SKILL_ICON_ASSET_BASE}/${assetName}?v=${WEAPON_MASTER_SKILL_ICON_ASSET_VERSION}` : "";
+}
 
 const characterMasterData = {
 	weapon_master: {
@@ -40,7 +59,7 @@ const skillMasterData = {
 		id: "lightsabre",
 		slotKey: "Q",
 		name: "광검 마스터리",
-		img: "https://placehold.co/70x70/2ecc71/fff?text=Q",
+		img: getWeaponMasterSkillIconUrl("lightsabre"),
 		description: "광검을 보다 효율적으로 다룹니다.",
 		effectHtml: "-기본 공격 시 단일 적에게 스킬레벨 x 공격력 x 1의 스킬데미지",
 		maxLevel: 7,
@@ -52,7 +71,7 @@ const skillMasterData = {
 			id: "lightsabre_sq",
 			slotKey: "SQ",
 			name: "극 귀검술 - 유성락",
-			img: "https://placehold.co/70x70/2ecc71/fff?text=SQ",
+			img: getWeaponMasterSkillIconUrl("lightsabre_sq"),
 			description: "무수한 기의 검을 내려꽂습니다.",
 			effectHtml: "-기본 공격 시 0.5% 확률로 발동<br>-단일 적에게 스킬레벨 x 공격력 x 200000의 스킬데미지",
 			baseProcRate: 0.5,
@@ -64,7 +83,7 @@ const skillMasterData = {
 		id: "ironStrike",
 		slotKey: "W",
 		name: "극 귀검술 - 참철식",
-		img: "https://placehold.co/70x70/27ae60/fff?text=W",
+		img: getWeaponMasterSkillIconUrl("ironStrike"),
 		description: "검술을 극성으로 익힙니다.",
 		effectHtml: "-기본 공격 시 3% 확률로 발동<br>-단일 적에게 스킬레벨 x 공격력 x 500의 스킬데미지<br>-4초간 모든피해 1% 증가 (합산; 재발동 시 지속시간만 갱신)",
 		maxLevel: 7,
@@ -76,7 +95,7 @@ const skillMasterData = {
 			id: "ironStrike_sw",
 			slotKey: "SW",
 			name: "극 발검술 - 무형참",
-			img: "https://placehold.co/70x70/27ae60/fff?text=SW",
+			img: getWeaponMasterSkillIconUrl("ironStrike_sw"),
 			description: "무수한 무형의 검으로 적을 난도질합니다.",
 			effectHtml: "-기본 공격 시 0.5% 확률로 발동<br>-단일 적에게 스킬레벨 x 공격력 x 320000의 스킬데미지",
 			baseProcRate: 0.5,
@@ -88,7 +107,7 @@ const skillMasterData = {
 		id: "overdrive",
 		slotKey: "E",
 		name: "오버 드라이브",
-		img: "https://placehold.co/70x70/3498db/fff?text=E",
+		img: getWeaponMasterSkillIconUrl("overdrive"),
 		description: "일정 시간 동안 무기의 내구도 이상으로 무기를 활용합니다.",
 		effectHtml: "-기본 공격 시 2% 확률로 발동<br>-지속시간 4초 (재발동 시 갱신)<br>-지속중 기본 공격 시 단일 적에게 스킬레벨 x 공격력 x 150의 스킬데미지",
 		maxLevel: 7,
@@ -101,7 +120,7 @@ const skillMasterData = {
 		id: "baldo",
 		slotKey: "R",
 		name: "발도",
-		img: "https://placehold.co/70x70/f1c40f/000?text=R",
+		img: getWeaponMasterSkillIconUrl("baldo"),
 		description: "매우 빠른속도로 납도를 하여 즉 베어버립니다.",
 		effectHtml: "-기본 공격 시 3% 확률로 발동<br>-단일 적에게 스킬레벨 x 공격력 x 4000의 스킬데미지",
 		maxLevel: 7,
@@ -114,7 +133,7 @@ const skillMasterData = {
 		id: "illusionSword",
 		slotKey: "T",
 		name: "환영검무",
-		img: "https://placehold.co/70x70/e67e22/fff?text=T",
+		img: getWeaponMasterSkillIconUrl("illusionSword"),
 		description: "환영이 보일정도의 초고속으로 적을 베어버립니다.",
 		effectHtml: "-기본 공격 시 2% 확률로 발동<br>-단일 적에게 스킬레벨 x 공격력 x 12000의 스킬데미지",
 		maxLevel: 7,
@@ -127,7 +146,7 @@ const skillMasterData = {
 		id: "deepSword",
 		slotKey: "F",
 		name: "극 귀검술 - 심검",
-		img: "https://placehold.co/70x70/e74c3c/fff?text=F",
+		img: getWeaponMasterSkillIconUrl("deepSword"),
 		description: "눈에보이지 않는 속도로 베어버립니다.",
 		effectHtml: "-기본 공격 시 2% 확률로 발동<br>-단일 적에게 스킬레벨 x 공격력 x 16000의 스킬데미지",
 		maxLevel: 7,
@@ -140,7 +159,7 @@ const skillMasterData = {
 		id: "tempestStrike",
 		slotKey: "D",
 		name: "극 귀검술 - 폭풍식",
-		img: "https://placehold.co/70x70/9b59b6/fff?text=D",
+		img: getWeaponMasterSkillIconUrl("tempestStrike"),
 		description: "수많은 기의 검을 소환하여 각검으로 공격합니다.",
 		effectHtml: "-기본 공격 시 1.2% 확률로 발동<br>-단일 적에게 스킬레벨 x 공격력 x 42000의 스킬데미지",
 		maxLevel: 7,
@@ -153,7 +172,7 @@ const skillMasterData = {
 		id: "heavenlyStrike",
 		slotKey: "M",
 		name: "천제극섬",
-		img: "https://placehold.co/70x70/bdc3c7/000?text=M",
+		img: getWeaponMasterSkillIconUrl("heavenlyStrike"),
 		description: "모든 웨펀의 궁극의 일격을 가합니다.",
 		effectHtml: "-쿨타임 300초<br>-기본 공격 시 5% 확률로 발동<br>-단일 적에게 스킬레벨 x 공격력 x 11000000의 스킬데미지",
 		maxLevel: 7,
@@ -164,6 +183,22 @@ const skillMasterData = {
 		bonusGroup: null,
 	},
 };
+
+function applyWeaponMasterSkillIconAssets(targetSkillMasterData = skillMasterData) {
+	if (!targetSkillMasterData || typeof targetSkillMasterData !== "object") return targetSkillMasterData;
+	Object.values(targetSkillMasterData).forEach((skill) => {
+		if (!skill || typeof skill !== "object") return;
+		const baseIconUrl = getWeaponMasterSkillIconUrl(skill.id);
+		if (baseIconUrl) skill.img = baseIconUrl;
+		if (skill.awakening && typeof skill.awakening === "object") {
+			const awakeningIconUrl = getWeaponMasterSkillIconUrl(skill.awakening.id);
+			if (awakeningIconUrl) skill.awakening.img = awakeningIconUrl;
+		}
+	});
+	return targetSkillMasterData;
+}
+
+applyWeaponMasterSkillIconAssets();
 
 const skillBookMasterData = {
 	"스킬강화권": { itemName: "스킬강화권", targetSkillId: "lightsabre", type: "normal" },

@@ -2094,23 +2094,6 @@ function renderSkills() {
 		let sk = { ...skillData[i] };
 		let pSk = currentSkills && currentSkills[sk.id] ? currentSkills[sk.id] : { level: 0 };
 
-		if (sk.id === "lightsabre" && pSk.isUpgraded) {
-			sk.name = "극 귀검술 - 유성락";
-			sk.key = "SQ";
-			sk.img = "https://placehold.co/70x70/2ecc71/fff?text=SQ"; // 🌟 깨진 이미지 복구
-			sk.description = "무수한 기의 검을 내려꽂습니다.";
-			sk.effectHtml = "-기본 공격 시 0.5% 확률로 발동<br>-단일 적에게 스킬레벨 x 공격력 x 200000의 스킬데미지";
-			sk.baseProcRate = 0.5;
-		}
-		if (sk.id === "ironStrike" && pSk.isUpgraded) {
-			sk.name = "극 발검술 - 무형참";
-			sk.key = "SW";
-			sk.img = "https://placehold.co/70x70/27ae60/fff?text=SW"; // 🌟 깨진 이미지 복구
-			sk.description = "무수한 무형의 검으로 적을 난도질합니다.";
-			sk.effectHtml = "-기본 공격 시 0.5% 확률로 발동<br>-단일 적에게 스킬레벨 x 공격력 x 320000의 스킬데미지";
-			sk.baseProcRate = 0.5;
-		}
-
 		// 🌟 레벨 합산 로직
 		let baseLevel = pSk.level;
 		let bonusLevel = 0;

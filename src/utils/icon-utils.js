@@ -1,9 +1,9 @@
 /*
  * icon-utils.js
  *
- * 화면에 표시할 임시 아이콘 URL을 만드는 유틸 모음입니다.
+ * 화면에 표시할 아이콘 URL과 저장 아이템의 아이콘을 이름 기준으로 정규화합니다.
+ * - 실제 PNG가 준비되지 않은 항목에만 텍스트 아이콘을 fallback으로 사용합니다.
  * - 게임 밸런스/드랍/강화 계산에는 관여하지 않습니다.
- * - 나중에 실제 이미지 리소스 서버나 CDN을 붙일 때 이 파일부터 교체하면 됩니다.
  */
 
 function iconTextUrl(text, bg = "333", fg = "FFF") {
@@ -24,6 +24,22 @@ const SPECIAL_EQUIP_ASSET_BASE = "src/assets/special-equipment";
 const SPECIAL_EQUIP_ASSET_VERSION = "361";
 const NORMAL_EQUIP_ASSET_BASE = "src/assets/equipment";
 const NORMAL_EQUIP_ASSET_VERSION = "368";
+const BEGINNER_EQUIP_ASSET_VERSION = "369";
+const SKILL_BOOK_ASSET_BASE = "src/assets/skill-books";
+const SKILL_BOOK_ASSET_VERSION = "369";
+const SKILL_BOOK_ICON_ASSET_BY_NAME = Object.freeze({
+	"스킬강화권": "skill-book-q.png",
+	"강력한 스킬강화권": "skill-book-w.png",
+	"빛나는 스킬강화권": "skill-book-e.png",
+	"화려한 스킬강화권": "skill-book-r.png",
+	"찬란한 스킬강화권": "skill-book-t.png",
+	"해방된 스킬강화권": "skill-book-f.png",
+	"천공의 스킬강화권": "skill-book-d.png",
+	"심연의 스킬강화권": "skill-book-sq.png",
+	"-초월- 심연의 스킬강화권": "skill-book-sw.png",
+	"-초월-심연의 스킬강화권": "skill-book-sw.png",
+	"진 각성 스킬강화권": "skill-book-m.png",
+});
 const NORMAL_EQUIP_GROUP_ASSET_KEYS = Object.freeze({
 	skill_all: "skill-all",
 	atk_inc: "atk-inc",
@@ -79,7 +95,12 @@ function getItemFrameGrade(item) {
 }
 
 function getNormalEquipmentIconAssetName(item) {
-	if (!item || item.type !== "normal") return "";
+	if (!item) return "";
+	const name = String(item.name || "");
+	if (name === "리버레이션 스태프" || String(item.equipGroup || "") === "beginner") {
+		return "liberation-staff.png";
+	}
+	if (item.type !== "normal") return "";
 	const tier = Number(item.tier);
 	const groupKey = NORMAL_EQUIP_GROUP_ASSET_KEYS[String(item.equipGroup || "")];
 	if (!Number.isInteger(tier) || tier < 1 || tier > 39 || !groupKey) return "";
@@ -88,20 +109,56 @@ function getNormalEquipmentIconAssetName(item) {
 
 function getNormalEquipmentIconUrl(item) {
 	const assetName = getNormalEquipmentIconAssetName(item);
-	return assetName ? `${NORMAL_EQUIP_ASSET_BASE}/${assetName}?v=${NORMAL_EQUIP_ASSET_VERSION}` : "";
+	if (!assetName) return "";
+	const assetVersion = assetName === "liberation-staff.png" ? BEGINNER_EQUIP_ASSET_VERSION : NORMAL_EQUIP_ASSET_VERSION;
+	return `${NORMAL_EQUIP_ASSET_BASE}/${assetName}?v=${assetVersion}`;
+}
+
+function getSkillBookIconUrl(name) {
+	const assetName = SKILL_BOOK_ICON_ASSET_BY_NAME[String(name || "")];
+	return assetName ? `${SKILL_BOOK_ASSET_BASE}/${assetName}?v=${SKILL_BOOK_ASSET_VERSION}` : "";
 }
 
 function normalizeItemIcon(item) {
 	if (!item) return item;
+	const skillBookIconUrl = getSkillBookIconUrl(item.name);
+	if (skillBookIconUrl) {
+		item.img = skillBookIconUrl;
+		return item;
+	}
 	if (item.type === "special_equip" && typeof getSpecialEquipIconUrl === "function") {
 		item.img = getSpecialEquipIconUrl(item);
 		return item;
 	}
-	if (item.type === "normal") {
-		const normalIconUrl = getNormalEquipmentIconUrl(item);
-		if (normalIconUrl) item.img = normalIconUrl;
-	}
+	const normalIconUrl = getNormalEquipmentIconUrl(item);
+	if (normalIconUrl) item.img = normalIconUrl;
 	return item;
+}
+
+function normalizePlayerItemIcons(targetPlayer) {
+	if (!targetPlayer || typeof targetPlayer !== "object") return targetPlayer;
+
+	["inventory", "storage", "trash", "equipment"].forEach((containerName) => {
+		const items = targetPlayer[containerName];
+		if (!Array.isArray(items)) return;
+		items.forEach((item) => {
+			if (item) normalizeItemIcon(item);
+		});
+	});
+
+	if (Array.isArray(targetPlayer.mailbox)) {
+		targetPlayer.mailbox.forEach((mail) => {
+			if (!mail || typeof mail !== "object") return;
+			if (mail.item) normalizeItemIcon(mail.item);
+			if (Array.isArray(mail.items)) {
+				mail.items.forEach((item) => {
+					if (item) normalizeItemIcon(item);
+				});
+			}
+		});
+	}
+
+	return targetPlayer;
 }
 
 function applyEquipmentIconAssets() {
@@ -111,7 +168,10 @@ function applyEquipmentIconAssets() {
 	bossCollections.forEach((bossList) => {
 		bossList.forEach((boss) => {
 			if (!boss || !Array.isArray(boss.drops)) return;
-			boss.drops.forEach((drop) => normalizeItemIcon(drop));
+			boss.drops.forEach((drop) => {
+				normalizeItemIcon(drop);
+				if (drop && drop.raw) normalizeItemIcon(drop.raw);
+			});
 		});
 	});
 }
@@ -190,7 +250,7 @@ function getSkillBookIconText(name) {
 	if (name === "해방된 스킬강화권") return "F";
 	if (name === "천공의 스킬강화권") return "D";
 	if (name === "심연의 스킬강화권") return "SQ";
-	if (name === "-초월-심연의 스킬강화권") return "SW";
+	if (name === "-초월- 심연의 스킬강화권" || name === "-초월-심연의 스킬강화권") return "SW";
 	if (name === "진 각성 스킬강화권") return "M";
 	return "SK";
 }

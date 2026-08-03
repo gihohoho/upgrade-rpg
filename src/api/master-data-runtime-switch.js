@@ -268,6 +268,20 @@
 			applied.zones = replaceArray(zones, legacyData.fieldZones);
 		}
 
+		if (typeof applyWeaponMasterSkillIconAssets === "function") {
+			applyWeaponMasterSkillIconAssets(skillMasterData);
+		}
+		if (typeof applyEquipmentIconAssets === "function") applyEquipmentIconAssets();
+		if (Array.isArray(legacyData.itemTemplateList) && typeof normalizeItemIcon === "function") {
+			legacyData.itemTemplateList.forEach((item) => {
+				normalizeItemIcon(item);
+				if (item && item.raw) normalizeItemIcon(item.raw);
+			});
+		}
+		if (typeof player !== "undefined" && typeof normalizePlayerItemIcons === "function") {
+			normalizePlayerItemIcons(player);
+		}
+
 		const missing = Object.entries(applied).filter(([, ok]) => !ok).map(([key]) => key);
 		const status = setStatus({
 			state: missing.length ? "applied_with_missing_targets" : "applied",

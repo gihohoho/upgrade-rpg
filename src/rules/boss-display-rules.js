@@ -15,12 +15,12 @@ function applyGeneratedThumbnails() {
 		let normalEquipNo = 1;
 		boss.drops.forEach((drop) => {
 			if (drop.type === "skill_book") {
-				drop.img = iconTextUrl(getSkillBookIconText(drop.name), "ffd700", "000000");
+				drop.img = getSkillBookIconUrl(drop.name) || iconTextUrl(getSkillBookIconText(drop.name), "ffd700", "000000");
 				return;
 			}
 
 			if (drop.type === "normal") {
-				drop.img = iconTextUrl(`T${boss.id}-${normalEquipNo}`, "333333", "ffffff");
+				drop.img = getNormalEquipmentIconUrl(drop) || iconTextUrl(`T${boss.id}-${normalEquipNo}`, "333333", "ffffff");
 				normalEquipNo++;
 				return;
 			}
@@ -37,7 +37,7 @@ function applyGeneratedThumbnails() {
 
 		boss.drops.forEach((drop) => {
 			if (drop.type === "skill_book") {
-				drop.img = iconTextUrl(getSkillBookIconText(drop.name), "ffd700", "000000");
+				drop.img = getSkillBookIconUrl(drop.name) || iconTextUrl(getSkillBookIconText(drop.name), "ffd700", "000000");
 				return;
 			}
 

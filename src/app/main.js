@@ -291,6 +291,7 @@ function sendMail(mail) {
 		createdAt: Date.now(),
 		...mail,
 	});
+	if (typeof normalizePlayerItemIcons === "function") normalizePlayerItemIcons(player);
 	addLog(`📮 [우편함] ${mail.title || "새 우편"}이 도착했습니다.`, true);
 	updateFullUI();
 }
@@ -457,6 +458,7 @@ function loadGame() {
 			if (typeof ensureGameStateShape === "function") ensureGameStateShape();
 			ensurePlayerRecords();
 			if (typeof normalizePlayerSpecialStackItems === "function") normalizePlayerSpecialStackItems();
+			if (typeof normalizePlayerItemIcons === "function") normalizePlayerItemIcons(player);
 			if (data.saveVersion !== CURRENT_SAVE_VERSION) saveGame();
 			return true;
 		}
@@ -511,6 +513,7 @@ window.onload = function () {
 		if (isNaN(currentEnemy.hp)) currentEnemy.hp = getFieldEnemyHp(currentZoneIndex || 0);
 
 		ensurePlayerRecords();
+		if (typeof normalizePlayerItemIcons === "function") normalizePlayerItemIcons(player);
 		startPlayTimeRecordTimer();
 		updateFullUI();
 		renderSkills();
@@ -747,7 +750,7 @@ function giveBeginnerItem() {
 		name: "리버레이션 스태프",
 		type: "normal",
 		level: 0,
-		img: "https://placehold.co/64x64/666/fff?text=Beginner",
+		img: "",
 		baseCost: 350,
 		equipGroup: "beginner",
 		equipLimit: 6,
@@ -755,6 +758,7 @@ function giveBeginnerItem() {
 		enhanceStats: [100, 107, 121, 142, 170, 205, 247, 296, 352, 415, 485, 618, 814, 1073, 1395, 1780, 2228, 2739, 3313, 3950, 4650],
 	};
 
+	if (typeof normalizeItemIcon === "function") normalizeItemIcon(beginnerItem);
 	placeItemInFirstEmptySlot(player.inventory, beginnerItem, player.maxInventorySize);
 	if (typeof recordItemAcquired === "function") recordItemAcquired(beginnerItem);
 	addLog(`🎁 [초보자 지원] ${beginnerItem.name}을(를) 받았습니다!`);
