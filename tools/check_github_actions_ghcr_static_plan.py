@@ -156,15 +156,15 @@ ATTEMPT_EVIDENCE_CHANGED_PATH_ALLOWLIST = frozenset({
 DOCKERFILE_FRONTEND = "docker/dockerfile:1.21.0@sha256:27f9262d43452075f3c410287a2c43f5ef1bf7ec2bb06e8c9eeb1b8d453087bc"
 LOCK_SHA256 = {
     "backend/requirements/pip-bootstrap.lock": "9399f6b52f827b1c92f996f77319107055ad01fa2296193e9bede8f42f6c3307",
-    "backend/requirements/runtime-linux-amd64-py311.lock": "c6ce22bfa188bec909ddc0628c276cd46acaf497cf593d5e536fa20108477ce7",
-    "backend/requirements/runtime-musllinux-amd64-py311.lock": "ed93d9ebe819e2f7e025b8dbcef2ccfed82f4bf20596a004fe2764134d0a5e1a",
-    "backend/requirements/dev-linux-amd64-py311.lock": "e8c238ebe304a30a1fb67c7b5251318b1ea3af7cc7cb35ef2a02112b84168bbf",
+    "backend/requirements/runtime-linux-amd64-py311.lock": "629978d544a52d13417a04ca313c34cea75c190b2e5c369baabba6abfa5cb59a",
+    "backend/requirements/runtime-musllinux-amd64-py311.lock": "947d3367781e7e119d33c9ec597ae94efb607085c1564d7268adb06bd9f7139b",
+    "backend/requirements/dev-linux-amd64-py311.lock": "e68a63c8cce1a3365caba4e38ad6f0774491a12ad56612a45451fd9c35eb5ec2",
 }
 REPRODUCIBILITY_INPUT_SHA256 = {
     "backend/requirements/pip-bootstrap.in": "9df44a3db13ef551bf575949d553b8d14044635b91c09e85dc6d3ea97f50d225",
-    "backend/requirements/runtime.in": "57ec2d01cea29b29706fcbdf9d6fec1a7f3b3e799cef0b46f1111a2f09f7bc16",
+    "backend/requirements/runtime.in": "95e6a7573f683f54586a2aeabab6c52c27760c8039a99313e1957392e17fb4fa",
     "backend/requirements/dev.in": "6404277a75ce651735fcea3f89b5eee548cfd58ee197faed27b03333d587e2fe",
-    "backend/pyproject.toml": "421adfa2e6a0152800ca5ef5b9e673aeceac46691a2e057070e7ef6ae9198205",
+    "backend/pyproject.toml": "66cd31c19ffd7e7eb7457af2ac641ffb4865ef2fc9b854d908058b28b38c75a2",
     "backend/Dockerfile.production": "ca4bb49de42650355b6f28519c231f5249f1ea9f52fb6fe574bc778cd7c5f16c",
 }
 CERTIFICATE_IDENTITY = (

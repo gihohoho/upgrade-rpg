@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.response import ok_response
-from app.core.security import CurrentUser, get_current_user_placeholder
+from app.core.security import CurrentUser, get_current_user
 from app.db.session import get_db_session
-from app.schemas.game import GameSaveSnapshotRequest
+from app.schemas.account import ACCOUNT_CHARACTER_ID_PATTERN, AccountCharacterGameSaveRequest
 from app.services.game_service import GameService
 
 router = APIRouter()
@@ -18,7 +18,6 @@ async def get_master_data(
         alias="includeAssets",
         description="긴 SVG/data URL 이미지 문자열까지 포함하려면 true로 설정합니다.",
     ),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
     session: AsyncSession = Depends(get_db_session),
 ):
     """Return master data imported from PostgreSQL seed tables.
@@ -31,7 +30,7 @@ async def get_master_data(
     return ok_response(
         type="game.master_data",
         payload=master_data,
-        data={"status": "loaded", "userId": current_user.id},
+        data={"status": "loaded"},
         meta={
             "source": "postgresql",
             "counts": master_data["counts"],
@@ -44,16 +43,24 @@ async def get_master_data(
 
 @router.get("/load")
 async def load_game(
-    slot_key: str = Query(default="default", alias="slotKey"),
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    slot_key: str = Query(..., alias="slotKey", pattern=r"^character-[1-8]$"),
+    account_character_id: str = Query(
+        ...,
+        alias="accountCharacterId",
+        pattern=ACCOUNT_CHARACTER_ID_PATTERN.pattern,
+        min_length=32,
+        max_length=32,
+    ),
+    current_user: CurrentUser = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Load the raw localStorage save snapshot stored in PostgreSQL.
-
-    This endpoint is a migration bridge. It does not yet replace the browser's
-    localStorage boot flow; it only proves that user progress can be read from DB.
-    """
-    save_data = await service.load_game(session, current_user.id, slot_key=slot_key)
+    """Load one account character save owned by the authenticated user."""
+    save_data = await service.load_game(
+        session,
+        current_user.id,
+        slot_key=slot_key,
+        account_character_id=account_character_id,
+    )
     return ok_response(
         type="game.load",
         payload=save_data,
@@ -61,6 +68,7 @@ async def load_game(
             "status": save_data["status"],
             "userId": current_user.id,
             "slotKey": slot_key,
+            "accountCharacterId": save_data["accountCharacterId"],
             "exists": save_data["exists"],
             "integrity": save_data.get("integrity"),
         },
@@ -70,15 +78,10 @@ async def load_game(
 
 @router.get("/save-slots")
 async def list_save_slots(
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    current_user: CurrentUser = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """List saved DB snapshot slots without returning full raw save JSON.
-
-    This is a safe preparation step for future multi-slot saves and admin tools.
-    The existing browser game still uses the default slot unless a caller explicitly
-    requests a different slot key.
-    """
+    """List the authenticated account's character slots without raw save JSON."""
     slots_data = await service.list_save_slots(session, current_user.id)
     return ok_response(
         type="game.save_slots",
@@ -99,8 +102,8 @@ async def list_save_slots(
 
 @router.post("/save")
 async def save_game(
-    payload: GameSaveSnapshotRequest,
-    current_user: CurrentUser = Depends(get_current_user_placeholder),
+    payload: AccountCharacterGameSaveRequest,
+    current_user: CurrentUser = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
     """Store a raw localStorage save snapshot in PostgreSQL.
@@ -112,7 +115,6 @@ async def save_game(
     saved = await service.save_game_snapshot(
         session,
         user_id=current_user.id,
-        username=current_user.username,
         payload=payload,
     )
     return ok_response(
@@ -122,6 +124,7 @@ async def save_game(
             "status": "saved",
             "userId": current_user.id,
             "slotKey": saved["slotKey"],
+            "accountCharacterId": saved["accountCharacterId"],
             "saveVersion": saved["saveVersion"],
             "integrity": saved.get("integrity"),
         },

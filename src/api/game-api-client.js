@@ -66,6 +66,13 @@
 		return key ? { "X-Admin-Dev-Key": key } : {};
 	}
 
+	function getAuthHeaders() {
+		const token = window.RpgAuthSession && typeof window.RpgAuthSession.getAccessToken === "function"
+			? window.RpgAuthSession.getAccessToken()
+			: "";
+		return token ? { Authorization: `Bearer ${token}` } : {};
+	}
+
 	function hasAdminWriteDevKey() {
 		return !!getAdminWriteDevKey();
 	}
@@ -100,6 +107,7 @@
 				headers: {
 					Accept: "application/json",
 					...(requestOptions.body ? { "Content-Type": "application/json" } : {}),
+					...(requestOptions.auth === false ? {} : getAuthHeaders()),
 					...(requestOptions.headers || {}),
 				},
 				body: requestOptions.body ? JSON.stringify(requestOptions.body) : undefined,
@@ -125,7 +133,15 @@
 		}
 
 		if (!response.ok) {
-			const message = json && json.error && json.error.message ? json.error.message : `API 요청 실패: HTTP ${response.status}`;
+			const detail = json && json.detail;
+			const detailMessage = typeof detail === "string"
+				? detail
+				: (Array.isArray(detail)
+					? detail.map((item) => item && (item.msg || item.message) ? (item.msg || item.message) : String(item)).join(" / ")
+					: "");
+			const message = json && json.error && json.error.message
+				? json.error.message
+				: (detailMessage || (json && json.payload && json.payload.message) || `API 요청 실패: HTTP ${response.status}`);
 			const apiError = new Error(message);
 			apiError.status = response.status;
 			apiError.response = json;
@@ -141,6 +157,114 @@
 		}
 
 		return json;
+	}
+
+	async function registerAccount(payload, options) {
+		const opts = options || {};
+		return request("/auth/register", {
+			method: "POST",
+			body: payload || {},
+			timeoutMs: opts.timeoutMs,
+			auth: false,
+		});
+	}
+
+	async function loginAccount(payload, options) {
+		const opts = options || {};
+		return request("/auth/login", {
+			method: "POST",
+			body: payload || {},
+			timeoutMs: opts.timeoutMs,
+			auth: false,
+		});
+	}
+
+	async function fetchCurrentAccount(options) {
+		const opts = options || {};
+		return request("/auth/me", { timeoutMs: opts.timeoutMs });
+	}
+
+	async function logoutAccount(options) {
+		const opts = options || {};
+		return request("/auth/logout", {
+			method: "POST",
+			timeoutMs: opts.timeoutMs,
+		});
+	}
+
+	async function listAccountCharacters(options) {
+		const opts = options || {};
+		return request("/account/characters", { timeoutMs: opts.timeoutMs });
+	}
+
+	async function createAccountCharacter(payload, options) {
+		const opts = options || {};
+		return request("/account/characters", {
+			method: "POST",
+			body: payload || {},
+			timeoutMs: opts.timeoutMs,
+		});
+	}
+
+	async function deleteAccountCharacter(accountCharacterId, options) {
+		const opts = options || {};
+		return request(`/account/characters/${encodeURIComponent(accountCharacterId)}`, {
+			method: "DELETE",
+			timeoutMs: opts.timeoutMs,
+		});
+	}
+
+	async function fetchAccountBootstrapStatus(options) {
+		const opts = options || {};
+		return request("/account-admin/bootstrap-status", { timeoutMs: opts.timeoutMs });
+	}
+
+	async function bootstrapFirstAdmin(payload, options) {
+		const opts = options || {};
+		return request("/account-admin/bootstrap", {
+			method: "POST",
+			body: payload || {},
+			timeoutMs: opts.timeoutMs,
+			headers: getAdminWriteHeaders(),
+		});
+	}
+
+	async function listAdminAccounts(options) {
+		const opts = options || {};
+		return request("/account-admin/users", {
+			query: {
+				page: opts.page,
+				limit: opts.limit,
+				query: opts.query,
+				status: opts.status,
+				sort: opts.sort,
+			},
+			timeoutMs: opts.timeoutMs,
+		});
+	}
+
+	async function fetchAdminAccountDetail(userId, options) {
+		const opts = options || {};
+		return request(`/account-admin/users/${encodeURIComponent(userId)}`, { timeoutMs: opts.timeoutMs });
+	}
+
+	async function previewAdminAccountStatus(userId, payload, options) {
+		const opts = options || {};
+		return request(`/account-admin/users/${encodeURIComponent(userId)}/status-preview`, {
+			method: "POST",
+			body: payload || {},
+			timeoutMs: opts.timeoutMs,
+		});
+	}
+
+	async function applyAdminAccountStatus(userId, payload, options) {
+		const opts = options || {};
+		return request(`/account-admin/users/${encodeURIComponent(userId)}/status-apply`, {
+			method: "POST",
+			body: payload || {},
+			timeoutMs: opts.timeoutMs,
+			headers: getAdminWriteHeaders(),
+		});
 	}
 
 	async function fetchMasterData(options) {
@@ -460,9 +584,10 @@
 
 	async function loadGameSnapshot(options) {
 		const slotKey = options && options.slotKey ? options.slotKey : undefined;
+		const accountCharacterId = options && options.accountCharacterId ? options.accountCharacterId : undefined;
 		const timeoutMs = options && options.timeoutMs !== undefined ? Number(options.timeoutMs) : undefined;
 		return request("/game/load", {
-			query: slotKey ? { slotKey } : undefined,
+			query: slotKey || accountCharacterId ? { slotKey, accountCharacterId } : undefined,
 			timeoutMs,
 		});
 	}
@@ -478,9 +603,23 @@
 		setAdminWriteDevKey,
 		clearAdminWriteDevKey,
 		getAdminWriteHeaders,
+		getAuthHeaders,
 		hasAdminWriteDevKey,
 		buildUrl,
 		request,
+		registerAccount,
+		loginAccount,
+		fetchCurrentAccount,
+		logoutAccount,
+		listAccountCharacters,
+		createAccountCharacter,
+		deleteAccountCharacter,
+		fetchAccountBootstrapStatus,
+		bootstrapFirstAdmin,
+		listAdminAccounts,
+		fetchAdminAccountDetail,
+		previewAdminAccountStatus,
+		applyAdminAccountStatus,
 		fetchMasterData,
 		listGameSaveSlots,
 		saveGameSnapshot,

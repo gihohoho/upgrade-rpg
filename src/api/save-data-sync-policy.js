@@ -9,6 +9,22 @@
 
 	let isSyncing = false;
 
+	function getActiveLocalSaveKey() {
+		return typeof window.getCurrentAccountLocalSaveKey === "function"
+			? window.getCurrentAccountLocalSaveKey()
+			: (window.UPGRADE_RPG_LOCAL_SAVE_KEY || "idleRpgSaveV22");
+	}
+
+	function getActiveBackendSlotKey() {
+		return typeof window.getCurrentAccountBackendSlotKey === "function"
+			? window.getCurrentAccountBackendSlotKey()
+			: (window.UPGRADE_RPG_BACKEND_SLOT_KEY || "default");
+	}
+
+	function getActiveAccountCharacterId() {
+		return typeof window.getCurrentAccountCharacterId === "function" ? window.getCurrentAccountCharacterId() : null;
+	}
+
 	function nowIso() {
 		return new Date().toISOString();
 	}
@@ -139,7 +155,7 @@
 			updatedAt: nowIso(),
 			mode: getBackendSaveSyncMode(),
 			reason: status.reason || null,
-			slotKey: status.slotKey || "default",
+			slotKey: status.slotKey || getActiveBackendSlotKey(),
 			saveVersion: status.saveVersion !== undefined ? status.saveVersion : null,
 			error: status.error || null,
 			summary: status.summary || null,
@@ -157,8 +173,9 @@
 			mode,
 			manualDualWriteEnabled: mode === "manual_dual",
 			fallbackToLocalStorage: true,
-			localSaveKey: window.UPGRADE_RPG_LOCAL_SAVE_KEY || "idleRpgSaveV22",
-			defaultSlotKey: "default",
+			localSaveKey: getActiveLocalSaveKey(),
+			defaultSlotKey: getActiveBackendSlotKey(),
+			accountCharacterId: getActiveAccountCharacterId(),
 			defaultTimeoutMs: DEFAULT_TIMEOUT_MS,
 			status: getBackendSaveSyncStatus(),
 		};
@@ -225,7 +242,9 @@
 		isSyncing = true;
 		try {
 			const requestOptions = {
-				slotKey: opts.slotKey || "default",
+				saveKey: opts.saveKey || getActiveLocalSaveKey(),
+				slotKey: opts.slotKey || getActiveBackendSlotKey(),
+				accountCharacterId: opts.accountCharacterId || getActiveAccountCharacterId(),
 				timeoutMs: opts.timeoutMs !== undefined ? opts.timeoutMs : DEFAULT_TIMEOUT_MS,
 				verifyTimeoutMs: opts.verifyTimeoutMs !== undefined ? opts.verifyTimeoutMs : opts.timeoutMs,
 				source: opts.source || "manual-save-dual-write",
@@ -245,7 +264,7 @@
 				ok: shouldVerify ? verified : true,
 				state: shouldVerify ? (verified ? "synced_verified" : "saved_verify_failed") : "synced",
 				reason: opts.reason || "manual-save",
-				slotKey: payload.slotKey || opts.slotKey || "default",
+				slotKey: payload.slotKey || opts.slotKey || getActiveBackendSlotKey(),
 				saveVersion: payload.saveVersion,
 				summary: payload.summary || null,
 				responseData: {

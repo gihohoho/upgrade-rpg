@@ -20,12 +20,19 @@ assert.deepEqual(topLevel, ["admin.html", "index.html", "src"]);
 
 for (const entrypoint of ["index.html", "admin.html"]) {
   const html = fs.readFileSync(path.join(output, entrypoint), "utf8");
-  const configIndex = html.indexOf('src="src/api/runtime-config.js"');
-  const clientIndex = html.indexOf('src="src/api/game-api-client.js"');
+  const configIndex = html.search(/src="src\/api\/runtime-config\.js(?:\?[^\"]*)?"/);
+  const authIndex = html.search(/src="src\/api\/auth-session\.js(?:\?[^\"]*)?"/);
+  const clientIndex = html.search(/src="src\/api\/game-api-client\.js(?:\?[^\"]*)?"/);
   assert(configIndex >= 0, `${entrypoint}: runtime-config.js is missing`);
+  assert(authIndex > configIndex, `${entrypoint}: auth session must load after runtime config`);
+  assert(clientIndex > authIndex, `${entrypoint}: API client must load after auth session`);
   assert(clientIndex > configIndex, `${entrypoint}: runtime config must load before the API client`);
 }
 const gameHtml = fs.readFileSync(path.join(output, "index.html"), "utf8");
+const gameClientIndex = gameHtml.search(/src="src\/api\/game-api-client\.js(?:\?[^\"]*)?"/);
+const gameGateIndex = gameHtml.search(/src="src\/ui\/account-gate\.js(?:\?[^\"]*)?"/);
+const gameMainIndex = gameHtml.search(/src="src\/app\/main\.js(?:\?[^\"]*)?"/);
+assert(gameClientIndex < gameGateIndex && gameGateIndex < gameMainIndex, "index.html account gate/main load order differs");
 assert(gameHtml.includes('src="src/utils/icon-utils.js?v=369"'), "item icon utility cache key differs");
 
 const runtimeConfig = fs.readFileSync(path.join(output, "src", "api", "runtime-config.js"), "utf8");

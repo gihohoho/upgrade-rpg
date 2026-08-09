@@ -2858,7 +2858,19 @@ async function openAdminMasterDataDetail(...args) {
     });
   }
 
+  let authenticatedAdminPageBooted = false;
+
   function bootAdminReadOnlyPage() {
+    if (authenticatedAdminPageBooted) return true;
+    const accountGuard = window.RpgAdminAccountManagement;
+    if (
+      !accountGuard
+      || typeof accountGuard.isAdminAuthorized !== "function"
+      || accountGuard.isAdminAuthorized() !== true
+    ) {
+      return false;
+    }
+    authenticatedAdminPageBooted = true;
     bindEvents();
     initializeAdminLayoutShell();
     syncLocationHints();
@@ -2871,6 +2883,7 @@ async function openAdminMasterDataDetail(...args) {
     renderAdminCreateBlueprint({});
     renderAdminJsSplitReadiness();
     refreshAdminReadOnlyPage();
+    return true;
   }
 
   function checkAdminReadOnlyPageReady(options) {
@@ -3154,6 +3167,7 @@ async function openAdminMasterDataDetail(...args) {
       getAdminLayoutShellReadiness,
       setAdminSectionCollapsed,
       setAdminActiveSidebarLink,
+      bootAdminReadOnlyPage,
       checkAdminReadOnlyPageReady,
     };
     window.refreshAdminReadOnlyPage = refreshAdminReadOnlyPage;

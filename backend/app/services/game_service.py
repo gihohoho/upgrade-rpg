@@ -6,6 +6,7 @@ import hashlib
 import json
 from typing import Any
 
+from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,9 +22,13 @@ from app.models import (
     ItemTemplate,
     Skill,
     SkillLevel,
-    User,
-    UserProfile,
     UserSaveSnapshot,
+)
+from app.services.account_character_service import (
+    ACCOUNT_CHARACTER_SUMMARY_KEY,
+    AccountCharacterService,
+    account_character_metadata,
+    account_character_slot_index,
 )
 
 
@@ -35,6 +40,7 @@ INLINE_ASSET_PREFIXES = (
 )
 
 SAVE_SNAPSHOT_WARN_SIZE_BYTES = 1_000_000
+SAVE_SNAPSHOT_MAX_SIZE_BYTES = 2_000_000
 
 
 def is_inline_asset_string(value: Any) -> bool:
@@ -107,11 +113,7 @@ def count_filled_items(value: Any) -> int:
 
 
 class GameService:
-    """Read/write service for game APIs.
-
-    This stage only reads master data. User save/load still remains a stub until the
-    localStorage migration step starts.
-    """
+    """Serve public master data and authenticated account-character snapshots."""
 
     async def get_master_data(self, session: AsyncSession, *, include_assets: bool = False) -> dict[str, Any]:
         characters = await self._fetch_characters(session, include_assets=include_assets)
@@ -188,33 +190,21 @@ class GameService:
             return value
         return None
 
-    async def load_game(self, session: AsyncSession, user_id: int, *, slot_key: str = "default") -> dict[str, Any]:
-        """Load the latest raw save snapshot for a user/slot.
-
-        This is a migration bridge. It returns the raw snapshot exactly as stored so
-        later browser-side migration can still use the existing saveVersion rules.
-        """
-        result = await session.execute(
-            select(UserSaveSnapshot).where(
-                UserSaveSnapshot.user_id == user_id,
-                UserSaveSnapshot.slot_key == slot_key,
-            )
+    async def load_game(
+        self,
+        session: AsyncSession,
+        user_id: int,
+        *,
+        slot_key: str,
+        account_character_id: str,
+    ) -> dict[str, Any]:
+        """Load one authenticated account character snapshot."""
+        snapshot, _metadata = await AccountCharacterService().require_owned_character(
+            session,
+            user_id=user_id,
+            account_character_id=account_character_id,
+            slot_key=slot_key,
         )
-        snapshot = result.scalar_one_or_none()
-        if snapshot is None:
-            return {
-                "userId": user_id,
-                "slotKey": slot_key,
-                "status": "empty",
-                "exists": False,
-                "clientSaveKey": None,
-                "saveVersion": None,
-                "snapshot": None,
-                "summary": {},
-                "source": None,
-                "updatedAt": None,
-            }
-
         return self._serialize_save_snapshot(snapshot, status="loaded")
 
 
@@ -226,18 +216,24 @@ class GameService:
         """
         result = await session.execute(
             select(UserSaveSnapshot)
-            .where(UserSaveSnapshot.user_id == user_id)
+            .where(
+                UserSaveSnapshot.user_id == user_id,
+                UserSaveSnapshot.slot_key.in_([f"character-{index}" for index in range(1, 9)]),
+            )
             .order_by(UserSaveSnapshot.updated_at.desc(), UserSaveSnapshot.slot_key)
         )
-        slots = [self._serialize_save_slot(row) for row in result.scalars().all()]
-        default_slot = next((slot for slot in slots if slot.get("isDefault")), None)
+        slots = [
+            self._serialize_save_slot(row)
+            for row in result.scalars().all()
+            if account_character_metadata(row) is not None
+        ]
         latest_slot = slots[0] if slots else None
         return {
             "userId": user_id,
             "status": "loaded",
             "exists": bool(slots),
             "count": len(slots),
-            "defaultSlot": default_slot,
+            "defaultSlot": None,
             "latestSlot": latest_slot,
             "slots": slots,
         }
@@ -247,18 +243,27 @@ class GameService:
         session: AsyncSession,
         *,
         user_id: int,
-        username: str,
         payload: Any,
     ) -> dict[str, Any]:
-        """Store the browser localStorage save payload as one raw DB snapshot.
-
-        The local dev auth placeholder uses user id 1. Since local schema resets wipe
-        users too, this method also ensures the placeholder user/profile exists before
-        inserting the save snapshot.
-        """
-        await self._ensure_local_user(session, user_id=user_id, username=username)
-
+        """Update only the selected account character owned by the current user."""
         snapshot_data = payload.snapshot or {}
+        summary_data = payload.summary or {}
+        request_bytes = len(
+            stable_json_string(
+                {
+                    "snapshot": snapshot_data,
+                    "summary": summary_data,
+                    "note": payload.note,
+                    "source": payload.source,
+                }
+            ).encode("utf-8")
+        )
+        if request_bytes > SAVE_SNAPSHOT_MAX_SIZE_BYTES:
+            raise HTTPException(
+                status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+                detail="게임 저장 데이터가 허용 크기 2MB를 초과했습니다.",
+            )
+
         save_version = payload.save_version
         if save_version is None and isinstance(snapshot_data, dict):
             raw_version = snapshot_data.get("saveVersion")
@@ -270,49 +275,37 @@ class GameService:
         if save_version is None:
             save_version = 0
 
-        result = await session.execute(
-            select(UserSaveSnapshot).where(
-                UserSaveSnapshot.user_id == user_id,
-                UserSaveSnapshot.slot_key == payload.slot_key,
-            )
+        row, metadata = await AccountCharacterService().require_owned_character(
+            session,
+            user_id=user_id,
+            account_character_id=payload.account_character_id,
+            slot_key=payload.slot_key,
         )
-        row = result.scalar_one_or_none()
-        if row is None:
-            row = UserSaveSnapshot(
-                user_id=user_id,
-                slot_key=payload.slot_key,
-                client_save_key=payload.client_save_key,
-                save_version=save_version,
-                snapshot_json=snapshot_data,
-                summary_json=payload.summary or {},
-                source=payload.source or "localStorage",
-                note=payload.note,
+
+        player = snapshot_data.get("player") if isinstance(snapshot_data, dict) else None
+        snapshot_character_code = player.get("currentCharacterId") if isinstance(player, dict) else None
+        if snapshot_character_code and snapshot_character_code != metadata["characterCode"]:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="저장 데이터의 캐릭터 종류가 선택한 캐릭터와 일치하지 않습니다.",
             )
-            session.add(row)
-        else:
+
+        try:
             row.client_save_key = payload.client_save_key
             row.save_version = save_version
             row.snapshot_json = snapshot_data
-            row.summary_json = payload.summary or {}
+            row.summary_json = {
+                **summary_data,
+                ACCOUNT_CHARACTER_SUMMARY_KEY: metadata,
+            }
             row.source = payload.source or "localStorage"
             row.note = payload.note
-
-        await session.commit()
-        await session.refresh(row)
+            await session.commit()
+            await session.refresh(row)
+        except Exception:
+            await session.rollback()
+            raise
         return self._serialize_save_snapshot(row, status="saved")
-
-    async def _ensure_local_user(self, session: AsyncSession, *, user_id: int, username: str) -> None:
-        user = await session.get(User, user_id)
-        if user is None:
-            user = User(id=user_id, username=username or f"local-dev-{user_id}", is_active=True, is_admin=True)
-            session.add(user)
-            await session.flush()
-
-        result = await session.execute(select(UserProfile).where(UserProfile.user_id == user_id))
-        profile = result.scalar_one_or_none()
-        if profile is None:
-            session.add(UserProfile(user_id=user_id))
-            await session.flush()
 
 
     def _build_save_integrity(self, snapshot: UserSaveSnapshot) -> dict[str, Any]:
@@ -361,11 +354,15 @@ class GameService:
         }
 
     def _serialize_save_slot(self, snapshot: UserSaveSnapshot) -> dict[str, Any]:
+        metadata = account_character_metadata(snapshot)
         return {
             "userId": snapshot.user_id,
             "slotKey": snapshot.slot_key,
             "exists": True,
-            "isDefault": snapshot.slot_key == "default",
+            "isDefault": False,
+            "slotIndex": account_character_slot_index(snapshot.slot_key),
+            "accountCharacterId": str(metadata["id"]) if metadata else None,
+            "accountCharacter": metadata,
             "clientSaveKey": snapshot.client_save_key,
             "saveVersion": snapshot.save_version,
             "summary": serialize_value(snapshot.summary_json),
@@ -377,9 +374,13 @@ class GameService:
         }
 
     def _serialize_save_snapshot(self, snapshot: UserSaveSnapshot, *, status: str) -> dict[str, Any]:
+        metadata = account_character_metadata(snapshot)
         return {
             "userId": snapshot.user_id,
             "slotKey": snapshot.slot_key,
+            "slotIndex": account_character_slot_index(snapshot.slot_key),
+            "accountCharacterId": str(metadata["id"]) if metadata else None,
+            "accountCharacter": metadata,
             "status": status,
             "exists": True,
             "clientSaveKey": snapshot.client_save_key,

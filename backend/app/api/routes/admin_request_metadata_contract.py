@@ -37,9 +37,9 @@ def _body(model: str, *, required: bool) -> dict[str, Any]:
     return {"name": "payload", "required": required, "model": model}
 
 
-AUTH_ONLY = ["get_current_user_placeholder"]
-AUTH_DB = ["get_current_user_placeholder", "get_db_session"]
-WRITE_AUTH_DB = ["require_admin_write_dev_key", "get_current_user_placeholder", "get_db_session"]
+AUTH_ONLY = ["require_admin_user"]
+AUTH_DB = ["require_admin_user", "get_db_session"]
+WRITE_AUTH_DB = ["require_admin_write_dev_key", "require_admin_user", "get_db_session"]
 
 DOMAIN_QUERY = [_query("domain", default="itemTemplates", constraints=["MaxLen(max_length=80)"])]
 CHANGE_LOG_ID_PATH = [_path("change_log_id")]
@@ -54,6 +54,7 @@ ADMIN_REQUEST_METADATA_CONTRACT: dict[str, Any] = {
     "sourceOperationContract": "backend/app/api/routes/admin_route_operation_contract.py",
     "sourceResponseMetadataContract": "backend/app/api/routes/admin_response_metadata_contract.py",
     "expectedRouteCount": 21,
+    "authHeader": "Authorization",
     "writeGuardHeader": "X-Admin-Dev-Key",
     "requests": [
         {"method": "GET", "path": "/requirements", "endpoint": "get_admin_requirements", "dependencies": AUTH_ONLY, "pathParams": [], "queryParams": [], "body": None, "writeGuard": False},
@@ -351,7 +352,11 @@ def get_admin_request_metadata_contract_readiness(
         openapi_item = openapi_by_key.get(key)
         expected_query_aliases = [param["alias"] for param in expected_item["queryParams"]]
         expected_path_aliases = [param["alias"] for param in expected_item["pathParams"]]
-        expected_header_names = [ADMIN_REQUEST_METADATA_CONTRACT["writeGuardHeader"]] if expected_item["writeGuard"] else []
+        expected_header_names = (
+            [ADMIN_REQUEST_METADATA_CONTRACT["writeGuardHeader"]]
+            if expected_item["writeGuard"]
+            else []
+        ) + [ADMIN_REQUEST_METADATA_CONTRACT["authHeader"]]
         expected_body = expected_item["body"]
         operation_checks.append(
             {

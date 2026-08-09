@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v369
+# Upgrade RPG Codex working rules — v370
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -44,6 +44,22 @@
 - 게임 UI에서는 이미지 파일과 별개로 모든 아이템에 등급별 CSS 테두리를 일관되게 적용합니다. 기본 등급은 효과 없는 흰색 테두리이고, 강력·빛나는·초월·해방·찬란·짙은·영롱 등 상위 단계는 색상, 이중선, 광채와 절제된 애니메이션을 점진적으로 강화합니다. 이 판정은 장착칸, 가방, 보관함, 휴지통, 관리창과 지급 미리보기 등 아이템이 표시되는 모든 위치에서 유지하며 실제 브라우저 슬롯 크기와 `prefers-reduced-motion`에서도 확인합니다.
 - 가방·보관함·휴지통에서 아이템을 이동·사용·장착해제·삭제해도 뒤 아이템을 자동으로 당기지 않고 원래 칸을 빈 칸으로 유지합니다. 새 아이템은 가장 앞의 빈 칸을 사용하고, 사용자가 각 패널의 `위로 정렬` 버튼을 눌렀을 때만 기존 상대 순서를 보존한 채 빈 칸을 제거합니다.
 
+## 계정·인증·캐릭터 슬롯
+
+- 게임은 로그인 또는 회원가입 → 계정별 캐릭터 슬롯 8개 조회 → 캐릭터 선택·생성 → 선택 캐릭터 저장 로드 순서로 시작합니다. 인증과 캐릭터 선택 전에는 게임 boot와 자동 저장 timer를 시작하지 않습니다.
+- 계정 캐릭터 슬롯은 기존 `user_save_snapshots`의 `character-1`부터 `character-8`까지를 사용합니다. 새 테이블이나 Alembic revision을 임의로 만들지 않으며, `characters`는 직업 마스터 데이터이고 `player.userCharacters`는 직업별 스킬 상태이므로 계정 슬롯으로 재사용하지 않습니다.
+- 각 캐릭터는 슬롯 번호와 별개인 32자리 무작위 `accountCharacterId`를 가집니다. 저장·불러오기는 Bearer token의 계정, `character-N` 슬롯 키, 캐릭터 고유 ID가 모두 일치할 때만 허용해 삭제 후 같은 슬롯을 다시 만든 경우의 오래된 브라우저 캐시를 차단합니다.
+- 인증 API는 요청 본문의 `userId`를 신뢰하지 않고 Bearer token의 현재 사용자만 사용합니다. 회원가입은 항상 일반 회원으로 만들고, 비밀번호 원문·해시, access token, 전체 save snapshot을 관리자 응답·로그·문서에 노출하지 않습니다.
+- 기존 단일 로컬 저장 `idleRpgSaveV22`는 자동 삭제·자동 가져오기·자동 덮어쓰기를 하지 않고 사용자가 명시적으로 선택하는 가져오기 원본으로만 보존합니다. 새 로컬 키에는 계정 ID와 캐릭터 고유 ID를 함께 넣습니다.
+- 정상 load에서는 서버 DB snapshot을 authoritative 기준으로 사용합니다. backend snapshot이 있으면 서로 다른 local은 `.pre-backend-recovery` 복구 백업으로 먼저 보존한 뒤 서버본을 사용하고, backend가 비어 있을 때만 계정·캐릭터가 일치하는 local을 복구 원본으로 사용해 직렬 저장 큐로 서버에 올립니다.
+- 이전 저장 실패로 `pending-unsynced` marker가 있는 local과 서버본이 다르면 자동 덮어쓰지 않고 게임 UI 선택 모달에서 `이 기기 저장 사용`·`서버 저장 사용`·취소를 고르게 합니다. local 선택은 서버 재전송, 서버 선택은 local 복구 백업 후 marker 제거이며, 결정 전에는 두 원본을 모두 보존합니다.
+- 자동 저장, 수동 저장, 캐릭터 전환·로그아웃 최종 저장은 하나의 직렬 저장 큐를 사용합니다. 전환 시 runtime과 전투/timer를 먼저 pause하고 기존 큐와 최종 저장을 drain한 뒤에만 선택 상태/token 정리와 reload를 진행하며, 실패하면 전환을 중단하고 runtime을 다시 시작할 수 있어야 합니다.
+- 저장·세션 확인의 `401/403`은 현재 local과 `pending-unsynced` marker를 보존한 채 token을 폐기하고 재로그인 뒤 복구 선택으로 이어집니다. network/timeout/`5xx`는 token과 선택 상태를 보존하고 retry 화면 또는 다음 직렬 저장 재시도를 사용합니다.
+- 최초 관리자 지정은 로그인 가능한 관리자가 없을 때 로그인 계정과 별도 `X-Admin-Dev-Key`를 함께 확인하는 1회 bootstrap으로만 허용합니다. 회원 상태 apply는 실제 관리자 Bearer 권한과 dev key, preview/stale 확인, 본인·마지막 관리자 보호, 감사 로그를 모두 요구합니다.
+- 인증 `422` 응답은 `loc`·`type`·`msg`만 유지하고 비밀번호·비밀번호 확인의 `input`과 인증 body를 반사하지 않습니다. SQLAlchemy는 application debug와 무관하게 `echo=False`, `hide_parameters=True`를 유지하고, 관리자 save summary는 명시 allow-list의 제한된 scalar만 반환하며 raw snapshot과 임의 `summary_json` 키는 반환하지 않습니다.
+- 계정 전환과 로그아웃은 현재 캐릭터 저장을 기다린 뒤 token과 선택 상태를 지우고 reload해 오래된 runtime과 중복 timer를 남기지 않습니다. `beforeunload`에서는 네트워크 저장 완료를 기대하지 않고 현재 캐릭터의 로컬 저장만 수행합니다.
+- 인증이 포함된 공개 배포는 backend image와 legacy static을 같은 승인 단위로 준비합니다. 공개 회원가입 전 rate limit, 비밀번호 변경·복구, 서버측 session/refresh·폐기 정책, ASGI 계층 raw request body 제한, 다중 기기 revision 충돌·낙관적 잠금, HTTPS/CSP/XSS와 개인정보·삭제 정책을 별도 검토합니다.
+
 ## Code Review Graph 제한 시험
 
 - Code Review Graph 2.3.7은 사용자 전용 독립 환경에 설치한 **CLI-only 보조 도구**입니다. backend `.venv`와 프로젝트 dependency에는 포함하지 않습니다.
@@ -61,9 +77,9 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v369.starter-skill-book-and-weapon-master-skill-icons-applied
-strict result: starter-skill-book-and-weapon-master-skill-icons-applied
-next safe stage: owner-review-v369-local-icons-and-select-next-character-step
+latest: v370.account-auth-character-slots-admin-management-local-ready
+strict result: account-auth-character-slots-admin-management-local-ready
+next safe stage: owner-create-local-account-bootstrap-admin-and-verify-authenticated-multicharacter-flow
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -112,6 +128,10 @@ Alembic current: v295_initial_schema / new revision needed: no
 - 기호가 exact v354 준비 SHA `05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62`를 승인했고, backend image update deploy `dep-d9jeuf3eo5us73ba6cgg`와 Static Site v351 deploy `dep-d9jev7gu01pc73favje0`가 각각 정확히 한 번 실행되어 Live입니다.
 - `/api/v1/health`, `/api/v1/health/db`, `/index.html`, `/admin.html`, exact CORS, gzip master-data no-fallback, 관리자 guarded read-only 흐름이 모두 검증됐습니다. DB health는 한 번만 요청했고 DB/Alembic/admin write/콘텐츠 변경/자동 retry는 실행하지 않았습니다.
 - sanitized provider evidence는 `deploy/review/render-v351-provider-release-v355.json`입니다.
+- v370은 회원가입·로그인, 계정별 캐릭터 슬롯 8개, 캐릭터별 로컬/DB snapshot 격리와 관리자 회원 관리를 로컬 소스에 구현했습니다. 기존 `users`, `user_profiles`, `user_save_snapshots`, `admin_change_logs`를 사용하므로 새 Alembic revision은 없습니다.
+- v370 인증은 기존 `JWT_SECRET_KEY`로 서명한 24시간 Bearer access token과 직접 `bcrypt 5.0.0` 해시를 사용합니다. 회원가입으로 관리자 권한을 받을 수 없고, 각 인증 요청에서 활성 계정을 다시 확인합니다.
+- 공개 Render backend와 Static Site는 계속 v351입니다. v370 구현 과정에서 실제 DB write·seed·migration, Neon 변경, Render env·서비스·배포, GHCR 게시를 실행하지 않았습니다. backend/frontend focused, Python/JavaScript, runtime blocking-I/O, route map 40 ops, static build, GitHub/GHCR reproducibility, core smoke와 desktop/mobile 브라우저 QA가 모두 통과했으며 즉시 수정 blocker는 없습니다.
+- 공개 회원가입 전 후속 보강은 rate limit, 비밀번호 변경·복구, 서버측 session/refresh·원격 폐기, ASGI raw body cap, 다중 기기 save revision·충돌 해결, HTTPS/CSP/XSS와 개인정보·계정 삭제 정책입니다. 새 secret·extension·외부 서비스·설치는 이번 로컬 구현에 필요하지 않습니다.
 - v356에서 12단계 `607%` 기준을 반영했고, v357에서 16단계 `무의식 : 넥스의 몽환의 어둠 +20 = 2121%` 실측 기준을 추가해 고단계 공식을 다시 조정했습니다.
 - 12단계 이상 `skill_all` 장비는 +0 기본값을 유지합니다. +20 목표는 12단계 `607%`와 16단계 `2121%`를 단계당 `1.36721871444...`배 기하 보간·외삽하고, +1~+19는 기존 `enhanceTable.sdmg` 진행률을 그대로 사용합니다.
 - +20 스킬 피해는 13단계 `829.9%`, 14단계 `1134.7%`, 15단계 `1551.3%`, 17단계 `2899.9%`, 18단계 `3964.8%`, 39단계 `2823673.9%`입니다. 17단계 이후 실제 스킬 피해 실측값은 저장소에 없어 새 기준이 생기기 전까지 위 비율을 추정 외삽합니다.
@@ -196,6 +216,10 @@ Alembic current: v295_initial_schema / new revision needed: no
 프로젝트 루트에서 `backend/.venv` Python으로 먼저 실행합니다.
 
 ```bash
+python tools/smoke/backend/smoke_v370_account_auth_backend.py
+python tools/smoke/backend/smoke_v370_account_admin_management.py
+node tools/smoke/frontend/smoke_v370_account_character_gate.js
+node tools/smoke/frontend/smoke_v370_admin_account_management.js
 node tools/smoke/game/smoke_v369_item_and_skill_icons.js
 node tools/smoke/game/smoke_equipment_progression_formulas.js
 python tools/check_v351_public_release_gates.py --strict

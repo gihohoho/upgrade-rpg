@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from fastapi import Depends, Query
 
-from app.core.security import get_current_user_placeholder, require_admin_write_dev_key
+from app.core.security import require_admin_user, require_admin_write_dev_key
 from app.db.session import get_db_session
 
 # Dependency defaults kept in one place so admin route cleanup can reduce repeated
 # FastAPI Depends(...) boilerplate without changing the public API contract.
-ADMIN_CURRENT_USER_DEP = Depends(get_current_user_placeholder)
+ADMIN_CURRENT_USER_DEP = Depends(require_admin_user)
 ADMIN_DB_SESSION_DEP = Depends(get_db_session)
 ADMIN_WRITE_GUARD_DEP = Depends(require_admin_write_dev_key)
 

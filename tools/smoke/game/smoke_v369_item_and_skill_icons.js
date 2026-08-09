@@ -267,14 +267,15 @@ for (const script of [
 	"src/utils/icon-utils.js",
 	"src/rules/boss-display-rules.js",
 	"src/ui/render-ui.js",
-	"src/app/main.js",
 	"src/api/master-data-runtime-switch.js",
 ]) {
+	const expectedCacheVersion = script === "src/app/main.js" ? 370 : assetVersion;
 	assert(
-		indexSource.includes(`src=\"${script}?v=${assetVersion}\"`),
-		`${script}: index cache key must be v${assetVersion}`,
+		indexSource.includes(`src=\"${script}?v=${expectedCacheVersion}\"`),
+		`${script}: index cache key must be v${expectedCacheVersion}`,
 	);
 }
+assert(indexSource.includes('src="src/app/main.js?v=370"'), "src/app/main.js: index cache key must be v370");
 
 const builderSource = read("tools/build_legacy_static_site.mjs");
 assert(builderSource.includes('new Set([".js", ".css", ".png"])'), "legacy builder must publish PNG files");

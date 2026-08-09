@@ -51,6 +51,8 @@ node tools/smoke/frontend/smoke_admin_field_help_split.js
 node tools/smoke/frontend/smoke_admin_settings_helpers_split.js
 node tools/smoke/frontend/smoke_admin_bootstrap_bindings_readiness.js
 node tools/smoke/frontend/smoke_admin_thin_entry_cleanup.js
+node tools/smoke/frontend/smoke_v370_admin_account_management.js
+node tools/smoke/frontend/smoke_v370_account_character_gate.js
 node tools/smoke/frontend/smoke_admin_create_delete_rollback.js
 node tools/smoke/frontend/smoke_admin_create_delete_restore.js
 node tools/smoke/frontend/smoke_admin_layout_navigation_shell.js
@@ -112,6 +114,7 @@ python tools/smoke/contracts/smoke_backend_admin_preview_integration.py
 python tools/smoke/backend/smoke_backend_packaging_contract.py
 python tools/smoke/backend/smoke_backend_local_cors.py
 python tools/smoke/backend/smoke_backend_route_map_report.py
+python tools/smoke/backend/smoke_v370_account_admin_management.py
 python tools/smoke/backend/smoke_postgres_alembic_readiness.py
 python tools/smoke/backend/smoke_backend_alembic_async_env.py
 python tools/smoke/backend/smoke_postgres_runtime_readonly_state.py

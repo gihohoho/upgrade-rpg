@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Generate a static FastAPI backend route map for the Vue migration.
+"""Generate a static FastAPI backend route map without importing the app.
 
 This tool intentionally avoids importing ``app.main``. Importing the app can
 create DB engines and require local packages such as asyncpg, which makes a
 simple documentation check depend on the developer machine state. Instead, the
 report reads the route modules that are already included by ``api_router`` and
-extracts ``@router.get/post(...)`` decorators from source.
+extracts FastAPI route decorators from source.
 
 The output is documentation-only. It does not change route paths, request
 bodies, response bodies, DB, authentication, or write behavior.
@@ -19,7 +19,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-PROJECT_VERSION = "v275"
+PROJECT_VERSION = "v370"
 REPORT_PATH = Path("docs/current/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
 
@@ -35,6 +35,24 @@ ROUTE_MODULES = [
         "file": Path("backend/app/api/routes/game.py"),
         "prefix": "/game",
         "include": "api_router.include_router(game.router, prefix='/game', tags=['game'])",
+    },
+    {
+        "group": "auth",
+        "file": Path("backend/app/api/routes/auth.py"),
+        "prefix": "/auth",
+        "include": "api_router.include_router(auth.router, prefix='/auth', tags=['auth'])",
+    },
+    {
+        "group": "account",
+        "file": Path("backend/app/api/routes/account.py"),
+        "prefix": "/account",
+        "include": "api_router.include_router(account.router, prefix='/account', tags=['account'])",
+    },
+    {
+        "group": "account-admin",
+        "file": Path("backend/app/api/routes/account_admin.py"),
+        "prefix": "/account-admin",
+        "include": "api_router.include_router(account_admin.router, prefix='/account-admin', tags=['account-admin'])",
     },
     {
         "group": "admin",
@@ -58,22 +76,29 @@ ROUTE_MODULES = [
 
 VUE_SAFE_AUTO_CHECKS = {
     "GET /api/v1/health",
-    "GET /api/v1/admin/requirements",
+}
+
+LEGACY_ACCOUNT_ACTIVE_ROUTES = {
+    "POST /api/v1/auth/register",
+    "POST /api/v1/auth/login",
+    "GET /api/v1/auth/me",
+    "POST /api/v1/auth/logout",
+    "GET /api/v1/account/characters",
+    "POST /api/v1/account/characters",
+    "DELETE /api/v1/account/characters/{account_character_id}",
+    "GET /api/v1/game/load",
+    "GET /api/v1/game/save-slots",
+    "POST /api/v1/game/save",
+    "GET /api/v1/account-admin/bootstrap-status",
+    "POST /api/v1/account-admin/bootstrap",
+    "GET /api/v1/account-admin/users",
+    "GET /api/v1/account-admin/users/{user_id}",
+    "POST /api/v1/account-admin/users/{user_id}/status-preview",
+    "POST /api/v1/account-admin/users/{user_id}/status-apply",
 }
 
 VUE_READONLY_CANDIDATES = {
-    "GET /api/v1/admin/overview",
-    "GET /api/v1/admin/save-snapshots",
-    "GET /api/v1/admin/master-data/domains",
-    "GET /api/v1/admin/master-data/catalog",
-    "GET /api/v1/admin/master-data/create-blueprint",
-    "GET /api/v1/admin/master-data/detail",
-    "GET /api/v1/admin/master-data/relations",
-    "GET /api/v1/admin/change-logs",
-    "GET /api/v1/admin/change-logs/{change_log_id}",
     "GET /api/v1/game/master-data",
-    "GET /api/v1/game/load",
-    "GET /api/v1/game/save-slots",
 }
 
 DB_CHECK_ONLY = {
@@ -89,7 +114,8 @@ QUERY_HINTS = {
     "GET /api/v1/admin/change-logs": "limit, targetType, targetId, action, changedKey, applied, sort",
     "GET /api/v1/admin/change-logs/{change_log_id}": "path: change_log_id; Vue wrapper may expose changeLogId and translate it",
     "GET /api/v1/game/master-data": "includeAssets",
-    "GET /api/v1/game/load": "slotKey",
+    "GET /api/v1/game/load": "slotKey, accountCharacterId",
+    "GET /api/v1/account-admin/users": "page, limit, query, status, sort",
 }
 
 PROTECTED_ITEMS = [
@@ -101,7 +127,7 @@ PROTECTED_ITEMS = [
     "DB schema",
     "env",
     "seed",
-    "authentication",
+    "credential secrecy",
     "existing smoke/contract meaning",
 ]
 
@@ -176,6 +202,8 @@ def route_status(key: str, method: str, path: str) -> str:
     lowered = path.lower()
     if key in VUE_SAFE_AUTO_CHECKS:
         return "Vue 자동 smoke 화면 사용 중"
+    if key in LEGACY_ACCOUNT_ACTIVE_ROUTES:
+        return "legacy 계정/관리자 화면 사용 중"
     if key in DB_CHECK_ONLY:
         return "DB 연결 확인용 GET, 자동 화면 연결 보류"
     if key in VUE_READONLY_CANDIDATES:
@@ -272,7 +300,12 @@ def hold_rows(routes: list[RouteInfo]) -> list[list[str]]:
             route.migration_status,
         ]
         for route in routes
-        if route.migration_status not in {"Vue 자동 smoke 화면 사용 중", "Vue read-only 후보"}
+        if route.migration_status
+        not in {
+            "Vue 자동 smoke 화면 사용 중",
+            "legacy 계정/관리자 화면 사용 중",
+            "Vue read-only 후보",
+        }
     ]
 
 
@@ -291,6 +324,7 @@ def render_report(root: Path) -> str:
     duplicate_text = "없음" if not duplicates else "\n".join(f"- `{item}`" for item in duplicates)
 
     auto_rows = candidate_rows(routes, status="Vue 자동 smoke 화면 사용 중")
+    active_rows = candidate_rows(routes, status="legacy 계정/관리자 화면 사용 중")
     readonly_rows = candidate_rows(routes, status="Vue read-only 후보")
     postponed_rows = hold_rows(routes)
 
@@ -298,13 +332,13 @@ def render_report(root: Path) -> str:
 
 이 문서는 FastAPI route 파일을 정적으로 분석해서 현재 API 목록을 정리한 자동 보고서입니다.
 
-중요: v275는 **route 목록 문서화 + Vue read-only 후보 확정 단계**입니다. 실제 route path, 요청 body, 응답 body, DB, 인증, write 로직은 변경하지 않습니다.
+중요: v370은 **회원가입·로그인·계정별 8개 캐릭터 슬롯·관리자 회원관리 로컬 구현 단계**입니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
 
 ## 생성 방식
 
 - 도구: `tools/report_backend_route_map.py`
 - 산출물: `docs/current/BACKEND_ROUTE_MAP.md`
-- 방식: `app.main`을 import하지 않고 route 파일의 `@router.get/post(...)` decorator를 정적으로 분석합니다.
+- 방식: `app.main`을 import하지 않고 route 파일의 GET/POST/PUT/PATCH/DELETE decorator를 정적으로 분석합니다.
 - 이유: 단순 문서 생성이 `asyncpg` 같은 로컬 DB 의존성 설치 상태에 막히지 않게 하기 위해서입니다.
 
 ## 보호 항목
@@ -334,40 +368,48 @@ def render_report(root: Path) -> str:
 
 {table(["route", "group", "query/body 힌트", "response type", "endpoint"], auto_rows)}
 
+## legacy 계정·관리자 화면에서 사용하는 route
+
+아래 경로는 v370 로그인 gate, 캐릭터 슬롯, 저장 브리지 또는 관리자 회원관리 화면에 연결됩니다. `register`, `login`, `master-data`, health를 제외한 계정·게임 저장·관리자 경로는 실제 Bearer 인증을 요구합니다.
+
+{table(["route", "group", "query/body 힌트", "response type", "endpoint"], active_rows)}
+
 ## Vue read-only 연결 후보
 
 아래 route는 모두 `GET`입니다. 다만 일부는 DB 상태에 영향을 받으므로, 화면에 자동 호출하기 전에 loading/error/empty 상태를 먼저 설계해야 합니다.
 
 {table(["route", "group", "query/body 힌트", "response type", "endpoint"], readonly_rows)}
 
-### v275에서 확인한 Vue query 이름 주의점
+### query 이름 주의점
 
 - `GET /api/v1/admin/master-data/detail`의 row 식별자 query 이름은 `id`입니다.
 - `GET /api/v1/admin/master-data/relations`의 row 식별자 query 이름도 `id`입니다.
 - Vue wrapper에서는 사용자가 이해하기 쉽게 `rowId`를 받을 수 있지만, 실제 요청 query는 `id`로 변환해야 합니다.
-- v275에서 `frontend/vue-app/src/api/adminReadOnlyApi.js`의 read-only query 변환을 이 기준에 맞췄습니다.
+- `GET /api/v1/game/load`는 `slotKey`와 `accountCharacterId`가 모두 필요합니다.
 
 ## Vue 연결 보류 route
 
-아래 route는 DB 상태 확인, POST preview, Apply/write 계열이므로 Vue read-only 자동 화면에는 아직 넣지 않습니다.
+아래 route는 DB 상태 확인, 기존 관리자 Preview/Apply 또는 아직 Vue에 연결하지 않은 경로입니다.
 
 {table(["route", "group", "response type", "보류 이유"], postponed_rows)}
 
 ## 전체 route map
 
-{table(["method", "full path", "endpoint", "source", "response type", "v275 판단"], route_rows(routes))}
+{table(["method", "full path", "endpoint", "source", "response type", "v370 판단"], route_rows(routes))}
 
-## v276 추천
+## 다음 추천 단계
 
-다음 단계는 `v276 Vue admin read-only catalog mini panel`을 추천합니다.
+`next safe stage: owner-create-local-account-bootstrap-admin-and-verify-authenticated-multicharacter-flow`
+
+로컬 v370 검증 뒤 기호가 직접 일반 계정을 만들고, 별도 dev key를 브라우저나 채팅에 노출하지 않는 방식으로 최초 관리자 1회를 지정합니다.
 
 권장 범위:
 
-1. `GET /api/v1/admin/master-data/domains`만 먼저 Vue 관리자 shell에 연결합니다.
-2. 성공/오류/빈 데이터 상태만 확인합니다.
-3. 카탈로그 row 목록, 상세, 관계 조회는 그다음 단계로 미룹니다.
-4. Preview/Apply/write route는 계속 보류합니다.
-5. DB/Alembic/인증/env/seed는 변경하지 않습니다.
+1. 로컬 회원가입·로그인과 계정 A/B 저장 격리를 확인합니다.
+2. 최초 관리자 지정과 회원 정지 Preview/Apply 감사 로그를 확인합니다.
+3. rate limit, 비밀번호 변경·복구, 서버측 세션 정책을 공개 배포 전에 보강합니다.
+4. v370 backend image와 legacy static을 같은 승인 단위로 게시·배포합니다.
+5. OAuth 소셜 로그인은 별도 계정 연결 정책이 정해질 때 추가합니다.
 """
 
 

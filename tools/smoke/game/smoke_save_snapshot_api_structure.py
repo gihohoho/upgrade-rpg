@@ -21,14 +21,19 @@ REQUIRED_PATTERNS = {
     ],
     "backend/app/models/__init__.py": ["UserSaveSnapshot"],
     "backend/app/schemas/game.py": ["class GameSaveSnapshotRequest", "snapshot", "slot_key"],
+    "backend/app/schemas/account.py": [
+        "class AccountCharacterGameSaveRequest",
+        "account_character_id",
+        "validate_character_slot_key",
+    ],
     "backend/app/services/game_service.py": [
         "save_game_snapshot",
         "_serialize_save_snapshot",
-        "_ensure_local_user",
+        "require_owned_character",
         "UserSaveSnapshot",
     ],
     "backend/app/api/routes/game.py": [
-        "GameSaveSnapshotRequest",
+        "AccountCharacterGameSaveRequest",
         "@router.get(\"/load\")",
         "@router.post(\"/save\")",
         "service.save_game_snapshot",

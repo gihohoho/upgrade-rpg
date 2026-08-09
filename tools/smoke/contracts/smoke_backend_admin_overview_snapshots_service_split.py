@@ -88,7 +88,14 @@ def main() -> int:
         slot_key="default",
         client_save_key="rpg_save",
         save_version="smoke",
-        summary_json={},
+        summary_json={
+            "gold": 100,
+            "level": 7,
+            "currentZoneIndex": 4,
+            "currentZoneType": "field",
+            "accessToken": "sentinel-access-token",
+            "nested": {"password_hash": "sentinel-password-hash"},
+        },
         snapshot_json={
             "player": {
                 "inventory": [{"id": 1}, None, {}],
@@ -106,6 +113,15 @@ def main() -> int:
     assert_true(serialized["counts"]["inventoryItems"] == 1, "snapshot inventory count should be serialized without bound-method errors")
     assert_true(serialized["counts"]["storageItems"] == 1, "snapshot storage count should be serialized without bound-method errors")
     assert_true(serialized["rawSnapshotReturned"] is False, "snapshot serialization must stay read-only")
+    assert_true(serialized["summary"] == {
+        "gold": 100,
+        "level": 7,
+        "currentZoneIndex": 4,
+        "currentZoneType": "field",
+    }, "admin snapshot summary must contain only approved scalar fields")
+    serialized_text = repr(serialized)
+    assert_true("sentinel-access-token" not in serialized_text, "admin snapshot summary reflected an access token")
+    assert_true("sentinel-password-hash" not in serialized_text, "admin snapshot summary reflected a password hash")
 
     print("backend admin overview/snapshots service split smoke test passed")
     return 0

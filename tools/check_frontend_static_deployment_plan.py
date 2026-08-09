@@ -223,11 +223,20 @@ def verify_sources() -> None:
         require(marker in runtime, f"runtime config marker differs: {marker}")
     require("ADMIN_WRITE_DEV_KEY" not in runtime, "runtime config must not contain admin key")
 
+    def script_index(html: str, source: str) -> int:
+        match = re.search(rf'src=["\']{re.escape(source)}(?:\?[^"\']*)?["\']', html)
+        return match.start() if match else -1
+
     for entrypoint in ("index.html", "admin.html"):
         html = (ROOT / entrypoint).read_text(encoding="utf-8")
-        config_index = html.find('src="src/api/runtime-config.js"')
-        client_index = html.find('src="src/api/game-api-client.js"')
-        require(config_index >= 0 and client_index > config_index, f"{entrypoint} load order differs")
+        config_index = script_index(html, "src/api/runtime-config.js")
+        auth_index = script_index(html, "src/api/auth-session.js")
+        client_index = script_index(html, "src/api/game-api-client.js")
+        require(config_index >= 0 and config_index < auth_index < client_index, f"{entrypoint} load order differs")
+        if entrypoint == "index.html":
+            gate_index = script_index(html, "src/ui/account-gate.js")
+            main_index = script_index(html, "src/app/main.js")
+            require(client_index < gate_index < main_index, "index.html account gate load order differs")
 
     builder = BUILDER_PATH.read_text(encoding="utf-8")
     for marker in (

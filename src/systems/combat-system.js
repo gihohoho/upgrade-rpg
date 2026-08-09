@@ -34,9 +34,18 @@ function scheduleFieldRespawn(index, delayMs = 2000) {
 	fieldRespawnEndAt[key] = Date.now() + delayMs;
 	setFieldEnemyHp(index, 0);
 
-	setTimeout(() => {
+	const completeFieldRespawn = () => {
+		if (window.isAccountGameRuntimePaused && window.isAccountGameRuntimePaused()) {
+			setTimeout(completeFieldRespawn, 100);
+			return;
+		}
 		if (!zones[index]) return;
-		if (!fieldRespawnEndAt[key] || Date.now() < fieldRespawnEndAt[key]) return;
+		if (!fieldRespawnEndAt[key]) return;
+		const remainingMs = fieldRespawnEndAt[key] - Date.now();
+		if (remainingMs > 0) {
+			setTimeout(completeFieldRespawn, remainingMs);
+			return;
+		}
 
 		fieldEnemyHp[key] = zones[index].maxHp;
 		delete fieldRespawnEndAt[key];
@@ -46,7 +55,8 @@ function scheduleFieldRespawn(index, delayMs = 2000) {
 			updateCombatUI();
 			startAutoAttack();
 		}
-	}, delayMs);
+	};
+	setTimeout(completeFieldRespawn, delayMs);
 }
 
 function syncCurrentFieldHp() {
@@ -81,6 +91,8 @@ function enterBossZone() {
 
 function startAutoAttack() {
 	clearInterval(attackInterval);
+	attackInterval = null;
+	if (window.isAccountGameRuntimePaused && window.isAccountGameRuntimePaused()) return;
 	if (currentZoneType === "field" || currentZoneType === "boss_fight") {
 		attackInterval = setInterval(playerAttack, getTotals().aspdMs);
 	}

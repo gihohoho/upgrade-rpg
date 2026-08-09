@@ -61,19 +61,11 @@
 			timeoutMs: opts.timeoutMs !== undefined ? opts.timeoutMs : DEFAULT_TIMEOUT_MS,
 		});
 		if (opts.log !== false) {
-			const snapshots = response && response.payload ? response.payload.snapshots : [];
-			console.log("[Upgrade RPG] admin save snapshot summaries loaded", { count: snapshots.length, snapshots });
-			if (snapshots.length && console.table) {
-				console.table(snapshots.map((item) => ({
-					userId: item.userId,
-					slotKey: item.slotKey,
-					saveVersion: item.saveVersion,
-					gold: item.summary && item.summary.gold,
-					level: item.summary && item.summary.level,
-					source: item.source,
-					updatedAt: item.updatedAt,
-				})));
-			}
+			const payload = response && response.payload ? response.payload : {};
+			console.log("[Upgrade RPG] admin save snapshot summaries loaded", {
+				status: payload.status || "unknown",
+				count: Number(payload.count || 0),
+			});
 		}
 		return response;
 	}

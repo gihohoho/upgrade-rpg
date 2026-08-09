@@ -1,4 +1,4 @@
-# Upgrade RPG Codex next prompt — v369
+# Upgrade RPG Codex next prompt — v370
 
 프로젝트 루트의 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽고 계속 지켜주세요. 기호는 코딩을 거의 모르므로 한국어로 쉽게 설명하고, 모든 터미널 명령 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적어주세요. 필요한 extension·권한·설치는 해결될 때까지 요청해주세요.
 
@@ -7,9 +7,9 @@ Codex가 개발 서버와 기존 local PostgreSQL dependency를 필요에 따라
 ## 현재 고정값
 
 ```txt
-latest: v369.starter-skill-book-and-weapon-master-skill-icons-applied
-strict result: starter-skill-book-and-weapon-master-skill-icons-applied
-next safe stage: owner-review-v369-local-icons-and-select-next-character-step
+latest: v370.account-auth-character-slots-admin-management-local-ready
+strict result: account-auth-character-slots-admin-management-local-ready
+next safe stage: owner-create-local-account-bootstrap-admin-and-verify-authenticated-multicharacter-flow
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -91,7 +91,49 @@ v341 source를 포함한 새 image는 게시와 isolated Alpine system CA store,
 
 ## 다음 작업
 
-v369까지 다음을 완료했습니다.
+v370 로컬 source에서 다음을 준비했습니다.
+
+- 게임 첫 진입은 로그인 또는 회원가입 → 계정별 캐릭터 슬롯 8개 → 캐릭터 선택·생성 →
+  해당 캐릭터 snapshot load → 게임 boot 순서입니다. 인증·선택 전에는 game boot와 자동
+  저장 timer를 시작하지 않습니다.
+- 기존 `users`, `user_profiles`, `user_save_snapshots`, `admin_change_logs`를 사용하므로
+  새 테이블과 Alembic revision은 없습니다. `characters`와 `player.userCharacters`는
+  계정 슬롯으로 재사용하지 않습니다.
+- 슬롯 키는 `character-1`~`character-8`이고 각 캐릭터는 별도 32자리
+  `accountCharacterId`를 가집니다. Bearer token 계정·슬롯 키·고유 ID를 함께 확인해
+  계정 간 접근과 삭제 후 stale cache를 차단합니다.
+- 비밀번호는 직접 `bcrypt 5.0.0`으로 worker thread에서 처리하고, 기존
+  `JWT_SECRET_KEY`로 알고리즘 고정 HS256 24시간 token을 서명합니다. 회원가입은 항상
+  일반 회원이고 매 인증 요청에서 활성 상태를 다시 확인합니다.
+- 최초 관리자는 로그인 가능한 관리자가 없을 때 로그인 계정과 별도
+  `X-Admin-Dev-Key`를 확인하는
+  1회 bootstrap으로만 지정합니다. 회원 상태 apply는 실제 관리자 Bearer 권한, dev key,
+  preview/stale 검사, 본인·마지막 관리자 보호와 감사 로그를 모두 요구합니다.
+- 기존 `idleRpgSaveV22`는 자동 삭제·자동 가져오기하지 않고 명시적 가져오기 원본으로
+  보존합니다. 정상 load는 서버 DB authoritative이며 backend snapshot이 있으면 다른
+  local을 `.pre-backend-recovery`로 보존한 뒤 서버본을 사용합니다. backend가 비어 있을
+  때만 계정·캐릭터가 일치하는 local로 복구하고 직렬 저장 큐에 넣습니다.
+- 저장 실패의 `pending-unsynced` marker가 있으면 이 기기 저장·서버 저장·취소 선택
+  모달을 보여 줍니다. local 선택은 서버 재전송, 서버 선택은 local 복구 백업 후 marker
+  제거이며 결정 전에는 자동 덮어쓰지 않습니다.
+- 자동·수동·캐릭터 전환·로그아웃 저장은 한 직렬 큐를 사용합니다. 전환은 runtime과
+  전투/timer pause → 기존 큐와 마지막 저장 drain → 상태 정리/reload 순서입니다.
+- 저장·세션 확인의 `401/403`은 local과 marker를 보존하고 token을 폐기해 재로그인 복구
+  선택으로 이어집니다. network/timeout/`5xx`는 token·선택 상태를 보존하고 retry합니다.
+- 인증 `422`는 비밀번호 input과 인증 body를 반사하지 않습니다. SQLAlchemy는
+  `echo=False`, `hide_parameters=True`이고 관리자 save summary는 명시 allow-list의 제한된
+  scalar만 반환해 password hash·raw snapshot·임의 summary 키를 노출하지 않습니다.
+- 다중 기기 동시 접속의 revision 충돌 해결은 아직 없습니다. 공개 전 rate limit,
+  비밀번호 변경·복구, 서버측 session/refresh·원격 폐기, ASGI raw body cap,
+  다중 기기 낙관적 잠금, HTTPS/CSP/XSS와 개인정보·삭제 정책을 보강합니다.
+- 실제 local/Neon DB write, seed, restore, Alembic mutation, 새 secret, GitHub
+  Actions·GHCR 게시, Render env 변경·deploy는 실행하지 않았습니다. 공개 Render
+  backend와 Static Site는 계속 v351입니다.
+- 상세 계약은 `docs/current/ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md`입니다. backend/frontend
+  focused, compileall/JavaScript, blocking-I/O, route map 40 ops, static, GitHub/GHCR
+  reproducibility, core smoke와 desktop/mobile 브라우저 QA를 모두 통과했습니다.
+
+v369까지 다음 이미지·게임 변경도 완료돼 그대로 보존합니다.
 
 - 16단계 `무의식 : 넥스의 몽환의 어둠 +20`은 로컬 계산 `369B / 2121% / 225.8%`이며, 특수장비 이미지 최종 캐시 식별자는 `?v=361`입니다.
 - 공개 Render Static Site는 아직 v351이므로 v357~v369 변경이 없는 것이 정상입니다.
@@ -139,7 +181,11 @@ v369까지 다음을 완료했습니다.
 - 스킬 치명타 확률/피해를 실제 스킬 피해 계산에 연결했습니다.
 - generated field/item/drop seed는 동기화했지만 Neon DB write, backend image/API, Render 서비스는 변경하지 않았습니다.
 
-다음 단계에서는 로컬 `http://127.0.0.1:5500/index.html`에서 v369의 초보자 무기·강화권·검신 스킬 아이콘을 기호가 확인한 뒤, 다음 캐릭터의 스킬 이미지 또는 별도 static release 준비 중 하나를 선택합니다. 현재 작업만으로 Render Static Site deploy는 실행하지 않습니다.
+다음 단계에서는 기호가 로컬 `http://127.0.0.1:5500/index.html`에서 자신의 계정을
+직접 만들고 최초 관리자
+bootstrap과 두 캐릭터 이상의 저장 격리를 확인합니다. 비밀번호와 dev key는 채팅에
+보내지 않습니다. 공개 전 보안 보강과 별도 exact-SHA gate가 끝날 때까지 Render
+backend/Static Site deploy는 실행하지 않습니다.
 
 승인된 v343 SHA `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 Neon restore를 한 번 실행했습니다. 22 application tables / 748 rows / schema digest가 일치했고 stamp 전에 legacy data digest 비교가 session timezone 차이로 멈췄습니다. UTC-normalized digest는 verified rehearsal과 Neon이 정확히 일치하며 `alembic_version`은 없습니다.
 
@@ -184,6 +230,10 @@ Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.ex
 새 설치 여부: 없음
 
 ```bash
+python tools/smoke/backend/smoke_v370_account_auth_backend.py
+python tools/smoke/backend/smoke_v370_account_admin_management.py
+node tools/smoke/frontend/smoke_v370_account_character_gate.js
+node tools/smoke/frontend/smoke_v370_admin_account_management.js
 node tools/smoke/game/smoke_v369_item_and_skill_icons.js
 node tools/smoke/game/smoke_equipment_progression_formulas.js
 node tools/smoke/game/smoke_runtime_item_quality_of_life.js
@@ -209,6 +259,14 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v368 focused smoke는 1~39단계 일반 장비 195개의 서로 다른 로컬 이미지 URL, 정확한 `tier + equipGroup` 매핑, 전체 195개 PNG의 signature·256×256, 4원소 크리스탈 6개와 v368 교체 43개의 SHA-256, T23/T26/T35/T36 상위 테두리와 `icon-utils.js?v=368` 정적 배포 포함을 계속 고정합니다. v369 전용 smoke는 초보자 무기 1장·강화권 10장·검신 스킬 10장의 승인 SHA-256, PNG 규격, 저장 데이터 정규화, backend master-data 재적용과 legacy 정적 산출물 포함을 통과했습니다. 실제 Chrome 게임 화면과 21개 검수 화면은 모두 256→68px 정사각형으로 로드됐고 브라우저 오류는 0건입니다. 다음 단계는 로컬 v369 아이콘을 검토하고 다음 캐릭터 또는 별도 static release 범위를 선택하는 것입니다. 공개 Render Static Site는 계속 v351로 유지합니다. v362 인벤토리, v361 특수장비 이미지, v357 장비 공식과 이전 배포·공급자 baseline도 보존합니다.
+v370 backend auth/account-admin focused, frontend account gate/admin, v369 icon smoke,
+Python compileall, 관련 JavaScript `node --check`, runtime blocking-I/O strict, backend route
+map 40 operations, legacy static build/static smoke를 모두 통과했습니다. GitHub/GHCR
+reproducibility hash 5개 동기화와 strict/fail-closed smoke, backend `.venv` 활성화·자식
+`DEBUG=false` 조건의 `bash tools/run_smoke_core.sh`도 PASS입니다. 실제 브라우저
+desktop/mobile 로그인·회원가입 화면과 `pending-unsynced` 선택 모달은 overflow 0,
+console error 0으로 QA PASS했고 최종 reviewer 즉시 blocker는 없습니다. 실제 DB
+write·migration·deploy·새 설치·서버 재시작은 없었습니다. v368/v369 기존 증거와 이전
+배포·공급자 baseline은 계속 보존하며 공개 Render Static Site와 backend는 계속 v351입니다.
 
 별도 승인 전에는 추가 deploy, Render env 변경, DB/Alembic mutation, auth/API write, Vue Preview/Apply/write, 게임 콘텐츠·밸런스를 변경하지 않습니다.

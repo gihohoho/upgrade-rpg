@@ -1,12 +1,38 @@
 (function () {
 	"use strict";
 
-	const LOCAL_SAVE_KEY = "idleRpgSaveV22";
-	const DEFAULT_SLOT_KEY = "default";
+	const LEGACY_LOCAL_SAVE_KEY = "idleRpgSaveV22";
+	const LEGACY_DEFAULT_SLOT_KEY = "default";
 	const DEFAULT_TIMEOUT_MS = 2500;
+	let backendSaveWriteQueue = Promise.resolve();
+	let queuedBackendSaveWrites = 0;
+
+	function getCurrentLocalSaveKey(options) {
+		const opts = options || {};
+		if (opts.saveKey) return String(opts.saveKey);
+		return typeof window.getCurrentAccountLocalSaveKey === "function"
+			? window.getCurrentAccountLocalSaveKey()
+			: LEGACY_LOCAL_SAVE_KEY;
+	}
+
+	function getCurrentBackendSlotKey(options) {
+		const opts = options || {};
+		if (opts.slotKey) return String(opts.slotKey);
+		return typeof window.getCurrentAccountBackendSlotKey === "function"
+			? window.getCurrentAccountBackendSlotKey()
+			: LEGACY_DEFAULT_SLOT_KEY;
+	}
+
+	function getCurrentCharacterId(options) {
+		const opts = options || {};
+		if (opts.accountCharacterId) return String(opts.accountCharacterId).trim().toLowerCase();
+		return typeof window.getCurrentAccountCharacterId === "function"
+			? window.getCurrentAccountCharacterId()
+			: null;
+	}
 
 	function readLocalSaveSnapshot(saveKey) {
-		const key = saveKey || LOCAL_SAVE_KEY;
+		const key = saveKey || getCurrentLocalSaveKey();
 		if (!window.localStorage) {
 			return { key, exists: false, raw: null, snapshot: null, error: "localStorage를 사용할 수 없습니다." };
 		}
@@ -45,7 +71,7 @@
 
 	function buildBackendSavePayload(options) {
 		const opts = options || {};
-		const local = readLocalSaveSnapshot(opts.saveKey || LOCAL_SAVE_KEY);
+		const local = readLocalSaveSnapshot(getCurrentLocalSaveKey(opts));
 		if (!local.exists) {
 			throw new Error(`${local.key} localStorage 저장 데이터가 없습니다.`);
 		}
@@ -53,23 +79,25 @@
 			throw new Error(`localStorage 저장 데이터를 JSON으로 읽을 수 없습니다: ${local.error || "unknown"}`);
 		}
 
-		return {
+		const accountCharacterId = getCurrentCharacterId(opts);
+		const payload = {
 			saveVersion: local.snapshot.saveVersion !== undefined ? Number(local.snapshot.saveVersion) : null,
 			clientSaveKey: local.key,
-			slotKey: opts.slotKey || DEFAULT_SLOT_KEY,
+			slotKey: getCurrentBackendSlotKey(opts),
 			snapshot: local.snapshot,
 			summary: opts.summary || buildLocalSaveSummary(local.snapshot),
 			source: opts.source || "localStorage-manual-push",
 			note: opts.note || null,
 		};
+		if (accountCharacterId) payload.accountCharacterId = accountCharacterId;
+		return payload;
 	}
 
-	async function pushLocalSaveToBackend(options) {
+	async function performBackendSaveWrite(payload, options) {
 		if (!window.RpgGameApi || typeof window.RpgGameApi.saveGameSnapshot !== "function") {
 			throw new Error("RpgGameApi.saveGameSnapshot을 찾을 수 없습니다.");
 		}
 		const opts = options || {};
-		const payload = buildBackendSavePayload(opts);
 		const response = await window.RpgGameApi.saveGameSnapshot(payload, {
 			timeoutMs: opts.timeoutMs !== undefined ? opts.timeoutMs : DEFAULT_TIMEOUT_MS,
 		});
@@ -82,26 +110,79 @@
 		return response;
 	}
 
+	function pushLocalSaveToBackend(options) {
+		const opts = options || {};
+		const authSession = window.RpgAuthSession;
+		const currentUser = authSession && typeof authSession.getCurrentUser === "function" ? authSession.getCurrentUser() : null;
+		const currentCharacter = authSession && typeof authSession.getCurrentCharacter === "function" ? authSession.getCurrentCharacter() : null;
+		const frozenOptions = {
+			...opts,
+			saveKey: getCurrentLocalSaveKey(opts),
+			slotKey: getCurrentBackendSlotKey(opts),
+			accountCharacterId: getCurrentCharacterId(opts),
+			userId: opts.userId !== undefined ? opts.userId : (currentUser && (currentUser.userId || currentUser.id)),
+			characterName: opts.characterName || (currentCharacter && currentCharacter.name) || "",
+		};
+		const pendingAtEnqueue = authSession && typeof authSession.getPendingUnsyncedSave === "function"
+			? authSession.getPendingUnsyncedSave(frozenOptions)
+			: null;
+		const pendingTokenAtEnqueue = pendingAtEnqueue && (pendingAtEnqueue.markerId || pendingAtEnqueue.markedAt);
+		const payload = buildBackendSavePayload(frozenOptions);
+		queuedBackendSaveWrites += 1;
+		const queuedWrite = backendSaveWriteQueue
+			.catch(() => undefined)
+			.then(() => performBackendSaveWrite(payload, frozenOptions));
+		const trackedWrite = queuedWrite.then((response) => {
+			if (pendingTokenAtEnqueue && authSession && typeof authSession.getPendingUnsyncedSave === "function" && typeof authSession.clearPendingUnsyncedSave === "function") {
+				const pendingNow = authSession.getPendingUnsyncedSave(frozenOptions);
+				const pendingTokenNow = pendingNow && (pendingNow.markerId || pendingNow.markedAt);
+				if (pendingTokenNow === pendingTokenAtEnqueue) authSession.clearPendingUnsyncedSave(frozenOptions);
+			}
+			return response;
+		}, (error) => {
+			if (authSession && typeof authSession.markPendingUnsyncedSave === "function") {
+				authSession.markPendingUnsyncedSave({
+					...frozenOptions,
+					status: Number(error && error.status) || null,
+					reason: frozenOptions.source || "backend-save-failed",
+				});
+			}
+			throw error;
+		});
+		backendSaveWriteQueue = trackedWrite;
+		return trackedWrite.finally(() => {
+			queuedBackendSaveWrites = Math.max(0, queuedBackendSaveWrites - 1);
+		});
+	}
+
+	function getBackendSaveWriteQueueState() {
+		return { queuedWrites: queuedBackendSaveWrites, idle: queuedBackendSaveWrites === 0 };
+	}
+
 	async function loadBackendSaveSnapshot(options) {
 		if (!window.RpgGameApi || typeof window.RpgGameApi.loadGameSnapshot !== "function") {
 			throw new Error("RpgGameApi.loadGameSnapshot을 찾을 수 없습니다.");
 		}
 		const opts = options || {};
+		const slotKey = getCurrentBackendSlotKey(opts);
+		const accountCharacterId = getCurrentCharacterId(opts);
 		const response = await window.RpgGameApi.loadGameSnapshot({
-			slotKey: opts.slotKey || DEFAULT_SLOT_KEY,
+			slotKey,
+			accountCharacterId,
 			timeoutMs: opts.timeoutMs !== undefined ? opts.timeoutMs : DEFAULT_TIMEOUT_MS,
 		});
 		console.log("[Upgrade RPG] backend save snapshot loaded", {
 			status: response && response.data ? response.data.status : null,
 			exists: response && response.data ? response.data.exists : null,
-			slotKey: opts.slotKey || DEFAULT_SLOT_KEY,
+			slotKey,
+			accountCharacterId,
 			summary: response && response.payload ? response.payload.summary : null,
 		});
 		return response;
 	}
 
 	async function checkBackendSaveSnapshotBridge(options) {
-		const local = readLocalSaveSnapshot((options || {}).saveKey || LOCAL_SAVE_KEY);
+		const local = readLocalSaveSnapshot(getCurrentLocalSaveKey(options));
 		const result = {
 			ok: false,
 			localSaveKey: local.key,
@@ -120,10 +201,22 @@
 		return result;
 	}
 
-	window.UPGRADE_RPG_LOCAL_SAVE_KEY = LOCAL_SAVE_KEY;
+	try {
+		Object.defineProperty(window, "UPGRADE_RPG_LOCAL_SAVE_KEY", { configurable: true, get: getCurrentLocalSaveKey });
+		Object.defineProperty(window, "UPGRADE_RPG_BACKEND_SLOT_KEY", { configurable: true, get: getCurrentBackendSlotKey });
+	} catch (error) {
+		window.UPGRADE_RPG_LOCAL_SAVE_KEY = getCurrentLocalSaveKey();
+		window.UPGRADE_RPG_BACKEND_SLOT_KEY = getCurrentBackendSlotKey();
+	}
+	window.LEGACY_LOCAL_SAVE_KEY = LEGACY_LOCAL_SAVE_KEY;
+	window.getActiveSaveDataLocalKey = getCurrentLocalSaveKey;
+	window.getActiveSaveDataBackendSlotKey = getCurrentBackendSlotKey;
+	window.getActiveSaveDataAccountCharacterId = getCurrentCharacterId;
 	window.readLocalSaveSnapshot = readLocalSaveSnapshot;
 	window.buildBackendSavePayload = buildBackendSavePayload;
 	window.pushLocalSaveToBackend = pushLocalSaveToBackend;
+	window.enqueueBackendSaveSnapshotWrite = pushLocalSaveToBackend;
+	window.getBackendSaveWriteQueueState = getBackendSaveWriteQueueState;
 	window.loadBackendSaveSnapshot = loadBackendSaveSnapshot;
 	window.checkBackendSaveSnapshotBridge = checkBackendSaveSnapshotBridge;
 })();

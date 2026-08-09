@@ -10,6 +10,19 @@
 
 	let currentAction = null;
 	let lastLoadResult = null;
+	let badgeAutoRefreshStarted = false;
+
+	function getActiveLocalSaveKey() {
+		return typeof window.getCurrentAccountLocalSaveKey === "function"
+			? window.getCurrentAccountLocalSaveKey()
+			: (window.UPGRADE_RPG_LOCAL_SAVE_KEY || "idleRpgSaveV22");
+	}
+
+	function getActiveBackendSlotKey() {
+		return typeof window.getCurrentAccountBackendSlotKey === "function"
+			? window.getCurrentAccountBackendSlotKey()
+			: (window.UPGRADE_RPG_BACKEND_SLOT_KEY || "default");
+	}
 
 	function isLocalDevelopment() {
 		try {
@@ -55,7 +68,8 @@
 			mode: "unknown",
 			manualDualWriteEnabled: false,
 			fallbackToLocalStorage: true,
-			localSaveKey: window.UPGRADE_RPG_LOCAL_SAVE_KEY || "idleRpgSaveV22",
+			localSaveKey: getActiveLocalSaveKey(),
+			defaultSlotKey: getActiveBackendSlotKey(),
 			status: getStatus(),
 		};
 	}
@@ -360,7 +374,7 @@
 			</div>
 			<div class="sd-badge-meta">
 				<span data-sd-mode>mode: unknown</span>
-				<span data-sd-slot>slot: default</span>
+				<span data-sd-slot>slot: 현재 캐릭터</span>
 			</div>
 			<div class="sd-badge-summary" data-sd-summary>save: -</div>
 			<div class="sd-badge-load" data-sd-load>loaded: -</div>
@@ -469,7 +483,7 @@
 		const updatedAt = formatClockNow();
 		const statusUpdatedAt = formatClockFromIso(status.updatedAt);
 		const mode = policy.mode || status.mode || "unknown";
-		const slot = status.slotKey || policy.defaultSlotKey || "default";
+		const slot = status.slotKey || policy.defaultSlotKey || getActiveBackendSlotKey();
 
 		badge.dataset.kind = kind;
 		badge.dataset.state = state;
@@ -535,7 +549,8 @@
 	}
 
 	function startBadgeAutoRefresh() {
-		if (!shouldCreateControls()) return;
+		if (badgeAutoRefreshStarted || !shouldCreateControls()) return;
+		badgeAutoRefreshStarted = true;
 		const refresh = () => {
 			try {
 				refreshBackendSaveDataDevBadge();
@@ -563,6 +578,7 @@
 		TOGGLE_ID,
 		WRAPPER_ID,
 		STORAGE_KEY,
+		startBadgeAutoRefresh,
 		refreshBackendSaveDataDevBadge,
 		showBackendSaveDataDevBadge,
 		hideBackendSaveDataDevBadge,
@@ -573,5 +589,9 @@
 	window.hideBackendSaveDataDevBadge = hideBackendSaveDataDevBadge;
 	window.toggleBackendSaveDataDevBadge = toggleBackendSaveDataDevBadge;
 
-	startBadgeAutoRefresh();
+	if (typeof window.isAccountCharacterGameBooted === "function" && window.isAccountCharacterGameBooted()) {
+		startBadgeAutoRefresh();
+	} else {
+		window.addEventListener("upgrade-rpg:account-game-ready", startBadgeAutoRefresh, { once: true });
+	}
 })();

@@ -6,7 +6,10 @@ from app.core.config import build_database_connect_args, settings
 
 engine = create_async_engine(
     settings.database_url,
-    echo=settings.debug,
+    # Authentication hashes and raw game snapshots are SQL bind parameters.
+    # Never couple application debug mode to SQL/parameter logging.
+    echo=False,
+    hide_parameters=True,
     pool_pre_ping=settings.db_pool_pre_ping,
     pool_size=settings.db_pool_size,
     max_overflow=settings.db_max_overflow,

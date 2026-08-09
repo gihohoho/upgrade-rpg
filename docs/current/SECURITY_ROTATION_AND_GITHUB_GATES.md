@@ -1,4 +1,54 @@
-# Security rotation and GitHub gates — v349
+# Security rotation and GitHub gates — v370
+
+## v370 계정 인증 로컬 구현 보안 상태 — 2026-08-10
+
+- v370은 회원가입·로그인, 계정별 캐릭터 슬롯 8개와 관리자 회원 관리를 로컬
+  source에 구현한 단계입니다. 공개 Render backend와 Static Site는 계속 v351이며
+  v370 인증 경로는 아직 공개되지 않았습니다.
+- 새 secret을 만들지 않았습니다. access token 서명에는 이미 Render/local에 준비된
+  기존 `JWT_SECRET_KEY`, 최초 관리자와 위험한 관리자 apply의 두 번째 방어선에는 기존
+  `ADMIN_WRITE_DEV_KEY`를 사용합니다. 실제 값은 조회·출력·문서화하지 않았습니다.
+- 비밀번호는 직접 dependency인 `bcrypt 5.0.0`으로만 해시합니다. 회원가입은
+  `is_admin=false`로 고정하고 원문·해시, access token, 전체 save snapshot을 관리자
+  응답과 로그에 포함하지 않습니다.
+- access token은 알고리즘을 HS256으로 고정하고 종류·발급 시각·만료 시각·서명을
+  확인합니다. 각 요청에서 DB 계정의 활성 상태를 다시 읽어 정지된 계정은 기존 token도
+  다음 요청부터 거절합니다.
+- 브라우저는 로그인 유지가 꺼져 있으면 `sessionStorage`, 사용자가 명시적으로 켜면
+  `localStorage`에 token을 저장합니다. 이는 XSS 영향 범위가 있으므로 공개 전 CSP/XSS
+  회귀와 저장 정책을 다시 검토합니다.
+- 최초 관리자 지정은 로그인 가능한 관리자가 없을 때 현재 로그인 계정과 dev key를
+  함께 확인하는 1회 bootstrap입니다. 회원 상태 apply는 관리자 Bearer 권한과 dev key,
+  preview/stale 검사, 본인·마지막 관리자 보호, `AdminChangeLog` 기록을 모두 요구합니다.
+- 저장 서비스는 인증 계정·고정 슬롯 키·캐릭터 고유 ID를 모두 대조하고 안정 직렬화된
+  저장 요청을 2,000,000바이트로 제한합니다. JSON 파싱 전 ASGI raw request body cap은
+  아직 없으므로 공개 전 별도 보강합니다.
+- 정상 load는 서버 DB snapshot을 authoritative로 사용합니다. backend가 비어 있을 때만
+  계정·캐릭터가 일치하는 local을 초기 복구 원본으로 사용합니다. 서버본과 다른 local은
+  `.pre-backend-recovery`로 보존한 뒤 서버본을 사용합니다.
+- 저장 실패의 `pending-unsynced` marker가 있으면 local 재전송·서버본 사용·취소를 게임
+  UI 모달에서 명시적으로 선택하게 하고 결정 전 두 원본을 보존합니다. 자동·수동·전환
+  저장은 단일 직렬 큐를 통과하며 전환은 runtime pause → queue drain → 상태 정리 순서입니다.
+- 저장·세션 확인의 `401/403`은 local과 미전송 marker를 보존하고 token을 폐기해 재로그인
+  복구 선택으로 이어집니다. network/timeout/`5xx`는 token·선택 상태를 유지하고 retry를
+  허용합니다. 서버 revision과 낙관적 잠금이 아직 없어 다중 기기 동시 접속의 최신본 충돌
+  정책은 공개 전 별도 보강합니다.
+- 인증 FastAPI `422`는 비밀번호·비밀번호 확인과 인증 body의 `input`을 응답에서 제거합니다.
+  SQLAlchemy engine은 debug와 무관하게 `echo=False`, `hide_parameters=True`이며, 관리자
+  save summary는 11개 제한 scalar allow-list와 문자열 160자 cap만 허용합니다. password
+  hash, raw `snapshot_json`, 임의 `summary_json` 키는 응답·SQL 로그에 노출하지 않습니다.
+- 이번 로컬 구현에서 실제 local/Neon DB write, seed, restore, Alembic mutation,
+  GitHub Actions·GHCR 게시, Render env 변경·서비스 deploy는 실행하지 않았습니다.
+
+공개 회원가입 전에 반드시 별도 검토·구현할 항목은 로그인·회원가입 rate limit과 실패
+지연, 비밀번호 변경·분실 복구, 서버측 session/refresh·개별 token 폐기, ASGI raw body
+cap, 다중 기기 save revision·충돌 해결, HTTPS/CSP/XSS, 개인정보 고지와 계정·데이터 삭제 정책입니다. 소셜 로그인은
+provider-neutral 계정 연결·해제 정책을 정한 뒤 추가하며 이번 단계에는 OAuth secret이나
+SDK를 만들지 않았습니다.
+
+v370을 공개할 때는 backend image와 legacy static을 같은 exact-SHA 승인 단위로 준비해야
+합니다. `JWT_SECRET_KEY` 회전은 기존 access token을 전부 무효화하므로 노출 대응 또는
+명시적인 전체 로그아웃이 필요할 때만 새 준비·배포 승인을 받아 실행합니다.
 
 ## Render GitHub App repository access — 2026-07-26
 

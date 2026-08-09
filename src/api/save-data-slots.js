@@ -6,6 +6,12 @@
 	const MODAL_ID = "backend-save-slots-modal";
 	const STYLE_ID = "backend-save-slots-style";
 
+	function getCurrentBackendSlotKey() {
+		return typeof window.getCurrentAccountBackendSlotKey === "function"
+			? window.getCurrentAccountBackendSlotKey()
+			: (window.UPGRADE_RPG_BACKEND_SLOT_KEY || "default");
+	}
+
 	function formatClock(value) {
 		if (!value) return "-";
 		try {
@@ -45,9 +51,10 @@
 	}
 
 	function getSlotRows(slots) {
+		const currentSlotKey = getCurrentBackendSlotKey();
 		return (Array.isArray(slots) ? slots : []).map((slot) => ({
 			slotKey: slot.slotKey || "-",
-			isDefault: !!slot.isDefault,
+			isCurrent: slot.slotKey === currentSlotKey,
 			saveVersion: slot.saveVersion !== undefined ? slot.saveVersion : "-",
 			level: getSummaryValue(slot, "level"),
 			gold: getSummaryValue(slot, "gold"),
@@ -219,7 +226,7 @@
 					<tbody>
 						${rows.map((row) => `
 							<tr title="${escapeHtml(row.note)}">
-								<td>${escapeHtml(row.slotKey)}${row.isDefault ? " <strong>(default)</strong>" : ""}</td>
+								<td>${escapeHtml(row.slotKey)}${row.isCurrent ? " <strong>(현재 캐릭터)</strong>" : ""}</td>
 								<td>${escapeHtml(formatValue(row.saveVersion))}</td>
 								<td>${escapeHtml(formatValue(row.level))}</td>
 								<td>${escapeHtml(formatValue(row.gold))}</td>
@@ -284,7 +291,7 @@
 
 		const payload = response && response.payload ? response.payload : { count: 0, slots: [] };
 		body.innerHTML = `
-			<div class="save-slots-modal-note">총 ${escapeHtml(formatValue(payload.count))}개 슬롯이 DB에 있습니다. 현재 게임 자동 저장은 계속 default 슬롯만 사용합니다.</div>
+			<div class="save-slots-modal-note">총 ${escapeHtml(formatValue(payload.count))}개 캐릭터 슬롯이 DB에 있습니다. 자동 저장은 현재 선택한 캐릭터(${escapeHtml(getCurrentBackendSlotKey())})에만 반영됩니다.</div>
 			${renderSlotRows(payload.slots)}
 			<div class="save-slots-modal-actions">
 				<button type="button" data-action="close">닫기</button>

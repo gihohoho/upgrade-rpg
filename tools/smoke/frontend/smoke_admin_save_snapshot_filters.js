@@ -26,7 +26,7 @@ assertContains("admin.html", [
   "data-admin-filter-default-only",
   "data-admin-action=\"apply-snapshot-filters\"",
   "data-admin-action=\"reset-snapshot-filters\"",
-  "원본 snapshot_json은 계속 숨김 상태입니다",
+  "원본 저장 데이터는 계속 숨김 상태입니다",
 ]);
 
 assertContains("src/api/admin-page-readonly.js", [

@@ -9,6 +9,22 @@ from app.models import User, UserSaveSnapshot
 from app.services.game_service import serialize_value
 
 
+ADMIN_SAVE_SUMMARY_FIELDS = (
+    "saveVersion",
+    "gold",
+    "level",
+    "currentCharacterId",
+    "currentZoneIndex",
+    "currentZoneType",
+    "inventoryItems",
+    "storageItems",
+    "trashItems",
+    "mailboxItems",
+    "createdAt",
+)
+ADMIN_SAVE_SUMMARY_TEXT_LIMIT = 160
+
+
 class AdminOverviewSnapshotsService:
     """Overview and save snapshot read-only admin helpers.
 
@@ -28,7 +44,7 @@ class AdminOverviewSnapshotsService:
             "admin": {
                 "userId": admin_user_id,
                 "username": admin_username,
-                "authMode": "placeholder-local-dev",
+                "authMode": "authenticated-admin-account",
             },
             "masterData": master_counts,
             "saveSnapshots": save_snapshot_summary,
@@ -198,7 +214,7 @@ class AdminOverviewSnapshotsService:
         return int(result.scalar_one() or 0)
 
     def _serialize_save_snapshot_summary(self, snapshot: UserSaveSnapshot) -> dict[str, Any]:
-        summary = serialize_value(snapshot.summary_json) or {}
+        summary = self._serialize_admin_save_summary(snapshot.summary_json)
         snapshot_json = serialize_value(snapshot.snapshot_json) or {}
         player = snapshot_json.get("player") if isinstance(snapshot_json, dict) else {}
         player = player if isinstance(player, dict) else {}
@@ -223,3 +239,17 @@ class AdminOverviewSnapshotsService:
             "rawSnapshotReturned": False,
         }
 
+    @staticmethod
+    def _serialize_admin_save_summary(value: Any) -> dict[str, Any]:
+        """Return only bounded scalar fields consumed by admin diagnostics."""
+        source = value if isinstance(value, dict) else {}
+        summary: dict[str, Any] = {}
+        for key in ADMIN_SAVE_SUMMARY_FIELDS:
+            if key not in source:
+                continue
+            serialized = serialize_value(source.get(key))
+            if isinstance(serialized, str):
+                summary[key] = serialized[:ADMIN_SAVE_SUMMARY_TEXT_LIMIT]
+            elif serialized is None or isinstance(serialized, bool | int | float):
+                summary[key] = serialized
+        return summary

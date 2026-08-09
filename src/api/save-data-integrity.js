@@ -2,8 +2,27 @@
 	"use strict";
 
 	const VERSION = "v110.backend-save-data-integrity-verify";
-	const DEFAULT_SLOT_KEY = "default";
+	const LEGACY_DEFAULT_SLOT_KEY = "default";
 	const DEFAULT_TIMEOUT_MS = 3000;
+
+	function getLocalSaveKey(options) {
+		return (options && options.saveKey)
+			|| (typeof window.getCurrentAccountLocalSaveKey === "function" ? window.getCurrentAccountLocalSaveKey() : null)
+			|| window.UPGRADE_RPG_LOCAL_SAVE_KEY
+			|| "idleRpgSaveV22";
+	}
+
+	function getBackendSlotKey(options) {
+		return (options && options.slotKey)
+			|| (typeof window.getCurrentAccountBackendSlotKey === "function" ? window.getCurrentAccountBackendSlotKey() : null)
+			|| window.UPGRADE_RPG_BACKEND_SLOT_KEY
+			|| LEGACY_DEFAULT_SLOT_KEY;
+	}
+
+	function getAccountCharacterId(options) {
+		return (options && options.accountCharacterId)
+			|| (typeof window.getCurrentAccountCharacterId === "function" ? window.getCurrentAccountCharacterId() : null);
+	}
 
 	function stableStringify(value) {
 		const seen = new WeakSet();
@@ -53,10 +72,12 @@
 
 	async function verifyBackendSaveSnapshotIntegrity(options) {
 		const opts = options || {};
-		const slotKey = opts.slotKey || DEFAULT_SLOT_KEY;
+		const slotKey = getBackendSlotKey(opts);
+		const saveKey = getLocalSaveKey(opts);
+		const accountCharacterId = getAccountCharacterId(opts);
 		const timeoutMs = opts.timeoutMs !== undefined ? opts.timeoutMs : DEFAULT_TIMEOUT_MS;
 		const local = window.readLocalSaveSnapshot
-			? window.readLocalSaveSnapshot(opts.saveKey || window.UPGRADE_RPG_LOCAL_SAVE_KEY || "idleRpgSaveV22")
+			? window.readLocalSaveSnapshot(saveKey)
 			: { exists: false, snapshot: null, error: "readLocalSaveSnapshot 함수를 찾을 수 없습니다." };
 		const result = {
 			ok: false,
@@ -64,7 +85,7 @@
 			slotKey,
 			local: {
 				exists: !!local.exists,
-				key: local.key || opts.saveKey || window.UPGRADE_RPG_LOCAL_SAVE_KEY || "idleRpgSaveV22",
+				key: local.key || saveKey,
 				error: local.error || null,
 			},
 			backend: {
@@ -99,7 +120,7 @@
 		}
 
 		try {
-			const response = await window.loadBackendSaveSnapshot({ slotKey, timeoutMs });
+			const response = await window.loadBackendSaveSnapshot({ slotKey, accountCharacterId, timeoutMs });
 			result.response = response;
 			const payload = response && response.payload ? response.payload : {};
 			const backendSnapshot = getBackendSnapshotFromLoadResponse(response);
@@ -142,8 +163,9 @@
 		}
 		const saveResponse = await window.pushLocalSaveToBackend(opts);
 		const verify = await verifyBackendSaveSnapshotIntegrity({
-			saveKey: opts.saveKey,
-			slotKey: opts.slotKey || DEFAULT_SLOT_KEY,
+			saveKey: opts.saveKey || getLocalSaveKey(opts),
+			slotKey: opts.slotKey || getBackendSlotKey(opts),
+			accountCharacterId: opts.accountCharacterId || getAccountCharacterId(opts),
 			timeoutMs: opts.verifyTimeoutMs !== undefined ? opts.verifyTimeoutMs : opts.timeoutMs,
 			log: opts.log,
 		});

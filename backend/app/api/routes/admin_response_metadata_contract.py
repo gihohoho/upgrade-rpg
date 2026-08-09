@@ -29,11 +29,10 @@ ADMIN_RESPONSE_METADATA_CONTRACT: dict[str, Any] = {
     "explicitResponseModel": None,
     "requiredSuccessResponseCode": "200",
     "validationResponseCode": "422",
-    "noValidationResponsePaths": [
-        "/requirements",
-        "/overview",
-        "/master-data/domains",
-    ],
+    # Real Bearer authentication adds the Authorization header dependency to
+    # every admin operation, so FastAPI now documents its standard 422 response
+    # even for routes that otherwise have no query/path/body parameters.
+    "noValidationResponsePaths": [],
     "forbiddenRouteDecoratorOptions": [
         "response_model=",
         "status_code=",

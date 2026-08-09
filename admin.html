@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Upgrade RPG Admin - Practical UX</title>
+  <link rel="stylesheet" href="src/styles/account-admin.css?v=370" />
   <style>
     :root {
       color-scheme: dark;
@@ -2049,7 +2050,32 @@
   </style>
 </head>
 <body>
-  <main class="admin-shell">
+  <div class="account-admin-gate" data-account-admin-gate role="dialog" aria-modal="true" aria-labelledby="account-admin-gate-title">
+    <div class="account-admin-gate-panel">
+      <div class="account-admin-gate-kicker">UPGRADE RPG · ADMIN</div>
+      <h1 id="account-admin-gate-title">관리자 계정을 확인하고 있습니다</h1>
+      <p data-account-admin-gate-message>로그인 정보와 관리자 권한을 안전하게 확인하는 중입니다.</p>
+      <div class="account-admin-gate-bootstrap" data-account-admin-bootstrap hidden>
+        <strong>최초 관리자 설정</strong>
+        <p>로그인 가능한 관리자가 아직 한 명도 없을 때만 현재 계정을 최초 관리자로 지정할 수 있습니다.</p>
+        <label>
+          <span>관리자 dev key</span>
+          <input type="password" data-account-admin-bootstrap-dev-key autocomplete="off" placeholder="backend에 설정된 관리자 dev key" />
+        </label>
+        <label>
+          <span>설정 사유</span>
+          <input type="text" data-account-admin-bootstrap-reason maxlength="500" value="최초 관리자 계정 설정" />
+        </label>
+        <button class="account-admin-gate-primary" type="button" data-account-admin-action="bootstrap">현재 계정을 최초 관리자로 설정</button>
+      </div>
+      <div class="account-admin-gate-actions">
+        <a href="index.html">게임 로그인 화면으로</a>
+        <button type="button" data-account-admin-action="retry-gate">다시 확인</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="admin-shell" data-account-admin-content aria-hidden="true">
     <div class="topbar" data-admin-sticky-header>
       <div>
         <div class="eyebrow"><span class="dot"></span>Guarded Admin + API Verify</div>
@@ -2080,6 +2106,7 @@
           <nav class="admin-jump-nav" aria-label="관리자 페이지 바로가기">
             <a href="#section-workspace">작업 시작</a>
             <a href="#section-overview">요약</a>
+            <a href="#section-account-users">회원 관리</a>
             <a href="#section-field-help">필드 도움말</a>
             <a href="#section-admin-write-guard">쓰기 잠금</a>
             <a href="#section-master-catalog">마스터 목록</a>
@@ -2187,6 +2214,99 @@
     <section class="grid" data-admin-cards>
       <div class="card"><div class="label">상태</div><div class="value small">불러오는 중...</div></div>
     </section>
+
+    <section class="account-admin-panel" id="section-account-users" data-admin-collapsible data-admin-section-key="account-users" aria-label="회원 계정 관리">
+      <div class="account-admin-heading">
+        <div>
+          <div class="account-admin-kicker">ACCOUNT CONTROL</div>
+          <h2>회원 관리</h2>
+          <p>계정 상태와 캐릭터 슬롯 요약만 표시합니다. 비밀번호와 게임 저장 원본은 관리자 화면에서도 볼 수 없습니다.</p>
+        </div>
+        <div class="account-admin-heading-actions">
+          <span class="account-admin-auth-badge" data-account-admin-current-admin>관리자 확인 중</span>
+          <button class="btn" type="button" data-account-admin-action="refresh-users">회원 새로고침</button>
+        </div>
+      </div>
+
+      <div class="account-admin-summary" data-account-admin-summary>
+        <div><span>전체 회원</span><strong>-</strong></div>
+        <div><span>현재 표시</span><strong>-</strong></div>
+        <div><span>사용 중 슬롯</span><strong>-</strong></div>
+      </div>
+
+      <div class="account-admin-filter" role="search">
+        <label>
+          <span>아이디 검색</span>
+          <input type="search" data-account-admin-query maxlength="120" placeholder="회원 아이디를 입력하세요" />
+        </label>
+        <label>
+          <span>계정 상태</span>
+          <select data-account-admin-status>
+            <option value="all">전체</option>
+            <option value="active">활성</option>
+            <option value="suspended">정지</option>
+          </select>
+        </label>
+        <label>
+          <span>정렬</span>
+          <select data-account-admin-sort>
+            <option value="created_desc">최근 가입순</option>
+            <option value="created_asc">오래된 가입순</option>
+            <option value="username_asc">아이디 오름차순</option>
+            <option value="username_desc">아이디 내림차순</option>
+          </select>
+        </label>
+        <button class="btn primary" type="button" data-account-admin-action="search-users">조회</button>
+        <button class="btn" type="button" data-account-admin-action="reset-users">초기화</button>
+      </div>
+
+      <div class="account-admin-status" data-account-admin-status-line aria-live="polite">회원 정보를 불러올 준비가 됐습니다.</div>
+      <div class="account-admin-table-wrap" data-account-admin-user-table>
+        <div class="account-admin-empty">관리자 권한 확인 후 회원 목록을 불러옵니다.</div>
+      </div>
+      <div class="account-admin-pagination" data-account-admin-pagination></div>
+    </section>
+
+    <div class="account-admin-modal" data-account-admin-detail-modal aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="account-admin-detail-title">
+      <div class="account-admin-modal-panel account-admin-detail-panel">
+        <div class="account-admin-modal-header">
+          <div>
+            <div class="account-admin-kicker">MEMBER DETAIL</div>
+            <h2 id="account-admin-detail-title" data-account-admin-detail-title>회원 상세</h2>
+          </div>
+          <button type="button" data-account-admin-action="close-detail" aria-label="회원 상세 닫기">×</button>
+        </div>
+        <div class="account-admin-modal-body" data-account-admin-detail-body></div>
+      </div>
+    </div>
+
+    <div class="account-admin-modal" data-account-admin-status-modal aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="account-admin-status-title">
+      <div class="account-admin-modal-panel account-admin-confirm-panel">
+        <div class="account-admin-modal-header">
+          <div>
+            <div class="account-admin-kicker">ACCOUNT STATUS</div>
+            <h2 id="account-admin-status-title" data-account-admin-status-title>계정 상태 변경</h2>
+          </div>
+          <button type="button" data-account-admin-action="close-status" aria-label="계정 상태 변경 닫기">×</button>
+        </div>
+        <div class="account-admin-modal-body">
+          <div data-account-admin-status-preview></div>
+          <label class="account-admin-confirm-field">
+            <span>변경 사유</span>
+            <textarea data-account-admin-status-reason maxlength="500" rows="3" placeholder="관리 기록에 남길 사유를 입력하세요"></textarea>
+          </label>
+          <label class="account-admin-confirm-field">
+            <span>정확한 확인 문구</span>
+            <input type="text" data-account-admin-status-confirm autocomplete="off" />
+          </label>
+          <div class="account-admin-modal-actions">
+            <button class="btn" type="button" data-account-admin-action="close-status">취소</button>
+            <button class="btn" type="button" data-account-admin-action="preview-status">변경 내용 확인</button>
+            <button class="btn danger" type="button" data-account-admin-action="apply-status" disabled>상태 변경 적용</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <section class="section" id="section-master-counts" data-admin-collapsible data-admin-section-key="master-counts">
       <div class="section-header">
@@ -2615,7 +2735,7 @@
           <button class="btn" type="button" data-admin-action="reset-snapshot-filters">초기화</button>
         </div>
       </div>
-      <div class="filter-help">필터는 조회 조건만 바꾸며 DB/localStorage/게임 세이브를 수정하지 않습니다. 원본 snapshot_json은 계속 숨김 상태입니다.</div>
+      <div class="filter-help">필터는 조회 조건만 바꾸며 DB/localStorage/게임 세이브를 수정하지 않습니다. 원본 저장 데이터는 계속 숨김 상태입니다.</div>
     </section>
 
     <section class="section" id="section-save-snapshot-summary" data-admin-collapsible data-admin-section-key="save-snapshot-summary">
@@ -2644,7 +2764,8 @@
   </main>
 
   <script src="src/api/runtime-config.js"></script>
-  <script src="src/api/game-api-client.js"></script>
+  <script src="src/api/auth-session.js?v=370"></script>
+  <script src="src/api/game-api-client.js?v=370"></script>
   <script src="src/api/admin-layout-shell.js"></script>
   <script src="src/api/admin/admin-workspace-navigation.js"></script>
   <script src="src/api/admin/admin-field-help.js"></script>
@@ -2660,6 +2781,7 @@
   <script src="src/api/admin/admin-master-catalog.js"></script>
   <script src="src/api/admin/admin-detail-shortcuts.js"></script>
   <script src="src/api/admin/admin-overview-snapshots.js"></script>
-  <script src="src/api/admin-page-readonly.js"></script>
+  <script src="src/api/admin/admin-account-management.js?v=370"></script>
+  <script src="src/api/admin-page-readonly.js?v=370"></script>
 </body>
 </html>

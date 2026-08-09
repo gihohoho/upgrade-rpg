@@ -2,8 +2,27 @@
 	"use strict";
 
 	const VERSION = "v105.backend-save-data-preview-compare";
-	const DEFAULT_SLOT_KEY = "default";
+	const LEGACY_DEFAULT_SLOT_KEY = "default";
 	const DEFAULT_TIMEOUT_MS = 2500;
+
+	function getLocalSaveKey(options) {
+		return (options && options.saveKey)
+			|| (typeof window.getCurrentAccountLocalSaveKey === "function" ? window.getCurrentAccountLocalSaveKey() : null)
+			|| window.UPGRADE_RPG_LOCAL_SAVE_KEY
+			|| "idleRpgSaveV22";
+	}
+
+	function getBackendSlotKey(options) {
+		return (options && options.slotKey)
+			|| (typeof window.getCurrentAccountBackendSlotKey === "function" ? window.getCurrentAccountBackendSlotKey() : null)
+			|| window.UPGRADE_RPG_BACKEND_SLOT_KEY
+			|| LEGACY_DEFAULT_SLOT_KEY;
+	}
+
+	function getAccountCharacterId(options) {
+		return (options && options.accountCharacterId)
+			|| (typeof window.getCurrentAccountCharacterId === "function" ? window.getCurrentAccountCharacterId() : null);
+	}
 
 	function isPlainObject(value) {
 		return !!value && typeof value === "object" && !Array.isArray(value);
@@ -148,8 +167,11 @@
 
 	async function previewBackendSaveSnapshot(options) {
 		const opts = options || {};
+		const saveKey = getLocalSaveKey(opts);
+		const slotKey = getBackendSlotKey(opts);
+		const accountCharacterId = getAccountCharacterId(opts);
 		const local = window.readLocalSaveSnapshot
-			? window.readLocalSaveSnapshot(opts.saveKey || window.UPGRADE_RPG_LOCAL_SAVE_KEY || "idleRpgSaveV22")
+			? window.readLocalSaveSnapshot(saveKey)
 			: { exists: false, snapshot: null, error: "readLocalSaveSnapshot 함수를 찾을 수 없습니다." };
 		let backendResponse = null;
 		let backendPayload = null;
@@ -159,7 +181,8 @@
 				throw new Error("loadBackendSaveSnapshot 함수를 찾을 수 없습니다.");
 			}
 			backendResponse = await window.loadBackendSaveSnapshot({
-				slotKey: opts.slotKey || DEFAULT_SLOT_KEY,
+				slotKey,
+				accountCharacterId,
 				timeoutMs: opts.timeoutMs !== undefined ? opts.timeoutMs : DEFAULT_TIMEOUT_MS,
 			});
 			backendPayload = backendResponse && backendResponse.payload ? backendResponse.payload : null;
@@ -174,13 +197,13 @@
 			version: VERSION,
 			local: {
 				exists: !!local.exists,
-				key: local.key || opts.saveKey || window.UPGRADE_RPG_LOCAL_SAVE_KEY || "idleRpgSaveV22",
+				key: local.key || saveKey,
 				error: local.error || null,
 				summary: comparison.localSummary,
 			},
 			backend: {
 				exists: backendExists,
-				slotKey: opts.slotKey || DEFAULT_SLOT_KEY,
+				slotKey,
 				status: backendPayload ? backendPayload.status : null,
 				error: backendError,
 				updatedAt: backendPayload ? backendPayload.updatedAt : null,

@@ -2,8 +2,8 @@
 	"use strict";
 
 	const VERSION = "v108.backend-save-data-restore-reload-lock";
-	const LOCAL_SAVE_KEY = "idleRpgSaveV22";
-	const DEFAULT_SLOT_KEY = "default";
+	const LEGACY_LOCAL_SAVE_KEY = "idleRpgSaveV22";
+	const LEGACY_DEFAULT_SLOT_KEY = "default";
 	const DEFAULT_TIMEOUT_MS = 3000;
 	const BACKUP_INDEX_KEY = "upgradeRpgBackendSaveRestoreBackups";
 	const RESTORE_STATUS_KEY = "upgradeRpgBackendSaveRestoreStatus";
@@ -14,7 +14,22 @@
 	const STYLE_ID = "backend-save-restore-preview-style";
 
 	function getLocalSaveKey(options) {
-		return (options && options.saveKey) || window.UPGRADE_RPG_LOCAL_SAVE_KEY || LOCAL_SAVE_KEY;
+		return (options && options.saveKey)
+			|| (typeof window.getCurrentAccountLocalSaveKey === "function" ? window.getCurrentAccountLocalSaveKey() : null)
+			|| window.UPGRADE_RPG_LOCAL_SAVE_KEY
+			|| LEGACY_LOCAL_SAVE_KEY;
+	}
+
+	function getBackendSlotKey(options) {
+		return (options && options.slotKey)
+			|| (typeof window.getCurrentAccountBackendSlotKey === "function" ? window.getCurrentAccountBackendSlotKey() : null)
+			|| window.UPGRADE_RPG_BACKEND_SLOT_KEY
+			|| LEGACY_DEFAULT_SLOT_KEY;
+	}
+
+	function getAccountCharacterId(options) {
+		return (options && options.accountCharacterId)
+			|| (typeof window.getCurrentAccountCharacterId === "function" ? window.getCurrentAccountCharacterId() : null);
 	}
 
 	function nowIso() {
@@ -188,7 +203,7 @@
 			updatedAt: nowIso(),
 			backupKey: status.backupKey || null,
 			saveKey: status.saveKey || getLocalSaveKey(),
-			slotKey: status.slotKey || DEFAULT_SLOT_KEY,
+			slotKey: status.slotKey || getBackendSlotKey(),
 			recommendation: status.recommendation || null,
 			diffCount: status.diffCount !== undefined ? status.diffCount : null,
 			error: status.error || null,
@@ -298,7 +313,8 @@
 		}
 		const preview = await window.previewBackendSaveSnapshot({
 			saveKey,
-			slotKey: opts.slotKey || DEFAULT_SLOT_KEY,
+			slotKey: getBackendSlotKey(opts),
+			accountCharacterId: getAccountCharacterId(opts),
 			timeoutMs: opts.timeoutMs !== undefined ? opts.timeoutMs : DEFAULT_TIMEOUT_MS,
 			log: opts.log,
 		});
@@ -307,7 +323,7 @@
 				ok: false,
 				state: "failed_backend_empty",
 				saveKey,
-				slotKey: opts.slotKey || DEFAULT_SLOT_KEY,
+				slotKey: getBackendSlotKey(opts),
 				recommendation: preview.recommendation,
 				diffCount: preview.comparison ? preview.comparison.diffCount : null,
 				error: "백엔드 DB에 복구할 세이브가 없습니다. 먼저 수동 저장 또는 sync DB를 실행하세요.",
@@ -320,7 +336,7 @@
 				ok: false,
 				state: "failed_invalid_backend_snapshot",
 				saveKey,
-				slotKey: opts.slotKey || DEFAULT_SLOT_KEY,
+				slotKey: getBackendSlotKey(opts),
 				error: "백엔드 세이브 스냅샷을 읽을 수 없습니다.",
 			});
 			return { ok: false, status, preview };
@@ -330,7 +346,7 @@
 				ok: null,
 				state: "cancelled_by_user",
 				saveKey,
-				slotKey: opts.slotKey || DEFAULT_SLOT_KEY,
+				slotKey: getBackendSlotKey(opts),
 				recommendation: preview.recommendation,
 				diffCount: preview.comparison ? preview.comparison.diffCount : null,
 			});
@@ -343,7 +359,7 @@
 				ok: false,
 				state: "failed_backup_write",
 				saveKey,
-				slotKey: opts.slotKey || DEFAULT_SLOT_KEY,
+				slotKey: getBackendSlotKey(opts),
 				error: "기존 localStorage 세이브 백업에 실패해서 복구를 중단했습니다.",
 			});
 			return { ok: false, status, preview, backupResult };
@@ -355,7 +371,7 @@
 				ok: false,
 				state: "failed_local_write",
 				saveKey,
-				slotKey: opts.slotKey || DEFAULT_SLOT_KEY,
+				slotKey: getBackendSlotKey(opts),
 				backupKey: backupResult.backupKey,
 				error: "DB 세이브를 localStorage에 쓰지 못했습니다.",
 			});
@@ -371,7 +387,7 @@
 			ok: true,
 			state: "restored_needs_reload",
 			saveKey,
-			slotKey: opts.slotKey || DEFAULT_SLOT_KEY,
+			slotKey: getBackendSlotKey(opts),
 			backupKey: backupResult.backupKey || null,
 			recommendation: preview.recommendation,
 			diffCount: preview.comparison ? preview.comparison.diffCount : null,
@@ -681,7 +697,8 @@
 		try {
 			preview = await window.previewBackendSaveSnapshot({
 				saveKey: getLocalSaveKey(opts),
-				slotKey: opts.slotKey || DEFAULT_SLOT_KEY,
+				slotKey: getBackendSlotKey(opts),
+				accountCharacterId: getAccountCharacterId(opts),
 				timeoutMs: opts.timeoutMs !== undefined ? opts.timeoutMs : DEFAULT_TIMEOUT_MS,
 				log: opts.log,
 			});

@@ -42,6 +42,8 @@ function refreshOnOffButtonVisuals() {
 
 let recordPlayLastTick = Date.now();
 let isUpdatingCodexUi = false;
+let playTimeRecordInterval = null;
+let playTimeVisibilityBound = false;
 
 function ensurePlayerRecords() {
 	if (!player.records || typeof player.records !== "object") player.records = {};
@@ -177,10 +179,13 @@ function tickPlayTimeRecord() {
 
 function startPlayTimeRecordTimer() {
 	recordPlayLastTick = Date.now();
-	document.addEventListener("visibilitychange", () => {
-		recordPlayLastTick = Date.now();
-	});
-	setInterval(tickPlayTimeRecord, 1000);
+	if (!playTimeVisibilityBound) {
+		document.addEventListener("visibilitychange", () => {
+			recordPlayLastTick = Date.now();
+		});
+		playTimeVisibilityBound = true;
+	}
+	if (!playTimeRecordInterval) playTimeRecordInterval = setInterval(tickPlayTimeRecord, 1000);
 }
 
 function migrateSaveData(data) {
@@ -221,11 +226,40 @@ function migrateSaveData(data) {
 
 let lastManualSaveAt = 0;
 let isResettingGame = false;
+let isAccountGameBooted = false;
+let accountGameBootPromise = null;
+let accountAutosaveInterval = null;
+let accountMaintenanceInterval = null;
+let cooldownUiInterval = null;
+let activeBuffInterval = null;
+let isAccountGameRuntimePaused = false;
+let accountCombatWasActiveBeforePause = false;
+
+function getActiveLocalSaveKey() {
+	return typeof window.getCurrentAccountLocalSaveKey === "function"
+		? window.getCurrentAccountLocalSaveKey()
+		: "idleRpgSaveV22";
+}
+
+function getActiveBackendSlotKey() {
+	return typeof window.getCurrentAccountBackendSlotKey === "function"
+		? window.getCurrentAccountBackendSlotKey()
+		: "default";
+}
+
+function getActiveAccountCharacterId() {
+	return typeof window.getCurrentAccountCharacterId === "function" ? window.getCurrentAccountCharacterId() : null;
+}
+
+function hasReadyAccountGameContext() {
+	return !!(window.RpgAuthSession && window.RpgAuthSession.hasReadyGameContext());
+}
 
 function saveGame(options = {}) {
-	if (isResettingGame) return;
-	if (window.shouldSkipSaveGameForBackendRestore && typeof window.shouldSkipSaveGameForBackendRestore === "function" && window.shouldSkipSaveGameForBackendRestore("idleRpgSaveV22")) {
-		return;
+	if (isResettingGame || !isAccountGameBooted || !hasReadyAccountGameContext()) return false;
+	const saveKey = getActiveLocalSaveKey();
+	if (window.shouldSkipSaveGameForBackendRestore && typeof window.shouldSkipSaveGameForBackendRestore === "function" && window.shouldSkipSaveGameForBackendRestore(saveKey)) {
+		return false;
 	}
 	if (typeof tickPlayTimeRecord === "function") tickPlayTimeRecord();
 	if (typeof refreshRecordSnapshot === "function") refreshRecordSnapshot(!!options.refreshRecordSnapshot);
@@ -239,11 +273,13 @@ function saveGame(options = {}) {
 			fieldEnemyHp,
 			fieldRespawnEndAt,
 		};
-	localStorage.setItem("idleRpgSaveV22", JSON.stringify(savePayload));
+	localStorage.setItem(saveKey, JSON.stringify(savePayload));
+	return savePayload;
 }
 
 function manualSaveGame() {
-	if (window.shouldSkipSaveGameForBackendRestore && typeof window.shouldSkipSaveGameForBackendRestore === "function" && window.shouldSkipSaveGameForBackendRestore("idleRpgSaveV22")) {
+	const saveKey = getActiveLocalSaveKey();
+	if (window.shouldSkipSaveGameForBackendRestore && typeof window.shouldSkipSaveGameForBackendRestore === "function" && window.shouldSkipSaveGameForBackendRestore(saveKey)) {
 		addLog("[저장] 세이브 복구가 새로고침 대기 중이라 수동 저장을 잠시 막았습니다. 새로고침 후 다시 저장하세요.", true);
 		return;
 	}
@@ -440,7 +476,7 @@ function claimAllMail() {
 
 function loadGame() {
 	try {
-		const savedStr = localStorage.getItem("idleRpgSaveV22");
+		const savedStr = localStorage.getItem(getActiveLocalSaveKey());
 		if (savedStr) {
 			let data = migrateSaveData(JSON.parse(savedStr));
 			if (typeof applyServerSavePayload === "function") {
@@ -470,7 +506,21 @@ function loadGame() {
 
 function resetGame() {
 	const modal = document.getElementById("reset-modal");
-	if (modal) modal.style.display = "flex";
+	if (!modal) return;
+	const accountMode = !!getActiveAccountCharacterId();
+	const subtitle = modal.querySelector(".game-reset-subtitle");
+	const body = modal.querySelector(".game-reset-body");
+	const confirmButton = modal.querySelector(".game-reset-confirm");
+	if (accountMode) {
+		if (subtitle) subtitle.textContent = "현재 캐릭터를 삭제하고 처음부터 시작할까요?";
+		if (body) body.innerHTML = '<p>캐릭터 선택 화면에서 삭제할 캐릭터의 이름을 다시 입력해야 최종 삭제됩니다.</p><p class="game-reset-warning">삭제한 캐릭터의 장비·골드·진행도는 되돌릴 수 없습니다.</p>';
+		if (confirmButton) confirmButton.textContent = "캐릭터 선택으로 이동";
+	} else {
+		if (subtitle) subtitle.textContent = "정말 처음부터 다시 시작할까요?";
+		if (body) body.innerHTML = '<p>현재 캐릭터의 골드, 장비, 보관함, 휴지통, 스킬, 보스 진행 상황이 모두 삭제됩니다.</p><p class="game-reset-warning">이 작업은 되돌릴 수 없습니다.</p>';
+		if (confirmButton) confirmButton.textContent = "초기화 진행";
+	}
+	modal.style.display = "flex";
 }
 
 function closeResetModal() {
@@ -479,9 +529,14 @@ function closeResetModal() {
 }
 
 function confirmResetGame() {
+	if (getActiveAccountCharacterId() && window.RpgAccountGate && typeof window.RpgAccountGate.transitionFromGame === "function") {
+		closeResetModal();
+		window.RpgAccountGate.transitionFromGame("switch");
+		return;
+	}
 	isResettingGame = true;
 	try {
-		localStorage.removeItem("idleRpgSaveV22");
+		localStorage.removeItem(getActiveLocalSaveKey());
 	} catch (error) {
 		console.error("저장 데이터 삭제 실패:", error);
 	}
@@ -494,11 +549,199 @@ function confirmResetGame() {
 	}
 }
 
-window.onload = function () {
+function getBackendSnapshotFromResponse(response) {
+	const payload = response && response.payload && typeof response.payload === "object" ? response.payload : {};
+	const snapshot = payload.snapshot;
+	return snapshot && typeof snapshot === "object" && Object.keys(snapshot).length ? snapshot : null;
+}
+
+function getSnapshotCharacterCode(snapshot) {
+	const savedPlayer = snapshot && snapshot.player && typeof snapshot.player === "object" ? snapshot.player : null;
+	return savedPlayer && savedPlayer.currentCharacterId ? String(savedPlayer.currentCharacterId) : null;
+}
+
+function backupDisplacedAccountLocalSave(saveKey, local, backendResponse) {
+	if (!local || !local.exists || !local.raw) return null;
+	const backendPayload = backendResponse && backendResponse.payload && typeof backendResponse.payload === "object" ? backendResponse.payload : {};
+	const backupKey = `${saveKey}.pre-backend-recovery`;
+	localStorage.setItem(backupKey, JSON.stringify({
+		version: "v370.backend-authoritative-local-backup",
+		backedUpAt: new Date().toISOString(),
+		backendUpdatedAt: backendPayload.updatedAt || null,
+		localParseError: local.error || null,
+		raw: local.raw,
+	}));
+	return backupKey;
+}
+
+async function prepareAccountCharacterSnapshot(character) {
+	const saveKey = getActiveLocalSaveKey();
+	const slotKey = getActiveBackendSlotKey();
+	const accountCharacterId = getActiveAccountCharacterId();
+	if (!accountCharacterId || !/^([a-f0-9]{32})$/i.test(accountCharacterId)) {
+		throw new Error("선택한 캐릭터 식별자가 올바르지 않습니다. 캐릭터를 다시 선택해 주세요.");
+	}
+	if (!/^character-[1-8]$/.test(slotKey)) {
+		throw new Error("선택한 캐릭터 슬롯 정보가 올바르지 않습니다. 캐릭터를 다시 선택해 주세요.");
+	}
+	if (typeof window.loadBackendSaveSnapshot !== "function") throw new Error("캐릭터 저장 데이터를 불러오는 기능을 찾을 수 없습니다.");
+
+	const backendResponse = await window.loadBackendSaveSnapshot({ slotKey, accountCharacterId, timeoutMs: 7000 });
+	const backendSnapshot = getBackendSnapshotFromResponse(backendResponse);
+	const local = typeof window.readLocalSaveSnapshot === "function"
+		? window.readLocalSaveSnapshot(saveKey)
+		: { exists: !!localStorage.getItem(saveKey), raw: localStorage.getItem(saveKey), snapshot: null, error: null };
+	const authSession = window.RpgAuthSession;
+	const currentUser = authSession && typeof authSession.getCurrentUser === "function" ? authSession.getCurrentUser() : null;
+	const pendingUnsynced = authSession && typeof authSession.getPendingUnsyncedSave === "function"
+		? authSession.getPendingUnsyncedSave({ userId: currentUser && currentUser.userId, accountCharacterId })
+		: null;
+	if (pendingUnsynced && local.exists) {
+		const pendingDecision = window.RpgAccountGate && typeof window.RpgAccountGate.requestPendingUnsyncedDecision === "function"
+			? await window.RpgAccountGate.requestPendingUnsyncedDecision(character, pendingUnsynced, backendResponse)
+			: "cancel";
+		if (pendingDecision === "cancel") return { cancelled: true, backendResponse };
+		if (pendingDecision === "local") {
+			if (local.error || !local.snapshot) throw new Error(`이 기기의 미전송 저장을 읽지 못했습니다: ${local.error || "저장 데이터 없음"}`);
+			const localCharacterCode = getSnapshotCharacterCode(local.snapshot);
+			if (localCharacterCode && localCharacterCode !== character.characterCode) {
+				throw new Error("이 기기의 미전송 저장이 다른 직업과 연결되어 있어 안전을 위해 불러오지 않았습니다.");
+			}
+			return { source: "pending-unsynced-local-retry", needsBackendSave: true, backendResponse };
+		}
+		const displacedLocalBackupKey = backupDisplacedAccountLocalSave(saveKey, local, backendResponse);
+		authSession.clearPendingUnsyncedSave({ userId: currentUser && currentUser.userId, accountCharacterId });
+		if (backendSnapshot) {
+			localStorage.setItem(saveKey, JSON.stringify(backendSnapshot));
+			return { source: "pending-server-authoritative", needsBackendSave: false, backendResponse, displacedLocalBackupKey };
+		}
+		localStorage.removeItem(saveKey);
+		return { source: "pending-server-empty", needsBackendSave: true, backendResponse, displacedLocalBackupKey };
+	}
+	if (pendingUnsynced && !local.exists && authSession && typeof authSession.clearPendingUnsyncedSave === "function") {
+		authSession.clearPendingUnsyncedSave({ userId: currentUser && currentUser.userId, accountCharacterId });
+	}
+	if (backendSnapshot) {
+		const backendRaw = JSON.stringify(backendSnapshot);
+		const localDiffers = local.exists && (local.error || JSON.stringify(local.snapshot) !== backendRaw);
+		const displacedLocalBackupKey = localDiffers ? backupDisplacedAccountLocalSave(saveKey, local, backendResponse) : null;
+		localStorage.setItem(saveKey, backendRaw);
+		return { source: "backend-authoritative", needsBackendSave: false, backendResponse, displacedLocalBackupKey };
+	}
+	if (local.error) throw new Error(`현재 캐릭터의 브라우저 저장 데이터를 읽지 못했습니다: ${local.error}`);
+	if (local.exists) {
+		const localCharacterCode = getSnapshotCharacterCode(local.snapshot);
+		if (localCharacterCode && localCharacterCode !== character.characterCode) {
+			throw new Error("현재 캐릭터의 브라우저 저장 데이터가 다른 직업과 연결되어 있어 안전을 위해 불러오지 않았습니다.");
+		}
+		return { source: "account-local-recovery-backend-empty", needsBackendSave: true, backendResponse };
+	}
+
+	const decision = window.RpgAccountGate && typeof window.RpgAccountGate.requestLegacyImportDecision === "function"
+		? await window.RpgAccountGate.requestLegacyImportDecision(character)
+		: { decision: "fresh", legacy: null };
+	if (!decision || decision.decision === "cancel") return { cancelled: true, backendResponse };
+	if (decision.decision === "import" && decision.legacy && decision.legacy.raw) {
+		const legacyCharacterCode = getSnapshotCharacterCode(decision.legacy.snapshot);
+		if (legacyCharacterCode && legacyCharacterCode !== character.characterCode) {
+			throw new Error("기존 세이브의 직업이 선택한 캐릭터와 달라 가져오기를 중단했습니다.");
+		}
+		localStorage.setItem(saveKey, decision.legacy.raw);
+		return { source: "legacy-explicit-import", needsBackendSave: true, backendResponse };
+	}
+	localStorage.removeItem(saveKey);
+	return { source: "fresh-character", needsBackendSave: true, backendResponse };
+}
+
+function queueCurrentAccountSave(options = {}) {
+	if (!isAccountGameBooted || !hasReadyAccountGameContext()) return Promise.reject(new Error("저장할 계정 캐릭터가 선택되지 않았습니다."));
+	const saveKey = getActiveLocalSaveKey();
+	const slotKey = getActiveBackendSlotKey();
+	const accountCharacterId = getActiveAccountCharacterId();
+	const saved = saveGame({ refreshRecordSnapshot: !!options.refreshRecordSnapshot });
+	if (!saved) return Promise.reject(new Error("현재 캐릭터의 로컬 저장을 완료하지 못했습니다."));
+	const requestOptions = {
+		saveKey,
+		slotKey,
+		accountCharacterId,
+		timeoutMs: options.timeoutMs !== undefined ? options.timeoutMs : 7000,
+		source: options.source || "account-character-autosave",
+		note: options.note || null,
+	};
+	if (typeof window.enqueueBackendSaveSnapshotWrite !== "function") {
+		return Promise.reject(new Error("백엔드 저장 직렬 큐를 찾을 수 없습니다."));
+	}
+	return window.enqueueBackendSaveSnapshotWrite(requestOptions);
+}
+
+async function flushAccountGameSave(options = {}) {
+	return queueCurrentAccountSave({
+		...options,
+		refreshRecordSnapshot: true,
+		source: options.source || options.reason || "account-character-flush",
+		note: options.note || "캐릭터 변경 또는 로그아웃 전에 현재 진행도를 저장했습니다.",
+	});
+}
+
+function startGameRuntimeTimers() {
+	if (!isAccountGameBooted || isAccountGameRuntimePaused) return;
+	startPlayTimeRecordTimer();
+	if (!accountAutosaveInterval) {
+		accountAutosaveInterval = setInterval(() => {
+			flushAccountGameSave({ source: "account-character-autosave", note: "60초 계정 캐릭터 자동 저장" }).catch((error) => {
+				if (window.RpgAccountGate && typeof window.RpgAccountGate.handleGameSessionInvalid === "function" && window.RpgAccountGate.handleGameSessionInvalid(error)) return;
+				console.warn("[Upgrade RPG] account character autosave failed", error);
+			});
+		}, 60000);
+	}
+	if (!accountMaintenanceInterval) {
+		accountMaintenanceInterval = setInterval(() => {
+			if (typeof tryStartAutoSpecialBoss === "function") tryStartAutoSpecialBoss(false);
+			if (typeof refreshOnOffButtonVisuals === "function") refreshOnOffButtonVisuals();
+		}, 1000);
+	}
+	if (!cooldownUiInterval) cooldownUiInterval = setInterval(tickCooldownUi, 1000);
+	if (!activeBuffInterval) activeBuffInterval = setInterval(tickActiveBuffs, 100);
+}
+
+function pauseAccountGameRuntime() {
+	if (!isAccountGameBooted || isAccountGameRuntimePaused) return false;
+	tickPlayTimeRecord();
+	isAccountGameRuntimePaused = true;
+	accountCombatWasActiveBeforePause = typeof attackInterval !== "undefined" && attackInterval !== null;
+	if (typeof attackInterval !== "undefined") {
+		clearInterval(attackInterval);
+		attackInterval = null;
+	}
+	clearInterval(accountAutosaveInterval);
+	clearInterval(accountMaintenanceInterval);
+	clearInterval(cooldownUiInterval);
+	clearInterval(activeBuffInterval);
+	clearInterval(playTimeRecordInterval);
+	accountAutosaveInterval = null;
+	accountMaintenanceInterval = null;
+	cooldownUiInterval = null;
+	activeBuffInterval = null;
+	playTimeRecordInterval = null;
+	return true;
+}
+
+function resumeAccountGameRuntime() {
+	if (!isAccountGameBooted || !isAccountGameRuntimePaused) return false;
+	isAccountGameRuntimePaused = false;
+	recordPlayLastTick = Date.now();
+	startGameRuntimeTimers();
+	if (accountCombatWasActiveBeforePause && typeof startAutoAttack === "function") startAutoAttack();
+	accountCombatWasActiveBeforePause = false;
+	return true;
+}
+
+async function bootPreparedAccountCharacter(character, preparation) {
 	let loaded = false;
 	try {
 		loaded = loadGame();
 		if (!loaded) {
+			if (character && character.characterCode) player.currentCharacterId = character.characterCode;
 			currentEnemy.hp = getFieldEnemyHp(0);
 		} else if (currentZoneType === "field") {
 			currentEnemy.hp = getFieldEnemyHp(currentZoneIndex);
@@ -514,7 +757,6 @@ window.onload = function () {
 
 		ensurePlayerRecords();
 		if (typeof normalizePlayerItemIcons === "function") normalizePlayerItemIcons(player);
-		startPlayTimeRecordTimer();
 		updateFullUI();
 		renderSkills();
 		if (typeof refreshOnOffButtonVisuals === "function") refreshOnOffButtonVisuals();
@@ -522,21 +764,71 @@ window.onload = function () {
 		console.error("초기화 중 치명적 에러 발생, 강제 복구를 시도합니다:", error);
 		currentZoneType = "town";
 		updateFullUI();
+		throw error;
 	}
 	if (window.completeBackendSaveRestoreReloadApply && typeof window.completeBackendSaveRestoreReloadApply === "function") {
 		const restoreApplyResult = window.completeBackendSaveRestoreReloadApply({
 			loaded,
-			saveKey: "idleRpgSaveV22",
+			saveKey: getActiveLocalSaveKey(),
 		});
 		if (restoreApplyResult && restoreApplyResult.applied && typeof addLog === "function") {
 			addLog("[저장] 복구된 세이브를 새로고침 후 게임에 적용했고, 자동저장 잠금을 해제했습니다.", true);
 		}
 	}
-	setInterval(saveGame, 60000);
-	setInterval(() => {
-		if (typeof tryStartAutoSpecialBoss === "function") tryStartAutoSpecialBoss(false);
-		if (typeof refreshOnOffButtonVisuals === "function") refreshOnOffButtonVisuals();
-	}, 1000);
+	isAccountGameBooted = true;
+	window.dispatchEvent(new CustomEvent("upgrade-rpg:account-game-ready", {
+		detail: {
+			accountCharacterId: getActiveAccountCharacterId(),
+			slotKey: getActiveBackendSlotKey(),
+		},
+	}));
+	startGameRuntimeTimers();
+	if (preparation && preparation.displacedLocalBackupKey && typeof addLog === "function") {
+		addLog("[저장] 서버 DB 진행도를 기준으로 불러왔습니다. 달랐던 이 기기의 로컬 저장은 복구용 백업으로 보존했습니다.", true);
+	}
+	saveGame({ refreshRecordSnapshot: true });
+	if (preparation && preparation.needsBackendSave) {
+		try {
+			await flushAccountGameSave({ source: preparation.source || "account-character-initial-save", note: "캐릭터 첫 시작 상태를 저장했습니다." });
+		} catch (error) {
+			if (Number(error && error.status) === 401 || Number(error && error.status) === 403) throw error;
+			console.warn("[Upgrade RPG] initial account character save failed; autosave will retry", error);
+			if (typeof addLog === "function") addLog("[저장] 첫 DB 저장에 실패했습니다. 게임은 로컬에 보존되며 60초 자동 저장에서 다시 시도합니다.", true);
+		}
+	}
+	return { ok: true, loaded, source: preparation && preparation.source };
+}
+
+async function startAccountCharacterGame(character) {
+	if (isAccountGameBooted) return { ok: true, alreadyBooted: true };
+	if (accountGameBootPromise) return accountGameBootPromise;
+	if (!window.RpgAuthSession || !window.RpgAuthSession.hasReadyGameContext()) {
+		throw new Error("로그인하고 캐릭터를 선택한 뒤 게임을 시작할 수 있습니다.");
+	}
+	accountGameBootPromise = (async () => {
+		const preparation = await prepareAccountCharacterSnapshot(character);
+		if (preparation.cancelled) return { cancelled: true };
+		return bootPreparedAccountCharacter(character, preparation);
+	})();
+	try {
+		return await accountGameBootPromise;
+	} finally {
+		if (!isAccountGameBooted) accountGameBootPromise = null;
+	}
+}
+
+window.startAccountCharacterGame = startAccountCharacterGame;
+window.flushAccountGameSave = flushAccountGameSave;
+window.isAccountCharacterGameBooted = () => isAccountGameBooted;
+window.pauseAccountGameRuntime = pauseAccountGameRuntime;
+window.resumeAccountGameRuntime = resumeAccountGameRuntime;
+window.isAccountGameRuntimePaused = () => isAccountGameRuntimePaused;
+
+window.onload = async function () {
+	if (!window.RpgAccountGate || typeof window.RpgAccountGate.start !== "function") {
+		throw new Error("계정 시작 화면을 불러오지 못했습니다.");
+	}
+	await window.RpgAccountGate.start();
 };
 
 document.addEventListener("mousemove", (e) => {
@@ -685,7 +977,7 @@ document.querySelectorAll(".stat-row[data-stat]").forEach((el) => {
 	el.addEventListener("mouseleave", hideTooltip);
 });
 
-setInterval(() => {
+function tickCooldownUi() {
 	if (isSpecialBossPanelOpen) {
 		specialBossList.forEach((boss) => {
 			const cdEl = document.getElementById(`cd-text-${boss.id}`);
@@ -713,9 +1005,9 @@ setInterval(() => {
 			mCdEl.innerHTML = "&nbsp;";
 		}
 	}
-}, 1000);
+}
 
-setInterval(() => {
+function tickActiveBuffs() {
 	if (activeBuffs && activeBuffs.ironStrike && activeBuffs.ironStrike.active) {
 		activeBuffs.ironStrike.timer -= 100;
 		if (activeBuffs.ironStrike.timer <= 0) {
@@ -732,7 +1024,7 @@ setInterval(() => {
 			if (typeof showDamageText === "function") showDamageText("[E] 버프스킬 종료", "damage-skill-e damage-buff-state");
 		}
 	}
-}, 100);
+}
 
 document.addEventListener("keydown", (e) => {
 	if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
@@ -1054,4 +1346,21 @@ function renderTestItemList(boss) {
 	});
 }
 
-window.addEventListener("beforeunload", () => { tickPlayTimeRecord(); saveGame(); });
+window.addEventListener("beforeunload", () => {
+	if (!isAccountGameBooted || isResettingGame || !hasReadyAccountGameContext()) return;
+	if (window.RpgAuthSession && window.RpgAuthSession.isTransitionInProgress()) return;
+	tickPlayTimeRecord();
+	const saved = saveGame();
+	if (saved && window.RpgAuthSession && typeof window.RpgAuthSession.markPendingUnsyncedSave === "function") {
+		const user = window.RpgAuthSession.getCurrentUser();
+		const character = window.RpgAuthSession.getCurrentCharacter();
+		window.RpgAuthSession.markPendingUnsyncedSave({
+			userId: user && user.userId,
+			accountCharacterId: getActiveAccountCharacterId(),
+			saveKey: getActiveLocalSaveKey(),
+			slotKey: getActiveBackendSlotKey(),
+			characterName: character && character.name,
+			reason: "beforeunload-local-only",
+		});
+	}
+});

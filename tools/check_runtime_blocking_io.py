@@ -27,9 +27,12 @@ RESULT = "runtime-blocking-io-audit-passed"
 
 ROUTE_METHODS = {"delete", "get", "head", "options", "patch", "post", "put", "trace", "websocket"}
 ASYNC_WITHOUT_AWAIT_ALLOWLIST = {
+    "backend/app/main.py:request_validation_error_handler",
+    "backend/app/api/routes/auth.py:get_me",
+    "backend/app/api/routes/auth.py:logout",
     "backend/app/api/routes/admin_overview_snapshot_routes.py:get_admin_requirements",
     "backend/app/api/routes/health.py:health_check",
-    "backend/app/core/security.py:get_current_user_placeholder",
+    "backend/app/core/security.py:require_admin_user",
     "backend/app/core/security.py:require_admin_write_dev_key",
     "backend/app/services/admin/admin_readiness_service.py:AdminReadinessService.preview_change",
 }

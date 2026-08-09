@@ -5,11 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>강화RPG v0.22 (특수보스 & 장비슬롯 개편)</title>
     <link rel="stylesheet" href="src/styles/style.css?v=362" />
+    <link rel="stylesheet" href="src/styles/account.css?v=370" />
   </head>
-  <body>
+  <body class="account-gate-active">
+    <div id="account-gate" class="account-gate" data-view="loading">
+      <div class="account-gate-glow" aria-hidden="true"></div>
+      <main class="account-shell" aria-labelledby="account-gate-title">
+        <section id="account-gate-panel" class="account-panel" aria-live="polite">
+          <div class="account-loading-mark" aria-hidden="true">UR</div>
+          <h1 id="account-gate-title">Upgrade RPG</h1>
+          <p>계정 정보를 확인하고 있습니다...</p>
+        </section>
+      </main>
+      <div id="account-modal-root"></div>
+    </div>
+
     <div id="tooltip"></div>
 
-    <div class="game-wrapper">
+    <div id="game-root" class="game-wrapper" data-account-locked="true" aria-hidden="true" inert>
+      <div id="game-account-bar" class="game-account-bar" hidden>
+        <div class="game-account-identity">
+          <span class="game-account-label">접속 캐릭터</span>
+          <strong id="game-account-character">-</strong>
+          <span id="game-account-user">-</span>
+        </div>
+        <div class="game-account-actions">
+          <button type="button" id="game-account-switch">캐릭터 변경</button>
+          <button type="button" id="game-account-logout">로그아웃</button>
+        </div>
+      </div>
       <div id="battle-zone">
         <div class="zone-nav">
           <div id="zone-title">구역 1</div>
@@ -871,14 +895,15 @@
       state -> data -> systems -> ui -> app 순서로 유지해야 합니다.
     -->
     <script src="src/api/runtime-config.js"></script>
-    <script src="src/api/game-api-client.js"></script>
-    <script src="src/api/save-data-bridge.js"></script>
-    <script src="src/api/save-data-slots.js"></script>
-    <script src="src/api/admin-readonly-overview.js"></script>
-    <script src="src/api/save-data-sync-policy.js"></script>
-    <script src="src/api/save-data-preview.js"></script>
-    <script src="src/api/save-data-integrity.js"></script>
-    <script src="src/api/save-data-restore-guard.js"></script>
+	<script src="src/api/auth-session.js?v=370"></script>
+	<script src="src/api/game-api-client.js?v=370"></script>
+    <script src="src/api/save-data-bridge.js?v=370"></script>
+    <script src="src/api/save-data-slots.js?v=370"></script>
+    <script src="src/api/admin-readonly-overview.js?v=370"></script>
+    <script src="src/api/save-data-sync-policy.js?v=370"></script>
+    <script src="src/api/save-data-preview.js?v=370"></script>
+    <script src="src/api/save-data-integrity.js?v=370"></script>
+    <script src="src/api/save-data-restore-guard.js?v=370"></script>
     <script src="src/api/master-data-bridge.js"></script>
     <script src="src/api/master-data-adapter.js"></script>
     <script src="src/api/master-data-boot-policy.js"></script>
@@ -896,12 +921,13 @@
     <script src="src/ui/render-ui.js?v=369"></script>
     <script src="src/systems/action-result-system.js?v=360"></script>
     <script src="src/systems/item-system.js?v=363"></script>
-    <script src="src/systems/combat-system.js?v=362"></script>
-    <script src="src/app/main.js?v=369"></script>
+    <script src="src/systems/combat-system.js?v=370"></script>
+    <script src="src/ui/account-gate.js?v=370"></script>
+    <script src="src/app/main.js?v=370"></script>
     <script src="src/api/master-data-runtime-switch.js?v=369"></script>
     <script src="src/api/master-data-runtime-validator.js"></script>
     <script src="src/api/master-data-browser-checklist.js"></script>
     <script src="src/api/master-data-dev-badge.js"></script>
-    <script src="src/api/save-data-dev-badge.js"></script>
+    <script src="src/api/save-data-dev-badge.js?v=370"></script>
   </body>
 </html>
