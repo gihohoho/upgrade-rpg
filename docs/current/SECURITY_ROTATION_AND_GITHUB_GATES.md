@@ -1,4 +1,58 @@
-# Security rotation and GitHub gates — v370
+# Security rotation and GitHub gates — v371
+
+## v371 이메일 identity·복구·삭제 source 준비 보안 상태 — 2026-08-11
+
+- `v371_email_identity_lifecycle` revision source는 nullable legacy-safe email identity,
+  `authVersion`과 `user_email_action_tokens`를 추가하도록 준비했지만 local/Neon 어느 DB에도
+  apply·stamp하지 않았습니다. 기존 계정은 fake email backfill이나 자동 인증하지 않습니다.
+- 이메일 인증·비밀번호 재설정·계정 삭제 token은 CSPRNG 원문을 이메일 링크에 한 번만
+  전달하고, DB에는 `JWT_SECRET_KEY`와 별도인 `EMAIL_TOKEN_SECRET` HMAC-SHA256 digest만
+  저장합니다. 목적·만료·미사용 상태를 row lock 안에서 확인합니다.
+- 비밀번호 재설정은 `authVersion`을 증가시켜 기존 24시간 access token을 모두
+  무효화합니다. 아이디 찾기·인증 재전송·비밀번호 재설정 요청은 계정 존재·실제 발송
+  여부를 동일한 `202` 응답으로 숨깁니다.
+- action link는 고정 `PUBLIC_FRONTEND_ORIGIN`만 사용하고 Host·return URL을 신뢰하지
+  않습니다. 브라우저 fragment token은 즉시 history에서 제거하며 API·로그·관리자 화면에
+  원문 token을 반환하지 않습니다.
+- 계정 삭제는 일반 회원만 preview → 현재 비밀번호 → 이메일 link → `계정 삭제` 문구
+  순서로 허용합니다. 관리자·감사 기록 연결 계정은 fail-closed입니다. 삭제 성공 전
+  browser local cache를 지우지 않습니다.
+- Render Free는 SMTP 25/465/587을 막으므로 계정 메일은 Brevo HTTPS API만 사용하도록
+  준비합니다. Brevo account, sender 인증, API key, Render secret, 실제 메일 발송은 모두
+  아직 0회입니다.
+- 실제 발송 전 Brevo transactional anonymous tracking을 켜고, log retention은 최단
+  1개월, email preview는 `Never store previews`로 설정합니다. 익명화 뒤에도 전체
+  open/click 집계는 남을 수 있음을 개인정보 고지에 반영합니다.
+- Brevo 일반 API key는 send-only가 아니라 account-wide 권한입니다. 프로젝트 전용 key와
+  짧은 만료를 사용하고 Render secret에만 넣으며, 노출·미사용·integration 종료 시 즉시
+  삭제합니다. 실제 key 생성·주입은 migration과 분리된 사용자 확인 단계입니다.
+- owner 관리자용 `OWNER_ADMIN_PASSWORD`는 JWT/admin dev/email token secret과 공유하지
+  않습니다. one-shot script는 startup에서 실행하지 않고 migration head, 기존 관리자 0명,
+  enable flag, `--apply`, 현재 Git HEAD와 같은 소문자 40자리 `--approved-sha`, project
+  root·tracked script·tracked index/worktree clean과 환경·SHA·identity fingerprint 확인문을
+  요구합니다. 이 source gate는 DB session 생성 전에 실패하고 안전 차단은 exit `3`입니다.
+  성공 즉시 enable을 끄고 plaintext password를 `.env`에서 제거합니다. 입력한 email은
+  자동 인증하지 않습니다.
+- 현재 `email-validator 2.3.0` 설치·Linux lock 갱신은 owner 승인 대기 중입니다. 승인
+  전에는 약한 email parser로 폴백하지 않고 이메일 동작과 owner apply를 fail-closed로
+  유지합니다.
+- backend v371 이메일 lifecycle·owner one-shot·migration parity, v370 backend 회귀,
+  frontend v371 이메일 계정·v370 character/admin 회귀, compileall/JavaScript,
+  runtime blocking-I/O와 48-operation route map은 PASS입니다. 실제 Chrome 기본
+  viewport와 `390×844`의 account modal QA는 horizontal overflow 0, console warn/error
+  0입니다. renderer의 외부 asset 0·escape는 smoke로 확인했고 Browser의 `data:` URL 차단을
+  우회하지 않았으므로 실제 메일 클라이언트 시각 QA는 Brevo 테스트 메일 단계로 남습니다.
+  전체 core smoke는 PASS했고 독립 리뷰의 source-prepared 즉시 수정 blocker는 0건입니다.
+- 실제 local/Neon DB write·migration, Brevo/provider 설정·메일, owner bootstrap,
+  GitHub Actions·GHCR 게시, Render env·서비스·deploy는 실행하지 않았습니다. 공개
+  backend/static은 계속 v351입니다.
+
+분리 승인 순서는 dependency/lock → v371 source 검증 commit → exact migration apply →
+Brevo sender/key/secret → 테스트 메일 1건 → exact owner bootstrap → 공개 보안 보강 →
+backend/static 동시 release입니다. rate limit, server session/refresh·원격 폐기, ASGI raw
+body cap, 다중 기기 revision, HTTPS/CSP/XSS와 개인정보·법적 보존 정책은 여전히 공개
+blocker입니다. 자세한 계약은 `ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md`에
+있습니다.
 
 ## v370 계정 인증 로컬 구현 보안 상태 — 2026-08-10
 
@@ -46,7 +100,8 @@ cap, 다중 기기 save revision·충돌 해결, HTTPS/CSP/XSS, 개인정보 고
 provider-neutral 계정 연결·해제 정책을 정한 뒤 추가하며 이번 단계에는 OAuth secret이나
 SDK를 만들지 않았습니다.
 
-v370을 공개할 때는 backend image와 legacy static을 같은 exact-SHA 승인 단위로 준비해야
+v371을 공개할 때는 v370 계정·캐릭터 baseline을 포함한 backend image와 legacy static을
+같은 exact-SHA 승인 단위로 준비해야
 합니다. `JWT_SECRET_KEY` 회전은 기존 access token을 전부 무효화하므로 노출 대응 또는
 명시적인 전체 로그아웃이 필요할 때만 새 준비·배포 승인을 받아 실행합니다.
 

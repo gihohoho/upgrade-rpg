@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke check for the v370 backend route map report."""
+"""Smoke check for the v371 backend route map report."""
 from __future__ import annotations
 
 import subprocess
@@ -13,15 +13,19 @@ ADMIN_API = ROOT / "frontend/vue-app/src/api/adminReadOnlyApi.js"
 RUN_SMOKE = ROOT / "tools/run_smoke_core.sh"
 
 REQUIRED_TEXT = [
-    "Backend Route Map — v370",
-    "회원가입·로그인·계정별 8개 캐릭터 슬롯·관리자 회원관리 로컬 구현 단계",
-    "전체 route 수 | 40",
+    "Backend Route Map — v371",
+    "이메일 인증 가입·아이디 찾기·비밀번호 재설정·계정 삭제",
+    "전체 route 수 | 48",
     "`DELETE` | 1",
-    "`GET` | 20",
-    "`POST` | 19",
+    "`GET` | 21",
+    "`POST` | 26",
     "중복 method/path | 0",
     "GET /api/v1/health",
     "POST /api/v1/auth/register",
+    "POST /api/v1/auth/verify-email",
+    "POST /api/v1/auth/request-password-reset",
+    "GET /api/v1/auth/account-deletion/preview",
+    "POST /api/v1/auth/account-deletion/confirm",
     "GET /api/v1/auth/me",
     "GET /api/v1/account/characters",
     "DELETE /api/v1/account/characters/{account_character_id}",
@@ -32,7 +36,7 @@ REQUIRED_TEXT = [
     "POST /api/v1/admin/master-data/create-apply",
     "POST /api/v1/game/save",
     "query 이름은 `id`",
-    "owner-create-local-account-bootstrap-admin-and-verify-authenticated-multicharacter-flow",
+    "owner-approve-email-validator-install-and-review-v371-migration-source",
 ]
 
 FORBIDDEN_TEXT = [
@@ -82,7 +86,7 @@ def main() -> int:
 
     run_smoke = RUN_SMOKE.read_text(encoding="utf-8")
     if "smoke_backend_route_map_report.py" not in run_smoke:
-        return fail("core smoke should include v370 route map report smoke")
+        return fail("core smoke should include v371 route map report smoke")
 
     print("OK: backend route map report smoke passed")
     return 0

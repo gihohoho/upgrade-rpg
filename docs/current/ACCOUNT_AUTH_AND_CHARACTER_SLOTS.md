@@ -1,11 +1,16 @@
-# 계정 인증·캐릭터 슬롯·회원 관리 — v370
+# 계정 인증·캐릭터 슬롯·회원 관리 — v371
 
 ```txt
-latest: v370.account-auth-character-slots-admin-management-local-ready
-strict result: account-auth-character-slots-admin-management-local-ready
-next safe stage: owner-create-local-account-bootstrap-admin-and-verify-authenticated-multicharacter-flow
+latest: v371.email-verification-recovery-account-deletion-migration-prepared
+strict result: email-verification-recovery-account-deletion-migration-prepared
+next safe stage: owner-approve-email-validator-install-and-review-v371-migration-source
 public Render: backend/static 모두 계속 v351
 ```
+
+v370의 로그인·캐릭터 슬롯·관리자 회원 관리 기반은 그대로 유지합니다. v371은 그 위에
+필수 이메일 인증, 아이디 찾기, 비밀번호 재설정, 이메일 최종 확인을 거친 계정 삭제와
+별도 owner 관리자 1회 bootstrap script를 source-only로 준비합니다. 상세 신규 계약과
+Brevo 개인정보 설정은 `ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md`가 기준입니다.
 
 ## 이번 단계의 목표
 
@@ -24,12 +29,18 @@ public Render: backend/static 모두 계속 v351
 
 ## 데이터 구조
 
-이번 MVP는 새 테이블과 Alembic revision을 만들지 않습니다.
+v370은 새 테이블과 Alembic revision 없이 기존 구조를 사용했습니다. v371은 기존 행을
+거짓 이메일로 채우지 않으면서 신규 가입자의 이메일을 안전하게 관리하기 위해
+`v371_email_identity_lifecycle` revision source를 새로 준비합니다. 아직 어떤 DB에도
+적용하지 않았습니다.
 
-- `users`: 아이디, bcrypt 비밀번호 해시, 활성/정지, 관리자 여부
+- `users`: 아이디, nullable legacy-safe 원본/정규화 이메일, 인증 시각,
+  `authVersion`, bcrypt 비밀번호 해시, 활성/정지, 관리자 여부
 - `user_profiles`: 기존 계정 프로필 1:1 행
 - `user_save_snapshots`: 계정별 캐릭터 슬롯과 전체 게임 저장
 - `admin_change_logs`: 최초 관리자 지정과 회원 활성/정지 감사 기록
+- `user_email_action_tokens`: 인증·비밀번호 재설정·계정 삭제용 일회용 HMAC digest,
+  만료·사용·제한된 전달 상태
 - `characters`: 검신 같은 선택 가능한 **캐릭터 종류 마스터 데이터**이며 계정 슬롯이 아님
 
 한 계정의 슬롯은 DB에서 `character-1`부터 `character-8`까지 고정합니다. 각
@@ -60,20 +71,27 @@ ID가 모두 일치해야만 요청을 허용합니다. 따라서 캐릭터를 �
 ## 인증과 비밀번호
 
 - 회원가입 아이디는 소문자 영문·숫자·밑줄의 4~24자 규칙으로 정규화합니다.
+- 회원가입은 이메일을 필수로 받고 `email-validator 2.3.0`으로 원본 표기와 canonical
+  주소를 분리합니다. 설치 승인 전에는 약한 parser로 폴백하지 않고 이메일 동작을
+  fail-closed로 닫습니다.
 - 비밀번호는 최소 8자, 문자와 숫자를 각각 하나 이상 포함하고 UTF-8 72바이트를
   넘지 않아야 합니다.
 - 비밀번호는 `bcrypt 5.0.0`으로만 해시하며 원문과 해시는 API, 관리자 화면,
   로그, 문서에 반환하지 않습니다.
 - CPU 비용이 큰 bcrypt hash/verify는 FastAPI event loop가 아니라 worker
   thread에서 실행합니다.
-- 로그인 성공 시 기존 `JWT_SECRET_KEY`로 HS256 서명한 24시간 access token을
-  발급합니다. 서버는 알고리즘을 고정하고 서명, 종류, 발급 시각과 만료 시각을
-  검사합니다.
+- 이메일 인증 전에는 access token을 발급하지 않습니다. 인증 뒤 아이디 또는 이메일과
+  비밀번호로 로그인하면 기존 `JWT_SECRET_KEY`로 HS256 서명한 24시간 access token을
+  발급합니다. 서버는 알고리즘을 고정하고 서명, 종류, 발급 시각, 만료 시각과 DB의 현재
+  `authVersion`을 검사합니다.
 - 로그인 유지가 꺼져 있으면 token은 `sessionStorage`, 사용자가 명시적으로 켜면
   `localStorage`에 저장합니다. 로그아웃은 클라이언트 token을 즉시 삭제합니다.
 - 매 인증 요청마다 DB의 계정을 다시 읽으므로 관리자가 계정을 정지하면 이미 발급된
   token도 다음 요청부터 즉시 거절됩니다.
 - 회원가입 요청으로 관리자 권한을 받을 수 없으며 항상 `is_admin=false`입니다.
+- 비밀번호 재설정은 같은 transaction에서 `authVersion`을 증가시켜 기존 access token을
+  전부 무효화합니다. 이메일 작업 원문 token은 DB에 저장하지 않고 별도
+  `EMAIL_TOKEN_SECRET` HMAC-SHA256 digest만 저장합니다.
 
 서버 session/refresh token 테이블은 이번 MVP에 없습니다. 따라서 개별 기기 강제
 로그아웃, token 목록과 원격 폐기, refresh rotation은 아직 제공하지 않습니다.
@@ -86,6 +104,12 @@ ID가 모두 일치해야만 요청을 허용합니다. 따라서 캐릭터를 �
 
 - `POST /api/v1/auth/register`
 - `POST /api/v1/auth/login`
+- `POST /api/v1/auth/verify-email`
+- `POST /api/v1/auth/resend-verification`
+- `POST /api/v1/auth/recover-username`
+- `POST /api/v1/auth/request-password-reset`
+- `POST /api/v1/auth/reset-password`
+- `POST /api/v1/auth/account-deletion/confirm`
 - `GET /api/v1/game/master-data`
 - health 경로
 
@@ -93,6 +117,8 @@ Bearer 로그인이 필요한 경로:
 
 - `GET /api/v1/auth/me`
 - `POST /api/v1/auth/logout`
+- `GET /api/v1/auth/account-deletion/preview`
+- `POST /api/v1/auth/account-deletion/request`
 - `GET /api/v1/account/characters`
 - `POST /api/v1/account/characters`
 - `DELETE /api/v1/account/characters/{account_character_id}`
@@ -125,6 +151,15 @@ Bearer 권한에 더해 기존 dev key를 두 번째 방어선으로 유지하�
 stale 상태, 본인 정지 금지, 마지막 로그인 가능 관리자 정지 금지를 검사한 뒤
 `AdminChangeLog`와 같은 transaction에서 반영합니다. 관리자 API는 비밀번호 해시,
 token, 전체 `snapshot_json`을 반환하지 않습니다.
+
+v371은 JWT secret과 공유하지 않는 `OWNER_ADMIN_USERNAME`, `OWNER_ADMIN_EMAIL`,
+`OWNER_ADMIN_PASSWORD`를 Git 제외 `.env`에서 잠시 읽는 명시적 one-shot script도
+준비합니다. startup에서는 절대 실행하지 않으며 migration head 일치, 관리자 0명,
+enable flag, `--apply`, 현재 Git HEAD와 같은 소문자 40자리 `--approved-sha`, project
+root·tracked script·tracked index/worktree clean과 환경·SHA·identity fingerprint 확인문을
+DB session 생성 전에 요구합니다. 별도 exact-SHA 승인은 계속 필요합니다.
+`.env`에 이메일을 적었다는 사실만으로 인증 처리하지 않으며 성공 직후 enable과
+password를 제거합니다.
 
 ## 서버 기준 저장·브라우저 복구와 캐릭터 전환
 
@@ -181,30 +216,35 @@ token, 전체 `snapshot_json`을 반환하지 않습니다.
 - focus 이동, `Escape`, label, 상태 알림, 좁은 화면 버튼 배치를 함께 검증합니다.
 - 관리자 페이지는 로그인 및 관리자 권한을 확인하기 전 기존 관리 API와 회원 정보를
   요청하지 않습니다.
+- 상단 `접속 캐릭터` 바는 글자·버튼·간격과 터치 영역을 키우고 로그인·캐릭터 선택 뒤
+  현재 구역이 `town`일 때만 표시합니다. 필드·보스·빈 보스 구역과 인증/슬롯 gate에서는
+  숨깁니다.
 
 ## 공개 배포 전 남은 보안 보강
 
-v370은 로컬 구현·검증 단계이며 Render backend와 Static Site에는 배포하지 않습니다.
+v371은 로컬 source·migration 준비 단계이며 Render backend와 Static Site에는 배포하지
+않습니다.
 현재 공개본은 계속 v351입니다. 공개 회원가입을 열기 전 다음 항목을 별도 단계에서
 결정하고 검증해야 합니다.
 
-1. 로그인·회원가입 IP/계정별 rate limit과 반복 실패 지연
-2. 비밀번호 변경·분실 복구와 관리자 안전 복구 절차
-3. 서버측 session/refresh token 또는 현재 단기 access token 정책의 최종 선택
-4. ASGI 계층의 HTTP raw request body 크기 사전 제한
-5. HTTPS 전용 동작, CSP와 XSS 회귀, token 저장 방식 재검토
-6. 이용약관·개인정보 고지와 계정/데이터 삭제 정책
+1. 로그인·가입·인증 재전송·복구·삭제 요청 IP/이메일별 rate limit과 반복 실패 지연
+2. 서버측 session/refresh token 또는 현재 단기 access token 정책의 최종 선택
+3. ASGI 계층의 HTTP raw request body 크기 사전 제한
+4. HTTPS 전용 동작, CSP와 XSS 회귀, token 저장 방식 재검토
+5. 이용약관·개인정보 고지와 계정/데이터 삭제·법적 보존 정책
+6. Brevo sender, anonymous transactional tracking, 1개월 log retention, preview 미저장 검증
 7. 소셜 로그인 도입 시 provider-neutral 연결 테이블과 계정 연결/해제 정책
 8. 다중 기기 동시 접속의 save revision, 충돌 해결과 낙관적 잠금 정책
-9. v370 backend image와 legacy static을 같은 승인 단위로 게시·배포하는 exact-SHA gate
+9. v371 backend image와 legacy static을 같은 승인 단위로 게시·배포하는 exact-SHA gate
 
-새 secret, extension, 별도 외부 서비스와 DB migration은 이번 로컬 구현에 필요하지
-않습니다. 실제 최초 관리자 지정은 기호가 자신의 계정을 직접 만든 뒤 별도 로컬 확인
-단계에서 수행합니다. 비밀번호나 dev key 값은 채팅에 보내지 않습니다.
+v371에는 `email-validator 2.3.0` 설치 승인, 별도 `EMAIL_TOKEN_SECRET`, Brevo 전용
+API key와 발신자, 새 DB migration이 필요합니다. 실제 값은 채팅에 보내지 않습니다.
+dependency/lock, migration apply, Brevo 설정, owner bootstrap, 공개 release는 각각 분리된
+승인 단계로 진행합니다.
 
-## 검증 상태 — 완료
+## 검증 상태
 
-v370 focused/browser/core 최종 검증을 모두 통과했습니다.
+v370 focused/browser/core 최종 검증은 아래와 같이 통과한 과거 baseline입니다.
 
 - backend account auth focused smoke: PASS
 - backend account-admin focused smoke: PASS
@@ -222,6 +262,13 @@ v370 focused/browser/core 최종 검증을 모두 통과했습니다.
   QA PASS, overflow 0, console error 0
 - 최종 reviewer가 확인한 즉시 수정 blocker: 없음
 
-이번 구현 준비 과정에서는 실제 local/Neon DB write, seed, restore, Alembic mutation,
-Render/GHCR 배포를 실행하지 않았습니다. 새 secret, extension, 권한과 설치도 필요하지
-않았습니다. 개발 서버 재시작도 필요하지 않았습니다.
+v371 backend 이메일 lifecycle·owner one-shot·migration source, v370 backend 회귀,
+frontend v371 이메일 계정·v370 character/admin 회귀, Python compileall, JavaScript
+`node --check`, runtime blocking-I/O와 48-operation route map smoke는 PASS입니다.
+실제 Chrome에서 로그인·회원가입·아이디 찾기·비밀번호 재설정 custom modal을 확인했고,
+기본 viewport와 `390×844`에서 mobile `document.scrollWidth=390`, horizontal overflow 0,
+console warn/error 0입니다. 이메일 renderer의 외부 asset 0·escape 구조는 smoke로
+검증했지만 Browser가 `data:` preview를 차단해 실제 메일 클라이언트 시각 QA는 Brevo
+테스트 메일 단계로 남습니다. 전체 core smoke는 PASS했고 독립 리뷰의 즉시 수정 blocker는 0건입니다. 현재까지 실제
+local/Neon DB write, seed, restore, Alembic mutation, Brevo 설정·발송, owner bootstrap,
+Render/GHCR 배포는 실행하지 않았습니다.

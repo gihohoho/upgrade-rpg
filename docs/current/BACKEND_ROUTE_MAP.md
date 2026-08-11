@@ -1,8 +1,8 @@
-# Backend Route Map — v370
+# Backend Route Map — v371
 
 이 문서는 FastAPI route 파일을 정적으로 분석해서 현재 API 목록을 정리한 자동 보고서입니다.
 
-중요: v370은 **회원가입·로그인·계정별 8개 캐릭터 슬롯·관리자 회원관리 로컬 구현 단계**입니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
+중요: v371은 **이메일 인증 가입·아이디 찾기·비밀번호 재설정·계정 삭제와 owner 관리자 one-shot, 수동 migration source 준비 단계**입니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
 
 ## 생성 방식
 
@@ -28,7 +28,7 @@
 
 | 기준 | 값 |
 |---|---:|
-| 전체 route 수 | 40 |
+| 전체 route 수 | 48 |
 | 중복 method/path | 0 |
 
 ### Method별 수
@@ -36,8 +36,8 @@
 | method | count |
 | --- | --- |
 | `DELETE` | 1 |
-| `GET` | 20 |
-| `POST` | 19 |
+| `GET` | 21 |
+| `POST` | 26 |
 
 ### Group별 수
 
@@ -46,7 +46,7 @@
 | `account` | 3 |
 | `account-admin` | 6 |
 | `admin` | 21 |
-| `auth` | 4 |
+| `auth` | 12 |
 | `game` | 4 |
 | `health` | 2 |
 
@@ -62,7 +62,7 @@
 
 ## legacy 계정·관리자 화면에서 사용하는 route
 
-아래 경로는 v370 로그인 gate, 캐릭터 슬롯, 저장 브리지 또는 관리자 회원관리 화면에 연결됩니다. `register`, `login`, `master-data`, health를 제외한 계정·게임 저장·관리자 경로는 실제 Bearer 인증을 요구합니다.
+아래 경로는 v371 이메일 계정 gate, 캐릭터 슬롯, 저장 브리지 또는 관리자 회원관리 화면에 연결됩니다. 이메일 인증·복구 링크처럼 명시적으로 public인 경로를 제외한 계정·게임 저장·관리자 경로는 실제 Bearer 인증을 요구합니다.
 
 | route | group | query/body 힌트 | response type | endpoint |
 | --- | --- | --- | --- | --- |
@@ -75,10 +75,18 @@
 | `GET /api/v1/account/characters` | account | - | account.characters | `list_account_characters` |
 | `POST /api/v1/account/characters` | account | - | account.character.create | `create_account_character` |
 | `DELETE /api/v1/account/characters/{account_character_id}` | account | - | account.character.delete | `delete_account_character` |
+| `POST /api/v1/auth/account-deletion/confirm` | auth | - | auth.account_deletion.confirm | `confirm_account_deletion` |
+| `GET /api/v1/auth/account-deletion/preview` | auth | - | auth.account_deletion.preview | `preview_account_deletion` |
+| `POST /api/v1/auth/account-deletion/request` | auth | - | auth.account_deletion.request | `request_account_deletion` |
 | `POST /api/v1/auth/login` | auth | - | auth.login | `login` |
 | `POST /api/v1/auth/logout` | auth | - | auth.logout | `logout` |
 | `GET /api/v1/auth/me` | auth | - | auth.me | `get_me` |
+| `POST /api/v1/auth/recover-username` | auth | - | auth.recover_username | `recover_username` |
 | `POST /api/v1/auth/register` | auth | - | auth.register | `register` |
+| `POST /api/v1/auth/request-password-reset` | auth | - | auth.request_password_reset | `request_password_reset` |
+| `POST /api/v1/auth/resend-verification` | auth | - | auth.resend_verification | `resend_verification` |
+| `POST /api/v1/auth/reset-password` | auth | - | auth.reset_password | `reset_password` |
+| `POST /api/v1/auth/verify-email` | auth | - | auth.verify_email | `verify_email` |
 | `GET /api/v1/game/load` | game | slotKey, accountCharacterId | game.load | `load_game` |
 | `POST /api/v1/game/save` | game | - | game.save | `save_game` |
 | `GET /api/v1/game/save-slots` | game | - | game.save_slots | `list_save_slots` |
@@ -129,7 +137,7 @@
 
 ## 전체 route map
 
-| method | full path | endpoint | source | response type | v370 판단 |
+| method | full path | endpoint | source | response type | v371 판단 |
 | --- | --- | --- | --- | --- | --- |
 | `POST` | `/api/v1/account-admin/bootstrap` | `bootstrap_first_account_admin` | `backend/app/api/routes/account_admin.py:48` | account_admin.bootstrap | legacy 계정/관리자 화면 사용 중 |
 | `GET` | `/api/v1/account-admin/bootstrap-status` | `get_account_admin_bootstrap_status` | `backend/app/api/routes/account_admin.py:30` | account_admin.bootstrap_status | legacy 계정/관리자 화면 사용 중 |
@@ -161,10 +169,18 @@
 | `GET` | `/api/v1/admin/overview` | `get_admin_readonly_overview` | `backend/app/api/routes/admin_overview_snapshot_routes.py:34` | admin.overview | GET route, 추가 검토 필요 |
 | `GET` | `/api/v1/admin/requirements` | `get_admin_requirements` | `backend/app/api/routes/admin_overview_snapshot_routes.py:25` | admin.requirements | GET route, 추가 검토 필요 |
 | `GET` | `/api/v1/admin/save-snapshots` | `list_admin_save_snapshots` | `backend/app/api/routes/admin_overview_snapshot_routes.py:57` | admin.save_snapshots | GET route, 추가 검토 필요 |
-| `POST` | `/api/v1/auth/login` | `login` | `backend/app/api/routes/auth.py:29` | auth.login | legacy 계정/관리자 화면 사용 중 |
-| `POST` | `/api/v1/auth/logout` | `logout` | `backend/app/api/routes/auth.py:54` | auth.logout | legacy 계정/관리자 화면 사용 중 |
-| `GET` | `/api/v1/auth/me` | `get_me` | `backend/app/api/routes/auth.py:43` | auth.me | legacy 계정/관리자 화면 사용 중 |
-| `POST` | `/api/v1/auth/register` | `register` | `backend/app/api/routes/auth.py:15` | auth.register | legacy 계정/관리자 화면 사용 중 |
+| `POST` | `/api/v1/auth/account-deletion/confirm` | `confirm_account_deletion` | `backend/app/api/routes/auth.py:198` | auth.account_deletion.confirm | legacy 계정/관리자 화면 사용 중 |
+| `GET` | `/api/v1/auth/account-deletion/preview` | `preview_account_deletion` | `backend/app/api/routes/auth.py:158` | auth.account_deletion.preview | legacy 계정/관리자 화면 사용 중 |
+| `POST` | `/api/v1/auth/account-deletion/request` | `request_account_deletion` | `backend/app/api/routes/auth.py:179` | auth.account_deletion.request | legacy 계정/관리자 화면 사용 중 |
+| `POST` | `/api/v1/auth/login` | `login` | `backend/app/api/routes/auth.py:46` | auth.login | legacy 계정/관리자 화면 사용 중 |
+| `POST` | `/api/v1/auth/logout` | `logout` | `backend/app/api/routes/auth.py:141` | auth.logout | legacy 계정/관리자 화면 사용 중 |
+| `GET` | `/api/v1/auth/me` | `get_me` | `backend/app/api/routes/auth.py:130` | auth.me | legacy 계정/관리자 화면 사용 중 |
+| `POST` | `/api/v1/auth/recover-username` | `recover_username` | `backend/app/api/routes/auth.py:88` | auth.recover_username | legacy 계정/관리자 화면 사용 중 |
+| `POST` | `/api/v1/auth/register` | `register` | `backend/app/api/routes/auth.py:32` | auth.register | legacy 계정/관리자 화면 사용 중 |
+| `POST` | `/api/v1/auth/request-password-reset` | `request_password_reset` | `backend/app/api/routes/auth.py:102` | auth.request_password_reset | legacy 계정/관리자 화면 사용 중 |
+| `POST` | `/api/v1/auth/resend-verification` | `resend_verification` | `backend/app/api/routes/auth.py:74` | auth.resend_verification | legacy 계정/관리자 화면 사용 중 |
+| `POST` | `/api/v1/auth/reset-password` | `reset_password` | `backend/app/api/routes/auth.py:116` | auth.reset_password | legacy 계정/관리자 화면 사용 중 |
+| `POST` | `/api/v1/auth/verify-email` | `verify_email` | `backend/app/api/routes/auth.py:60` | auth.verify_email | legacy 계정/관리자 화면 사용 중 |
 | `GET` | `/api/v1/game/load` | `load_game` | `backend/app/api/routes/game.py:44` | game.load | legacy 계정/관리자 화면 사용 중 |
 | `GET` | `/api/v1/game/master-data` | `get_master_data` | `backend/app/api/routes/game.py:14` | game.master_data | Vue read-only 후보 |
 | `POST` | `/api/v1/game/save` | `save_game` | `backend/app/api/routes/game.py:103` | game.save | legacy 계정/관리자 화면 사용 중 |
@@ -174,14 +190,14 @@
 
 ## 다음 추천 단계
 
-`next safe stage: owner-create-local-account-bootstrap-admin-and-verify-authenticated-multicharacter-flow`
+`next safe stage: owner-approve-email-validator-install-and-review-v371-migration-source`
 
-로컬 v370 검증 뒤 기호가 직접 일반 계정을 만들고, 별도 dev key를 브라우저나 채팅에 노출하지 않는 방식으로 최초 관리자 1회를 지정합니다.
+v371 source 검증 뒤에도 dependency 설치, v371 migration apply, Brevo 설정, owner bootstrap apply는 각각 별도 경계로 남습니다.
 
 권장 범위:
 
-1. 로컬 회원가입·로그인과 계정 A/B 저장 격리를 확인합니다.
-2. 최초 관리자 지정과 회원 정지 Preview/Apply 감사 로그를 확인합니다.
-3. rate limit, 비밀번호 변경·복구, 서버측 세션 정책을 공개 배포 전에 보강합니다.
-4. v370 backend image와 legacy static을 같은 승인 단위로 게시·배포합니다.
-5. OAuth 소셜 로그인은 별도 계정 연결 정책이 정해질 때 추가합니다.
+1. `email-validator==2.3.0` 설치와 Linux lock 갱신을 기호 승인 뒤 수행합니다.
+2. v371 migration source와 isolated roundtrip 계획을 검토하고 exact SHA 승인 전에는 실제 DB에 적용하지 않습니다.
+3. Brevo sender/API key와 Render secret은 공급자 설정 승인 단계에서만 구성합니다.
+4. 공개 전 rate limit, raw body cap, 세션 폐기, save revision/CAS와 CSP·개인정보 정책을 보강합니다.
+5. backend image와 legacy static은 이메일 backend가 준비된 뒤 같은 exact-SHA 승인 단위로 게시·배포합니다.

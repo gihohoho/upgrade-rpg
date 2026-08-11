@@ -1442,6 +1442,9 @@ function updateFullUI() {
 	}
 
 	renderTownHub();
+	if (window.RpgAccountGate && typeof window.RpgAccountGate.syncAccountBarTownVisibility === "function") {
+		window.RpgAccountGate.syncAccountBarTownVisibility(currentZoneType);
+	}
 	updateGoldUI();
 	updateCombatUI();
 

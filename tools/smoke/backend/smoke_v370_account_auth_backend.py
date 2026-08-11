@@ -38,8 +38,8 @@ from app.schemas.account import (  # noqa: E402
     AccountCharacterCreateRequest,
     AccountCharacterGameSaveRequest,
 )
-from app.models import User, UserProfile  # noqa: E402
-from app.schemas.auth import LoginRequest, RegisterRequest  # noqa: E402
+from app.models import User, UserEmailActionToken, UserProfile  # noqa: E402
+from app.schemas.auth import LoginRequest, NormalizedEmail, RegisterRequest  # noqa: E402
 from app.services.account_character_service import (  # noqa: E402
     ACCOUNT_CHARACTER_SUMMARY_KEY,
     AccountCharacterService,
@@ -49,6 +49,7 @@ from app.services.account_character_service import (  # noqa: E402
 )
 from app.services.game_service import GameService, SAVE_SNAPSHOT_MAX_SIZE_BYTES  # noqa: E402
 from app.services.auth_service import AuthService  # noqa: E402
+from app.services.auth_email_delivery import EmailDeliveryResult  # noqa: E402
 from app.main import create_app  # noqa: E402
 from app.db.session import engine  # noqa: E402
 
@@ -132,6 +133,30 @@ class AuthFakeSession:
         return self.get_user
 
 
+class AuthFakeDelivery:
+    def __init__(self) -> None:
+        self.calls = []
+
+    async def send(self, **kwargs):  # type: ignore[no-untyped-def]
+        self.calls.append(dict(kwargs))
+        return EmailDeliveryResult(provider="brevo", message_id="v370-compat-message")
+
+
+def auth_service(delivery: AuthFakeDelivery | None = None) -> AuthService:
+    return AuthService(
+        email_delivery=delivery or AuthFakeDelivery(),
+        email_normalizer=lambda value: NormalizedEmail(
+            original=str(value).strip(),
+            canonical=str(value).strip().casefold(),
+        ),
+        token_secret="e" * 40,
+        token_factory=lambda: "T" * 43,
+        now_factory=lambda: datetime(2026, 8, 10, tzinfo=UTC),
+        provider_ready=True,
+        public_frontend_origin="https://game.example.com",
+    )
+
+
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise AssertionError(message)
@@ -148,20 +173,36 @@ def expect_validation_error(factory, message: str) -> None:  # type: ignore[no-u
 def test_password_and_token() -> None:
     request = RegisterRequest(
         username="PLAYER_01",
+        email="player01@example.com",
         password="account123",
         passwordConfirm="account123",
     )
     require(request.username == "player_01", "username must normalize to lowercase")
     expect_validation_error(
-        lambda: RegisterRequest(username="abc", password="account123", passwordConfirm="account123"),
+        lambda: RegisterRequest(
+            username="abc",
+            email="player01@example.com",
+            password="account123",
+            passwordConfirm="account123",
+        ),
         "short username was accepted",
     )
     expect_validation_error(
-        lambda: RegisterRequest(username="player02", password="onlyletters", passwordConfirm="onlyletters"),
+        lambda: RegisterRequest(
+            username="player02",
+            email="player02@example.com",
+            password="onlyletters",
+            passwordConfirm="onlyletters",
+        ),
         "password without a number was accepted",
     )
     expect_validation_error(
-        lambda: RegisterRequest(username="player02", password="숫자1234" * 10, passwordConfirm="숫자1234" * 10),
+        lambda: RegisterRequest(
+            username="player02",
+            email="player02@example.com",
+            password="숫자1234" * 10,
+            passwordConfirm="숫자1234" * 10,
+        ),
         "password exceeding 72 UTF-8 bytes was accepted",
     )
 
@@ -171,9 +212,15 @@ def test_password_and_token() -> None:
     require(not verify_password("account124", password_hash), "wrong password was accepted")
 
     now = datetime(2026, 8, 10, tzinfo=UTC)
-    token, ttl_seconds = create_access_token(17, now=now, nonce="focused-smoke")
+    token, ttl_seconds = create_access_token(
+        17,
+        auth_version=3,
+        now=now,
+        nonce="focused-smoke",
+    )
     claims = decode_access_token(token, now=now + timedelta(seconds=1))
     require(claims["userId"] == 17, "token subject did not round-trip")
+    require(claims["authVersion"] == 3, "token authVersion did not round-trip")
     require(claims["nonce"] == "focused-smoke", "token nonce did not round-trip")
 
     header, payload, signature = token.split(".")
@@ -221,6 +268,7 @@ def test_auth_validation_secrets_are_not_reflected() -> None:
             f"{settings.api_prefix}/auth/register",
             json={
                 "username": "player_01",
+                "email": "player01@example.com",
                 "password": weak_secret,
                 "passwordConfirm": weak_secret,
             },
@@ -234,6 +282,7 @@ def test_auth_validation_secrets_are_not_reflected() -> None:
             f"{settings.api_prefix}/auth/register",
             json={
                 "username": "player_01",
+                "email": "player01@example.com",
                 "password": password,
                 "passwordConfirm": password_confirm,
             },
@@ -245,7 +294,10 @@ def test_auth_validation_secrets_are_not_reflected() -> None:
         malformed_secret = "malformedSecret123"
         malformed_response = client.post(
             f"{settings.api_prefix}/auth/register",
-            content=f'{{"username":"player_01","password":"{malformed_secret}"',
+            content=(
+                f'{{"username":"player_01","email":"player01@example.com",'
+                f'"password":"{malformed_secret}"'
+            ),
             headers={"Content-Type": "application/json"},
         )
         require(malformed_response.status_code == 422, "malformed auth JSON must return HTTP 422")
@@ -254,7 +306,7 @@ def test_auth_validation_secrets_are_not_reflected() -> None:
         long_password = "v370LongSecret1" * 8
         login_response = client.post(
             f"{settings.api_prefix}/auth/login",
-            json={"username": "player_01", "password": long_password},
+            json={"identifier": "player_01", "password": long_password},
         )
         require(login_response.status_code == 422, "overlong login password must return HTTP 422")
         require(long_password not in login_response.text, "login password was reflected in HTTP 422")
@@ -264,21 +316,31 @@ def test_auth_validation_secrets_are_not_reflected() -> None:
             f"{settings.api_prefix}/auth/register",
             json={
                 "username": invalid_username,
+                "email": "player01@example.com",
                 "password": "v370Valid123",
                 "passwordConfirm": "v370Valid123",
             },
         )
         require(username_response.status_code == 422, "invalid username must return HTTP 422")
-        require(invalid_username in username_response.text, "safe non-password validation input was removed")
+        require(invalid_username not in username_response.text, "auth username input was reflected")
+        require(
+            all(
+                set(error) == {"loc", "type", "msg"}
+                for error in username_response.json()["detail"]
+            ),
+            "auth 422 detail must contain exactly loc/type/msg",
+        )
 
     require(engine.echo is False, "SQLAlchemy echo must stay disabled")
     require(engine.sync_engine.hide_parameters is True, "SQLAlchemy bind parameters must stay hidden")
 
 
 async def test_auth_service_and_current_user() -> None:
-    service = AuthService()
+    delivery = AuthFakeDelivery()
+    service = auth_service(delivery)
     register_payload = RegisterRequest(
         username="PLAYER_10",
+        email="Player10@example.com",
         password="account123",
         passwordConfirm="account123",
     )
@@ -286,16 +348,23 @@ async def test_auth_service_and_current_user() -> None:
     registered = await service.register(register_session, register_payload)
     added_user = next(value for value in register_session.added if isinstance(value, User))
     added_profile = next(value for value in register_session.added if isinstance(value, UserProfile))
-    require(registered["status"] == "registered", "registration status changed")
+    added_email_token = next(
+        value for value in register_session.added if isinstance(value, UserEmailActionToken)
+    )
+    require(registered["status"] == "verification_required", "registration status changed")
     require(registered["user"]["username"] == "player_10", "registered username was not normalized")
     require(registered["user"]["isAdmin"] is False, "self registration unexpectedly granted admin")
+    require(registered["user"]["emailVerified"] is False, "registration self-verified email")
+    require("accessToken" not in registered, "unverified registration received an access token")
     require(added_user.password_hash != "account123", "registration stored a plaintext password")
     require(verify_password("account123", added_user.password_hash or ""), "registered password hash is invalid")
     require(added_profile.user_id == added_user.id == 101, "registration did not create the matching profile")
-    require(register_session.commit_calls == 1, "registration did not commit exactly once")
-    require(isinstance(registered["accessToken"], str) and registered["accessToken"], "registration token missing")
+    require(added_email_token.token_digest != "T" * 43, "raw email token was persisted")
+    require(added_email_token.delivery_status == "sent", "verification delivery state missing")
+    require(register_session.commit_calls == 2, "registration/delivery state did not commit twice")
+    require(len(delivery.calls) == 1, "verification email was not sent exactly once")
 
-    duplicate_session = AuthFakeSession([[101]])
+    duplicate_session = AuthFakeSession([[], [101]])
     try:
         await service.register(duplicate_session, register_payload)
     except HTTPException as exc:
@@ -307,19 +376,27 @@ async def test_auth_service_and_current_user() -> None:
     active_user = User(
         id=22,
         username="player_22",
+        email_original="Player22@example.com",
+        email_canonical="player22@example.com",
+        email_verified_at=datetime(2026, 8, 10, tzinfo=UTC),
         password_hash=added_user.password_hash,
+        auth_version=4,
         is_active=True,
         is_admin=False,
     )
-    login_payload = LoginRequest(username="PLAYER_22", password="account123")
+    login_payload = LoginRequest(identifier="PLAYER_22", password="account123")
     logged_in = await service.login(AuthFakeSession([[active_user]]), login_payload)
     require(logged_in["status"] == "authenticated", "valid login failed")
     require(logged_in["user"]["id"] == 22, "login returned the wrong user")
+    require(
+        decode_access_token(logged_in["accessToken"])["authVersion"] == 4,
+        "login token omitted authVersion",
+    )
 
     wrong_errors: list[HTTPException] = []
     for session, payload in (
-        (AuthFakeSession([[active_user]]), LoginRequest(username="player_22", password="account124")),
-        (AuthFakeSession([[]]), LoginRequest(username="missing_22", password="account124")),
+        (AuthFakeSession([[active_user]]), LoginRequest(identifier="player_22", password="account124")),
+        (AuthFakeSession([[]]), LoginRequest(identifier="missing_22", password="account124")),
     ):
         try:
             await service.login(session, payload)
@@ -333,30 +410,76 @@ async def test_auth_service_and_current_user() -> None:
     inactive_user = User(
         id=23,
         username="player_23",
+        email_original="Player23@example.com",
+        email_canonical="player23@example.com",
+        email_verified_at=datetime(2026, 8, 10, tzinfo=UTC),
         password_hash=added_user.password_hash,
+        auth_version=1,
         is_active=False,
         is_admin=False,
     )
     try:
         await service.login(
             AuthFakeSession([[inactive_user]]),
-            LoginRequest(username="player_23", password="account123"),
+            LoginRequest(identifier="player_23", password="account123"),
         )
     except HTTPException as exc:
         require(exc.status_code == 403, "inactive login must return 403")
     else:
         raise AssertionError("inactive user logged in")
 
-    token, _ttl = create_access_token(active_user.id)
+    unverified_user = User(
+        id=24,
+        username="player_24",
+        email_original="Player24@example.com",
+        email_canonical="player24@example.com",
+        email_verified_at=None,
+        password_hash=added_user.password_hash,
+        auth_version=0,
+        is_active=True,
+        is_admin=False,
+    )
+    try:
+        await service.login(
+            AuthFakeSession([[unverified_user]]),
+            LoginRequest(identifier="player_24", password="account123"),
+        )
+    except HTTPException as exc:
+        require(exc.status_code == 403, "unverified login must return 403")
+        require(exc.detail["code"] == "email_verification_required", "unverified code missing")
+    else:
+        raise AssertionError("unverified user logged in")
+
+    token, _ttl = create_access_token(
+        active_user.id,
+        auth_version=int(active_user.auth_version or 0),
+    )
     current = await get_current_user(
         authorization=f"Bearer {token}",
         session=AuthFakeSession(get_user=active_user),
     )
-    require(current == CurrentUser(id=22, username="player_22", is_admin=False), "current user DB reload changed")
+    require(
+        current
+        == CurrentUser(
+            id=22,
+            username="player_22",
+            email="Player22@example.com",
+            email_verified=True,
+            auth_version=4,
+            is_admin=False,
+        ),
+        "current user DB reload changed",
+    )
 
     try:
         await get_current_user(
-            authorization=f"Bearer {token}",
+            authorization=(
+                "Bearer "
+                + create_access_token(
+                    inactive_user.id,
+                    auth_version=int(inactive_user.auth_version or 0),
+                )[0]
+            ),
             session=AuthFakeSession(get_user=inactive_user),
         )
     except HTTPException as exc:

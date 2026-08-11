@@ -1,8 +1,11 @@
-# Current Documents — v362
+# Current Documents — v371
 
 현재 판단은 이 폴더와 루트 `AGENTS.md`를 우선합니다.
 
 - `CURRENT_STATUS.md`: 현재 완료 상태와 금지 경계
+- `ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md`: v371 필수 이메일 인증,
+  아이디·비밀번호 복구, 계정 삭제, Brevo와 owner bootstrap 분리 승인 계약
+- `ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md`: v370 계정별 8슬롯 기반과 v371 이메일 계정 확장
 - `EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`: 1~12단계 장비 공식 감사와 12단계 이후 스킬 피해 공식
 - `SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md`: AI 특수장비 아이콘의 생성 조건·계열별 프롬프트·23개 파일 매핑
 - `RENDER_SERVICE_SETTINGS_PLAN.md`: Render Existing Image Web Service 생성 직전 설정과 차단 gate
@@ -14,7 +17,7 @@
 - `SECURITY_ROTATION_AND_GITHUB_GATES.md`: secret·credential·reviewer 경계
 - `ROADMAP.md`, `NEXT_STEPS.md`: 다음 진행 순서
 - `PROJECT_STRUCTURE.md`: 현재 폴더 구조
-- `POSTGRES_*`: 현재 운영·복구·migration 판단과 runbook
+- `POSTGRES_*`: v295 applied DB baseline, v371 local source head와 운영·복구·migration runbook
 - `BACKEND_*`, `VUE_*`, `LEGACY_*`, `LOCAL_*`: 현재 코드 구조와 개발 경계
 
 완료된 과거 단계는 `../archive/`, 실행 가이드는 `../guides/`, 계약은 `../contracts/`, 배포 증거 JSON은 `../../deploy/review/`에 있습니다.

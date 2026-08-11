@@ -11,14 +11,34 @@ from starlette.responses import JSONResponse
 
 from app.api.router import api_router
 from app.core.config import settings
+from app.core.response import error_response
 from app.db.session import engine
+from app.services.auth_service import AuthFlowHTTPException
 
 
-SENSITIVE_VALIDATION_FIELDS = frozenset({"password", "passwordconfirm", "password_confirm"})
+SENSITIVE_VALIDATION_FIELDS = frozenset(
+    {
+        "password",
+        "passwordconfirm",
+        "password_confirm",
+        "newpassword",
+        "new_password",
+        "token",
+        "email",
+        "identifier",
+    }
+)
 AUTH_VALIDATION_PATHS = frozenset(
     {
         f"{settings.api_prefix.rstrip('/')}/auth/login",
         f"{settings.api_prefix.rstrip('/')}/auth/register",
+        f"{settings.api_prefix.rstrip('/')}/auth/verify-email",
+        f"{settings.api_prefix.rstrip('/')}/auth/resend-verification",
+        f"{settings.api_prefix.rstrip('/')}/auth/recover-username",
+        f"{settings.api_prefix.rstrip('/')}/auth/request-password-reset",
+        f"{settings.api_prefix.rstrip('/')}/auth/reset-password",
+        f"{settings.api_prefix.rstrip('/')}/auth/account-deletion/request",
+        f"{settings.api_prefix.rstrip('/')}/auth/account-deletion/confirm",
     }
 )
 
@@ -27,9 +47,19 @@ def sanitize_request_validation_errors(
     request: Request,
     errors: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    """Remove password-bearing validation input while preserving safe error detail."""
+    """Return loc/type/msg only for auth, otherwise remove sensitive input values."""
     request_path = request.url.path.rstrip("/")
     is_auth_request = request_path in AUTH_VALIDATION_PATHS
+    if is_auth_request:
+        return [
+            {
+                "loc": error.get("loc", ()),
+                "type": str(error.get("type") or "value_error"),
+                "msg": str(error.get("msg") or "요청 값이 올바르지 않습니다."),
+            }
+            for error in errors
+        ]
+
     sanitized_errors: list[dict[str, Any]] = []
 
     for error in errors:
@@ -40,12 +70,7 @@ def sanitize_request_validation_errors(
             if isinstance(part, str)
         }
         contains_sensitive_field = bool(location & SENSITIVE_VALIDATION_FIELDS)
-        input_value = sanitized.get("input")
-        contains_auth_body = is_auth_request and (
-            isinstance(input_value, dict | list)
-            or location == {"body"}
-        )
-        if contains_sensitive_field or contains_auth_body:
+        if contains_sensitive_field:
             sanitized.pop("input", None)
         sanitized_errors.append(sanitized)
 
@@ -61,6 +86,27 @@ async def request_validation_error_handler(
     return JSONResponse(
         status_code=422,
         content={"detail": jsonable_encoder(errors)},
+    )
+
+
+async def auth_flow_error_handler(
+    _request: Request,
+    exc: AuthFlowHTTPException,
+) -> JSONResponse:
+    detail = exc.detail if isinstance(exc.detail, dict) else {}
+    code = str(detail.get("code") or "auth_request_failed")[:80]
+    message = str(detail.get("message") or "계정 요청을 처리하지 못했습니다.")[:300]
+    return JSONResponse(
+        status_code=int(exc.status_code),
+        headers=exc.headers,
+        content=error_response(
+            type="auth.error",
+            code=code,
+            message=message,
+            payload={"status": "error", "code": code},
+            data={"status": "error"},
+            meta={"sensitiveInputReturned": False},
+        ),
     )
 
 
@@ -81,6 +127,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     app.add_exception_handler(RequestValidationError, request_validation_error_handler)
+    app.add_exception_handler(AuthFlowHTTPException, auth_flow_error_handler)
 
     # Large read-only master-data snapshots benefit from transport compression.
     # Register GZip first so the subsequently registered CORS middleware remains

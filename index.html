@@ -2,10 +2,11 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
+    <meta name="referrer" content="no-referrer" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>강화RPG v0.22 (특수보스 & 장비슬롯 개편)</title>
     <link rel="stylesheet" href="src/styles/style.css?v=362" />
-    <link rel="stylesheet" href="src/styles/account.css?v=370" />
+    <link rel="stylesheet" href="src/styles/account.css?v=371" />
   </head>
   <body class="account-gate-active">
     <div id="account-gate" class="account-gate" data-view="loading">
@@ -23,7 +24,7 @@
     <div id="tooltip"></div>
 
     <div id="game-root" class="game-wrapper" data-account-locked="true" aria-hidden="true" inert>
-      <div id="game-account-bar" class="game-account-bar" hidden>
+      <div id="game-account-bar" class="game-account-bar" aria-hidden="true" hidden inert>
         <div class="game-account-identity">
           <span class="game-account-label">접속 캐릭터</span>
           <strong id="game-account-character">-</strong>
@@ -895,8 +896,8 @@
       state -> data -> systems -> ui -> app 순서로 유지해야 합니다.
     -->
     <script src="src/api/runtime-config.js"></script>
-	<script src="src/api/auth-session.js?v=370"></script>
-	<script src="src/api/game-api-client.js?v=370"></script>
+	<script src="src/api/auth-session.js?v=371"></script>
+	<script src="src/api/game-api-client.js?v=371"></script>
     <script src="src/api/save-data-bridge.js?v=370"></script>
     <script src="src/api/save-data-slots.js?v=370"></script>
     <script src="src/api/admin-readonly-overview.js?v=370"></script>
@@ -918,11 +919,11 @@
     <script src="src/data/boss-bootstrap.js"></script>
     <script src="src/data/zones.js?v=360"></script>
     <script src="src/systems/stat-system.js?v=360"></script>
-    <script src="src/ui/render-ui.js?v=369"></script>
+    <script src="src/ui/render-ui.js?v=371"></script>
     <script src="src/systems/action-result-system.js?v=360"></script>
     <script src="src/systems/item-system.js?v=363"></script>
     <script src="src/systems/combat-system.js?v=370"></script>
-    <script src="src/ui/account-gate.js?v=370"></script>
+    <script src="src/ui/account-gate.js?v=371"></script>
     <script src="src/app/main.js?v=370"></script>
     <script src="src/api/master-data-runtime-switch.js?v=369"></script>
     <script src="src/api/master-data-runtime-validator.js"></script>

@@ -192,6 +192,82 @@
 		});
 	}
 
+	async function verifyAccountEmail(payload, options) {
+		const opts = options || {};
+		return request("/auth/verify-email", {
+			method: "POST",
+			body: payload || {},
+			timeoutMs: opts.timeoutMs,
+			auth: false,
+		});
+	}
+
+	async function resendAccountVerification(payload, options) {
+		const opts = options || {};
+		return request("/auth/resend-verification", {
+			method: "POST",
+			body: payload || {},
+			timeoutMs: opts.timeoutMs,
+			auth: false,
+		});
+	}
+
+	async function recoverAccountUsername(payload, options) {
+		const opts = options || {};
+		return request("/auth/recover-username", {
+			method: "POST",
+			body: payload || {},
+			timeoutMs: opts.timeoutMs,
+			auth: false,
+		});
+	}
+
+	async function requestAccountPasswordReset(payload, options) {
+		const opts = options || {};
+		return request("/auth/request-password-reset", {
+			method: "POST",
+			body: payload || {},
+			timeoutMs: opts.timeoutMs,
+			auth: false,
+		});
+	}
+
+	async function resetAccountPassword(payload, options) {
+		const opts = options || {};
+		return request("/auth/reset-password", {
+			method: "POST",
+			body: payload || {},
+			timeoutMs: opts.timeoutMs,
+			auth: false,
+		});
+	}
+
+	async function requestAccountDeletion(payload, options) {
+		const opts = options || {};
+		return request("/auth/account-deletion/request", {
+			method: "POST",
+			body: payload || {},
+			timeoutMs: opts.timeoutMs,
+		});
+	}
+
+	async function previewAccountDeletion(options) {
+		const opts = options || {};
+		return request("/auth/account-deletion/preview", {
+			timeoutMs: opts.timeoutMs,
+		});
+	}
+
+	async function confirmAccountDeletion(payload, options) {
+		const opts = options || {};
+		return request("/auth/account-deletion/confirm", {
+			method: "POST",
+			body: payload || {},
+			timeoutMs: opts.timeoutMs,
+			auth: false,
+		});
+	}
+
 	async function listAccountCharacters(options) {
 		const opts = options || {};
 		return request("/account/characters", { timeoutMs: opts.timeoutMs });
@@ -611,6 +687,14 @@
 		loginAccount,
 		fetchCurrentAccount,
 		logoutAccount,
+		verifyAccountEmail,
+		resendAccountVerification,
+		recoverAccountUsername,
+		requestAccountPasswordReset,
+		resetAccountPassword,
+		previewAccountDeletion,
+		requestAccountDeletion,
+		confirmAccountDeletion,
 		listAccountCharacters,
 		createAccountCharacter,
 		deleteAccountCharacter,

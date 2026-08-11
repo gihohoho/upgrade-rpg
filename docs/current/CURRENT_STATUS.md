@@ -1,11 +1,11 @@
-# Current Status — v370
+# Current Status — v371
 
 ## 현재 결과
 
 ```txt
-latest: v370.account-auth-character-slots-admin-management-local-ready
-strict result: account-auth-character-slots-admin-management-local-ready
-next safe stage: owner-create-local-account-bootstrap-admin-and-verify-authenticated-multicharacter-flow
+latest: v371.email-verification-recovery-account-deletion-migration-prepared
+strict result: email-verification-recovery-account-deletion-migration-prepared
+next safe stage: owner-approve-email-validator-install-and-review-v371-migration-source
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -50,6 +50,8 @@ Render public preview deployment ready/approved/executed: yes/yes/yes
 - v345 read-only completion guard와 focused smoke 준비 완료
 - asyncpg system-CA와 PostgreSQL 16/libpq exported-Windows-system-CA `verify-full` read-only preflight 통과
 - 최종 public tables/total rows: 23/749 / current revision: v295_initial_schema
+- v371 local source graph head: `v371_email_identity_lifecycle` / local·Neon DB current:
+  `v295_initial_schema` / v371 apply·stamp 0회
 - application UTC-canonical schema/data digest 불변 / Render service mutation 없음
 
 ## 로컬 리뷰 도구 체크포인트 — 2026-07-26
@@ -85,9 +87,11 @@ Render 무료 app은 15분 유휴 뒤 잠들고 첫 요청에서 약 1분의 col
 
 ## 아직 남은 것
 
-- 기호가 로컬에서 자신의 계정을 직접 만들고 최초 관리자 bootstrap과 두 캐릭터 이상의 저장 격리 확인
-- 공개 회원가입 전 rate limit, 비밀번호 변경·복구, 서버측 session/refresh·원격 폐기, ASGI raw body cap, 다중 기기 revision 충돌 정책, HTTPS/CSP/XSS와 개인정보·삭제 정책 보강
-- v370 backend image와 legacy static을 같은 exact-SHA 승인 단위로 준비
+- `email-validator 2.3.0` 설치·lock 갱신 승인과 v371 migration source 검토
+- exact migration apply, Brevo sender/API key/secret, 테스트 메일, owner bootstrap을 서로 다른 승인 단계로 실행
+- owner 이메일 인증 뒤 두 캐릭터 이상의 저장 격리 확인
+- 공개 회원가입 전 rate limit, 만료된 미인증 계정의 안전한 정리·메일 소유자 회수, 서버측 session/refresh·원격 폐기, ASGI raw body cap, 다중 기기 revision 충돌 정책, HTTPS/CSP/XSS와 개인정보·삭제·법적 보존 정책 보강
+- v371 backend image와 legacy static을 같은 exact-SHA 승인 단위로 준비
 - 기존 Static Site와 exact source를 고정하는 v358 static-only fail-closed 계약/checker 준비
 - gate 준비 commit의 exact SHA 승인 시 기존 Render Static Site 수동 deploy 1회
 - 공개 게임에서 12단계 `607%`, 16단계 `2121%`와 13+ 증가 공식 read-only 확인
@@ -180,16 +184,62 @@ Neon DB/schema/data 초기화, Render backend public preview, frontend Static Si
 
 ## 다음 단계
 
-v370 로컬 source에서 회원가입·로그인, 계정별 캐릭터 슬롯 8개, 캐릭터별 저장 격리와
-관리자 회원 관리를 준비하고 focused/browser/core 최종 검증까지 완료했습니다. 다음은 기호가
-로컬 `http://127.0.0.1:5500/index.html`에서 자신의 계정을 직접 만들고 최초 관리자
-bootstrap과 두 캐릭터 이상의 저장 격리를 확인하는 단계로 진행합니다. 비밀번호와 dev
-key는 채팅에 보내지 않습니다. 기존 Render backend와 Static Site의 공개본은 계속
-v351이며 v370을 배포하지 않습니다.
+v371 로컬 source는 필수 이메일 인증, 아이디 찾기, 비밀번호 재설정, 이메일 최종 확인을
+거친 일반 회원 계정 삭제, 관리자 이메일 상태와 마을 전용 `접속 캐릭터` UI를 준비합니다.
+새 Alembic revision은 source-only이며 적용하지 않았고, `email-validator 2.3.0` 설치와
+Linux lock 갱신은 기호 승인 대기 중입니다. 다음 안전 단계는 dependency 설치 승인과
+v371 migration source 검토입니다. migration apply, Brevo 설정, owner bootstrap과 공개
+release는 이후 각각 별도 승인합니다. 기존 Render backend와 Static Site는 계속 v351입니다.
+
+## 이메일 인증·계정 복구·계정 삭제 — v371 source/migration 준비
+
+- 가입은 아이디·필수 이메일·비밀번호를 받고 이메일 링크 인증 전에는 access token과
+  게임 접속을 허용하지 않습니다. 로그인은 아이디 또는 이메일을 사용합니다.
+- 아이디 찾기·인증 재전송·비밀번호 재설정 요청은 계정 존재 여부와 실제 메일 발송 여부를
+  같은 `202` 응답으로 숨깁니다. 비밀번호 재설정은 `authVersion`을 증가시켜 기존 access
+  token을 전부 무효화합니다.
+- `v371_email_identity_lifecycle` revision source는 `users`의 nullable legacy-safe
+  이메일/인증/`authVersion` 열과 `user_email_action_tokens`를 준비합니다. 기존 계정에
+  fake email을 backfill하거나 자동 인증하지 않습니다.
+- 이메일 action 원문 token은 CSPRNG로 만들고 DB에는 별도 `EMAIL_TOKEN_SECRET`
+  HMAC-SHA256 digest만 보관합니다. 고정 `PUBLIC_FRONTEND_ORIGIN` fragment 링크만 사용하고
+  프런트가 읽은 즉시 history에서 제거합니다.
+- 일반 회원 계정 삭제는 범위 preview → 현재 비밀번호 → 이메일 링크 → 게임 모달의
+  `계정 삭제` 문구 순서입니다. 관리자·감사 기록 연결 계정은 fail-closed입니다.
+- Render Free의 SMTP 포트 제한 때문에 Brevo Free HTTPS API를 선택했습니다. 실제 발송
+  전에 anonymous transactional tracking, log retention 1개월, email preview 미저장과
+  account-wide API key 분리·만료·회전 정책을 확인합니다.
+- owner 관리자는 JWT secret과 공유하지 않는 Git 제외 `OWNER_ADMIN_*` 값을 사용하는
+  explicit one-shot script로만 준비합니다. startup 자동 mutation은 없고 migration head,
+  관리자 0명, enable, `--apply`, 현재 Git HEAD와 같은 소문자 40자리 `--approved-sha`,
+  project root·tracked script·tracked index/worktree clean, 환경·SHA·identity fingerprint
+  확인문을 DB session 생성 전에 검사합니다. 별도 exact-SHA 승인은 계속 필요합니다.
+  입력 이메일은 자동 인증하지 않고 성공 직후 plaintext password를 `.env`에서 제거합니다.
+- 상단 `접속 캐릭터` 바는 글자·이름·버튼·간격과 터치 영역을 키우고 현재 구역이
+  `town`일 때만 표시하도록 준비합니다. field/boss/`boss_empty`와 인증·슬롯 gate에서는
+  숨깁니다.
+- 실제 local/Neon DB write·migration, Brevo account/sender/API key·secret·메일,
+  owner bootstrap, GHCR 게시, Render env·서비스·deploy는 모두 0회입니다.
+- v371 backend 이메일 lifecycle·owner one-shot·migration source, v370 backend 회귀,
+  frontend v371 이메일 계정·v370 character/admin 회귀, Python compileall, JavaScript
+  syntax, runtime blocking-I/O와 route map 48 operations(`GET 21 / POST 26 / DELETE 1`,
+  duplicate 0)는 PASS입니다. 실제 Chrome 기본 viewport에서 로그인·회원가입·아이디
+  찾기·비밀번호 재설정 custom modal을 확인했고 `390×844`에서
+  `document.scrollWidth=390`, overflow 0, console warn/error 0입니다. 이메일 renderer의
+  외부 asset 0·escape 구조는 smoke로 검증했지만 Browser `data:` URL 정책 때문에 실제
+  메일 클라이언트 시각 QA는 Brevo 테스트 메일 단계로 남습니다. 전체 core smoke는 PASS했고
+  독립 리뷰의 source-prepared 즉시 수정 blocker는 0건입니다. 현재 marker의 `migration-prepared`는 migration **적용 완료**를 뜻하지
+  않습니다.
+- 상세 기준: `docs/current/ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md`
+- core에서는 v295~v310 단일-head·no-next-revision 역사 계약에 고정된 최초 revision
+  생성·수동 검토, isolated upgrade·downgrade·roundtrip, source·restore stamp guard,
+  baseline completion, next-revision preflight와 deployment runtime readiness의 실행 줄만
+  제거했습니다. 도구·문서·증거는 보존하고 v371 migration parity smoke가 현재 계약을
+  대신합니다.
 
 ## 계정 인증·캐릭터 슬롯·회원 관리 — v370
 
-- 첫 진입 흐름은 로그인 또는 회원가입 → 계정별 8슬롯 조회 → 기존 캐릭터 선택 또는
+- 첫 진입 흐름은 로그인 또는 회원가입 → 계정별 캐릭터 슬롯 8개 조회 → 기존 캐릭터 선택 또는
   빈 슬롯 생성 → 선택 캐릭터 snapshot load → 게임 boot입니다. 인증·선택 전에는 게임
   boot와 저장 timer를 시작하지 않습니다.
 - 새 테이블이나 Alembic revision 없이 `users`, `user_profiles`, `user_save_snapshots`,

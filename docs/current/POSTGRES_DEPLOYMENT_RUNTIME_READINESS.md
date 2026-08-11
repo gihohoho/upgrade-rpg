@@ -5,6 +5,11 @@
 v307은 완료된 PostgreSQL baseline을 유지하면서 실제 배포 전에 필요한 runtime 경계를 읽기 전용으로 점검합니다.
 DB, `.env`, Docker container/volume, Alembic history는 변경하지 않습니다.
 
+v371 현재 local source graph head는 `v371_email_identity_lifecycle`이지만 local/live/Neon
+DB current는 계속 `v295_initial_schema`입니다. 아래 v306 equivalent 판정은 v307 당시
+역사이며, v371 source는 아직 적용하지 않았습니다. runtime startup 자동 migration 금지는
+그대로 유지됩니다.
+
 ## 추가 파일
 
 ```txt
@@ -19,7 +24,8 @@ docs/current/POSTGRES_DEPLOYMENT_MIGRATION_RUNBOOK.md
 ### PostgreSQL/Alembic
 
 - v305 baseline completion 유지
-- v306 `next-revision-not-required-current-schema-equivalent` 유지
+- v306 당시 `next-revision-not-required-current-schema-equivalent` 역사 보존
+- local source graph head `v371_email_identity_lifecycle` / applied DB current v295 분리
 - runtime `DATABASE_URL`이 `postgresql+asyncpg`인지
 - runtime DB가 exact `rpg_game`인지
 - rehearsal/migration DB가 runtime URL로 사용되지 않는지
@@ -41,6 +47,11 @@ docs/current/POSTGRES_DEPLOYMENT_MIGRATION_RUNBOOK.md
 - 실제 `backend/.env`는 값이 아니라 **키 이름만** 확인
 - DB 비밀번호, JWT secret, 관리자 쓰기 키는 출력하지 않음
 - production일 때 `DEBUG=false`와 로컬 기본 secret 미사용을 필수로 검사
+- v371 production은 `EMAIL_PROVIDER=brevo`, `BREVO_API_KEY`, 인증된 sender,
+  `EMAIL_TOKEN_SECRET`, exact HTTPS `PUBLIC_FRONTEND_ORIGIN`을 추가로 요구하며 값은
+  secret-safe inventory로만 확인
+- `EMAIL_TOKEN_SECRET`은 32자 이상이고 `JWT_SECRET_KEY`와 달라야 하며 owner bootstrap
+  password는 startup runtime이 사용하지 않음
 
 ### Docker
 

@@ -1,10 +1,12 @@
-# FastAPI 백엔드 구조 — v370
+# FastAPI 백엔드 구조 — v371
 
 ## 목표
 
 현재 브라우저 JS 안에 있는 저장/전투/드랍/강화 판정을 단계적으로 FastAPI로 옮깁니다.
 v370에서는 그 기반 위에 회원가입·로그인, 계정별 캐릭터 슬롯 8개, 캐릭터별 save
-snapshot과 관리자 회원 관리를 로컬 소스에 추가했습니다.
+snapshot과 관리자 회원 관리를 로컬 소스에 추가했습니다. v371은 필수 이메일 인증,
+아이디·비밀번호 복구, 계정 삭제, `authVersion` 폐기와 source-only DB migration을
+추가로 준비합니다.
 
 ## 폴더 구조
 
@@ -69,11 +71,43 @@ runtime을 pause한 뒤 기존 큐와 마지막 snapshot write를 drain하고, �
 선택 상태/token 정리와 reload를 실행합니다. 서버 revision과 낙관적 잠금이 아직 없으므로
 다중 기기 동시 저장 충돌 해결은 공개 전 후속입니다.
 
-## v370 인증 경계
+## v371 이메일 identity와 token 구조
+
+`v371_email_identity_lifecycle` revision source는 `users`에 nullable legacy-safe
+`email_original`, unique/index `email_canonical`, `email_verified_at`, non-null
+`auth_version`을 추가합니다. 기존 계정에 가짜 이메일을 backfill하거나 자동 인증하지
+않습니다. 신규 가입만 검증된 이메일을 필수로 받습니다.
+
+`user_email_action_tokens`는 이메일 인증, 비밀번호 재설정, 일반 회원 계정 삭제의 세
+목적만 허용합니다. 원문 token은 `secrets.token_urlsafe(32)`로 만들고 링크에 한 번만
+전달하며 DB에는 별도 `EMAIL_TOKEN_SECRET` HMAC-SHA256 digest만 저장합니다. 목적,
+만료, 미사용 상태를 row lock 안에서 확인하고 사용 뒤에는 남은 계정 token을 소진합니다.
+비밀번호 재설정은 password hash와 `authVersion` 증가를 같은 transaction으로 처리해
+기존 access token을 모두 거절합니다.
+
+메일 전달은 Render Free의 SMTP 포트 제한에 맞춰 Brevo HTTPS API를 worker thread에서
+한 번만 호출합니다. 자동 retry는 하지 않으며 provider timeout·오류를 제한된 code와
+message ID로만 기록합니다. 메일 본문·수신자별 token·API key는 로그에 넣지 않습니다.
+source-controlled HTML/plain-text 템플릿에는 외부 asset·script·tracking pixel이 없습니다.
+
+`backend/scripts/bootstrap_owner_admin.py`는 FastAPI lifespan과 분리된 explicit
+one-shot 도구입니다. 기본 inspect는 read-only이고 실제 `--apply`는 DB migration head,
+관리자 0명, enable flag, 현재 Git HEAD와 같은 소문자 40자리 `--approved-sha`, project
+root·tracked script·tracked index/worktree clean, 환경·SHA·identity fingerprint 확인문과
+별도 owner 승인을 요구합니다. source gate는 DB session factory 생성 전에 fail-closed이고
+안전 차단은 exit `3`입니다. owner password는
+JWT secret과 공유하지 않고 성공 직후 `.env`에서 제거합니다. 이메일은 자동 인증하지
+않습니다.
+
+이 migration, owner script, Brevo 설정과 실제 메일은 아직 실행하지 않았습니다.
+
+## v371 인증 경계
 
 - 비밀번호는 직접 dependency인 `bcrypt 5.0.0`으로 해시하고 CPU 작업은 worker
   thread에서 수행합니다.
 - 기존 `JWT_SECRET_KEY`로 알고리즘이 고정된 HS256 24시간 access token을 서명합니다.
+- 이메일 인증 전에는 access token을 발급하지 않고, 매 인증 요청에서 token claim의
+  `authVersion`과 DB 현재값을 비교합니다.
 - 각 인증 요청에서 `users`를 다시 읽고 비활성 계정은 이미 발급된 token도 거절합니다.
 - 회원가입은 항상 `is_admin=false`이며 비밀번호 원문·해시와 token을 로그나 관리자
   응답에 포함하지 않습니다.
@@ -92,8 +126,9 @@ runtime을 pause한 뒤 기존 큐와 마지막 snapshot write를 drain하고, �
 복구 선택으로 돌아갑니다. network/timeout/`5xx`에서는 token과 선택 상태를 유지해 retry와
 다음 직렬 저장을 허용합니다.
 
-서버측 session/refresh token, 개별 기기 원격 로그아웃, 로그인 rate limit,
-비밀번호 변경·복구는 아직 구현하지 않았으며 공개 전 보강 범위입니다.
+아이디 찾기·비밀번호 재설정·계정 삭제 source 흐름은 v371에서 준비하지만, 서버측
+session/refresh token, 개별 기기 원격 로그아웃, 인증·복구 요청 rate limit과 raw body
+cap은 아직 구현하지 않았으며 공개 전 보강 범위입니다.
 
 ## API 응답 표준
 
@@ -119,15 +154,19 @@ runtime을 pause한 뒤 기존 큐와 마지막 snapshot write를 drain하고, �
 
 ```txt
 1. backend 뼈대·PostgreSQL schema·JSON seed·`/game/master-data`: 완료
-2. 인증된 `/game/load`, `/game/save`, 계정 캐릭터 슬롯: v370 로컬 구현 준비
-3. 회원가입·로그인과 관리자 회원 관리: v370 로컬 구현 준비
-4. 장착/해제/강화 API 이전: 후속
-5. 보스 소환/전투/드랍 API 이전: 후속
-6. legacy 관리자 콘텐츠 API의 운영 인증·쓰기 절차: 추가 보강 후 공개
-7. Vue 관리자 페이지 이전: 후속, 현재 실제 화면은 legacy `admin.html`
+2. 인증된 `/game/load`, `/game/save`, 계정 캐릭터 슬롯: v370 로컬 구현 완료
+3. 회원가입·로그인과 관리자 회원 관리: v370 로컬 구현 완료
+4. 이메일 인증·아이디/비밀번호 복구·계정 삭제: v371 source/migration 준비 중
+5. 장착/해제/강화 API 이전: 후속
+6. 보스 소환/전투/드랍 API 이전: 후속
+7. legacy 관리자 콘텐츠 API의 운영 인증·쓰기 절차: 추가 보강 후 공개
+8. Vue 관리자 페이지 이전: 후속, 현재 실제 화면은 legacy `admin.html`
 ```
 
-공개 Render backend는 계속 v351 exact image입니다. v370에서는 DB write·seed·migration,
-새 secret, Render env 변경, image 게시와 deploy를 실행하지 않았습니다. v370
-focused/browser/core, route map 40 operations, runtime blocking-I/O strict와 core smoke는
-모두 통과했으며 상세 실제 결과는 `CURRENT_STATUS.md`에 기록합니다.
+공개 Render backend는 계속 v351 exact image입니다. v371에서는 DB write·seed·migration,
+Brevo account/sender/API key, 실제 메일, owner bootstrap, Render env 변경, image 게시와
+deploy를 실행하지 않았습니다. v371 backend 이메일 lifecycle·owner one-shot·migration
+source, v370 backend 회귀, compileall, runtime blocking-I/O와 route map 48 operations
+(`GET 21 / POST 26 / DELETE 1`, duplicate 0)는 PASS입니다. root 최종 browser와 전체
+core도 PASS했고 독립 리뷰의 source-prepared 즉시 수정 blocker는 0건이며, v370의 route map 40 operations와 core PASS는 과거 baseline으로
+보존합니다. 상세 실제 결과는 `CURRENT_STATUS.md`에 기록합니다.

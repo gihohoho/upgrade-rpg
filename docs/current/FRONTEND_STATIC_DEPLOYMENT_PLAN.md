@@ -1,12 +1,13 @@
-# Frontend Static Deployment and v370 Auth Release Boundary
+# Frontend Static Deployment and v371 Email Auth Release Boundary
 
 ## 결론
 
 실제 게임과 관리자 화면은 Vue shell이 아니라 루트 `index.html`, `admin.html`, `src/`입니다. 승인된 v348 준비 SHA로 Render Free Static Site에 이 legacy 화면을 배포했습니다.
 
-현재 공개본은 계속 v351입니다. v370의 로그인·회원가입, 계정별 캐릭터 슬롯 8개와
-관리자 회원 관리 UI는 로컬 source에만 있으며 Render Static Site나 backend에 배포하지
-않았습니다. 공개 주소에서 v370 로그인 화면이 보이지 않는 것이 정상입니다.
+현재 공개본은 계속 v351입니다. v370의 로그인·계정별 캐릭터 슬롯 8개 기반과 v371의
+필수 이메일 가입, 이메일 인증, 아이디 찾기, 비밀번호 재설정, 계정 삭제와 관리자 이메일
+상태 UI는 로컬 source에만 있으며 Render Static Site나 backend에 배포하지 않았습니다.
+공개 주소에서 v370/v371 계정 화면이 보이지 않는 것이 정상입니다.
 
 - 서비스 이름: `gihohoho-upgrade-rpg`
 - 게임 주소: `https://gihohoho-upgrade-rpg.onrender.com/index.html`
@@ -57,10 +58,35 @@ dev key는 사용자가 직접 입력할 때만 요청 header로 보내며 HTML�
 내장하지 않습니다. 비밀번호 해시, token과 전체 save snapshot은 회원 관리 표에
 표시하지 않습니다.
 
-v370 static만 먼저 공개하면 로그인·슬롯 화면이 v351 backend의 없는 API를 호출하므로
-실패합니다. 공개 반영은 v370 backend image와 legacy static을 같은 exact-SHA 승인
-단위로 준비하고, CORS·인증·캐시·rollback을 함께 검증해야 합니다. auto-deploy와 자동
-retry는 계속 끕니다.
+v371 로컬 `index.html`은 signup에 이메일을 필수로 받고 로그인 입력을
+`아이디 또는 이메일`로 바꿉니다. 이메일 action URL은 고정된 다음 fragment만
+허용합니다.
+
+```txt
+/index.html#auth=verify-email&token=...
+/index.html#auth=reset-password&token=...
+/index.html#auth=delete-account&token=...
+```
+
+프런트는 fragment token을 읽은 즉시 `history.replaceState`로 주소 표시줄과 history에서
+제거하며 `Referrer-Policy: no-referrer`를 유지합니다. 아이디 찾기·비밀번호 재설정과
+계정 삭제의 경고·확인은 browser 기본 alert/confirm이 아니라 게임 스타일의 접근 가능한
+모달을 사용합니다. 계정 삭제는 현재 비밀번호, 이메일 링크, 정확한 `계정 삭제` 문구의
+세 단계를 UI에서도 빠뜨리지 않습니다.
+
+상단 `접속 캐릭터` 바는 글자, 이름, 버튼, 간격과 터치 영역을 함께 키우고 로그인·캐릭터
+선택이 끝난 상태에서 zone type이 `town`일 때만 표시합니다. field, boss,
+`boss_empty`, 인증 gate와 슬롯 gate에서는 숨깁니다. desktop/mobile 실제 브라우저
+검증에서 기본 viewport의 로그인·회원가입·아이디 찾기·비밀번호 재설정 custom modal과
+`390×844`의 `document.scrollWidth=390`, horizontal overflow 0, console warn/error 0을
+확인했습니다. v371 이메일 계정, v370 character/admin 회귀 smoke와 관련
+`node --check`도 PASS입니다. Browser가 `data:` 이메일 HTML preview를 차단해 우회하지
+않았으며 실제 메일 클라이언트 시각 QA는 Brevo sender 설정 뒤 테스트 메일 단계입니다.
+
+v371 static만 먼저 공개하면 이메일·복구 화면이 v351 backend의 없는 API와 schema를
+호출하므로 실패합니다. 공개 반영은 v371 migration 완료 뒤 backend image와 legacy
+static을 같은 exact-SHA 승인 단위로 준비하고, CORS·인증·캐시·rollback을 함께
+검증해야 합니다. auto-deploy와 자동 retry는 계속 끕니다.
 
 v370의 정상 load는 서버 DB snapshot이 authoritative입니다. backend snapshot이 있으면
 그 내용을 사용하고 서로 다른 local은 `${saveKey}.pre-backend-recovery`에 먼저 백업합니다.
@@ -114,8 +140,9 @@ v350 당시에는 콘텐츠 추가·수정을 시작하기 좋은 시점이 아�
 
 ## 필요할 수 있는 사용자 조치
 
-지금 필요한 extension·권한·설치는 없습니다. 다음 안전 단계는 기호가 로컬에서 자신의
-계정을 직접 만들고 최초 관리자 bootstrap과 두 캐릭터 이상의 격리 흐름을 확인하는
-것입니다. 비밀번호나 dev key 값은 채팅에 보내지 않습니다. rate limit, 비밀번호
-변경·복구, 서버측 session/refresh·폐기, ASGI raw body cap과 HTTPS/CSP/XSS 보강 및
-별도 exact-SHA gate 전에는 v370을 공개 배포하지 않습니다.
+현재 `email-validator 2.3.0` 설치와 lock 갱신은 기호의 승인을 기다립니다. 그 뒤에도
+DB migration apply, Brevo 계정·발신자·전용 API key, owner bootstrap과 공개 배포는 서로
+다른 승인 단계입니다. 비밀번호, API key, dev key와 token은 채팅에 보내지 않습니다.
+rate limit, 서버측 session/refresh·폐기, ASGI raw body cap, 다중 기기 revision,
+HTTPS/CSP/XSS, 개인정보·삭제 정책과 별도 exact-SHA gate 전에는 v371을 공개 배포하지
+않습니다.

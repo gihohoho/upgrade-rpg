@@ -53,6 +53,7 @@ node tools/smoke/frontend/smoke_admin_bootstrap_bindings_readiness.js
 node tools/smoke/frontend/smoke_admin_thin_entry_cleanup.js
 node tools/smoke/frontend/smoke_v370_admin_account_management.js
 node tools/smoke/frontend/smoke_v370_account_character_gate.js
+node tools/smoke/frontend/smoke_v371_email_account_frontend.js
 node tools/smoke/frontend/smoke_admin_create_delete_rollback.js
 node tools/smoke/frontend/smoke_admin_create_delete_restore.js
 node tools/smoke/frontend/smoke_admin_layout_navigation_shell.js
@@ -114,7 +115,11 @@ python tools/smoke/contracts/smoke_backend_admin_preview_integration.py
 python tools/smoke/backend/smoke_backend_packaging_contract.py
 python tools/smoke/backend/smoke_backend_local_cors.py
 python tools/smoke/backend/smoke_backend_route_map_report.py
+python tools/smoke/backend/smoke_v370_account_auth_backend.py
 python tools/smoke/backend/smoke_v370_account_admin_management.py
+python tools/smoke/backend/smoke_v371_email_account_backend.py
+python tools/smoke/backend/smoke_v371_email_identity_migration_source.py
+python tools/smoke/backend/smoke_v371_owner_admin_bootstrap.py
 python tools/smoke/backend/smoke_postgres_alembic_readiness.py
 python tools/smoke/backend/smoke_backend_alembic_async_env.py
 python tools/smoke/backend/smoke_postgres_runtime_readonly_state.py
@@ -125,17 +130,10 @@ python tools/smoke/backend/smoke_postgres_backup_creation.py
 python tools/smoke/backend/smoke_postgres_restore_rehearsal_database_creation.py
 python tools/smoke/backend/smoke_postgres_restore_rehearsal.py
 python tools/smoke/backend/smoke_postgres_migration_test_database_creation.py
-python tools/smoke/backend/smoke_postgres_initial_alembic_revision_creation.py
-python tools/smoke/backend/smoke_postgres_initial_alembic_revision_manual_review.py
-python tools/smoke/backend/smoke_postgres_migration_test_database_upgrade.py
-python tools/smoke/backend/smoke_postgres_migration_test_database_downgrade.py
-python tools/smoke/backend/smoke_postgres_migration_test_database_roundtrip.py
-python tools/smoke/backend/smoke_postgres_source_baseline_stamp_preflight.py
-python tools/smoke/backend/smoke_postgres_restore_rehearsal_stamp_guard.py
-python tools/smoke/backend/smoke_postgres_source_baseline_stamp_guard.py
-python tools/smoke/backend/smoke_postgres_baseline_completion_state.py
-python tools/smoke/backend/smoke_postgres_next_revision_preflight.py
-python tools/smoke/backend/smoke_postgres_deployment_runtime_readiness.py
+# The v295-v310 initial-revision/stamp/round-trip/deployment-readiness smokes
+# remain preserved as historical evidence. They assume a single v295 source
+# head and must not be replayed against the v371 model graph; the v371
+# source-parity smoke above is the current fail-closed migration contract.
 python tools/smoke/backend/smoke_runtime_engine_source_binding_inspector.py
 python tools/smoke/backend/smoke_runtime_config_hardening.py
 python tools/smoke/backend/smoke_neon_production_database_bootstrap.py

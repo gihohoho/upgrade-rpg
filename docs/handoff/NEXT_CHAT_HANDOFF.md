@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v370
+# Upgrade RPG Codex handoff — v371
 
 ## 현재 상태
 
 ```txt
-latest: v370.account-auth-character-slots-admin-management-local-ready
-strict result: account-auth-character-slots-admin-management-local-ready
-next safe stage: owner-create-local-account-bootstrap-admin-and-verify-authenticated-multicharacter-flow
+latest: v371.email-verification-recovery-account-deletion-migration-prepared
+strict result: email-verification-recovery-account-deletion-migration-prepared
+next safe stage: owner-approve-email-validator-install-and-review-v371-migration-source
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -39,6 +39,49 @@ Render credential action ready/approved/executed: yes/yes/yes
 production deployment approval ready/approved/executed: no/no/no
 Render public preview deployment ready/approved/executed: yes/yes/yes
 ```
+
+## 이메일 인증·계정 복구·계정 삭제 — v371 source/migration 준비
+
+- 새 가입은 아이디·필수 이메일·비밀번호를 받으며 이메일 링크 인증 전에는 access token과
+  게임 접속을 허용하지 않습니다. 로그인은 아이디 또는 이메일을 사용합니다.
+- 아이디 찾기·인증 재전송·비밀번호 재설정 요청은 계정 존재와 실제 메일 발송 여부를 같은
+  `202` 응답으로 숨깁니다. 비밀번호 재설정은 `authVersion`을 증가시켜 기존 access token을
+  모두 무효화합니다.
+- 일반 회원 계정 삭제는 로그인 범위 preview → 현재 비밀번호 → 이메일 링크 → 게임 UI의
+  정확한 `계정 삭제` 문구 순서입니다. 관리자·감사 기록 연결 계정은 fail-closed입니다.
+- `v371_email_identity_lifecycle` revision은 source-only이며 기존 계정에 fake email을 넣지 않고
+  nullable legacy-safe 이메일·인증·`authVersion`과 `user_email_action_tokens`를
+  준비합니다. 어떤 local/Neon DB에도 apply·stamp하지 않았습니다.
+- 이메일 action 원문 token은 CSPRNG로 만들고 DB에는 별도 `EMAIL_TOKEN_SECRET`
+  HMAC-SHA256 digest만 보관합니다. 고정 `PUBLIC_FRONTEND_ORIGIN` fragment 링크만 쓰며
+  프런트가 읽은 즉시 history에서 제거합니다.
+- Render Free의 SMTP port 제한 때문에 Brevo Free HTTPS API를 선택했습니다. Brevo
+  account·sender 인증·API key·Render secret·실제 메일은 0회입니다. 실제 사용 전에
+  transactional anonymous tracking, log retention 1개월, email preview 미저장과
+  account-wide API key 분리·짧은 만료·회전을 확인합니다.
+- owner 관리자는 JWT secret과 공유하지 않는 Git 제외 `OWNER_ADMIN_*` 값을 explicit
+  one-shot script로만 준비합니다. startup 자동 mutation은 없고 migration head,
+  관리자 0명, enable, `--apply`, 현재 Git HEAD와 같은 소문자 40자리 `--approved-sha`,
+  project root·tracked script·tracked index/worktree clean과 환경·SHA·identity fingerprint
+  확인문을 DB session 생성 전에 요구합니다. 별도 exact-SHA 승인은 계속 필요합니다.
+  입력 email은 자동 인증하지 않고 성공 직후 plaintext password를 `.env`에서 제거합니다.
+- 상단 `접속 캐릭터` 바는 글자·이름·버튼·간격과 터치 영역을 키우고 현재 zone이
+  `town`일 때만 표시합니다. field/boss/`boss_empty`와 인증·슬롯 gate에서는 숨깁니다.
+- `email-validator 2.3.0` 설치·Linux lock 갱신은 기호 승인 대기 중이며 승인 전에는 약한
+  parser로 폴백하지 않습니다.
+- 승인 순서는 dependency/lock → v371 source 검증 commit → exact migration apply → Brevo
+  sender/key/secret → 테스트 메일 1건 → exact owner bootstrap → owner 이메일 인증·다중
+  캐릭터 확인 → 공개 보안 보강 → backend/static 동시 release입니다.
+- 실제 DB write·migration, provider/env/mail, owner bootstrap, GHCR 게시, Render
+  env·deploy는 모두 0회이고 공개 backend/static은 계속 v351입니다.
+- route map과 focused/browser 결과, 전체 core는 PASS했고 독립 리뷰의 source-prepared 즉시 수정 blocker는 0건입니다.
+  현재 marker의 `migration-prepared`는 migration 적용 완료를 뜻하지 않습니다.
+- 상세 계약: `docs/current/ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md`
+- core에서는 v295~v310 단일-head·no-next-revision 역사 계약에 고정된 최초 revision
+  생성·수동 검토, isolated upgrade·downgrade·roundtrip, source·restore stamp guard,
+  baseline completion, next-revision preflight와 deployment runtime readiness의 실행 줄만
+  제거했습니다. 도구·문서·증거는 보존하고 v371 migration parity smoke가 현재 계약을
+  대신합니다.
 
 ## 계정 인증·캐릭터 슬롯·회원 관리 — v370
 
@@ -76,10 +119,11 @@ Render public preview deployment ready/approved/executed: yes/yes/yes
 - 인증 `422`는 비밀번호 input과 인증 body를 반사하지 않습니다. SQLAlchemy는
   `echo=False`, `hide_parameters=True`이고 관리자 save summary는 명시 allow-list의 제한된
   scalar만 반환해 password hash·raw snapshot·임의 summary 키를 노출하지 않습니다.
-- 다중 기기 동시 접속의 최신 revision 판정·충돌 해결·낙관적 잠금은 공개 전 후속
-  hardening입니다. 같은 단계에서 rate limit, 비밀번호 변경·복구, 서버측
-  session/refresh·원격 폐기, ASGI raw body cap, HTTPS/CSP/XSS와 개인정보·삭제 정책도
-  보강합니다.
+- v370 당시 다중 기기 revision, rate limit, 비밀번호 변경·복구, server session과
+  개인정보·삭제가 후속이었습니다. v371은 분실 복구·삭제 source를 준비했고, rate limit,
+  만료된 미인증 계정의 안전한 정리·메일 소유자 회수,
+  로그인 상태 비밀번호 변경, server session/refresh·원격 폐기, ASGI raw body cap,
+  다중 기기 낙관적 잠금, HTTPS/CSP/XSS와 개인정보 정책은 계속 남습니다.
 - 안정 직렬화된 저장 요청의 2,000,000바이트 제한은 JSON 파싱 뒤 적용됩니다. HTTP raw
   body를 파싱 전에 막는 ASGI cap과는 다릅니다.
 - 실제 local/Neon DB write, seed, restore, Alembic mutation, 새 secret, GitHub
@@ -171,6 +215,11 @@ Render workspace는 `Hobby (legacy)`이고 결제수단은 없습니다. v337 �
 - actual secret/token/PAT/password/CA/cert/key를 Git·채팅·로그·artifact에 기록하지 않음
 
 ## 다음 단계
+
+현재 첫 단계는 기호가 `email-validator 2.3.0` 설치·Linux lock 갱신을 승인하고 v371
+migration source를 검토하는 것입니다. 이 승인은 migration apply, Brevo key·secret,
+실제 메일, owner bootstrap과 deploy를 포함하지 않습니다. 이후 각 mutation은 새 준비
+commit의 정확한 40자리 SHA와 범위를 별도로 승인받습니다.
 
 사용자가 승인한 v343 SHA `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 단일 트랜잭션 restore를 한 번 실행했습니다. 22 tables / 748 rows / schema digest는 즉시 일치했지만 legacy data digest가 session timezone offset에 의존해 달라졌고 도구는 stamp 전에 안전하게 중단했습니다.
 
@@ -378,11 +427,11 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 - CSS와 변경 JavaScript 로드 키는 `?v=362`입니다. 이미지 파일과 이미지 URL `?v=361`은 원본 미변경 때문에 유지합니다.
 - 변경 없음: PNG 원본, 장비 수치·밸런스, 필드 규칙, Neon DB, backend API/image, Render 서비스.
 
-현재 필요한 extension·권한·새 설치는 없습니다. 다음 단계는 기호가 로컬
-`http://127.0.0.1:5500/index.html`에서 자신의 계정을
-직접 만들고 최초 관리자 bootstrap과 두 캐릭터 이상의 저장 격리를 확인하는 것입니다.
-비밀번호와 dev key는 채팅에 보내지 않습니다. 공개 전 보안 보강과 별도 exact-SHA gate가
-끝날 때까지 Render backend/Static Site deploy는 실행하지 않습니다.
+현재 필요한 새 설치는 `email-validator 2.3.0`이며 기호 승인 대기 중입니다. 별도
+extension·GitHub 권한은 필요하지 않습니다. Brevo account·sender 인증·전용 API key는
+migration 검토 뒤 별도로 요청합니다. 비밀번호, API key, dev key와 token은 채팅에
+보내지 않습니다. 공개 전 보안 보강과 별도 exact-SHA gate가 끝날 때까지 Render
+backend/Static Site deploy는 실행하지 않습니다.
 
 로컬 검사 주의: Windows 전역 `DEBUG=release`는 backend의 boolean `DEBUG`와 충돌합니다. 시스템 환경변수는 바꾸지 말고 backend/core 검사 자식 프로세스에서만 `DEBUG`를 unset하거나 `DEBUG=false`로 덮어씁니다.
 
@@ -390,9 +439,14 @@ Render 설정 검사 출력에 포함된 backend/static deploy hook은 둘 다 �
 
 실행 위치: 프로젝트 루트
 Python `.venv` 상태: 셸 활성화는 꺼짐, `backend/.venv/Scripts/python.exe` 직접 사용
-새 설치 여부: 없음
+새 설치 여부: `email-validator 2.3.0` 승인 대기, 아직 설치하지 않음
 
 ```bash
+python tools/smoke/backend/smoke_v371_email_account_backend.py
+python tools/smoke/backend/smoke_v371_email_identity_migration_source.py
+python tools/smoke/backend/smoke_v371_owner_admin_bootstrap.py
+python tools/smoke/backend/smoke_backend_route_map_report.py
+node tools/smoke/frontend/smoke_v371_email_account_frontend.js
 python tools/smoke/backend/smoke_v370_account_auth_backend.py
 python tools/smoke/backend/smoke_v370_account_admin_management.py
 node tools/smoke/frontend/smoke_v370_account_character_gate.js
@@ -422,16 +476,17 @@ python tools/check_github_actions_ghcr_static_plan.py --strict
 python tools/check_codex_handoff_readiness.py --strict
 ```
 
-v370 backend auth/account-admin focused, frontend account gate/admin, v369 icon smoke,
-Python compileall, 관련 JavaScript `node --check`, runtime blocking-I/O strict, backend route
-map 40 operations, legacy static build/static smoke를 모두 통과했습니다. GitHub/GHCR
-reproducibility hash 5개 동기화와 strict/fail-closed smoke, backend `.venv` 활성화·자식
-`DEBUG=false` 조건의 `bash tools/run_smoke_core.sh`도 PASS입니다. 실제 브라우저
-desktop/mobile 로그인·회원가입 화면과 `pending-unsynced` 선택 모달은 overflow 0,
-console error 0으로 QA PASS했고 최종 reviewer 즉시 blocker는 없습니다. 실제 DB
-write·migration·deploy·새 설치·서버 재시작은 없었습니다. v368/v369 기존 증거와 이전
-배포·공급자 baseline은 계속 보존합니다. 다음 단계는 owner가 로컬 계정을 만들고 최초
-관리자 bootstrap과 인증된 다중 캐릭터 흐름을 확인하는 것입니다. 공개 Render Static
-Site와 backend는 계속 v351로 유지합니다.
+v371 backend 이메일 lifecycle·owner one-shot·migration source, v370 backend 회귀,
+frontend v371 이메일 계정·v370 character/admin 회귀, Python compileall, 관련 JavaScript
+`node --check`, runtime blocking-I/O strict와 backend route map 48 operations
+(`GET 21 / POST 26 / DELETE 1`, duplicate 0)은 PASS입니다. 실제 Chrome 기본 viewport와
+`390×844` account modal QA는 `document.scrollWidth=390`, overflow 0, console warn/error
+0입니다. renderer 외부 asset 0·escape는 smoke로 확인했고 Browser `data:` preview 차단을
+우회하지 않았으므로 실제 메일 클라이언트 시각 QA는 Brevo 테스트 메일 단계입니다. 전체
+core smoke는 PASS했고 독립 리뷰의 source-prepared 즉시 수정 blocker는 0건입니다. v370/v369의 legacy static·GitHub/GHCR 이전
+PASS는 baseline으로 보존합니다. 실제 DB write·migration, Brevo 설정·메일, owner
+bootstrap, deploy·새 설치·서버 재시작은 없었습니다. 다음 단계는 `email-validator 2.3.0`
+설치·lock 승인과 v371 migration source 검토입니다. 공개 Render Static Site와 backend는
+계속 v351로 유지합니다.
 
 서버 재시작은 필요하지 않습니다.

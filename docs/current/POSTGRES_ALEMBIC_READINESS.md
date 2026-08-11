@@ -1,14 +1,50 @@
-# PostgreSQL / Alembic Readiness — v310
+# PostgreSQL / Alembic Readiness — v371
 
 이 문서는 현재 프로젝트 파일을 기준으로 PostgreSQL과 Alembic 도입 준비 상태를 자동 분석한 결과입니다.
 
 중요: 이 보고서는 **읽기 전용 정적 분석**입니다. DB 연결, `.env` 변경, schema 생성/삭제, seed import, migration 생성/적용을 수행하지 않습니다.
 
+## v371 현재 overlay
+
+```txt
+local Alembic source graph head: v371_email_identity_lifecycle
+local/live/Neon applied DB revision: v295_initial_schema
+v371 revision state: source prepared / not applied
+model application tables: 23
+applied DB application tables: 22
+next safe stage: owner-approve-email-validator-install-and-review-v371-migration-source
+```
+
+v295는 최초 22-table baseline을 실제 DB에 적용한 역사이자 현재 local/Neon DB revision으로
+계속 유효합니다. 다만 local source graph에는 v295를 직접 잇는 두 번째 revision
+`v371_email_identity_lifecycle`이 준비됐으므로, 이제 `head`와 DB `current`를 같은 말로
+쓰지 않습니다.
+
+- source graph `head`: `v371_email_identity_lifecycle`
+- local/live/Neon DB `current`: `v295_initial_schema`
+- 차이: v371의 nullable email identity·`authVersion`과
+  `user_email_action_tokens` 1개 table
+- 실제 상태: revision 파일과 model만 준비, `upgrade`·`downgrade`·`stamp` 0회
+
+v371 source parity smoke는 v295 바로 다음 revision, upgrade의 사용자 열 4개와 table
+1개, downgrade 역순 제거, 필수 index/check/FK를 DB 접속 없이 검증해 PASS했습니다.
+실제 migration apply는 isolated 검토와 새 exact-SHA owner 승인 전까지 금지합니다.
+현재 `tools/run_smoke_core.sh`에서는 v295~v310 단일-head·no-next-revision 역사 계약에
+고정된 최초 revision 생성·수동 검토, isolated upgrade·downgrade·roundtrip,
+source·restore stamp guard, baseline completion, next-revision preflight와 deployment
+runtime readiness의 **실행 줄만** 제거했습니다. 해당 도구·문서·실행 증거 파일은 삭제하지
+않고 역사로 보존하며, v371 migration-source parity smoke가 현재 계약을 대신합니다.
+
+이하 v283~v310과 v295 baseline 문구는 당시 완료 증거입니다. `새 revision 불필요`라는
+v306 결과도 **v306 당시 model/schema**에 대한 역사이며 v371 현재 상태를 덮어쓰지
+않습니다.
+
 ## 결론
 
 - 현재 backend는 이미 PostgreSQL 전용 타입과 두 드라이버를 전제로 설계되어 있습니다.
 - FastAPI 런타임은 `asyncpg`, 로컬 schema/seed 도구는 `psycopg` 사용을 전제로 분리되어 있습니다.
-- SQLAlchemy 모델과 수동 검토가 끝난 최초 Alembic revision 1개가 존재합니다.
+- v310 당시 SQLAlchemy 모델과 수동 검토가 끝난 최초 Alembic revision 1개가
+  존재했습니다. 현재 source에는 v371 수동 revision을 더해 2개가 있습니다.
 - v284에서 사용자 실제 `MissingGreenlet` 결과를 근거로 Alembic online 경로를 async engine 방식으로 수정했습니다.
 - 기호 컴퓨터에서 `alembic history`, `heads`, `current`가 모두 정상 완료되고 PostgreSQL 연결이 확인되었습니다.
 - 기호 컴퓨터의 실제 runtime 점검에서 모델/DB 테이블 22개, 전체 row 748개, `alembic_version` 없음, DB health 정상 결과가 확인되었습니다.
@@ -47,10 +83,11 @@
 
 | 항목 | 현재 상태 |
 |---|---|
-| SQLAlchemy model table 수 | 22개 |
+| SQLAlchemy model table 수 | 23개 |
+| 적용된 DB application table 수 | 22개 |
 | PostgreSQL `JSONB` mapped column | 26개 |
 | 큰 수/확률용 `Numeric` mapped column | 10개 |
-| `ForeignKey` 선언 | 21개 |
+| `ForeignKey` 선언 | 22개 |
 | 명시적 `UniqueConstraint` 선언 | 5개 |
 | async session | 있음 |
 | Docker PostgreSQL 16 | 있음 |
@@ -61,7 +98,9 @@
 | Alembic env | 있음 |
 | Alembic asyncpg-compatible online env | 있음 |
 | Alembic versions 폴더 | 있음 |
-| Alembic revision 수 | 1개 |
+| Alembic revision 수 | 2개 |
+| local source graph head | `v371_email_identity_lifecycle` |
+| local/live/Neon DB current | `v295_initial_schema` |
 | Alembic script template | 있음 |
 
 ## Python 의존성 선언
@@ -103,6 +142,7 @@ python -m pip install -e ".[dev]"
 | `users` | `User` | `backend/app/models/user.py` |
 | `user_profiles` | `UserProfile` | `backend/app/models/user.py` |
 | `user_save_snapshots` | `UserSaveSnapshot` | `backend/app/models/user.py` |
+| `user_email_action_tokens` | `UserEmailActionToken` | `backend/app/models/user.py` |
 
 ## 현재 DB 실행 경로
 
@@ -129,7 +169,8 @@ python -m pip install -e ".[dev]"
 - env: `backend/alembic/env.py`
 - metadata: `Base.metadata`
 - online 방식: `async_engine_from_config()` + `connection.run_sync()`
-- 현재 revision: 1개
+- source revision: 2개 / graph head `v371_email_identity_lifecycle`
+- 적용 DB current: `v295_initial_schema` / v371 not applied
 - `history`, `heads`, `current` 읽기 전용 수집 도구: `tools/check_alembic_readonly_state.py`
 - Docker/schema/table count/health 읽기 전용 수집 도구: `tools/check_postgres_runtime_readonly_state.py`
 - SQLAlchemy metadata/실제 PostgreSQL 상세 구조 비교: `tools/check_postgres_schema_equivalence.py`
@@ -223,18 +264,22 @@ backend runtime/model/schema 경로에서 SQLite URL이나 SQLite 전용 타입�
 
 초기 수집 시점에는 `existing-schema-without-alembic-baseline`이었습니다. backup, restore rehearsal, empty migration DB 왕복, exact digest 비교를 거쳐 source와 rehearsal에 baseline stamp가 완료되었습니다.
 
-현재 확정 상태:
+v295 baseline 확정 상태:
 
 - classification: `alembic-managed-baseline-complete`
 - source/rehearsal: 23 public tables / 749 rows
 - application: 22 tables / 748 rows preserved
-- current revision: `v295_initial_schema`
+- local/live/Neon DB current revision: `v295_initial_schema`
 - source/rehearsal application digest identical
 - v302/v304 execution reports verified
 
 이전 `stamp head`는 완료됐으며 재실행하지 않습니다.
 
-### Stage E — 다음 revision 준비
+현재 local source graph head는 그 뒤의 `v371_email_identity_lifecycle`입니다. 따라서
+v295 DB에 대해 승인 없이 `stamp head`를 다시 실행하면 실제 v371 schema 변경 없이
+revision만 거짓으로 올릴 수 있으므로 특히 금지합니다.
+
+### Stage E — v306 당시 다음 revision 판정 역사
 
 1. v306 next-revision read-only preflight 실제 결과 확인
 2. candidate operation 0개면 single baseline을 유지하고 새 revision을 만들지 않음
@@ -244,7 +289,26 @@ backend runtime/model/schema 경로에서 SQLite URL이나 SQLite 전용 타입�
 6. table/index/FK/JSONB/Numeric와 API 영향 비교
 7. 그 후에만 다음 migration 실행 여부를 별도 승인
 
-현재는 새 revision 생성, autogenerate, upgrade, downgrade가 모두 미승인입니다.
+위 1~7은 v306 당시 model/schema 차이 0개에 대한 역사입니다.
+
+### Stage E-2 — v371 이메일 identity revision 준비
+
+1. 의도된 schema 변화는 `users` 열 4개와 `user_email_action_tokens` table 1개입니다.
+2. revision ID는 `v371_email_identity_lifecycle`, down revision은
+   `v295_initial_schema`, local source graph의 single head는 v371입니다.
+3. 기존 v295 계정은 email 열 `NULL`을 허용하고 fake backfill·자동 인증을 하지 않습니다.
+4. source parity smoke는 upgrade/downgrade operation·index·check·FK 대칭을 DB 없이
+   검증해 PASS했습니다.
+5. `email-validator 2.3.0` dependency/lock 승인을 먼저 받고 v371 source 준비 commit을
+   확정합니다.
+6. 그 commit의 정확한 40자리 SHA를 기호가 별도 승인하기 전에는 local/Neon 어느 DB에도
+   `upgrade`, `downgrade`, `stamp`를 실행하지 않습니다.
+7. 실제 apply 전 현재 DB `v295`, backup, v371 single head와 migration source hash를
+   read-only로 확인하고 isolated roundtrip/rollback 범위를 별도 검토합니다.
+8. migration 적용과 Brevo 설정, owner bootstrap은 같은 승인이 아니며 순서대로 분리합니다.
+
+현재는 v371 revision **생성·source 검토 준비만 완료**했고 autogenerate와 실제
+upgrade/downgrade/stamp는 모두 미승인·미실행입니다.
 
 ### Stage F — 운영·배포 runtime readiness
 

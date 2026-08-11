@@ -239,6 +239,10 @@ def inspect_runtime_hardening_settings(root: Path) -> dict[str, Any]:
             debug=False,
             jwt_secret_key="j" * 40,
             admin_write_dev_key="a" * 40,
+            brevo_api_key="b" * 40,
+            brevo_from_email="noreply@game.example.invalid",
+            email_token_secret="e" * 40,
+            public_frontend_origin="https://game.example.invalid",
             database_url="postgresql+asyncpg://user:secret@db.internal:5432/rpg_game",
             CORS_ORIGINS="https://game.example.invalid",
         )

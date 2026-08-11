@@ -1,5 +1,10 @@
 # PostgreSQL / Alembic baseline completion state — v305
 
+> v371 현재 구분: 아래 내용은 v295 baseline 적용 완료의 역사적 증거입니다. 현재
+> local/live/Neon DB current는 여전히 `v295_initial_schema`이고, local source graph
+> head는 source-only `v371_email_identity_lifecycle`입니다. v371 migration은 아직
+> 적용하지 않았으므로 기존 v305 DB baseline 증거와 digest를 덮어쓰지 않습니다.
+
 ## 결론
 
 사용자 PC에서 최초 PostgreSQL/Alembic baseline 전체 절차가 완료됐습니다.
@@ -44,7 +49,7 @@ python tools/check_postgres_baseline_completion_state.py --strict
 - rehearsal이 23/749이고 v302 실행 보고서가 verified인지
 - migration DB가 23/1의 검증된 왕복 endpoint인지
 - source/rehearsal application integrity가 정확히 같은지
-- revision 파일이 검토된 최초 revision 1개뿐인지
+- 당시 revision 파일이 검토된 최초 revision 1개뿐이었는지
 
 정상 결과:
 

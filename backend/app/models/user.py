@@ -1,4 +1,17 @@
-from sqlalchemy import Boolean, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint
+from datetime import datetime
+
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -10,7 +23,16 @@ class User(Base, IdMixin, TimestampMixin):
     __tablename__ = "users"
 
     username: Mapped[str] = mapped_column(String(80), unique=True, index=True)
+    # Existing pre-v371 rows are allowed to remain NULL until the owner migrates
+    # them deliberately. Every public registration path requires a normalized
+    # email address, so newly created login-capable accounts always have one.
+    email_original: Mapped[str | None] = mapped_column(String(254), nullable=True)
+    email_canonical: Mapped[str | None] = mapped_column(
+        String(254), nullable=True, unique=True, index=True
+    )
+    email_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    auth_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
 
@@ -53,3 +75,48 @@ class UserSaveSnapshot(Base, IdMixin, TimestampMixin):
     summary_json: Mapped[dict] = mapped_column(JSONB, default=dict)
     source: Mapped[str] = mapped_column(String(80), default="localStorage")
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class UserEmailActionToken(Base, IdMixin, TimestampMixin):
+    """Single-use opaque email action token metadata.
+
+    Only the CSPRNG token sent to the account owner leaves the process. PostgreSQL
+    stores an HMAC-SHA256 digest made with ``EMAIL_TOKEN_SECRET`` so a database read
+    cannot be turned into an account action. Delivery fields are audit-only: a
+    provider may accept a message before a timeout or status-commit failure, so
+    they never decide whether the presented token is valid.
+    """
+
+    __tablename__ = "user_email_action_tokens"
+    __table_args__ = (
+        CheckConstraint(
+            "purpose IN ('verify_email', 'password_reset', 'account_deletion')",
+            name="ck_user_email_action_tokens_purpose",
+        ),
+        CheckConstraint(
+            "delivery_status IN ('pending', 'sent', 'failed')",
+            name="ck_user_email_action_tokens_delivery_status",
+        ),
+        Index(
+            "ix_user_email_action_tokens_user_purpose_expires",
+            "user_id",
+            "purpose",
+            "expires_at",
+        ),
+        Index("ix_user_email_action_tokens_expires_at", "expires_at"),
+    )
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    purpose: Mapped[str] = mapped_column(String(40))
+    token_digest: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    delivery_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="pending", server_default="pending"
+    )
+    delivery_attempted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    provider_message_id: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    delivery_error_code: Mapped[str | None] = mapped_column(String(80), nullable=True)

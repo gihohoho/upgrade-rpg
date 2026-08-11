@@ -2,6 +2,7 @@
 """DB-free safety smoke for authenticated account administration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 import os
 from pathlib import Path
@@ -9,6 +10,7 @@ from types import SimpleNamespace
 import sys
 from typing import Any
 
+from fastapi import HTTPException
 from fastapi.routing import APIRoute
 from pydantic import ValidationError
 
@@ -44,6 +46,47 @@ def require(condition: bool, message: str) -> None:
         raise AssertionError(message)
 
 
+class FakeLockScalars:
+    def __init__(self, rows):  # type: ignore[no-untyped-def]
+        self.rows = list(rows)
+
+    def all(self):  # type: ignore[no-untyped-def]
+        return list(self.rows)
+
+
+class FakeLockResult:
+    def __init__(self, rows):  # type: ignore[no-untyped-def]
+        self.rows = list(rows)
+
+    def scalars(self):  # type: ignore[no-untyped-def]
+        return FakeLockScalars(self.rows)
+
+
+class FakeApplySession:
+    def __init__(self, rows):  # type: ignore[no-untyped-def]
+        self.rows = list(rows)
+        self.statements = []
+        self.added = []
+        self.commit_calls = 0
+        self.rollback_calls = 0
+
+    async def execute(self, statement):  # type: ignore[no-untyped-def]
+        self.statements.append(statement)
+        return FakeLockResult(self.rows)
+
+    def add(self, value):  # type: ignore[no-untyped-def]
+        self.added.append(value)
+
+    async def commit(self):
+        self.commit_calls += 1
+
+    async def rollback(self):
+        self.rollback_calls += 1
+
+    async def refresh(self, _row):  # type: ignore[no-untyped-def]
+        return None
+
+
 def normalized_key(value: Any) -> str:
     return "".join(character.lower() for character in str(value) if character.isalnum() or character == "_")
 
@@ -73,6 +116,9 @@ def user_row(
     return SimpleNamespace(
         id=user_id,
         username=username,
+        email_original=f"{username}@example.com",
+        email_canonical=f"{username}@example.com",
+        email_verified_at=stamp,
         is_active=is_active,
         is_admin=is_admin,
         password_hash=password_hash,
@@ -171,6 +217,25 @@ def test_safe_serialization_and_character_slots() -> None:
     require(serialized["characterSlotsUsed"] == 1, "character slot count mismatch")
     assert_no_sensitive_response_keys({"user": serialized, "characterSlots": slots})
 
+    hostile_summary = snapshot_row()
+    hostile_summary.save_version = 10**500
+    hostile_summary.summary_json.update(
+        {
+            "level": "21",
+            "gold": float("inf"),
+            "currentZoneIndex": 10**500,
+            "currentZoneType": ["field"],
+        }
+    )
+    hostile_slot = service._build_character_slots([hostile_summary])[2]
+    for field in ("saveVersion", "level", "gold", "currentZoneIndex", "currentZoneType"):
+        require(hostile_slot[field] is None, f"unsafe admin summary field survived: {field}")
+    require(service._safe_bounded_int(True) is None, "bool was accepted as an admin integer")
+    require(service._safe_gold(float("nan")) is None, "NaN was accepted as admin gold")
+    require(service._safe_gold(10**50) == 10**50, "bounded finite admin gold was removed")
+    require(service._safe_zone_type("field") == "field", "known zone type was removed")
+    require(service._safe_zone_type("future-zone") is None, "unknown zone type was exposed")
+
 
 def test_status_safety_contract() -> None:
     service = AccountUserManagementService()
@@ -213,6 +278,34 @@ def test_status_safety_contract() -> None:
         "password-less local-dev row was treated as the last real administrator",
     )
 
+    unverified_owner = user_row(
+        user_id=10,
+        username="owner-pending",
+        is_admin=True,
+    )
+    unverified_owner.email_verified_at = None
+    require(
+        service._is_initialized_admin(unverified_owner),
+        "unverified owner admin did not lock the one-shot bootstrap",
+    )
+    require(
+        service._bootstrap_block_reason(user_row(user_id=11), initialized_admin_count=1)
+        is not None,
+        "a verified account could bypass an existing unverified owner admin",
+    )
+    unverified_preview = service._build_status_preview(
+        unverified_owner,
+        admin_user_id=99,
+        base_is_active=True,
+        next_is_active=False,
+        reason="미인증 owner 상태 판정",
+        active_admin_count=1,
+    )
+    require(
+        "cannot_suspend_last_active_admin" not in unverified_preview["blockers"],
+        "unverified owner was counted as a login-capable active administrator",
+    )
+
     stale_preview = service._build_status_preview(
         user_row(user_id=9),
         admin_user_id=99,
@@ -224,6 +317,48 @@ def test_status_safety_contract() -> None:
     require(stale_preview["status"] == "stale", "stale baseIsActive was not rejected")
     require(last_preview["confirmationText"] == "계정 정지: manager", "exact confirmation text changed")
     assert_no_sensitive_response_keys(last_preview)
+
+
+async def test_status_apply_revalidates_locked_actor() -> None:
+    service = AccountUserManagementService()
+    target = user_row(user_id=7, username="target-user")
+    suspended_actor = user_row(
+        user_id=99,
+        username="stale-admin",
+        is_active=False,
+        is_admin=True,
+    )
+    session = FakeApplySession([target, suspended_actor])
+    try:
+        await service.apply_status_change(
+            session,
+            admin_user_id=suspended_actor.id,
+            user_id=target.id,
+            base_is_active=True,
+            next_is_active=False,
+            reason="dependency 이후 actor 정지 회귀",
+            confirm_text="계정 정지: target-user",
+        )
+    except HTTPException as exc:
+        require(exc.status_code == 403, "stale admin actor did not fail with 403")
+    else:
+        raise AssertionError("stale admin actor applied an account write")
+
+    require(session.rollback_calls == 1, "stale actor lock transaction was not rolled back")
+    require(session.commit_calls == 0 and not session.added, "stale actor wrote an audit or account row")
+    require(len(session.statements) == 1, "stale actor path executed unexpected queries")
+    lock_stmt = session.statements[0]
+    require(
+        lock_stmt.get_execution_options().get("populate_existing") is True,
+        "actor lock does not refresh identity-map state",
+    )
+    lock_sql = str(lock_stmt)
+    require("ORDER BY users.id" in lock_sql, "actor/target locks are not stable-ordered")
+    require("FOR UPDATE" in lock_sql.upper(), "actor/target rows are not locked")
+    require(
+        int(suspended_actor.id) in lock_stmt.compile().params.values(),
+        "actor id is absent from the lock query",
+    )
 
 
 def test_schema_and_source_guards() -> None:
@@ -254,8 +389,21 @@ def test_schema_and_source_guards() -> None:
     require("snapshot_json" not in load_only_block, "member summary query explicitly loads raw snapshot_json")
     count_block = source.split("async def _count_active_admins", 1)[1].split("async def _snapshots_by_user", 1)[0]
     require("User.password_hash.is_not(None)" in count_block, "active admin count includes login-ineligible rows")
+    require("User.email_canonical.is_not(None)" in count_block, "active admin count omits email identity")
+    require("User.email_verified_at.is_not(None)" in count_block, "active admin count omits verification")
     lock_block = source.split("lock_stmt =", 1)[1].split("locked_users =", 1)[0]
     require("User.password_hash.is_not(None)" in lock_block, "status apply lock omits login-capable admin filter")
+    require("User.id == int(admin_user_id)" in lock_block, "status apply lock omits the actor")
+    require("populate_existing=True" in lock_block, "status apply lock keeps stale identity-map state")
+    require(".order_by(User.id)" in lock_block, "status apply lock order is unstable")
+    initialized_block = source.split("async def _count_initialized_admins", 1)[1].split(
+        "async def _count_active_admins",
+        1,
+    )[0]
+    require("User.email_verified_at" not in initialized_block, "unverified owner no longer locks bootstrap")
+    require("def _safe_scalar" not in source, "admin member summary accepts arbitrary scalars")
+    require("math.isfinite" in source, "admin numeric summary omits finite-number validation")
+    require("ADMIN_SUMMARY_GOLD_MAX" in source, "admin gold summary has no size bound")
     require("AdminChangeLog(" in source, "account status/bootstrap writes lack an audit log")
 
 
@@ -263,6 +411,7 @@ def main() -> None:
     test_route_dependencies()
     test_safe_serialization_and_character_slots()
     test_status_safety_contract()
+    asyncio.run(test_status_apply_revalidates_locked_actor())
     test_schema_and_source_guards()
     print("OK: v370 authenticated account-admin management smoke passed")
 

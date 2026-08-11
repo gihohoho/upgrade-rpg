@@ -27,6 +27,7 @@ RESULT = "runtime-blocking-io-audit-passed"
 
 ROUTE_METHODS = {"delete", "get", "head", "options", "patch", "post", "put", "trace", "websocket"}
 ASYNC_WITHOUT_AWAIT_ALLOWLIST = {
+    "backend/app/main.py:auth_flow_error_handler",
     "backend/app/main.py:request_validation_error_handler",
     "backend/app/api/routes/auth.py:get_me",
     "backend/app/api/routes/auth.py:logout",

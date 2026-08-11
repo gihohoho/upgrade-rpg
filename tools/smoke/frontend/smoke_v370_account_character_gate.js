@@ -27,9 +27,9 @@ async function run() {
 
 	assert.match(html, /<body class="account-gate-active">/);
 	assert.match(html, /id="game-root"[^>]+aria-hidden="true"[^>]+inert/);
-	assert.match(html, /src\/styles\/account\.css\?v=370/);
-	assert(html.indexOf("auth-session.js?v=370") < html.indexOf("game-api-client.js?v=370"));
-	assert(html.indexOf("account-gate.js?v=370") < html.indexOf("main.js?v=370"));
+	assert.match(html, /src\/styles\/account\.css\?v=371/);
+	assert(html.indexOf("auth-session.js?v=371") < html.indexOf("game-api-client.js?v=371"));
+	assert(html.indexOf("account-gate.js?v=371") < html.indexOf("main.js?v=370"));
 	assert.match(html, /src\/systems\/combat-system\.js\?v=370/);
 	assert.match(html, /src\/api\/admin-readonly-overview\.js\?v=370/);
 
@@ -72,7 +72,7 @@ async function run() {
 	assert.equal(sessionStorage.getItem(context.RpgAuthSession.ACCESS_TOKEN_KEY), null);
 
 	vm.runInNewContext(clientSource, context, { filename: "game-api-client.js" });
-	await context.RpgGameApi.loginAccount({ username: "safe_user", password: "Password1" });
+	await context.RpgGameApi.loginAccount({ identifier: "safe_user", password: "Password1" });
 	assert.equal(calls.at(-1).options.headers.Authorization, undefined, "login must not send an existing bearer token");
 	await context.RpgGameApi.listAccountCharacters();
 	assert.equal(calls.at(-1).options.headers.Authorization, "Bearer local-token");

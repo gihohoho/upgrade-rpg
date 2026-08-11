@@ -3,7 +3,10 @@
 ## 목적
 
 이 문서는 baseline 완료 이후 배포 환경에서 migration을 어떻게 다룰지 고정합니다.
-현재 원본 DB는 `v295_initial_schema`에 있으며, v306 결과상 새 revision은 필요하지 않습니다.
+현재 local/live/Neon DB는 `v295_initial_schema`에 있습니다. v306의 “새 revision 불필요”는
+당시 model/schema에 대한 역사이며, 현재 local source graph에는 이메일 identity용
+`v371_email_identity_lifecycle` head가 source-only로 준비됐습니다. v371은 아직 어떤
+DB에도 적용하지 않았습니다.
 
 ## 핵심 원칙
 
@@ -35,7 +38,10 @@ Docker entrypoint에서 자동 upgrade
 FastAPI lifespan에서 alembic.command.upgrade 호출
 ```
 
-향후 실제 revision이 생기더라도 운영 migration은 전용 guard가 exact target DB, exact revision, backup evidence를 확인한 뒤 한 번만 실행하도록 설계합니다.
+v371 같은 실제 revision의 운영 migration은 전용 guard가 exact target DB, 현재
+`v295_initial_schema`, exact target revision, source hash와 backup evidence를 확인한 뒤
+별도 exact-SHA 승인을 받아 한 번만 실행하도록 설계합니다. `stamp head`로 v371 schema
+변경을 건너뛰지 않습니다.
 
 ## 장애 대응
 
@@ -54,6 +60,16 @@ FastAPI lifespan에서 alembic.command.upgrade 호출
 - `.env` 변경: 미승인
 - Docker container/volume 변경: 미승인
 - DB schema/data 변경: 없음
+
+## 현재 v371 경계
+
+- local source graph head: `v371_email_identity_lifecycle`
+- local/live/Neon DB current: `v295_initial_schema`
+- v371 revision source/parity smoke: 준비/PASS
+- `email-validator 2.3.0` dependency/lock: owner 승인 대기
+- isolated migration review/roundtrip: 후속 별도 준비
+- local/Neon upgrade/downgrade/stamp: 미승인·0회
+- Brevo 설정, owner bootstrap, app deploy: migration 승인과 분리
 
 ## v308 runtime hardening 이후에도 유지되는 원칙
 

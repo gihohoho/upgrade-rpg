@@ -19,7 +19,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-PROJECT_VERSION = "v370"
+PROJECT_VERSION = "v371"
 REPORT_PATH = Path("docs/current/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
 
@@ -81,8 +81,16 @@ VUE_SAFE_AUTO_CHECKS = {
 LEGACY_ACCOUNT_ACTIVE_ROUTES = {
     "POST /api/v1/auth/register",
     "POST /api/v1/auth/login",
+    "POST /api/v1/auth/verify-email",
+    "POST /api/v1/auth/resend-verification",
+    "POST /api/v1/auth/recover-username",
+    "POST /api/v1/auth/request-password-reset",
+    "POST /api/v1/auth/reset-password",
     "GET /api/v1/auth/me",
     "POST /api/v1/auth/logout",
+    "GET /api/v1/auth/account-deletion/preview",
+    "POST /api/v1/auth/account-deletion/request",
+    "POST /api/v1/auth/account-deletion/confirm",
     "GET /api/v1/account/characters",
     "POST /api/v1/account/characters",
     "DELETE /api/v1/account/characters/{account_character_id}",
@@ -332,7 +340,7 @@ def render_report(root: Path) -> str:
 
 이 문서는 FastAPI route 파일을 정적으로 분석해서 현재 API 목록을 정리한 자동 보고서입니다.
 
-중요: v370은 **회원가입·로그인·계정별 8개 캐릭터 슬롯·관리자 회원관리 로컬 구현 단계**입니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
+중요: v371은 **이메일 인증 가입·아이디 찾기·비밀번호 재설정·계정 삭제와 owner 관리자 one-shot, 수동 migration source 준비 단계**입니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
 
 ## 생성 방식
 
@@ -370,7 +378,7 @@ def render_report(root: Path) -> str:
 
 ## legacy 계정·관리자 화면에서 사용하는 route
 
-아래 경로는 v370 로그인 gate, 캐릭터 슬롯, 저장 브리지 또는 관리자 회원관리 화면에 연결됩니다. `register`, `login`, `master-data`, health를 제외한 계정·게임 저장·관리자 경로는 실제 Bearer 인증을 요구합니다.
+아래 경로는 v371 이메일 계정 gate, 캐릭터 슬롯, 저장 브리지 또는 관리자 회원관리 화면에 연결됩니다. 이메일 인증·복구 링크처럼 명시적으로 public인 경로를 제외한 계정·게임 저장·관리자 경로는 실제 Bearer 인증을 요구합니다.
 
 {table(["route", "group", "query/body 힌트", "response type", "endpoint"], active_rows)}
 
@@ -395,21 +403,21 @@ def render_report(root: Path) -> str:
 
 ## 전체 route map
 
-{table(["method", "full path", "endpoint", "source", "response type", "v370 판단"], route_rows(routes))}
+{table(["method", "full path", "endpoint", "source", "response type", "v371 판단"], route_rows(routes))}
 
 ## 다음 추천 단계
 
-`next safe stage: owner-create-local-account-bootstrap-admin-and-verify-authenticated-multicharacter-flow`
+`next safe stage: owner-approve-email-validator-install-and-review-v371-migration-source`
 
-로컬 v370 검증 뒤 기호가 직접 일반 계정을 만들고, 별도 dev key를 브라우저나 채팅에 노출하지 않는 방식으로 최초 관리자 1회를 지정합니다.
+v371 source 검증 뒤에도 dependency 설치, v371 migration apply, Brevo 설정, owner bootstrap apply는 각각 별도 경계로 남습니다.
 
 권장 범위:
 
-1. 로컬 회원가입·로그인과 계정 A/B 저장 격리를 확인합니다.
-2. 최초 관리자 지정과 회원 정지 Preview/Apply 감사 로그를 확인합니다.
-3. rate limit, 비밀번호 변경·복구, 서버측 세션 정책을 공개 배포 전에 보강합니다.
-4. v370 backend image와 legacy static을 같은 승인 단위로 게시·배포합니다.
-5. OAuth 소셜 로그인은 별도 계정 연결 정책이 정해질 때 추가합니다.
+1. `email-validator==2.3.0` 설치와 Linux lock 갱신을 기호 승인 뒤 수행합니다.
+2. v371 migration source와 isolated roundtrip 계획을 검토하고 exact SHA 승인 전에는 실제 DB에 적용하지 않습니다.
+3. Brevo sender/API key와 Render secret은 공급자 설정 승인 단계에서만 구성합니다.
+4. 공개 전 rate limit, raw body cap, 세션 폐기, save revision/CAS와 CSP·개인정보 정책을 보강합니다.
+5. backend image와 legacy static은 이메일 backend가 준비된 뒤 같은 exact-SHA 승인 단위로 게시·배포합니다.
 """
 
 

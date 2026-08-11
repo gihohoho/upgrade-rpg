@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import math
 from typing import Any, Iterable
 
 from fastapi import HTTPException, status
@@ -14,6 +15,9 @@ from app.services.game_service import serialize_value
 
 
 ACCOUNT_CHARACTER_SLOT_COUNT = 8
+ADMIN_SUMMARY_INTEGER_MAX = 1_000_000_000
+ADMIN_SUMMARY_GOLD_MAX = 10**100
+ADMIN_SUMMARY_ZONE_TYPES = frozenset({"town", "field", "boss", "boss_empty"})
 
 
 class AccountUserManagementService:
@@ -42,6 +46,7 @@ class AccountUserManagementService:
             initialized_admin_count == 0
             and current.is_active
             and current.password_hash
+            and self._has_verified_email_identity(current)
         )
         return {
             "status": "ready" if can_bootstrap else "locked",
@@ -131,7 +136,13 @@ class AccountUserManagementService:
 
         clauses: list[Any] = []
         if safe_query:
-            clauses.append(func.lower(User.username).contains(safe_query.casefold(), autoescape=True))
+            folded_query = safe_query.casefold()
+            clauses.append(
+                or_(
+                    func.lower(User.username).contains(folded_query, autoescape=True),
+                    func.lower(User.email_canonical).contains(folded_query, autoescape=True),
+                )
+            )
         if safe_status == "active":
             clauses.append(User.is_active.is_(True))
         elif safe_status == "suspended":
@@ -186,7 +197,11 @@ class AccountUserManagementService:
         return {
             "status": "loaded",
             "readOnly": True,
-            "user": self._serialize_user(user, character_slots=slots),
+            "user": self._serialize_user(
+                user,
+                character_slots=slots,
+                include_full_email=True,
+            ),
             "characterSlots": slots,
             "safeFieldPolicy": "account-metadata-and-character-summary-only",
             "rawSaveReturned": False,
@@ -233,17 +248,31 @@ class AccountUserManagementService:
             .where(
                 or_(
                     User.id == int(user_id),
+                    User.id == int(admin_user_id),
                     (
                         User.is_admin.is_(True)
                         & User.is_active.is_(True)
                         & User.password_hash.is_not(None)
+                        & User.email_canonical.is_not(None)
+                        & User.email_verified_at.is_not(None)
                     ),
                 )
             )
             .order_by(User.id)
+            .execution_options(populate_existing=True)
             .with_for_update()
         )
         locked_users = list((await session.execute(lock_stmt)).scalars().all())
+        actor = next(
+            (row for row in locked_users if int(row.id) == int(admin_user_id)),
+            None,
+        )
+        if actor is None or not self._is_login_capable_active_admin(actor):
+            await session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="관리자 권한 또는 계정 상태가 변경되었습니다. 다시 로그인해주세요.",
+            )
         user = next((row for row in locked_users if int(row.id) == int(user_id)), None)
         if user is None:
             await session.rollback()
@@ -251,7 +280,7 @@ class AccountUserManagementService:
         active_admin_count = sum(
             1
             for row in locked_users
-            if row.is_admin and row.is_active and row.password_hash
+            if self._is_login_capable_active_admin(row)
         )
         preview = self._build_status_preview(
             user,
@@ -328,6 +357,7 @@ class AccountUserManagementService:
         if (
             user.is_admin
             and user.password_hash
+            and self._has_verified_email_identity(user)
             and current_is_active
             and not desired_is_active
             and int(active_admin_count) <= 1
@@ -357,7 +387,25 @@ class AccountUserManagementService:
 
     @staticmethod
     def _is_initialized_admin(user: User) -> bool:
+        # One-shot bootstrap stays locked once an owner admin exists, even if
+        # that account still needs to finish email verification.
         return bool(user.is_admin and user.password_hash)
+
+    @staticmethod
+    def _has_verified_email_identity(user: User) -> bool:
+        return bool(
+            str(getattr(user, "email_canonical", None) or "").strip()
+            and getattr(user, "email_verified_at", None)
+        )
+
+    @classmethod
+    def _is_login_capable_active_admin(cls, user: User) -> bool:
+        return bool(
+            user.is_admin
+            and user.is_active
+            and user.password_hash
+            and cls._has_verified_email_identity(user)
+        )
 
     @classmethod
     def _bootstrap_block_reason(cls, user: User, initialized_admin_count: int) -> str | None:
@@ -367,13 +415,18 @@ class AccountUserManagementService:
             return "비활성 계정은 최초 관리자가 될 수 없습니다."
         if not user.password_hash:
             return "비밀번호가 설정된 로그인 계정만 최초 관리자가 될 수 있습니다."
+        if not cls._has_verified_email_identity(user):
+            return "이메일 인증을 완료한 로그인 계정만 최초 관리자가 될 수 있습니다."
         return None
 
     async def _count_initialized_admins(self, session: AsyncSession) -> int:
         stmt = (
             select(func.count())
             .select_from(User)
-            .where(User.is_admin.is_(True), User.password_hash.is_not(None))
+            .where(
+                User.is_admin.is_(True),
+                User.password_hash.is_not(None),
+            )
         )
         return int((await session.execute(stmt)).scalar_one() or 0)
 
@@ -385,6 +438,8 @@ class AccountUserManagementService:
                 User.is_admin.is_(True),
                 User.is_active.is_(True),
                 User.password_hash.is_not(None),
+                User.email_canonical.is_not(None),
+                User.email_verified_at.is_not(None),
             )
         )
         return int((await session.execute(stmt)).scalar_one() or 0)
@@ -439,31 +494,59 @@ class AccountUserManagementService:
                 "name": self._safe_text(metadata.get("name"), 80),
                 "characterCode": self._safe_text(metadata.get("characterCode"), 80),
                 "characterCreatedAt": self._safe_text(metadata.get("createdAt"), 80),
-                "saveVersion": snapshot.save_version,
-                "level": self._safe_scalar(summary.get("level")),
-                "gold": self._safe_scalar(summary.get("gold")),
-                "currentZoneIndex": self._safe_scalar(summary.get("currentZoneIndex")),
-                "currentZoneType": self._safe_text(summary.get("currentZoneType"), 30),
+                "saveVersion": self._safe_bounded_int(snapshot.save_version),
+                "level": self._safe_bounded_int(summary.get("level")),
+                "gold": self._safe_gold(summary.get("gold")),
+                "currentZoneIndex": self._safe_bounded_int(summary.get("currentZoneIndex")),
+                "currentZoneType": self._safe_zone_type(summary.get("currentZoneType")),
                 "lastSavedAt": serialize_value(snapshot.updated_at),
             }
         return slots
 
     @staticmethod
-    def _safe_scalar(value: Any) -> str | int | float | bool | None:
-        serialized = serialize_value(value)
-        return serialized if isinstance(serialized, str | int | float | bool) or serialized is None else None
+    def _safe_bounded_int(value: Any) -> int | None:
+        if isinstance(value, bool) or not isinstance(value, int):
+            return None
+        return value if 0 <= value <= ADMIN_SUMMARY_INTEGER_MAX else None
+
+    @staticmethod
+    def _safe_gold(value: Any) -> int | float | None:
+        if isinstance(value, bool) or not isinstance(value, int | float):
+            return None
+        if isinstance(value, float) and not math.isfinite(value):
+            return None
+        return value if 0 <= value <= ADMIN_SUMMARY_GOLD_MAX else None
+
+    @staticmethod
+    def _safe_zone_type(value: Any) -> str | None:
+        return value if isinstance(value, str) and value in ADMIN_SUMMARY_ZONE_TYPES else None
 
     @staticmethod
     def _safe_text(value: Any, limit: int) -> str | None:
-        text = str(value or "").strip()
+        if not isinstance(value, str):
+            return None
+        text = value.strip()
         return text[:limit] or None
 
     @staticmethod
-    def _serialize_user(user: User, *, character_slots: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    def _serialize_user(
+        user: User,
+        *,
+        character_slots: list[dict[str, Any]] | None = None,
+        include_full_email: bool = False,
+    ) -> dict[str, Any]:
         slots = character_slots or []
-        return {
+        email = str(
+            getattr(user, "email_original", None)
+            or getattr(user, "email_canonical", None)
+            or ""
+        ).strip() or None
+        email_verified = bool(email and getattr(user, "email_verified_at", None))
+        serialized = {
             "id": int(user.id),
             "username": str(user.username),
+            "maskedEmail": AccountUserManagementService._mask_email(email),
+            "emailVerified": email_verified,
             "isActive": bool(user.is_active),
             "status": "active" if user.is_active else "suspended",
             "isAdmin": bool(user.is_admin),
@@ -472,3 +555,16 @@ class AccountUserManagementService:
             "createdAt": serialize_value(user.created_at),
             "updatedAt": serialize_value(user.updated_at),
         }
+        if include_full_email:
+            serialized["email"] = email
+        return serialized
+
+    @staticmethod
+    def _mask_email(value: str | None) -> str | None:
+        email = str(value or "").strip()
+        if "@" not in email:
+            return None
+        local, domain = email.rsplit("@", 1)
+        if not local or not domain:
+            return None
+        return f"{local[:1]}{'*' * max(3, min(len(local) - 1, 8))}@{domain}"

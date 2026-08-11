@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v370
+# Upgrade RPG Codex working rules — v371
 
 이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
 
@@ -58,7 +58,13 @@
 - 최초 관리자 지정은 로그인 가능한 관리자가 없을 때 로그인 계정과 별도 `X-Admin-Dev-Key`를 함께 확인하는 1회 bootstrap으로만 허용합니다. 회원 상태 apply는 실제 관리자 Bearer 권한과 dev key, preview/stale 확인, 본인·마지막 관리자 보호, 감사 로그를 모두 요구합니다.
 - 인증 `422` 응답은 `loc`·`type`·`msg`만 유지하고 비밀번호·비밀번호 확인의 `input`과 인증 body를 반사하지 않습니다. SQLAlchemy는 application debug와 무관하게 `echo=False`, `hide_parameters=True`를 유지하고, 관리자 save summary는 명시 allow-list의 제한된 scalar만 반환하며 raw snapshot과 임의 `summary_json` 키는 반환하지 않습니다.
 - 계정 전환과 로그아웃은 현재 캐릭터 저장을 기다린 뒤 token과 선택 상태를 지우고 reload해 오래된 runtime과 중복 timer를 남기지 않습니다. `beforeunload`에서는 네트워크 저장 완료를 기대하지 않고 현재 캐릭터의 로컬 저장만 수행합니다.
-- 인증이 포함된 공개 배포는 backend image와 legacy static을 같은 승인 단위로 준비합니다. 공개 회원가입 전 rate limit, 비밀번호 변경·복구, 서버측 session/refresh·폐기 정책, ASGI 계층 raw request body 제한, 다중 기기 revision 충돌·낙관적 잠금, HTTPS/CSP/XSS와 개인정보·삭제 정책을 별도 검토합니다.
+- 인증이 포함된 공개 배포는 backend image와 legacy static을 같은 승인 단위로 준비합니다. 공개 회원가입 전 로그인 상태 비밀번호 변경, 인증·복구·삭제 요청 rate limit, 만료된 미인증 계정의 안전한 정리·메일 소유자 회수 정책, 서버측 session/refresh·폐기 정책, ASGI 계층 raw request body 제한, 다중 기기 revision 충돌·낙관적 잠금, HTTPS/CSP/XSS와 개인정보·삭제 정책을 별도 검토합니다.
+- v371 이후 새 회원가입은 별도 아이디와 필수 이메일을 함께 받으며 이메일 링크 인증 전에는 access token과 게임 접속을 허용하지 않습니다. 로그인은 아이디 또는 이메일을 허용하고, 아이디 찾기·비밀번호 재설정·인증 재전송 요청은 계정 존재 여부와 실제 발송 여부를 같은 응답으로 숨깁니다.
+- 이메일 작업 token은 CSPRNG 원문을 메일 링크에 한 번만 전달하고 DB에는 `JWT_SECRET_KEY`와 다른 `EMAIL_TOKEN_SECRET`으로 만든 HMAC-SHA256 digest만 저장합니다. 인증·비밀번호 재설정·계정 삭제 token은 목적·만료·미사용 상태가 모두 맞을 때 row lock 안에서 한 번만 사용합니다.
+- 이메일 action URL은 고정 allow-list `PUBLIC_FRONTEND_ORIGIN`으로만 만들며 요청의 Host·return URL을 신뢰하지 않습니다. fragment token은 프런트가 읽은 직후 history에서 제거하고 원문 token, 비밀번호, 전체 인증 body를 API·로그·관리자 화면에 노출하지 않습니다.
+- Render Free 계정 메일은 SMTP가 아니라 Brevo HTTPS API만 사용합니다. 실제 발송 전 transactional anonymous tracking, log retention 1개월, email preview 미저장을 확인하고, account-wide 권한인 전용 API key는 Git/Docker 제외 secret store에만 두며 노출·미사용 시 즉시 폐기합니다.
+- 일반 회원 계정 삭제는 로그인 상태의 범위 preview → 현재 비밀번호 → 이메일 링크 → 게임 모달의 정확한 `계정 삭제` 확인 문구 순서만 허용합니다. 관리자·감사 기록 연결 계정은 fail-closed로 막고 삭제 성공 전 local cache를 지우지 않습니다.
+- 최상위 owner 관리자 계정은 JWT secret과 비밀번호를 공유하지 않습니다. Git 제외 `.env`의 별도 `OWNER_ADMIN_*` 값을 사용하는 explicit one-shot script만 허용하고 startup 자동 mutation을 금지합니다. 실제 apply는 정확한 migration head, 기존 관리자 0명, enable flag, `--apply`, 소문자 40자리 `--approved-sha`와 현재 Git HEAD 일치, 프로젝트 root·tracked script·tracked index/worktree clean 검사를 모두 요구합니다. 환경·승인 SHA·아이디/이메일 SHA-256 identity fingerprint를 묶은 정확한 확인 문구까지 DB session 생성 전에 통과해야 하며, 성공 직후 enable/password 값을 제거합니다. `.env` 입력만으로 이메일 인증을 대신하지 않습니다.
 
 ## Code Review Graph 제한 시험
 
@@ -77,9 +83,9 @@
 ## 현재 고정 상태
 
 ```txt
-latest: v370.account-auth-character-slots-admin-management-local-ready
-strict result: account-auth-character-slots-admin-management-local-ready
-next safe stage: owner-create-local-account-bootstrap-admin-and-verify-authenticated-multicharacter-flow
+latest: v371.email-verification-recovery-account-deletion-migration-prepared
+strict result: email-verification-recovery-account-deletion-migration-prepared
+next safe stage: owner-approve-email-validator-install-and-review-v371-migration-source
 v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
 v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
 v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
@@ -106,7 +112,7 @@ verified production reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6
 verified v351 candidate: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac
 Render live reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac
 architecture: managed PostgreSQL + verify-full + provider-managed HTTPS ingress + backend 1/1
-Alembic current: v295_initial_schema / new revision needed: no
+Alembic current: v295_initial_schema / prepared next revision: v371_email_identity_lifecycle / applied: no
 ```
 
 - CI credential은 GitHub Actions `GITHUB_TOKEN`, local pull은 GitHub CLI OAuth `read:packages` → Docker credential store입니다.
@@ -131,7 +137,13 @@ Alembic current: v295_initial_schema / new revision needed: no
 - v370은 회원가입·로그인, 계정별 캐릭터 슬롯 8개, 캐릭터별 로컬/DB snapshot 격리와 관리자 회원 관리를 로컬 소스에 구현했습니다. 기존 `users`, `user_profiles`, `user_save_snapshots`, `admin_change_logs`를 사용하므로 새 Alembic revision은 없습니다.
 - v370 인증은 기존 `JWT_SECRET_KEY`로 서명한 24시간 Bearer access token과 직접 `bcrypt 5.0.0` 해시를 사용합니다. 회원가입으로 관리자 권한을 받을 수 없고, 각 인증 요청에서 활성 계정을 다시 확인합니다.
 - 공개 Render backend와 Static Site는 계속 v351입니다. v370 구현 과정에서 실제 DB write·seed·migration, Neon 변경, Render env·서비스·배포, GHCR 게시를 실행하지 않았습니다. backend/frontend focused, Python/JavaScript, runtime blocking-I/O, route map 40 ops, static build, GitHub/GHCR reproducibility, core smoke와 desktop/mobile 브라우저 QA가 모두 통과했으며 즉시 수정 blocker는 없습니다.
-- 공개 회원가입 전 후속 보강은 rate limit, 비밀번호 변경·복구, 서버측 session/refresh·원격 폐기, ASGI raw body cap, 다중 기기 save revision·충돌 해결, HTTPS/CSP/XSS와 개인정보·계정 삭제 정책입니다. 새 secret·extension·외부 서비스·설치는 이번 로컬 구현에 필요하지 않습니다.
+- v370 당시 공개 회원가입 전 후속 보강은 rate limit, 비밀번호 변경·복구, 서버측 session/refresh·원격 폐기, ASGI raw body cap, 다중 기기 save revision·충돌 해결, HTTPS/CSP/XSS와 개인정보·계정 삭제 정책이었습니다. v371에서 이메일 인증·분실 복구·삭제 source를 준비했지만 rate limit, 만료된 미인증 계정 정리·메일 소유자 회수, 로그인 상태 비밀번호 변경, server session과 나머지 공개 hardening은 계속 남습니다.
+- v371 source는 필수 이메일 인증, 아이디 찾기, 비밀번호 재설정, 이메일 확인을 거친 일반 회원 계정 삭제, `authVersion` access-token 폐기와 관리자 이메일 상태 표시를 준비했습니다. `users`의 nullable legacy-safe 이메일 열과 `user_email_action_tokens`를 추가하는 `v371_email_identity_lifecycle` revision은 source-only이며 아직 어떤 DB에도 적용하지 않았습니다.
+- v371 계정 메일 공급자는 Render Free의 SMTP 포트 제한 때문에 Brevo Free HTTPS API로 선택했습니다. Brevo 계정·발신자 인증·API key 생성·secret 주입·메일 발송은 실행하지 않았고, 실제 설정 전 anonymous transactional tracking·1개월 log retention·preview 미저장과 account-wide API key 회전 정책을 확인합니다.
+- 이메일 정규화는 승인 대기 중인 `email-validator 2.3.0`을 사용하며 패키지와 Linux lock 갱신 전에는 약한 자체 검사로 폴백하지 않고 이메일 동작을 fail-closed로 유지합니다.
+- v371 local Alembic source graph head는 `v371_email_identity_lifecycle`, local/Neon DB current는 `v295_initial_schema`입니다. `migration-prepared`는 revision source와 parity 검사가 준비됐다는 뜻이며 apply·downgrade·stamp 완료를 뜻하지 않습니다.
+- v371 backend 이메일 lifecycle·owner one-shot·migration parity, v370 backend 회귀, frontend v371 이메일 계정·v370 character/admin 회귀, Python compileall, JavaScript syntax, runtime blocking-I/O와 route map 48 ops(`GET 21 / POST 26 / DELETE 1`, duplicate 0), 전체 core smoke는 PASS입니다. 실제 Chrome 기본 viewport와 `390×844` account modal QA는 overflow 0, console warn/error 0입니다. 이메일 renderer 외부 asset 0·escape는 smoke로 확인했고 실제 메일 클라이언트 시각 QA는 Brevo 테스트 메일 단계로 남습니다. 독립 리뷰의 source-prepared 즉시 수정 blocker는 0건입니다.
+- v371 준비 중 실제 local/Neon DB write, Alembic apply/stamp, owner bootstrap, Render env·서비스·deploy, GHCR 게시를 실행하지 않았습니다. 공개 Render backend와 Static Site는 계속 v351입니다.
 - v356에서 12단계 `607%` 기준을 반영했고, v357에서 16단계 `무의식 : 넥스의 몽환의 어둠 +20 = 2121%` 실측 기준을 추가해 고단계 공식을 다시 조정했습니다.
 - 12단계 이상 `skill_all` 장비는 +0 기본값을 유지합니다. +20 목표는 12단계 `607%`와 16단계 `2121%`를 단계당 `1.36721871444...`배 기하 보간·외삽하고, +1~+19는 기존 `enhanceTable.sdmg` 진행률을 그대로 사용합니다.
 - +20 스킬 피해는 13단계 `829.9%`, 14단계 `1134.7%`, 15단계 `1551.3%`, 17단계 `2899.9%`, 18단계 `3964.8%`, 39단계 `2823673.9%`입니다. 17단계 이후 실제 스킬 피해 실측값은 저장소에 없어 새 기준이 생기기 전까지 위 비율을 추정 외삽합니다.
@@ -176,7 +188,7 @@ Alembic current: v295_initial_schema / new revision needed: no
 - `src/api/runtime-config.js`는 로컬 host에서는 기존 local API를 유지하고 그 밖의 host에서만 `https://upgrade-rpg-api.onrender.com/api/v1`을 사용합니다.
 - frontend Static Site 최초 배포와 backend CORS recovery deploy는 완료됐습니다. recovery 1회 승인은 소비됐고 추가 provider deploy는 새 승인 전 실행하지 않습니다.
 - 공개 `admin.html`에는 admin write key를 넣지 않으며 read-only public preview로만 취급합니다.
-- 현재 필요한 extension·권한·설치는 없습니다.
+- 현재 필요한 새 설치는 `email-validator 2.3.0`이며 기호 승인 대기 중입니다. 별도 extension·GitHub 권한은 필요하지 않고, Brevo account·sender·전용 API key는 migration 검토 뒤 별도로 요청합니다.
 - Windows PostgreSQL 16/OpenSSL의 `sslrootcert=system` 오류는 Windows 시스템 공개 CA를 Git 제외 로컬 PEM으로 내보내 `verify-full`에 전달하는 방식으로 해결했고, asyncpg와 libpq read-only preflight가 모두 통과했습니다.
 - 승인된 v343 commit `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 Neon restore를 한 번 실행했고 22 application tables / 748 rows / schema digest가 일치했습니다. legacy data digest는 session timezone 차이로 실패해 stamp 전에 안전하게 중단했습니다.
 - v343 안전 중단 시점에 aware datetime을 UTC로 정규화한 digest `4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c`가 verified rehearsal과 Neon에서 일치했고, 당시 `alembic_version`은 없었습니다.

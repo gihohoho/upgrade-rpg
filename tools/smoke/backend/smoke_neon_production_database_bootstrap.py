@@ -41,6 +41,10 @@ def production_settings(database_url: str = SAFE_DATABASE_URL) -> Settings:
         database_url=database_url,
         jwt_secret_key=SAFE_SECRET,
         admin_write_dev_key=SAFE_ADMIN_KEY,
+        brevo_api_key="b" * 40,
+        brevo_from_email="noreply@game.example.invalid",
+        email_token_secret="e" * 40,
+        public_frontend_origin="https://game.example.invalid",
         **{"CORS_ORIGINS": "[]"},
     )
 

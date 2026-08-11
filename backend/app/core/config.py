@@ -1,8 +1,9 @@
+import hmac
 import ssl
 from functools import lru_cache
 from urllib.parse import parse_qs, urlsplit
 
-from pydantic import Field, model_validator
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,6 +17,7 @@ LOCAL_DEV_CORS_ORIGINS = (
 )
 
 LOCAL_JWT_SECRET = "change-me-before-production"
+LOCAL_EMAIL_TOKEN_SECRET = "change-me-before-production-email-token"
 LOCAL_ADMIN_WRITE_KEY = "local-admin-dev-key"
 PRODUCTION_ENVIRONMENTS = {"prod", "production"}
 
@@ -38,6 +40,30 @@ class Settings(BaseSettings):
 
     jwt_secret_key: str = LOCAL_JWT_SECRET
     access_token_expire_minutes: int = 1440
+    email_verification_expire_minutes: int = Field(default=1440, ge=5, le=10080)
+    password_reset_expire_minutes: int = Field(default=30, ge=5, le=1440)
+    account_deletion_expire_minutes: int = Field(default=30, ge=5, le=1440)
+
+    # Render Free blocks outbound mail ports. Account mail is therefore sent only
+    # through Brevo's fixed HTTPS API by the later delivery service. Keeping these
+    # values empty locally lets read-only/source checks run without secrets; an
+    # email-producing endpoint must still fail closed until ``brevo_ready`` is true.
+    email_provider: str = "brevo"
+    brevo_api_key: SecretStr = SecretStr("")
+    brevo_from_email: str = ""
+    brevo_from_name: str = "Upgrade RPG"
+    email_token_secret: SecretStr = SecretStr(LOCAL_EMAIL_TOKEN_SECRET)
+    email_delivery_timeout_seconds: int = Field(default=10, ge=3, le=30)
+    public_frontend_origin: str = "http://127.0.0.1:5500"
+
+    # Explicit one-shot owner bootstrap inputs. FastAPI never consumes these
+    # values to mutate the database; only scripts/bootstrap_owner_admin.py may
+    # use them after its independent enable/confirmation/migration-head gates.
+    owner_admin_bootstrap_enabled: bool = False
+    owner_admin_username: str = ""
+    owner_admin_email: str = ""
+    owner_admin_password: SecretStr = SecretStr("")
+
     # Local-only guard for dangerous admin write endpoints until real login/RBAC is added.
     # Read-only admin APIs do not require this key.
     admin_write_dev_key: str = LOCAL_ADMIN_WRITE_KEY
@@ -69,6 +95,38 @@ class Settings(BaseSettings):
             errors.append("JWT_SECRET_KEY must contain at least 32 characters in production")
         if len(self.admin_write_dev_key.strip()) < 32:
             errors.append("ADMIN_WRITE_DEV_KEY must contain at least 32 characters in production")
+        email_token_secret = self.email_token_secret.get_secret_value().strip()
+        brevo_api_key = self.brevo_api_key.get_secret_value().strip()
+        if self.email_provider.strip().lower() != "brevo":
+            errors.append("EMAIL_PROVIDER must be brevo in production")
+        if not brevo_api_key:
+            errors.append("BREVO_API_KEY must be configured in production")
+        if not self.brevo_from_email.strip() or "@" not in self.brevo_from_email:
+            errors.append("BREVO_FROM_EMAIL must be configured in production")
+        if not self.brevo_from_name.strip():
+            errors.append("BREVO_FROM_NAME must be configured in production")
+        if email_token_secret == LOCAL_EMAIL_TOKEN_SECRET:
+            errors.append("EMAIL_TOKEN_SECRET must not use the local default in production")
+        if len(email_token_secret) < 32:
+            errors.append("EMAIL_TOKEN_SECRET must contain at least 32 characters in production")
+        if hmac.compare_digest(email_token_secret, self.jwt_secret_key.strip()):
+            errors.append("EMAIL_TOKEN_SECRET must be separate from JWT_SECRET_KEY")
+
+        try:
+            parsed_frontend_origin = urlsplit(self.public_frontend_origin.strip())
+        except ValueError:
+            errors.append("PUBLIC_FRONTEND_ORIGIN must be a valid HTTPS origin in production")
+        else:
+            if (
+                parsed_frontend_origin.scheme != "https"
+                or not parsed_frontend_origin.netloc
+                or parsed_frontend_origin.username is not None
+                or parsed_frontend_origin.password is not None
+                or parsed_frontend_origin.path not in {"", "/"}
+                or parsed_frontend_origin.query
+                or parsed_frontend_origin.fragment
+            ):
+                errors.append("PUBLIC_FRONTEND_ORIGIN must be an exact HTTPS origin in production")
 
         try:
             parsed_database_url = urlsplit(self.database_url)
@@ -98,6 +156,18 @@ class Settings(BaseSettings):
         if errors:
             raise ValueError("; ".join(errors))
         return self
+
+    @property
+    def brevo_ready(self) -> bool:
+        return bool(
+            self.email_provider.strip().lower() == "brevo"
+            and self.brevo_api_key.get_secret_value().strip()
+            and self.brevo_from_email.strip()
+            and "@" in self.brevo_from_email
+            and self.brevo_from_name.strip()
+            and self.email_token_secret.get_secret_value().strip() != LOCAL_EMAIL_TOKEN_SECRET
+            and len(self.email_token_secret.get_secret_value().strip()) >= 32
+        )
 
     @property
     def cors_origins(self) -> list[str]:

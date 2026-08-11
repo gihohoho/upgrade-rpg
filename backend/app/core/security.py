@@ -30,6 +30,9 @@ BCRYPT_ROUNDS = 12
 class CurrentUser:
     id: int
     username: str
+    email: str | None = None
+    email_verified: bool = False
+    auth_version: int = 0
     is_admin: bool = False
 
 
@@ -95,6 +98,7 @@ def verify_password(password: str, password_hash: str) -> bool:
 def create_access_token(
     user_id: int,
     *,
+    auth_version: int = 0,
     now: datetime | None = None,
     nonce: str | None = None,
 ) -> tuple[str, int]:
@@ -113,6 +117,7 @@ def create_access_token(
         "exp": int(expires_at.timestamp()),
         "nonce": nonce or secrets.token_hex(16),
         "tokenType": ACCESS_TOKEN_KIND,
+        "authVersion": int(auth_version),
     }
     encoded_header = _base64url_encode(
         json.dumps(header, ensure_ascii=True, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -159,10 +164,17 @@ def decode_access_token(token: str, *, now: datetime | None = None) -> dict[str,
         user_id = int(payload["sub"])
         issued_at = int(payload["iat"])
         expires_at = int(payload["exp"])
+        auth_version = int(payload["authVersion"])
     except (KeyError, TypeError, ValueError) as exc:
         raise InvalidAccessToken("invalid_token_claims") from exc
     nonce = payload.get("nonce")
-    if user_id < 1 or not isinstance(nonce, str) or not nonce or len(nonce) > 128:
+    if (
+        user_id < 1
+        or auth_version < 0
+        or not isinstance(nonce, str)
+        or not nonce
+        or len(nonce) > 128
+    ):
         raise InvalidAccessToken("invalid_token_claims")
 
     current = now or datetime.now(UTC)
@@ -179,7 +191,7 @@ def decode_access_token(token: str, *, now: datetime | None = None) -> dict[str,
     if expires_at - issued_at > configured_ttl_seconds:
         raise InvalidAccessToken("token_lifetime_exceeds_limit")
 
-    return {**payload, "userId": user_id}
+    return {**payload, "userId": user_id, "authVersion": auth_version}
 
 
 def _bearer_token(authorization: str | None) -> str:
@@ -216,12 +228,35 @@ async def get_current_user(
             detail="로그인 정보를 확인할 수 없습니다.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    if int(getattr(user, "auth_version", 0) or 0) != int(claims["authVersion"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="로그인 정보가 폐기되었습니다. 다시 로그인해주세요.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="현재 이용이 중지된 계정입니다.",
         )
-    return CurrentUser(id=user.id, username=user.username, is_admin=bool(user.is_admin))
+    email = str(getattr(user, "email_original", None) or getattr(user, "email_canonical", None) or "").strip()
+    email_verified = bool(email and getattr(user, "email_verified_at", None))
+    if not email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "email_verification_required",
+                "message": "이메일 인증을 완료한 뒤 로그인해주세요.",
+            },
+        )
+    return CurrentUser(
+        id=user.id,
+        username=user.username,
+        email=email,
+        email_verified=True,
+        auth_version=int(getattr(user, "auth_version", 0) or 0),
+        is_admin=bool(user.is_admin),
+    )
 
 
 async def require_admin_user(

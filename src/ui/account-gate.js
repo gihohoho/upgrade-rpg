@@ -1,9 +1,10 @@
 (function () {
 	"use strict";
 
-	const VERSION = "v370.account-gate";
+	const VERSION = "v371.email-account-gate";
 	const SLOT_COUNT = 8;
 	const DEFAULT_CHARACTER_OPTIONS = [{ code: "weapon_master", name: "검신" }];
+	const AUTH_LINK_ACTIONS = new Set(["verify-email", "reset-password", "delete-account"]);
 	const gate = document.getElementById("account-gate");
 	const panel = document.getElementById("account-gate-panel");
 	const modalRoot = document.getElementById("account-modal-root");
@@ -17,6 +18,8 @@
 	let gateBusy = false;
 	let initialized = false;
 	let pendingRuntimeResume = false;
+	let pendingVerificationEmail = "";
+	let pendingAuthLinkAction = consumeAuthLinkFragment();
 
 	function escapeHtml(value) {
 		return String(value ?? "")
@@ -25,6 +28,48 @@
 			.replace(/>/g, "&gt;")
 			.replace(/"/g, "&quot;")
 			.replace(/'/g, "&#39;");
+	}
+
+	function consumeAuthLinkFragment() {
+		if (!window.location || !window.location.hash) return null;
+		const rawHash = String(window.location.hash || "").replace(/^#/, "");
+		const params = new URLSearchParams(rawHash);
+		const action = String(params.get("auth") || "").trim();
+		const token = String(params.get("token") || "").trim();
+		if (!AUTH_LINK_ACTIONS.has(action)) return null;
+
+		if (window.history && typeof window.history.replaceState === "function") {
+			const cleanUrl = `${window.location.pathname || "index.html"}${window.location.search || ""}`;
+			window.history.replaceState(null, document.title, cleanUrl);
+		}
+		if (!token || token.length > 4096 || /\s/.test(token)) return { action, token: "", invalid: true };
+		return { action, token };
+	}
+
+	function handleAuthLinkHashChange() {
+		if (!window.location || !window.location.hash) return;
+		const params = new URLSearchParams(String(window.location.hash || "").replace(/^#/, ""));
+		const action = String(params.get("auth") || "").trim();
+		if (!AUTH_LINK_ACTIONS.has(action)) return;
+		if (typeof window.location.reload === "function") window.location.reload();
+	}
+
+	if (typeof window.addEventListener === "function") {
+		window.addEventListener("hashchange", handleAuthLinkHashChange);
+	}
+
+	function getErrorCode(error) {
+		const response = error && error.response && typeof error.response === "object" ? error.response : {};
+		return String(
+			(response.error && response.error.code)
+			|| (response.payload && (response.payload.code || response.payload.status))
+			|| response.code
+			|| "",
+		).trim().toLowerCase();
+	}
+
+	function normalizeEmail(value) {
+		return String(value || "").trim().toLowerCase();
 	}
 
 	function getPayload(response) {
@@ -153,7 +198,7 @@
 			</div>
 			${isLogin ? renderLoginForm() : renderRegisterForm()}
 			<div id="account-form-status" class="account-form-status" data-tone="${escapeHtml(opts.tone || "")}" role="status" aria-live="polite">${escapeHtml(opts.message || "")}</div>
-			<p class="account-auth-note">현재는 아이디 로그인만 지원합니다. 소셜 로그인은 추후 같은 계정 화면에 추가할 수 있습니다.</p>
+			<p class="account-auth-note">회원가입은 실제로 메일을 받을 수 있는 이메일이 필요합니다. 인증을 완료한 계정만 게임에 접속할 수 있습니다.<br />소셜 로그인은 추후 같은 계정 화면에 추가할 수 있습니다.</p>
 		`;
 		const firstInput = panel.querySelector("input:not([type='checkbox'])");
 		if (firstInput && firstInput.focus) window.setTimeout(() => firstInput.focus(), 0);
@@ -163,8 +208,8 @@
 		return `
 			<form class="account-form" data-account-form="login">
 				<div class="account-field">
-					<label for="account-login-username">아이디</label>
-					<input id="account-login-username" name="username" autocomplete="username" minlength="4" maxlength="24" autocapitalize="none" spellcheck="false" required placeholder="아이디를 입력하세요" />
+					<label for="account-login-identifier">아이디 또는 이메일</label>
+					<input id="account-login-identifier" name="identifier" autocomplete="username" maxlength="254" autocapitalize="none" spellcheck="false" required placeholder="아이디 또는 가입 이메일" />
 				</div>
 				<div class="account-field">
 					<label for="account-login-password">비밀번호</label>
@@ -175,6 +220,11 @@
 					<span>로그인 유지<br />체크하지 않으면 이 브라우저 탭을 모두 닫을 때 로그인이 해제됩니다.</span>
 				</label>
 				<button class="account-primary-button" type="submit">로그인</button>
+				<div class="account-auth-links" aria-label="계정 찾기와 인증 도움">
+					<button type="button" class="account-link-button" data-account-action="recover-username">아이디 찾기</button>
+					<button type="button" class="account-link-button" data-account-action="request-password-reset">비밀번호 재설정</button>
+					<button type="button" class="account-link-button" data-account-action="resend-verification">인증메일 다시 받기</button>
+				</div>
 			</form>
 		`;
 	}
@@ -188,6 +238,11 @@
 					<span class="account-field-help">영문 소문자 또는 숫자로 시작하고, 영문 소문자·숫자·_만 사용할 수 있습니다.</span>
 				</div>
 				<div class="account-field">
+					<label for="account-register-email">가입 이메일</label>
+					<input id="account-register-email" name="email" type="email" autocomplete="email" maxlength="254" autocapitalize="none" spellcheck="false" required placeholder="example@email.com" />
+					<span class="account-field-help">인증, 아이디 찾기, 비밀번호 재설정, 계정 삭제 확인에 사용합니다.</span>
+				</div>
+				<div class="account-field">
 					<label for="account-register-password">비밀번호</label>
 					<input id="account-register-password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="72" required placeholder="문자와 숫자를 포함해 8자 이상" />
 				</div>
@@ -195,13 +250,50 @@
 					<label for="account-register-password-confirm">비밀번호 확인</label>
 					<input id="account-register-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="8" maxlength="72" required placeholder="비밀번호를 한 번 더 입력하세요" />
 				</div>
-				<label class="account-keep-row">
-					<input name="keepLogin" type="checkbox" />
-					<span>가입 후 로그인 유지</span>
-				</label>
-				<button class="account-primary-button" type="submit">회원가입</button>
+				<button class="account-primary-button" type="submit">인증메일 받고 가입하기</button>
 			</form>
 		`;
+	}
+
+	function renderVerificationPending(email, options) {
+		const opts = options || {};
+		pendingVerificationEmail = normalizeEmail(email || pendingVerificationEmail);
+		if (!panel) return;
+		gate.dataset.view = "verification-pending";
+		panel.className = "account-panel";
+		panel.innerHTML = `
+			<div class="account-email-mark" aria-hidden="true">✉</div>
+			<h1 id="account-gate-title">이메일을 확인해 주세요</h1>
+			<p class="account-auth-copy">가입을 마치려면 받은 메일의 <strong>이메일 인증 완료</strong> 버튼을 눌러야 합니다.</p>
+			<div class="account-email-callout">
+				<span>인증 메일 발송 주소</span>
+				<strong>${escapeHtml(pendingVerificationEmail || "가입한 이메일")}</strong>
+				<p>메일이 보이지 않으면 스팸함을 확인하고, 잠시 기다린 뒤 한 번만 다시 요청해 주세요.</p>
+			</div>
+			<div id="account-form-status" class="account-form-status" data-tone="${escapeHtml(opts.tone || "success")}" role="status" aria-live="polite">${escapeHtml(opts.message || "인증 메일을 보냈습니다.")}</div>
+			<div class="account-verification-actions">
+				<button type="button" class="account-secondary-button" data-account-action="verification-back-login">로그인 화면으로</button>
+				<button type="button" class="account-primary-button" data-account-action="verification-resend">인증메일 다시 받기</button>
+			</div>
+		`;
+	}
+
+	function renderPasswordResetLinkForm() {
+		if (!panel || !pendingAuthLinkAction || pendingAuthLinkAction.action !== "reset-password") return;
+		gate.dataset.view = "password-reset";
+		panel.className = "account-panel";
+		panel.innerHTML = `
+			<div class="account-email-mark" aria-hidden="true">🔑</div>
+			<h1 id="account-gate-title">새 비밀번호 설정</h1>
+			<p class="account-auth-copy">메일 링크 확인이 완료되었습니다. 다른 사이트에서 사용하지 않는 새 비밀번호를 입력해 주세요.</p>
+			<form class="account-form" data-account-form="reset-password">
+				<div class="account-field"><label for="account-reset-password">새 비밀번호</label><input id="account-reset-password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="72" required placeholder="문자와 숫자를 포함해 8자 이상" /></div>
+				<div class="account-field"><label for="account-reset-password-confirm">새 비밀번호 확인</label><input id="account-reset-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="8" maxlength="72" required placeholder="새 비밀번호를 한 번 더 입력하세요" /></div>
+				<div id="account-form-status" class="account-form-status" role="status" aria-live="polite"></div>
+				<div class="account-verification-actions"><button type="button" class="account-secondary-button" data-account-action="cancel-link-action">취소</button><button type="submit" class="account-primary-button">비밀번호 변경</button></div>
+			</form>
+		`;
+		panel.querySelector("input")?.focus();
 	}
 
 	function setAuthStatus(message, tone) {
@@ -275,7 +367,10 @@
 			<div id="account-slot-status" class="account-form-status" data-tone="${escapeHtml(opts.tone || "")}" role="status" aria-live="polite">${escapeHtml(opts.message || "")}</div>
 			<div class="account-slot-footer">
 				<span>${characters.length}/${SLOT_COUNT} 슬롯 사용 중 · 캐릭터를 누르면 게임이 시작됩니다.</span>
-				<button type="button" class="account-secondary-button" data-account-action="logout-from-slots">로그아웃</button>
+				<div class="account-slot-footer-actions">
+					<button type="button" class="account-secondary-button" data-account-action="account-settings">계정 관리</button>
+					<button type="button" class="account-secondary-button" data-account-action="logout-from-slots">로그아웃</button>
+				</div>
 			</div>
 		`;
 	}
@@ -422,6 +517,184 @@
 		target.dataset.tone = tone || "";
 	}
 
+	function openEmailRequestModal(mode) {
+		const definitions = {
+			"recover-username": {
+				title: "아이디 찾기",
+				description: "가입한 이메일로 아이디 안내 메일을 보냅니다.",
+				action: "recover-username",
+				button: "아이디 안내 메일 받기",
+			},
+			"request-password-reset": {
+				title: "비밀번호 재설정",
+				description: "가입한 이메일로 새 비밀번호 설정 링크를 보냅니다.",
+				action: "request-password-reset",
+				button: "재설정 메일 받기",
+			},
+			"resend-verification": {
+				title: "인증메일 다시 받기",
+				description: "아직 인증하지 않은 가입 이메일로 새 인증 링크를 보냅니다.",
+				action: "resend-verification",
+				button: "인증메일 다시 받기",
+			},
+		};
+		const definition = definitions[mode];
+		if (!definition) return;
+		openModal({
+			type: definition.action,
+			title: definition.title,
+			description: definition.description,
+			initialFocus: "#account-recovery-email",
+			body: `
+				<form class="account-form" data-account-form="${definition.action}">
+					<div class="account-field"><label for="account-recovery-email">가입 이메일</label><input id="account-recovery-email" name="email" type="email" autocomplete="email" maxlength="254" autocapitalize="none" spellcheck="false" required placeholder="example@email.com" /></div>
+					<p class="account-modal-note">계정 정보 보호를 위해 가입 여부와 관계없이 같은 완료 안내를 표시합니다.</p>
+					<div id="account-modal-status" class="account-form-status" role="status" aria-live="polite"></div>
+					<div class="account-modal-actions"><button type="button" class="account-secondary-button" data-account-action="close-modal">취소</button><button type="submit" class="account-primary-button">${definition.button}</button></div>
+				</form>`,
+		});
+	}
+
+	function openAccountSettingsModal() {
+		const user = window.RpgAuthSession && window.RpgAuthSession.getCurrentUser();
+		if (!user) return;
+		const email = String(user.email || "").trim();
+		openModal({
+			type: "account-settings",
+			title: "계정 관리",
+			description: `${user.username} 계정의 가입 정보와 삭제 요청을 관리합니다.`,
+			body: `
+				<div class="account-email-callout account-email-callout-compact">
+					<span>가입 이메일</span><strong>${escapeHtml(email || "이메일 정보 없음")}</strong>
+					<p>${user.emailVerified ? "이메일 인증 완료" : "이메일 인증 확인이 필요합니다."}</p>
+				</div>
+				<p class="account-modal-warning"><strong>계정 삭제</strong><br />계정과 모든 캐릭터의 서버 저장을 영구 삭제합니다. 삭제 확인 메일을 받은 뒤 한 번 더 확정해야 합니다.</p>
+				<div class="account-modal-actions"><button type="button" class="account-secondary-button" data-account-action="close-modal">돌아가기</button><button type="button" class="account-danger-button" data-account-action="open-account-deletion">계정 삭제 시작</button></div>`,
+		});
+	}
+
+	function openAccountDeletionRequestModal(previewPayload) {
+		const user = window.RpgAuthSession && window.RpgAuthSession.getCurrentUser();
+		if (!user) return;
+		const preview = previewPayload && typeof previewPayload === "object" ? previewPayload : {};
+		const characterCount = Number(preview.characterCount !== undefined ? preview.characterCount : preview.charactersCount);
+		const saveSnapshotCount = Number(preview.saveSnapshotCount !== undefined ? preview.saveSnapshotCount : preview.snapshotCount);
+		const scope = Array.isArray(preview.deletionScope) ? preview.deletionScope.filter((item) => typeof item === "string" && item.trim()).slice(0, 6) : [];
+		openModal({
+			type: "account-deletion-request",
+			tone: "danger",
+			title: "계정 삭제 메일 요청",
+			description: "현재 비밀번호를 확인한 뒤 가입 이메일로 최종 삭제 링크를 보냅니다.",
+			initialFocus: "#account-deletion-password",
+			body: `
+				<form class="account-form" data-account-form="account-deletion-request">
+					<p class="account-modal-warning">모든 캐릭터, 장비, 골드와 진행도가 삭제되며 되돌릴 수 없습니다. 메일 링크를 누르기 전까지는 삭제되지 않습니다.</p>
+					<div class="account-deletion-preview">
+						<div><span>삭제 대상 캐릭터</span><strong>${Number.isFinite(characterCount) ? `${escapeHtml(characterCount)}개` : "모든 캐릭터"}</strong></div>
+						<div><span>삭제 대상 저장</span><strong>${Number.isFinite(saveSnapshotCount) ? `${escapeHtml(saveSnapshotCount)}개` : "연결된 모든 저장"}</strong></div>
+						${scope.length ? `<ul>${scope.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : ""}
+					</div>
+					<div class="account-field"><label for="account-deletion-password">현재 비밀번호</label><input id="account-deletion-password" name="password" type="password" autocomplete="current-password" maxlength="72" required placeholder="현재 비밀번호를 입력하세요" /></div>
+					<div id="account-modal-status" class="account-form-status" role="status" aria-live="polite"></div>
+					<div class="account-modal-actions"><button type="button" class="account-secondary-button" data-account-action="close-modal">취소</button><button type="submit" class="account-danger-button">삭제 확인 메일 받기</button></div>
+				</form>`,
+		});
+	}
+
+	async function previewAndOpenAccountDeletion() {
+		if (gateBusy) return;
+		gateBusy = true;
+		openModal({
+			type: "account-deletion-preview-loading",
+			tone: "danger",
+			closeable: false,
+			title: "삭제 범위를 확인합니다",
+			description: "캐릭터와 서버 저장 중 삭제될 항목을 안전하게 확인하고 있습니다.",
+			body: '<div class="account-form-status" role="status">잠시만 기다려 주세요...</div>',
+		});
+		try {
+			const response = await window.RpgGameApi.previewAccountDeletion({ timeoutMs: 7000 });
+			openAccountDeletionRequestModal(getPayload(response));
+		} catch (error) {
+			if (handleGameSessionInvalid(error)) return;
+			openModal({
+				type: "account-deletion-preview-error",
+				tone: "danger",
+				title: "삭제 범위를 확인하지 못했습니다",
+				description: "안전을 위해 계정 삭제 요청을 시작하지 않았습니다.",
+				body: `<div class="account-form-status" data-tone="error" role="status">${escapeHtml("서버 연결을 확인한 뒤 다시 시도해 주세요.")}</div><div class="account-modal-actions"><button type="button" class="account-secondary-button" data-account-action="close-modal">돌아가기</button><button type="button" class="account-danger-button" data-account-action="open-account-deletion">다시 확인</button></div>`,
+			});
+		} finally {
+			gateBusy = false;
+		}
+	}
+
+	function openAccountDeletionConfirmModal() {
+		openModal({
+			type: "account-deletion-confirm",
+			tone: "danger",
+			closeable: false,
+			title: "계정을 영구 삭제합니다",
+			description: "메일 링크 확인이 완료되었습니다. 마지막 확인 문구를 입력해야 삭제됩니다.",
+			initialFocus: "#account-deletion-confirm-text",
+			body: `
+				<form class="account-form" data-account-form="account-deletion-confirm">
+					<p class="account-modal-warning">계정과 모든 캐릭터의 서버 저장은 복구할 수 없습니다. 계속하려면 아래에 <strong>계정 삭제</strong>를 정확히 입력하세요.</p>
+					<div class="account-field"><label for="account-deletion-confirm-text">확인 입력: 계정 삭제</label><input id="account-deletion-confirm-text" name="confirmText" autocomplete="off" data-account-deletion-confirm-text placeholder="계정 삭제" /></div>
+					<div id="account-modal-status" class="account-form-status" role="status" aria-live="polite"></div>
+					<div class="account-modal-actions"><button type="button" class="account-secondary-button" data-account-action="cancel-link-action">삭제하지 않기</button><button type="submit" class="account-danger-button" data-account-action="confirm-delete-account" disabled>계정 영구 삭제</button></div>
+				</form>`,
+		});
+	}
+
+	function renderAuthLinkRetry(message) {
+		if (!panel) return;
+		gate.dataset.view = "auth-link-retry";
+		panel.className = "account-panel";
+		panel.innerHTML = `
+			<div class="account-email-mark" aria-hidden="true">!</div>
+			<h1 id="account-gate-title">메일 링크를 처리하지 못했습니다</h1>
+			<p class="account-auth-copy">링크 정보는 주소창에서 안전하게 지웠고 현재 탭의 메모리에만 보관하고 있습니다.</p>
+			<div class="account-form-status" data-tone="error" role="status">${escapeHtml(message || "서버 연결을 확인한 뒤 다시 시도해 주세요.")}</div>
+			<div class="account-retry-actions"><button type="button" class="account-secondary-button" data-account-action="cancel-link-action">로그인 화면으로</button><button type="button" class="account-primary-button" data-account-action="retry-link-action">다시 시도</button></div>
+		`;
+	}
+
+	async function processPendingAuthLinkAction() {
+		const link = pendingAuthLinkAction;
+		if (!link || link.invalid || !link.token) {
+			pendingAuthLinkAction = null;
+			renderAuth({ message: "메일 링크가 올바르지 않습니다. 새 메일을 요청해 주세요.", tone: "error" });
+			return;
+		}
+		if (link.action === "reset-password") {
+			renderPasswordResetLinkForm();
+			return;
+		}
+		if (link.action === "delete-account") {
+			renderLoading("계정 삭제 확인", "삭제 링크를 안전하게 확인했습니다.");
+			openAccountDeletionConfirmModal();
+			return;
+		}
+
+		renderLoading("이메일 인증", "인증 링크를 확인하고 있습니다...");
+		try {
+			await window.RpgGameApi.verifyAccountEmail({ token: link.token }, { timeoutMs: 7000 });
+			pendingAuthLinkAction = null;
+			activeAuthTab = "login";
+			renderAuth({ message: "이메일 인증이 완료되었습니다. 이제 로그인할 수 있습니다.", tone: "success" });
+		} catch (error) {
+			const status = Number(error && error.status);
+			if (status >= 400 && status < 500) {
+				pendingAuthLinkAction = null;
+				activeAuthTab = "login";
+				renderAuth({ message: "인증 링크가 만료됐거나 이미 사용되었습니다. 필요하면 인증메일을 다시 요청해 주세요.", tone: "error" });
+			} else {
+				renderAuthLinkRetry("서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+			}
+		}
+	}
+
 	function readLegacySave() {
 		const key = window.RpgAuthSession ? window.RpgAuthSession.LEGACY_LOCAL_SAVE_KEY : "idleRpgSaveV22";
 		let raw = null;
@@ -507,12 +780,31 @@
 	function updateAccountBar() {
 		const user = window.RpgAuthSession && window.RpgAuthSession.getCurrentUser();
 		const character = window.RpgAuthSession && window.RpgAuthSession.getCurrentCharacter();
-		if (!accountBar || !user || !character) return;
+		if (!accountBar || !user || !character) {
+			syncAccountBarTownVisibility();
+			return;
+		}
 		const characterTarget = document.getElementById("game-account-character");
 		const userTarget = document.getElementById("game-account-user");
 		if (characterTarget) characterTarget.textContent = `${character.name} · ${getCharacterLabel(character)}`;
 		if (userTarget) userTarget.textContent = user.username;
-		accountBar.hidden = false;
+		syncAccountBarTownVisibility();
+	}
+
+	function syncAccountBarTownVisibility(zoneType) {
+		if (!accountBar) return false;
+		const user = window.RpgAuthSession && window.RpgAuthSession.getCurrentUser();
+		const character = window.RpgAuthSession && window.RpgAuthSession.getCurrentCharacter();
+		const resolvedZoneType = zoneType !== undefined
+			? String(zoneType || "")
+			: (typeof currentZoneType !== "undefined" ? String(currentZoneType || "") : "");
+		const shouldShow = !!(user && character && resolvedZoneType === "town");
+		accountBar.hidden = !shouldShow;
+		accountBar.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+		accountBar.toggleAttribute("inert", !shouldShow);
+		accountBar.inert = !shouldShow;
+		accountBar.dataset.zoneVisible = shouldShow ? "town" : "hidden";
+		return shouldShow;
 	}
 
 	async function transitionFromGame(mode) {
@@ -573,12 +865,14 @@
 		if (gateBusy) return;
 		const formType = form.dataset.accountForm;
 		const data = new FormData(form);
-		const username = String(data.get("username") || "").trim();
+		const username = String(data.get("username") || "").trim().toLowerCase();
+		const email = normalizeEmail(data.get("email"));
+		const identifier = String(data.get("identifier") || "").trim();
 		const password = String(data.get("password") || "");
 		const passwordConfirm = String(data.get("passwordConfirm") || "");
 		const keepLogin = data.get("keepLogin") === "on";
-		if (!username || !password) {
-			setAuthStatus("아이디와 비밀번호를 모두 입력해 주세요.", "error");
+		if ((formType === "register" && (!username || !email || !password)) || (formType === "login" && (!identifier || !password))) {
+			setAuthStatus(formType === "register" ? "아이디, 이메일, 비밀번호를 모두 입력해 주세요." : "아이디 또는 이메일과 비밀번호를 모두 입력해 주세요.", "error");
 			return;
 		}
 		if (formType === "register" && password !== passwordConfirm) {
@@ -591,20 +885,33 @@
 		setAuthStatus("서버에 안전하게 확인하고 있습니다...", "");
 		try {
 			const response = formType === "register"
-				? await window.RpgGameApi.registerAccount({ username, password, passwordConfirm }, { timeoutMs: 7000 })
-				: await window.RpgGameApi.loginAccount({ username, password }, { timeoutMs: 7000 });
+				? await window.RpgGameApi.registerAccount({ username, email, password, passwordConfirm }, { timeoutMs: 15000 })
+				: await window.RpgGameApi.loginAccount({ identifier, password }, { timeoutMs: 7000 });
+			if (formType === "register") {
+				window.RpgAuthSession.clearSession();
+				renderVerificationPending(email, { message: "인증 메일을 보냈습니다. 이메일 인증을 완료한 뒤 로그인해 주세요.", tone: "success" });
+				return;
+			}
 			const token = window.RpgAuthSession.extractAccessToken(response);
 			if (token) {
 				await window.RpgAuthSession.acceptAuthResponse(response, keepLogin);
 				await loadCharacters({ resumeSelected: false });
-			} else if (formType === "register") {
-				activeAuthTab = "login";
-				renderAuth({ message: "회원가입이 완료되었습니다. 새 계정으로 로그인해 주세요.", tone: "success" });
 			} else {
 				throw new Error("로그인 토큰을 받지 못했습니다.");
 			}
 		} catch (error) {
-			const message = error && error.message ? error.message : "계정 요청을 처리하지 못했습니다.";
+			const errorCode = getErrorCode(error);
+			if (formType === "register" && errorCode === "verification_email_delivery_failed") {
+				window.RpgAuthSession.clearSession();
+				renderVerificationPending(email, {
+					message: "계정은 만들어졌지만 인증메일 발송에 실패했습니다. 잠시 후 다시 요청해주세요.",
+					tone: "error",
+				});
+				return;
+			}
+			const message = errorCode.includes("verification") || errorCode.includes("email_unverified")
+				? "이메일 인증이 완료되지 않았습니다. 인증메일을 확인하거나 다시 요청해 주세요."
+				: (error && error.message ? error.message : "계정 요청을 처리하지 못했습니다.");
 			if (window.RpgAuthSession.getCurrentUser() || window.RpgAuthSession.getAccessToken()) {
 				if (isAccountSessionInvalidError(error)) {
 					returnToLoginAfterSessionExpiry("로그인 정보가 만료되었거나 사용할 수 없는 계정입니다. 다시 로그인해 주세요.");
@@ -615,6 +922,139 @@
 				setFormBusy(form, false);
 				setAuthStatus(message, "error");
 			}
+		} finally {
+			gateBusy = false;
+		}
+	}
+
+	async function handleEmailRequestSubmit(form) {
+		if (gateBusy) return;
+		const formType = form.dataset.accountForm;
+		const email = normalizeEmail(new FormData(form).get("email"));
+		if (!email) {
+			setModalStatus("가입 이메일을 입력해 주세요.", "error");
+			return;
+		}
+		const requests = {
+			"recover-username": () => window.RpgGameApi.recoverAccountUsername({ email }, { timeoutMs: 15000 }),
+			"request-password-reset": () => window.RpgGameApi.requestAccountPasswordReset({ email }, { timeoutMs: 15000 }),
+			"resend-verification": () => window.RpgGameApi.resendAccountVerification({ email }, { timeoutMs: 15000 }),
+		};
+		const request = requests[formType];
+		if (!request) return;
+		gateBusy = true;
+		setFormBusy(form, true, "메일 요청 중...");
+		setModalStatus("메일 전송을 요청하고 있습니다...", "");
+		try {
+			await request();
+			const successMessage = formType === "recover-username"
+				? "입력한 이메일과 일치하는 계정이 있다면 아이디 안내 메일을 보냈습니다."
+				: (formType === "request-password-reset"
+					? "입력한 이메일과 일치하는 계정이 있다면 비밀번호 재설정 메일을 보냈습니다."
+					: "입력한 이메일과 일치하는 미인증 계정이 있다면 인증 메일을 보냈습니다.");
+			setFormBusy(form, false);
+			setModalStatus(successMessage, "success");
+		} catch (error) {
+			setFormBusy(form, false);
+			setModalStatus("메일 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.", "error");
+		} finally {
+			gateBusy = false;
+		}
+	}
+
+	async function resendPendingVerification() {
+		if (gateBusy) return;
+		if (!pendingVerificationEmail) {
+			openEmailRequestModal("resend-verification");
+			return;
+		}
+		gateBusy = true;
+		setAuthStatus("인증 메일을 다시 요청하고 있습니다...", "");
+		try {
+			await window.RpgGameApi.resendAccountVerification({ email: pendingVerificationEmail }, { timeoutMs: 15000 });
+			setAuthStatus("인증 메일을 다시 보냈습니다. 받은편지함과 스팸함을 확인해 주세요.", "success");
+		} catch (error) {
+			setAuthStatus("인증 메일을 다시 보내지 못했습니다. 잠시 후 다시 시도해 주세요.", "error");
+		} finally {
+			gateBusy = false;
+		}
+	}
+
+	async function handlePasswordResetSubmit(form) {
+		if (gateBusy || !pendingAuthLinkAction || pendingAuthLinkAction.action !== "reset-password") return;
+		const data = new FormData(form);
+		const password = String(data.get("password") || "");
+		const passwordConfirm = String(data.get("passwordConfirm") || "");
+		if (password !== passwordConfirm) {
+			setAuthStatus("비밀번호 확인이 일치하지 않습니다.", "error");
+			form.querySelector("[name='passwordConfirm']")?.focus();
+			return;
+		}
+		gateBusy = true;
+		setFormBusy(form, true, "변경 중...");
+		setAuthStatus("새 비밀번호를 안전하게 저장하고 있습니다...", "");
+		try {
+			await window.RpgGameApi.resetAccountPassword({ token: pendingAuthLinkAction.token, password, passwordConfirm }, { timeoutMs: 7000 });
+			pendingAuthLinkAction = null;
+			window.RpgAuthSession.clearSession();
+			activeAuthTab = "login";
+			renderAuth({ message: "비밀번호를 변경했습니다. 새 비밀번호로 로그인해 주세요.", tone: "success" });
+		} catch (error) {
+			setFormBusy(form, false);
+			setAuthStatus(Number(error && error.status) >= 500 ? "서버 연결을 확인한 뒤 다시 시도해 주세요." : "재설정 링크가 만료됐거나 이미 사용되었습니다. 새 메일을 요청해 주세요.", "error");
+		} finally {
+			gateBusy = false;
+		}
+	}
+
+	async function handleAccountDeletionRequestSubmit(form) {
+		if (gateBusy) return;
+		const password = String(new FormData(form).get("password") || "");
+		if (!password) {
+			setModalStatus("현재 비밀번호를 입력해 주세요.", "error");
+			return;
+		}
+		gateBusy = true;
+		setFormBusy(form, true, "확인 중...");
+		setModalStatus("비밀번호를 확인하고 삭제 확인 메일을 요청하고 있습니다...", "");
+		try {
+			await window.RpgGameApi.requestAccountDeletion({ password }, { timeoutMs: 15000 });
+			setFormBusy(form, false);
+			form.querySelector("[type='submit']").disabled = true;
+			setModalStatus("삭제 확인 메일을 보냈습니다. 메일 링크를 누르기 전까지 계정은 삭제되지 않습니다.", "success");
+		} catch (error) {
+			if (handleGameSessionInvalid(error)) return;
+			setFormBusy(form, false);
+			setModalStatus("비밀번호를 확인하지 못했거나 메일 요청에 실패했습니다.", "error");
+		} finally {
+			gateBusy = false;
+		}
+	}
+
+	async function handleAccountDeletionConfirmSubmit(form) {
+		if (gateBusy || !pendingAuthLinkAction || pendingAuthLinkAction.action !== "delete-account") return;
+		const confirmText = String(new FormData(form).get("confirmText") || "").trim();
+		if (confirmText !== "계정 삭제") {
+			setModalStatus("확인 문구 ‘계정 삭제’를 정확히 입력해 주세요.", "error");
+			return;
+		}
+		gateBusy = true;
+		setFormBusy(form, true, "삭제 중...");
+		setModalStatus("계정과 서버 저장을 삭제하고 있습니다...", "");
+		try {
+			const response = await window.RpgGameApi.confirmAccountDeletion({ token: pendingAuthLinkAction.token, confirmText: "계정 삭제" }, { timeoutMs: 7000 });
+			const deletedUserId = Number(getPayload(response).deletedUserId);
+			window.RpgAuthSession.clearDeletedAccountLocalData(deletedUserId);
+			pendingAuthLinkAction = null;
+			window.RpgAuthSession.clearSession();
+			closeModal("resolved");
+			activeAuthTab = "login";
+			renderAuth({ message: "계정과 서버 저장을 삭제했습니다.", tone: "success" });
+		} catch (error) {
+			setFormBusy(form, false);
+			const confirmButton = form.querySelector("[data-account-action='confirm-delete-account']");
+			if (confirmButton) confirmButton.disabled = confirmText !== "계정 삭제";
+			setModalStatus(Number(error && error.status) >= 500 ? "서버 연결을 확인한 뒤 다시 시도해 주세요." : "삭제 링크가 만료됐거나 이미 사용되었습니다. 계정 관리에서 새 메일을 요청해 주세요.", "error");
 		} finally {
 			gateBusy = false;
 		}
@@ -748,6 +1188,28 @@
 			if (gateBusy) return;
 			activeAuthTab = actionTarget.dataset.tab === "register" ? "register" : "login";
 			renderAuth();
+		} else if (action === "recover-username" || action === "request-password-reset" || action === "resend-verification") {
+			if (!gateBusy) openEmailRequestModal(action);
+		} else if (action === "verification-back-login") {
+			if (!gateBusy) {
+				activeAuthTab = "login";
+				renderAuth({ message: "이메일 인증을 완료한 뒤 로그인해 주세요.", tone: "" });
+			}
+		} else if (action === "verification-resend") {
+			await resendPendingVerification();
+		} else if (action === "retry-link-action") {
+			if (!gateBusy) await processPendingAuthLinkAction();
+		} else if (action === "cancel-link-action") {
+			if (!gateBusy) {
+				pendingAuthLinkAction = null;
+				closeModal("resolved");
+				activeAuthTab = "login";
+				renderAuth();
+			}
+		} else if (action === "account-settings") {
+			if (!gateBusy) openAccountSettingsModal();
+		} else if (action === "open-account-deletion") {
+			if (!gateBusy) await previewAndOpenAccountDeletion();
 		} else if (action === "create-character") {
 			openCreateModal(Number(actionTarget.dataset.slotIndex));
 		} else if (action === "select-character") {
@@ -793,13 +1255,23 @@
 		if (!form) return;
 		event.preventDefault();
 		if (form.dataset.accountForm === "login" || form.dataset.accountForm === "register") await handleAuthSubmit(form);
+		if (["recover-username", "request-password-reset", "resend-verification"].includes(form.dataset.accountForm)) await handleEmailRequestSubmit(form);
+		if (form.dataset.accountForm === "reset-password") await handlePasswordResetSubmit(form);
+		if (form.dataset.accountForm === "account-deletion-request") await handleAccountDeletionRequestSubmit(form);
+		if (form.dataset.accountForm === "account-deletion-confirm") await handleAccountDeletionConfirmSubmit(form);
 		if (form.dataset.accountForm === "create-character") await handleCreateSubmit(form);
 	}
 
 	function handleGateInput(event) {
-		if (!activeModal || activeModal.type !== "delete" || !event.target.matches("[data-account-delete-name]")) return;
-		const button = modalRoot.querySelector("[data-account-action='confirm-delete-character']");
-		if (button) button.disabled = event.target.value !== activeModal.data.character.name;
+		if (!activeModal) return;
+		if (activeModal.type === "delete" && event.target.matches("[data-account-delete-name]")) {
+			const button = modalRoot.querySelector("[data-account-action='confirm-delete-character']");
+			if (button) button.disabled = event.target.value !== activeModal.data.character.name;
+		}
+		if (activeModal.type === "account-deletion-confirm" && event.target.matches("[data-account-deletion-confirm-text]")) {
+			const button = modalRoot.querySelector("[data-account-action='confirm-delete-account']");
+			if (button) button.disabled = event.target.value.trim() !== "계정 삭제";
+		}
 	}
 
 	function handleKeyboard(event) {
@@ -835,6 +1307,10 @@
 			renderAuth({ message: "계정 모듈을 불러오지 못했습니다. 페이지를 새로고침해 주세요.", tone: "error" });
 			return;
 		}
+		if (pendingAuthLinkAction) {
+			await processPendingAuthLinkAction();
+			return;
+		}
 		const authNotice = window.RpgAuthSession.consumeAuthNotice();
 		await restoreSessionAndContinue(authNotice);
 	}
@@ -867,6 +1343,7 @@
 		verifyCharacterDeletionAfterError,
 		readLegacySave,
 		updateAccountBar,
+		syncAccountBarTownVisibility,
 		transitionFromGame,
 		handleGameSessionInvalid,
 		getState: () => ({ initialized, activeAuthTab, gateBusy, characters: characters.slice(), characterOptions: characterOptions.slice(), modalType: activeModal && activeModal.type }),

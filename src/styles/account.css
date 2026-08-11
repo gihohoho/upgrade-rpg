@@ -80,7 +80,8 @@
 }
 
 .account-loading-mark,
-.account-brand-mark {
+.account-brand-mark,
+.account-email-mark {
 	display: grid;
 	place-items: center;
 	width: 64px;
@@ -94,6 +95,13 @@
 	font-size: 22px;
 	font-weight: 900;
 	letter-spacing: -1px;
+}
+
+.account-email-mark {
+	border-color: #73c7ff;
+	background: linear-gradient(145deg, #174d82, #091d36);
+	color: #d8f1ff;
+	font-size: 28px;
 }
 
 .account-loading-mark {
@@ -225,6 +233,26 @@
 	flex: 0 0 auto;
 }
 
+.account-auth-links {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 7px;
+	margin-top: -3px;
+}
+
+.account-link-button {
+	min-height: 38px;
+	padding: 7px 6px;
+	border: 1px solid rgba(108, 159, 211, 0.38);
+	border-radius: 6px;
+	background: rgba(20, 50, 82, 0.42);
+	color: #c8e5ff;
+	cursor: pointer;
+	font: inherit;
+	font-size: 11px;
+	font-weight: 900;
+}
+
 .account-primary-button,
 .account-secondary-button,
 .account-danger-button {
@@ -286,6 +314,83 @@
 	text-align: center;
 	font-size: 11px;
 	line-height: 1.5;
+}
+
+.account-email-callout {
+	display: grid;
+	gap: 7px;
+	margin: 20px 0 14px;
+	padding: 15px;
+	border: 1px solid rgba(89, 183, 255, 0.55);
+	border-radius: 9px;
+	background: linear-gradient(145deg, rgba(26, 77, 123, 0.5), rgba(8, 27, 49, 0.72));
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.account-email-callout span {
+	color: #9bcdf2;
+	font-size: 11px;
+	font-weight: 900;
+}
+
+.account-email-callout strong {
+	overflow-wrap: anywhere;
+	color: #fff1a7;
+	font-size: 16px;
+}
+
+.account-email-callout p {
+	margin: 0;
+	color: #c2d2e4;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.account-email-callout-compact {
+	margin: 0;
+}
+
+.account-deletion-preview {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 9px;
+}
+
+.account-deletion-preview > div {
+	display: grid;
+	gap: 5px;
+	padding: 11px;
+	border: 1px solid rgba(255, 129, 129, 0.34);
+	border-radius: 7px;
+	background: rgba(92, 28, 36, 0.3);
+}
+
+.account-deletion-preview span {
+	color: #e9adb4;
+	font-size: 11px;
+}
+
+.account-deletion-preview strong {
+	color: #ffe1e1;
+	font-size: 14px;
+}
+
+.account-deletion-preview ul {
+	grid-column: 1 / -1;
+	margin: 0;
+	padding: 10px 12px 10px 28px;
+	border: 1px solid rgba(255, 129, 129, 0.24);
+	border-radius: 7px;
+	color: #f1c5c9;
+	font-size: 11px;
+	line-height: 1.55;
+}
+
+.account-verification-actions {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+	margin-top: 14px;
 }
 
 .account-slot-header {
@@ -438,6 +543,16 @@ button.account-slot.empty {
 	border-top: 1px solid rgba(255, 255, 255, 0.08);
 	color: #91a0b5;
 	font-size: 11px;
+}
+
+.account-slot-footer-actions {
+	display: flex;
+	gap: 8px;
+	flex: 0 0 auto;
+}
+
+.account-slot-footer-actions button {
+	min-height: 42px;
 }
 
 .account-modal-backdrop {
@@ -611,12 +726,12 @@ body.account-gate-active {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 12px;
-	width: min(520px, calc(100vw - 28px));
+	gap: 18px;
+	width: min(700px, calc(100vw - 28px));
 	box-sizing: border-box;
-	padding: 8px 10px 8px 13px;
-	border: 1px solid rgba(255, 208, 70, 0.6);
-	border-radius: 8px;
+	padding: 12px 14px 12px 17px;
+	border: 2px solid rgba(255, 208, 70, 0.68);
+	border-radius: 10px;
 	background: rgba(7, 13, 23, 0.93);
 	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.58);
 	color: #fff;
@@ -631,43 +746,45 @@ body.account-gate-active {
 .game-account-identity {
 	display: flex;
 	align-items: baseline;
-	gap: 8px;
+	gap: 11px;
 	min-width: 0;
 }
 
 .game-account-label {
 	color: #8fa0b7;
-	font-size: 10px;
+	font-size: 13px;
+	font-weight: 900;
 }
 
 #game-account-character {
 	overflow: hidden;
 	color: var(--account-gold);
-	font-size: 13px;
+	font-size: 17px;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
 #game-account-user {
 	color: #9fb1c9;
-	font-size: 10px;
+	font-size: 13px;
+	font-weight: 700;
 }
 
 .game-account-actions {
 	display: flex;
-	gap: 6px;
+	gap: 8px;
 	flex: 0 0 auto;
 }
 
 .game-account-actions button {
-	min-height: 34px;
-	padding: 6px 9px;
+	min-height: 44px;
+	padding: 9px 13px;
 	border: 1px solid rgba(123, 166, 213, 0.55);
 	border-radius: 5px;
 	background: #20364f;
 	color: #e8f3ff;
 	cursor: pointer;
-	font-size: 10px;
+	font-size: 13px;
 	font-weight: 900;
 }
 
@@ -720,6 +837,14 @@ body.account-gate-active {
 	.account-slot-footer .account-secondary-button {
 		width: 100%;
 	}
+
+	.account-slot-footer-actions {
+		width: 100%;
+	}
+
+	.account-slot-footer-actions button {
+		flex: 1;
+	}
 }
 
 @media (max-width: 480px) {
@@ -755,12 +880,23 @@ body.account-gate-active {
 		grid-template-columns: 1fr;
 	}
 
+	.account-auth-links,
+	.account-verification-actions,
+	.account-deletion-preview {
+		grid-template-columns: 1fr;
+	}
+
+	.account-deletion-preview ul {
+		grid-column: auto;
+	}
+
 	.game-account-bar {
 		top: 6px;
 		align-items: stretch;
 		flex-direction: column;
 		gap: 7px;
-		padding: 8px;
+		width: min(430px, calc(100vw - 16px));
+		padding: 10px;
 	}
 
 	.game-account-identity,
@@ -768,8 +904,13 @@ body.account-gate-active {
 		justify-content: center;
 	}
 
+	.game-account-identity {
+		flex-wrap: wrap;
+		row-gap: 4px;
+	}
+
 	.game-account-actions button {
-		min-height: 38px;
+		min-height: 44px;
 		flex: 1;
 	}
 }

@@ -1,5 +1,11 @@
 # Neon database initialization and migration plan — v345
 
+> v371 현재 구분: 이 문서는 Neon의 최초 v295 baseline restore/stamp 완료 이력입니다.
+> Neon DB current는 계속 `v295_initial_schema`이고 local source graph head는
+> `v371_email_identity_lifecycle`입니다. 이메일 identity migration은 source-only이며
+> Neon apply·stamp는 0회입니다. 새 exact-SHA 승인 전 기존 v345 도구로 v371을
+> 적용하지 않습니다.
+
 ## 결론
 
 새 `rpg_game` DB를 만들지 않고 restore 전에는 비어 있던 production branch의 `neondb`를 사용합니다. 앱은 DB 이름을 코드에 고정하지 않고 `DATABASE_URL`을 사용하므로 DB 생성 단계를 없애는 편이 단순하고 안전합니다.

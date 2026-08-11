@@ -316,6 +316,37 @@ body.account-admin-locked {
   font-weight: 850;
 }
 
+.account-admin-email {
+  display: block;
+  max-width: 190px;
+  overflow: hidden;
+  color: #d8eaff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-admin-email-state {
+  display: inline-flex;
+  margin-top: 5px;
+  padding: 3px 7px;
+  border: 1px solid rgba(251, 191, 36, 0.38);
+  border-radius: 999px;
+  background: rgba(120, 80, 18, 0.24);
+  color: #ffd87a;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.account-admin-email-state.verified {
+  border-color: rgba(74, 222, 128, 0.4);
+  background: rgba(22, 101, 52, 0.25);
+  color: #9af0b5;
+}
+
+.account-admin-email-full {
+  overflow-wrap: anywhere;
+}
+
 .account-admin-row-actions {
   display: flex;
   flex-wrap: wrap;

@@ -1,7 +1,7 @@
 (function () {
 	"use strict";
 
-	const VERSION = "v370.account-auth-session";
+	const VERSION = "v371.account-email-auth-session";
 	const ACCESS_TOKEN_KEY = "upgradeRpgAccountAccessToken";
 	const SELECTED_CHARACTER_KEY = "upgradeRpgSelectedAccountCharacter";
 	const AUTH_NOTICE_KEY = "upgradeRpgAccountAuthNotice";
@@ -71,6 +71,8 @@
 			id,
 			userId: id,
 			username: String(source.username || source.loginId || "").trim(),
+			email: String(source.email || "").trim().toLowerCase(),
+			emailVerified: source.emailVerified === true || source.email_verified === true || !!source.emailVerifiedAt || !!source.email_verified_at,
 			isAdmin: source.isAdmin === true || source.is_admin === true,
 			isActive: source.isActive !== false && source.is_active !== false,
 		};
@@ -268,6 +270,47 @@
 		return true;
 	}
 
+	function clearDeletedAccountLocalData(userId) {
+		const normalizedUserId = Number(userId);
+		if (!Number.isInteger(normalizedUserId) || normalizedUserId <= 0) {
+			return { ok: false, removedSaveKeys: 0, removedPendingMarkers: 0 };
+		}
+
+		const accountSavePrefix = `${LEGACY_LOCAL_SAVE_KEY}.u${normalizedUserId}.c`;
+		let removedSaveKeys = 0;
+		try {
+			const keysToRemove = [];
+			for (let index = 0; index < window.localStorage.length; index += 1) {
+				const key = window.localStorage.key(index);
+				if (key && key.startsWith(accountSavePrefix)) keysToRemove.push(key);
+			}
+			keysToRemove.forEach((key) => {
+				window.localStorage.removeItem(key);
+				removedSaveKeys += 1;
+			});
+		} catch (error) {
+			// 저장소 접근이 막힌 환경에서도 서버 계정 삭제 완료와 세션 정리는 계속 진행합니다.
+		}
+
+		let removedPendingMarkers = 0;
+		try {
+			const markers = readPendingUnsyncedSaves();
+			Object.keys(markers).forEach((key) => {
+				const marker = markers[key];
+				const markerUserId = Number(marker && marker.userId);
+				if (markerUserId === normalizedUserId || key.startsWith(`${normalizedUserId}:`)) {
+					delete markers[key];
+					removedPendingMarkers += 1;
+				}
+			});
+			writePendingUnsyncedSaves(markers);
+		} catch (error) {
+			// marker 정리에 실패해도 다른 계정 데이터나 legacy 단일 저장을 임의 삭제하지 않습니다.
+		}
+
+		return { ok: true, removedSaveKeys, removedPendingMarkers };
+	}
+
 	function getCurrentAccountBackendSlotKey() {
 		const slotIndex = currentCharacter && Number(currentCharacter.slotIndex);
 		return Number.isInteger(slotIndex) && slotIndex >= 1 && slotIndex <= 8
@@ -375,6 +418,7 @@
 		markPendingUnsyncedSave,
 		getPendingUnsyncedSave,
 		clearPendingUnsyncedSave,
+		clearDeletedAccountLocalData,
 		getCurrentAccountLocalSaveKey,
 		getCurrentAccountBackendSlotKey,
 		hasReadyGameContext,

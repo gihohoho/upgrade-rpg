@@ -116,6 +116,8 @@ function createHarness(options) {
           users: [{
             id: 7,
             username: malicious,
+            maskedEmail: malicious,
+            emailVerified: true,
             isActive: true,
             isAdmin: true,
             characterSlotsUsed: 1,
@@ -132,6 +134,8 @@ function createHarness(options) {
           user: {
             id: userId,
             username: malicious,
+            email: malicious,
+            emailVerified: true,
             isActive: true,
             isAdmin: true,
             characterSlotsUsed: 1,
@@ -202,11 +206,13 @@ async function testRuntimeGateAndEscaping() {
   const tableHtml = admin.elements.get("[data-account-admin-user-table]").innerHTML;
   requireCondition(!tableHtml.includes("<img src=x"), "server username was inserted into list HTML without escaping");
   requireCondition(tableHtml.includes("&lt;img src=x"), "escaped server username is missing from list HTML");
+  requireCondition(!tableHtml.includes("<img src=x"), "server masked email was inserted into list HTML without escaping");
 
   await admin.context.RpgAdminAccountManagement.openUserDetail(7, createElement());
   const detailHtml = admin.elements.get("[data-account-admin-detail-body]").innerHTML;
   requireCondition(!detailHtml.includes("<img src=x"), "server character name was inserted into detail HTML without escaping");
   requireCondition(detailHtml.includes("&lt;img src=x"), "escaped server character name is missing from detail HTML");
+  requireCondition(!detailHtml.includes("<img src=x"), "server full email was inserted into detail HTML without escaping");
   requireCondition(
     admin.elements.get("[data-account-admin-detail-title]").textContent.includes(admin.malicious),
     "detail title should use textContent for the server username",
@@ -214,14 +220,14 @@ async function testRuntimeGateAndEscaping() {
 }
 
 function testStaticContract() {
-  const authScriptIndex = HTML.indexOf('src/api/auth-session.js?v=370');
-  const clientScriptIndex = HTML.indexOf('src/api/game-api-client.js?v=370');
-  const accountScriptIndex = HTML.indexOf('src/api/admin/admin-account-management.js?v=370');
+  const authScriptIndex = HTML.indexOf('src/api/auth-session.js?v=371');
+  const clientScriptIndex = HTML.indexOf('src/api/game-api-client.js?v=371');
+  const accountScriptIndex = HTML.indexOf('src/api/admin/admin-account-management.js?v=371');
   const legacyScriptIndex = HTML.indexOf('src/api/admin-page-readonly.js?v=370');
   requireCondition(authScriptIndex >= 0 && authScriptIndex < clientScriptIndex, "admin page does not load auth session before API client");
   requireCondition(accountScriptIndex >= 0 && accountScriptIndex < legacyScriptIndex, "account authorization gate must load before legacy admin entry");
   requireCondition(HTML.includes('data-account-admin-content aria-hidden="true"'), "admin content is not fail-closed in HTML");
-  requireCondition(HTML.includes('src/styles/account-admin.css?v=370'), "separate account-admin stylesheet missing");
+  requireCondition(HTML.includes('src/styles/account-admin.css?v=371'), "separate account-admin stylesheet missing");
   requireCondition(CSS_SOURCE.includes("@media (max-width: 680px)"), "account admin mobile layout missing");
   requireCondition(CSS_SOURCE.includes("prefers-reduced-motion"), "account admin reduced-motion fallback missing");
 
@@ -231,6 +237,8 @@ function testStaticContract() {
   requireCondition(bootBlock.includes("accountGuard.isAdminAuthorized() !== true"), "admin authorization does not require exact true");
   requireCondition(bootBlock.indexOf("isAdminAuthorized") < bootBlock.indexOf("refreshAdminReadOnlyPage"), "legacy admin API guard runs too late");
   requireCondition(MODULE_SOURCE.includes("escapeHtml(user.username)"), "member username HTML escaping missing");
+  requireCondition(MODULE_SOURCE.includes("escapeHtml(user.maskedEmail"), "masked member email HTML escaping missing");
+  requireCondition(MODULE_SOURCE.includes("escapeHtml(formatValue(user.email))"), "full member email detail HTML escaping missing");
   requireCondition(MODULE_SOURCE.includes("escapeHtml(slot.name"), "character name HTML escaping missing");
   requireCondition(!/\b(?:alert|confirm)\s*\(/.test(MODULE_SOURCE), "browser alert/confirm is used instead of the custom modal");
 

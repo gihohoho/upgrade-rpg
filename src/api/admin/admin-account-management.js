@@ -300,7 +300,7 @@
       } else {
         table.innerHTML = `
           <table class="account-admin-table">
-            <thead><tr><th>ID</th><th>아이디</th><th>상태</th><th>권한</th><th>캐릭터 슬롯</th><th>가입일</th><th>관리</th></tr></thead>
+            <thead><tr><th>ID</th><th>아이디</th><th>이메일</th><th>상태</th><th>권한</th><th>캐릭터 슬롯</th><th>가입일</th><th>관리</th></tr></thead>
             <tbody>${users.map(renderUserRow).join("")}</tbody>
           </table>
         `;
@@ -326,6 +326,7 @@
       <tr>
         <td data-label="ID">${escapeHtml(user.id)}</td>
         <td data-label="아이디"><span class="account-admin-user-name">${escapeHtml(user.username)}</span>${isCurrent ? " · 나" : ""}</td>
+        <td data-label="이메일"><span class="account-admin-email">${escapeHtml(user.maskedEmail || "-")}</span><span class="account-admin-email-state ${user.emailVerified ? "verified" : "pending"}">${user.emailVerified ? "인증 완료" : "인증 대기"}</span></td>
         <td data-label="상태"><span class="account-admin-state ${user.isActive ? "" : "suspended"}">${user.isActive ? "활성" : "정지"}</span></td>
         <td data-label="권한">${user.isAdmin ? `<span class="account-admin-state admin">관리자</span>` : "일반 회원"}</td>
         <td data-label="캐릭터 슬롯">${escapeHtml(user.characterSlotsUsed || 0)} / ${escapeHtml(user.characterSlotCapacity || 8)}</td>
@@ -368,13 +369,16 @@
     body.innerHTML = `
       <div class="account-admin-profile-grid">
         <div><span>회원 ID</span><strong>${escapeHtml(formatValue(user.id))}</strong></div>
+        <div><span>아이디</span><strong>${escapeHtml(formatValue(user.username))}</strong></div>
+        <div><span>가입 이메일</span><strong class="account-admin-email-full">${escapeHtml(formatValue(user.email))}</strong></div>
+        <div><span>이메일 인증</span><strong>${user.emailVerified ? "인증 완료" : "인증 대기"}</strong></div>
         <div><span>계정 상태</span><strong>${user.isActive ? "활성" : "정지"}</strong></div>
         <div><span>권한</span><strong>${user.isAdmin ? "관리자" : "일반 회원"}</strong></div>
         <div><span>가입일</span><strong>${escapeHtml(formatDate(user.createdAt))}</strong></div>
       </div>
       <h3 class="account-admin-slot-title">캐릭터 슬롯 · ${escapeHtml(user.characterSlotsUsed || 0)} / ${escapeHtml(user.characterSlotCapacity || 8)}</h3>
       <div class="account-admin-slots">${slots.map(renderCharacterSlot).join("")}</div>
-      <div class="account-admin-status good">이 상세 화면은 accountCharacter 요약만 사용하며 게임 저장 원본과 인증 정보는 불러오지 않습니다.</div>
+      <div class="account-admin-status good">이 상세 화면은 계정 식별·인증 상태와 accountCharacter 요약만 사용합니다. 비밀번호, 메일 링크 토큰과 게임 저장 원본은 불러오지 않습니다.</div>
     `;
   }
 

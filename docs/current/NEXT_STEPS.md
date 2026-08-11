@@ -1,35 +1,49 @@
-# Next Steps — v357
+# Next Steps — v371
 
 ## 현재 위치
 
-- Render backend와 Static Site는 v351 공개 버전으로 Live입니다.
-- Neon PostgreSQL 16 초기화와 exact v295 상태는 완료됐습니다.
-- 12단계 `607%`에 이어 16단계 `무의식 : 넥스의 몽환의 어둠 +20 = 2121%` 실측 기준을 반영했습니다.
-- 12→16단계 +20 목표는 단계당 `1.36721871444...`배 기하 보간하고 17단계 이후 같은 비율로 추정 외삽합니다.
-- 14/15/17/18단계 +20 스킬 피해는 `1134.7 / 1551.3 / 2899.9 / 3964.8%`입니다.
-- 16단계 +1~+19와 12~39단계 전 강화 레벨의 새 스킬 피해 공식을 검증했습니다.
-- 17단계 `2097179 / 803447%`, 18단계 `851B / 7506%` 비대상 기준도 변경 없이 고정했습니다.
-- 별도 공식 감사에서 추가 스킬 계수의 기존 외삽이 22단계부터 감소하고 33단계부터 음수가 되는 문제를 발견했으며, 이번 스킬 피해 전용 범위에서는 변경하지 않았습니다.
-- generated seed, Neon DB, backend image는 변경하지 않았습니다.
-- v357 static-only 배포 gate는 아직 준비되지 않았고, 공개 배포도 승인·실행되지 않았습니다.
-- v357 정적 소스는 아직 공개 Static Site에 배포하지 않았습니다.
+- 공개 Render backend와 Static Site는 계속 v351로 Live입니다.
+- v370 로그인·계정별 캐릭터 슬롯 8개·관리자 회원 관리 baseline은 로컬 검증 완료입니다.
+- v371 필수 이메일 인증, 아이디 찾기, 비밀번호 재설정, 계정 삭제와 owner one-shot
+  source가 준비됐습니다.
+- local Alembic source graph head는 `v371_email_identity_lifecycle`입니다.
+- local/live/Neon DB current는 `v295_initial_schema`이며 v371 upgrade·downgrade·stamp는
+  0회입니다.
+- backend/frontend v371 focused와 v370 회귀, migration parity, compileall/JavaScript,
+  runtime blocking-I/O, route map 48 operations는 PASS입니다.
+- `email-validator 2.3.0` 설치·Linux lock 갱신은 기호 승인 대기 중입니다.
+- Brevo account/sender/API key·secret, 실제 메일, owner bootstrap, Render 배포는
+  실행하지 않았습니다.
 
 ## 바로 다음 순서
 
-1. 기존 Static Site ID, exact source commit, auto-deploy Off, 수동 deploy 1회와 금지 범위를 고정하는 v357 static-only fail-closed 계약/checker를 별도 준비합니다.
-2. 기호가 그 gate 준비 commit의 정확한 40자리 SHA를 별도 승인할지 결정합니다.
-3. 승인되면 기존 Render Static Site를 계약에 고정한 exact commit으로 수동 배포 한 번 실행합니다.
-4. 공개 게임에서 12단계 `607%`, 16단계 `2121%`, 14·15·17단계 이후 증가값과 backend master-data 무폴백 상태를 read-only로 확인합니다.
-5. sanitized 배포 증거와 handoff를 갱신합니다.
-6. 이후 기호가 선택하는 다음 콘텐츠·밸런스 범위를 별도 작업으로 진행합니다.
+1. 기호가 `email-validator 2.3.0` 설치·Linux lock 갱신을 승인합니다.
+2. dependency와 lock, v371 migration source, 관련 source 검증을 마치고 준비 commit을
+   push합니다.
+3. 기호가 migration 적용 준비 commit의 정확한 40자리 SHA와 범위를 별도 검토합니다.
+4. 승인 뒤에만 현재 DB `v295`, backup, v371 single head와 isolated migration
+   roundtrip을 확인하고 local/Neon migration을 계획대로 한 번 적용합니다.
+5. migration 완료 뒤 Brevo Free account, 인증된 sender, 프로젝트 전용 API key와
+   `EMAIL_TOKEN_SECRET`·`PUBLIC_FRONTEND_ORIGIN` 설정을 별도로 확인합니다.
+6. anonymous transactional tracking, log retention 1개월, email preview 미저장을
+   확인한 뒤 테스트 메일 1건을 별도 승인합니다.
+7. 새로운 exact-SHA 승인 뒤 owner one-shot bootstrap을 한 번 실행하고 plaintext
+   password를 `.env`에서 즉시 제거합니다.
+8. owner 이메일 인증·로그인과 두 캐릭터 이상의 저장 격리를 확인합니다.
+9. rate limit, server session/refresh·원격 폐기, raw body cap, 다중 기기 revision,
+   HTTPS/CSP/XSS와 개인정보·삭제 정책을 보강합니다.
+10. 마지막에 backend image와 legacy static을 같은 exact-SHA release 단위로 준비합니다.
 
-## 이번 다음 단계에 포함되지 않는 것
+## 현재 승인에 포함되지 않는 것
 
-- backend image build/push/deploy
-- Neon DB write, seed import, schema 변경, Alembic mutation
-- Render env·secret 변경
-- 관리자 write 기능 실행
-- 자동 deploy, 자동 retry, custom domain/DNS
-- 이번 요청 밖의 장비·게임 밸런스 변경
+- `email-validator` 승인 전 package 설치·lock 변경
+- local/Neon DB write, migration apply·downgrade·stamp
+- Brevo account·sender·API key·secret 생성 또는 실제 이메일 전송
+- owner 관리자 bootstrap apply
+- GitHub Actions·GHCR 게시, Render env 변경과 backend/static deploy
+- 자동 migration, 자동 retry, custom domain/DNS와 결제
+- 이번 요청 밖의 게임 콘텐츠·밸런스 변경
 
-공식과 감사 세부 내용은 `EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`를 봅니다.
+상세 계정 계약은 `ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md`, DB head/current
+구분과 migration 원칙은 `POSTGRES_ALEMBIC_READINESS.md`와
+`POSTGRES_DEPLOYMENT_MIGRATION_RUNBOOK.md`를 봅니다.
