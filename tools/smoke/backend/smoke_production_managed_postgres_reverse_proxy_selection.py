@@ -14,7 +14,7 @@ REQUIRED_FILES = (
     "deploy/docker-compose.production.yml",
     "deploy/production.env.example",
     "backend/Dockerfile",
-    "docs/current/POSTGRES_PRODUCTION_MANAGED_DB_PROXY_SELECTION.md",
+    "docs/reference/database/POSTGRES_PRODUCTION_MANAGED_DB_PROXY_SELECTION.md",
     "deploy/reverse-proxy/README.md",
     "deploy/isolated-validation/README.md",
     "deploy/review/production-compose-config-render-v312.json",

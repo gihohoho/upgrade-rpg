@@ -1,37 +1,39 @@
 # Upgrade RPG
 
-현재 기준은 `v334.production-deploy-plan-reviewed-inputs-blocked`입니다.
+웹 기반 방치형 Upgrade RPG 프로젝트입니다. 현재 공개 버전은 v351이며, 로컬 소스는 v371 이메일 계정 lifecycle과 migration 준비 단계입니다.
 
-코딩을 이어갈 때는 루트 `AGENTS.md`와 `NEXT_CHAT_HANDOFF.md`를 먼저 읽고, 현재 상태는 `docs/current/CURRENT_STATUS.md`에서 확인합니다.
+## 새 작업 시작
 
-## 로컬 개발서버 ON
+다음 세 문서만 먼저 읽습니다.
 
-- 백엔드 시작 : python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-- 프론트엔드 시작 : npm run dev
+1. [AGENTS.md](AGENTS.md)
+2. [NEXT_CHAT_HANDOFF.md](NEXT_CHAT_HANDOFF.md)
+3. [현재 상태](docs/current/CURRENT_STATUS.md)
+
+전체 문서 위치는 [Docs Hub](docs/README.md), 폴더 운영 규칙은 [Documentation System](docs/DOCUMENTATION_SYSTEM.md)을 봅니다.
 
 ## 핵심 폴더
 
-- `index.html`, `admin.html`, `src/`: legacy 게임·관리자
-- `frontend/vue-app/`: Vue GET read-only 앱
-- `backend/`: FastAPI, Alembic, dependency locks, production Dockerfile
-- `deploy/`: 운영 Compose, 변수 inventory, 정적 배포 계약과 검증 증거
-- `docs/current/`: 지금 적용되는 판단·계획·상태
-- `docs/guides/`: 실제 개발·실행 가이드
-- `docs/contracts/`: API·관리자 계약
-- `docs/archive/`: 과거 단계 기록
-- `tools/`: checker, report, smoke
+- `index.html`, `admin.html`, `src/`: legacy 게임과 관리자 화면
+- `backend/`: FastAPI, SQLAlchemy, Alembic, production image
+- `frontend/vue-app/`: Vue read-only 전환 실험
+- `deploy/`: 배포 계약, 설정 예시, 정제된 증거
+- `docs/current/`: 지금 판단과 승인에 필요한 문서
+- `docs/reference/`: 주제별 장기 기술 자료
+- `docs/generated/`: 도구가 생성하는 보고서
+- `docs/contracts/`, `docs/guides/`: API 계약과 실행 절차
+- `docs/archive/history/`: 완료된 단계의 검색용 통합 역사
+- `tools/`: checker, report, smoke, maintenance
 
-전체 구조는 `docs/current/PROJECT_STRUCTURE.md`, 문서 색인은 `docs/README.md`를 봅니다.
-
-## 운영 고정값
+## 현재 고정값
 
 ```txt
-managed PostgreSQL + provider CA verify-full
-external reverse proxy HTTPS
-backend 1 replica / 1 worker
 GHCR: ghcr.io/gihohoho/upgrade-rpg-backend
 target: linux/amd64
-production image: exact digest only
+database: Neon PostgreSQL 16 Singapore
+hosting: Render Free Web Service + Static Site
+public backend/static: v351 Live
+local source: v371 migration prepared / DB still v295
 ```
 
-검증된 image의 isolated runtime 확인은 완료했습니다. 운영 배포 계획 검토도 완료했지만 실제 host/DB/proxy/secret 입력이 정해지지 않아 배포 승인은 닫혀 있습니다. `docs/current/PRODUCTION_DEPLOYMENT_PLAN.md`를 참고합니다.
+로컬 서버를 실행하거나 배포하기 전에는 관련 guide와 현재 승인 경계를 먼저 확인합니다.

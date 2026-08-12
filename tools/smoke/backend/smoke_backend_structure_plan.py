@@ -7,7 +7,7 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[3]
-REPORT = ROOT / "docs/current/BACKEND_STRUCTURE_PLAN.md"
+REPORT = ROOT / "docs/generated/BACKEND_STRUCTURE_PLAN.md"
 TOOL = ROOT / "tools/report_backend_structure_plan.py"
 
 REQUIRED_TEXT = [

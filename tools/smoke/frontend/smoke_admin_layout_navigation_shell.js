@@ -66,7 +66,7 @@ assertContains("src/api/admin-layout-shell.js", [
   "collapsedPanelStyleReady",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_LAYOUT_NAVIGATION_SHELL.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Layout Navigation Shell",
   "sidebar",
   "sticky",

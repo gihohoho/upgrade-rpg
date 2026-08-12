@@ -60,7 +60,7 @@ assertContains("admin.html", [
   "<option value=\"dropTables\">드랍 테이블</option>",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_CREATE_APPLY_SKILLS_DROPTABLES.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Create Apply Skills and DropTables",
   "skills",
   "dropTables",

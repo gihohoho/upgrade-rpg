@@ -22,8 +22,6 @@ HANDOFF_PATHS = (
     Path("NEXT_CHAT_PROMPT.md"),
     Path("NEXT_CHAT_HANDOFF.md"),
     Path("docs/current/CURRENT_STATUS.md"),
-    Path("docs/handoff/NEXT_CHAT_PROMPT.md"),
-    Path("docs/handoff/NEXT_CHAT_HANDOFF.md"),
 )
 
 
@@ -105,17 +103,6 @@ def verify(root: Path) -> dict[str, Any]:
         require(SCHEMA_VERSION in text, f"{relative.as_posix()} is missing v338 schema marker")
         require(RESULT in text, f"{relative.as_posix()} is missing v338 result marker")
         require(NEXT_SAFE_STAGE in text, f"{relative.as_posix()} is missing v338 next-stage marker")
-
-    require(
-        (root / "NEXT_CHAT_PROMPT.md").read_bytes()
-        == (root / "docs/handoff/NEXT_CHAT_PROMPT.md").read_bytes(),
-        "NEXT_CHAT_PROMPT mirror differs",
-    )
-    require(
-        (root / "NEXT_CHAT_HANDOFF.md").read_bytes()
-        == (root / "docs/handoff/NEXT_CHAT_HANDOFF.md").read_bytes(),
-        "NEXT_CHAT_HANDOFF mirror differs",
-    )
 
     return {
         "schemaVersion": SCHEMA_VERSION,

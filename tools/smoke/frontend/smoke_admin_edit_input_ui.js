@@ -41,7 +41,7 @@ assertContains("admin.html", [
   "타입별 입력 UI",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_EDIT_INPUT_UI.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Edit Input UI",
   "boolean 필드는 checkbox 대신",
   "number 필드는",

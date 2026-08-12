@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 TOOL = ROOT / "tools/report_backend_route_map.py"
-REPORT = ROOT / "docs/current/BACKEND_ROUTE_MAP.md"
+REPORT = ROOT / "docs/generated/BACKEND_ROUTE_MAP.md"
 ADMIN_API = ROOT / "frontend/vue-app/src/api/adminReadOnlyApi.js"
 RUN_SMOKE = ROOT / "tools/run_smoke_core.sh"
 

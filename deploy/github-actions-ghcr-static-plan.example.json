@@ -71,14 +71,12 @@
       "NEXT_CHAT_PROMPT.md",
       "deploy/github-actions-ghcr-publish-lifecycle.json",
       "docs/CHANGELOG.md",
-      "docs/NEXT_STEPS.md",
+      "docs/DOCUMENTATION_SYSTEM.md",
+      "docs/README.md",
       "docs/current/BACKEND_IMAGE_GHCR_POLICY.md",
       "docs/current/CURRENT_STATUS.md",
       "docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md",
-      "docs/current/ROADMAP.md",
-      "docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md",
-      "docs/handoff/NEXT_CHAT_HANDOFF.md",
-      "docs/handoff/NEXT_CHAT_PROMPT.md"
+      "docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md"
     ],
     "codeWorkflowCheckerChangesAllowed": false,
     "stableRecordedStateAllowedAfterFirstRecordCommit": true,

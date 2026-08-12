@@ -38,7 +38,7 @@ assertContains("admin.html", [
   "relation-jump-btn",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_RELATION_PREVIEW_TOOLS.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Relation Preview Tools",
   "relation label",
   "대상 열기",

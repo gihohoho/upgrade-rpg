@@ -106,7 +106,7 @@ def inspect_production_capacity_plan(root: Path) -> dict[str, Any]:
     compose = _read(root / "deploy/docker-compose.production.yml")
     env_example = _read(root / "deploy/production.env.example")
     dockerfile = _read(root / "backend/Dockerfile")
-    plan_doc = _read(root / "docs/current/POSTGRES_PRODUCTION_CAPACITY_TLS_NETWORK_PLAN.md")
+    plan_doc = _read(root / "docs/reference/database/POSTGRES_PRODUCTION_CAPACITY_TLS_NETWORK_PLAN.md")
     isolated_doc = _read(root / "deploy/isolated-validation/README.md")
     deploy_readme = _read(root / "deploy/README.md")
 

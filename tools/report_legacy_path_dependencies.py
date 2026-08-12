@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Iterable
 
 PROJECT_VERSION = "v334"
-REPORT_PATH = Path("docs/current/LEGACY_PATH_DEPENDENCIES.md")
+REPORT_PATH = Path("docs/generated/LEGACY_PATH_DEPENDENCIES.md")
 
 IGNORED_DIRS = {
     ".git",

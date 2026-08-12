@@ -41,7 +41,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "admin note / 관리자 메모",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_FIELD_HELP.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Field Help",
   "grade",
   "enhance group code",

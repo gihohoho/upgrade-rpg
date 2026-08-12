@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 PROJECT_VERSION = "v371"
-REPORT_PATH = Path("docs/current/POSTGRES_ALEMBIC_READINESS.md")
+REPORT_PATH = Path("docs/generated/POSTGRES_ALEMBIC_READINESS.md")
 SOURCE_GRAPH_HEAD = "v371_email_identity_lifecycle"
 APPLIED_DB_REVISION = "v295_initial_schema"
 APPLIED_DB_APPLICATION_TABLES = 22
@@ -293,7 +293,7 @@ python -m pip install -e ".[dev]"
 - isolated target restore 및 검증: `tools/restore_postgres_rehearsal_database.py`
 - empty migration test DB 생성: `tools/create_postgres_migration_test_database.py`
 - 최초 revision 생성·자동 검토: `tools/create_postgres_initial_alembic_revision.py`
-- 최초 revision 수동 검토: `docs/current/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md`
+- 최초 revision 수동 검토: `docs/reference/database/POSTGRES_INITIAL_ALEMBIC_REVISION_MANUAL_REVIEW.md`
 - isolated migration DB upgrade guard: `tools/upgrade_postgres_migration_test_database.py`
 - isolated migration DB downgrade guard: `tools/downgrade_postgres_migration_test_database.py`
 - isolated migration round-trip re-upgrade guard: `tools/reupgrade_postgres_migration_test_database.py`
@@ -504,7 +504,7 @@ python tools/create_postgres_restore_rehearsal_database.py --execute
 python tools/restore_postgres_rehearsal_database.py --execute
 ```
 
-완료된 baseline 전략 기록은 `docs/current/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md`에 보관합니다.
+완료된 baseline 전략 기록은 `docs/reference/database/POSTGRES_ALEMBIC_BASELINE_STRATEGY.md`에 보관합니다.
 
 ## v310에서 변경하지 않은 것
 

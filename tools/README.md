@@ -47,7 +47,7 @@ python tools/report_legacy_path_dependencies.py --check
 생성되는 문서:
 
 ```txt
-docs/current/LEGACY_PATH_DEPENDENCIES.md
+docs/generated/LEGACY_PATH_DEPENDENCIES.md
 ```
 
 이 도구는 새 contract가 아닙니다. Vue/FastAPI/DB 전환 전에 기존 legacy 경로를 움직여도 되는지 판단하기 위한 보조 도구입니다.
@@ -64,7 +64,7 @@ python tools/report_postgres_alembic_readiness.py --check
 생성 문서:
 
 ```txt
-docs/current/POSTGRES_ALEMBIC_READINESS.md
+docs/generated/POSTGRES_ALEMBIC_READINESS.md
 ```
 
 ## PostgreSQL/Alembic 로컬 사전 점검

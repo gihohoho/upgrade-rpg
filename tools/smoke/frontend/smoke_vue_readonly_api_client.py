@@ -17,7 +17,7 @@ REQUIRED_FILES = [
     "src/api/README.md",
     "src/pages/AdminShell.vue",
     "src/pages/GameShell.vue",
-    "docs/current/VUE_READONLY_API_CLIENT.md",
+    "docs/reference/frontend/VUE_READONLY_API_CLIENT.md",
 ]
 
 EXPECTED_ADMIN_ROUTES = [
@@ -143,7 +143,7 @@ def main() -> None:
         assert_contains(text, "@/api", f"{shell} imports API route constants")
         assert_contains(text, "GET", f"{shell} labels read-only route method")
 
-    docs = read("docs/current/VUE_READONLY_API_CLIENT.md")
+    docs = read("docs/reference/frontend/VUE_READONLY_API_CLIENT.md")
     assert_contains(docs, "v272", "read-only API client doc version")
     assert_contains(docs, "POST /game/save", "doc excluded write route")
     assert_contains(docs, "`.venv` 상태", "doc venv guidance")

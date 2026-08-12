@@ -25,7 +25,7 @@ assertContains("src/systems/item-system.js", [
   "겹쳐진 장비를 강화하려면 먼저 1칸의 빈 공간이 필요합니다.",
 ]);
 
-assertContains("docs/archive/stage-notes/RUNTIME_STACKED_ENHANCE_SPACE_GUARD.md", [
+assertContains("docs/archive/history/GAME_UI_RUNTIME_HISTORY.md", [
   "탈리스만",
   "빛나는 휘장",
   "DB reset/seed 불필요",

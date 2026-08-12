@@ -1,255 +1,97 @@
-# Upgrade RPG Codex working rules — v371
+# Upgrade RPG Codex working rules — v372
 
-이 파일은 저장소 전체에 적용됩니다. 작업 시작 시 이 파일, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`를 먼저 읽습니다.
+이 파일은 저장소 전체에 적용되는 **장기 규칙**입니다. 새 작업은 다음 순서로 시작합니다.
 
-## 사용자와 설명
+1. `AGENTS.md`
+2. `NEXT_CHAT_HANDOFF.md`
+3. `docs/current/CURRENT_STATUS.md`
+4. 작업과 직접 관련된 `docs/current/`, `docs/reference/`, `docs/contracts/` 문서
 
-- 사용자는 코딩을 거의 모르는 **기호**입니다. 항상 쉽고 자세한 한국어로 설명합니다.
-- 모든 터미널 명령 바로 위에 **실행 위치**, **Python `.venv` 상태**, **새 설치 여부**를 적습니다.
+과거 구현 세부는 처음부터 읽지 않고 필요할 때만 `docs/archive/history/`에서 검색합니다.
+
+## 사용자와 작업 방식
+
+- 사용자는 코딩을 거의 모르는 **기호**입니다. 항상 쉽고 구체적인 한국어로 설명합니다.
+- 모든 터미널 명령 바로 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적습니다.
 - backend 가상환경은 `backend/.venv`입니다. Git Bash에서는 `backend`에서 `source .venv/Scripts/activate`로 켭니다.
 - Vue/npm은 `frontend/vue-app`에서 실행하며 Python `.venv`가 필요 없습니다.
-- 필요한 extension, GitHub/repository/app 권한, 설치가 있으면 기호에게 요청하고 해결될 때까지 `NEXT_CHAT_PROMPT.md`, `NEXT_CHAT_HANDOFF.md`에도 반복 기록합니다.
-- 공개 게임이 backend master-data를 폴백 없이 로드하고 관리자 guarded 콘텐츠 작업 흐름이 검증되어 콘텐츠 추가·수정을 시작하기 좋은 시점이 되면 기호에게 먼저 명확히 알립니다.
-- 매 작업에서 루트 `NEXT_CHAT_PROMPT.md`, `NEXT_CHAT_HANDOFF.md`와 `docs/handoff/` mirror를 동기화합니다.
-- 변경·검증 뒤 Codex가 `git status`, `git add`, `git commit`, `git push`를 직접 실행합니다. Git 명령 안내와 ZIP은 기호가 별도로 요구하지 않는 한 제공하지 않습니다.
+- 필요한 extension, 권한, 설치, 외부 계정 작업이 있으면 기호에게 요청하고 해결될 때까지 handoff에 남깁니다.
+- Codex는 정상 실행 중인 backend `127.0.0.1:8000`, Vue `127.0.0.1:5173`, legacy static `127.0.0.1:5500` 서버를 재사용합니다.
+- legacy 브라우저 검증은 `http://127.0.0.1:5500/index.html`과 `/admin.html`을 사용합니다. `file://`는 사용하지 않습니다.
+- Windows 전역 `DEBUG=release`는 backend 설정과 충돌하므로 backend 검사 자식 프로세스에서만 `DEBUG=false`로 덮어씁니다.
+- 변경·검증 뒤 Codex가 직접 `git status`, 선택적 stage, commit, push를 수행합니다. 사용자 변경은 stage하지 않습니다. ZIP과 Git 명령 안내는 요청받지 않는 한 제공하지 않습니다.
+- 서버를 재시작하지 않았으면 완료 답변에 `서버 재시작 불필요`라고 적습니다.
 
-## 개발 서버와 로컬 자원
+## 변경 품질
 
-- Codex는 터미널을 자유롭게 사용하고 **실행 중인 개발 서버를 재사용**합니다.
-- backend `127.0.0.1:8000`, Vue `127.0.0.1:5173`, legacy static `127.0.0.1:5500`이 정상이면 재시작하지 않습니다.
-- legacy 통합 확인은 `http://127.0.0.1:5500/index.html`, `/admin.html`을 사용합니다. `file://`는 origin이 `null`이라 API 통합 검증에 사용하지 않습니다.
-- 기존 local PostgreSQL dependency의 단순 시작·중지는 가능하지만 reset·recreate·volume 삭제·seed·restore·migration은 별도 요청 전 금지합니다.
-- Windows 전역 환경변수 `DEBUG=release`는 backend의 boolean `DEBUG`와 충돌합니다. backend/core 검사는 시스템 값을 바꾸지 말고 해당 자식 프로세스에서만 `DEBUG`를 unset하거나 `DEBUG=false`로 덮어씁니다.
-- 서버를 재시작하지 않았으면 완료 답변에 “서버 재시작 불필요”라고 적습니다.
+- 새 추상화·의존성·파일보다 기존 코드와 표준 기능을 먼저 사용합니다.
+- 사용자에게 보이는 기능은 동작만 연결하지 않고 버튼 배치, 간격, 문구, 툴팁, 모달, 반응형, 접근성, 캐시 키까지 함께 완성하고 실제 브라우저에서 확인합니다.
+- 동작·수치·상태를 바꾸면 관련 설명, source/generated seed, 회귀 검사와 현재 문서를 전수 검색해 동기화합니다.
+- 파괴적 동작은 브라우저 기본 `alert`/`confirm` 대신 게임 UI와 일관된 확인 모달을 사용하며 실행 전 영향과 반환값을 보여줍니다.
+- 코드나 구조를 바꾸면 관련 focused smoke, Python compileall, JavaScript syntax와 `bash tools/run_smoke_core.sh`를 위험도에 맞게 검증합니다. Vue를 바꾼 경우에만 `frontend/vue-app`에서 `.venv` 없이 `npm ci`와 `npm run build`를 실행합니다.
 
-## 최소 구현 원칙
+## 로컬 자원과 안전 경계
 
-- 새 추상화·의존성·파일을 만들기 전에 기존 코드, Python/JavaScript 표준 기능, 브라우저·DB·프레임워크 기본 기능으로 해결할 수 있는지 먼저 확인합니다.
-- 요청하지 않은 미래용 구조·설정·scaffolding은 만들지 않으며, 안전·보안·검증·접근성 요구는 단순화를 이유로 생략하지 않습니다.
-- 사용자에게 보이는 버튼·기능을 추가하거나 바꿀 때 기능만 연결하지 않고 기존 화면의 시각 위계, 버튼 배치, 간격, 문구, 반응형 동작까지 함께 완성하고 실제 브라우저에서 확인합니다.
-- 파괴적이거나 되돌리기 어려운 동작에는 브라우저 기본 `alert`/`confirm`을 쓰지 않고 기존 게임 UI와 일관된 확인·취소 모달을 사용하며, 결과와 반환 수량을 실행 전에 명확히 보여줍니다.
-- 동작·수치·상태를 바꾸면 연관된 화면 제목, 고정 설명, 툴팁, 모달 안내, 버튼 문구, 로그, 캐시 키, source/generated seed, 회귀 검사와 현재 문서를 함께 전수 검색해 실제 동작과 같은 내용으로 동기화합니다.
-- 생성형 인벤토리·아이템 이미지는 모두 동일한 정사각형 크기로 만듭니다. 이미지 파일 자체에는 테두리, 프레임, 카드판, inset panel, margin band를 넣지 않고 아이템과 효과가 네 변 가까이 닿도록 화면을 여백 없이 채우며, 종류를 한눈에 알아볼 수 있다면 일부가 잘리는 close-up 구도를 허용합니다. 고전 한국식 횡스크롤 액션 RPG·던전앤파이터풍의 굵은 외곽선, 선명한 만화식 명암, 작은 슬롯 판독성을 기준으로 합니다.
-- 스킬 아이콘은 사용자가 제시한 작은 슬롯용 예시처럼 어두운 배경 위에 굵고 단순한 단일 문양·동작 실루엣을 크게 배치하고, 정사각형 full-bleed와 작은 크기 판독성을 지킵니다. 기본 스킬의 자동·패시브형은 초록색, 버프형은 파란색, 액티브형은 노란색 계열이며, `SQ`·`SW`·`M` 강화·진각성 스킬은 기능 유형과 관계없이 보라색 계열입니다.
-- 스킬 이미지 파일 안에는 `Q`·`W` 같은 키 문자, 숫자, 스킬명과 설명을 넣지 않습니다. 키와 이름은 UI가 별도로 표시합니다. 추후 캐릭터를 추가할 때는 같은 슬롯 키라는 이유로 검신 아이콘을 재사용하지 않고 캐릭터별 고유 파일을 만듭니다.
-- 스킬강화권은 `Q → W → E → R → T → F → D → SQ → SW → M` 순서의 한 계열입니다. `Q` 기본형을 만든 뒤 바로 전 단계 이미지를 직접 편집해 같은 책·강화권의 정체성, 실루엣, 각도, 구도를 유지하고 재질·룬·오라만 절제되게 발전시킵니다. 이미지 안에는 키 문자·숫자·희귀도 테두리를 넣지 않으며 UI의 CSS 프레임을 이미지와 분리합니다.
-- 초보자 무기를 포함한 같은 장비 계열의 상위 이미지는 기본형을 직접 편집해 같은 물체의 실루엣과 구도를 유지합니다. 장비·강화권·스킬 PNG 내부 프레임과 게임 UI의 등급별 CSS 테두리를 혼합하지 않습니다.
-- 일반 장비 생성형 이미지는 64px에서도 종류가 보이는 단일 물체와 굵은 실루엣을 유지하되, 너무 밋밋하지 않도록 2~3개의 목적 있는 장식, 금속 하이라이트, 보석과 절제된 마력 효과를 허용합니다. 이미지 안에 글자·숫자·로고·희귀도 테두리·무관한 날개·과도한 입자·물체를 가리는 광채·복잡한 세공을 넣지 않습니다.
-- 같은 일반 장비 계열도 승급 단계마다 별도 PNG를 만듭니다. 기본 이미지의 물체 정체성, 실루엣, 카메라 각도, 배치와 주요 부품을 유지한 채 단계가 오를수록 재질, 중심색, 기존 부품의 장식, 룬과 마력 효과를 점진적으로 발전시킵니다. 전혀 다른 물체로 재설계하거나 CSS 테두리만 바꿔 승급 이미지를 대신하지 않습니다.
-- 일반 장비 계열은 `-현-`, `-진-`, `-초월-`, `★심연★`, `★연옥★`, `★진 연옥★`, `★초월 연옥★` 같은 승급 표식을 제거한 이름이 같으면 같은 계열입니다. 또한 `끝없는 절망 : 티아매트의 불신`이 `절망 : 티아매트의 불신`을, `영원한 파멸 : 베리아스의 불신`이 `파멸 : 베리아스의 불신`을 포함하는 것처럼 더 긴 상위 이름 안에 기본 장비 이름 전체가 들어 있으면 같은 계열로 봅니다. 여러 후보가 있으면 가장 긴 기본 이름을 우선하며 불명확하면 사용자에게 확인합니다.
-- 같은 계열 여부와 단계 순서는 이름 앞의 고정 접두어만으로 제한하지 않습니다. `끝없는`, `영원한`, `선 :`처럼 다른 수식어가 붙거나 기본 이름이 상위 이름에 포함되는 경우도 이미 확정된 단계표를 우선합니다. 특히 21→22→23, 24→25→26은 `basic → rare → transcendent`, 30→31→35→36은 `basic → rare → transcendent → liberated`로 이미지와 CSS 테두리를 함께 발전시킵니다.
-- 사용자가 승인한 계열 기본 이미지를 교체하면 그 기본형에서 파생된 모든 상위 단계 PNG도 같은 작업에서 새 기본형을 바탕으로 다시 생성·적용합니다. 일부 단계에 이전 시안을 남기거나 이미지 발전 단계와 CSS 테두리 단계를 서로 다르게 적용하지 않습니다.
-- 과거 이미지 묶음이나 특정 commit의 시안을 폐기해 달라는 요청은 대표 파일 한 장이나 한 계열만 뜻하는 것으로 축소하지 않습니다. 해당 commit에서 추가된 원본 파일 목록과 이후 tier별 복제·파생 이력을 Git으로 역추적해 현재 사용 중인 모든 후손 PNG를 범위로 잡고, 교체 완료 전에는 “전부 폐기”라고 기록하지 않습니다.
-- 일반 장비 CSS 등급은 이름 맨 앞의 명시 승급 표식이 내부 단어보다 항상 우선합니다. 예를 들어 `-초월- ... 천공`은 내부의 `천공` 때문에 `luminous`가 되지 않고 반드시 `transcendent`입니다. 이미지 연결·등급 판정 JavaScript를 바꾸면 이미지 URL뿐 아니라 해당 `<script>` 캐시 키도 함께 갱신하고 실제 브라우저에서 확인합니다.
-- 게임 UI에서는 이미지 파일과 별개로 모든 아이템에 등급별 CSS 테두리를 일관되게 적용합니다. 기본 등급은 효과 없는 흰색 테두리이고, 강력·빛나는·초월·해방·찬란·짙은·영롱 등 상위 단계는 색상, 이중선, 광채와 절제된 애니메이션을 점진적으로 강화합니다. 이 판정은 장착칸, 가방, 보관함, 휴지통, 관리창과 지급 미리보기 등 아이템이 표시되는 모든 위치에서 유지하며 실제 브라우저 슬롯 크기와 `prefers-reduced-motion`에서도 확인합니다.
-- 가방·보관함·휴지통에서 아이템을 이동·사용·장착해제·삭제해도 뒤 아이템을 자동으로 당기지 않고 원래 칸을 빈 칸으로 유지합니다. 새 아이템은 가장 앞의 빈 칸을 사용하고, 사용자가 각 패널의 `위로 정렬` 버튼을 눌렀을 때만 기존 상대 순서를 보존한 채 빈 칸을 제거합니다.
+- 숨김 파일과 ignored `.env`는 점검·수정할 수 있지만 실제 secret, token, PAT, password, CA, cert, key를 Git·채팅·로그·artifact에 노출하지 않습니다.
+- 실제 local/Neon DB write, reset, restore, seed, Alembic apply·stamp·downgrade, Docker container/network/volume 변경, GHCR 게시, Render env·deploy는 해당 단계와 exact 범위를 별도 확인한 뒤 실행합니다.
+- root `.dockerignore`는 `.env` 계열을 전부 제외합니다. 나중에 회전할 항목은 `docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md`에 기록합니다.
+- 현재 고정 GitHub/GHCR namespace는 `gihohoho`, repository는 `ghcr.io/gihohoho/upgrade-rpg-backend`, target은 `linux/amd64`입니다. placeholder로 되돌리지 않습니다.
+- GitHub Actions 게시 모델은 `owner-only-source-controlled-two-step`이며 production image는 exact digest만 사용합니다.
 
-## 계정·인증·캐릭터 슬롯
+## 계정·인증·캐릭터
 
-- 게임은 로그인 또는 회원가입 → 계정별 캐릭터 슬롯 8개 조회 → 캐릭터 선택·생성 → 선택 캐릭터 저장 로드 순서로 시작합니다. 인증과 캐릭터 선택 전에는 게임 boot와 자동 저장 timer를 시작하지 않습니다.
-- 계정 캐릭터 슬롯은 기존 `user_save_snapshots`의 `character-1`부터 `character-8`까지를 사용합니다. 새 테이블이나 Alembic revision을 임의로 만들지 않으며, `characters`는 직업 마스터 데이터이고 `player.userCharacters`는 직업별 스킬 상태이므로 계정 슬롯으로 재사용하지 않습니다.
-- 각 캐릭터는 슬롯 번호와 별개인 32자리 무작위 `accountCharacterId`를 가집니다. 저장·불러오기는 Bearer token의 계정, `character-N` 슬롯 키, 캐릭터 고유 ID가 모두 일치할 때만 허용해 삭제 후 같은 슬롯을 다시 만든 경우의 오래된 브라우저 캐시를 차단합니다.
-- 인증 API는 요청 본문의 `userId`를 신뢰하지 않고 Bearer token의 현재 사용자만 사용합니다. 회원가입은 항상 일반 회원으로 만들고, 비밀번호 원문·해시, access token, 전체 save snapshot을 관리자 응답·로그·문서에 노출하지 않습니다.
-- 기존 단일 로컬 저장 `idleRpgSaveV22`는 자동 삭제·자동 가져오기·자동 덮어쓰기를 하지 않고 사용자가 명시적으로 선택하는 가져오기 원본으로만 보존합니다. 새 로컬 키에는 계정 ID와 캐릭터 고유 ID를 함께 넣습니다.
-- 정상 load에서는 서버 DB snapshot을 authoritative 기준으로 사용합니다. backend snapshot이 있으면 서로 다른 local은 `.pre-backend-recovery` 복구 백업으로 먼저 보존한 뒤 서버본을 사용하고, backend가 비어 있을 때만 계정·캐릭터가 일치하는 local을 복구 원본으로 사용해 직렬 저장 큐로 서버에 올립니다.
-- 이전 저장 실패로 `pending-unsynced` marker가 있는 local과 서버본이 다르면 자동 덮어쓰지 않고 게임 UI 선택 모달에서 `이 기기 저장 사용`·`서버 저장 사용`·취소를 고르게 합니다. local 선택은 서버 재전송, 서버 선택은 local 복구 백업 후 marker 제거이며, 결정 전에는 두 원본을 모두 보존합니다.
-- 자동 저장, 수동 저장, 캐릭터 전환·로그아웃 최종 저장은 하나의 직렬 저장 큐를 사용합니다. 전환 시 runtime과 전투/timer를 먼저 pause하고 기존 큐와 최종 저장을 drain한 뒤에만 선택 상태/token 정리와 reload를 진행하며, 실패하면 전환을 중단하고 runtime을 다시 시작할 수 있어야 합니다.
-- 저장·세션 확인의 `401/403`은 현재 local과 `pending-unsynced` marker를 보존한 채 token을 폐기하고 재로그인 뒤 복구 선택으로 이어집니다. network/timeout/`5xx`는 token과 선택 상태를 보존하고 retry 화면 또는 다음 직렬 저장 재시도를 사용합니다.
-- 최초 관리자 지정은 로그인 가능한 관리자가 없을 때 로그인 계정과 별도 `X-Admin-Dev-Key`를 함께 확인하는 1회 bootstrap으로만 허용합니다. 회원 상태 apply는 실제 관리자 Bearer 권한과 dev key, preview/stale 확인, 본인·마지막 관리자 보호, 감사 로그를 모두 요구합니다.
-- 인증 `422` 응답은 `loc`·`type`·`msg`만 유지하고 비밀번호·비밀번호 확인의 `input`과 인증 body를 반사하지 않습니다. SQLAlchemy는 application debug와 무관하게 `echo=False`, `hide_parameters=True`를 유지하고, 관리자 save summary는 명시 allow-list의 제한된 scalar만 반환하며 raw snapshot과 임의 `summary_json` 키는 반환하지 않습니다.
-- 계정 전환과 로그아웃은 현재 캐릭터 저장을 기다린 뒤 token과 선택 상태를 지우고 reload해 오래된 runtime과 중복 timer를 남기지 않습니다. `beforeunload`에서는 네트워크 저장 완료를 기대하지 않고 현재 캐릭터의 로컬 저장만 수행합니다.
-- 인증이 포함된 공개 배포는 backend image와 legacy static을 같은 승인 단위로 준비합니다. 공개 회원가입 전 로그인 상태 비밀번호 변경, 인증·복구·삭제 요청 rate limit, 만료된 미인증 계정의 안전한 정리·메일 소유자 회수 정책, 서버측 session/refresh·폐기 정책, ASGI 계층 raw request body 제한, 다중 기기 revision 충돌·낙관적 잠금, HTTPS/CSP/XSS와 개인정보·삭제 정책을 별도 검토합니다.
-- v371 이후 새 회원가입은 별도 아이디와 필수 이메일을 함께 받으며 이메일 링크 인증 전에는 access token과 게임 접속을 허용하지 않습니다. 로그인은 아이디 또는 이메일을 허용하고, 아이디 찾기·비밀번호 재설정·인증 재전송 요청은 계정 존재 여부와 실제 발송 여부를 같은 응답으로 숨깁니다.
-- 이메일 작업 token은 CSPRNG 원문을 메일 링크에 한 번만 전달하고 DB에는 `JWT_SECRET_KEY`와 다른 `EMAIL_TOKEN_SECRET`으로 만든 HMAC-SHA256 digest만 저장합니다. 인증·비밀번호 재설정·계정 삭제 token은 목적·만료·미사용 상태가 모두 맞을 때 row lock 안에서 한 번만 사용합니다.
-- 이메일 action URL은 고정 allow-list `PUBLIC_FRONTEND_ORIGIN`으로만 만들며 요청의 Host·return URL을 신뢰하지 않습니다. fragment token은 프런트가 읽은 직후 history에서 제거하고 원문 token, 비밀번호, 전체 인증 body를 API·로그·관리자 화면에 노출하지 않습니다.
-- Render Free 계정 메일은 SMTP가 아니라 Brevo HTTPS API만 사용합니다. 실제 발송 전 transactional anonymous tracking, log retention 1개월, email preview 미저장을 확인하고, account-wide 권한인 전용 API key는 Git/Docker 제외 secret store에만 두며 노출·미사용 시 즉시 폐기합니다.
-- 일반 회원 계정 삭제는 로그인 상태의 범위 preview → 현재 비밀번호 → 이메일 링크 → 게임 모달의 정확한 `계정 삭제` 확인 문구 순서만 허용합니다. 관리자·감사 기록 연결 계정은 fail-closed로 막고 삭제 성공 전 local cache를 지우지 않습니다.
-- 최상위 owner 관리자 계정은 JWT secret과 비밀번호를 공유하지 않습니다. Git 제외 `.env`의 별도 `OWNER_ADMIN_*` 값을 사용하는 explicit one-shot script만 허용하고 startup 자동 mutation을 금지합니다. 실제 apply는 정확한 migration head, 기존 관리자 0명, enable flag, `--apply`, 소문자 40자리 `--approved-sha`와 현재 Git HEAD 일치, 프로젝트 root·tracked script·tracked index/worktree clean 검사를 모두 요구합니다. 환경·승인 SHA·아이디/이메일 SHA-256 identity fingerprint를 묶은 정확한 확인 문구까지 DB session 생성 전에 통과해야 하며, 성공 직후 enable/password 값을 제거합니다. `.env` 입력만으로 이메일 인증을 대신하지 않습니다.
+- 시작 순서는 로그인/가입 → 계정별 캐릭터 슬롯 8개 → 캐릭터 선택/생성 → 해당 저장 로드입니다. 인증과 캐릭터 선택 전에는 게임 boot와 자동 저장을 시작하지 않습니다.
+- 슬롯은 `character-1`부터 `character-8`, 캐릭터 식별자는 슬롯과 별개의 32자리 `accountCharacterId`입니다. Bearer 계정, 슬롯 키, 캐릭터 ID가 모두 일치해야 저장·로드합니다.
+- 서버 snapshot이 정상 load의 기준입니다. 다른 local은 복구 백업으로 보존하며, `pending-unsynced` 충돌은 사용자가 local/server 중 하나를 명시적으로 선택하기 전까지 자동 덮어쓰지 않습니다.
+- 자동·수동·전환 저장은 하나의 직렬 큐를 사용합니다. 전환 시 runtime과 전투 timer를 먼저 멈추고 최종 저장을 기다린 뒤 token과 선택 상태를 지웁니다.
+- `401/403`은 local과 pending marker를 보존하고 재로그인으로 돌립니다. network/timeout/`5xx`는 token을 보존하고 재시도합니다.
+- 신규 가입은 아이디와 필수 이메일을 받으며 이메일 인증 전에는 로그인할 수 없습니다. 아이디 찾기, 비밀번호 재설정, 인증 재전송, 계정 삭제 메일은 계정 존재 여부를 공개 응답에서 숨깁니다.
+- 이메일 action token은 원문을 저장하지 않고 `EMAIL_TOKEN_SECRET` HMAC digest만 저장합니다. JWT `authVersion` 불일치, 정지·미인증 계정은 매 요청에서 차단합니다.
+- 인증 `422`는 `loc`, `type`, `msg`만 반환합니다. 비밀번호·token·요청 body와 SQL bind parameter를 응답·로그에 남기지 않습니다.
+- 회원가입은 관리자 권한을 만들지 않습니다. owner bootstrap은 별도 one-shot, exact SHA, clean tracked tree, 기존 관리자 0명, 명시 확인을 모두 요구하며 성공 뒤 평문 password env를 제거합니다.
+- 공개 회원가입 전 rate limit, ASGI raw body cap, durable mail queue/timing 보호, 미인증 계정 회수, server session/revoke, save revision 충돌, CSP/XSS, 개인정보 정책을 완료해야 합니다.
 
-## Code Review Graph 제한 시험
+상세 계약은 `docs/current/ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md`와 `docs/current/ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md`를 따릅니다.
 
-- Code Review Graph 2.3.7은 사용자 전용 독립 환경에 설치한 **CLI-only 보조 도구**입니다. backend `.venv`와 프로젝트 dependency에는 포함하지 않습니다.
-- Codex가 다중 파일 변경, 영향 범위, 생소한 코드 경로, PR·복합 버그 검토에 도움이 된다고 판단하면 수동 CLI를 적극 사용하고 결과를 원본 코드·테스트와 대조합니다.
-- 좁은 `search`·`query`부터 사용하고 광범위 `impact`는 실제 필요할 때만 사용합니다. `install`, MCP, Codex hooks/instructions, watch/daemon, Git hook은 사용하지 않습니다.
+## UI·아이템·이미지 규칙
 
-## GitHub와 secret
+- 인벤토리·보관함·휴지통은 이동·사용 뒤 빈 칸을 유지합니다. 새 아이템은 첫 빈 칸을 쓰고 `위로 정렬` 버튼을 눌렀을 때만 상대 순서를 유지해 압축합니다.
+- 이미지 파일은 동일한 정사각형 full-bleed PNG이며 내부 테두리·카드판·글자·키 문자·희귀도 프레임을 넣지 않습니다. 아이템 등급 테두리는 모든 UI 위치에서 CSS로 일관되게 적용합니다.
+- 장비 계열 상위 이미지는 기본형을 직접 편집해 실루엣·각도·정체성을 유지하고 재질·룬·효과만 단계적으로 발전시킵니다. 이름 포함 관계와 확정 tier 표를 함께 사용합니다.
+- 스킬 아이콘은 작은 슬롯에서도 읽히는 단일 문양 중심입니다. 기본 자동/패시브는 초록, 버프는 파랑, 액티브는 노랑, `SQ`·`SW`·`M`은 보라 계열입니다.
+- 스킬강화권은 `Q → W → E → R → T → F → D → SQ → SW → M` 한 계열이며 직전 이미지를 직접 편집해 발전시킵니다.
+- 자산별 상세 매핑과 승인 기준은 `docs/reference/assets/`를 우선합니다.
 
-- 기호는 작업 목적 안에서 Actions, workflow, action SHA, environment, variables와 필요한 GitHub 설정을 Codex가 구성하도록 허용했습니다.
-- 숨김 파일과 `.env`는 점검·수정할 수 있지만 실제 secret/token/PAT/password/CA/cert/key를 Git·채팅·로그·artifact에 노출하거나 커밋하지 않습니다.
-- root `.dockerignore`는 `.env`/`*.env`/`.envrc` 계열을 모두 제외하고 재포함을 금지합니다. `backend/Dockerfile.production.dockerignore`는 만들지 않습니다.
-- 나중에 회전·폐기할 항목은 `docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md`에 기록합니다.
-- 사용자 계정 선택, 추가 로그인, 결제/플랜, 실제 운영 공급자 선택처럼 Codex가 대신할 수 없는 일만 요청합니다.
+## 문서 체계
 
-## 현재 고정 상태
+- `docs/current/`: 지금 판단과 승인에 필요한 소수의 문서
+- `docs/reference/`: 계속 유효한 주제별 기술 자료
+- `docs/generated/`: checker/report가 다시 만드는 결과물; 직접 편집 금지
+- `docs/contracts/`: API와 관리자 계약
+- `docs/guides/`: 실행 절차
+- `docs/archive/history/`: 완료된 단계의 검색용 통합 역사; 현재 규칙으로 사용 금지
+- 같은 내용을 여러 파일에 복사하지 않습니다. 새 채팅용 상태는 `NEXT_CHAT_HANDOFF.md` 한 곳에 기록하고 `NEXT_CHAT_PROMPT.md`는 그 문서를 가리키는 짧은 안내만 유지합니다.
+- 구조를 바꾸면 `docs/README.md`, `docs/current/README.md`, `docs/DOCUMENTATION_SYSTEM.md`, 문서 구조 smoke와 root handoff를 함께 갱신합니다.
+- Obsidian은 선택형 뷰어일 뿐 필수 dependency가 아닙니다. 저장소 루트를 vault로 열고 표준 Markdown 링크를 사용하며 개인 `.obsidian/` 설정은 commit하지 않습니다.
+
+## 현재 체크포인트
 
 ```txt
-latest: v371.email-verification-recovery-account-deletion-migration-prepared
-strict result: email-verification-recovery-account-deletion-migration-prepared
+latest: v372.documentation-system-consolidated
+strict result: documentation-system-consolidated
 next safe stage: owner-approve-email-validator-install-and-review-v371-migration-source
-v355 provider checkpoint: v355.v351-provider-release-deployed-verified-content-ready / v351-provider-release-deployed-verified-content-ready / select-first-content-and-balance-change-scope
-v354 provider preparation checkpoint: v354.v351-provider-release-prepared-exact-sha-approval-required / v351-provider-release-prepared-exact-sha-approval-required / owner-approve-v354-v351-provider-release-preparation-sha
-v353 image checkpoint: v351-image-publish-and-isolated-validation-complete
-v352 preparation checkpoint: v352.v351-public-release-gates-prepared-backend-image-approval-required
-v351 source checkpoint: v351.master-data-latency-focused-fix-blocking-io-audited / master-data-latency-fix-blocking-io-audit-ready
-v351 source next stage (completed): prepare-v351-image-and-static-release-exact-sha-gates
-frontend plan: v351.master-data-latency-focused-fix-blocking-io-audited
-v350 prior checkpoint: v350.backend-cors-recovered-browser-timeout-followup-required / backend-cors-recovered-browser-timeout-followup-required
-v350 prior next stage (completed): prepare-frontend-master-data-timeout-fix-and-content-readiness-review
-render plan: v347.render-service-created-initial-deploy-verified
-render prior next stage (completed): review-render-live-service-and-prepare-frontend-deployment-plan
-neon plan: v345.neon-initialization-completed-verified-render-preparation-required
-render checkpoint: v338.render-private-ghcr-exact-digest-connect-verified-service-creation-blocked
-render checkpoint result: render-ghcr-read-credential-exact-digest-connect-verified
-render checkpoint next stage: review-render-service-settings-and-database-initialization-plan
-tooling checkpoint: v339.code-review-graph-cli-only-trial-built-ponytail-principle-applied
-tooling result: code-review-graph-cli-only-built-hooks-mcp-disabled
-deployment safety baseline: v334.production-deploy-plan-reviewed-inputs-blocked / production-deploy-plan-reviewed-inputs-blocked
-baseline next stage marker: select-production-targets-and-complete-executable-deploy-plan
-GitHub remote: https://github.com/gihohoho/upgrade-rpg.git
-GHCR repository: ghcr.io/gihohoho/upgrade-rpg-backend (private)
-target: linux/amd64
-verified production reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1
-verified v351 candidate: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac
-Render live reference: ghcr.io/gihohoho/upgrade-rpg-backend@sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac
-architecture: managed PostgreSQL + verify-full + provider-managed HTTPS ingress + backend 1/1
-Alembic current: v295_initial_schema / prepared next revision: v371_email_identity_lifecycle / applied: no
+local source head: v371_email_identity_lifecycle
+local/Neon DB current: v295_initial_schema
+v371 migration applied: no
+public backend/static: v351 Live
+Render public preview: deployed
+production approval/execution: no/no
 ```
 
-- CI credential은 GitHub Actions `GITHUB_TOKEN`, local pull은 GitHub CLI OAuth `read:packages` → Docker credential store입니다.
-- image publish model은 `owner-only-source-controlled-two-step`입니다.
-- source-controlled lifecycle gate는 `deploy/github-actions-ghcr-publish-lifecycle.json`의 `attempt-recorded`, `publishReviewerGateReady=false`입니다. 이전 run 6건은 `attemptHistory`에 보존하고 현재 run은 `observedAttempt`에 기록합니다.
-- run `30226905547`은 run_attempt=1 단일 실행으로 build/SBOM/Trivy/provenance/Cosign을 통과했고 exact digest `sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac`은 v353 isolated runtime/CA-store/cleanup까지 통과했습니다.
-- 과거 run `30180738530`과 digest `sha256:f3bf6eed45e46e9d2022df4ab62eb6ca55b1ec0997b8ed342ae250c4a60052c1`은 이전 Render live image의 공급망·v342 isolated 증거로 보존합니다.
-- 운영 배포 계획은 `deploy/production-deploy-plan.example.json`과 `docs/current/PRODUCTION_DEPLOYMENT_PLAN.md`에서 검토 완료했습니다.
-- production host, managed DB, provider CA, reverse proxy/domain/certificate, secret injection, edge network, first-deploy rollback 입력은 아직 미확정입니다.
-- production deployment approval ready/approved/executed는 `no/no/no`입니다.
-- Render public preview deployment ready/approved/executed는 `yes/yes/yes`입니다.
-- Render GitHub App은 `gihohoho/upgrade-rpg` 단일 저장소만 접근하도록 연결됐습니다.
-- frontend Static Site `gihohoho-upgrade-rpg`는 v351 exact source `81beaa0864c3422fb9fc2071b9c4965936ecafac`로 Live이며 auto-deploy는 꺼져 있습니다.
-- 공개 게임/관리자 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`이고 둘 다 HTTP 200입니다.
-- 승인된 recovery SHA `e64d42d812d78de023dc6cbd7f960263bc1c2d15`로 backend CORS deploy `dep-d9ivfmvlk1mc73fbcv40`를 정확히 한 번 실행했고 Live입니다.
-- 실제 `CORS_ORIGINS`는 exact frontend origin 배열로 저장됐으며 health/preflight 200과 exact `Access-Control-Allow-Origin`을 확인했습니다.
-- v351 source는 master-data 기본 timeout을 5초로 늘리고 backend 1KB 이상 응답에 GZip을 적용했습니다. 새 image/static deploy 뒤 공개 master-data는 1,346ms, gzip, no-fallback으로 검증됐습니다.
-- v352 준비 SHA 승인으로 authorization `7578eb665c03ee0fcb9399929328ce684cdd1b31` → closure `5d547126322dbe3c235e855cc9c2f7337342ae36` → evidence `5c842deec6d1f496679a144897f485b07428810b` 전이를 완료했습니다.
-- 기호가 exact v354 준비 SHA `05f1af8ed1316e2cf0e0f39ac795b3ff60bccb62`를 승인했고, backend image update deploy `dep-d9jeuf3eo5us73ba6cgg`와 Static Site v351 deploy `dep-d9jev7gu01pc73favje0`가 각각 정확히 한 번 실행되어 Live입니다.
-- `/api/v1/health`, `/api/v1/health/db`, `/index.html`, `/admin.html`, exact CORS, gzip master-data no-fallback, 관리자 guarded read-only 흐름이 모두 검증됐습니다. DB health는 한 번만 요청했고 DB/Alembic/admin write/콘텐츠 변경/자동 retry는 실행하지 않았습니다.
-- sanitized provider evidence는 `deploy/review/render-v351-provider-release-v355.json`입니다.
-- v370은 회원가입·로그인, 계정별 캐릭터 슬롯 8개, 캐릭터별 로컬/DB snapshot 격리와 관리자 회원 관리를 로컬 소스에 구현했습니다. 기존 `users`, `user_profiles`, `user_save_snapshots`, `admin_change_logs`를 사용하므로 새 Alembic revision은 없습니다.
-- v370 인증은 기존 `JWT_SECRET_KEY`로 서명한 24시간 Bearer access token과 직접 `bcrypt 5.0.0` 해시를 사용합니다. 회원가입으로 관리자 권한을 받을 수 없고, 각 인증 요청에서 활성 계정을 다시 확인합니다.
-- 공개 Render backend와 Static Site는 계속 v351입니다. v370 구현 과정에서 실제 DB write·seed·migration, Neon 변경, Render env·서비스·배포, GHCR 게시를 실행하지 않았습니다. backend/frontend focused, Python/JavaScript, runtime blocking-I/O, route map 40 ops, static build, GitHub/GHCR reproducibility, core smoke와 desktop/mobile 브라우저 QA가 모두 통과했으며 즉시 수정 blocker는 없습니다.
-- v370 당시 공개 회원가입 전 후속 보강은 rate limit, 비밀번호 변경·복구, 서버측 session/refresh·원격 폐기, ASGI raw body cap, 다중 기기 save revision·충돌 해결, HTTPS/CSP/XSS와 개인정보·계정 삭제 정책이었습니다. v371에서 이메일 인증·분실 복구·삭제 source를 준비했지만 rate limit, 만료된 미인증 계정 정리·메일 소유자 회수, 로그인 상태 비밀번호 변경, server session과 나머지 공개 hardening은 계속 남습니다.
-- v371 source는 필수 이메일 인증, 아이디 찾기, 비밀번호 재설정, 이메일 확인을 거친 일반 회원 계정 삭제, `authVersion` access-token 폐기와 관리자 이메일 상태 표시를 준비했습니다. `users`의 nullable legacy-safe 이메일 열과 `user_email_action_tokens`를 추가하는 `v371_email_identity_lifecycle` revision은 source-only이며 아직 어떤 DB에도 적용하지 않았습니다.
-- v371 계정 메일 공급자는 Render Free의 SMTP 포트 제한 때문에 Brevo Free HTTPS API로 선택했습니다. Brevo 계정·발신자 인증·API key 생성·secret 주입·메일 발송은 실행하지 않았고, 실제 설정 전 anonymous transactional tracking·1개월 log retention·preview 미저장과 account-wide API key 회전 정책을 확인합니다.
-- 이메일 정규화는 승인 대기 중인 `email-validator 2.3.0`을 사용하며 패키지와 Linux lock 갱신 전에는 약한 자체 검사로 폴백하지 않고 이메일 동작을 fail-closed로 유지합니다.
-- v371 local Alembic source graph head는 `v371_email_identity_lifecycle`, local/Neon DB current는 `v295_initial_schema`입니다. `migration-prepared`는 revision source와 parity 검사가 준비됐다는 뜻이며 apply·downgrade·stamp 완료를 뜻하지 않습니다.
-- v371 backend 이메일 lifecycle·owner one-shot·migration parity, v370 backend 회귀, frontend v371 이메일 계정·v370 character/admin 회귀, Python compileall, JavaScript syntax, runtime blocking-I/O와 route map 48 ops(`GET 21 / POST 26 / DELETE 1`, duplicate 0), 전체 core smoke는 PASS입니다. 실제 Chrome 기본 viewport와 `390×844` account modal QA는 overflow 0, console warn/error 0입니다. 이메일 renderer 외부 asset 0·escape는 smoke로 확인했고 실제 메일 클라이언트 시각 QA는 Brevo 테스트 메일 단계로 남습니다. 독립 리뷰의 source-prepared 즉시 수정 blocker는 0건입니다.
-- v371 준비 중 실제 local/Neon DB write, Alembic apply/stamp, owner bootstrap, Render env·서비스·deploy, GHCR 게시를 실행하지 않았습니다. 공개 Render backend와 Static Site는 계속 v351입니다.
-- v356에서 12단계 `607%` 기준을 반영했고, v357에서 16단계 `무의식 : 넥스의 몽환의 어둠 +20 = 2121%` 실측 기준을 추가해 고단계 공식을 다시 조정했습니다.
-- 12단계 이상 `skill_all` 장비는 +0 기본값을 유지합니다. +20 목표는 12단계 `607%`와 16단계 `2121%`를 단계당 `1.36721871444...`배 기하 보간·외삽하고, +1~+19는 기존 `enhanceTable.sdmg` 진행률을 그대로 사용합니다.
-- +20 스킬 피해는 13단계 `829.9%`, 14단계 `1134.7%`, 15단계 `1551.3%`, 17단계 `2899.9%`, 18단계 `3964.8%`, 39단계 `2823673.9%`입니다. 17단계 이후 실제 스킬 피해 실측값은 저장소에 없어 새 기준이 생기기 전까지 위 비율을 추정 외삽합니다.
-- 사용자 교차 기준인 16단계 공격력 `369B`·기존 모든 피해 내부값 `225.8%`, 17단계 추가 스킬 계수 `2097179%`·치명 피해 `803447%`, 18단계 공격력 `851B`·평타 피해 `7506%`는 변경 없이 정확히 일치합니다.
-- 1~12단계 일반 장비 60종과 탈리스만 5종을 감사했고 누락·중복은 없습니다. 전체 장비 단일 공식은 없으며 1~11 고정 데이터와 옵션별 구간·예외 공식, 12+ 생성·보간 공식이 함께 사용됩니다.
-- 공격력, 모든 피해, 1~11단계, 나머지 4개 장비 그룹, generated seed, Neon DB와 backend는 변경하지 않았습니다. 상세 근거는 `docs/current/EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`입니다.
-- 별도 감사에서 추가 스킬 계수의 기존 2차 외삽이 22단계부터 감소하고 33단계부터 음수가 되는 문제를 확인했습니다. 이번 스킬 피해 전용 범위에서는 바꾸지 않으며 실제 고단계 기준을 받아 별도 작업으로 다룹니다.
-- v358은 세 기본 아바타 +0~+20 성장과 +20 `88.2B`, 무기 평타 치명 피해 증폭 `33%`, 오라 추가 스킬공격 계수 증폭 `33%`, 클론 스킬 치명 `10%/150%`를 실제 전투 합산까지 연결합니다.
-- v358에서 스킬강화권 창 유지와 강화 탈리스만/휘장 `+0으로 분해`를 추가했고, v359에서 분해 반환량을 `2^강화단계`로 보완했습니다. v358의 필드 절반 지급은 v360에서 표시 상승량 100%·성공 확률 50% 규칙으로 대체됐습니다.
-- v363 commit `a696e1be3fe27beddc545cbba01e1e438573b7cc`의 단순 파랑·금색 결정 시안 15개는 이후 10~20단계 55개 PNG로 파생됐습니다. v364 반지 6개와 v367 올 엘리멘탈 크리스탈 6개에 이어 v368에서 남은 13계열 43개를 모두 이름이 식별되는 장비 발전형으로 교체해, 해당 v363 시안의 현재 사용 후손은 0개입니다.
-- v369에서 초보자 무기 `리버레이션 스태프` 1장, `Q → W → E → R → T → F → D → SQ → SW → M` 스킬강화권 발전형 10장, 검신(`weapon_master`) 스킬 10장의 256×256 프로젝트 PNG를 `?v=369` 캐시로 적용했습니다. 검신의 `Q`·`W`·`R`·`T`·`F`·`D`는 초록색 자동·패시브, `E`는 파란색 버프, `SQ`·`SW`·`M`은 보라색 강화·진각성 계열이며 장비 능력치와 스킬 수치는 변경하지 않았습니다.
-- v369 정적 seed는 `skills.json`, `item_templates.json`, `drop_table_items.json`, `manifest.json`을 현재 로컬 이미지 URL로 다시 추출했습니다. 이는 Git 파일 동기화일 뿐 DB write·seed 실행·migration은 하지 않았습니다. 전용 smoke와 관련 core smoke, 실제 Chrome 256→68px 렌더링, 브라우저 오류 0건을 확인했습니다.
-- v369 생성 원본은 Git 밖 `C:\Users\HOME\.codex\generated_images\019f64cb-07a2-7bb3-81e9-e66fdced3b76`에 보존합니다. 공개 Render Static Site는 계속 v351이며 v369 로컬 자산은 배포하지 않았습니다.
-- Chrome 구형 JavaScript 캐시를 재현해 변경 스크립트에 최종 `?v=358.1` 캐시 키를 붙였습니다. 공개 Static Site는 아직 v351이므로 v357/v358 콘텐츠는 미배포입니다.
-- v358 공개 반영은 backend image나 DB 작업 없이 기존 Render Static Site 수동 배포 1회만 필요합니다. 먼저 static-only fail-closed 계약/checker를 별도 준비한 뒤, 그 gate 준비 commit의 정확한 40자리 SHA를 기호가 승인하기 전에는 실행하지 않습니다.
-- 전체 runtime blocking-I/O audit는 sync FastAPI route 0, async 내부 blocking 호출 0, frontend entrypoint·source blocking 호출 0으로 통과했습니다.
-- offline tooling은 Python 148 files/371 blocking calls, JavaScript 94 files/126 sync calls를 별도 확인했고 서버·브라우저 event loop 밖의 `intentional-one-shot-cli`로 분류했습니다.
-- master-data의 11개 async DB 조회는 하나의 `AsyncSession`을 공유하므로 동시 task로 바꾸지 않고 안전한 순차 실행을 유지합니다.
-- 공개 정적 자산 세 개의 raw byte SHA-256은 approved source와 일치합니다. 새 관리자 탭에서는 이전 `RpgAdminFieldHelp` 오류 로그가 재현되지 않았습니다.
-- 비용 최소 공급자는 Render Free Web Service Singapore + Neon Free PostgreSQL 16 Singapore로 선택했습니다.
-- 첫 공개 주소는 Render `onrender.com` managed HTTPS이며 custom domain과 DNS 변경은 보류합니다.
-- 무료 구성은 SLA production이 아닌 개인용 public preview이고 월 고정비 $0, idle cold start 허용 조건입니다.
-- Neon Free PostgreSQL 16 AWS Singapore 프로젝트는 생성됐고 Neon Auth는 사용하지 않습니다. 채팅에 노출된 최초 `neondb_owner` 비밀번호는 2026-07-22에 재설정해 폐기했습니다.
-- 새 Neon direct/pooled URL은 앱·배포 플랫폼에 아직 주입하지 않고 Git/Docker 제외 경로 `deploy/.env.production`에만 보관합니다.
-- Direct/Pooler 모두 PostgreSQL 16.14, TLS 1.3 인증서·호스트 검증, read-only transaction을 통과했습니다. sanitized evidence는 `deploy/review/neon-readonly-connectivity-v336.json`입니다.
-- Render `Hobby (legacy)` workspace는 연결됐고 결제수단·billing 정보가 없습니다. 현재 backend Web Service와 frontend Static Site가 각각 1개씩 있습니다.
-- GitHub `Confirm access`는 사용자가 완료했고 Render 전용 classic PAT는 `read:packages` only, 만료일 2027-07-23으로 생성해 `upgrade-rpg-ghcr-read` credential에 저장했습니다. 실제 값은 Git·파일·채팅에 기록하지 않습니다.
-- 브라우저 검사 출력에 노출된 첫 PAT는 Render에 저장하지 않고 즉시 GitHub에서 폐기했습니다. 교체 PAT는 값 출력 없이 전달했으며 회전 기록은 `docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md`에 있습니다.
-- v355 Render 설정 검사 출력에 backend/static deploy hook 값이 포함돼 두 hook을 즉시 재발급했습니다. 새 값은 기록하지 않았고 회전은 추가 deploy를 만들지 않았습니다.
-- v338 checkpoint에서 verified exact digest를 Render `Existing Image`로 `Connect`해 private GHCR 접근과 서비스 설정 화면 진입을 확인했으며, 그 시점에는 Web Service 생성·env 주입·deploy를 실행하지 않았습니다.
-- Render 서비스 이름은 `upgrade-rpg-api`로 기호가 확정했습니다.
-- v341 source는 production SQLAlchemy/Alembic에 system-CA hostname-verifying SSLContext를 공유 주입하고 Render env inventory를 분리했습니다.
-- 실제 Neon direct URL을 프로세스에만 주입한 read-only bootstrap에서 TLS 연결과 빈 `neondb` 상태를 재확인했습니다.
-- v341 source를 포함한 exact image로 Render Free Web Service `upgrade-rpg-api`를 Singapore에 생성했고 첫 deploy가 Live입니다.
-- Neon production branch의 `neondb` 초기화가 완료됐습니다. 22 application tables / 748 rows와 `alembic_version` 1 table / 1 row, exact `v295_initial_schema`를 포함해 public 23 tables / total 749 rows입니다. 새 `rpg_game` DB는 만들지 않습니다.
-- `tools/initialize_neon_database.py`의 mutation 경로는 모두 비활성화됐고 기본/static 및 `--inspect` read-only 완료 검증만 허용합니다.
-- Git/Docker 제외 `deploy/.env.production`에는 Render용 direct asyncpg `DATABASE_URL`과 서로 다른 강한 JWT/admin secret이 준비됐습니다. 값은 출력·문서화·커밋하지 않습니다.
-- 승인된 v346 SHA `81d1c4faa59194e8928d54fbecac28694ab139ab`로 서비스 1개 생성, env 14개 주입, exact image 최초 deploy를 한 번 실행했습니다. 재사용·자동 retry·두 번째 deploy는 금지합니다.
-- 공개 주소는 `https://upgrade-rpg-api.onrender.com`이며 `/api/v1/health`와 `/api/v1/health/db`가 각각 HTTP 200 `status=ok`를 반환했습니다.
-- 첫 공개 frontend는 실제 legacy 화면을 Render Free Static Site `gihohoho-upgrade-rpg`로 배포하는 계획입니다. 예상 주소는 `/index.html`, `/admin.html`이며 Vue shell은 이번 배포 대상이 아닙니다.
-- `tools/build_legacy_static_site.mjs`는 `index.html`, `admin.html`, `src/**/*.js`, `src/**/*.css`, `src/assets/**/*.png`만 `frontend/legacy-dist`에 묶고 secret·DB endpoint 형태가 있으면 실패합니다.
-- `src/api/runtime-config.js`는 로컬 host에서는 기존 local API를 유지하고 그 밖의 host에서만 `https://upgrade-rpg-api.onrender.com/api/v1`을 사용합니다.
-- frontend Static Site 최초 배포와 backend CORS recovery deploy는 완료됐습니다. recovery 1회 승인은 소비됐고 추가 provider deploy는 새 승인 전 실행하지 않습니다.
-- 공개 `admin.html`에는 admin write key를 넣지 않으며 read-only public preview로만 취급합니다.
-- 현재 필요한 새 설치는 `email-validator 2.3.0`이며 기호 승인 대기 중입니다. 별도 extension·GitHub 권한은 필요하지 않고, Brevo account·sender·전용 API key는 migration 검토 뒤 별도로 요청합니다.
-- Windows PostgreSQL 16/OpenSSL의 `sslrootcert=system` 오류는 Windows 시스템 공개 CA를 Git 제외 로컬 PEM으로 내보내 `verify-full`에 전달하는 방식으로 해결했고, asyncpg와 libpq read-only preflight가 모두 통과했습니다.
-- 승인된 v343 commit `d6df9984e00d08b28fd524dcfefeb492e334d5e9`로 Neon restore를 한 번 실행했고 22 application tables / 748 rows / schema digest가 일치했습니다. legacy data digest는 session timezone 차이로 실패해 stamp 전에 안전하게 중단했습니다.
-- v343 안전 중단 시점에 aware datetime을 UTC로 정규화한 digest `4ea23cfd2446b522cc9e85e2a8520160427cf8e3987d9b6ab04f4b99fbf6c00c`가 verified rehearsal과 Neon에서 일치했고, 당시 `alembic_version`은 없었습니다.
-- 승인된 v344 commit `cf0f506b6ae9dc9d4c02f3ab5313ca68be32676c`로 복원 상태를 재검증하고 exact v295 stamp만 실행했습니다. application digest는 불변이며 최종 23/749 검증을 통과했습니다.
-- 복원·stamp·Render 최초 deploy 재실행은 금지합니다. 당시 다음 단계였던 live backend·frontend·CORS 검토는 v347~v355에서 완료됐습니다.
-- 이번 image 게시 approval은 모두 소비됐으며 Neon restore/stamp나 Render 생성·배포 권한으로 재사용하지 않습니다.
-- v343 Neon 초기화 approval도 restore 시도와 안전 중단으로 소비됐으며 stamp 권한으로 재사용하지 않습니다.
-- v344 stamp recovery approval도 성공 실행으로 소비됐으며 Render 생성·배포 권한으로 재사용하지 않습니다.
-
-## 승인과 안전 경계
-
-실제 운영 배포는 입력을 모두 확정한 실행 준비 commit의 정확한 40자리 SHA를 기호가 별도 승인한 뒤에만 진행합니다. 한 번의 exact-SHA 승인은 문서에 적힌 GHCR login/pull, final Compose render, backend start/replace, read-only health, 기존 proxy route 확인 범위만 허용합니다.
-
-다음은 그 승인에도 포함되지 않으며 별도 구체적 요청 없이는 실행하지 않습니다.
-
-- DB create/delete/restore/reset/seed/write
-- Alembic revision/autogenerate/stamp/upgrade/downgrade
-- 인증, API route/response/write logic 변경
-- Vue Preview/Apply/write 연결
-- 게임 콘텐츠·밸런스 변경
-- Docker volume 삭제, `docker compose down -v`
-- production image 자동 갱신, 자동 deploy, 자동 retry
-
-## 폴더와 문서
-
-- `docs/current/`: 현재 판단·계획·runbook
-- `docs/guides/`: 실제 사용 가이드
-- `docs/contracts/`: API·관리자 계약
-- `docs/archive/`: 과거 고유 기록
-- `docs/handoff/`: 루트 handoff mirror
-- `deploy/review/`: sanitized 정적/runtime 증거
-- `local-backups/`, `local-review-artifacts/`: Git 제외 로컬 보존 자료이며 자동 삭제하지 않습니다.
-- legacy `index.html`, `admin.html`, `src/`는 Vue 이식 전까지 이동하거나 대규모 재작성하지 않습니다.
-
-## 다음 검사와 검증 원칙
-
-프로젝트 루트에서 `backend/.venv` Python으로 먼저 실행합니다.
-
-```bash
-python tools/smoke/backend/smoke_v370_account_auth_backend.py
-python tools/smoke/backend/smoke_v370_account_admin_management.py
-node tools/smoke/frontend/smoke_v370_account_character_gate.js
-node tools/smoke/frontend/smoke_v370_admin_account_management.js
-node tools/smoke/game/smoke_v369_item_and_skill_icons.js
-node tools/smoke/game/smoke_equipment_progression_formulas.js
-python tools/check_v351_public_release_gates.py --strict
-python tools/smoke/backend/smoke_v351_public_release_gates.py
-python tools/check_runtime_blocking_io.py --strict
-python tools/smoke/backend/smoke_master_data_latency_guard.py
-node tools/smoke/game/smoke_master_data_auto_boot_policy.js
-python tools/check_frontend_static_deployment_plan.py --strict
-node tools/smoke/frontend/smoke_legacy_static_deployment_preparation.js
-python tools/check_render_neon_separated_plan.py --strict
-python tools/smoke/backend/smoke_neon_production_database_bootstrap.py
-python tools/check_neon_readonly_connectivity.py --evidence
-python tools/check_production_provider_selection.py --strict
-python tools/check_production_deployment_plan.py --strict
-python tools/check_github_actions_ghcr_static_plan.py --strict
-python tools/check_codex_handoff_readiness.py --strict
-```
-
-변경 영역 전용 checker/smoke부터 1회 실행하고 실패할 때만 확대합니다. 문서·handoff·상태값만 바꾸면 전체 core smoke를 반복하지 않습니다. 핵심 로직·DB/Alembic·API 계약·공통 구조·여러 영역을 함께 바꾸거나 실제 배포 후보 직전에는 `bash tools/run_smoke_core.sh`를 1회 실행합니다. Python 변경은 해당 compileall, JavaScript 변경은 문법 검사를 수행합니다. Vue 변경 시에만 `npm ci`, `npm run build`를 실행합니다.
-
-완료 답변에는 한 일, 검증, 서버 재시작 여부, commit/push, 다음 단계, 필요한 extension/권한/설치를 포함합니다.
+- v371 source는 이메일 인증·복구·삭제, `authVersion`, Brevo HTTPS renderer/transport, owner bootstrap과 migration source를 준비했습니다.
+- v372는 기능을 바꾸지 않고 Markdown 243개를 95개로 정리하고 `docs/current`의 실제 현재 문서를 11개로 줄였습니다. entry/current/reference/generated/archive 역할과 구조 smoke를 고정했습니다.
+- `email-validator==2.3.0`은 아직 설치·lock 반영 전이며 없으면 503으로 닫힙니다.
+- Brevo 계정·발신자·API key·secret, 실제 메일, DB migration, owner bootstrap, 새 image/static 배포는 실행하지 않았습니다.
+- source-prepared 즉시 수정 blocker는 없습니다. 공개 배포 blocker는 rate limit/queue/body cap, 미인증 계정 회수, session/revoke, save CAS, CSP/XSS·개인정보 정책입니다.
+- 검증된 공개 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`, backend는 `https://upgrade-rpg-api.onrender.com`입니다.
+- 이전 배포·콘텐츠·이미지의 상세 이력은 `docs/archive/history/`와 Git history에서 필요할 때만 확인합니다.

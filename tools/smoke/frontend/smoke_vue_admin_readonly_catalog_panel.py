@@ -12,7 +12,7 @@ REQUIRED_FILES = [
     "src/components/AdminMasterRelationsPanel.vue",
     "src/pages/AdminShell.vue",
     "src/styles/base.css",
-    "docs/current/VUE_ADMIN_READONLY_CATALOG.md",
+    "docs/reference/frontend/VUE_ADMIN_READONLY_CATALOG.md",
 ]
 
 FORBIDDEN_MUTATION_PATTERNS = [
@@ -116,7 +116,7 @@ def main() -> None:
     assert_contains(css, ".admin-detail-grid", "admin detail grid CSS")
     assert_contains(css, ".admin-detail-json-card", "admin detail JSON CSS")
 
-    docs = read("docs/current/VUE_ADMIN_READONLY_CATALOG.md")
+    docs = read("docs/reference/frontend/VUE_ADMIN_READONLY_CATALOG.md")
     assert_contains(docs, "v278", "catalog controls doc version")
     assert_contains(docs, "v279", "detail panel doc version")
     assert_contains(docs, "query", "catalog search query doc")

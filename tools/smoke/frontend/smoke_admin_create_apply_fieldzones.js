@@ -60,7 +60,7 @@ assertContains("admin.html", [
   "<option value=\"enhancementGroups\">강화 그룹</option>",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_CREATE_APPLY_FIELDZONES.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Create Apply FieldZones",
   "fieldZones",
   "dropTables.owner_type = field",

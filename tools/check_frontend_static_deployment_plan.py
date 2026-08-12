@@ -25,14 +25,6 @@ APPROVED_SHA = "b13b1775093716800d7361ee1e8f94d8112eefc1"
 RECOVERY_SHA = "e64d42d812d78de023dc6cbd7f960263bc1c2d15"
 FRONTEND_ORIGIN = "https://gihohoho-upgrade-rpg.onrender.com"
 BACKEND_API = "https://upgrade-rpg-api.onrender.com/api/v1"
-STATE_FILES = (
-    ROOT / "AGENTS.md",
-    ROOT / "NEXT_CHAT_PROMPT.md",
-    ROOT / "NEXT_CHAT_HANDOFF.md",
-    ROOT / "docs/current/CURRENT_STATUS.md",
-    ROOT / "docs/handoff/NEXT_CHAT_PROMPT.md",
-    ROOT / "docs/handoff/NEXT_CHAT_HANDOFF.md",
-)
 
 
 class PlanError(RuntimeError):
@@ -257,12 +249,6 @@ def verify_sources() -> None:
     doc = DOC_PATH.read_text(encoding="utf-8")
     for marker in (VERSION.split(".", 1)[0], FRONTEND_ORIGIN, BACKEND_API, RECOVERY_SHA, "정확한 40자리 SHA"):
         require(marker in doc, f"frontend plan document marker differs: {marker}")
-
-    for state_path in STATE_FILES:
-        text = state_path.read_text(encoding="utf-8")
-        for marker in (VERSION, RESULT, NEXT_STAGE):
-            require(marker in text, f"{state_path.relative_to(ROOT)} marker differs: {marker}")
-
 
 def main() -> int:
     parser = argparse.ArgumentParser()

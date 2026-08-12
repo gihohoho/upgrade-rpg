@@ -491,17 +491,17 @@ def fetch_health(url: str, timeout: float) -> HealthSnapshot:
 
 def inspect_operations_policy(root: Path) -> dict[str, Any]:
     required_docs = [
-        root / "docs/current/POSTGRES_BASELINE_COMPLETION_STATE.md",
-        root / "docs/current/POSTGRES_NEXT_REVISION_PREFLIGHT.md",
-        root / "docs/current/POSTGRES_BACKUP_CREATION.md",
-        root / "docs/current/POSTGRES_RESTORE_REHEARSAL.md",
-        root / "docs/current/POSTGRES_DEPLOYMENT_MIGRATION_RUNBOOK.md",
+        root / "docs/reference/database/POSTGRES_BASELINE_COMPLETION_STATE.md",
+        root / "docs/reference/database/POSTGRES_NEXT_REVISION_PREFLIGHT.md",
+        root / "docs/reference/database/POSTGRES_BACKUP_CREATION.md",
+        root / "docs/reference/database/POSTGRES_RESTORE_REHEARSAL.md",
+        root / "docs/reference/database/POSTGRES_DEPLOYMENT_MIGRATION_RUNBOOK.md",
     ]
     missing = [path.relative_to(root).as_posix() for path in required_docs if not path.is_file()]
     gitignore = _read(root / ".gitignore")
     dockerignore = _read(root / ".dockerignore")
     runbook_text = (
-        (root / "docs/current/POSTGRES_DEPLOYMENT_MIGRATION_RUNBOOK.md").read_text(
+        (root / "docs/reference/database/POSTGRES_DEPLOYMENT_MIGRATION_RUNBOOK.md").read_text(
             encoding="utf-8"
         )
         if not missing

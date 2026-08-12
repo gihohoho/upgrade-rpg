@@ -14,7 +14,7 @@ REQUIRED_FILES = (
     "deploy/production.env.example",
     "deploy/README.md",
     "deploy/isolated-validation/README.md",
-    "docs/current/POSTGRES_PRODUCTION_CAPACITY_TLS_NETWORK_PLAN.md",
+    "docs/reference/database/POSTGRES_PRODUCTION_CAPACITY_TLS_NETWORK_PLAN.md",
     "backend/Dockerfile",
 )
 

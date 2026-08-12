@@ -4,7 +4,7 @@ const path = require('path');
 const root = path.resolve(__dirname, "..", "..", "..");
 const adminJsPath = path.join(root, 'src/api/admin-page-readonly.js');
 const adminHtmlPath = path.join(root, 'admin.html');
-const docsPath = path.join(root, 'docs/archive/stage-notes/ADMIN_MASTER_API_VERIFY.md');
+const docsPath = path.join(root, 'docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md');
 
 const adminJs = fs.readFileSync(adminJsPath, 'utf8');
 const adminHtml = fs.readFileSync(adminHtmlPath, 'utf8');

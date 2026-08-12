@@ -70,7 +70,7 @@ assertContains("tools/run_smoke_core.sh", [
   "node tools/smoke/frontend/smoke_admin_change_logs_split.js",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_CHANGE_LOGS_SPLIT.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Change Logs Split",
   "v187",
   "src/api/admin/admin-change-logs.js",

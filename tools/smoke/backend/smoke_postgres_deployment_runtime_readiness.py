@@ -10,8 +10,8 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[3]
 TOOL = ROOT / "tools/check_postgres_deployment_runtime_readiness.py"
-READINESS_DOC = ROOT / "docs/current/POSTGRES_DEPLOYMENT_RUNTIME_READINESS.md"
-RUNBOOK_DOC = ROOT / "docs/current/POSTGRES_DEPLOYMENT_MIGRATION_RUNBOOK.md"
+READINESS_DOC = ROOT / "docs/reference/database/POSTGRES_DEPLOYMENT_RUNTIME_READINESS.md"
+RUNBOOK_DOC = ROOT / "docs/reference/database/POSTGRES_DEPLOYMENT_MIGRATION_RUNBOOK.md"
 
 
 def fail(message: str) -> int:

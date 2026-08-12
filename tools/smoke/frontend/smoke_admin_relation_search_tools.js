@@ -39,7 +39,7 @@ assertContains("admin.html", [
   "relation-option-meta",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_RELATION_SEARCH_TOOLS.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Relation Search Tools",
   "relation select",
   "코드/이름",

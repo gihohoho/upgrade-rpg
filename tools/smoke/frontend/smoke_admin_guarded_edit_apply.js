@@ -90,7 +90,7 @@ assertContains("admin.html", [
   "allow-list 필드",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_GUARDED_EDIT_APPLY.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Guarded Edit Apply",
   "POST /api/v1/admin/master-data/edit-apply",
   "APPLY MASTER DATA EDIT",

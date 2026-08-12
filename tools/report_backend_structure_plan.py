@@ -14,7 +14,7 @@ from collections import defaultdict
 from pathlib import Path
 
 PROJECT_VERSION = "v274"
-REPORT_PATH = Path("docs/current/BACKEND_STRUCTURE_PLAN.md")
+REPORT_PATH = Path("docs/generated/BACKEND_STRUCTURE_PLAN.md")
 
 ROOTS = {
     "routes": Path("backend/app/api/routes"),
@@ -288,7 +288,7 @@ def render_report(root: Path) -> str:
 v275에서 해도 되는 일:
 
 - `backend/app/api/routes/`의 실제 route 목록을 자동 추출하는 도구 추가
-- `docs/current/BACKEND_ROUTE_MAP.md` 생성
+- `docs/generated/BACKEND_ROUTE_MAP.md` 생성
 - Vue에서 연결 가능한 `GET` 후보를 문서로 분류
 
 v275에서 아직 하지 말아야 할 일:

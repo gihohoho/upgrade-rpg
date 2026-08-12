@@ -10,7 +10,7 @@ REQUIRED_FILES = [
     "src/components/AdminMasterDetailPanel.vue",
     "src/pages/AdminShell.vue",
     "src/styles/base.css",
-    "docs/current/VUE_ADMIN_READONLY_CATALOG.md",
+    "docs/reference/frontend/VUE_ADMIN_READONLY_CATALOG.md",
 ]
 
 FORBIDDEN_MUTATION_PATTERNS = [
@@ -92,7 +92,7 @@ def main() -> None:
     app = read("src/App.vue")
     assert_contains(app, "Upgrade RPG v281", "Vue shell visible version")
 
-    docs = read("docs/current/VUE_ADMIN_READONLY_CATALOG.md")
+    docs = read("docs/reference/frontend/VUE_ADMIN_READONLY_CATALOG.md")
     assert_contains(docs, "v280", "relations panel doc version")
     assert_contains(docs, "v281", "related detail navigation doc version")
     assert_contains(docs, "GET /api/v1/admin/master-data/relations", "relations endpoint doc")

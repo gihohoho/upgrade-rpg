@@ -49,7 +49,7 @@ assertContains("tools/run_smoke_core.sh", [
   "node tools/smoke/frontend/smoke_admin_js_split_readiness.js",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_JS_SPLIT_READINESS.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin JS Split Readiness",
   "v184",
   "layout shell",

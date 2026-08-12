@@ -46,7 +46,7 @@ assertContains("admin.html", [
   ".draft-field-badges",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_SAFE_SELECTS_ALLOWLIST.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Safe Selects + Allow-list Expansion",
   "itemTemplates.item_type",
   "itemTemplates.equip_slot",

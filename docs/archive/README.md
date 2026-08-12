@@ -1,10 +1,13 @@
 # Archive
 
-이 폴더는 완료됐거나 대체된 과거 작업 기록을 보존합니다. 현재 실행 지침으로 사용하지 않습니다.
+완료된 작업의 상세 근거를 주제별 통합 문서로 보존합니다. 현재 실행 지침으로 사용하지 않습니다.
 
-- `stage-notes/`: 기능·구조 변경 단계 기록
-- `postgres-baseline/`: PostgreSQL/Alembic 최초 baseline의 고유 기록
-- `runtime-hardening/`: 완료된 runtime hardening
-- `production-deployment/`: 과거 운영 배포 준비 검토
+- `history/ADMIN_AND_BACKEND_HISTORY.md`
+- `history/DATA_AND_SEED_HISTORY.md`
+- `history/GAME_UI_RUNTIME_HISTORY.md`
+- `history/SAVE_SYSTEM_HISTORY.md`
+- `history/PROJECT_HISTORY.md`
+- `history/POSTGRES_V295_BASELINE_HISTORY.md`
+- `history/PRODUCTION_RELEASE_PREPARATION_HISTORY.md`
 
-현재 기준은 `../current/`를 먼저 봅니다. 현재 문서와 byte-for-byte 동일했던 archive 사본은 중복 제거했으며 Git 이력에는 남아 있습니다.
+각 통합 문서에는 원본 경로가 표시되어 있어 검색할 수 있습니다. 제거된 개별 파일은 Git commit `270d57bd234ede18cee7168f4b5da36b1a08df18` 이전 이력에서 복원할 수 있습니다.

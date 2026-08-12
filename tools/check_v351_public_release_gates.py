@@ -49,8 +49,6 @@ STATE_FILES = (
     ROOT / "NEXT_CHAT_PROMPT.md",
     ROOT / "NEXT_CHAT_HANDOFF.md",
     ROOT / "docs/current/CURRENT_STATUS.md",
-    ROOT / "docs/handoff/NEXT_CHAT_PROMPT.md",
-    ROOT / "docs/handoff/NEXT_CHAT_HANDOFF.md",
 )
 
 
@@ -345,17 +343,6 @@ def verify_repository(plan: dict[str, Any]) -> None:
         text = state_file.read_text(encoding="utf-8")
         for marker in (VERSION, RESULT, NEXT_STAGE):
             require(marker in text, f"{state_file.relative_to(ROOT)} is missing {marker}")
-    require(
-        (ROOT / "NEXT_CHAT_PROMPT.md").read_bytes()
-        == (ROOT / "docs/handoff/NEXT_CHAT_PROMPT.md").read_bytes(),
-        "prompt mirror differs",
-    )
-    require(
-        (ROOT / "NEXT_CHAT_HANDOFF.md").read_bytes()
-        == (ROOT / "docs/handoff/NEXT_CHAT_HANDOFF.md").read_bytes(),
-        "handoff mirror differs",
-    )
-
 
 def main() -> int:
     parser = argparse.ArgumentParser()

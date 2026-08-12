@@ -1,3 +1,14 @@
+# v372.documentation-system-consolidated
+
+- Markdown을 243개에서 95개로 줄이고 `docs/current/`의 실제 현재 문서를 11개로 정리했습니다.
+- 131개 stage note와 완료된 PostgreSQL·배포 준비 문서를 7개의 `docs/archive/history/` 검색용 통합본으로 보존한 뒤 중복 원본을 제거했습니다.
+- 장기 기술 자료 30개를 `docs/reference/{database,backend,frontend,assets}/`, 자동 보고서 4개를 `docs/generated/`로 이동하고 생성기·검사기·링크를 동기화했습니다.
+- root handoff mirror와 오래된 `ROADMAP`·`NEXT_STEPS` 중복을 제거하고 `AGENTS.md`·`NEXT_CHAT_HANDOFF.md`·`CURRENT_STATUS.md`의 역할과 크기를 축소했습니다.
+- `docs/DOCUMENTATION_SYSTEM.md`에 문서 lifecycle, 새 채팅 읽기 순서, 중복·크기 기준과 선택형 Obsidian 사용법을 기록했습니다. `.obsidian/`은 Git에서 제외합니다.
+- 문서 수 예산, current 개수, entry 크기, exact duplicate, obsolete 경로, 활성 문서 내부 링크를 fail-closed smoke로 고정했습니다.
+- generated report 4종 최신성, handoff readiness, frontend static 계획과 전체 core smoke를 통과했습니다.
+- 게임 기능·DB·dependency·Brevo·owner bootstrap·GHCR·Render 배포는 변경하거나 실행하지 않았습니다.
+
 # v367.elemental-crystal-family-and-equipment-family-frames-fixed
 
 - 이전 단순 파랑·금색 결정 시안을 폐기하고 10·11·12·18·19·20단계 `올 엘리멘탈 크리스탈`을 사용자가 확인한 불·물·바람·빛 사분할 기본형의 단계별 발전 이미지 6개로 모두 교체했습니다.
@@ -485,7 +496,7 @@
 # v288 - PostgreSQL schema equivalence read-only preflight
 
 - Added `tools/check_postgres_schema_equivalence.py` to compare live PostgreSQL tables, columns, types, nullability, PK, FK, unique constraints, indexes, and check constraints with SQLAlchemy metadata.
-- Added `docs/current/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md` and a dedicated core smoke.
+- Added `docs/reference/database/POSTGRES_SCHEMA_EQUIVALENCE_CHECK.md` and a dedicated core smoke.
 - Kept DB schema/data, Docker resources, env, seed, revisions, migration apply/stamp, API contracts, auth, and write behavior unchanged.
 
 # v287 - Windows subprocess decode fix and baseline strategy confirmation
@@ -520,12 +531,12 @@
 # v283 - PostgreSQL/Alembic prerequisite checker
 
 - Added `tools/check_postgres_alembic_prerequisites.py`, a read-only local checker for Python, virtualenv, Docker, Compose, SQLAlchemy, Alembic, asyncpg, psycopg, and required project files.
-- Added `docs/current/POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md` with exact install locations, `.venv` states, and dangerous commands that remain forbidden.
+- Added `docs/reference/database/POSTGRES_ALEMBIC_LOCAL_CHECKLIST.md` with exact install locations, `.venv` states, and dangerous commands that remain forbidden.
 - The checker never connects to the DB, starts Docker, changes `.env`, or runs migrations.
 
 # v282 - PostgreSQL/Alembic readiness report
 
-- Added `tools/report_postgres_alembic_readiness.py` and `docs/current/POSTGRES_ALEMBIC_READINESS.md`.
+- Added `tools/report_postgres_alembic_readiness.py` and `docs/generated/POSTGRES_ALEMBIC_READINESS.md`.
 - Documented 22 SQLAlchemy tables, PostgreSQL-specific types, asyncpg/psycopg responsibilities, Docker settings, and the current Alembic state with zero revisions.
 - Recorded missing `versions/` and `script.py.mako`, create_all ownership, async online execution verification risk, and destructive reset/down-volume commands.
 - Added `tools/smoke/backend/smoke_postgres_alembic_readiness.py`.
@@ -577,7 +588,7 @@
 ## v275.backend-route-map-report
 
 - Added `tools/report_backend_route_map.py` to generate/check a deterministic backend route map without importing `app.main`.
-- Added `docs/current/BACKEND_ROUTE_MAP.md` with all 27 FastAPI routes, GET/POST counts, Vue read-only candidates, and postponed Preview/Apply/write routes.
+- Added `docs/generated/BACKEND_ROUTE_MAP.md` with all 27 FastAPI routes, GET/POST counts, Vue read-only candidates, and postponed Preview/Apply/write routes.
 - Added `tools/smoke/backend/smoke_backend_route_map_report.py` and included it in `tools/run_smoke_core.sh`.
 - Updated `frontend/vue-app/src/api/adminReadOnlyApi.js` so master-data detail/relations wrappers translate `rowId` to the backend query name `id`.
 - Confirmed that route paths, API response bodies, DB, env, seed, auth, Write Guard, Preview/Apply request bodies, write logic, existing smoke/contract meaning, and game content remain unchanged.
@@ -585,7 +596,7 @@
 ## v274.backend-structure-plan
 
 - Added `tools/report_backend_structure_plan.py` to generate/check a deterministic backend structure plan.
-- Added `docs/current/BACKEND_STRUCTURE_PLAN.md` with current route/service/schema/model/db/core responsibilities.
+- Added `docs/generated/BACKEND_STRUCTURE_PLAN.md` with current route/service/schema/model/db/core responsibilities.
 - Added `tools/smoke/backend/smoke_backend_structure_plan.py` to guard that the structure plan stays up to date.
 - Confirmed that route paths, API response bodies, DB, env, seed, auth, Write Guard, Preview/Apply request bodies, write logic, existing smoke/contract meaning, and game content remain unchanged.
 
@@ -600,7 +611,7 @@
 ## v269.legacy-path-dependency-report
 
 - Added `tools/report_legacy_path_dependencies.py` to generate/check a legacy path dependency report before Vue/FastAPI/DB transition work.
-- Added `docs/current/LEGACY_PATH_DEPENDENCIES.md` with current high-risk legacy path references, HTML direct-load relationships, and core smoke path dependencies.
+- Added `docs/generated/LEGACY_PATH_DEPENDENCIES.md` with current high-risk legacy path references, HTML direct-load relationships, and core smoke path dependencies.
 - Decided that the future Vue app should be created under `frontend/vue-app/` instead of reusing the root `src/` folder.
 - Kept `admin.html`, `index.html`, existing `src/`, backend routes/services, DB, env, seed, auth, API response bodies, write guards, and actual write logic unchanged.
 
@@ -1364,14 +1375,14 @@
 - 현재 JS 마스터 데이터에서 생성된 `backend/seeds/generated/*.json`과 FastAPI `/api/v1/game/master-data` 응답을 비교할 수 있습니다.
 - 기본 경량 응답과 `--include-assets` 이미지 포함 응답을 모두 검사할 수 있습니다.
 - characters, skills, itemTemplates, bosses, fieldZones, dropTables, dropTableItems, enhancementRules의 개수와 주요 필드를 비교합니다.
-- `tools/smoke/game/smoke_master_data_parity_checker.py`와 `docs/archive/stage-notes/MASTER_DATA_PARITY_CHECKER.md`를 추가했습니다.
+- `tools/smoke/game/smoke_master_data_parity_checker.py`와 `docs/archive/history/DATA_AND_SEED_HISTORY.md`를 추가했습니다.
 
 ## v085 - Frontend Master Data Bridge
 
 - `src/api/game-api-client.js`와 `src/api/master-data-bridge.js`를 추가했습니다.
 - 기존 게임 동작은 유지하면서 브라우저 콘솔에서 FastAPI master-data API를 읽어올 수 있게 했습니다.
 - `checkBackendMasterData()`, `loadBackendMasterData()`, `getCachedBackendMasterData()` 전역 함수를 추가했습니다.
-- `tools/smoke/game/smoke_frontend_master_data_bridge.js`와 `docs/archive/stage-notes/FRONTEND_MASTER_DATA_BRIDGE.md`를 추가했습니다.
+- `tools/smoke/game/smoke_frontend_master_data_bridge.js`와 `docs/archive/history/PROJECT_HISTORY.md`를 추가했습니다.
 
 ## v084 - Master Data Nested Asset Cleanup
 
@@ -1392,7 +1403,7 @@
 - `backend/scripts/setup_dev_db.py` 추가
   - 로컬 DB reset/schema 생성/seed import/verify 지원
   - `--dry-run`으로 DB 접속 없이 seed JSON 개수 확인 가능
-- `docs/archive/stage-notes/SEED_IMPORT.md` 추가
+- `docs/archive/history/DATA_AND_SEED_HISTORY.md` 추가
 - `tools/smoke/game/smoke_seed_import_structure.py` 추가
 - 매우 큰 HP/골드/강화비용을 고려해 DB 초안/모델의 관련 컬럼을 `NUMERIC(40,0)` 계열로 보정
 - `user_mailbox_messages` 테이블을 SQL 초안에 보강
@@ -1405,7 +1416,7 @@
 - `backend/pyproject.toml` 버전을 `0.1.1`로 올리고 `asyncpg` 의존성을 명시했습니다.
 - `tools/extract_seed_data.js`를 추가해 현재 JS 마스터 데이터를 `backend/seeds/generated/*.json`으로 추출할 수 있게 했습니다.
 - `tools/smoke/game/smoke_seed_extraction.js`를 추가해 생성된 seed JSON 기본 검증을 할 수 있게 했습니다.
-- `backend/seeds/README.md`, `docs/archive/stage-notes/SEED_EXTRACTION.md`를 추가했습니다.
+- `backend/seeds/README.md`, `docs/archive/history/DATA_AND_SEED_HISTORY.md`를 추가했습니다.
 - Docker/FastAPI 로컬 실행 중 실제로 발생한 `CORS_ORIGINS` 파싱 오류와 `asyncpg` 누락 오류 해결법을 문서에 반영했습니다.
 - 기존 프론트 게임 동작은 변경하지 않았습니다.
 
@@ -1494,8 +1505,8 @@
 
 - 다음 채팅에서 바로 이어갈 수 있도록 root/docs handoff prompt를 최신 v266 기준으로 정리했습니다.
 - 오래된 v250/v260 중심 인계 문구를 v267/Vue-FastAPI-DB 전환 방향으로 갱신했습니다.
-- `docs/current/VUE_FASTAPI_DB_TRANSITION_PLAN.md`를 추가했습니다.
-- `docs/current/CURRENT_STATUS.md`, `docs/current/ROADMAP.md`, `docs/current/NEXT_STEPS.md`, `README.md`, `docs/archive/production-deployment/BACKEND_READY_V320.md`를 최신 방향에 맞게 정리했습니다.
+- `docs/reference/frontend/VUE_FASTAPI_DB_TRANSITION_PLAN.md`를 추가했습니다.
+- `docs/current/CURRENT_STATUS.md`, `docs/current/ROADMAP.md`, `docs/current/NEXT_STEPS.md`, `README.md`, `docs/archive/history/PRODUCTION_RELEASE_PREPARATION_HISTORY.md`를 최신 방향에 맞게 정리했습니다.
 - 런타임 코드, DB, env, seed, 인증, route, API 응답 body, Write Guard, 실제 write 로직은 변경하지 않았습니다.
 
 ## v271.vue-readonly-api-client
@@ -1522,7 +1533,7 @@
 - Added local/debug fallback CORS origins in `backend/app/core/config.py` so older local `.env` values that omit Vite port `5173` do not block read-only Vue API checks.
 - Production CORS behavior remains explicit: production/debug-false settings do not auto-append local dev origins.
 - Added `tools/smoke/backend/smoke_backend_local_cors.py` and included it in `tools/run_smoke_core.sh`.
-- Added `docs/current/LOCAL_DEV_CORS.md`.
+- Added `docs/reference/frontend/LOCAL_DEV_CORS.md`.
 - Did not change `.env`, DB, seed, auth, route paths, API response body, write logic, Write Guard, Preview/Apply request bodies, or game content.
 # v327.third-owner-only-attempt-recorded-vulnerability-gated
 

@@ -64,7 +64,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "createDeleteRestoreReady",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_CREATE_DELETE_RESTORE.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Create Delete Restore",
   "RESTORE DELETED CREATED ROW",
   "idConflict",

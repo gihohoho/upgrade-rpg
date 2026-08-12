@@ -12,8 +12,8 @@ REQUIRED_FILES = [
     "src/pages/AdminShell.vue",
     "src/pages/GameShell.vue",
     "src/styles/base.css",
-    "docs/current/VUE_READONLY_API_CLIENT.md",
-    "docs/current/VUE_APP_SHELL.md",
+    "docs/reference/frontend/VUE_READONLY_API_CLIENT.md",
+    "docs/reference/frontend/VUE_APP_SHELL.md",
 ]
 
 FORBIDDEN_MUTATION_PATTERNS = [
@@ -102,7 +102,7 @@ def main() -> None:
     assert_contains(css, "data-status=\"success\"", "success status CSS")
     assert_contains(css, "data-status=\"error\"", "error status CSS")
 
-    docs = read("docs/current/VUE_READONLY_API_CLIENT.md")
+    docs = read("docs/reference/frontend/VUE_READONLY_API_CLIENT.md")
     assert_contains(docs, "v272", "read-only API doc version")
     assert_contains(docs, "/health", "doc health endpoint")
     assert_contains(docs, "/admin/requirements", "doc admin requirements endpoint")

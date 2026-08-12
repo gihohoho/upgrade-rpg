@@ -1,43 +1,45 @@
-# Project Structure — v334
+# Project Structure — v371
 
-```txt
-.
-├── AGENTS.md                         # Codex 저장소 규칙
-├── NEXT_CHAT_PROMPT.md               # 다음 작업용 prompt
-├── NEXT_CHAT_HANDOFF.md              # 현재 handoff
-├── README.md                         # 짧은 프로젝트 입구
-├── index.html / admin.html / src/    # legacy 게임·관리자
-├── .github/workflows/
-│   └── publish-backend-ghcr.yml      # 수동 owner-only image publish
-├── frontend/vue-app/                 # Vue GET read-only 앱
-├── backend/
-│   ├── .venv/                        # 로컬 전용, Git 제외
-│   ├── app/ / alembic/ / scripts/
-│   ├── requirements/                 # exact version + wheel SHA-256 locks
-│   ├── Dockerfile                    # 로컬 호환
-│   └── Dockerfile.production         # verified production image source
-├── deploy/
-│   ├── docker-compose.production.yml
-│   ├── production.env.example
-│   ├── production-deploy-plan.example.json
-│   ├── review/                       # sanitized 정적·runtime 증거
-│   ├── reverse-proxy/ / secrets/
-│   └── isolated-validation/
-├── docs/
-│   ├── current/                      # 현재 판단과 runbook
-│   ├── guides/                       # 실제 사용 가이드
-│   ├── contracts/                    # 자동 검사되는 계약
-│   ├── handoff/                      # 루트 handoff mirror
-│   ├── archive/                      # 고유한 과거 기록
-│   └── CHANGELOG.md                  # 단일 현재 변경 이력
-└── tools/
-    ├── check_*.py / report_*.py      # 정적·읽기 전용 검사
-    ├── smoke/                        # backend/frontend/game/contracts smoke
-    └── run_smoke_core.sh
+## 실행 코드
+
+```text
+Upgrade RPG/
+├─ index.html, admin.html       legacy 게임·관리자 진입점
+├─ src/
+│  ├─ api/                      인증, runtime config, backend client
+│  ├─ app/                      게임 boot와 상태 연결
+│  ├─ assets/                   정적 이미지
+│  ├─ data/                     legacy master data
+│  ├─ rules/, systems/, ui/     게임 규칙·전투·화면
+│  └─ styles/                   legacy CSS
+├─ backend/
+│  ├─ app/                      FastAPI routes/services/models/schemas
+│  ├─ alembic/                  DB revision source
+│  ├─ requirements/             reproducible dependency inputs/locks
+│  └─ scripts/                  backend 전용 one-shot/read-only 도구
+├─ frontend/vue-app/            Vue read-only 전환 실험
+├─ deploy/                      배포 계약·예시·정제된 증거
+└─ tools/                       checker·report·smoke·maintenance
 ```
 
-## 로컬 전용 보존 폴더
+자동 생성된 backend route/structure/legacy dependency 보고서는 `docs/generated/`에서 확인합니다.
 
-`local-backups/`, `local-review-artifacts/`, `backend/.venv/`, `frontend/vue-app/node_modules/`는 Git에서 제외합니다. PostgreSQL backup과 Alembic review 증거가 있으므로 구조 정리 때 자동 삭제하지 않습니다.
+## 문서
 
-legacy `index.html`, `admin.html`, `src/`는 Vue 이식 전까지 경로를 유지합니다. 현재 GHCR repository는 `ghcr.io/gihohoho/upgrade-rpg-backend`입니다.
+```text
+docs/
+├─ README.md                    전체 문서 허브
+├─ DOCUMENTATION_SYSTEM.md      위치·중복·Obsidian 운영 규칙
+├─ current/                     현재 판단·승인 문서
+├─ reference/
+│  ├─ database/                 PostgreSQL·Alembic·Neon
+│  ├─ backend/                  backend 구조·runtime 감사
+│  ├─ frontend/                 Vue·CORS·read-only API
+│  └─ assets/                   장비 공식·이미지 규칙
+├─ generated/                   도구가 재생성하는 보고서
+├─ contracts/                   API·관리자 계약
+├─ guides/                      사람이 따라 하는 실행 절차
+└─ archive/history/             완료 단계 통합 역사
+```
+
+새 채팅은 루트 `AGENTS.md` → `NEXT_CHAT_HANDOFF.md` → `docs/current/CURRENT_STATUS.md`만 먼저 읽습니다. 문서 이동·추가는 `docs/DOCUMENTATION_SYSTEM.md`를 따릅니다.

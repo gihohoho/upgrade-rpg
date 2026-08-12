@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 TOOL = ROOT / "tools/check_postgres_backup_restore_preflight.py"
-DOC = ROOT / "docs/current/POSTGRES_BACKUP_RESTORE_PREP.md"
+DOC = ROOT / "docs/reference/database/POSTGRES_BACKUP_RESTORE_PREP.md"
 
 
 def fail(message: str) -> int:

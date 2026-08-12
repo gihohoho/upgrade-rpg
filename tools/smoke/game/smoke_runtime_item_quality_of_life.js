@@ -295,13 +295,15 @@ assertContains("src/rules/boss-display-rules.js", [
   "drop.img = getSpecialEquipIconUrl(drop);",
 ]);
 assertContains("AGENTS.md", [
-  "이미지 파일 자체에는 테두리, 프레임, 카드판, inset panel, margin band",
-  "기본 등급은 효과 없는 흰색 테두리",
-  "등급별 CSS 테두리",
-  "여백 없이 채우며",
-  "일부가 잘리는 close-up 구도",
+  "등급 테두리는 모든 UI 위치에서 CSS로 일관되게 적용",
+  "docs/reference/assets/",
+]);
+assertContains("docs/reference/assets/SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md", [
+  "이미지 파일 자체에는 테두리, 프레임, 카드판",
+  "게임 화면의 등급 테두리",
+  "정사각형 전체를 여백 없이 채웁니다",
+  "잘리는 close-up",
   "던전앤파이터풍",
-  "실제 브라우저 슬롯 크기",
 ]);
 
 console.log(

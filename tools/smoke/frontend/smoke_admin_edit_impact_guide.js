@@ -40,7 +40,7 @@ assertContains("admin.html", [
   "인게임 영향 안내",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_EDIT_IMPACT_GUIDE.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Edit Impact Guide",
   "stackable",
   "보스 체력",

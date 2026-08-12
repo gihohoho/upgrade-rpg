@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RENDER_PLAN = ROOT / "deploy/render-service-settings.example.json"
 NEON_PLAN = ROOT / "deploy/neon-database-initialization-migration.example.json"
 RENDER_DOC = ROOT / "docs/current/RENDER_SERVICE_SETTINGS_PLAN.md"
-NEON_DOC = ROOT / "docs/current/NEON_DATABASE_INITIALIZATION_MIGRATION_PLAN.md"
+NEON_DOC = ROOT / "docs/reference/database/NEON_DATABASE_INITIALIZATION_MIGRATION_PLAN.md"
 RENDER_ENV = ROOT / "deploy/render.production.env.example"
 CONFIG_SOURCE = ROOT / "backend/app/core/config.py"
 SESSION_SOURCE = ROOT / "backend/app/db/session.py"
@@ -60,8 +60,6 @@ STATE_FILES = (
     ROOT / "NEXT_CHAT_PROMPT.md",
     ROOT / "NEXT_CHAT_HANDOFF.md",
     ROOT / "docs/current/CURRENT_STATUS.md",
-    ROOT / "docs/handoff/NEXT_CHAT_PROMPT.md",
-    ROOT / "docs/handoff/NEXT_CHAT_HANDOFF.md",
 )
 
 
@@ -444,17 +442,6 @@ def verify_docs() -> None:
         text = path.read_text(encoding="utf-8")
         for marker in (STATE_VERSION, RENDER_VERSION, NEON_VERSION, RESULT, NEXT_STAGE):
             require(marker in text, f"{path.relative_to(ROOT)} is missing {marker}")
-    require(
-        (ROOT / "NEXT_CHAT_PROMPT.md").read_bytes()
-        == (ROOT / "docs/handoff/NEXT_CHAT_PROMPT.md").read_bytes(),
-        "NEXT_CHAT_PROMPT mirror differs",
-    )
-    require(
-        (ROOT / "NEXT_CHAT_HANDOFF.md").read_bytes()
-        == (ROOT / "docs/handoff/NEXT_CHAT_HANDOFF.md").read_bytes(),
-        "NEXT_CHAT_HANDOFF mirror differs",
-    )
-
 
 def verify_bootstrap_sources() -> None:
     for path in (

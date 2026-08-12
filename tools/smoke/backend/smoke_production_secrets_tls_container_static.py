@@ -12,7 +12,7 @@ REQUIRED_FILES = (
     "deploy/production.env.example",
     "deploy/README.md",
     "deploy/secrets/README.md",
-    "docs/current/POSTGRES_PRODUCTION_STATIC_VALIDATION.md",
+    "docs/reference/database/POSTGRES_PRODUCTION_STATIC_VALIDATION.md",
     "backend/Dockerfile",
     ".gitignore",
     ".dockerignore",

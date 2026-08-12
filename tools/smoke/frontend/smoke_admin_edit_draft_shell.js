@@ -33,7 +33,7 @@ assertContains("admin.html", [
   ".draft-field",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_EDIT_DRAFT_SHELL.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Edit Draft Shell",
   "읽기 전용",
   "getAdminEditDraftReadiness",

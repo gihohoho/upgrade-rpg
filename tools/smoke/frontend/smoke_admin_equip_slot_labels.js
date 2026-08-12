@@ -33,7 +33,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "window.getAdminEquipSlotDisplayName",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_MASTER_CATALOG_PAGINATION.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "6: 특수무기",
   "12: 탈리스만 A",
   "14: 휘장",

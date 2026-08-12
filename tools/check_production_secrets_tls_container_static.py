@@ -62,7 +62,7 @@ def inspect_production_static_templates(root: Path) -> dict[str, Any]:
     compose = _read(root / "deploy/docker-compose.production.yml")
     env_example = _read(root / "deploy/production.env.example")
     deploy_readme = _read(root / "deploy/README.md")
-    static_doc = _read(root / "docs/current/POSTGRES_PRODUCTION_STATIC_VALIDATION.md")
+    static_doc = _read(root / "docs/reference/database/POSTGRES_PRODUCTION_STATIC_VALIDATION.md")
     dockerfile = _read(root / "backend/Dockerfile")
     gitignore = _read(root / ".gitignore")
     dockerignore = _read(root / ".dockerignore")

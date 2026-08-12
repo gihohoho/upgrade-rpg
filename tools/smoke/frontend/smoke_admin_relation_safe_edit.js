@@ -49,7 +49,7 @@ assertContains("admin.html", [
   "draft-field-relation-select",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_RELATION_SAFE_EDIT.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Relation Safe Edit",
   "relation select",
   "itemTemplates.enhance_group_code",

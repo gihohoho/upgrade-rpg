@@ -66,7 +66,7 @@ assertContains("admin.html", [
   "<option value=\"characterSkills\">캐릭터 스킬</option>",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_CREATE_APPLY_LEVEL_LINKS.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Create Apply Level and Link Tables",
   "skillLevels",
   "enhancementLevels",

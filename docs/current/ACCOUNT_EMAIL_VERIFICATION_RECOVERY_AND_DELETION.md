@@ -146,7 +146,7 @@ token은 DB의 현재 `authVersion`을 함께 확인합니다. 이메일 인증�
 
 정적 route map은 전체 48 operations, `GET 21 / POST 26 / DELETE 1`, 중복
 method/path 0으로 갱신했고 보고서 smoke가 통과했습니다. auth group은 12개입니다.
-자동 보고서는 `docs/current/BACKEND_ROUTE_MAP.md`에 있습니다.
+자동 보고서는 `docs/generated/BACKEND_ROUTE_MAP.md`에 있습니다.
 
 ## 메일 화면과 전달 방식
 

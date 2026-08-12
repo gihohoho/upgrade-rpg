@@ -67,7 +67,7 @@ assertContains("src/api/admin-page-readonly.js", [
   "createDeleteRollbackReady",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_CREATE_APPLY_LIMITED.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Create Apply Limited",
   "CREATE MASTER DATA ROW",
   "characters",

@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 PROJECT_VERSION = "v371"
-REPORT_PATH = Path("docs/current/BACKEND_ROUTE_MAP.md")
+REPORT_PATH = Path("docs/generated/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
 
 ROUTE_MODULES = [
@@ -345,7 +345,7 @@ def render_report(root: Path) -> str:
 ## 생성 방식
 
 - 도구: `tools/report_backend_route_map.py`
-- 산출물: `docs/current/BACKEND_ROUTE_MAP.md`
+- 산출물: `docs/generated/BACKEND_ROUTE_MAP.md`
 - 방식: `app.main`을 import하지 않고 route 파일의 GET/POST/PUT/PATCH/DELETE decorator를 정적으로 분석합니다.
 - 이유: 단순 문서 생성이 `asyncpg` 같은 로컬 DB 의존성 설치 상태에 막히지 않게 하기 위해서입니다.
 

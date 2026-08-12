@@ -10,8 +10,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[3]
 TOOL = ROOT / "tools/check_runtime_config_hardening.py"
-DOC = ROOT / "docs/current/POSTGRES_RUNTIME_CONFIG_HARDENING.md"
-DEPLOY_DOC = ROOT / "docs/current/POSTGRES_PRODUCTION_DEPLOYMENT_TEMPLATE.md"
+DOC = ROOT / "docs/reference/database/POSTGRES_RUNTIME_CONFIG_HARDENING.md"
+DEPLOY_DOC = ROOT / "docs/reference/database/POSTGRES_PRODUCTION_DEPLOYMENT_TEMPLATE.md"
 
 
 def fail(message: str) -> int:

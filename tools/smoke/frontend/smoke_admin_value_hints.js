@@ -36,7 +36,7 @@ assertContains("admin.html", [
   "값 해석 힌트",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_VALUE_HINTS.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Value Hints",
   "itemTemplates.grade = 기존 JS item.tier",
   "grade=1",
@@ -45,7 +45,7 @@ assertContains("docs/archive/stage-notes/ADMIN_VALUE_HINTS.md", [
   "DB reset/seed는 필요 없습니다",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_FIELD_HELP.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "기존 JS 아이템의 `tier` 값을 옮겨 담은 숫자형 진행 등급",
   "rarity",
 ]);

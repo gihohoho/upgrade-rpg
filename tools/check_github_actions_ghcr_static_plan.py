@@ -143,15 +143,13 @@ ATTEMPT_EVIDENCE_CHANGED_PATH_ALLOWLIST = frozenset({
     "AGENTS.md",
     "NEXT_CHAT_HANDOFF.md",
     "NEXT_CHAT_PROMPT.md",
-    "docs/handoff/NEXT_CHAT_HANDOFF.md",
-    "docs/handoff/NEXT_CHAT_PROMPT.md",
     "docs/current/CURRENT_STATUS.md",
     "docs/current/BACKEND_IMAGE_GHCR_POLICY.md",
     "docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md",
     "docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md",
-    "docs/current/ROADMAP.md",
+    "docs/DOCUMENTATION_SYSTEM.md",
+    "docs/README.md",
     "docs/CHANGELOG.md",
-    "docs/NEXT_STEPS.md",
 })
 DOCKERFILE_FRONTEND = "docker/dockerfile:1.21.0@sha256:27f9262d43452075f3c410287a2c43f5ef1bf7ec2bb06e8c9eeb1b8d453087bc"
 LOCK_SHA256 = {

@@ -69,7 +69,7 @@ assertContains("tools/run_smoke_core.sh", [
   "node tools/smoke/frontend/smoke_admin_create_lifecycle_guide.js",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_CREATE_LIFECYCLE_GUIDE.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Create Lifecycle Guide",
   "v181",
   "v180",

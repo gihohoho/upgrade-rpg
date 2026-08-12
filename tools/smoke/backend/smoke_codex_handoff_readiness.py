@@ -43,8 +43,6 @@ REQUIRED = (
     "docs/current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md",
     "docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md",
     "deploy/github-actions-ghcr-static-plan.example.json",
-    "docs/handoff/NEXT_CHAT_PROMPT.md",
-    "docs/handoff/NEXT_CHAT_HANDOFF.md",
     "tools/check_github_actions_ghcr_static_plan.py",
     "tools/check_production_deployment_plan.py",
     "tools/generate_backend_linux_dependency_locks.py",

@@ -30,6 +30,6 @@ assertIncludes("src/api/save-data-preview.js", "assertBackendSaveSnapshotPreview
 assertIncludes("index.html", "src/api/save-data-preview.js");
 assertOrder("index.html", "src/api/save-data-sync-policy.js", "src/api/save-data-preview.js");
 assertOrder("index.html", "src/api/save-data-preview.js", "src/api/save-data-dev-badge.js");
-assertIncludes("docs/archive/stage-notes/SAVE_DATA_PREVIEW_COMPARE.md", "Save Data Preview");
+assertIncludes("docs/archive/history/SAVE_SYSTEM_HISTORY.md", "Save Data Preview");
 
 console.log("save data preview compare smoke test passed");

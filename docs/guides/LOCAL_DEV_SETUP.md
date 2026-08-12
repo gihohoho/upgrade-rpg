@@ -206,4 +206,4 @@ bosses/zones/skills 데이터를 JSON seed로 변환
 ```
 
 
-> 로컬 PostgreSQL은 기본 포트 `5432`가 아니라 `55432`를 사용한다. Windows에서 기존 PostgreSQL과 충돌을 피하기 위한 프로젝트 기준이다. 자세한 내용은 `docs/archive/stage-notes/LOCAL_DB_PORT_POLICY.md`를 참고한다.
+> 로컬 PostgreSQL은 기본 포트 `5432`가 아니라 `55432`를 사용한다. Windows에서 기존 PostgreSQL과 충돌을 피하기 위한 프로젝트 기준이다. 자세한 내용은 `docs/archive/history/PROJECT_HISTORY.md`를 참고한다.

@@ -1,31 +1,33 @@
-# Docs Index — v362
+# Upgrade RPG Docs Hub
 
-문서는 역할별로 한 곳에만 둡니다. 현재 판단과 과거 기록이 충돌하면 `current/`를 우선합니다.
+문서는 **현재 → 참고 → 계약/가이드 → 역사** 순서로 읽습니다. 새 채팅에서 전체 문서를 한꺼번에 읽지 않습니다.
 
-## 현재 판단
+## 1. 지금 상태
 
-- `current/CURRENT_STATUS.md`: 지금 완료된 상태와 안전 경계
-- `current/EQUIPMENT_PROGRESSION_FORMULA_AUDIT.md`: 1~12단계 장비 공식 감사와 12단계 이후 스킬 피해 성장 기준
-- `current/SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md`: AI 특수장비 아이콘 생성 조건·계열별 프롬프트·23개 파일 매핑
-- `current/PRODUCTION_DEPLOYMENT_PLAN.md`: 검토된 운영 배포 순서·승인·복구 계약
-- `current/FRONTEND_STATIC_DEPLOYMENT_PLAN.md`: legacy 게임·관리자 Render Static Site 배포와 exact CORS 승인 계획
-- `current/ROADMAP.md`: 다음 진행 순서
-- `current/PROJECT_STRUCTURE.md`: 저장소 구조
-- `current/SECURITY_ROTATION_AND_GITHUB_GATES.md`: 보안 권한과 나중에 회전할 항목
-- `current/BACKEND_IMAGE_GHCR_POLICY.md`: verified GHCR image와 lifecycle 정책
-- `current/GITHUB_ACTIONS_GHCR_STATIC_WORKFLOW_PLAN.md`: 공급망 workflow 계약
+- [Current Status](current/CURRENT_STATUS.md): 구현·검증·승인 경계
+- [Email Account Lifecycle](current/ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md): v371 이메일 인증·복구·삭제
+- [Account and Character Slots](current/ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md): 인증과 계정별 8슬롯
+- [Security Gates](current/SECURITY_ROTATION_AND_GITHUB_GATES.md): secret·회전·공개 전 보안 gate
+- [Production Plan](current/PRODUCTION_DEPLOYMENT_PLAN.md): 운영 배포 승인 단위와 rollback
+- [Current Index](current/README.md): 현재 문서 전체 목록
 
-## 실행 가이드
+## 2. 계속 쓰는 기술 자료
 
-- `guides/`: 로컬 개발, Git, PostgreSQL, 브라우저 확인, 다음 채팅 시작 가이드
-- `contracts/`: API response와 관리자/backend 계약
-- `handoff/`: 루트 `NEXT_CHAT_*`의 자동 검사용 mirror
+- `reference/database/`: PostgreSQL, Alembic, Neon, backup/restore runbook
+- `reference/backend/`: backend 구조와 blocking-I/O 감사
+- `reference/frontend/`: Vue 전환, CORS, read-only API 자료
+- `reference/assets/`: 장비 공식과 생성형 이미지 규칙·매핑
 
-## 과거 기록
+## 3. 자동 생성·계약·실행 안내
 
-- `archive/stage-notes/`: legacy·관리자·backend 단계별 구현 기록
-- `archive/postgres-baseline/`: 현재 문서와 중복되지 않는 PostgreSQL/Alembic baseline 기록
-- `archive/runtime-hardening/`: runtime hardening 기록
-- `archive/production-deployment/`: 완료된 배포 준비 단계와 과거 readiness
+- `generated/`: route map, backend structure, legacy dependency, Alembic readiness 보고서
+- `contracts/`: API response와 관리자 계약
+- `guides/`: 로컬 개발, Git, PostgreSQL, 브라우저 확인 절차
 
-완전 동일한 사본은 제거했습니다. Git 이력이 있으므로 삭제된 중복 사본도 과거 commit에서 확인할 수 있습니다. 현재 변경 이력은 `CHANGELOG.md` 하나만 사용합니다.
+## 4. 과거 기록
+
+- `archive/history/`: 완료된 150개 이상의 단계 메모를 주제별로 합친 검색용 역사
+- 과거 기록은 현재 규칙이 아닙니다. 현재 문서와 충돌하면 `current/`를 우선합니다.
+- 원본 개별 파일은 Git history에서 복원할 수 있습니다.
+
+문서를 새로 만들거나 이동하기 전에는 [Documentation System](DOCUMENTATION_SYSTEM.md)의 위치·중복·크기 규칙을 따릅니다.

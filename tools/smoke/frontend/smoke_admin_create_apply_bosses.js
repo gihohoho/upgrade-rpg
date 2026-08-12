@@ -59,7 +59,7 @@ assertContains("admin.html", [
   "<option value=\"bosses\">보스</option>",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_CREATE_APPLY_BOSSES.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Create Apply Bosses",
   "bosses",
   "dropTables.owner_type = boss",

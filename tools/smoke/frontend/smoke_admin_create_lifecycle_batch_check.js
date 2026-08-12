@@ -50,7 +50,7 @@ assertContains("tools/run_smoke_core.sh", [
   "node tools/smoke/frontend/smoke_admin_create_lifecycle_batch_check.js",
 ]);
 
-assertContains("docs/archive/stage-notes/ADMIN_CREATE_LIFECYCLE_BATCH_CHECK.md", [
+assertContains("docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md", [
   "Admin Create Lifecycle Batch Check",
   "RUN CREATE DELETE RESTORE CHECK",
   "생성 preview",

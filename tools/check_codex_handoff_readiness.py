@@ -471,8 +471,6 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     ghcr_doc = _read(root / "docs/current/BACKEND_IMAGE_GHCR_POLICY.md")
     security_doc = _read(root / "docs/current/SECURITY_ROTATION_AND_GITHUB_GATES.md")
     docs_index = _read(root / "docs/README.md")
-    handoff_prompt = _read(root / "docs/handoff/NEXT_CHAT_PROMPT.md")
-    handoff_state = _read(root / "docs/handoff/NEXT_CHAT_HANDOFF.md")
     actions_result = _inspect_actions_workflow(root)
     deployment_plan_result = _inspect_production_deployment_plan(root)
 
@@ -749,48 +747,27 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require("--workers" not in production_cmd, "production Uvicorn worker count must remain 1")
     _require("alembic" not in production_cmd, "container startup must not run Alembic")
 
-    common_markers = (TOOL_VERSION, EXPECTED_REMOTE, EXPECTED_REPOSITORY)
+    current_markers = (
+        "v372.documentation-system-consolidated",
+        "documentation-system-consolidated",
+        "owner-approve-email-validator-install-and-review-v371-migration-source",
+    )
     for path, text in (
         ("AGENTS.md", agents),
-        ("NEXT_CHAT_PROMPT.md", prompt),
         ("NEXT_CHAT_HANDOFF.md", handoff),
         ("docs/current/CURRENT_STATUS.md", current),
     ):
-        for marker in common_markers:
-            _require(marker in text, f"{path} is missing marker: {marker}")
-        _require("GITHUB_TOKEN" in text or "github-actions-github-token" in text, f"{path} is missing CI credential strategy")
-        _require(LIFECYCLE_PATH in text, f"{path} is missing source-controlled publish lifecycle path")
-        _require("source-controlled lifecycle gate" in text, f"{path} is missing lifecycle gate marker")
-    _require("check_github_actions_ghcr_static_plan.py --strict" in agents, "AGENTS.md is missing first checker")
-    _require("실행 중인 개발 서버를 재사용" in agents, "AGENTS.md is missing persistent server permission")
-    _require(READY_RESULT in prompt, "prompt is missing expected result")
-    _require(NEXT_SAFE_STAGE in prompt, "prompt is missing next safe stage")
-    _require("필요한 extension" in prompt, "prompt is missing recurring install/permission request rule")
+        for marker in current_markers:
+            _require(marker in text, f"{path} is missing current marker: {marker}")
+    for marker in ("AGENTS.md", "NEXT_CHAT_HANDOFF.md", "docs/current/CURRENT_STATUS.md"):
+        _require(marker in prompt, f"prompt is missing reading-order marker: {marker}")
+    _require("실행 중인" in agents and "서버를 재사용" in agents, "AGENTS.md is missing persistent server permission")
+    _require("필요한 extension" in agents, "AGENTS.md is missing recurring install/permission request rule")
     _require(EXPECTED_REPOSITORY in ghcr_doc, "GHCR policy doc is missing repository")
     _require("GITHUB_TOKEN" in ghcr_doc, "GHCR policy doc is missing credential strategy")
     _require("required reviewer" in security_doc, "security checklist is missing reviewer gate")
     _require("실제 secret 값은 적지 않습니다" in security_doc, "security checklist could expose secrets")
-    _require("Docs Index" in docs_index and "archive/production-deployment/" in docs_index, "docs index is not current")
-    _require(prompt == handoff_prompt, "root and docs/handoff prompts differ")
-    _require(handoff == handoff_state, "root and docs/handoff state differ")
-    lifecycle_markers = (
-        "source-controlled lifecycle gate",
-        "run_attempt=1",
-        "single dispatch",
-        "immediate closure",
-        "closureCommitSha",
-        "attempt-recorded",
-        "review-recorded-workflow-attempt-evidence",
-    )
-    for path, text in (
-        ("NEXT_CHAT_PROMPT.md", prompt),
-        ("NEXT_CHAT_HANDOFF.md", handoff),
-        ("docs/handoff/NEXT_CHAT_PROMPT.md", handoff_prompt),
-        ("docs/handoff/NEXT_CHAT_HANDOFF.md", handoff_state),
-    ):
-        for marker in lifecycle_markers:
-            _require(marker in text, f"{path} is missing lifecycle marker: {marker}")
-
+    _require("Upgrade RPG Docs Hub" in docs_index and "archive/history/" in docs_index, "docs index is not current")
     workflow_files = {
         path.relative_to(root).as_posix()
         for path in (root / ".github/workflows").rglob("*")

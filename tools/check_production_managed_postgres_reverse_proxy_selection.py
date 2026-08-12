@@ -90,7 +90,7 @@ def inspect_production_architecture_selection(root: Path) -> dict[str, Any]:
     env_example = _read(root / "deploy/production.env.example")
     dockerfile = _read(root / "backend/Dockerfile")
     selection_doc = _read(
-        root / "docs/current/POSTGRES_PRODUCTION_MANAGED_DB_PROXY_SELECTION.md"
+        root / "docs/reference/database/POSTGRES_PRODUCTION_MANAGED_DB_PROXY_SELECTION.md"
     )
     proxy_doc = _read(root / "deploy/reverse-proxy/README.md")
     isolated_doc = _read(root / "deploy/isolated-validation/README.md")
