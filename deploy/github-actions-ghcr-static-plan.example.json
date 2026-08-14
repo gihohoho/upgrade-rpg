@@ -283,15 +283,15 @@
       "hashCheckingRequired": true,
       "lockSha256": {
         "backend/requirements/pip-bootstrap.lock": "9399f6b52f827b1c92f996f77319107055ad01fa2296193e9bede8f42f6c3307",
-        "backend/requirements/runtime-linux-amd64-py311.lock": "629978d544a52d13417a04ca313c34cea75c190b2e5c369baabba6abfa5cb59a",
-        "backend/requirements/runtime-musllinux-amd64-py311.lock": "947d3367781e7e119d33c9ec597ae94efb607085c1564d7268adb06bd9f7139b",
-        "backend/requirements/dev-linux-amd64-py311.lock": "e68a63c8cce1a3365caba4e38ad6f0774491a12ad56612a45451fd9c35eb5ec2"
+        "backend/requirements/runtime-linux-amd64-py311.lock": "126718271e5cf1007487f7813adc648030691b3a251787f6bf570919d02cc05e",
+        "backend/requirements/runtime-musllinux-amd64-py311.lock": "a318ee15cf227eb057f1fef1c1df7ff3dc10b65d892e889da3ee9ad747b5ea10",
+        "backend/requirements/dev-linux-amd64-py311.lock": "eb97dea783b80fe5187a161eac3cd3298f602d64dabed613a3be5223c81198b7"
       },
       "inputSha256": {
         "backend/requirements/pip-bootstrap.in": "9df44a3db13ef551bf575949d553b8d14044635b91c09e85dc6d3ea97f50d225",
-        "backend/requirements/runtime.in": "95e6a7573f683f54586a2aeabab6c52c27760c8039a99313e1957392e17fb4fa",
+        "backend/requirements/runtime.in": "de3324e5b96538e6d4d768ed980acae3bd6005711eda48702364cf0e2018bfcb",
         "backend/requirements/dev.in": "6404277a75ce651735fcea3f89b5eee548cfd58ee197faed27b03333d587e2fe",
-        "backend/pyproject.toml": "66cd31c19ffd7e7eb7457af2ac641ffb4865ef2fc9b854d908058b28b38c75a2",
+        "backend/pyproject.toml": "066fbc7367508130b329ea31f9715dd95131cf02b64f22011bb025ca4f76ad9e",
       "backend/Dockerfile.production": "ca4bb49de42650355b6f28519c231f5249f1ea9f52fb6fe574bc778cd7c5f16c"
       },
       "requiredBeforeFirstPublish": true

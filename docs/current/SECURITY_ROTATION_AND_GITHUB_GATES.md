@@ -1,4 +1,4 @@
-# Security rotation and GitHub gates — v371
+# Security rotation and GitHub gates — v373
 
 ## v371 이메일 identity·복구·삭제 source 준비 보안 상태 — 2026-08-11
 
@@ -33,9 +33,9 @@
   요구합니다. 이 source gate는 DB session 생성 전에 실패하고 안전 차단은 exit `3`입니다.
   성공 즉시 enable을 끄고 plaintext password를 `.env`에서 제거합니다. 입력한 email은
   자동 인증하지 않습니다.
-- 현재 `email-validator 2.3.0` 설치·Linux lock 갱신은 owner 승인 대기 중입니다. 승인
-  전에는 약한 email parser로 폴백하지 않고 이메일 동작과 owner apply를 fail-closed로
-  유지합니다.
+- `email-validator 2.3.0`과 `dnspython 2.8.0`은 owner 승인으로 backend `.venv`와 Linux
+  runtime/musllinux/dev lock에 반영했습니다. dependency가 빠지면 약한 email parser로
+  폴백하지 않고 이메일 동작과 owner apply를 fail-closed로 유지합니다.
 - backend v371 이메일 lifecycle·owner one-shot·migration parity, v370 backend 회귀,
   frontend v371 이메일 계정·v370 character/admin 회귀, compileall/JavaScript,
   runtime blocking-I/O와 48-operation route map은 PASS입니다. 실제 Chrome 기본
@@ -47,8 +47,8 @@
   GitHub Actions·GHCR 게시, Render env·서비스·deploy는 실행하지 않았습니다. 공개
   backend/static은 계속 v351입니다.
 
-분리 승인 순서는 dependency/lock → v371 source 검증 commit → exact migration apply →
-Brevo sender/key/secret → 테스트 메일 1건 → exact owner bootstrap → 공개 보안 보강 →
+분리 승인 순서는 dependency/lock·v371 source 검증 commit → isolated migration 왕복 →
+exact migration apply → Brevo sender/key/secret → 테스트 메일 1건 → exact owner bootstrap → 공개 보안 보강 →
 backend/static 동시 release입니다. rate limit, server session/refresh·원격 폐기, ASGI raw
 body cap, 다중 기기 revision, HTTPS/CSP/XSS와 개인정보·법적 보존 정책은 여전히 공개
 blocker입니다. 자세한 계약은 `ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md`에

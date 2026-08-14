@@ -3,7 +3,7 @@
 ```txt
 latest: v371.email-verification-recovery-account-deletion-migration-prepared
 strict result: email-verification-recovery-account-deletion-migration-prepared
-next safe stage: owner-approve-email-validator-install-and-review-v371-migration-source
+next safe stage: owner-review-v371-migration-source-and-approve-isolated-roundtrip
 public Render: backend/static 모두 계속 v351
 ```
 
@@ -71,9 +71,9 @@ ID가 모두 일치해야만 요청을 허용합니다. 따라서 캐릭터를 �
 ## 인증과 비밀번호
 
 - 회원가입 아이디는 소문자 영문·숫자·밑줄의 4~24자 규칙으로 정규화합니다.
-- 회원가입은 이메일을 필수로 받고 `email-validator 2.3.0`으로 원본 표기와 canonical
-  주소를 분리합니다. 설치 승인 전에는 약한 parser로 폴백하지 않고 이메일 동작을
-  fail-closed로 닫습니다.
+- 회원가입은 이메일을 필수로 받고 설치·lock 반영된 `email-validator 2.3.0`으로 원본
+  표기와 canonical 주소를 분리합니다. dependency가 빠지면 약한 parser로 폴백하지 않고
+  이메일 동작을 fail-closed로 닫습니다.
 - 비밀번호는 최소 8자, 문자와 숫자를 각각 하나 이상 포함하고 UTF-8 72바이트를
   넘지 않아야 합니다.
 - 비밀번호는 `bcrypt 5.0.0`으로만 해시하며 원문과 해시는 API, 관리자 화면,
@@ -237,10 +237,10 @@ v371은 로컬 source·migration 준비 단계이며 Render backend와 Static Si
 8. 다중 기기 동시 접속의 save revision, 충돌 해결과 낙관적 잠금 정책
 9. v371 backend image와 legacy static을 같은 승인 단위로 게시·배포하는 exact-SHA gate
 
-v371에는 `email-validator 2.3.0` 설치 승인, 별도 `EMAIL_TOKEN_SECRET`, Brevo 전용
-API key와 발신자, 새 DB migration이 필요합니다. 실제 값은 채팅에 보내지 않습니다.
-dependency/lock, migration apply, Brevo 설정, owner bootstrap, 공개 release는 각각 분리된
-승인 단계로 진행합니다.
+v371의 `email-validator 2.3.0`과 Linux dependency lock은 반영됐습니다. 별도
+`EMAIL_TOKEN_SECRET`, Brevo 전용 API key와 발신자, 새 DB migration은 여전히 필요하며
+실제 값은 채팅에 보내지 않습니다. isolated migration 검증, migration apply, Brevo 설정,
+owner bootstrap, 공개 release는 각각 분리된 승인 단계로 진행합니다.
 
 ## 검증 상태
 

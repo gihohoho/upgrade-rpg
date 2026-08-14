@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v372.documentation-system-consolidated"
-RESULT = "documentation-system-consolidated"
-NEXT_STAGE = "owner-approve-email-validator-install-and-review-v371-migration-source"
+VERSION = "v373.email-validator-linux-locks-obsidian-ready"
+RESULT = "email-validator-linux-locks-obsidian-ready"
+NEXT_STAGE = "owner-review-v371-migration-source-and-approve-isolated-roundtrip"
 SOURCE_HEAD = "v371_email_identity_lifecycle"
 APPLIED_HEAD = "v295_initial_schema"
 
@@ -52,7 +52,8 @@ def main() -> int:
     require_markers(
         "NEXT_CHAT_HANDOFF.md",
         "바로 할 일",
-        "package 설치",
+        "Linux runtime/musllinux/dev lock",
+        "isolated PostgreSQL",
         "migration",
         "DB write",
         "owner bootstrap",
@@ -77,6 +78,7 @@ def main() -> int:
         "docs/archive/history/",
         "Obsidian",
         ".obsidian/",
+        "작업 종료 문서 마감",
     )
 
     for obsolete in (

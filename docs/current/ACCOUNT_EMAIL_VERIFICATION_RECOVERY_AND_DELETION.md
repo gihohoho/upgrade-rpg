@@ -3,7 +3,7 @@
 ```txt
 latest: v371.email-verification-recovery-account-deletion-migration-prepared
 strict result: email-verification-recovery-account-deletion-migration-prepared
-next safe stage: owner-approve-email-validator-install-and-review-v371-migration-source
+next safe stage: owner-review-v371-migration-source-and-approve-isolated-roundtrip
 public Render: backend/static 모두 계속 v351
 database migration: source only / not applied
 email provider: selected only / account·sender·API key not configured
@@ -102,9 +102,10 @@ DB write, Alembic `upgrade`·`downgrade`·`stamp`, Brevo 가입·발신자 인�
 dependency로 사용하도록 준비했습니다. 패키지가 없으면 약한 검사로 통과시키지 않고
 이메일 계정 동작을 `503`으로 닫습니다.
 
-현재 설치·lock 갱신은 기호의 승인을 기다립니다. 승인 뒤에만 backend dependency와
-`backend/.venv`에 추가하고 Linux lock 3개와 GHCR 재현성 hash를 함께 갱신합니다. 그전에는
-owner bootstrap과 실제 회원가입을 실행하지 않습니다.
+기호의 승인으로 `email-validator==2.3.0`과 전이 dependency `dnspython==2.8.0`을
+`backend/.venv`, Linux lock 3개와 GHCR 재현성 hash에 반영했습니다. package를 임의로
+제거하면 이메일 동작은 계속 `503`으로 fail-closed합니다. migration, owner bootstrap과
+실제 회원가입 실행은 아직 별도 승인 전입니다.
 
 ## API source 계약 — route map 확정
 
@@ -281,8 +282,8 @@ v371이 아래 항목을 모두 끝내는 것은 아닙니다. 공개 회원가�
 ## 승인 단위와 다음 순서
 
 ```txt
-1. email-validator 2.3.0 설치·lock 갱신 승인
-2. v371 source focused/core/browser 검증과 준비 commit
+1. email-validator 2.3.0 설치·Linux lock 및 v371 source 검증 commit
+2. exact SHA 승인 뒤 isolated PostgreSQL upgrade→downgrade→upgrade
 3. exact v371 migration 적용 SHA 별도 승인
 4. Brevo 계정·발신자·전용 API key와 Render secret 설정 별도 확인
 5. 실제 테스트 메일 1건 별도 확인

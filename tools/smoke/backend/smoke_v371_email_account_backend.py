@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import builtins
 from datetime import UTC, datetime, timedelta
 import os
 from pathlib import Path
@@ -858,12 +859,15 @@ def test_validation_sanitizer_and_route_contract() -> None:
             "unverified HTTP error envelope code missing",
         )
 
-        dependency_missing = False
+        original_import = builtins.__import__
+
+        def import_without_email_validator(name, *args, **kwargs):  # type: ignore[no-untyped-def]
+            if name == "email_validator" or name.startswith("email_validator."):
+                raise ImportError("forced missing email-validator for fail-closed smoke")
+            return original_import(name, *args, **kwargs)
+
+        builtins.__import__ = import_without_email_validator
         try:
-            normalize_email_identity("owner@example.com")
-        except EmailValidationUnavailable:
-            dependency_missing = True
-        if dependency_missing:
             unavailable = client.post(
                 "/api/v1/auth/register",
                 json={
@@ -876,6 +880,8 @@ def test_validation_sanitizer_and_route_contract() -> None:
             require(unavailable.status_code == 503, "missing email-validator did not fail closed")
             body = unavailable.json()
             require(body["error"]["code"] == "email_validation_unavailable", "503 code mismatch")
+        finally:
+            builtins.__import__ = original_import
 
     routes = {
         (method, route.path)

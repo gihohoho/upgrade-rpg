@@ -190,14 +190,14 @@
 
 ## 다음 추천 단계
 
-`next safe stage: owner-approve-email-validator-install-and-review-v371-migration-source`
+`next safe stage: owner-review-v371-migration-source-and-approve-isolated-roundtrip`
 
-v371 source 검증 뒤에도 dependency 설치, v371 migration apply, Brevo 설정, owner bootstrap apply는 각각 별도 경계로 남습니다.
+v371 source 검증 뒤에도 isolated migration roundtrip, migration apply, Brevo 설정, owner bootstrap apply는 각각 별도 경계로 남습니다.
 
 권장 범위:
 
-1. `email-validator==2.3.0` 설치와 Linux lock 갱신을 기호 승인 뒤 수행합니다.
-2. v371 migration source와 isolated roundtrip 계획을 검토하고 exact SHA 승인 전에는 실제 DB에 적용하지 않습니다.
+1. 반영된 `email-validator==2.3.0`과 Linux lock, v371 migration source를 검토합니다.
+2. isolated roundtrip은 exact SHA 승인 뒤 수행하며, 통과하더라도 실제 DB apply는 다시 별도 승인합니다.
 3. Brevo sender/API key와 Render secret은 공급자 설정 승인 단계에서만 구성합니다.
 4. 공개 전 rate limit, raw body cap, 세션 폐기, save revision/CAS와 CSP·개인정보 정책을 보강합니다.
 5. backend image와 legacy static은 이메일 backend가 준비된 뒤 같은 exact-SHA 승인 단위로 게시·배포합니다.

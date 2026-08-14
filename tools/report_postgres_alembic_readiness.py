@@ -151,7 +151,7 @@ local/live/Neon applied DB revision: {APPLIED_DB_REVISION}
 v371 revision state: source prepared / not applied
 model application tables: {len(models)}
 applied DB application tables: {APPLIED_DB_APPLICATION_TABLES}
-next safe stage: owner-approve-email-validator-install-and-review-v371-migration-source
+next safe stage: owner-review-v371-migration-source-and-approve-isolated-roundtrip
 ```
 
 v295는 최초 22-table baseline을 실제 DB에 적용한 역사이자 현재 local/Neon DB revision으로
@@ -410,12 +410,11 @@ revision만 거짓으로 올릴 수 있으므로 특히 금지합니다.
 3. 기존 v295 계정은 email 열 `NULL`을 허용하고 fake backfill·자동 인증을 하지 않습니다.
 4. source parity smoke는 upgrade/downgrade operation·index·check·FK 대칭을 DB 없이
    검증해 PASS했습니다.
-5. `email-validator 2.3.0` dependency/lock 승인을 먼저 받고 v371 source 준비 commit을
-   확정합니다.
-6. 그 commit의 정확한 40자리 SHA를 기호가 별도 승인하기 전에는 local/Neon 어느 DB에도
+5. 반영된 `email-validator 2.3.0` dependency/lock과 v371 source 준비 commit을 검토합니다.
+6. 그 commit의 정확한 40자리 SHA를 기호가 별도 승인하기 전에는 isolated roundtrip이나 local/Neon 어느 DB에도
    `upgrade`, `downgrade`, `stamp`를 실행하지 않습니다.
 7. 실제 apply 전 현재 DB `v295`, backup, v371 single head와 migration source hash를
-   read-only로 확인하고 isolated roundtrip/rollback 범위를 별도 검토합니다.
+   read-only로 확인하고 승인된 isolated roundtrip/rollback을 먼저 검증합니다.
 8. migration 적용과 Brevo 설정, owner bootstrap은 같은 승인이 아니며 순서대로 분리합니다.
 
 현재는 v371 revision **생성·source 검토 준비만 완료**했고 autogenerate와 실제

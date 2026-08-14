@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-웹 기반 방치형 Upgrade RPG 프로젝트입니다. 현재 공개 버전은 v351이며, 로컬 소스는 v371 이메일 계정 lifecycle과 migration 준비 단계입니다.
+웹 기반 방치형 Upgrade RPG 프로젝트입니다. 현재 공개 버전은 v351이며, 로컬 checkpoint는 v373 dependency·문서 탐색 준비 단계입니다. Alembic source head는 v371이고 DB는 계속 v295입니다.
 
 ## 새 작업 시작
 
@@ -33,7 +33,7 @@ target: linux/amd64
 database: Neon PostgreSQL 16 Singapore
 hosting: Render Free Web Service + Static Site
 public backend/static: v351 Live
-local source: v371 migration prepared / DB still v295
+local checkpoint: v373 / migration source v371 / DB still v295
 ```
 
 로컬 서버를 실행하거나 배포하기 전에는 관련 guide와 현재 승인 경계를 먼저 확인합니다.

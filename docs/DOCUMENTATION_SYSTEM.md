@@ -6,9 +6,9 @@
 
 ## 읽기 순서
 
-1. 루트 `AGENTS.md`: 오래 유지되는 작업 규칙
-2. 루트 `NEXT_CHAT_HANDOFF.md`: 현재 checkpoint와 바로 다음 행동
-3. `current/CURRENT_STATUS.md`: 상세 구현·검증·승인 경계
+1. 루트 [AGENTS.md](../AGENTS.md): 오래 유지되는 작업 규칙
+2. 루트 [NEXT_CHAT_HANDOFF.md](../NEXT_CHAT_HANDOFF.md): 현재 checkpoint와 바로 다음 행동
+3. [CURRENT_STATUS.md](current/CURRENT_STATUS.md): 상세 구현·검증·승인 경계
 4. 현재 작업에 직접 관련된 reference/contract/guide 한두 개
 5. 과거 원인이 필요할 때만 `archive/history/` 검색
 
@@ -43,14 +43,42 @@
 - 파일명은 역할이 드러나는 대문자 snake case를 유지하되 단순 진행 버전만 다른 파일을 만들지 않습니다.
 - 아주 긴 증거는 JSON/report 또는 archive history로 분리합니다.
 
+## 작업 종료 문서 마감
+
+기능·버그·조사·설치·배포 준비 등 작업 종류와 관계없이 다음 순서로 마감합니다.
+
+1. [AGENTS.md](../AGENTS.md), [NEXT_CHAT_HANDOFF.md](../NEXT_CHAT_HANDOFF.md), [CURRENT_STATUS.md](current/CURRENT_STATUS.md)를 현재 코드·검증·승인 경계와 맞춥니다. 장기 규칙이 그대로여도 checkpoint와 다음 행동이 낡지 않았는지 확인합니다.
+2. 변경 주제와 관련된 Markdown을 `rg`로 전수 검색해 오래된 수치·경로·승인 문구를 갱신합니다.
+3. 새 문서가 정말 필요한지 확인하고, 기존 섹션으로 충분하면 통합합니다. 끝난 단계 메모는 새 current 파일로 남기지 않고 관련 `archive/history/`에 합칩니다.
+4. 이동·삭제 시 표준 Markdown 링크, checker, generated report source와 smoke를 함께 갱신합니다.
+5. 문서 구조 smoke, handoff smoke, broken link·중복·크기 예산 검사를 통과시킨 뒤에만 commit합니다.
+
+핵심 3문서는 모든 작업에서 확인하지만, 동일 내용을 채우기 위한 의미 없는 문장 추가나 날짜만 바꾸는 churn은 만들지 않습니다.
+
 ## Obsidian 사용
 
-Obsidian은 **선택형 로컬 뷰어**로만 사용합니다. 프로젝트 동작이나 Codex 품질이 Obsidian 설치 여부에 의존하면 안 됩니다.
+Obsidian 1.13.7은 이 프로젝트의 **로컬 지식 탐색기**로 사용합니다. 프로젝트 동작이나 Codex 품질이 Obsidian 설치 여부에 의존하면 안 되며, source of truth는 계속 Git의 표준 Markdown입니다.
 
-1. Obsidian에서 새 빈 vault를 만들지 말고 **이 저장소 루트 폴더**를 기존 vault로 엽니다.
+1. 등록된 **`Upgrade RPG` vault**가 이 저장소 루트 폴더인지 확인해 엽니다. 새 빈 vault를 만들지 않습니다.
 2. 내부 링크는 Obsidian 전용 wikilink보다 표준 Markdown 링크를 사용합니다.
-3. 개인 workspace, plugin, appearance 설정인 `.obsidian/`은 Git에 올리지 않습니다.
-4. 처음에는 community plugin 없이 검색, backlinks, graph만 사용합니다.
+3. 개인 workspace, plugin, appearance 설정인 `.obsidian/`은 Git에 올리지 않습니다. local 설정은 표준 Markdown 상대 링크, 자동 링크 갱신, 삭제 확인을 사용합니다.
+4. File explorer, Search, Quick switcher, Bookmarks, Backlinks, Outgoing links, Outline, Page preview, Graph, Command palette, File recovery, Workspaces 같은 core plugin만 사용합니다. community plugin, Sync, Publish, Daily notes, Canvas, Bases, Properties, Tags는 현재 필요하지 않습니다.
 5. 문서 수정은 VS Code/Codex와 Obsidian 어느 쪽에서 해도 되지만 source of truth는 Git 파일입니다.
+
+Obsidian의 local 검색 색인에서는 `.git/`, `.obsidian/`, `backend/.venv/`, `frontend/vue-app/node_modules/`, `frontend/legacy-dist/`, `local-backups/`, `local-review-artifacts/`, `.code-review-graph/`, `deploy/secrets/`를 제외합니다. `docs/archive/history/`는 과거 원인 검색에 필요하므로 제외하지 않고 Graph에서만 다음 filter로 숨길 수 있습니다.
+
+```txt
+-path:"docs/archive/history" -path:"docs/generated"
+```
+
+유용한 검색 예시는 다음과 같습니다.
+
+```txt
+path:"docs/current"
+(path:"docs/current" OR path:"docs/reference" OR path:"docs/contracts" OR path:"docs/guides")
+path:"docs/archive/history"
+```
+
+95개 문서에 YAML frontmatter, tag, alias를 일괄 추가하지 않습니다. 폴더가 lifecycle metadata 역할을 하고 있으며, 일괄 속성은 중복·stale 상태와 Codex 읽기 비용을 늘립니다. Obsidian에서 새 scratch note나 attachment를 무심코 만들지 않고, 새 Markdown은 위 파일 위치 규칙으로 먼저 분류합니다.
 
 Obsidian은 탐색에는 도움이 되지만 파일 수와 중복을 스스로 해결하지는 않습니다. 이 저장소의 품질은 폴더 규칙과 자동 구조 검사로 유지합니다.

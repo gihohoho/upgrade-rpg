@@ -1,10 +1,10 @@
-# Upgrade RPG Codex working rules — v372
+# Upgrade RPG Codex working rules — v373
 
 이 파일은 저장소 전체에 적용되는 **장기 규칙**입니다. 새 작업은 다음 순서로 시작합니다.
 
-1. `AGENTS.md`
-2. `NEXT_CHAT_HANDOFF.md`
-3. `docs/current/CURRENT_STATUS.md`
+1. [AGENTS.md](AGENTS.md)
+2. [NEXT_CHAT_HANDOFF.md](NEXT_CHAT_HANDOFF.md)
+3. [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)
 4. 작업과 직접 관련된 `docs/current/`, `docs/reference/`, `docs/contracts/` 문서
 
 과거 구현 세부는 처음부터 읽지 않고 필요할 때만 `docs/archive/history/`에서 검색합니다.
@@ -21,6 +21,7 @@
 - Windows 전역 `DEBUG=release`는 backend 설정과 충돌하므로 backend 검사 자식 프로세스에서만 `DEBUG=false`로 덮어씁니다.
 - 변경·검증 뒤 Codex가 직접 `git status`, 선택적 stage, commit, push를 수행합니다. 사용자 변경은 stage하지 않습니다. ZIP과 Git 명령 안내는 요청받지 않는 한 제공하지 않습니다.
 - 서버를 재시작하지 않았으면 완료 답변에 `서버 재시작 불필요`라고 적습니다.
+- 모든 작업의 마지막에는 [AGENTS.md](AGENTS.md), [NEXT_CHAT_HANDOFF.md](NEXT_CHAT_HANDOFF.md), [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)를 현재 상태와 맞추고, 변경 주제와 관련된 Markdown을 전수 검색해 통합·이동·archive·삭제 필요 여부까지 점검합니다. 의미 없는 복사본이나 단계별 새 문서를 만들지 않습니다.
 
 ## 변경 품질
 
@@ -51,7 +52,7 @@
 - 회원가입은 관리자 권한을 만들지 않습니다. owner bootstrap은 별도 one-shot, exact SHA, clean tracked tree, 기존 관리자 0명, 명시 확인을 모두 요구하며 성공 뒤 평문 password env를 제거합니다.
 - 공개 회원가입 전 rate limit, ASGI raw body cap, durable mail queue/timing 보호, 미인증 계정 회수, server session/revoke, save revision 충돌, CSP/XSS, 개인정보 정책을 완료해야 합니다.
 
-상세 계약은 `docs/current/ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md`와 `docs/current/ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md`를 따릅니다.
+상세 계약은 [계정·캐릭터 슬롯](docs/current/ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md)과 [이메일 인증·복구·삭제](docs/current/ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md)를 따릅니다.
 
 ## UI·아이템·이미지 규칙
 
@@ -60,7 +61,7 @@
 - 장비 계열 상위 이미지는 기본형을 직접 편집해 실루엣·각도·정체성을 유지하고 재질·룬·효과만 단계적으로 발전시킵니다. 이름 포함 관계와 확정 tier 표를 함께 사용합니다.
 - 스킬 아이콘은 작은 슬롯에서도 읽히는 단일 문양 중심입니다. 기본 자동/패시브는 초록, 버프는 파랑, 액티브는 노랑, `SQ`·`SW`·`M`은 보라 계열입니다.
 - 스킬강화권은 `Q → W → E → R → T → F → D → SQ → SW → M` 한 계열이며 직전 이미지를 직접 편집해 발전시킵니다.
-- 자산별 상세 매핑과 승인 기준은 `docs/reference/assets/`를 우선합니다.
+- 자산별 상세 매핑과 승인 기준은 [자산 reference](docs/reference/assets/SPECIAL_EQUIPMENT_AI_ICON_ASSETS.md)를 우선합니다.
 
 ## 문서 체계
 
@@ -71,15 +72,16 @@
 - `docs/guides/`: 실행 절차
 - `docs/archive/history/`: 완료된 단계의 검색용 통합 역사; 현재 규칙으로 사용 금지
 - 같은 내용을 여러 파일에 복사하지 않습니다. 새 채팅용 상태는 `NEXT_CHAT_HANDOFF.md` 한 곳에 기록하고 `NEXT_CHAT_PROMPT.md`는 그 문서를 가리키는 짧은 안내만 유지합니다.
-- 구조를 바꾸면 `docs/README.md`, `docs/current/README.md`, `docs/DOCUMENTATION_SYSTEM.md`, 문서 구조 smoke와 root handoff를 함께 갱신합니다.
-- Obsidian은 선택형 뷰어일 뿐 필수 dependency가 아닙니다. 저장소 루트를 vault로 열고 표준 Markdown 링크를 사용하며 개인 `.obsidian/` 설정은 commit하지 않습니다.
+- 구조를 바꾸면 [Docs Hub](docs/README.md), [Current Index](docs/current/README.md), [Documentation System](docs/DOCUMENTATION_SYSTEM.md), 문서 구조 smoke와 root handoff를 함께 갱신합니다.
+- Obsidian은 설치된 로컬 지식 탐색기로 사용합니다. 저장소 루트를 vault로 열고 표준 Markdown 링크·Backlinks·Graph·Search를 사용하되, 프로젝트와 Codex는 Obsidian 없이도 동일하게 동작해야 합니다. 개인 `.obsidian/` 설정과 community plugin은 commit하지 않습니다.
+- 작업 종료 문서 마감 절차와 Obsidian 검색·제외 경로는 [Documentation System](docs/DOCUMENTATION_SYSTEM.md)을 따릅니다.
 
 ## 현재 체크포인트
 
 ```txt
-latest: v372.documentation-system-consolidated
-strict result: documentation-system-consolidated
-next safe stage: owner-approve-email-validator-install-and-review-v371-migration-source
+latest: v373.email-validator-linux-locks-obsidian-ready
+strict result: email-validator-linux-locks-obsidian-ready
+next safe stage: owner-review-v371-migration-source-and-approve-isolated-roundtrip
 local source head: v371_email_identity_lifecycle
 local/Neon DB current: v295_initial_schema
 v371 migration applied: no
@@ -90,7 +92,9 @@ production approval/execution: no/no
 
 - v371 source는 이메일 인증·복구·삭제, `authVersion`, Brevo HTTPS renderer/transport, owner bootstrap과 migration source를 준비했습니다.
 - v372는 기능을 바꾸지 않고 Markdown 243개를 95개로 정리하고 `docs/current`의 실제 현재 문서를 11개로 줄였습니다. entry/current/reference/generated/archive 역할과 구조 smoke를 고정했습니다.
-- `email-validator==2.3.0`은 아직 설치·lock 반영 전이며 없으면 503으로 닫힙니다.
+- v373은 승인된 `email-validator==2.3.0`과 전이 의존성 `dnspython==2.8.0`을 backend `.venv`와 재현 가능한 Linux runtime/dev lock에 반영했습니다. dependency가 임의로 빠지면 이메일 동작은 계속 503으로 fail-closed합니다.
+- Obsidian 1.13.7에서 저장소 루트를 `Upgrade RPG` local vault로 등록하고 ignored `.obsidian/` 설정과 핵심 문서·색인의 표준 Markdown 링크를 연결했습니다. Obsidian은 로컬 탐색기이며 Git source of truth를 대체하지 않습니다.
+- Linux lock check, `pip check`, email normalize/import-failure 503, v371/v370 focused, GHCR 재현성, compileall, blocking-I/O, 문서 구조와 전체 core smoke가 PASS했습니다.
 - Brevo 계정·발신자·API key·secret, 실제 메일, DB migration, owner bootstrap, 새 image/static 배포는 실행하지 않았습니다.
 - source-prepared 즉시 수정 blocker는 없습니다. 공개 배포 blocker는 rate limit/queue/body cap, 미인증 계정 회수, session/revoke, save CAS, CSP/XSS·개인정보 정책입니다.
 - 검증된 공개 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`, backend는 `https://upgrade-rpg-api.onrender.com`입니다.

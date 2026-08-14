@@ -66,7 +66,7 @@ v371 같은 실제 revision의 운영 migration은 전용 guard가 exact target 
 - local source graph head: `v371_email_identity_lifecycle`
 - local/live/Neon DB current: `v295_initial_schema`
 - v371 revision source/parity smoke: 준비/PASS
-- `email-validator 2.3.0` dependency/lock: owner 승인 대기
+- `email-validator 2.3.0` dependency/lock: v373 반영·검증 대상
 - isolated migration review/roundtrip: 후속 별도 준비
 - local/Neon upgrade/downgrade/stamp: 미승인·0회
 - Brevo 설정, owner bootstrap, app deploy: migration 승인과 분리

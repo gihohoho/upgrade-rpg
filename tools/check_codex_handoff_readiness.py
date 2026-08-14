@@ -748,9 +748,9 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require("alembic" not in production_cmd, "container startup must not run Alembic")
 
     current_markers = (
-        "v372.documentation-system-consolidated",
-        "documentation-system-consolidated",
-        "owner-approve-email-validator-install-and-review-v371-migration-source",
+        "v373.email-validator-linux-locks-obsidian-ready",
+        "email-validator-linux-locks-obsidian-ready",
+        "owner-review-v371-migration-source-and-approve-isolated-roundtrip",
     )
     for path, text in (
         ("AGENTS.md", agents),
@@ -767,7 +767,13 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require("GITHUB_TOKEN" in ghcr_doc, "GHCR policy doc is missing credential strategy")
     _require("required reviewer" in security_doc, "security checklist is missing reviewer gate")
     _require("실제 secret 값은 적지 않습니다" in security_doc, "security checklist could expose secrets")
-    _require("Upgrade RPG Docs Hub" in docs_index and "archive/history/" in docs_index, "docs index is not current")
+    _require(
+        "Upgrade RPG Docs Hub" in docs_index
+        and "Reference Index" in docs_index
+        and "Generated Index" in docs_index
+        and "Archive Index" in docs_index,
+        "docs index is not current",
+    )
     workflow_files = {
         path.relative_to(root).as_posix()
         for path in (root / ".github/workflows").rglob("*")

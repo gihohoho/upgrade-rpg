@@ -140,9 +140,10 @@ v350 당시에는 콘텐츠 추가·수정을 시작하기 좋은 시점이 아�
 
 ## 필요할 수 있는 사용자 조치
 
-현재 `email-validator 2.3.0` 설치와 lock 갱신은 기호의 승인을 기다립니다. 그 뒤에도
-DB migration apply, Brevo 계정·발신자·전용 API key, owner bootstrap과 공개 배포는 서로
-다른 승인 단계입니다. 비밀번호, API key, dev key와 token은 채팅에 보내지 않습니다.
+`email-validator 2.3.0` 설치와 Linux lock 갱신은 v373에서 완료했습니다. 그 뒤의 isolated
+migration 검증, DB migration apply, Brevo 계정·발신자·전용 API key, owner bootstrap과
+공개 배포는 서로 다른 승인 단계입니다. 비밀번호, API key, dev key와 token은 채팅에
+보내지 않습니다.
 rate limit, 서버측 session/refresh·폐기, ASGI raw body cap, 다중 기기 revision,
 HTTPS/CSP/XSS, 개인정보·삭제 정책과 별도 exact-SHA gate 전에는 v371을 공개 배포하지
 않습니다.

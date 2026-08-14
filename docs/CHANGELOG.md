@@ -1,3 +1,12 @@
+# v373.email-validator-linux-locks-obsidian-ready
+
+- 승인된 `email-validator==2.3.0`과 `dnspython==2.8.0`을 backend `.venv`와 Linux runtime/musllinux/dev lock에 반영하고 GHCR 재현성 입력 SHA를 갱신했습니다.
+- lock fresh resolve로 함께 갱신된 Starlette·Mako·websockets 등 전이 dependency를 인증·route·packaging·core smoke로 회귀 검증하도록 고정했습니다.
+- 설치 여부와 무관하게 `email-validator` import 실패를 강제로 모사해 이메일 가입이 `503`으로 fail-closed하는 계약을 계속 검사합니다.
+- Obsidian 1.13.7에 저장소 루트를 `Upgrade RPG` local vault로 등록하고 ignored `.obsidian/` 설정을 준비했으며, 핵심 entry/current/reference/archive 색인에 표준 Markdown 링크망을 연결했습니다.
+- 매 작업 종료 때 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `CURRENT_STATUS.md`와 관련 Markdown의 통합·이동·archive·삭제 여부까지 점검하는 문서 마감 절차를 장기 규칙과 smoke에 추가했습니다.
+- 실제 DB 연결·write·migration, Brevo 설정·메일, owner bootstrap, GHCR/Render 배포는 실행하지 않았습니다.
+
 # v372.documentation-system-consolidated
 
 - Markdown을 243개에서 95개로 줄이고 `docs/current/`의 실제 현재 문서를 11개로 정리했습니다.

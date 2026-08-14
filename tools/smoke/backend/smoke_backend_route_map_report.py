@@ -36,7 +36,7 @@ REQUIRED_TEXT = [
     "POST /api/v1/admin/master-data/create-apply",
     "POST /api/v1/game/save",
     "query 이름은 `id`",
-    "owner-approve-email-validator-install-and-review-v371-migration-source",
+    "owner-review-v371-migration-source-and-approve-isolated-roundtrip",
 ]
 
 FORBIDDEN_TEXT = [

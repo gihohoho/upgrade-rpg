@@ -81,7 +81,7 @@ for (const obsolete of [
 }
 
 const docsIndex = mustExist("docs/README.md");
-for (const marker of ["Upgrade RPG Docs Hub", "current/", "reference/", "generated/", "archive/history/"]) {
+for (const marker of ["Upgrade RPG Docs Hub", "Current Status", "Reference Index", "Generated Index", "Archive Index", "Obsidian에서 열기"]) {
   if (!docsIndex.includes(marker)) throw new Error(`docs index missing marker: ${marker}`);
 }
 
@@ -145,5 +145,10 @@ if (duplicates.length) throw new Error(`exact Markdown duplicates remain: ${JSON
 
 const gitignore = mustExist(".gitignore");
 if (!gitignore.includes(".obsidian/")) throw new Error(".obsidian/ must remain ignored");
+
+const documentationSystem = mustExist("docs/DOCUMENTATION_SYSTEM.md");
+for (const marker of ["작업 종료 문서 마감", "표준 Markdown 링크", "community plugin", "path:\"docs/current\""]) {
+  if (!documentationSystem.includes(marker)) throw new Error(`documentation system missing marker: ${marker}`);
+}
 
 console.log(`docs structure smoke passed: markdown=${markdown.length}, current=${current.length}`);
