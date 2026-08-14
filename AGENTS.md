@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v374
+# Upgrade RPG Codex working rules — v375
 
 이 파일은 저장소 전체에 적용되는 **장기 규칙**입니다. 새 작업은 다음 순서로 시작합니다.
 
@@ -22,6 +22,7 @@
 - 변경·검증 뒤 Codex가 직접 `git status`, 선택적 stage, commit, push를 수행합니다. 사용자 변경은 stage하지 않습니다. ZIP과 Git 명령 안내는 요청받지 않는 한 제공하지 않습니다.
 - 서버를 재시작하지 않았으면 완료 답변에 `서버 재시작 불필요`라고 적습니다.
 - 모든 작업의 마지막에는 [AGENTS.md](AGENTS.md), [NEXT_CHAT_HANDOFF.md](NEXT_CHAT_HANDOFF.md), [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)를 현재 상태와 맞추고, 변경 주제와 관련된 Markdown을 전수 검색해 통합·이동·archive·삭제 필요 여부까지 점검합니다. 의미 없는 복사본이나 단계별 새 문서를 만들지 않습니다.
+- Obsidian의 ignored 로컬 vault 설정, 북마크, 검색, Graph 색상 그룹과 workspace는 사용자가 직접 관리하지 않고 Codex가 탐색 효율 중심으로 유지합니다. Graph가 복잡해져도 문서 범위를 숨기기보다 폴더별로 구분하며, 프로젝트 동작은 Obsidian에 의존하지 않습니다.
 
 ## 변경 품질
 
@@ -30,6 +31,7 @@
 - 동작·수치·상태를 바꾸면 관련 설명, source/generated seed, 회귀 검사와 현재 문서를 전수 검색해 동기화합니다.
 - 파괴적 동작은 브라우저 기본 `alert`/`confirm` 대신 게임 UI와 일관된 확인 모달을 사용하며 실행 전 영향과 반환값을 보여줍니다.
 - 코드나 구조를 바꾸면 관련 focused smoke, Python compileall, JavaScript syntax와 `bash tools/run_smoke_core.sh`를 위험도에 맞게 검증합니다. Vue를 바꾼 경우에만 `frontend/vue-app`에서 `.venv` 없이 `npm ci`와 `npm run build`를 실행합니다.
+- 기존 사용자 변경이 공백·들여쓰기·정렬만 바꾼 비기능 포맷 변경임을 기계적으로 확인한 경우에는 별도 보존하지 않고 현재 작업과 함께 commit할 수 있습니다. 선택자·속성·값·실행 토큰이 달라지면 사용자 기능 변경으로 분리해 보존합니다.
 
 ## 로컬 자원과 안전 경계
 
@@ -73,14 +75,13 @@
 - `docs/archive/history/`: 완료된 단계의 검색용 통합 역사; 현재 규칙으로 사용 금지
 - 같은 내용을 여러 파일에 복사하지 않습니다. 새 채팅용 상태는 `NEXT_CHAT_HANDOFF.md` 한 곳에 기록하고 `NEXT_CHAT_PROMPT.md`는 그 문서를 가리키는 짧은 안내만 유지합니다.
 - 구조를 바꾸면 [Docs Hub](docs/README.md), [Current Index](docs/current/README.md), [Documentation System](docs/DOCUMENTATION_SYSTEM.md), 문서 구조 smoke와 root handoff를 함께 갱신합니다.
-- Obsidian은 설치된 로컬 지식 탐색기로 사용합니다. 저장소 루트를 vault로 열고 표준 Markdown 링크·Backlinks·Graph·Search를 사용하되, 프로젝트와 Codex는 Obsidian 없이도 동일하게 동작해야 합니다. 개인 `.obsidian/` 설정과 community plugin은 commit하지 않습니다.
-- 작업 종료 문서 마감 절차와 Obsidian 검색·제외 경로는 [Documentation System](docs/DOCUMENTATION_SYSTEM.md)을 따릅니다.
+- 작업 종료 문서 마감 절차는 [Documentation System](docs/DOCUMENTATION_SYSTEM.md)을 따릅니다. 개인 `.obsidian/` 설정은 Git에 commit하지 않고 Codex가 로컬에서 관리합니다.
 
 ## 현재 체크포인트
 
 ```txt
-latest: v374.local-run-readme-obsidian-usage-ready
-strict result: local-run-readme-obsidian-usage-ready
+latest: v375.obsidian-workspace-automation-style-format-accepted
+strict result: obsidian-workspace-automation-style-format-accepted
 next safe stage: owner-review-v371-migration-source-and-approve-isolated-roundtrip
 local source head: v371_email_identity_lifecycle
 local/Neon DB current: v295_initial_schema
@@ -96,6 +97,8 @@ production approval/execution: no/no
 - Obsidian 1.13.7에서 저장소 루트를 `Upgrade RPG` local vault로 등록하고 ignored `.obsidian/` 설정과 핵심 문서·색인의 표준 Markdown 링크를 연결했습니다. Obsidian은 로컬 탐색기이며 Git source of truth를 대체하지 않습니다.
 - Linux lock check, `pip check`, email normalize/import-failure 503, v371/v370 focused, GHCR 재현성, compileall, blocking-I/O, 문서 구조와 전체 core smoke가 PASS했습니다.
 - v374는 루트 README에 최초 준비·DB/backend/legacy/Vue·확인 URL·안전 종료를 위치/`.venv`/설치 상태와 함께 통합하고, Obsidian Graph·Local Graph·Backlinks·Bookmarks의 실제 사용법을 문서화했습니다.
+- v375는 사용자용 Obsidian 사용 설명을 추적 문서에서 제거하고, ignored 로컬 vault의 북마크·저장 검색·전역/로컬 Graph·workspace를 Codex가 직접 관리하도록 전환했습니다. 의미가 동일한 `src/styles/style.css` 포맷 정렬도 검증 뒤 함께 반영합니다.
+- Obsidian 1.13.7 재실행 뒤 북마크 8개, Graph 색상 그룹 13개, Local Graph 깊이 3과 필수 pane을 확인했고, CSS PostCSS AST 동등성·문서/정적 배포 focused·전체 core smoke가 PASS했습니다.
 - README 명령 계약·위험 명령 차단·Markdown 링크/중복/크기와 handoff readiness가 PASS했고, 현재 legacy 게임/관리자 HTTP 200과 기존 PostgreSQL healthy를 읽기 전용으로 확인했습니다.
 - Brevo 계정·발신자·API key·secret, 실제 메일, DB migration, owner bootstrap, 새 image/static 배포는 실행하지 않았습니다.
 - source-prepared 즉시 수정 blocker는 없습니다. 공개 배포 blocker는 rate limit/queue/body cap, 미인증 계정 회수, session/revoke, save CAS, CSP/XSS·개인정보 정책입니다.

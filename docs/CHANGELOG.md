@@ -1,3 +1,11 @@
+# v375.obsidian-workspace-automation-style-format-accepted
+
+- 사용자에게 Obsidian 설정 절차를 맡기지 않고 ignored 로컬 vault의 핵심 문서 북마크, 저장 검색, 폴더별 Graph 색상 그룹, Local Graph 깊이와 탐색 workspace를 Codex가 직접 관리하도록 전환했습니다.
+- `docs/DOCUMENTATION_SYSTEM.md`에서는 사용자용 Obsidian 설명을 제거하고 문서 위치·중복·크기·작업 종료 마감 규칙만 유지했습니다.
+- `src/styles/style.css`의 기존 사용자 변경은 선택자·속성·값이 같은 비기능 포맷 정렬인지 기계적으로 검증한 뒤 함께 반영합니다.
+- Obsidian 1.13.7 재실행 뒤 북마크 8개, Graph 색상 그룹 13개, Local Graph 깊이 3과 필수 pane 보존을 확인했고, CSS PostCSS AST 동등성·문서/정적 배포 focused·전체 core smoke를 통과했습니다.
+- 게임 기능·dependency·DB·Brevo·owner bootstrap·배포는 변경하거나 실행하지 않았습니다.
+
 # v374.local-run-readme-obsidian-usage-ready
 
 - 루트 README에 Git Bash 기준 최초 backend 준비, PostgreSQL/Adminer, FastAPI, legacy static, 선택적 Vue, 확인 URL과 안전 종료 절차를 모두 실행 위치·`.venv`·설치 상태와 함께 통합했습니다.

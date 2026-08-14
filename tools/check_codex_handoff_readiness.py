@@ -748,8 +748,8 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require("alembic" not in production_cmd, "container startup must not run Alembic")
 
     current_markers = (
-        "v374.local-run-readme-obsidian-usage-ready",
-        "local-run-readme-obsidian-usage-ready",
+        "v375.obsidian-workspace-automation-style-format-accepted",
+        "obsidian-workspace-automation-style-format-accepted",
         "owner-review-v371-migration-source-and-approve-isolated-roundtrip",
     )
     for path, text in (

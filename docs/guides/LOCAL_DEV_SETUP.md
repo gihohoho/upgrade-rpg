@@ -1,4 +1,4 @@
-# Local Dev Setup — v374
+# Local Dev Setup — v375
 
 매일 사용하는 설치·실행·종료 명령은 루트 [README.md](../../README.md)의 `로컬에서 게임 확인하기`가 단일 기준입니다. 이 문서는 새 PC와 오류 상황에서 확인할 안전 경계만 보충합니다.
 

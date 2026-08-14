@@ -7,8 +7,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v374.local-run-readme-obsidian-usage-ready"
-RESULT = "local-run-readme-obsidian-usage-ready"
+VERSION = "v375.obsidian-workspace-automation-style-format-accepted"
+RESULT = "obsidian-workspace-automation-style-format-accepted"
 NEXT_STAGE = "owner-review-v371-migration-source-and-approve-isolated-roundtrip"
 SOURCE_HEAD = "v371_email_identity_lifecycle"
 APPLIED_HEAD = "v295_initial_schema"
@@ -76,9 +76,13 @@ def main() -> int:
         "NEXT_CHAT_HANDOFF.md",
         "docs/generated/",
         "docs/archive/history/",
-        "Obsidian",
-        ".obsidian/",
         "작업 종료 문서 마감",
+    )
+    require_markers(
+        "AGENTS.md",
+        "Obsidian의 ignored 로컬 vault 설정",
+        "Codex가 탐색 효율 중심으로 유지",
+        "비기능 포맷 변경",
     )
 
     for obsolete in (

@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-웹 기반 방치형 Upgrade RPG 프로젝트입니다. 공개 버전은 v351, 로컬 checkpoint는 v374이며 Alembic source head는 v371, 실제 local/Neon DB는 v295입니다.
+웹 기반 방치형 Upgrade RPG 프로젝트입니다. 공개 버전은 v351, 로컬 checkpoint는 v375이며 Alembic source head는 v371, 실제 local/Neon DB는 v295입니다.
 
 ## 새 작업 시작
 
@@ -8,7 +8,7 @@
 2. [NEXT_CHAT_HANDOFF.md](NEXT_CHAT_HANDOFF.md)
 3. [현재 상태](docs/current/CURRENT_STATUS.md)
 
-전체 문서는 [Docs Hub](docs/README.md), 문서 운영과 Obsidian 사용법은 [Documentation System](docs/DOCUMENTATION_SYSTEM.md)을 봅니다.
+전체 문서는 [Docs Hub](docs/README.md), 문서 위치·중복·마감 규칙은 [Documentation System](docs/DOCUMENTATION_SYSTEM.md)을 봅니다.
 
 ## 로컬에서 게임 확인하기
 
@@ -124,5 +124,5 @@ target: linux/amd64
 database: Neon PostgreSQL 16 Singapore
 hosting: Render Free Web Service + Static Site
 public backend/static: v351 Live
-local checkpoint: v374 / migration source v371 / DB still v295
+local checkpoint: v375 / migration source v371 / DB still v295
 ```

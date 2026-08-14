@@ -81,9 +81,10 @@ for (const obsolete of [
 }
 
 const docsIndex = mustExist("docs/README.md");
-for (const marker of ["Upgrade RPG Docs Hub", "Current Status", "Reference Index", "Generated Index", "Archive Index", "Obsidian에서 열기"]) {
+for (const marker of ["Upgrade RPG Docs Hub", "Current Status", "Reference Index", "Generated Index", "Archive Index"]) {
   if (!docsIndex.includes(marker)) throw new Error(`docs index missing marker: ${marker}`);
 }
+if (docsIndex.includes("## Obsidian에서 열기")) throw new Error("docs index must not contain user-run Obsidian instructions");
 
 const prompt = mustExist("NEXT_CHAT_PROMPT.md");
 for (const marker of ["AGENTS.md", "NEXT_CHAT_HANDOFF.md", "docs/current/CURRENT_STATUS.md"]) {
@@ -175,14 +176,16 @@ const documentationSystem = mustExist("docs/DOCUMENTATION_SYSTEM.md");
 for (const marker of [
   "작업 종료 문서 마감",
   "표준 Markdown 링크",
-  "community plugin",
-  "path:\"docs/current\"",
-  "뇌처럼 보이는 Graph의 의미",
-  "Local Graph 깊이 2",
-  "Backlinks",
-  "Bookmarks",
+  "docs/generated/",
+  "docs/archive/history/",
 ]) {
   if (!documentationSystem.includes(marker)) throw new Error(`documentation system missing marker: ${marker}`);
+}
+if (documentationSystem.includes("## Obsidian 사용")) throw new Error("documentation system must not contain user-run Obsidian instructions");
+
+const agents = mustExist("AGENTS.md");
+for (const marker of ["Obsidian의 ignored 로컬 vault 설정", "Codex가 탐색 효율 중심으로 유지", "비기능 포맷 변경"]) {
+  if (!agents.includes(marker)) throw new Error(`AGENTS.md missing persistent local-tool rule: ${marker}`);
 }
 
 console.log(`docs structure smoke passed: markdown=${markdown.length}, current=${current.length}`);

@@ -32,7 +32,3 @@
 - 원본 개별 파일은 Git history에서 복원할 수 있습니다.
 
 문서를 새로 만들거나 이동하기 전에는 [Documentation System](DOCUMENTATION_SYSTEM.md)의 위치·중복·크기 규칙을 따릅니다.
-
-## Obsidian에서 열기
-
-Obsidian에서 이 저장소 루트 `Upgrade RPG` 폴더를 vault로 엽니다. 별도 빈 vault나 community plugin은 필요하지 않습니다. 시작할 때는 [AGENTS.md](../AGENTS.md), [NEXT_CHAT_HANDOFF.md](../NEXT_CHAT_HANDOFF.md), [Current Status](current/CURRENT_STATUS.md)를 bookmark하고, Search·Backlinks·Graph로 위 표준 Markdown 링크를 따라갑니다. 자세한 local 검색식과 제외 경로는 [Documentation System](DOCUMENTATION_SYSTEM.md)에 있습니다.
