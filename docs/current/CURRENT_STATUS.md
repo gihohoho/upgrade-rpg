@@ -1,12 +1,12 @@
-# Current Status — v373
+# Current Status — v374
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v373.email-validator-linux-locks-obsidian-ready
-strict result: email-validator-linux-locks-obsidian-ready
+latest: v374.local-run-readme-obsidian-usage-ready
+strict result: local-run-readme-obsidian-usage-ready
 next safe stage: owner-review-v371-migration-source-and-approve-isolated-roundtrip
 local Alembic source head: v371_email_identity_lifecycle
 local/Neon DB current: v295_initial_schema
@@ -19,6 +19,7 @@ production approval/execution: no/no
 
 - v372: 기능·DB·배포를 바꾸지 않고 Markdown 243개를 95개로 통합하고 `docs/current`의 실제 현재 문서를 11개로 줄였습니다. 문서 역할과 크기·중복·링크 smoke를 추가했습니다.
 - v373: `email-validator==2.3.0` 설치와 Linux dependency lock/GHCR 재현성 해시 갱신, Obsidian 1.13.7 `Upgrade RPG` local vault 등록, 표준 Markdown 링크망과 작업 종료 문서 마감 규칙을 준비했습니다.
+- v374: 루트 README에 현재 로컬 실행 절차를 단일 기준으로 통합하고, Obsidian Graph·Local Graph·Backlinks·Bookmarks를 프로젝트 구조에 맞게 사용하는 방법과 한계를 문서화했습니다.
 - v370: 회원가입·로그인, Bearer 인증, 계정별 캐릭터 슬롯 8개, 캐릭터별 local/DB 저장 격리, 관리자 회원 목록·상세·정지/해제와 감사 로그
 - v371: 가입 이메일 필수화, 이메일 인증, 인증 재전송, 아이디 찾기, 비밀번호 재설정, 이메일 최종 확인을 거친 일반 회원 계정 삭제
 - 비밀번호 재설정·계정 상태 변경은 `authVersion`을 올려 기존 access token을 무효화합니다.
@@ -37,6 +38,8 @@ production approval/execution: no/no
 
 ## 검증 결과
 
+- v374 README의 6개 Bash block은 모두 실행 위치·`.venv`·설치 상태를 가지며 필수 서버 명령/URL, 위험 DB 명령 code-block 차단, Markdown 링크·중복·크기·handoff readiness PASS
+- 기존 legacy `index.html`·`admin.html` HTTP 200, PostgreSQL container healthy를 읽기 전용 확인; backend·Adminer 시작/중지와 DB write 0회
 - v373 Linux dependency lock `--check`, `pip check`, `email-validator 2.3.0` 정규화와 세 lock의 `email-validator`/`dnspython` exact pin 검사 PASS
 - 설치 여부와 무관한 강제 import-failure 가입 `503`, v371 email/migration/owner와 v370 auth/admin focused 회귀 PASS
 - 갱신된 5개 dependency/GHCR SHA의 strict·변조 fail-closed 공급망 검사 PASS

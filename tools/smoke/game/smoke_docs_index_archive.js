@@ -91,6 +91,31 @@ for (const marker of ["AGENTS.md", "NEXT_CHAT_HANDOFF.md", "docs/current/CURRENT
 }
 if (prompt.includes("latest:")) throw new Error("next-chat prompt must not duplicate mutable status markers");
 
+const rootReadme = mustExist("README.md");
+for (const marker of [
+  "로컬에서 게임 확인하기",
+  "docker compose up -d postgres adminer",
+  "python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000",
+  "python -m http.server 5500 --bind 127.0.0.1",
+  "http://127.0.0.1:5500/index.html",
+  "http://127.0.0.1:5500/admin.html",
+  "docker compose stop",
+]) {
+  if (!rootReadme.includes(marker)) throw new Error(`root README missing local-run marker: ${marker}`);
+}
+const bashBlocks = [...rootReadme.matchAll(/```bash\r?\n([\s\S]*?)```/g)];
+if (bashBlocks.length !== 6) throw new Error(`root README bash block count differs: ${bashBlocks.length} !== 6`);
+for (const match of bashBlocks) {
+  const prefix = rootReadme.slice(Math.max(0, match.index - 420), match.index);
+  for (const label of ["실행 위치:", "Python `.venv` 상태:", "새 설치 여부:"]) {
+    if (!prefix.includes(label)) throw new Error(`root README command block missing label: ${label}`);
+  }
+}
+const executableGuidance = bashBlocks.map((match) => match[1]).join("\n");
+for (const unsafe of ["docker compose down -v", "setup_dev_db.py --reset", "alembic upgrade", "alembic downgrade", "alembic stamp"]) {
+  if (executableGuidance.includes(unsafe)) throw new Error(`unsafe command entered README code block: ${unsafe}`);
+}
+
 const sizeBudgets = new Map([
   ["AGENTS.md", 20000],
   ["NEXT_CHAT_PROMPT.md", 2500],
@@ -147,7 +172,16 @@ const gitignore = mustExist(".gitignore");
 if (!gitignore.includes(".obsidian/")) throw new Error(".obsidian/ must remain ignored");
 
 const documentationSystem = mustExist("docs/DOCUMENTATION_SYSTEM.md");
-for (const marker of ["작업 종료 문서 마감", "표준 Markdown 링크", "community plugin", "path:\"docs/current\""]) {
+for (const marker of [
+  "작업 종료 문서 마감",
+  "표준 Markdown 링크",
+  "community plugin",
+  "path:\"docs/current\"",
+  "뇌처럼 보이는 Graph의 의미",
+  "Local Graph 깊이 2",
+  "Backlinks",
+  "Bookmarks",
+]) {
   if (!documentationSystem.includes(marker)) throw new Error(`documentation system missing marker: ${marker}`);
 }
 

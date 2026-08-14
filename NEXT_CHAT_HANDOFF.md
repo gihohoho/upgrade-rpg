@@ -1,10 +1,10 @@
-# Upgrade RPG Codex handoff — v373
+# Upgrade RPG Codex handoff — v374
 
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 근거는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)에서 확인합니다.
 
 ```txt
-latest: v373.email-validator-linux-locks-obsidian-ready
-strict result: email-validator-linux-locks-obsidian-ready
+latest: v374.local-run-readme-obsidian-usage-ready
+strict result: local-run-readme-obsidian-usage-ready
 next safe stage: owner-review-v371-migration-source-and-approve-isolated-roundtrip
 source head: v371_email_identity_lifecycle
 local/Neon DB current: v295_initial_schema
@@ -21,6 +21,9 @@ public backend/static: v351 Live
 - source-prepared 즉시 수정 blocker는 없습니다. 공개 회원가입은 rate limit, mail queue/timing, raw body cap, 미인증 계정 회수, server session/revoke, save CAS, CSP/XSS·개인정보 정책이 남아 차단 상태입니다.
 - 설치된 Obsidian 1.13.7에 저장소 루트를 `Upgrade RPG` local vault로 등록하고 ignored 설정과 표준 Markdown 링크망을 준비했습니다. 프로젝트에는 Obsidian plugin dependency가 없습니다.
 - Linux lock check·`pip check`, packaging/강제 import-failure 503, v371 migration/owner와 v370 auth/admin 회귀, GHCR 재현성, compileall·blocking-I/O, 문서 구조와 전체 core smoke가 PASS했습니다.
+- 루트 README에 로컬 최초 준비, PostgreSQL/Adminer, backend, 실제 legacy 게임, 선택적 Vue, 확인 URL과 안전 종료 절차를 각 실행 위치·`.venv`·설치 상태와 함께 통합했습니다.
+- Obsidian의 뇌 모양 화면은 내부 링크를 그리는 Graph임을 명시하고 current/reference/archive 색상 group, Local Graph depth 2, Backlinks와 Bookmark 사용 순서를 추가했습니다.
+- README 실행 명령·위험 명령 차단·문서 구조/handoff smoke가 PASS했고, 기존 legacy 게임·관리자 HTTP 200과 PostgreSQL healthy를 읽기 전용으로 확인했습니다. backend는 새로 시작하지 않았습니다.
 
 ## 바로 할 일
 
@@ -49,5 +52,6 @@ public backend/static: v351 Live
 - 새 채팅은 [AGENTS.md](AGENTS.md) → 이 문서 → [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)만 먼저 읽습니다.
 - 매 작업 종료 시 위 핵심 3문서와 관련 Markdown을 함께 마감 점검하는 규칙을 장기 규칙과 구조 smoke에 반영했습니다.
 - Obsidian에서는 저장소 루트를 vault로 사용하고, `.venv`·`node_modules`·build/backup/secret 경로는 local 검색에서 제외합니다. 일괄 frontmatter·tag와 community plugin은 사용하지 않습니다.
+- 오래된 v077 `LOCAL_DEV_SETUP`은 README를 단일 실행 기준으로 가리키는 v374 안전 문제 해결 guide로 축소했습니다.
 
 문서 체계는 [Documentation System](docs/DOCUMENTATION_SYSTEM.md), 전체 색인은 [Docs Hub](docs/README.md)가 기준입니다.

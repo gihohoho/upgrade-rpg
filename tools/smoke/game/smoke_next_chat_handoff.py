@@ -7,8 +7,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v373.email-validator-linux-locks-obsidian-ready"
-RESULT = "email-validator-linux-locks-obsidian-ready"
+VERSION = "v374.local-run-readme-obsidian-usage-ready"
+RESULT = "local-run-readme-obsidian-usage-ready"
 NEXT_STAGE = "owner-review-v371-migration-source-and-approve-isolated-roundtrip"
 SOURCE_HEAD = "v371_email_identity_lifecycle"
 APPLIED_HEAD = "v295_initial_schema"

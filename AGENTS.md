@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v373
+# Upgrade RPG Codex working rules — v374
 
 이 파일은 저장소 전체에 적용되는 **장기 규칙**입니다. 새 작업은 다음 순서로 시작합니다.
 
@@ -79,8 +79,8 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v373.email-validator-linux-locks-obsidian-ready
-strict result: email-validator-linux-locks-obsidian-ready
+latest: v374.local-run-readme-obsidian-usage-ready
+strict result: local-run-readme-obsidian-usage-ready
 next safe stage: owner-review-v371-migration-source-and-approve-isolated-roundtrip
 local source head: v371_email_identity_lifecycle
 local/Neon DB current: v295_initial_schema
@@ -95,6 +95,8 @@ production approval/execution: no/no
 - v373은 승인된 `email-validator==2.3.0`과 전이 의존성 `dnspython==2.8.0`을 backend `.venv`와 재현 가능한 Linux runtime/dev lock에 반영했습니다. dependency가 임의로 빠지면 이메일 동작은 계속 503으로 fail-closed합니다.
 - Obsidian 1.13.7에서 저장소 루트를 `Upgrade RPG` local vault로 등록하고 ignored `.obsidian/` 설정과 핵심 문서·색인의 표준 Markdown 링크를 연결했습니다. Obsidian은 로컬 탐색기이며 Git source of truth를 대체하지 않습니다.
 - Linux lock check, `pip check`, email normalize/import-failure 503, v371/v370 focused, GHCR 재현성, compileall, blocking-I/O, 문서 구조와 전체 core smoke가 PASS했습니다.
+- v374는 루트 README에 최초 준비·DB/backend/legacy/Vue·확인 URL·안전 종료를 위치/`.venv`/설치 상태와 함께 통합하고, Obsidian Graph·Local Graph·Backlinks·Bookmarks의 실제 사용법을 문서화했습니다.
+- README 명령 계약·위험 명령 차단·Markdown 링크/중복/크기와 handoff readiness가 PASS했고, 현재 legacy 게임/관리자 HTTP 200과 기존 PostgreSQL healthy를 읽기 전용으로 확인했습니다.
 - Brevo 계정·발신자·API key·secret, 실제 메일, DB migration, owner bootstrap, 새 image/static 배포는 실행하지 않았습니다.
 - source-prepared 즉시 수정 blocker는 없습니다. 공개 배포 blocker는 rate limit/queue/body cap, 미인증 계정 회수, session/revoke, save CAS, CSP/XSS·개인정보 정책입니다.
 - 검증된 공개 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`, backend는 `https://upgrade-rpg-api.onrender.com`입니다.

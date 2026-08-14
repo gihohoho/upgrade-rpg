@@ -1,3 +1,11 @@
+# v374.local-run-readme-obsidian-usage-ready
+
+- 루트 README에 Git Bash 기준 최초 backend 준비, PostgreSQL/Adminer, FastAPI, legacy static, 선택적 Vue, 확인 URL과 안전 종료 절차를 모두 실행 위치·`.venv`·설치 상태와 함께 통합했습니다.
+- 위험한 DB reset·volume 삭제·승인 전 Alembic 명령은 실행 code block에서 제외하고, 새 PC·빈 DB에서는 Codex에게 현재 migration 경계를 먼저 확인하도록 명시했습니다.
+- 오래된 v077 local setup guide를 README 단일 실행 기준의 v374 문제 해결·DB 안전 경계 문서로 축소했습니다.
+- Obsidian Graph가 Markdown 내부 링크의 시각화라는 점, 전체 Graph와 Local Graph의 차이, current/reference/archive 색상 group, depth 2, Backlinks·Bookmarks·검색의 추천 순서를 기록했습니다.
+- 게임 코드·dependency·DB·Brevo·owner bootstrap·배포는 변경하거나 실행하지 않았습니다.
+
 # v373.email-validator-linux-locks-obsidian-ready
 
 - 승인된 `email-validator==2.3.0`과 `dnspython==2.8.0`을 backend `.venv`와 Linux runtime/musllinux/dev lock에 반영하고 GHCR 재현성 입력 SHA를 갱신했습니다.

@@ -1,209 +1,67 @@
-# Local Dev Setup - v077
+# Local Dev Setup — v374
 
-이 문서는 `v077_backend_env_fix_and_seed_extractor` 기준 로컬 개발환경 세팅 순서입니다.
+매일 사용하는 설치·실행·종료 명령은 루트 [README.md](../../README.md)의 `로컬에서 게임 확인하기`가 단일 기준입니다. 이 문서는 새 PC와 오류 상황에서 확인할 안전 경계만 보충합니다.
 
-목표는 아래 3개가 정상 작동하는 상태를 만드는 것입니다.
+## 준비물
 
-```txt
-1. GitHub 저장소
-2. Python 가상환경 + FastAPI
-3. Docker PostgreSQL
-```
+- Git Bash
+- Python 3.11
+- Docker Desktop
+- Node.js/npm: 선택적 Vue 화면을 볼 때만 필요
+- `backend/.env`: 없을 때만 `.env.example`에서 복사하며 Git에 올리지 않음
+- `backend/.venv`: backend dependency 전용
 
-## 0. 현재 권장 위치
+## 현재 DB 경계
 
-프로젝트 루트 예시:
+- Alembic source head: `v371_email_identity_lifecycle`
+- 실제 local/Neon DB current: `v295_initial_schema`
+- v371 migration apply: 승인 전, 0회
 
-```bash
-~/Desktop/Upgrade RPG
-```
+새 PC나 빈 Docker volume에서는 README의 서버 실행까지만 진행하고, schema reset·seed·migration은 Codex에게 현재 승인 범위를 확인한 뒤 진행합니다. `docker compose down -v`, `setup_dev_db.py --reset`, `alembic upgrade/downgrade/stamp`를 문제 해결용으로 사용하지 않습니다.
 
-`backend` 폴더 안에서 작업할 때와 프로젝트 루트에서 작업할 때가 다릅니다.
-명령어에 `cd backend`, `cd ..`가 있으면 꼭 위치를 확인하세요.
+## 빠른 상태 점검
 
-## 1. Git 확인
-
-프로젝트 루트에서:
-
-```bash
-git status
-git remote -v
-```
-
-정상 기준:
-
-```txt
-working tree clean
-origin  https://github.com/... 또는 git@github.com:...
-```
-
-## 2. Python 가상환경
+- 실행 위치: 프로젝트 루트
+- Python `.venv` 상태: 꺼짐
+- 새 설치 여부: 없음
 
 ```bash
-cd backend
-python -m venv .venv
-source .venv/Scripts/activate
-pip install -e .[dev]
+cd "/c/Users/HOME/Desktop/Upgrade RPG"
+docker compose ps
+curl http://127.0.0.1:8000/api/v1/health
+curl http://127.0.0.1:8000/api/v1/health/db
 ```
 
-Git Bash에서는 아래처럼 활성화합니다.
+정상 기대값:
 
-```bash
-source .venv/Scripts/activate
-```
+- `upgrade_rpg_postgres`: running/healthy
+- backend health: HTTP 200
+- DB health: HTTP 200
 
-PowerShell에서는 아래처럼 활성화합니다.
+## 자주 생기는 문제
 
-```powershell
-.venv\Scripts\Activate.ps1
-```
+### 브라우저 `Failed to fetch`
 
-## 3. backend/.env 만들기
+1. `http://127.0.0.1:5500/index.html`로 열었는지 확인합니다.
+2. backend `127.0.0.1:8000`이 실행 중인지 확인합니다.
+3. PostgreSQL `127.0.0.1:55432`가 healthy인지 확인합니다.
+4. `file://`와 임의 포트를 사용하지 않습니다.
 
-`backend` 폴더 안에서:
+### 포트가 이미 사용 중
 
-```bash
-cp .env.example .env
-```
+기존 정상 서버가 있으면 새로 실행하지 않고 그 서버를 재사용합니다. 실행 터미널을 찾을 수 없을 때만 Codex에게 해당 프로세스 확인을 요청합니다.
 
-`backend/.env`는 개인 로컬 설정 파일이므로 Git에 올리지 않습니다.
+### DB health 실패
 
-## 4. Docker PostgreSQL 실행
+Docker Desktop과 `docker compose ps`를 먼저 확인합니다. 빈 DB인지, 기존 v295 DB가 중지된 것인지 구분하지 않은 상태에서 reset·volume 삭제·migration을 실행하지 않습니다.
 
-프로젝트 루트로 이동합니다.
+### 이메일 가입이 끝까지 진행되지 않음
 
-```bash
-cd ..
-```
+v371 이메일 lifecycle source와 dependency는 준비됐지만 DB migration, Brevo sender/key/secret과 실제 메일은 아직 승인·적용 전입니다. 현재 로컬에서는 전체 이메일 가입 end-to-end 성공을 정상 기대값으로 두지 않습니다.
 
-PostgreSQL과 Adminer를 실행합니다.
+## 추가 문서
 
-```bash
-docker compose up -d
-```
-
-상태 확인:
-
-```bash
-docker ps
-```
-
-정상 기준:
-
-```txt
-upgrade_rpg_postgres
-upgrade_rpg_adminer
-```
-
-## 5. FastAPI 실행
-
-```bash
-cd backend
-source .venv/Scripts/activate
-uvicorn app.main:app --reload
-```
-
-브라우저에서 확인:
-
-```txt
-http://localhost:8000/docs
-http://localhost:8000/api/v1/health
-http://localhost:8000/api/v1/health/db
-```
-
-## 6. Adminer로 DB 보기
-
-Docker 실행 후 브라우저에서:
-
-```txt
-http://localhost:8081
-```
-
-입력값:
-
-```txt
-System: PostgreSQL
-Server: postgres
-Username: rpg_user
-Password: rpg_password
-Database: rpg_game
-```
-
-## 7. 개발환경 점검 스크립트
-
-프로젝트 루트에서:
-
-```bash
-python tools/check_backend_ready.py
-```
-
-DB 연결까지 확인하려면 PostgreSQL 컨테이너가 켜진 상태에서:
-
-```bash
-python tools/check_backend_ready.py --db
-```
-
-
-## 8. 이번 세팅에서 확인된 오류 해결
-
-### CORS_ORIGINS 파싱 오류
-
-아래 오류가 나오면 `.env`의 `CORS_ORIGINS` 형식을 확인하세요.
-
-```txt
-pydantic_settings.exceptions.SettingsError: error parsing value for field "cors_origins"
-```
-
-권장 형식:
-
-```env
-CORS_ORIGINS='["http://localhost:5500","http://127.0.0.1:5500","http://localhost:5173","http://127.0.0.1:5173","http://localhost:3000","http://127.0.0.1:8000","http://localhost:8000"]'
-```
-
-v077부터는 쉼표 형식도 읽을 수 있게 `backend/app/core/config.py`를 보강했습니다.
-
-### asyncpg 없음 오류
-
-아래 오류가 나오면 가상환경에서 `asyncpg`를 설치하세요.
-
-```txt
-ModuleNotFoundError: No module named 'asyncpg'
-```
-
-해결:
-
-```bash
-cd backend
-source .venv/Scripts/activate
-pip install asyncpg
-```
-
-v077부터는 `backend/pyproject.toml` 의존성에 `asyncpg`가 포함되어 있습니다. 새 가상환경에서는 `pip install -e .[dev]`로 같이 설치됩니다.
-
-## 9. JS 마스터 데이터 seed 추출
-
-프로젝트 루트에서 실행합니다.
-
-```bash
-node tools/extract_seed_data.js
-node tools/smoke/game/smoke_seed_extraction.js
-```
-
-출력 위치:
-
-```txt
-backend/seeds/generated/
-```
-
-## 다음 단계
-
-로컬 개발환경이 준비되면 다음은 아래 작업입니다.
-
-```txt
-현재 JS 마스터 데이터 추출 도구 실행
-bosses/zones/skills 데이터를 JSON seed로 변환
-/game/master-data API 구현 준비
-```
-
-
-> 로컬 PostgreSQL은 기본 포트 `5432`가 아니라 `55432`를 사용한다. Windows에서 기존 PostgreSQL과 충돌을 피하기 위한 프로젝트 기준이다. 자세한 내용은 `docs/archive/history/PROJECT_HISTORY.md`를 참고한다.
+- [현재 상태](../current/CURRENT_STATUS.md)
+- [PostgreSQL migration runbook](../reference/database/POSTGRES_DEPLOYMENT_MIGRATION_RUNBOOK.md)
+- [Local CORS](../reference/frontend/LOCAL_DEV_CORS.md)
+- [브라우저 점검](MASTER_DATA_BROWSER_CHECKLIST.md)

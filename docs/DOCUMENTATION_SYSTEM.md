@@ -65,6 +65,19 @@ Obsidian 1.13.7은 이 프로젝트의 **로컬 지식 탐색기**로 사용합�
 4. File explorer, Search, Quick switcher, Bookmarks, Backlinks, Outgoing links, Outline, Page preview, Graph, Command palette, File recovery, Workspaces 같은 core plugin만 사용합니다. community plugin, Sync, Publish, Daily notes, Canvas, Bases, Properties, Tags는 현재 필요하지 않습니다.
 5. 문서 수정은 VS Code/Codex와 Obsidian 어느 쪽에서 해도 되지만 source of truth는 Git 파일입니다.
 
+### 뇌처럼 보이는 Graph의 의미
+
+Graph View에서 원은 Markdown 문서, 선은 문서 사이의 실제 내부 링크입니다. 문서 내용을 AI가 자동으로 이해해서 연결하는 지식 그래프가 아니므로 링크가 없는 파일은 고립된 점으로 보입니다. 전체 Graph는 구조·고립 문서·과도하게 큰 중심 문서를 발견하는 지도에 가깝고, 평소 작업에는 현재 문서 주변만 보여주는 **Local Graph 깊이 2**가 더 실용적입니다.
+
+### 이 프로젝트의 추천 사용 순서
+
+1. Bookmarks에 `AGENTS.md`, `NEXT_CHAT_HANDOFF.md`, `docs/current/CURRENT_STATUS.md`, `docs/README.md`를 등록합니다.
+2. 전체 Graph의 filter에 아래 식을 넣고 `Existing files only`를 켜며 `Orphans`와 `Attachments`는 끕니다.
+3. Graph group은 `path:"docs/current"`를 금색, `path:"docs/reference"`를 파란색, `path:"docs/archive/history"`를 회색으로 지정합니다.
+4. 작업 문서에서는 Command Palette의 `Open local graph`를 열고 depth를 2로 둡니다. 관련 계약·상태·reference만 작은 뇌 모양으로 볼 수 있습니다.
+5. 오른쪽 Backlinks에서 이 문서를 참조하는 다른 문서를 확인하고, `Unlinked mentions`는 빠진 링크 후보를 찾는 용도로만 사용합니다.
+6. 아래 검색식을 Search에 입력한 뒤 자주 쓰는 검색 자체를 Bookmark합니다.
+
 Obsidian의 local 검색 색인에서는 `.git/`, `.obsidian/`, `backend/.venv/`, `frontend/vue-app/node_modules/`, `frontend/legacy-dist/`, `local-backups/`, `local-review-artifacts/`, `.code-review-graph/`, `deploy/secrets/`를 제외합니다. `docs/archive/history/`는 과거 원인 검색에 필요하므로 제외하지 않고 Graph에서만 다음 filter로 숨길 수 있습니다.
 
 ```txt
