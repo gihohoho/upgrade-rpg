@@ -1,16 +1,17 @@
-# Current Status — v375
+# Current Status — v376
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v375.obsidian-workspace-automation-style-format-accepted
-strict result: obsidian-workspace-automation-style-format-accepted
-next safe stage: owner-review-v371-migration-source-and-approve-isolated-roundtrip
+latest: v376.execution-feedback-email-verification-rollout-approved
+strict result: execution-feedback-email-verification-rollout-approved
+next safe stage: implement-practical-email-verification-security-and-provider-rollout
 local Alembic source head: v371_email_identity_lifecycle
 local/Neon DB current: v295_initial_schema
 v371 apply/stamp/downgrade: 0/0/0
+email rollout approval/execution: yes/no
 public backend/static: v351 Live
 production approval/execution: no/no
 ```
@@ -21,6 +22,7 @@ production approval/execution: no/no
 - v373: `email-validator==2.3.0` 설치와 Linux dependency lock/GHCR 재현성 해시 갱신, Obsidian 1.13.7 `Upgrade RPG` local vault 등록, 표준 Markdown 링크망과 작업 종료 문서 마감 규칙을 준비했습니다.
 - v374: 루트 README에 현재 로컬 실행 절차를 단일 기준으로 통합하고, Obsidian Graph·Local Graph·Backlinks·Bookmarks를 프로젝트 구조에 맞게 사용하는 방법과 한계를 문서화했습니다.
 - v375: 사용자용 Obsidian 설명을 추적 문서에서 제거하고, ignored local vault에 핵심 파일·저장 검색 북마크, 전체 문서 폴더별 Graph 색상 그룹, Local Graph 깊이 3과 탐색 workspace를 Codex가 직접 관리하도록 전환했습니다. 의미가 동일한 `src/styles/style.css` 포맷 정렬도 기계적으로 확인해 함께 반영합니다.
+- v376: 실행 전 환경 고정, 범위별 단일 검증, 성공 후 중복 확인 금지와 작업 종료 자체 피드백을 장기 규칙으로 만들었습니다. 기호는 실질적인 이메일 인증 rollout에 필요한 보안 구현·migration·Brevo/Render 설정·테스트 메일·배포를 승인했습니다.
 - v370: 회원가입·로그인, Bearer 인증, 계정별 캐릭터 슬롯 8개, 캐릭터별 local/DB 저장 격리, 관리자 회원 목록·상세·정지/해제와 감사 로그
 - v371: 가입 이메일 필수화, 이메일 인증, 인증 재전송, 아이디 찾기, 비밀번호 재설정, 이메일 최종 확인을 거친 일반 회원 계정 삭제
 - 비밀번호 재설정·계정 상태 변경은 `authVersion`을 올려 기존 access token을 무효화합니다.
@@ -79,9 +81,12 @@ production approval/execution: no/no
 
 ## 바로 다음 단계
 
-1. v371 migration source와 dependency/lock 준비 결과를 검토합니다.
-2. 별도 exact-SHA 승인 뒤 isolated PostgreSQL upgrade→downgrade→upgrade를 검증합니다.
-3. migration apply, Brevo 설정, 테스트 메일, owner bootstrap, 공개 배포는 각각 다음 승인 단위로 분리합니다.
+1. 완료된 v371 source를 반복 감사하지 않고 secret 존재 여부와 DB/source head만 한 번 preflight합니다.
+2. rate limit, raw body cap, durable mail outbox/timing 보호와 미인증 계정 회수부터 구현합니다.
+3. 필요한 migration chain의 isolated upgrade→downgrade→upgrade를 한 번 검증한 뒤 승인된 local/Neon 적용을 진행합니다.
+4. Brevo/Render 설정, 테스트 메일, 필요한 backend/static 배포 후 가입→인증→로그인→복구를 실제 이메일로 확인합니다.
+
+기호의 v376 승인은 위 이메일 인증 rollout 전체에 적용됩니다. 같은 범위를 다시 승인받지 않으며 Brevo 가입·발신자 소유 확인·API key 입력처럼 Codex가 대신할 수 없는 행동만 한 번에 요청합니다. owner bootstrap, DB reset·seed·restore와 무관한 기능 변경은 포함되지 않습니다.
 
 세부 인증 계약은 [이메일 인증·복구·삭제](ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md), 기존 캐릭터 저장 계약은 [계정·캐릭터 슬롯](ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md), 보안 후속은 [Security Gates](SECURITY_ROTATION_AND_GITHUB_GATES.md)를 봅니다.
 

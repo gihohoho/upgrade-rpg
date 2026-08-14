@@ -47,9 +47,9 @@
   GitHub Actions·GHCR 게시, Render env·서비스·deploy는 실행하지 않았습니다. 공개
   backend/static은 계속 v351입니다.
 
-분리 승인 순서는 dependency/lock·v371 source 검증 commit → isolated migration 왕복 →
-exact migration apply → Brevo sender/key/secret → 테스트 메일 1건 → exact owner bootstrap → 공개 보안 보강 →
-backend/static 동시 release입니다. rate limit, server session/refresh·원격 폐기, ASGI raw
+v376에서 기호는 이메일 인증 rollout에 한해 공개 보안 구현 → isolated migration 왕복 →
+local/Neon migration → Brevo sender/key/secret → 테스트 메일 → 필요한 backend/static release를 한 범위로 승인했습니다.
+각 단계를 다시 승인받지 않되 fail-closed 검사는 유지하고, Codex가 대신할 수 없는 Brevo 가입·발신자 소유 확인·API key 입력만 요청합니다. owner bootstrap은 이 승인과 분리합니다. rate limit, server session/refresh·원격 폐기, ASGI raw
 body cap, 다중 기기 revision, HTTPS/CSP/XSS와 개인정보·법적 보존 정책은 여전히 공개
 blocker입니다. 자세한 계약은 `ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md`에
 있습니다.

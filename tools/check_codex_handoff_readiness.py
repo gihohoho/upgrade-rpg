@@ -748,9 +748,9 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require("alembic" not in production_cmd, "container startup must not run Alembic")
 
     current_markers = (
-        "v375.obsidian-workspace-automation-style-format-accepted",
-        "obsidian-workspace-automation-style-format-accepted",
-        "owner-review-v371-migration-source-and-approve-isolated-roundtrip",
+        "v376.execution-feedback-email-verification-rollout-approved",
+        "execution-feedback-email-verification-rollout-approved",
+        "implement-practical-email-verification-security-and-provider-rollout",
     )
     for path, text in (
         ("AGENTS.md", agents),

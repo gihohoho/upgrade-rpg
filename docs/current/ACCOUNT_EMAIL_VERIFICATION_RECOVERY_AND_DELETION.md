@@ -3,11 +3,16 @@
 ```txt
 latest: v371.email-verification-recovery-account-deletion-migration-prepared
 strict result: email-verification-recovery-account-deletion-migration-prepared
-next safe stage: owner-review-v371-migration-source-and-approve-isolated-roundtrip
+next safe stage: implement-practical-email-verification-security-and-provider-rollout
 public Render: backend/static 모두 계속 v351
 database migration: source only / not applied
 email provider: selected only / account·sender·API key not configured
+email rollout approval/execution: yes/no
 ```
+
+## v376 실행 승인
+
+기호는 실질적인 이메일 인증 rollout에 필요한 공개 보안 구현, 필요한 unapplied migration source, isolated PostgreSQL 왕복, gate 통과 뒤 local/Neon migration, Brevo/Render secret 설정, 테스트 메일, backend/static 배포와 실제 이메일 end-to-end 확인을 승인했습니다. 같은 범위를 단계마다 다시 묻지 않으며, Brevo 가입·발신자 소유 확인·API key 입력처럼 Codex가 대신할 수 없는 행동만 한 번에 요청합니다. owner bootstrap, DB reset·seed·restore와 이메일 인증에 무관한 기능 변경은 포함되지 않습니다.
 
 ## 결론
 

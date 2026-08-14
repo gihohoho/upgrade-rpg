@@ -3,7 +3,7 @@
 ```txt
 latest: v371.email-verification-recovery-account-deletion-migration-prepared
 strict result: email-verification-recovery-account-deletion-migration-prepared
-next safe stage: owner-review-v371-migration-source-and-approve-isolated-roundtrip
+next safe stage: implement-practical-email-verification-security-and-provider-rollout
 public Render: backend/static 모두 계속 v351
 ```
 

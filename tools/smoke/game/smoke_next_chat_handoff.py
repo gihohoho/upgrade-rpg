@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v375.obsidian-workspace-automation-style-format-accepted"
-RESULT = "obsidian-workspace-automation-style-format-accepted"
-NEXT_STAGE = "owner-review-v371-migration-source-and-approve-isolated-roundtrip"
+VERSION = "v376.execution-feedback-email-verification-rollout-approved"
+RESULT = "execution-feedback-email-verification-rollout-approved"
+NEXT_STAGE = "implement-practical-email-verification-security-and-provider-rollout"
 SOURCE_HEAD = "v371_email_identity_lifecycle"
 APPLIED_HEAD = "v295_initial_schema"
 
@@ -83,6 +83,19 @@ def main() -> int:
         "Obsidian의 ignored 로컬 vault 설정",
         "Codex가 탐색 효율 중심으로 유지",
         "비기능 포맷 변경",
+        "실행 효율과 자체 피드백",
+        "성공한 `git push` 뒤",
+    )
+    require_markers(
+        "NEXT_CHAT_PROMPT.md",
+        "implement-practical-email-verification-security-and-provider-rollout",
+        "이미 승인된 범위를 다시 묻지 말고",
+    )
+    require_markers(
+        "NEXT_CHAT_HANDOFF.md",
+        "실질적인 이메일 인증 기능 rollout을 승인",
+        "이 범위는 다시 승인받지 않습니다",
+        "Brevo 가입",
     )
 
     for obsolete in (

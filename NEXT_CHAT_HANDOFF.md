@@ -1,13 +1,14 @@
-# Upgrade RPG Codex handoff — v375
+# Upgrade RPG Codex handoff — v376
 
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 근거는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)에서 확인합니다.
 
 ```txt
-latest: v375.obsidian-workspace-automation-style-format-accepted
-strict result: obsidian-workspace-automation-style-format-accepted
-next safe stage: owner-review-v371-migration-source-and-approve-isolated-roundtrip
+latest: v376.execution-feedback-email-verification-rollout-approved
+strict result: execution-feedback-email-verification-rollout-approved
+next safe stage: implement-practical-email-verification-security-and-provider-rollout
 source head: v371_email_identity_lifecycle
 local/Neon DB current: v295_initial_schema
+email rollout approval/execution: yes/no
 public backend/static: v351 Live
 ```
 
@@ -25,20 +26,23 @@ public backend/static: v351 Live
 - 사용자용 Obsidian 설정 설명은 추적 문서에서 제거했고, 사용자는 설정을 직접 관리하지 않습니다. Graph 복잡도보다 Codex 탐색 효율과 폴더별 가시성을 우선합니다.
 - Obsidian 1.13.7 재실행 뒤 ignored JSON 7개, 북마크 8개, Graph group 13개, Local Graph 깊이 3과 필수 pane 보존을 확인했습니다. CSS PostCSS AST 동등성, README/문서/handoff/아이템 등급/legacy static focused와 전체 core smoke가 PASS했습니다.
 - 기존 legacy 게임·관리자 HTTP 200과 PostgreSQL healthy를 읽기 전용으로 확인했습니다. backend는 새로 시작하지 않았습니다.
+- 기호는 이번 메시지에서 실질적인 이메일 인증 기능 rollout을 승인했습니다. 이 승인은 이메일 공개 보안 코드, 필요한 unapplied migration source, isolated PostgreSQL 왕복, gate 통과 뒤 local/Neon migration, Brevo/Render secret 설정, 테스트 메일, backend/static 배포와 end-to-end 확인을 포함합니다. 이 범위는 다시 승인받지 않습니다.
+- Brevo 가입, 발신자 이메일 소유 확인, API key 입력처럼 Codex가 대신할 수 없는 사용자 행동이나 결제·도메인 선택만 한 번에 모아 요청합니다. DB reset·seed·restore, owner bootstrap과 이메일 인증에 무관한 기능 변경은 이번 승인에 포함되지 않습니다.
+- 실행 전 환경과 검증을 한 번 정하고, 범위별 검사를 한 번만 수행하며, 성공한 push·Obsidian·서버 상태를 습관적으로 재확인하지 않는 효율 규칙을 장기 규칙에 추가했습니다.
 
 ## 바로 할 일
 
-1. v371 migration source와 dependency/lock 변경을 검토합니다.
-2. 기호의 별도 exact-SHA 승인 전에는 isolated PostgreSQL upgrade→downgrade→upgrade도 실행하지 않습니다.
-3. isolated 왕복이 승인·검증돼도 local/Neon migration apply는 다시 별도 승인으로 남깁니다.
-4. Brevo 설정·실제 메일·owner bootstrap·공개 배포도 각각 분리된 승인 단위입니다.
+1. 완료된 v371 기능을 다시 전면 감사하지 말고, required email secret의 존재 여부와 현재 DB/source head만 한 번 확인합니다.
+2. rate limit·요청 body cap·메일 outbox/timing 보호·미인증 계정 회수 등 실제 공개 이메일 보안 gate를 구현하고 focused 검사합니다.
+3. 필요한 migration chain을 isolated PostgreSQL에서 upgrade→downgrade→upgrade 한 번으로 검증한 뒤 승인된 local/Neon 적용을 진행합니다.
+4. Brevo/Render 설정과 실제 테스트 메일을 연결하고, backend/static을 필요한 정확한 범위로 배포해 가입→인증→로그인→복구 흐름을 end-to-end 확인합니다.
 
 ## 안전 경계
 
 - 실제 secret/token/password를 출력·문서화·commit하지 않습니다.
-- local/Neon migration과 어떤 DB write도 실행하지 않았으며, Brevo 설정/메일, owner bootstrap, GHCR/Render 배포는 각각 별도 승인입니다.
+- 승인된 DB write는 isolated 검증을 통과한 이메일 인증 migration chain 적용으로 한정합니다. DB reset·seed·restore와 게임 데이터 수정은 포함되지 않습니다.
+- 현재까지 local/Neon migration, Brevo 설정/메일과 새 배포는 0회입니다. 다음 채팅에서는 위 v376 승인 범위 안에서 fail-closed 검사를 통과한 순서대로 실행할 수 있습니다.
 - 공개 frontend/backend는 v351이며 v370/v371 로컬 기능을 아직 배포하지 않았습니다.
-- 사용자 변경 `src/styles/style.css`가 남아 있으면 건드리거나 stage하지 않습니다.
 
 ## 이번 문서 정리 결과
 

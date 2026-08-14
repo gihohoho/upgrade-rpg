@@ -1,3 +1,10 @@
+# v376.execution-feedback-email-verification-rollout-approved
+
+- 잘못된 shell/`.venv` 실행과 가치가 낮은 사후 확인을 반복하지 않도록 실행 환경 사전 고정, 범위별 단일 검증, 성공 결과 신뢰, 작업 종료 자체 피드백 규칙을 추가했습니다.
+- 다음 채팅은 완료된 준비 작업을 다시 감사하거나 승인받지 않고 `implement-practical-email-verification-security-and-provider-rollout`을 즉시 시작합니다.
+- 기호는 이메일 공개 보안 구현, 필요한 migration source와 isolated 왕복, gate 통과 뒤 local/Neon 적용, Brevo/Render 설정, 테스트 메일, 필요한 backend/static 배포와 실제 이메일 end-to-end 확인을 승인했습니다.
+- 이번 문서 handoff 작업에서는 코드·dependency·DB·Brevo·Render·서버를 변경하거나 실행하지 않았습니다.
+
 # v375.obsidian-workspace-automation-style-format-accepted
 
 - 사용자에게 Obsidian 설정 절차를 맡기지 않고 ignored 로컬 vault의 핵심 문서 북마크, 저장 검색, 폴더별 Graph 색상 그룹, Local Graph 깊이와 탐색 workspace를 Codex가 직접 관리하도록 전환했습니다.

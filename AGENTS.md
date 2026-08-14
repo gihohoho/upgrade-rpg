@@ -1,4 +1,4 @@
-# Upgrade RPG Codex working rules — v375
+# Upgrade RPG Codex working rules — v376
 
 이 파일은 저장소 전체에 적용되는 **장기 규칙**입니다. 새 작업은 다음 순서로 시작합니다.
 
@@ -23,6 +23,14 @@
 - 서버를 재시작하지 않았으면 완료 답변에 `서버 재시작 불필요`라고 적습니다.
 - 모든 작업의 마지막에는 [AGENTS.md](AGENTS.md), [NEXT_CHAT_HANDOFF.md](NEXT_CHAT_HANDOFF.md), [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)를 현재 상태와 맞추고, 변경 주제와 관련된 Markdown을 전수 검색해 통합·이동·archive·삭제 필요 여부까지 점검합니다. 의미 없는 복사본이나 단계별 새 문서를 만들지 않습니다.
 - Obsidian의 ignored 로컬 vault 설정, 북마크, 검색, Graph 색상 그룹과 workspace는 사용자가 직접 관리하지 않고 Codex가 탐색 효율 중심으로 유지합니다. Graph가 복잡해져도 문서 범위를 숨기기보다 폴더별로 구분하며, 프로젝트 동작은 Obsidian에 의존하지 않습니다.
+
+## 실행 효율과 자체 피드백
+
+- 작업 시작 시 변경 범위, 필요한 실행 환경, 검증 목록을 한 번 정하고 같은 확인을 습관적으로 반복하지 않습니다. 간단한 문서 작업에는 sub-agent, 브라우저, 서버 상태 확인, 전체 core smoke를 사용하지 않습니다.
+- PowerShell에서 `bash`만 호출하면 WSL로 잘못 연결될 수 있습니다. 전체 core smoke는 항상 설치된 Git Bash를 명시하고 같은 명령 안에서 `source backend/.venv/Scripts/activate`, `DEBUG=false`, `bash tools/run_smoke_core.sh` 순서로 실행합니다.
+- 문서만 바꾼 작업은 문서 구조·handoff·strict readiness만 한 번 검사합니다. 포맷만 바꾼 CSS는 AST 의미 동등성과 관련 focused smoke만 검사합니다. 동작 코드의 전체 core는 통합이 끝난 뒤 한 번만 실행하며, 이후 결과 문구만 고친 경우 다시 실행하지 않습니다.
+- 성공한 명령의 exit code와 출력은 그대로 신뢰합니다. 성공한 `git push` 뒤 원격 추적 상태를 다시 확인하거나, 이미 적용·재실행 검증한 Obsidian을 단순 확인 목적으로 다시 열지 않습니다.
+- 환경 지정 실수나 불필요한 반복이 생기면 작업 종료 전에 원인을 짧게 자체 점검하고 다음 실행 규칙에 반영합니다. 자체 점검을 증명하기 위한 추가 명령이나 보고서는 만들지 않습니다.
 
 ## 변경 품질
 
@@ -80,12 +88,13 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v375.obsidian-workspace-automation-style-format-accepted
-strict result: obsidian-workspace-automation-style-format-accepted
-next safe stage: owner-review-v371-migration-source-and-approve-isolated-roundtrip
+latest: v376.execution-feedback-email-verification-rollout-approved
+strict result: execution-feedback-email-verification-rollout-approved
+next safe stage: implement-practical-email-verification-security-and-provider-rollout
 local source head: v371_email_identity_lifecycle
 local/Neon DB current: v295_initial_schema
 v371 migration applied: no
+email rollout approval/execution: yes/no
 public backend/static: v351 Live
 Render public preview: deployed
 production approval/execution: no/no
@@ -99,6 +108,7 @@ production approval/execution: no/no
 - v374는 루트 README에 최초 준비·DB/backend/legacy/Vue·확인 URL·안전 종료를 위치/`.venv`/설치 상태와 함께 통합하고, Obsidian Graph·Local Graph·Backlinks·Bookmarks의 실제 사용법을 문서화했습니다.
 - v375는 사용자용 Obsidian 사용 설명을 추적 문서에서 제거하고, ignored 로컬 vault의 북마크·저장 검색·전역/로컬 Graph·workspace를 Codex가 직접 관리하도록 전환했습니다. 의미가 동일한 `src/styles/style.css` 포맷 정렬도 검증 뒤 함께 반영합니다.
 - Obsidian 1.13.7 재실행 뒤 북마크 8개, Graph 색상 그룹 13개, Local Graph 깊이 3과 필수 pane을 확인했고, CSS PostCSS AST 동등성·문서/정적 배포 focused·전체 core smoke가 PASS했습니다.
+- v376에서 실행 환경 사전 고정, 범위별 단일 검증, 성공 후 중복 확인 금지와 작업별 자체 피드백을 영구 규칙으로 추가했습니다. 기호는 실질적인 이메일 인증 rollout에 필요한 보안 구현·migration·provider 설정·테스트 메일·배포를 승인했습니다.
 - README 명령 계약·위험 명령 차단·Markdown 링크/중복/크기와 handoff readiness가 PASS했고, 현재 legacy 게임/관리자 HTTP 200과 기존 PostgreSQL healthy를 읽기 전용으로 확인했습니다.
 - Brevo 계정·발신자·API key·secret, 실제 메일, DB migration, owner bootstrap, 새 image/static 배포는 실행하지 않았습니다.
 - source-prepared 즉시 수정 blocker는 없습니다. 공개 배포 blocker는 rate limit/queue/body cap, 미인증 계정 회수, session/revoke, save CAS, CSP/XSS·개인정보 정책입니다.
