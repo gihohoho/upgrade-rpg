@@ -748,9 +748,9 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require("alembic" not in production_cmd, "container startup must not run Alembic")
 
     current_markers = (
-        "v376.execution-feedback-email-verification-rollout-approved",
-        "execution-feedback-email-verification-rollout-approved",
-        "implement-practical-email-verification-security-and-provider-rollout",
+        "v377.public-email-security-source-prepared",
+        "public-email-security-source-prepared",
+        "prepare-v377-private-email-environment",
     )
     for path, text in (
         ("AGENTS.md", agents),

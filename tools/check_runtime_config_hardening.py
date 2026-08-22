@@ -242,6 +242,8 @@ def inspect_runtime_hardening_settings(root: Path) -> dict[str, Any]:
             brevo_api_key="b" * 40,
             brevo_from_email="noreply@game.example.invalid",
             email_token_secret="e" * 40,
+            auth_abuse_secret="r" * 40,
+            auth_trusted_proxy_mode="render",
             public_frontend_origin="https://game.example.invalid",
             database_url="postgresql+asyncpg://user:secret@db.internal:5432/rpg_game",
             CORS_ORIGINS="https://game.example.invalid",

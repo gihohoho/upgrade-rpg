@@ -1,4 +1,6 @@
 from app.models.admin import AdminChangeLog, AdminRole, AdminUserRole
+from app.models.auth_email_outbox import AuthEmailOutbox
+from app.models.auth_rate_limit import AuthRateLimitBucket
 from app.models.boss import Boss, DropTable, DropTableItem
 from app.models.character import Character
 from app.models.enhancement import EnhancementGroup, EnhancementLevel
@@ -12,6 +14,8 @@ __all__ = [
     "AdminChangeLog",
     "AdminRole",
     "AdminUserRole",
+    "AuthEmailOutbox",
+    "AuthRateLimitBucket",
     "Boss",
     "Character",
     "CharacterSkill",

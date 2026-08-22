@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 import hashlib
 import hmac
@@ -33,12 +34,13 @@ from app.core.security import (  # noqa: E402
     require_admin_user,
     verify_password,
 )
+from app.api.routes import auth as auth_route_module  # noqa: E402
 from app.core.config import settings  # noqa: E402
 from app.schemas.account import (  # noqa: E402
     AccountCharacterCreateRequest,
     AccountCharacterGameSaveRequest,
 )
-from app.models import User, UserEmailActionToken, UserProfile  # noqa: E402
+from app.models import AuthEmailOutbox, User, UserProfile  # noqa: E402
 from app.schemas.auth import LoginRequest, NormalizedEmail, RegisterRequest  # noqa: E402
 from app.services.account_character_service import (  # noqa: E402
     ACCOUNT_CHARACTER_SUMMARY_KEY,
@@ -60,6 +62,9 @@ class FakeScalars:
 
     def all(self):  # type: ignore[no-untyped-def]
         return list(self.rows)
+
+    def __iter__(self):  # type: ignore[no-untyped-def]
+        return iter(self.rows)
 
 
 class FakeResult:
@@ -150,6 +155,7 @@ def auth_service(delivery: AuthFakeDelivery | None = None) -> AuthService:
             canonical=str(value).strip().casefold(),
         ),
         token_secret="e" * 40,
+        abuse_secret="a" * 40,
         token_factory=lambda: "T" * 43,
         now_factory=lambda: datetime(2026, 8, 10, tzinfo=UTC),
         provider_ready=True,
@@ -160,6 +166,21 @@ def auth_service(delivery: AuthFakeDelivery | None = None) -> AuthService:
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise AssertionError(message)
+
+
+@contextmanager
+def replaced_route_protection(value):  # type: ignore[no-untyped-def]
+    original = auth_route_module.protection
+    auth_route_module.protection = value
+    try:
+        yield
+    finally:
+        auth_route_module.protection = original
+
+
+class NoopAuthProtection:
+    async def check_ip(self, **_kwargs):  # type: ignore[no-untyped-def]
+        return auth_route_module.AuthProtectionContext(keyed_policies=())
 
 
 def expect_validation_error(factory, message: str) -> None:  # type: ignore[no-untyped-def]
@@ -262,7 +283,7 @@ def test_password_and_token() -> None:
 
 def test_auth_validation_secrets_are_not_reflected() -> None:
     app = create_app()
-    with TestClient(app) as client:
+    with replaced_route_protection(NoopAuthProtection()), TestClient(app) as client:
         weak_secret = "onlyletters"
         weak_response = client.post(
             f"{settings.api_prefix}/auth/register",
@@ -348,8 +369,8 @@ async def test_auth_service_and_current_user() -> None:
     registered = await service.register(register_session, register_payload)
     added_user = next(value for value in register_session.added if isinstance(value, User))
     added_profile = next(value for value in register_session.added if isinstance(value, UserProfile))
-    added_email_token = next(
-        value for value in register_session.added if isinstance(value, UserEmailActionToken)
+    added_outbox = next(
+        value for value in register_session.added if isinstance(value, AuthEmailOutbox)
     )
     require(registered["status"] == "verification_required", "registration status changed")
     require(registered["user"]["username"] == "player_10", "registered username was not normalized")
@@ -359,10 +380,10 @@ async def test_auth_service_and_current_user() -> None:
     require(added_user.password_hash != "account123", "registration stored a plaintext password")
     require(verify_password("account123", added_user.password_hash or ""), "registered password hash is invalid")
     require(added_profile.user_id == added_user.id == 101, "registration did not create the matching profile")
-    require(added_email_token.token_digest != "T" * 43, "raw email token was persisted")
-    require(added_email_token.delivery_status == "sent", "verification delivery state missing")
-    require(register_session.commit_calls == 2, "registration/delivery state did not commit twice")
-    require(len(delivery.calls) == 1, "verification email was not sent exactly once")
+    require(added_outbox.target_digest != "T" * 43, "raw email target was persisted")
+    require(added_outbox.status == "pending", "verification outbox state missing")
+    require(register_session.commit_calls == 1, "registration/outbox transaction did not commit once")
+    require(len(delivery.calls) == 0, "registration sent verification email synchronously")
 
     duplicate_session = AuthFakeSession([[], [101]])
     try:

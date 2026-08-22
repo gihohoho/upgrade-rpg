@@ -120,6 +120,11 @@ python tools/smoke/backend/smoke_v370_account_admin_management.py
 python tools/smoke/backend/smoke_v371_email_account_backend.py
 python tools/smoke/backend/smoke_v371_email_identity_migration_source.py
 python tools/smoke/backend/smoke_v371_owner_admin_bootstrap.py
+python tools/smoke/backend/smoke_v377_auth_public_security.py
+python tools/smoke/backend/smoke_v377_auth_email_outbox.py
+python tools/smoke/backend/smoke_v377_auth_security_migration.py
+python tools/smoke/backend/smoke_v377_email_security_environment.py
+python tools/smoke/backend/smoke_v377_email_release.py
 python tools/smoke/backend/smoke_postgres_alembic_readiness.py
 python tools/smoke/backend/smoke_backend_alembic_async_env.py
 python tools/smoke/backend/smoke_postgres_runtime_readonly_state.py
@@ -132,8 +137,8 @@ python tools/smoke/backend/smoke_postgres_restore_rehearsal.py
 python tools/smoke/backend/smoke_postgres_migration_test_database_creation.py
 # The v295-v310 initial-revision/stamp/round-trip/deployment-readiness smokes
 # remain preserved as historical evidence. They assume a single v295 source
-# head and must not be replayed against the v371 model graph; the v371
-# source-parity smoke above is the current fail-closed migration contract.
+# head and must not be replayed against the v377 model graph; the v371 source
+# parity plus v377 migration guard smoke above are the current contracts.
 python tools/smoke/backend/smoke_runtime_engine_source_binding_inspector.py
 python tools/smoke/backend/smoke_runtime_config_hardening.py
 python tools/smoke/backend/smoke_neon_production_database_bootstrap.py

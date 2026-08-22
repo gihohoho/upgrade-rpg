@@ -1,10 +1,22 @@
 (function () {
 	"use strict";
 
-	const VERSION = "v371.email-account-gate";
+	const VERSION = "v377.email-account-gate-security";
 	const SLOT_COUNT = 8;
 	const DEFAULT_CHARACTER_OPTIONS = [{ code: "weapon_master", name: "검신" }];
 	const AUTH_LINK_ACTIONS = new Set(["verify-email", "reset-password", "delete-account"]);
+	const EMAIL_ACTION_TOKEN_PATTERN = /^[A-Za-z0-9_-]{32,256}$/;
+	const SESSION_INVALID_ERROR_CODES = new Set([
+		"bearer_token_required",
+		"access_token_invalid",
+		"account_not_found",
+		"auth_version_stale",
+		"account_suspended",
+		"email_verification_required",
+	]);
+	const RATE_LIMIT_ERROR_CODE = "auth_rate_limited";
+	const REQUEST_BODY_TOO_LARGE_ERROR_CODE = "request_body_too_large";
+	const EMAIL_ACTION_TOKEN_INVALID_ERROR_CODE = "email_action_token_invalid";
 	const gate = document.getElementById("account-gate");
 	const panel = document.getElementById("account-gate-panel");
 	const modalRoot = document.getElementById("account-modal-root");
@@ -42,7 +54,7 @@
 			const cleanUrl = `${window.location.pathname || "index.html"}${window.location.search || ""}`;
 			window.history.replaceState(null, document.title, cleanUrl);
 		}
-		if (!token || token.length > 4096 || /\s/.test(token)) return { action, token: "", invalid: true };
+		if (!EMAIL_ACTION_TOKEN_PATTERN.test(token)) return { action, token: "", invalid: true };
 		return { action, token };
 	}
 
@@ -60,12 +72,61 @@
 
 	function getErrorCode(error) {
 		const response = error && error.response && typeof error.response === "object" ? error.response : {};
+		const detail = response.detail && typeof response.detail === "object" && !Array.isArray(response.detail)
+			? response.detail
+			: {};
 		return String(
-			(response.error && response.error.code)
-			|| (response.payload && (response.payload.code || response.payload.status))
+			(error && error.code)
+			|| (response.error && response.error.code)
+			|| (response.payload && response.payload.code)
+			|| detail.code
 			|| response.code
+			|| (response.payload && response.payload.status)
 			|| "",
 		).trim().toLowerCase();
+	}
+
+	function getRetryAfterSeconds(error) {
+		const response = error && error.response && typeof error.response === "object" ? error.response : {};
+		const meta = response.meta && typeof response.meta === "object" ? response.meta : {};
+		const details = response.error && response.error.details && typeof response.error.details === "object"
+			? response.error.details
+			: {};
+		const candidates = [
+			error && error.retryAfterSeconds,
+			meta.retryAfterSeconds,
+			meta.retry_after_seconds,
+			details.retryAfterSeconds,
+			details.retry_after_seconds,
+		];
+		for (const candidate of candidates) {
+			const seconds = Math.ceil(Number(candidate));
+			if (Number.isFinite(seconds) && seconds > 0) return Math.min(seconds, 86400);
+		}
+		return null;
+	}
+
+	function isRateLimitError(error) {
+		return Number(error && error.status) === 429 || getErrorCode(error) === RATE_LIMIT_ERROR_CODE;
+	}
+
+	function isRequestBodyTooLargeError(error) {
+		return Number(error && error.status) === 413 || getErrorCode(error) === REQUEST_BODY_TOO_LARGE_ERROR_CODE;
+	}
+
+	function isEmailActionTokenInvalidError(error) {
+		return getErrorCode(error) === EMAIL_ACTION_TOKEN_INVALID_ERROR_CODE;
+	}
+
+	function getRateLimitMessage(error) {
+		const retryAfterSeconds = getRetryAfterSeconds(error);
+		return retryAfterSeconds
+			? `요청이 너무 많습니다. ${retryAfterSeconds}초 후 다시 시도해 주세요.`
+			: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.";
+	}
+
+	function getRequestBodyTooLargeMessage() {
+		return "요청 데이터가 허용 크기를 넘었습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.";
 	}
 
 	function normalizeEmail(value) {
@@ -77,8 +138,10 @@
 	}
 
 	function isAccountSessionInvalidError(error) {
-		const status = Number(error && error.status);
-		return status === 401 || status === 403;
+		if (window.RpgAuthSession && typeof window.RpgAuthSession.isSessionInvalidError === "function") {
+			return window.RpgAuthSession.isSessionInvalidError(error);
+		}
+		return SESSION_INVALID_ERROR_CODES.has(getErrorCode(error));
 	}
 
 	function returnToLoginAfterSessionExpiry(message) {
@@ -94,9 +157,12 @@
 	function handleGameSessionInvalid(error) {
 		if (!isAccountSessionInvalidError(error)) return false;
 		pendingRuntimeResume = false;
-		returnToLoginAfterSessionExpiry(Number(error && error.status) === 403
+		const errorCode = getErrorCode(error);
+		returnToLoginAfterSessionExpiry(errorCode === "account_suspended"
 			? "계정이 비활성화되어 게임을 계속할 수 없습니다. 최신 진행은 이 기기의 미전송 저장으로 보존했습니다. 관리자에게 계정 상태를 확인해 주세요."
-			: undefined);
+			: (errorCode === "email_verification_required"
+				? "이메일 인증이 필요해 현재 로그인을 계속할 수 없습니다. 최신 진행은 이 기기의 미전송 저장으로 보존했습니다. 인증을 완료한 뒤 다시 로그인해 주세요."
+				: undefined));
 		return true;
 	}
 
@@ -250,7 +316,7 @@
 					<label for="account-register-password-confirm">비밀번호 확인</label>
 					<input id="account-register-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="8" maxlength="72" required placeholder="비밀번호를 한 번 더 입력하세요" />
 				</div>
-				<button class="account-primary-button" type="submit">인증메일 받고 가입하기</button>
+				<button class="account-primary-button" type="submit">인증메일 요청하고 가입하기</button>
 			</form>
 		`;
 	}
@@ -266,11 +332,11 @@
 			<h1 id="account-gate-title">이메일을 확인해 주세요</h1>
 			<p class="account-auth-copy">가입을 마치려면 받은 메일의 <strong>이메일 인증 완료</strong> 버튼을 눌러야 합니다.</p>
 			<div class="account-email-callout">
-				<span>인증 메일 발송 주소</span>
+				<span>인증 메일 요청 주소</span>
 				<strong>${escapeHtml(pendingVerificationEmail || "가입한 이메일")}</strong>
-				<p>메일이 보이지 않으면 스팸함을 확인하고, 잠시 기다린 뒤 한 번만 다시 요청해 주세요.</p>
+				<p>메일 도착까지 몇 분 걸릴 수 있습니다. 스팸함도 확인하고, 안내된 시간이 지난 뒤 한 번만 다시 요청해 주세요.</p>
 			</div>
-			<div id="account-form-status" class="account-form-status" data-tone="${escapeHtml(opts.tone || "success")}" role="status" aria-live="polite">${escapeHtml(opts.message || "인증 메일을 보냈습니다.")}</div>
+			<div id="account-form-status" class="account-form-status" data-tone="${escapeHtml(opts.tone || "success")}" role="status" aria-live="polite">${escapeHtml(opts.message || "인증 메일 요청을 접수했습니다.")}</div>
 			<div class="account-verification-actions">
 				<button type="button" class="account-secondary-button" data-account-action="verification-back-login">로그인 화면으로</button>
 				<button type="button" class="account-primary-button" data-account-action="verification-resend">인증메일 다시 받기</button>
@@ -521,19 +587,19 @@
 		const definitions = {
 			"recover-username": {
 				title: "아이디 찾기",
-				description: "가입한 이메일로 아이디 안내 메일을 보냅니다.",
+				description: "가입한 이메일로 아이디 안내 메일을 요청합니다.",
 				action: "recover-username",
 				button: "아이디 안내 메일 받기",
 			},
 			"request-password-reset": {
 				title: "비밀번호 재설정",
-				description: "가입한 이메일로 새 비밀번호 설정 링크를 보냅니다.",
+				description: "가입한 이메일로 새 비밀번호 설정 링크를 요청합니다.",
 				action: "request-password-reset",
 				button: "재설정 메일 받기",
 			},
 			"resend-verification": {
 				title: "인증메일 다시 받기",
-				description: "아직 인증하지 않은 가입 이메일로 새 인증 링크를 보냅니다.",
+				description: "아직 인증하지 않은 가입 이메일로 새 인증 링크를 요청합니다.",
 				action: "resend-verification",
 				button: "인증메일 다시 받기",
 			},
@@ -584,7 +650,7 @@
 			type: "account-deletion-request",
 			tone: "danger",
 			title: "계정 삭제 메일 요청",
-			description: "현재 비밀번호를 확인한 뒤 가입 이메일로 최종 삭제 링크를 보냅니다.",
+			description: "현재 비밀번호를 확인한 뒤 가입 이메일로 최종 삭제 링크를 요청합니다.",
 			initialFocus: "#account-deletion-password",
 			body: `
 				<form class="account-form" data-account-form="account-deletion-request">
@@ -617,12 +683,17 @@
 			openAccountDeletionRequestModal(getPayload(response));
 		} catch (error) {
 			if (handleGameSessionInvalid(error)) return;
+			const previewErrorMessage = isRateLimitError(error)
+				? getRateLimitMessage(error)
+				: (isRequestBodyTooLargeError(error)
+					? getRequestBodyTooLargeMessage()
+					: (error && error.message ? error.message : "서버 연결을 확인한 뒤 다시 시도해 주세요."));
 			openModal({
 				type: "account-deletion-preview-error",
 				tone: "danger",
 				title: "삭제 범위를 확인하지 못했습니다",
 				description: "안전을 위해 계정 삭제 요청을 시작하지 않았습니다.",
-				body: `<div class="account-form-status" data-tone="error" role="status">${escapeHtml("서버 연결을 확인한 뒤 다시 시도해 주세요.")}</div><div class="account-modal-actions"><button type="button" class="account-secondary-button" data-account-action="close-modal">돌아가기</button><button type="button" class="account-danger-button" data-account-action="open-account-deletion">다시 확인</button></div>`,
+				body: `<div class="account-form-status" data-tone="error" role="status">${escapeHtml(previewErrorMessage)}</div><div class="account-modal-actions"><button type="button" class="account-secondary-button" data-account-action="close-modal">돌아가기</button><button type="button" class="account-danger-button" data-account-action="open-account-deletion">다시 확인</button></div>`,
 			});
 		} finally {
 			gateBusy = false;
@@ -684,11 +755,14 @@
 			activeAuthTab = "login";
 			renderAuth({ message: "이메일 인증이 완료되었습니다. 이제 로그인할 수 있습니다.", tone: "success" });
 		} catch (error) {
-			const status = Number(error && error.status);
-			if (status >= 400 && status < 500) {
+			if (isEmailActionTokenInvalidError(error)) {
 				pendingAuthLinkAction = null;
 				activeAuthTab = "login";
 				renderAuth({ message: "인증 링크가 만료됐거나 이미 사용되었습니다. 필요하면 인증메일을 다시 요청해 주세요.", tone: "error" });
+			} else if (isRateLimitError(error)) {
+				renderAuthLinkRetry(`${getRateLimitMessage(error)} 인증 링크는 현재 탭의 메모리에 안전하게 보존했습니다.`);
+			} else if (isRequestBodyTooLargeError(error)) {
+				renderAuthLinkRetry(`${getRequestBodyTooLargeMessage()} 인증 링크는 현재 탭의 메모리에 안전하게 보존했습니다.`);
 			} else {
 				renderAuthLinkRetry("서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.");
 			}
@@ -889,7 +963,7 @@
 				: await window.RpgGameApi.loginAccount({ identifier, password }, { timeoutMs: 7000 });
 			if (formType === "register") {
 				window.RpgAuthSession.clearSession();
-				renderVerificationPending(email, { message: "인증 메일을 보냈습니다. 이메일 인증을 완료한 뒤 로그인해 주세요.", tone: "success" });
+				renderVerificationPending(email, { message: "가입과 인증 메일 요청을 접수했습니다. 메일 도착까지 몇 분 걸릴 수 있습니다.", tone: "success" });
 				return;
 			}
 			const token = window.RpgAuthSession.extractAccessToken(response);
@@ -901,17 +975,13 @@
 			}
 		} catch (error) {
 			const errorCode = getErrorCode(error);
-			if (formType === "register" && errorCode === "verification_email_delivery_failed") {
-				window.RpgAuthSession.clearSession();
-				renderVerificationPending(email, {
-					message: "계정은 만들어졌지만 인증메일 발송에 실패했습니다. 잠시 후 다시 요청해주세요.",
-					tone: "error",
-				});
-				return;
-			}
-			const message = errorCode.includes("verification") || errorCode.includes("email_unverified")
-				? "이메일 인증이 완료되지 않았습니다. 인증메일을 확인하거나 다시 요청해 주세요."
-				: (error && error.message ? error.message : "계정 요청을 처리하지 못했습니다.");
+			const message = isRateLimitError(error)
+				? getRateLimitMessage(error)
+				: (isRequestBodyTooLargeError(error)
+					? getRequestBodyTooLargeMessage()
+					: (errorCode.includes("verification") || errorCode.includes("email_unverified")
+						? "이메일 인증이 완료되지 않았습니다. 인증메일을 확인하거나 다시 요청해 주세요."
+						: (error && error.message ? error.message : "계정 요청을 처리하지 못했습니다.")));
 			if (window.RpgAuthSession.getCurrentUser() || window.RpgAuthSession.getAccessToken()) {
 				if (isAccountSessionInvalidError(error)) {
 					returnToLoginAfterSessionExpiry("로그인 정보가 만료되었거나 사용할 수 없는 계정입니다. 다시 로그인해 주세요.");
@@ -944,19 +1014,23 @@
 		if (!request) return;
 		gateBusy = true;
 		setFormBusy(form, true, "메일 요청 중...");
-		setModalStatus("메일 전송을 요청하고 있습니다...", "");
+		setModalStatus("메일 요청을 접수하고 있습니다...", "");
 		try {
 			await request();
 			const successMessage = formType === "recover-username"
-				? "입력한 이메일과 일치하는 계정이 있다면 아이디 안내 메일을 보냈습니다."
+				? "입력한 이메일과 일치하는 계정이 있다면 아이디 안내 메일 요청을 접수했습니다."
 				: (formType === "request-password-reset"
-					? "입력한 이메일과 일치하는 계정이 있다면 비밀번호 재설정 메일을 보냈습니다."
-					: "입력한 이메일과 일치하는 미인증 계정이 있다면 인증 메일을 보냈습니다.");
+					? "입력한 이메일과 일치하는 계정이 있다면 비밀번호 재설정 메일 요청을 접수했습니다."
+					: "입력한 이메일과 일치하는 미인증 계정이 있다면 인증 메일 요청을 접수했습니다.");
 			setFormBusy(form, false);
 			setModalStatus(successMessage, "success");
 		} catch (error) {
 			setFormBusy(form, false);
-			setModalStatus("메일 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.", "error");
+			setModalStatus(isRateLimitError(error)
+				? getRateLimitMessage(error)
+				: (isRequestBodyTooLargeError(error)
+					? getRequestBodyTooLargeMessage()
+					: "메일 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."), "error");
 		} finally {
 			gateBusy = false;
 		}
@@ -972,9 +1046,13 @@
 		setAuthStatus("인증 메일을 다시 요청하고 있습니다...", "");
 		try {
 			await window.RpgGameApi.resendAccountVerification({ email: pendingVerificationEmail }, { timeoutMs: 15000 });
-			setAuthStatus("인증 메일을 다시 보냈습니다. 받은편지함과 스팸함을 확인해 주세요.", "success");
+			setAuthStatus("인증 메일 요청을 접수했습니다. 도착까지 몇 분 걸릴 수 있으니 받은편지함과 스팸함을 확인해 주세요.", "success");
 		} catch (error) {
-			setAuthStatus("인증 메일을 다시 보내지 못했습니다. 잠시 후 다시 시도해 주세요.", "error");
+			setAuthStatus(isRateLimitError(error)
+				? getRateLimitMessage(error)
+				: (isRequestBodyTooLargeError(error)
+					? getRequestBodyTooLargeMessage()
+					: "인증 메일 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."), "error");
 		} finally {
 			gateBusy = false;
 		}
@@ -1001,7 +1079,17 @@
 			renderAuth({ message: "비밀번호를 변경했습니다. 새 비밀번호로 로그인해 주세요.", tone: "success" });
 		} catch (error) {
 			setFormBusy(form, false);
-			setAuthStatus(Number(error && error.status) >= 500 ? "서버 연결을 확인한 뒤 다시 시도해 주세요." : "재설정 링크가 만료됐거나 이미 사용되었습니다. 새 메일을 요청해 주세요.", "error");
+			if (isEmailActionTokenInvalidError(error)) {
+				pendingAuthLinkAction = null;
+				activeAuthTab = "login";
+				renderAuth({ message: "재설정 링크가 만료됐거나 이미 사용되었습니다. 새 메일을 요청해 주세요.", tone: "error" });
+			} else {
+				setAuthStatus(isRateLimitError(error)
+					? `${getRateLimitMessage(error)} 재설정 링크는 현재 탭의 메모리에 안전하게 보존했습니다.`
+					: (isRequestBodyTooLargeError(error)
+						? `${getRequestBodyTooLargeMessage()} 재설정 링크는 현재 탭의 메모리에 안전하게 보존했습니다.`
+						: `${error && error.message ? error.message : "비밀번호 재설정 요청을 처리하지 못했습니다."} 재설정 링크는 현재 탭의 메모리에 보존했습니다.`), "error");
+			}
 		} finally {
 			gateBusy = false;
 		}
@@ -1021,11 +1109,18 @@
 			await window.RpgGameApi.requestAccountDeletion({ password }, { timeoutMs: 15000 });
 			setFormBusy(form, false);
 			form.querySelector("[type='submit']").disabled = true;
-			setModalStatus("삭제 확인 메일을 보냈습니다. 메일 링크를 누르기 전까지 계정은 삭제되지 않습니다.", "success");
+			setModalStatus("삭제 확인 메일 요청을 접수했습니다. 메일 도착까지 몇 분 걸릴 수 있으며, 링크를 누르기 전까지 계정은 삭제되지 않습니다.", "success");
 		} catch (error) {
 			if (handleGameSessionInvalid(error)) return;
 			setFormBusy(form, false);
-			setModalStatus("비밀번호를 확인하지 못했거나 메일 요청에 실패했습니다.", "error");
+			const errorCode = getErrorCode(error);
+			setModalStatus(isRateLimitError(error)
+				? getRateLimitMessage(error)
+				: (isRequestBodyTooLargeError(error)
+					? getRequestBodyTooLargeMessage()
+					: (errorCode === "invalid_credentials"
+						? "현재 비밀번호가 올바르지 않습니다. 다시 확인해 주세요."
+						: (error && error.message ? error.message : "삭제 확인 메일 요청을 처리하지 못했습니다."))), "error");
 		} finally {
 			gateBusy = false;
 		}
@@ -1054,7 +1149,17 @@
 			setFormBusy(form, false);
 			const confirmButton = form.querySelector("[data-account-action='confirm-delete-account']");
 			if (confirmButton) confirmButton.disabled = confirmText !== "계정 삭제";
-			setModalStatus(Number(error && error.status) >= 500 ? "서버 연결을 확인한 뒤 다시 시도해 주세요." : "삭제 링크가 만료됐거나 이미 사용되었습니다. 계정 관리에서 새 메일을 요청해 주세요.", "error");
+			if (isEmailActionTokenInvalidError(error)) {
+				pendingAuthLinkAction = null;
+				if (confirmButton) confirmButton.disabled = true;
+				setModalStatus("삭제 링크가 만료됐거나 이미 사용되었습니다. 계정 관리에서 새 메일을 요청해 주세요.", "error");
+			} else {
+				setModalStatus(isRateLimitError(error)
+					? `${getRateLimitMessage(error)} 삭제 링크는 현재 탭의 메모리에 안전하게 보존했습니다.`
+					: (isRequestBodyTooLargeError(error)
+						? `${getRequestBodyTooLargeMessage()} 삭제 링크는 현재 탭의 메모리에 안전하게 보존했습니다.`
+						: `${error && error.message ? error.message : "계정 삭제 요청을 처리하지 못했습니다."} 삭제 링크는 현재 탭의 메모리에 보존했습니다.`), "error");
+			}
 		} finally {
 			gateBusy = false;
 		}

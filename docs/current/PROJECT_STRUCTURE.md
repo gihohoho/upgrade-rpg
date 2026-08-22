@@ -1,4 +1,4 @@
-# Project Structure — v371
+# Project Structure — v377
 
 ## 실행 코드
 
@@ -13,16 +13,29 @@ Upgrade RPG/
 │  ├─ rules/, systems/, ui/     게임 규칙·전투·화면
 │  └─ styles/                   legacy CSS
 ├─ backend/
-│  ├─ app/                      FastAPI routes/services/models/schemas
-│  ├─ alembic/                  DB revision source
+│  ├─ app/                      FastAPI routes/services/models/schemas/middleware
+│  ├─ alembic/                  v371 identity + v377 보안 revision source
 │  ├─ requirements/             reproducible dependency inputs/locks
 │  └─ scripts/                  backend 전용 one-shot/read-only 도구
 ├─ frontend/vue-app/            Vue read-only 전환 실험
-├─ deploy/                      배포 계약·예시·정제된 증거
-└─ tools/                       checker·report·smoke·maintenance
+├─ deploy/                      배포 계약·예시·정제된 증거·v377 release guard
+└─ tools/                       checker·report·smoke·migration/release guard·maintenance
 ```
 
 자동 생성된 backend route/structure/legacy dependency 보고서는 `docs/generated/`에서 확인합니다.
+
+v377은 `backend/app/middleware/`의 JSON 파싱 전 body cap·인증 IP gate,
+`backend/app/models/`와 `services/`의 PostgreSQL HMAC rate bucket·semantic email outbox를
+추가했습니다. `tools/run_v377_auth_security_migration_roundtrip.py`와
+`tools/apply_v377_auth_security_migration.py`는 격리 왕복과 local/Neon의 새 backup 기반
+exact apply를 분리합니다. `tools/private_artifacts.py`는 dotenv·DB backup·migration evidence의
+Windows exact DACL/POSIX owner-mode 검증과 내용 기록 전 private atomic create를 공통으로
+담당하고, `tools/postgres_client_safety.py`는 inherited libpq 환경 제거와 POSIX client 실행파일
+trust 경계를 담당합니다. `deploy/v377-email-release-guard.example.json`,
+`tools/prepare_v377_email_release.py`, `tools/smoke/backend/smoke_v377_email_release.py`는
+미래의 GitHub Actions/GHCR/기존 Render service 단일 배포에 필요한 source-only guard와
+회귀 검사를 정의합니다. 이 구조 설명은 source 준비를 뜻하며 실제 DB·provider·배포
+실행 완료를 뜻하지 않습니다.
 
 ## 문서
 

@@ -7,10 +7,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v376.execution-feedback-email-verification-rollout-approved"
-RESULT = "execution-feedback-email-verification-rollout-approved"
-NEXT_STAGE = "implement-practical-email-verification-security-and-provider-rollout"
-SOURCE_HEAD = "v371_email_identity_lifecycle"
+VERSION = "v377.public-email-security-source-prepared"
+RESULT = "public-email-security-source-prepared"
+NEXT_STAGE = "prepare-v377-private-email-environment"
+SOURCE_HEAD = "v377_auth_email_public_security"
 APPLIED_HEAD = "v295_initial_schema"
 
 
@@ -88,7 +88,7 @@ def main() -> int:
     )
     require_markers(
         "NEXT_CHAT_PROMPT.md",
-        "implement-practical-email-verification-security-and-provider-rollout",
+        "prepare-v377-private-email-environment",
         "이미 승인된 범위를 다시 묻지 말고",
     )
     require_markers(

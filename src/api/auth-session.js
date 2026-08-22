@@ -1,7 +1,7 @@
 (function () {
 	"use strict";
 
-	const VERSION = "v371.account-email-auth-session";
+	const VERSION = "v377.account-email-auth-session-security";
 	const ACCESS_TOKEN_KEY = "upgradeRpgAccountAccessToken";
 	const SELECTED_CHARACTER_KEY = "upgradeRpgSelectedAccountCharacter";
 	const AUTH_NOTICE_KEY = "upgradeRpgAccountAuthNotice";
@@ -9,6 +9,14 @@
 	const LEGACY_LOCAL_SAVE_KEY = "idleRpgSaveV22";
 	const DEFAULT_BACKEND_SLOT_KEY = "default";
 	const ACCOUNT_CHARACTER_ID_PATTERN = /^[a-f0-9]{32}$/i;
+	const SESSION_INVALID_ERROR_CODES = new Set([
+		"bearer_token_required",
+		"access_token_invalid",
+		"account_not_found",
+		"auth_version_stale",
+		"account_suspended",
+		"email_verification_required",
+	]);
 
 	let accessToken = "";
 	let persistence = "session";
@@ -33,6 +41,26 @@
 		} catch (error) {
 			return false;
 		}
+	}
+
+	function getErrorCode(error) {
+		const response = error && error.response && typeof error.response === "object" ? error.response : {};
+		const detail = response.detail && typeof response.detail === "object" && !Array.isArray(response.detail)
+			? response.detail
+			: {};
+		return String(
+			(error && error.code)
+			|| (response.error && response.error.code)
+			|| (response.payload && response.payload.code)
+			|| detail.code
+			|| response.code
+			|| (response.payload && response.payload.status)
+			|| "",
+		).trim().toLowerCase();
+	}
+
+	function isSessionInvalidError(error) {
+		return SESSION_INVALID_ERROR_CODES.has(getErrorCode(error));
 	}
 
 	function readJson(storage, key) {
@@ -359,8 +387,7 @@
 			restoreSelectedCharacter();
 			return { ok: true, authenticated: true, user, character: currentCharacter, response };
 		} catch (error) {
-			const status = Number(error && error.status);
-			if (status === 401 || status === 403) {
+			if (isSessionInvalidError(error)) {
 				clearSession();
 				return { ok: false, authenticated: false, reason: "session-invalid", retryable: false, error };
 			}
@@ -399,6 +426,7 @@
 		normalizeUser,
 		normalizeCharacter,
 		extractAccessToken,
+		isSessionInvalidError,
 		getAccessToken,
 		restoreTokenFromStorage,
 		storeAccessToken,

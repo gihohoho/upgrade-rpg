@@ -19,7 +19,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-PROJECT_VERSION = "v371"
+PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
 
@@ -340,7 +340,7 @@ def render_report(root: Path) -> str:
 
 이 문서는 FastAPI route 파일을 정적으로 분석해서 현재 API 목록을 정리한 자동 보고서입니다.
 
-중요: v371은 **이메일 인증 가입·아이디 찾기·비밀번호 재설정·계정 삭제와 owner 관리자 one-shot, 수동 migration source 준비 단계**입니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
+중요: v377은 **v371 이메일 계정 주기 위에 지속성 rate limit, JSON 파싱 전 body cap, semantic mail outbox와 안전한 미인증 identity 회수를 추가한 source-prepared 단계**입니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
 
 ## 생성 방식
 
@@ -378,7 +378,7 @@ def render_report(root: Path) -> str:
 
 ## legacy 계정·관리자 화면에서 사용하는 route
 
-아래 경로는 v371 이메일 계정 gate, 캐릭터 슬롯, 저장 브리지 또는 관리자 회원관리 화면에 연결됩니다. 이메일 인증·복구 링크처럼 명시적으로 public인 경로를 제외한 계정·게임 저장·관리자 경로는 실제 Bearer 인증을 요구합니다.
+아래 경로는 v377 이메일 계정 gate, 캐릭터 슬롯, 저장 브리지 또는 관리자 회원관리 화면에 연결됩니다. 이메일 인증·복구 링크처럼 명시적으로 public인 경로를 제외한 계정·게임 저장·관리자 경로는 실제 Bearer 인증을 요구합니다.
 
 {table(["route", "group", "query/body 힌트", "response type", "endpoint"], active_rows)}
 
@@ -403,21 +403,22 @@ def render_report(root: Path) -> str:
 
 ## 전체 route map
 
-{table(["method", "full path", "endpoint", "source", "response type", "v371 판단"], route_rows(routes))}
+{table(["method", "full path", "endpoint", "source", "response type", "v377 판단"], route_rows(routes))}
 
 ## 다음 추천 단계
 
-`next safe stage: owner-review-v371-migration-source-and-approve-isolated-roundtrip`
+`next safe stage: prepare-v377-private-email-environment`
 
-v371 source 검증 뒤에도 isolated migration roundtrip, migration apply, Brevo 설정, owner bootstrap apply는 각각 별도 경계로 남습니다.
+v377 source 검증 뒤에도 private environment/DB artifact preparation, isolated migration roundtrip, fresh local/Neon backup과 exact apply, Brevo 설정·테스트 메일과 배포는 순서대로 남습니다. owner bootstrap은 이 rollout과 분리된 별도 one-shot입니다.
 
 권장 범위:
 
-1. 반영된 `email-validator==2.3.0`과 Linux lock, v371 migration source를 검토합니다.
-2. isolated roundtrip은 exact SHA 승인 뒤 수행하며, 통과하더라도 실제 DB apply는 다시 별도 승인합니다.
-3. Brevo sender/API key와 Render secret은 공급자 설정 승인 단계에서만 구성합니다.
-4. 공개 전 rate limit, raw body cap, 세션 폐기, save revision/CAS와 CSP·개인정보 정책을 보강합니다.
-5. backend image와 legacy static은 이메일 backend가 준비된 뒤 같은 exact-SHA 승인 단위로 게시·배포합니다.
+1. ignored dotenv와 기존 DB security artifact를 private ACL로 고정하고 email/abuse secret을 값 출력 없이 준비합니다.
+2. 고정 DB의 synthetic v295 fixture로 v377 upgrade→v295 downgrade→v377 re-upgrade를 한 번 검증합니다.
+3. 같은 source SHA의 완료 보고서와 fresh backup을 강제한 뒤 local, Neon을 exact v377로 적용합니다.
+4. Brevo sender/API key와 Render secret을 구성하고 실제 테스트 메일로 발송·링크 흐름을 확인합니다.
+5. 서버측 session/revoke, save revision/CAS, CSP/XSS·브라우저 token과 개인정보 정책은 공개 회원가입을 열기 전에 마저 완료합니다.
+6. backend image와 legacy static은 모든 공개 gate가 닫힌 뒤 같은 exact-SHA 단위로 게시·배포합니다.
 """
 
 

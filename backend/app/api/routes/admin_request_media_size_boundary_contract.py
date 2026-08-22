@@ -5,14 +5,15 @@ from typing import Any
 from fastapi.testclient import TestClient
 
 from app.api.routes.admin_request_payload_validation_contract import _build_validation_app
+from app.core.config import settings
 
 
 ADMIN_REQUEST_MEDIA_SIZE_BOUNDARY_CONTRACT: dict[str, Any] = {
-    "version": "v243.backend-admin-request-media-size-boundary-contract",
-    "status": "admin-request-media-size-boundary-v243",
+    "version": "v377.backend-admin-request-media-size-boundary-contract",
+    "status": "admin-request-media-size-boundary-v377",
     "policy": (
         "Non-JSON media types must fail at request parsing without service or DB execution; "
-        "the application currently has no implicit body-size rejection contract"
+        "the pure-ASGI application boundary rejects bodies above the configured cap"
     ),
     "path": "/master-data/create-preview",
     "cases": [
@@ -72,7 +73,7 @@ ADMIN_REQUEST_MEDIA_SIZE_BOUNDARY_CONTRACT: dict[str, Any] = {
             },
         },
         {
-            "key": "moderate-json-body-no-app-limit",
+            "key": "moderate-json-body-within-app-limit",
             "request": {
                 "json": {
                     "domain": "items",
@@ -86,11 +87,12 @@ ADMIN_REQUEST_MEDIA_SIZE_BOUNDARY_CONTRACT: dict[str, Any] = {
         },
     ],
     "sizePolicy": {
-        "applicationLimitConfigured": False,
-        "applicationLimitBytes": None,
-        "enforcementOwner": "deployment-proxy-or-server-configuration",
+        "applicationLimitConfigured": True,
+        "applicationLimitBytes": int(settings.request_body_limit_bytes),
+        "authApplicationLimitBytes": int(settings.auth_request_body_limit_bytes),
+        "enforcementOwner": "pure-asgi-request-body-limit-middleware",
         "probeBytes": 65536,
-        "note": "Do not infer a production upload limit from TestClient; configure it explicitly at the deployment boundary before relying on one.",
+        "note": "The focused v377 middleware smoke proves declared, understated, and headerless body enforcement before route parsing.",
     },
 }
 

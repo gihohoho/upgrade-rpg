@@ -44,6 +44,8 @@ def production_settings(database_url: str = SAFE_DATABASE_URL) -> Settings:
         brevo_api_key="b" * 40,
         brevo_from_email="noreply@game.example.invalid",
         email_token_secret="e" * 40,
+        auth_abuse_secret="r" * 40,
+        auth_trusted_proxy_mode="render",
         public_frontend_origin="https://game.example.invalid",
         **{"CORS_ORIGINS": "[]"},
     )
@@ -88,7 +90,14 @@ def main() -> int:
     alembic_source = (BACKEND / "alembic/env.py").read_text(encoding="utf-8")
     for label, source in (("runtime", session_source), ("alembic", alembic_source)):
         require("build_database_connect_args" in source, f"{label} does not use shared TLS connect args")
-        require("connect_args=build_database_connect_args()" in source, f"{label} connect_args binding differs")
+    require(
+        "connect_args=build_database_connect_args()" in session_source,
+        "runtime connect_args binding differs",
+    )
+    require(
+        "connect_args=build_alembic_connect_args()" in alembic_source,
+        "Alembic bounded connect_args binding differs",
+    )
 
     print("Neon production database bootstrap smoke")
     print("- production system CA + certificate + hostname verification: yes")

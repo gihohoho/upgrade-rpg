@@ -1,100 +1,99 @@
-# Current Status — v376
+# Current Status — v377
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v376.execution-feedback-email-verification-rollout-approved
-strict result: execution-feedback-email-verification-rollout-approved
-next safe stage: implement-practical-email-verification-security-and-provider-rollout
-local Alembic source head: v371_email_identity_lifecycle
+latest: v377.public-email-security-source-prepared
+strict result: public-email-security-source-prepared
+next safe stage: prepare-v377-private-email-environment
+local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v295_initial_schema
-v371 apply/stamp/downgrade: 0/0/0
-email rollout approval/execution: yes/no
+v377 apply/stamp/downgrade: 0/0/0
+email rollout approval/execution: yes/source-prepared
 public backend/static: v351 Live
 production approval/execution: no/no
 ```
 
-## 현재 로컬 구현
+## v377 source-prepared 구현
 
-- v372: 기능·DB·배포를 바꾸지 않고 Markdown 243개를 95개로 통합하고 `docs/current`의 실제 현재 문서를 11개로 줄였습니다. 문서 역할과 크기·중복·링크 smoke를 추가했습니다.
-- v373: `email-validator==2.3.0` 설치와 Linux dependency lock/GHCR 재현성 해시 갱신, Obsidian 1.13.7 `Upgrade RPG` local vault 등록, 표준 Markdown 링크망과 작업 종료 문서 마감 규칙을 준비했습니다.
-- v374: 루트 README에 현재 로컬 실행 절차를 단일 기준으로 통합하고, Obsidian Graph·Local Graph·Backlinks·Bookmarks를 프로젝트 구조에 맞게 사용하는 방법과 한계를 문서화했습니다.
-- v375: 사용자용 Obsidian 설명을 추적 문서에서 제거하고, ignored local vault에 핵심 파일·저장 검색 북마크, 전체 문서 폴더별 Graph 색상 그룹, Local Graph 깊이 3과 탐색 workspace를 Codex가 직접 관리하도록 전환했습니다. 의미가 동일한 `src/styles/style.css` 포맷 정렬도 기계적으로 확인해 함께 반영합니다.
-- v376: 실행 전 환경 고정, 범위별 단일 검증, 성공 후 중복 확인 금지와 작업 종료 자체 피드백을 장기 규칙으로 만들었습니다. 기호는 실질적인 이메일 인증 rollout에 필요한 보안 구현·migration·Brevo/Render 설정·테스트 메일·배포를 승인했습니다.
-- v370: 회원가입·로그인, Bearer 인증, 계정별 캐릭터 슬롯 8개, 캐릭터별 local/DB 저장 격리, 관리자 회원 목록·상세·정지/해제와 감사 로그
-- v371: 가입 이메일 필수화, 이메일 인증, 인증 재전송, 아이디 찾기, 비밀번호 재설정, 이메일 최종 확인을 거친 일반 회원 계정 삭제
-- 비밀번호 재설정·계정 상태 변경은 `authVersion`을 올려 기존 access token을 무효화합니다.
-- 이메일 action token 원문은 저장하지 않고 별도 `EMAIL_TOKEN_SECRET`의 HMAC-SHA256 digest만 저장합니다.
-- 메일은 Render Free의 SMTP 제한 때문에 Brevo HTTPS API를 사용하도록 준비했으며 HTML과 plaintext 모두 게임 스타일 source-controlled template입니다.
-- 계정 상단 UI는 크기를 키웠고 마을에서만 보입니다. 필드·보스·특수 구역에서는 hidden/inert입니다.
-- owner 관리자는 app startup 자동 변경이 아니라 별도 one-shot 스크립트로만 만들 수 있습니다. exact SHA, clean tracked tree, 기존 관리자 0명, 명시 확인이 필요하고 이메일은 자동 인증하지 않습니다.
+- `auth_rate_limit_buckets`는 scope와 domain-separated HMAC subject digest만 보존하고 원문 IP·email·username·identifier·Bearer/action token을 저장하지 않습니다. PostgreSQL upsert 후 row lock으로 동시 요청을 직렬화하고 fixed window, 반복 실패 cooldown, 유한 비동기 지연을 적용합니다.
+- auth 9개 POST의 IP 검사는 pure ASGI middleware에서 FastAPI JSON 파싱·schema·Bearer dependency보다 먼저 실행됩니다. 유효한 body는 route에서 subject bucket을 합쳐 credential/token 실패를 두 bucket에 기록합니다.
+- Render proxy mode는 Cloudflare가 덮어쓰는 단일 `CF-Connecting-IP`만 허용합니다. caller가 선행 값을 조작할 수 있는 `X-Forwarded-For`는 무시하고, 신뢰 header가 없거나 IP가 아니면 production에서 503 fail-closed합니다.
+- `RequestBodyLimitMiddleware`는 auth 16,384 bytes, 전체 2,100,000 bytes를 JSON 파싱 전에 적용합니다. 선언 초과, 중복·충돌·잘못된 `Content-Length`, 실제 body 초과를 원문 반사 없이 413으로 차단합니다.
+- `auth_email_outbox`는 user FK, purpose, HMAC target digest, 상태·시각·단일 시도 메타데이터만 저장합니다. 수신자·원문 token·메일 본문은 DB에 없습니다.
+- worker는 `FOR UPDATE SKIP LOCKED`로 claim하고 preparing commit 뒤 recipient을 해석합니다. action token은 provider 호출 직전에 생성해 digest만 sending 상태와 commit합니다. provider 시도 후 실패·timeout·process crash는 자동 재시도하지 않고 unknown outcome을 terminal로 마감합니다.
+- resend는 기존 유효 token을 먼저 폐기하지 않습니다. 새 provider 발송이 성공해야 다른 동일-purpose token을 소비하며, prepare·failed·unknown 상태에서는 이전 링크를 보존합니다.
+- 인증 재전송·아이디 찾기·비밀번호 재설정 요청은 실제·decoy 모두 outbox transaction을 거친 뒤 350 ms + 0∼100 ms jitter와 generic 202로 답합니다. provider HTTPS 호출은 request transaction에서 실행하지 않습니다.
+- 7일이 지난 미인증 identity는 active email/password legacy account이면서 admin·audit·save·item·inventory·equipment·skill·mailbox 관계가 없을 때만 동일 username/email 재가입 시 회수합니다.
+- Bearer/session 실패는 stable code를 사용합니다. frontend는 이 allowlist에서만 session을 지우고, `invalid_credentials`·관리자 업무 403·429·413·code 없는 401/403에서는 token을 보존합니다.
+- action-link fragment는 backend와 같은 `A-Za-z0-9_-` 32∼256자를 검사한 뒤 URL에서 즉시 제거합니다. backend가 `email_action_token_invalid`를 반환할 때만 메모리의 링크를 폐기합니다.
+- 이메일 접수 UI는 “보냈습니다”가 아니라 “요청을 접수했습니다·도착까지 몇 분 걸릴 수 있음”을 보여줍니다.
+- `email-validator==2.3.0`과 `dnspython==2.8.0`은 backend `.venv`와 재현 가능한 Linux lock에 고정되어 있으며 누락 시 이메일 동작은 fail-closed합니다.
+- `prepare_v377_email_release.py`는 미래 release의 fresh publish lifecycle, 단일 `run_attempt=1`, 새 서명 image digest, 기존 Render service와 필수 환경변수 키 이름만 fail-closed로 검증합니다. 기본 동작은 read-only이며 GitHub·GHCR·Render·Brevo·공개 endpoint를 호출하지 않는 source-only guard입니다.
+- `private_artifacts.py`와 환경·migration guard는 secret·DB backup·evidence를 읽기 전에 exact path와 OS별 비공개 권한을 검증합니다. Windows에서는 현재 사용자·LocalSystem·Administrators만 명시적으로 허용하며 secret/backup 내용은 private file을 먼저 만든 뒤 기록합니다. 기본 plan/inspect는 권한을 바꾸지 않습니다.
 
-## DB와 의존성
+## DB·migration 상태
 
-- source graph에는 `v371_email_identity_lifecycle` revision이 있습니다.
-- 실제 local/Neon DB는 계속 `v295_initial_schema`입니다. 이번 준비에서 migration apply·stamp·downgrade와 DB write를 하지 않았습니다.
-- revision은 `users`에 legacy-safe nullable email identity, verification 시각, `auth_version`을 추가하고 `user_email_action_tokens`를 만듭니다.
-- 검증된 이메일 정규화를 위한 `email-validator==2.3.0`과 전이 의존성 `dnspython==2.8.0`을 backend `.venv`와 Linux runtime/musllinux/dev lock에 반영했습니다. dependency가 빠지면 가입 관련 API는 계속 503으로 fail-closed합니다.
-- 현재 생성 보고서는 [POSTGRES_ALEMBIC_READINESS.md](../generated/POSTGRES_ALEMBIC_READINESS.md)입니다. 상세 절차는 [migration runbook](../reference/database/POSTGRES_DEPLOYMENT_MIGRATION_RUNBOOK.md)에 있습니다.
+- Alembic graph의 단일 head는 `v295_initial_schema → v371_email_identity_lifecycle → v377_auth_email_public_security`입니다.
+- v377은 `auth_rate_limit_buckets`, `auth_email_outbox` 두 table과 관련 index·FK·CHECK만 추가합니다. v371 source를 수정하지 않습니다.
+- actual local/Neon DB는 계속 exact v295이며 v377 migration·backup·write는 아직 0회입니다.
+- 새 isolated runner는 기존 dump를 restore하지 않고 고정 빈 DB에 v295까지 upgrade한 뒤 비민감 synthetic legacy fixture를 삽입해 `v295 → v377 → v295 → v377`을 1회 검증합니다. DB 생성 전에 고정 private report를 배타적으로 만들고 그 report가 이미 있으면 성공·실패와 관계없이 재실행을 거부합니다.
+- target backup/apply guard는 같은 clean pushed source SHA의 완료된 고정 roundtrip report와 fresh custom backup을 필수로 검증합니다. 기존 22 table은 migration 전 열과 PK 순서로 before/after digest가 정확히 일치해야 합니다.
+- actual target apply는 한 synchronous PostgreSQL transaction에서 고정 5초 lock timeout·120초 statement timeout을 설정하고 기존 22개 table을 첫 SELECT 전에 정렬된 `SHARE ROW EXCLUSIVE`로 잠급니다. 같은 connection에서 fingerprint→backup 대조→Alembic→schema/data parity를 끝낸 뒤 한 번 commit하고, 실패하면 전체 rollback합니다. 일반 reader는 허용되고 writer만 유한 시간 대기하므로 Render pause는 필요 없습니다.
+- PostgreSQL subprocess와 sync psycopg connection은 inherited `PG*` 값을 모두 제거합니다. Windows는 고정 PostgreSQL 16 절대 경로, POSIX는 root/current owner이면서 group/world non-writable인 resolved client 경로만 허용합니다.
+- isolated roundtrip, local/Neon backup, local/Neon apply는 각각 첫 mutation 전에 private exclusive attempt marker를 만들며 성공·실패 후 수동·자동 재실행을 모두 거부합니다. actual target에 downgrade·stamp·restore·reset·seed 경로도 없습니다.
+- production rollback은 DB를 additive v377에 둔 채 이전 application image로만 수행하며 actual DB downgrade를 사용하지 않습니다.
 
 ## 검증 결과
 
-- v375 README의 6개 Bash block은 모두 실행 위치·`.venv`·설치 상태를 가지며 필수 서버 명령/URL, 위험 DB 명령 code-block 차단, Markdown 링크·중복·크기·handoff readiness PASS
-- Obsidian 1.13.7 종료·재실행 뒤 ignored JSON 7개 parse, 핵심 파일·저장 검색 북마크 8개, 전체 Graph의 빈 filter·13개 폴더 색상 group·orphans 표시, Local Graph 깊이 3, markdown/graph/search/bookmarks/backlinks/outgoing/outline pane 보존 PASS
-- `src/styles/style.css` HEAD/작업본 PostCSS AST 비교에서 selector 490개, at-rule 12개, declaration 1,698개, 속성·값·`!important`·주석이 동일하고 실제 값 변경 0건; PostCSS parse와 item quality/static smoke PASS
-- 기존 legacy `index.html`·`admin.html` HTTP 200, PostgreSQL container healthy를 읽기 전용 확인; backend·Adminer 시작/중지와 DB write 0회
-- v373 Linux dependency lock `--check`, `pip check`, `email-validator 2.3.0` 정규화와 세 lock의 `email-validator`/`dnspython` exact pin 검사 PASS
-- 설치 여부와 무관한 강제 import-failure 가입 `503`, v371 email/migration/owner와 v370 auth/admin focused 회귀 PASS
-- 갱신된 5개 dependency/GHCR SHA의 strict·변조 fail-closed 공급망 검사 PASS
-- v372 문서 구조 smoke: Markdown 95개, current 11개, exact duplicate 0, 활성 문서 broken link 0, 131개 stage-note 원본 경로 보존 PASS
-- 문서 이동 뒤 generated report 4종 최신성, handoff readiness, frontend static plan, 전체 `tools/run_smoke_core.sh` PASS
-- v371 이메일 lifecycle, migration source parity, owner bootstrap focused smoke PASS
-- v370 auth/character/admin 회귀 PASS
-- 인증 422 credential 비반사, SQL bind 숨김, action-token 단일 소비, IDOR·관리자 actor 재검증 PASS
-- Python compileall, JavaScript syntax, runtime blocking-I/O, backend route map 48 operations PASS
-- 실제 Chrome 기본 viewport와 `390×844`에서 계정 modal/account bar overflow 0, console warn/error 0
-- 이메일 renderer는 외부 asset·web font·script 0, HTML escape와 plaintext fallback을 검사했습니다. 실제 메일 클라이언트 QA는 아직 하지 않았습니다.
-- 독립 리뷰 기준 source-prepared 즉시 수정 blocker는 없습니다.
+- v377 public auth security focused smoke: body cap, malformed/schema-invalid pre-parse IP limiter, HMAC key, concurrent-safe bucket, cooldown/delay, trusted Render IP, 429/413/no-store/CORS PASS
+- v377 semantic outbox focused smoke: no recipient/raw token/body persistence, ordered claim·prepare·sending·finalize, provider 단일 시도, crash recovery, decoy, 기존 token 보존 PASS
+- v377 migration parity/guard smoke: revision/model parity, fixed synthetic roundtrip과 target backup/apply one-attempt marker, private evidence chain, hostile libpq env 제거, trusted client path, single-transaction quiescent exact apply, legacy data preservation, Neon TLS boundary PASS
+- v377 email environment temp-fixture smoke: ignored-only private atomic replacement, existing backup tree recursive ACL hardening, read-only plan non-mutation, strong secret preserve/distinct generation, no value output, external Brevo action report PASS
+- v377 email release source guard smoke: 과거 v351 evidence·digest·deploy ID 재사용 차단, fresh publish lifecycle, 단일 dispatch·즉시 gate closure·rerun 금지, key-only Render 준비 PASS
+- v371 email backend·frontend, v370 auth/character/admin, admin media contract·Neon production Settings focused 회귀 PASS
+- 관련 Python Ruff·compileall, JavaScript syntax, runtime blocking-I/O, `git diff --check` PASS
+- 설치된 Git Bash에서 backend `.venv`를 활성화하고 `DEBUG=false`로 실행한 전체 core smoke PASS
+- source-prepared 즉시 수정 blocker는 없습니다. 실제 DB 왕복·backup·apply와 provider 검증은 아직 실행 전입니다.
 
-## 아직 실행하지 않은 것
+## 실행하지 않은 것
 
-- local/Neon v371 migration과 어떤 DB write도 없음
-- Brevo 가입·발신자 확인·API key/secret 주입·실제 메일 발송
+- isolated PostgreSQL runner, local/Neon backup·v377 migration, DB reset·seed·restore·stamp·actual downgrade
+- Brevo 가입·sender 확인·API key·secret 주입, 실제 메일·메일 클라이언트 QA
 - owner bootstrap apply
-- GitHub Actions, GHCR image 게시, Render env 변경과 backend/static 재배포
+- GitHub Actions, GHCR image 게시, Render env·backend deploy, legacy static 배포
 - custom domain, DNS, 결제
 
 ## 공개 전 필수 보강
 
-현재 소스는 로컬 검토와 다음 승인 준비에는 적합하지만 공개 회원가입 배포에는 적합하지 않습니다.
+v377에서 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수는 source 구현을 완료했습니다. 공개 회원가입과 새 backend/static 배포 전에는 다음이 남아 있습니다.
 
-1. IP·정규화 이메일별 rate limit과 반복 실패 지연
-2. durable outbox/queue로 메일 발송 접수 시간 차이와 provider 지연 분리
-3. ASGI raw request body cap
-4. 만료된 미인증 계정 정리 또는 실제 메일 소유자의 안전한 계정 회수
-5. 서버측 session/refresh/revoke와 로그인 상태 비밀번호 변경
-6. 다중 기기 save revision/CAS와 충돌 해결
-7. CSP/XSS, 개인정보 보관·삭제·감사 정책
-8. Brevo tracking/log retention/preview 저장과 API key 회전 설정 검토
+1. 서버측 session/refresh/revoke, 기기별 원격 폐기 또는 현재 access-token 정책 확정
+2. 다중 기기 save revision/CAS와 충돌 해결
+3. HTTPS/CSP/XSS 회귀, 브라우저 token 저장 정책
+4. 개인정보 보관·삭제·문의·복구 정책
+5. Brevo sender, anonymous tracking, 1개월 log retention, preview 미저장과 전용 API key 회전 실제 검증
+6. backend image와 legacy static의 같은 exact-SHA 게시·배포·rollback 검증
+
+source-only release guard는 이 마지막 실행을 대신하거나 허가하지 않습니다. 위 1∼5번과
+Brevo 실제 검증이 끝난 뒤에만 별도 exact-SHA release 판단에 사용합니다.
 
 ## 바로 다음 단계
 
-1. 완료된 v371 source를 반복 감사하지 않고 secret 존재 여부와 DB/source head만 한 번 preflight합니다.
-2. rate limit, raw body cap, durable mail outbox/timing 보호와 미인증 계정 회수부터 구현합니다.
-3. 필요한 migration chain의 isolated upgrade→downgrade→upgrade를 한 번 검증한 뒤 승인된 local/Neon 적용을 진행합니다.
-4. Brevo/Render 설정, 테스트 메일, 필요한 backend/static 배포 후 가입→인증→로그인→복구를 실제 이메일로 확인합니다.
+1. 같은 clean pushed SHA에서 environment `--apply`를 먼저 한 번 실행해 ignored dotenv와 기존 DB security artifact를 private ACL로 고정하고 email/abuse secret을 값 출력 없이 생성합니다.
+2. fixed isolated DB의 synthetic v295→v377→v295→v377을 1회 실행합니다.
+3. 완료 보고서로 local·Neon의 fresh backup과 exact v377 upgrade를 순서대로 실행하고 기존 22 table의 row digest 변경 0을 확인합니다.
+4. 기호가 직접 완료해야 하는 Brevo 행동을 한 번에 요청한 뒤 실제 테스트 메일 E2E를 수행합니다.
 
-기호의 v376 승인은 위 이메일 인증 rollout 전체에 적용됩니다. 같은 범위를 다시 승인받지 않으며 Brevo 가입·발신자 소유 확인·API key 입력처럼 Codex가 대신할 수 없는 행동만 한 번에 요청합니다. owner bootstrap, DB reset·seed·restore와 무관한 기능 변경은 포함되지 않습니다.
-
-세부 인증 계약은 [이메일 인증·복구·삭제](ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md), 기존 캐릭터 저장 계약은 [계정·캐릭터 슬롯](ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md), 보안 후속은 [Security Gates](SECURITY_ROTATION_AND_GITHUB_GATES.md)를 봅니다.
+기호의 v376 승인은 이 이메일 인증 rollout 범위에 계속 적용됩니다. 같은 범위를 다시 묻지 않으며 Brevo 가입·발신자 소유 확인·API key 입력처럼 Codex가 대신할 수 없는 행동만 모아 요청합니다. owner bootstrap, DB reset·seed·restore와 이메일 인증에 무관한 기능 변경은 포함되지 않습니다.
 
 ## 배포와 기존 게임 상태
 
 - 공개 frontend: `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`
 - 공개 backend: `https://upgrade-rpg-api.onrender.com`
-- 공개 backend와 Static Site는 계속 v351입니다. v370/v371 로컬 계정 기능은 아직 배포하지 않았습니다.
-- Neon PostgreSQL 16 Singapore는 v295 기준 22 application tables와 `alembic_version`을 유지합니다.
-- GHCR namespace/repository는 `gihohoho` / `ghcr.io/gihohoho/upgrade-rpg-backend`입니다.
-- 콘텐츠·장비 공식·이미지의 완료 이력은 `docs/reference/assets/`와 `docs/archive/history/`에서 찾습니다.
+- 공개 backend/static은 계속 v351이고 v370/v371/v377 로컬 계정 기능은 배포하지 않았습니다.
+- Neon PostgreSQL 16 Singapore는 아직 v295의 22 application tables + `alembic_version`입니다.
+- GHCR은 `ghcr.io/gihohoho/upgrade-rpg-backend`, target은 `linux/amd64`입니다.
+- 상세 인증 계약은 [이메일 인증·복구·삭제](ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md), 기존 저장 계약은 [계정·캐릭터 슬롯](ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md), 후속 gate는 [Security Gates](SECURITY_ROTATION_AND_GITHUB_GATES.md)를 따릅니다.

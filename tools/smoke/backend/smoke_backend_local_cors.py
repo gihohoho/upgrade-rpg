@@ -76,6 +76,8 @@ def test_production_settings_do_not_append_local_dev_origins() -> None:
         brevo_api_key="b" * 40,
         brevo_from_email="noreply@example.com",
         email_token_secret="e" * 40,
+        auth_abuse_secret="u" * 40,
+        auth_trusted_proxy_mode="render",
         public_frontend_origin="https://example.com",
         database_url="postgresql+asyncpg://user:secret@db.example.invalid:5432/rpg_game",
         CORS_ORIGINS="https://example.com",

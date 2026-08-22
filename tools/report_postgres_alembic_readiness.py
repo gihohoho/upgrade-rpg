@@ -15,11 +15,12 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-PROJECT_VERSION = "v371"
+PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/POSTGRES_ALEMBIC_READINESS.md")
-SOURCE_GRAPH_HEAD = "v371_email_identity_lifecycle"
+SOURCE_GRAPH_HEAD = "v377_auth_email_public_security"
 APPLIED_DB_REVISION = "v295_initial_schema"
 APPLIED_DB_APPLICATION_TABLES = 22
+NEXT_SAFE_STAGE = "prepare-v377-private-email-environment"
 
 
 @dataclass(frozen=True)
@@ -143,39 +144,41 @@ def render(root: Path) -> str:
 
 중요: 이 보고서는 **읽기 전용 정적 분석**입니다. DB 연결, `.env` 변경, schema 생성/삭제, seed import, migration 생성/적용을 수행하지 않습니다.
 
-## v371 현재 overlay
+## v377 현재 overlay
 
 ```txt
 local Alembic source graph head: {SOURCE_GRAPH_HEAD}
 local/live/Neon applied DB revision: {APPLIED_DB_REVISION}
-v371 revision state: source prepared / not applied
+v377 revision state: source prepared / not applied
 model application tables: {len(models)}
 applied DB application tables: {APPLIED_DB_APPLICATION_TABLES}
-next safe stage: owner-review-v371-migration-source-and-approve-isolated-roundtrip
+next safe stage: {NEXT_SAFE_STAGE}
 ```
 
 v295는 최초 22-table baseline을 실제 DB에 적용한 역사이자 현재 local/Neon DB revision으로
-계속 유효합니다. 다만 local source graph에는 v295를 직접 잇는 두 번째 revision
-`v371_email_identity_lifecycle`이 준비됐으므로, 이제 `head`와 DB `current`를 같은 말로
-쓰지 않습니다.
+계속 유효합니다. local source graph에는 v295 뒤에 `v371_email_identity_lifecycle`과
+`v377_auth_email_public_security`이 차례로 준비됐으므로, `head`와 DB `current`를 같은
+말로 쓰지 않습니다.
 
-- source graph `head`: `v371_email_identity_lifecycle`
+- source graph `head`: `v377_auth_email_public_security`
 - local/live/Neon DB `current`: `v295_initial_schema`
 - 차이: v371의 nullable email identity·`authVersion`과
-  `user_email_action_tokens` 1개 table
+  `user_email_action_tokens` 1개 table, v377의 durable auth rate-limit·semantic mail outbox
+  2개 table
 - 실제 상태: revision 파일과 model만 준비, `upgrade`·`downgrade`·`stamp` 0회
 
-v371 source parity smoke는 v295 바로 다음 revision, upgrade의 사용자 열 4개와 table
-1개, downgrade 역순 제거, 필수 index/check/FK를 DB 접속 없이 검증해 PASS했습니다.
-실제 migration apply는 isolated 검토와 새 exact-SHA owner 승인 전까지 금지합니다.
+v371·v377 source parity smoke는 두 revision의 연결, upgrade/downgrade 대칭과 필수
+index/check/FK를 DB 접속 없이 검증해 PASS했습니다. 실제 migration apply에 앞서 clean
+pushed SHA에서 ignored dotenv·기존 DB 보안 artifact의 private ACL과 두 HMAC secret을
+값 출력 없이 준비한 뒤 isolated v295→v377→v295→v377 왕복을 한 번 검증합니다.
 현재 `tools/run_smoke_core.sh`에서는 v295~v310 단일-head·no-next-revision 역사 계약에
 고정된 최초 revision 생성·수동 검토, isolated upgrade·downgrade·roundtrip,
 source·restore stamp guard, baseline completion, next-revision preflight와 deployment
 runtime readiness의 **실행 줄만** 제거했습니다. 해당 도구·문서·실행 증거 파일은 삭제하지
-않고 역사로 보존하며, v371 migration-source parity smoke가 현재 계약을 대신합니다.
+않고 역사로 보존하며, v371·v377 migration-source parity smoke가 현재 계약을 대신합니다.
 
 이하 v283~v310과 v295 baseline 문구는 당시 완료 증거입니다. `새 revision 불필요`라는
-v306 결과도 **v306 당시 model/schema**에 대한 역사이며 v371 현재 상태를 덮어쓰지
+v306 결과도 **v306 당시 model/schema**에 대한 역사이며 v377 현재 상태를 덮어쓰지
 않습니다.
 
 ## 결론
@@ -183,7 +186,7 @@ v306 결과도 **v306 당시 model/schema**에 대한 역사이며 v371 현재 �
 - 현재 backend는 이미 PostgreSQL 전용 타입과 두 드라이버를 전제로 설계되어 있습니다.
 - FastAPI 런타임은 `asyncpg`, 로컬 schema/seed 도구는 `psycopg` 사용을 전제로 분리되어 있습니다.
 - v310 당시 SQLAlchemy 모델과 수동 검토가 끝난 최초 Alembic revision 1개가
-  존재했습니다. 현재 source에는 v371 수동 revision을 더해 2개가 있습니다.
+  존재했습니다. 현재 source에는 v371·v377 수동 revision을 더해 3개가 있습니다.
 - v284에서 사용자 실제 `MissingGreenlet` 결과를 근거로 Alembic online 경로를 async engine 방식으로 수정했습니다.
 - 기호 컴퓨터에서 `alembic history`, `heads`, `current`가 모두 정상 완료되고 PostgreSQL 연결이 확인되었습니다.
 - 기호 컴퓨터의 실제 runtime 점검에서 모델/DB 테이블 22개, 전체 row 748개, `alembic_version` 없음, DB health 정상 결과가 확인되었습니다.
@@ -284,7 +287,7 @@ python -m pip install -e ".[dev]"
 - metadata: `Base.metadata`
 - online 방식: `async_engine_from_config()` + `connection.run_sync()`
 - source revision: {len(revision_files)}개 / graph head `{SOURCE_GRAPH_HEAD}`
-- 적용 DB current: `{APPLIED_DB_REVISION}` / v371 not applied
+- 적용 DB current: `{APPLIED_DB_REVISION}` / v371·v377 not applied
 - `history`, `heads`, `current` 읽기 전용 수집 도구: `tools/check_alembic_readonly_state.py`
 - Docker/schema/table count/health 읽기 전용 수집 도구: `tools/check_postgres_runtime_readonly_state.py`
 - SQLAlchemy metadata/실제 PostgreSQL 상세 구조 비교: `tools/check_postgres_schema_equivalence.py`
@@ -304,6 +307,9 @@ python -m pip install -e ".[dev]"
 - next revision read-only preflight: `tools/check_postgres_next_revision_preflight.py`
 - deployment/runtime readiness preflight: `tools/check_postgres_deployment_runtime_readiness.py`
 - runtime config hardening verification: `tools/check_runtime_config_hardening.py`
+- v377 private environment/ACL 준비: `tools/prepare_v377_email_security_environment.py`
+- v377 isolated migration roundtrip guard: `tools/run_v377_auth_security_migration_roundtrip.py`
+- v377 local/Neon exact migration apply guard: `tools/apply_v377_auth_security_migration.py`
 
 ## 현재 차단 요소 / 실제 검증 필요 지점
 
@@ -386,8 +392,8 @@ v295 baseline 확정 상태:
 
 이전 `stamp head`는 완료됐으며 재실행하지 않습니다.
 
-현재 local source graph head는 그 뒤의 `v371_email_identity_lifecycle`입니다. 따라서
-v295 DB에 대해 승인 없이 `stamp head`를 다시 실행하면 실제 v371 schema 변경 없이
+현재 local source graph head는 그 뒤의 `v377_auth_email_public_security`입니다. 따라서
+v295 DB에 대해 `stamp head`를 다시 실행하면 실제 v371·v377 schema 변경 없이
 revision만 거짓으로 올릴 수 있으므로 특히 금지합니다.
 
 ### Stage E — v306 당시 다음 revision 판정 역사
@@ -402,7 +408,7 @@ revision만 거짓으로 올릴 수 있으므로 특히 금지합니다.
 
 위 1~7은 v306 당시 model/schema 차이 0개에 대한 역사입니다.
 
-### Stage E-2 — v371 이메일 identity revision 준비
+### Stage E-2 — v371 이메일 identity revision 준비 역사
 
 1. 의도된 schema 변화는 `users` 열 4개와 `user_email_action_tokens` table 1개입니다.
 2. revision ID는 `v371_email_identity_lifecycle`, down revision은
@@ -411,14 +417,29 @@ revision만 거짓으로 올릴 수 있으므로 특히 금지합니다.
 4. source parity smoke는 upgrade/downgrade operation·index·check·FK 대칭을 DB 없이
    검증해 PASS했습니다.
 5. 반영된 `email-validator 2.3.0` dependency/lock과 v371 source 준비 commit을 검토합니다.
-6. 그 commit의 정확한 40자리 SHA를 기호가 별도 승인하기 전에는 isolated roundtrip이나 local/Neon 어느 DB에도
-   `upgrade`, `downgrade`, `stamp`를 실행하지 않습니다.
-7. 실제 apply 전 현재 DB `v295`, backup, v371 single head와 migration source hash를
-   read-only로 확인하고 승인된 isolated roundtrip/rollback을 먼저 검증합니다.
+6. v371은 단독 적용하지 않았고 현재 승인된 v377 chain의 첫 후속 revision으로 보존합니다.
+7. 실제 apply 전 현재 DB `v295`, backup, v377 single head와 두 migration source hash를
+   read-only로 확인하고 isolated roundtrip/rollback을 먼저 검증합니다.
 8. migration 적용과 Brevo 설정, owner bootstrap은 같은 승인이 아니며 순서대로 분리합니다.
 
-현재는 v371 revision **생성·source 검토 준비만 완료**했고 autogenerate와 실제
-upgrade/downgrade/stamp는 모두 미승인·미실행입니다.
+### Stage E-3 — v377 공개 이메일 보안 revision 준비
+
+1. v377은 `auth_rate_limit_buckets`와 `auth_email_outbox` 두 table만 추가합니다.
+2. revision ID는 `v377_auth_email_public_security`, down revision은
+   `v371_email_identity_lifecycle`이며 source graph는 v295→v371→v377 단일 head입니다.
+3. migration source parity, private artifact, exact endpoint, one-attempt guard는 DB 접속 없이
+   focused smoke로 검증했습니다.
+4. 현재 local/Neon DB는 모두 v295이며 v377 autogenerate·upgrade·downgrade·stamp는
+   실행하지 않았습니다.
+5. 다음 안전 단계는 clean pushed SHA에서
+   `tools/prepare_v377_email_security_environment.py --apply`로 ignored dotenv와 기존 DB
+   artifact를 private ACL로 고정하고 `EMAIL_TOKEN_SECRET`·`AUTH_ABUSE_SECRET`을 값 출력
+   없이 준비하는 `prepare-v377-private-email-environment`입니다.
+6. 그다음 fixed isolated report 경로에서 v295→v377→v295→v377을 정확히 한 번 검증하고,
+   fresh backup과 one-transaction exact apply를 local, Neon 순서로 분리합니다.
+
+현재는 v377 revision **생성·source 검토 준비만 완료**했고 실제 환경·DB·provider는
+변경하지 않았습니다.
 
 ### Stage F — 운영·배포 runtime readiness
 

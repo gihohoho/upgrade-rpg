@@ -18,6 +18,7 @@ LOCAL_DEV_CORS_ORIGINS = (
 
 LOCAL_JWT_SECRET = "change-me-before-production"
 LOCAL_EMAIL_TOKEN_SECRET = "change-me-before-production-email-token"
+LOCAL_AUTH_ABUSE_SECRET = "change-me-before-production-auth-abuse"
 LOCAL_ADMIN_WRITE_KEY = "local-admin-dev-key"
 PRODUCTION_ENVIRONMENTS = {"prod", "production"}
 
@@ -53,8 +54,30 @@ class Settings(BaseSettings):
     brevo_from_email: str = ""
     brevo_from_name: str = "Upgrade RPG"
     email_token_secret: SecretStr = SecretStr(LOCAL_EMAIL_TOKEN_SECRET)
+    auth_abuse_secret: SecretStr = SecretStr(LOCAL_AUTH_ABUSE_SECRET)
     email_delivery_timeout_seconds: int = Field(default=10, ge=3, le=30)
     public_frontend_origin: str = "http://127.0.0.1:5500"
+    email_outbox_worker_enabled: bool = True
+    email_outbox_poll_seconds: float = Field(default=1.0, ge=0.2, le=30.0)
+    email_outbox_maintenance_interval_seconds: int = Field(default=300, ge=30, le=3600)
+    email_outbox_preparing_timeout_seconds: int = Field(default=300, ge=60, le=3600)
+    email_outbox_sending_timeout_seconds: int = Field(default=120, ge=30, le=3600)
+    email_outbox_retention_days: int = Field(default=30, ge=1, le=90)
+
+    # JSON is capped at the ASGI receive boundary before FastAPI parses it. Auth
+    # bodies are deliberately tiny while game saves retain their existing 2 MB
+    # application contract plus bounded JSON overhead.
+    request_body_limit_bytes: int = Field(default=2_100_000, ge=65_536, le=10_000_000)
+    auth_request_body_limit_bytes: int = Field(default=16_384, ge=1_024, le=65_536)
+
+    # Rate-limit subjects are HMACed before persistence. Render is the only
+    # production proxy mode currently supported; local development ignores
+    # forwarded client headers.
+    auth_trusted_proxy_mode: str = "direct"
+    auth_discovery_response_floor_ms: int = Field(default=350, ge=0, le=2_000)
+    auth_discovery_response_jitter_ms: int = Field(default=100, ge=0, le=1_000)
+    auth_rate_limit_retention_days: int = Field(default=30, ge=1, le=90)
+    unverified_account_ttl_hours: int = Field(default=168, ge=24, le=720)
 
     # Explicit one-shot owner bootstrap inputs. FastAPI never consumes these
     # values to mutate the database; only scripts/bootstrap_owner_admin.py may
@@ -96,6 +119,7 @@ class Settings(BaseSettings):
         if len(self.admin_write_dev_key.strip()) < 32:
             errors.append("ADMIN_WRITE_DEV_KEY must contain at least 32 characters in production")
         email_token_secret = self.email_token_secret.get_secret_value().strip()
+        auth_abuse_secret = self.auth_abuse_secret.get_secret_value().strip()
         brevo_api_key = self.brevo_api_key.get_secret_value().strip()
         if self.email_provider.strip().lower() != "brevo":
             errors.append("EMAIL_PROVIDER must be brevo in production")
@@ -111,6 +135,33 @@ class Settings(BaseSettings):
             errors.append("EMAIL_TOKEN_SECRET must contain at least 32 characters in production")
         if hmac.compare_digest(email_token_secret, self.jwt_secret_key.strip()):
             errors.append("EMAIL_TOKEN_SECRET must be separate from JWT_SECRET_KEY")
+        if auth_abuse_secret == LOCAL_AUTH_ABUSE_SECRET:
+            errors.append("AUTH_ABUSE_SECRET must not use the local default in production")
+        if len(auth_abuse_secret) < 32:
+            errors.append("AUTH_ABUSE_SECRET must contain at least 32 characters in production")
+        if any(
+            hmac.compare_digest(auth_abuse_secret, other)
+            for other in (
+                self.jwt_secret_key.strip(),
+                self.admin_write_dev_key.strip(),
+                email_token_secret,
+            )
+        ):
+            errors.append("AUTH_ABUSE_SECRET must be separate from other application secrets")
+        if not self.email_outbox_worker_enabled:
+            errors.append("EMAIL_OUTBOX_WORKER_ENABLED must be true in production")
+        if self.auth_trusted_proxy_mode.strip().lower() != "render":
+            errors.append("AUTH_TRUSTED_PROXY_MODE must be render in production")
+        if self.auth_request_body_limit_bytes > self.request_body_limit_bytes:
+            errors.append("AUTH_REQUEST_BODY_LIMIT_BYTES must not exceed REQUEST_BODY_LIMIT_BYTES")
+        if self.auth_request_body_limit_bytes > 65_536:
+            errors.append("AUTH_REQUEST_BODY_LIMIT_BYTES must not exceed 65536 in production")
+        if self.request_body_limit_bytes < 2_000_000:
+            errors.append("REQUEST_BODY_LIMIT_BYTES must preserve the 2000000-byte save contract")
+        if self.auth_discovery_response_floor_ms < 250:
+            errors.append("AUTH_DISCOVERY_RESPONSE_FLOOR_MS must be at least 250 in production")
+        if self.auth_discovery_response_jitter_ms < 50:
+            errors.append("AUTH_DISCOVERY_RESPONSE_JITTER_MS must be at least 50 in production")
 
         try:
             parsed_frontend_origin = urlsplit(self.public_frontend_origin.strip())
@@ -167,6 +218,20 @@ class Settings(BaseSettings):
             and self.brevo_from_name.strip()
             and self.email_token_secret.get_secret_value().strip() != LOCAL_EMAIL_TOKEN_SECRET
             and len(self.email_token_secret.get_secret_value().strip()) >= 32
+        )
+
+    @property
+    def auth_abuse_ready(self) -> bool:
+        value = self.auth_abuse_secret.get_secret_value().strip()
+        return bool(
+            len(value) >= 32
+            and value != LOCAL_AUTH_ABUSE_SECRET
+            and not hmac.compare_digest(value, self.jwt_secret_key.strip())
+            and not hmac.compare_digest(value, self.admin_write_dev_key.strip())
+            and not hmac.compare_digest(
+                value,
+                self.email_token_secret.get_secret_value().strip(),
+            )
         )
 
     @property

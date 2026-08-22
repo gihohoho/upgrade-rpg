@@ -1,16 +1,18 @@
-# 계정 인증·캐릭터 슬롯·회원 관리 — v371
+# 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v371.email-verification-recovery-account-deletion-migration-prepared
-strict result: email-verification-recovery-account-deletion-migration-prepared
-next safe stage: implement-practical-email-verification-security-and-provider-rollout
+latest: v377.public-email-security-source-prepared
+strict result: public-email-security-source-prepared
+next safe stage: prepare-v377-private-email-environment
 public Render: backend/static 모두 계속 v351
+local/Neon DB: 모두 계속 v295
 ```
 
-v370의 로그인·캐릭터 슬롯·관리자 회원 관리 기반은 그대로 유지합니다. v371은 그 위에
-필수 이메일 인증, 아이디 찾기, 비밀번호 재설정, 이메일 최종 확인을 거친 계정 삭제와
-별도 owner 관리자 1회 bootstrap script를 source-only로 준비합니다. 상세 신규 계약과
-Brevo 개인정보 설정은 `ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md`가 기준입니다.
+v370의 로그인·캐릭터 슬롯·관리자 회원 관리 기반과 v371 이메일 identity lifecycle을
+그대로 유지합니다. v377은 그 위에 공개 인증 요청 제한, JSON 파싱 전 body cap, durable
+semantic email outbox와 만료된 미인증 identity의 안전한 회수를 source로 준비합니다.
+상세 이메일 계약과 Brevo 개인정보 설정은
+`ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md`가 기준입니다.
 
 ## 이번 단계의 목표
 
@@ -31,8 +33,8 @@ Brevo 개인정보 설정은 `ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.m
 
 v370은 새 테이블과 Alembic revision 없이 기존 구조를 사용했습니다. v371은 기존 행을
 거짓 이메일로 채우지 않으면서 신규 가입자의 이메일을 안전하게 관리하기 위해
-`v371_email_identity_lifecycle` revision source를 새로 준비합니다. 아직 어떤 DB에도
-적용하지 않았습니다.
+`v371_email_identity_lifecycle` revision source를 준비했습니다. v377 source head는 그
+다음 `v377_auth_email_public_security` revision이며, 아직 어떤 DB에도 적용하지 않았습니다.
 
 - `users`: 아이디, nullable legacy-safe 원본/정규화 이메일, 인증 시각,
   `authVersion`, bcrypt 비밀번호 해시, 활성/정지, 관리자 여부
@@ -41,6 +43,10 @@ v370은 새 테이블과 Alembic revision 없이 기존 구조를 사용했습�
 - `admin_change_logs`: 최초 관리자 지정과 회원 활성/정지 감사 기록
 - `user_email_action_tokens`: 인증·비밀번호 재설정·계정 삭제용 일회용 HMAC digest,
   만료·사용·제한된 전달 상태
+- `auth_rate_limit_buckets`: 원문 IP·이메일·아이디·token 대신 별도 secret HMAC digest로
+  구분하는 PostgreSQL 요청·실패 bucket
+- `auth_email_outbox`: 목적·HMAC 대상 digest·상태만 보관하는 durable semantic mail job;
+  수신자 주소·원문 token·제목·본문은 저장하지 않음
 - `characters`: 검신 같은 선택 가능한 **캐릭터 종류 마스터 데이터**이며 계정 슬롯이 아님
 
 한 계정의 슬롯은 DB에서 `character-1`부터 `character-8`까지 고정합니다. 각
@@ -127,10 +133,10 @@ Bearer 로그인이 필요한 경로:
 - `POST /api/v1/game/save`
 
 서비스가 `snapshot`, 슬롯 키와 캐릭터 고유 ID를 안정적으로 JSON 직렬화한 크기는
-최대 2,000,000바이트이며 초과 시 `413`으로 닫힙니다. 이는 JSON 파싱 뒤의 저장
-계약 제한이며, ASGI 계층에서 HTTP raw body를 파싱 전에 차단하는 제한은 공개 전
-후속 보강 항목입니다. 클라이언트가 임의 `userId`를 보내 소유자를 선택할 수 없고,
-항상 access token의 현재 계정 ID만 사용합니다.
+최대 2,000,000바이트이며 초과 시 `413`으로 닫힙니다. v377 pure-ASGI 경계는 모든 HTTP
+raw body를 2,100,000바이트, `/api/v1/auth` body를 16,384바이트로 제한하고 FastAPI가
+JSON을 파싱하기 전에 `413 request_body_too_large`로 닫습니다. 클라이언트가 임의
+`userId`를 보내 소유자를 선택할 수 없고, 항상 access token의 현재 계정 ID만 사용합니다.
 
 관리자 회원 API:
 
@@ -196,6 +202,12 @@ password를 제거합니다.
 
 - 인증 경로의 FastAPI `422`는 오류의 `loc`·`type`·`msg`를 유지하되 비밀번호,
   비밀번호 확인과 전체 인증 body의 `input`을 응답에서 제거합니다.
+- 인증 실패는 source-controlled stable code를 사용합니다. 요청 제한은 `429
+  auth_rate_limited`와 `Retry-After`, 큰 body는 `413 request_body_too_large`를 반환하며,
+  모든 `/api/v1/auth` 응답은 `Cache-Control: no-store`입니다.
+- Render production의 IP bucket은 edge가 덮어쓴 정확한 `CF-Connecting-IP` 한 값만
+  신뢰하고 `X-Forwarded-For`는 사용하지 않습니다. 신뢰 header가 없거나 잘못되면
+  rate-limit을 건너뛰지 않고 `503`으로 닫습니다.
 - SQLAlchemy engine은 application `DEBUG`와 관계없이 항상 `echo=False`,
   `hide_parameters=True`입니다. 비밀번호 해시와 raw snapshot이 SQL bind parameter나
   오류 로그에 노출되지 않도록 합니다.
@@ -222,25 +234,25 @@ password를 제거합니다.
 
 ## 공개 배포 전 남은 보안 보강
 
-v371은 로컬 source·migration 준비 단계이며 Render backend와 Static Site에는 배포하지
+v377은 로컬 source·migration 준비 단계이며 Render backend와 Static Site에는 배포하지
 않습니다.
 현재 공개본은 계속 v351입니다. 공개 회원가입을 열기 전 다음 항목을 별도 단계에서
 결정하고 검증해야 합니다.
 
-1. 로그인·가입·인증 재전송·복구·삭제 요청 IP/이메일별 rate limit과 반복 실패 지연
-2. 서버측 session/refresh token 또는 현재 단기 access token 정책의 최종 선택
-3. ASGI 계층의 HTTP raw request body 크기 사전 제한
-4. HTTPS 전용 동작, CSP와 XSS 회귀, token 저장 방식 재검토
-5. 이용약관·개인정보 고지와 계정/데이터 삭제·법적 보존 정책
-6. Brevo sender, anonymous transactional tracking, 1개월 log retention, preview 미저장 검증
+1. 서버측 session/refresh token과 기기별 원격 폐기 또는 현재 access token 정책 확정
+2. 다중 기기 동시 접속의 save revision, CAS·낙관적 잠금과 충돌 해결
+3. HTTPS 전용 동작, CSP와 XSS 회귀, browser token 저장 방식 재검토
+4. 이용약관·개인정보 고지와 계정/데이터 삭제·법적 보존 정책
+5. Brevo sender, anonymous transactional tracking, 1개월 log retention, preview 미저장과
+   실제 테스트 메일 검증
+6. v377 backend image와 legacy static을 같은 승인 단위로 게시·배포하는 exact-SHA gate
 7. 소셜 로그인 도입 시 provider-neutral 연결 테이블과 계정 연결/해제 정책
-8. 다중 기기 동시 접속의 save revision, 충돌 해결과 낙관적 잠금 정책
-9. v371 backend image와 legacy static을 같은 승인 단위로 게시·배포하는 exact-SHA gate
 
-v371의 `email-validator 2.3.0`과 Linux dependency lock은 반영됐습니다. 별도
-`EMAIL_TOKEN_SECRET`, Brevo 전용 API key와 발신자, 새 DB migration은 여전히 필요하며
-실제 값은 채팅에 보내지 않습니다. isolated migration 검증, migration apply, Brevo 설정,
-owner bootstrap, 공개 release는 각각 분리된 승인 단계로 진행합니다.
+`email-validator 2.3.0`과 Linux dependency lock은 반영됐습니다. 별도
+`EMAIL_TOKEN_SECRET`, `AUTH_ABUSE_SECRET`, Brevo 전용 API key와 발신자, 새 DB migration은
+여전히 필요하며 실제 값은 채팅에 보내지 않습니다. 다음 순서는 exact source의 격리
+왕복 → local/Neon별 새 backup과 exact apply → Brevo 설정·테스트 메일입니다. owner
+bootstrap은 승인 범위 밖의 별도 단계이고, 공개 release는 남은 blocker 완료 뒤 진행합니다.
 
 ## 검증 상태
 
@@ -264,11 +276,14 @@ v370 focused/browser/core 최종 검증은 아래와 같이 통과한 과거 bas
 
 v371 backend 이메일 lifecycle·owner one-shot·migration source, v370 backend 회귀,
 frontend v371 이메일 계정·v370 character/admin 회귀, Python compileall, JavaScript
-`node --check`, runtime blocking-I/O와 48-operation route map smoke는 PASS입니다.
+`node --check`, runtime blocking-I/O와 48-operation route map smoke는 과거 baseline에서
+PASS입니다.
 실제 Chrome에서 로그인·회원가입·아이디 찾기·비밀번호 재설정 custom modal을 확인했고,
 기본 viewport와 `390×844`에서 mobile `document.scrollWidth=390`, horizontal overflow 0,
 console warn/error 0입니다. 이메일 renderer의 외부 asset 0·escape 구조는 smoke로
 검증했지만 Browser가 `data:` preview를 차단해 실제 메일 클라이언트 시각 QA는 Brevo
-테스트 메일 단계로 남습니다. 전체 core smoke는 PASS했고 독립 리뷰의 즉시 수정 blocker는 0건입니다. 현재까지 실제
-local/Neon DB write, seed, restore, Alembic mutation, Brevo 설정·발송, owner bootstrap,
-Render/GHCR 배포는 실행하지 않았습니다.
+테스트 메일 단계로 남습니다. v377 public-security·semantic-outbox와 기존 v371 이메일
+lifecycle focused source 검사 및 전체 core smoke는 PASS입니다. 격리 왕복은 아직 이 source
+checkpoint의 완료 주장에 포함하지 않습니다. 현재까지 실제 local/Neon DB write, seed,
+restore, Alembic mutation, Brevo 설정·발송, owner bootstrap, Render/GHCR 배포는 실행하지
+않았습니다.

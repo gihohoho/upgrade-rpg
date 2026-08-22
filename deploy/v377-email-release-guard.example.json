@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "v377.email-release-deployment-guard.v1",
+  "result": "v377-email-release-source-guard-prepared",
+  "productionResourcesMutated": false,
+  "networkAccessExecuted": false,
+  "source": {
+    "branch": "main",
+    "cleanPushedExactShaRequired": true,
+    "sourceCommitSha": null
+  },
+  "githubActions": {
+    "workflow": ".github/workflows/publish-backend-ghcr.yml",
+    "imageRepository": "ghcr.io/gihohoho/upgrade-rpg-backend",
+    "targetPlatform": "linux/amd64",
+    "lifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
+    "freshPreparationRequired": true,
+    "states": [
+      "preparation-closed",
+      "authorization-open",
+      "authorization-closed-awaiting-evidence",
+      "attempt-recorded"
+    ],
+    "authorizationChangedPaths": [
+      "deploy/github-actions-ghcr-publish-lifecycle.json"
+    ],
+    "workflowRunAttemptMustEqual": 1,
+    "singleDispatchRequired": true,
+    "rerunForbidden": true,
+    "immediateClosureRequired": true,
+    "historicalAttemptsImmutable": true,
+    "completedV351EvidenceReusable": false
+  },
+  "render": {
+    "serviceMode": "existing-image-web-service",
+    "serviceName": "upgrade-rpg-api",
+    "serviceIdentitySha256": "bb2c7aeab76e28e363ce85be0964245110c51f212879a55bbb19cc8b46bb5d46",
+    "imageRepository": "ghcr.io/gihohoho/upgrade-rpg-backend",
+    "previousV351ImageDigest": "sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac",
+    "previousV351DeployIdSha256": "7e80fbc0efe0b13dd8b8daefee0bda83ab55141722c50bd8ae9b5cf513a3e9bc",
+    "completedV351EvidencePathSha256": "0bf97470d9b51a21c2f958f0b51235326f1e4338c9da96cd09de96d3b953737f",
+    "environmentExample": "deploy/render.production.env.example",
+    "requiredEmailSecurityEnvKeys": [
+      "ENVIRONMENT",
+      "DEBUG",
+      "JWT_SECRET_KEY",
+      "CORS_ORIGINS",
+      "EMAIL_PROVIDER",
+      "BREVO_API_KEY",
+      "BREVO_FROM_EMAIL",
+      "BREVO_FROM_NAME",
+      "EMAIL_TOKEN_SECRET",
+      "AUTH_ABUSE_SECRET",
+      "PUBLIC_FRONTEND_ORIGIN",
+      "EMAIL_DELIVERY_TIMEOUT_SECONDS",
+      "EMAIL_OUTBOX_WORKER_ENABLED",
+      "EMAIL_OUTBOX_POLL_SECONDS",
+      "EMAIL_OUTBOX_MAINTENANCE_INTERVAL_SECONDS",
+      "EMAIL_OUTBOX_PREPARING_TIMEOUT_SECONDS",
+      "EMAIL_OUTBOX_SENDING_TIMEOUT_SECONDS",
+      "EMAIL_OUTBOX_RETENTION_DAYS",
+      "REQUEST_BODY_LIMIT_BYTES",
+      "AUTH_REQUEST_BODY_LIMIT_BYTES",
+      "AUTH_TRUSTED_PROXY_MODE",
+      "AUTH_DISCOVERY_RESPONSE_FLOOR_MS",
+      "AUTH_DISCOVERY_RESPONSE_JITTER_MS",
+      "AUTH_RATE_LIMIT_RETENTION_DAYS",
+      "UNVERIFIED_ACCOUNT_TTL_HOURS"
+    ],
+    "environmentEvidenceMode": "key-names-only",
+    "secretValuesRecorded": false,
+    "endpointsRecorded": false,
+    "exactDigestRequired": true,
+    "singleManualDeployOnly": true,
+    "automaticRetry": false,
+    "providerMutationDuringGuard": false
+  },
+  "forbidden": [
+    "reuse the completed v351 provider evidence as a v377 attempt",
+    "reuse the v351 image digest as the v377 candidate",
+    "reuse the v351 deploy ID as the v377 deploy attempt",
+    "record a secret value or provider endpoint",
+    "dispatch or deploy more than once",
+    "automatic retry",
+    "provider mutation from this guard"
+  ]
+}

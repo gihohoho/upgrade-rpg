@@ -8,4 +8,4 @@
 
 과거 문서를 처음부터 전부 읽지 말고, 작업에 직접 필요한 경우에만 [Docs Hub](docs/README.md)를 통해 reference, contracts, guides, archive history를 찾아보세요. 현재 다음 단계와 승인 경계는 `NEXT_CHAT_HANDOFF.md`만 기준으로 판단합니다.
 
-문서를 읽은 뒤 완료된 v371 source·dependency·Obsidian·README 작업을 다시 감사하거나 장황하게 요약하지 말고, 이미 승인된 `implement-practical-email-verification-security-and-provider-rollout`을 즉시 시작해주세요. 먼저 한 번의 좁은 preflight로 필요한 secret의 존재 여부만 값 출력 없이 확인하고, 이메일 공개 보안 보강 → isolated migration 왕복 → provider/DB/Render 적용 → 실제 이메일 end-to-end 확인 순서로 진행합니다. 이미 승인된 범위를 다시 묻지 말고, Brevo 가입·발신자 소유 인증·API key 입력처럼 Codex가 대신할 수 없는 사용자 행동만 한 번에 모아 요청하세요.
+문서를 읽은 뒤 완료된 v377 source-prepared 구현을 다시 전면 감사하거나 장황하게 요약하지 말고, 이미 승인된 `prepare-v377-private-email-environment`를 즉시 이어서 진행해주세요. clean pushed source SHA에서 ignored dotenv·기존 DB security artifact의 private ACL과 email/abuse secret 준비 → 고정 synthetic DB 왕복 1회 → 같은 보고서를 강제한 local/Neon fresh backup·exact v377 apply → Brevo/Render 설정 → 실제 이메일 end-to-end 확인 순서를 유지하세요. 이미 승인된 범위를 다시 묻지 말고, Brevo 가입·발신자 소유 인증·API key 입력처럼 Codex가 대신할 수 없는 사용자 행동만 한 번에 모아 요청하세요. DB reset·seed·restore·stamp·actual downgrade·자동 retry와 남은 공개 gate 우회는 하지 마세요.

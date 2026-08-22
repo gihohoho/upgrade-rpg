@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import builtins
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 import os
 from pathlib import Path
@@ -26,7 +27,7 @@ from app.core.security import CurrentUser, decode_access_token, get_current_user
 from app.api.routes import auth as auth_route_module  # noqa: E402
 from app.api.routes.auth import router as auth_router  # noqa: E402
 from app.main import create_app  # noqa: E402
-from app.models import User, UserEmailActionToken, UserProfile  # noqa: E402
+from app.models import AuthEmailOutbox, User, UserEmailActionToken, UserProfile  # noqa: E402
 from app.schemas.auth import (  # noqa: E402
     AccountDeletionConfirmRequest,
     EmailRequest,
@@ -63,6 +64,16 @@ def require(condition: bool, message: str) -> None:
         raise AssertionError(message)
 
 
+@contextmanager
+def replaced_route_protection(value):  # type: ignore[no-untyped-def]
+    original = auth_route_module.protection
+    auth_route_module.protection = value
+    try:
+        yield
+    finally:
+        auth_route_module.protection = original
+
+
 class FakeResult:
     def __init__(self, rows: list[Any]):
         self.rows = list(rows)
@@ -82,6 +93,9 @@ class FakeResult:
             return None
         require(len(self.rows) == 1, "fake result expected at most one row")
         return self.rows[0]
+
+    def scalars(self):  # type: ignore[no-untyped-def]
+        return iter(self.rows)
 
 
 class FakeSession:
@@ -178,10 +192,13 @@ def service(delivery: FakeDelivery | None = None) -> AuthService:
         email_delivery=delivery or FakeDelivery(),
         email_normalizer=fake_normalize,
         token_secret=TOKEN_SECRET,
+        abuse_secret="a" * 40,
         token_factory=lambda: TOKEN,
         now_factory=lambda: NOW,
         provider_ready=True,
         public_frontend_origin="https://game.example.com",
+        discovery_floor_ms=0,
+        discovery_jitter_ms=0,
     )
 
 
@@ -219,13 +236,13 @@ async def test_register_login_and_generation() -> None:
     require(registered["accessTokenIssued"] is False, "registration token marker mismatch")
     added_user = next(row for row in register_session.added if isinstance(row, User))
     added_profile = next(row for row in register_session.added if isinstance(row, UserProfile))
-    added_token = next(row for row in register_session.added if isinstance(row, UserEmailActionToken))
+    added_outbox = next(row for row in register_session.added if isinstance(row, AuthEmailOutbox))
     require(added_user.is_admin is False and added_user.email_verified_at is None, "unsafe registration flags")
     require(added_profile.user_id == added_user.id == 101, "profile ownership mismatch")
-    require(added_token.token_digest != TOKEN and len(added_token.token_digest) == 64, "raw email token stored")
-    require(added_token.delivery_status == "sent", "delivery state was not persisted")
-    require(len(delivery.calls) == 1 and register_session.commit_calls == 2, "email was not one-shot")
-    require(delivery.transaction_states == [False], "registration held a DB transaction during email send")
+    require(added_outbox.target_digest != TOKEN and len(added_outbox.target_digest) == 64, "raw email target stored")
+    require(added_outbox.status == "pending", "registration outbox state was not persisted")
+    require(len(delivery.calls) == 0 and register_session.commit_calls == 1, "registration sent mail synchronously")
+    require(delivery.transaction_states == [], "registration invoked the provider")
     require(register_session.refresh_calls == 0, "registration refreshed rows before email send")
 
     unverified = user_row(verified=False)
@@ -278,10 +295,10 @@ async def test_register_login_and_generation() -> None:
         "pending retry created a duplicate account/profile",
     )
     require(
-        len([row for row in retry_session.added if isinstance(row, UserEmailActionToken)]) == 1,
-        "pending retry did not create exactly one new verification token",
+        len([row for row in retry_session.added if isinstance(row, AuthEmailOutbox)]) == 1,
+        "pending retry did not create exactly one verification outbox request",
     )
-    require(len(retry_delivery.calls) == 1, "pending retry email was not one-shot")
+    require(len(retry_delivery.calls) == 0, "pending retry sent email synchronously")
 
     wrong_session = FakeSession([[pending_user]])
     try:
@@ -431,24 +448,87 @@ async def test_registration_conflict_bcrypt_shape() -> None:
                 f"{scenario_name} held a DB transaction during bcrypt",
             )
             require(
-                scenario_session.rollback_calls == 1,
-                f"{scenario_name} did not release its identity lookup transaction",
+                scenario_session.rollback_calls == 3,
+                f"{scenario_name} did not release lookup and reclaim transactions",
             )
     finally:
         auth_service_module.run_in_threadpool = original_run_in_threadpool
 
 
+async def test_unverified_account_recovery_guard() -> None:
+    auth = service()
+    expired = user_row(verified=False)
+    expired.created_at = NOW - timedelta(days=8)
+
+    reclaim_session = FakeSession([[expired], [False], [0]])
+    reclaimed = await auth._reclaim_expired_registration_conflicts(
+        reclaim_session,
+        username=expired.username,
+        email_canonical=str(expired.email_canonical),
+    )
+    require(reclaimed is True, "abandoned unverified identity was not reclaimed")
+    require(
+        any("DELETE FROM users" in str(statement) for statement in reclaim_session.statements),
+        "abandoned account reclaim did not delete the locked user",
+    )
+    require(reclaim_session.commit_calls == 1, "abandoned account reclaim did not commit once")
+
+    owned_data_session = FakeSession([[expired], [True]])
+    require(
+        await auth._reclaim_expired_registration_conflicts(
+            owned_data_session,
+            username=expired.username,
+            email_canonical=str(expired.email_canonical),
+        )
+        is False,
+        "expired account with user-owned data was reclaimed",
+    )
+    require(
+        not any("DELETE FROM users" in str(statement) for statement in owned_data_session.statements),
+        "owned-data recovery reached user deletion",
+    )
+
+    audit_session = FakeSession([[expired], [False], [1]])
+    require(
+        await auth._reclaim_expired_registration_conflicts(
+            audit_session,
+            username=expired.username,
+            email_canonical=str(expired.email_canonical),
+        )
+        is False,
+        "expired account with admin audit history was reclaimed",
+    )
+
+    recent = user_row(verified=False)
+    recent_session = FakeSession([[recent]])
+    require(
+        await auth._reclaim_expired_registration_conflicts(
+            recent_session,
+            username=recent.username,
+            email_canonical=str(recent.email_canonical),
+        )
+        is False,
+        "recent unverified account was reclaimed before TTL",
+    )
+
+
 async def test_generic_discovery_and_token_lock() -> None:
     auth = service()
+    unknown_session = FakeSession([[]])
     unknown = await auth.resend_verification(
-        FakeSession([[]]),
+        unknown_session,
         EmailRequest(email="missing@example.com"),
     )
     require(unknown == {
         "status": "accepted",
         "request": "verification_email_if_eligible",
         "accountDisclosed": False,
+        "emailRequestAccepted": True,
     }, "generic discovery response changed")
+    unknown_outbox = next(
+        row for row in unknown_session.added if isinstance(row, AuthEmailOutbox)
+    )
+    require(unknown_outbox.user_id is None, "unknown account was not queued as a decoy")
 
     recovery_user = user_row(verified=True)
     recovery_session = FakeSession([[recovery_user]])
@@ -459,9 +539,13 @@ async def test_generic_discovery_and_token_lock() -> None:
         EmailRequest(email="player22@example.com"),
     )
     require(recovered["status"] == "accepted", "username recovery response changed")
-    require(recovery_session.rollback_calls == 1, "username recovery read transaction stayed open")
-    require(recovery_delivery.transaction_states == [False], "username email held a DB transaction")
-    require(recovery_session.refresh_calls == 0, "username recovery refreshed before email send")
+    recovery_outbox = next(
+        row for row in recovery_session.added if isinstance(row, AuthEmailOutbox)
+    )
+    require(recovery_outbox.user_id == recovery_user.id, "eligible recovery was not queued")
+    require(recovery_session.commit_calls == 1, "username recovery queue did not commit once")
+    require(recovery_delivery.transaction_states == [], "username recovery invoked the provider")
+    require(recovery_session.refresh_calls == 0, "username recovery refreshed queue rows")
 
     token_row = UserEmailActionToken(
         id=9,
@@ -621,83 +705,59 @@ async def test_generic_discovery_and_token_lock() -> None:
     issue_session = FakeSession([[issue_user]])
     issue_delivery = FakeDelivery(issue_session.in_transaction)
     issue_auth = service(issue_delivery)
-    await issue_auth._issue_and_deliver(
+    await issue_auth.resend_verification(
         issue_session,
-        user=issue_user,
-        purpose=EMAIL_PURPOSE_VERIFY,
-        expires_in_minutes=30,
-        hide_delivery_failure=False,
+        EmailRequest(email="player22@example.com"),
     )
     require(old_token.consumed_at is None, "resend pre-consumed an older valid token")
     require(
         not any("UPDATE user_email_action_tokens" in str(statement) for statement in issue_session.statements),
         "resend updated existing action tokens before successful action",
     )
-    require(issue_delivery.transaction_states == [False], "resend held a DB transaction during email send")
-    require(issue_session.refresh_calls == 0, "resend refreshed token before email send")
+    require(issue_delivery.transaction_states == [], "resend invoked the provider synchronously")
+    require(issue_session.refresh_calls == 0, "resend refreshed token before queueing")
 
-    audit_success_user = user_row(verified=False)
-    audit_success_session = FakeSession(
-        [[audit_success_user]],
-        commit_fail_on_calls={2},
-    )
-    audit_success_delivery = FakeDelivery(audit_success_session.in_transaction)
-    await service(audit_success_delivery)._issue_and_deliver(
-        audit_success_session,
-        user=audit_success_user,
-        purpose=EMAIL_PURPOSE_VERIFY,
-        expires_in_minutes=30,
-        hide_delivery_failure=False,
-    )
-    require(audit_success_session.commit_calls == 2, "success audit failure was not exercised")
-    require(audit_success_session.rollback_calls == 1, "success audit failure was not rolled back")
-    require(
-        audit_success_delivery.transaction_states == [False],
-        "success audit test held a DB transaction during provider call",
-    )
-
-    audit_register_session = FakeSession([[], []], commit_fail_on_calls={2})
+    audit_register_session = FakeSession([[], []], commit_fail_on_calls={1})
     audit_register_delivery = FakeDelivery(audit_register_session.in_transaction)
-    audit_register_result = await service(audit_register_delivery).register(
-        audit_register_session,
-        RegisterRequest(
-            username="audituser",
-            email="audituser@example.com",
-            password="account123",
-            passwordConfirm="account123",
-        ),
-    )
-    require(
-        audit_register_result["status"] == "verification_required"
-        and audit_register_result["user"]["username"] == "audituser",
-        "success audit failure changed registration outcome",
-    )
-    require(audit_register_session.rollback_calls == 2, "registration read/audit failures were not rolled back")
+    try:
+        await service(audit_register_delivery).register(
+            audit_register_session,
+            RegisterRequest(
+                username="audituser",
+                email="audituser@example.com",
+                password="account123",
+                passwordConfirm="account123",
+            ),
+        )
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("registration accepted an outbox commit failure")
+    require(audit_register_session.commit_calls == 1, "registration queue failure was not exercised")
+    require(audit_register_session.rollback_calls == 2, "registration queue failure was not rolled back")
+    require(audit_register_delivery.calls == [], "failed registration queue invoked provider")
 
     audit_failure_user = user_row(verified=False)
     audit_failure_session = FakeSession(
-        [[audit_failure_user], [audit_failure_user]],
-        commit_fail_on_calls={2},
+        [[audit_failure_user]],
+        commit_fail_on_calls={1},
     )
     audit_failure_delivery = FakeDelivery(
         audit_failure_session.in_transaction,
         error_code="brevo_network_error",
     )
-    audit_failure_result = await service(audit_failure_delivery).resend_verification(
-        audit_failure_session,
-        EmailRequest(email="player22@example.com"),
-    )
-    require(
-        audit_failure_result
-        == {
-            "status": "accepted",
-            "request": "verification_email_if_eligible",
-            "accountDisclosed": False,
-        },
-        "audit commit failure changed generic discovery response",
-    )
-    require(audit_failure_session.commit_calls == 2, "failure audit commit was not exercised")
+    try:
+        await service(audit_failure_delivery).resend_verification(
+            audit_failure_session,
+            EmailRequest(email="player22@example.com"),
+        )
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("generic discovery accepted an outbox commit failure")
+    require(audit_failure_session.commit_calls == 1, "generic queue failure was not exercised")
     require(audit_failure_session.rollback_calls == 1, "failure audit commit was not rolled back")
+    require(audit_failure_delivery.calls == [], "failed generic queue invoked provider")
 
 
 async def test_deletion_preview_and_hard_delete() -> None:
@@ -801,8 +861,34 @@ async def test_deletion_preview_and_hard_delete() -> None:
 
 
 def test_validation_sanitizer_and_route_contract() -> None:
+    class NoopProtection:
+        async def check_ip(self, **_kwargs):  # type: ignore[no-untyped-def]
+            return auth_route_module.AuthProtectionContext(keyed_policies=())
+
+        async def check_subject(
+            self,
+            *,
+            subject_kind,
+            subject_value,
+            **_kwargs,
+        ):  # type: ignore[no-untyped-def]
+            if subject_kind == "email":
+                try:
+                    normalize_email_identity(str(subject_value))
+                except EmailValidationUnavailable as exc:
+                    raise auth_route_module.AuthProtectionUnavailable(
+                        "email_validation_unavailable"
+                    ) from exc
+            return auth_route_module.AuthProtectionContext(keyed_policies=())
+
+        async def record_failure(self, _context):  # type: ignore[no-untyped-def]
+            return None
+
+        async def record_success(self, _context):  # type: ignore[no-untyped-def]
+            return None
+
     app = create_app()
-    with TestClient(app) as client:
+    with replaced_route_protection(NoopProtection()), TestClient(app) as client:
         password = "account123"
         different = "different456"
         mismatch = client.post(
@@ -915,11 +1001,23 @@ def test_admin_email_contract_source() -> None:
         "candidate scalar identity columns missing",
     )
     require("token_row.delivery_status" not in lock_block, "delivery audit state gates token validity")
-    issue_block = auth_source.split("async def _issue_and_deliver", 1)[1].split(
-        "async def _create_and_deliver_for_locked_user",
+    outbox_source = (BACKEND / "app/services/auth_email_outbox.py").read_text(encoding="utf-8")
+    prepare_block = outbox_source.split("async def _prepare_claimed", 1)[1].split(
+        "async def _eligible",
         1,
     )[0]
-    require("_consume_outstanding_tokens" not in issue_block, "resend pre-consumes older links")
+    require(
+        "update(UserEmailActionToken)" not in prepare_block,
+        "outbox prepare pre-consumes older links",
+    )
+    finalize_block = outbox_source.split("async def _finalize_attempt", 1)[1].split(
+        "def new_token_row",
+        1,
+    )[0]
+    require(
+        "UserEmailActionToken.id != int(token_row.id)" in finalize_block,
+        "successful outbox finalize does not preserve its newly delivered link",
+    )
     require("async def _retry_pending_registration" in auth_source, "ambiguous registration recovery missing")
     require("async def _dummy_registration_password_check" in auth_source, "dummy bcrypt equalizer missing")
     partial_conflict_block = auth_source.split("if conflicting_id is not None:", 1)[1].split(
@@ -996,6 +1094,7 @@ def test_email_rendering_and_redirect_fail_closed() -> None:
 async def main_async() -> None:
     await test_register_login_and_generation()
     await test_registration_conflict_bcrypt_shape()
+    await test_unverified_account_recovery_guard()
     await test_generic_discovery_and_token_lock()
     await test_deletion_preview_and_hard_delete()
 

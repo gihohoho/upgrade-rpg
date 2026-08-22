@@ -14,6 +14,7 @@ from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.auth_errors import auth_error
 from app.db.session import get_db_session
 from app.models import User
 
@@ -198,9 +199,10 @@ def _bearer_token(authorization: str | None) -> str:
     value = str(authorization or "").strip()
     scheme, separator, token = value.partition(" ")
     if separator != " " or scheme.lower() != "bearer" or not token or any(character.isspace() for character in token):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="로그인이 필요합니다.",
+        raise auth_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "bearer_token_required",
+            "로그인이 필요합니다.",
             headers={"WWW-Authenticate": "Bearer"},
         )
     return token
@@ -215,39 +217,41 @@ async def get_current_user(
     try:
         claims = decode_access_token(token)
     except InvalidAccessToken as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="로그인 정보가 만료되었거나 올바르지 않습니다.",
+        raise auth_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "access_token_invalid",
+            "로그인 정보가 만료되었거나 올바르지 않습니다.",
             headers={"WWW-Authenticate": "Bearer"},
         ) from exc
 
     user = await session.get(User, int(claims["userId"]))
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="로그인 정보를 확인할 수 없습니다.",
+        raise auth_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "account_not_found",
+            "로그인 정보를 확인할 수 없습니다.",
             headers={"WWW-Authenticate": "Bearer"},
         )
     if int(getattr(user, "auth_version", 0) or 0) != int(claims["authVersion"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="로그인 정보가 폐기되었습니다. 다시 로그인해주세요.",
+        raise auth_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "auth_version_stale",
+            "로그인 정보가 폐기되었습니다. 다시 로그인해주세요.",
             headers={"WWW-Authenticate": "Bearer"},
         )
     if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="현재 이용이 중지된 계정입니다.",
+        raise auth_error(
+            status.HTTP_403_FORBIDDEN,
+            "account_suspended",
+            "현재 이용이 중지된 계정입니다.",
         )
     email = str(getattr(user, "email_original", None) or getattr(user, "email_canonical", None) or "").strip()
     email_verified = bool(email and getattr(user, "email_verified_at", None))
     if not email_verified:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "code": "email_verification_required",
-                "message": "이메일 인증을 완료한 뒤 로그인해주세요.",
-            },
+        raise auth_error(
+            status.HTTP_403_FORBIDDEN,
+            "email_verification_required",
+            "이메일 인증을 완료한 뒤 로그인해주세요.",
         )
     return CurrentUser(
         id=user.id,
@@ -263,9 +267,10 @@ async def require_admin_user(
     current_user: CurrentUser = Depends(get_current_user),
 ) -> CurrentUser:
     if not current_user.is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="관리자 권한이 필요합니다.",
+        raise auth_error(
+            status.HTTP_403_FORBIDDEN,
+            "admin_permission_required",
+            "관리자 권한이 필요합니다.",
         )
     return current_user
 

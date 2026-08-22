@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[3]
 BACKEND = ROOT / "backend"
 SCRIPT = BACKEND / "scripts" / "bootstrap_owner_admin.py"
 ENV_EXAMPLE = BACKEND / ".env.example"
+EXPECTED_ALEMBIC_HEAD = "v377_auth_email_public_security"
 os.environ["DEBUG"] = "false"
 sys.path.insert(0, str(BACKEND / "scripts"))
 sys.path.insert(0, str(BACKEND))
@@ -149,7 +150,7 @@ def _check_apply_preflight_blocks(
     def record_alembic_head() -> str:
         nonlocal alembic_head_read
         alembic_head_read = True
-        return "v371_email_identity_lifecycle"
+        return EXPECTED_ALEMBIC_HEAD
 
     bootstrap.load_local_settings = lambda: object()  # type: ignore[assignment]
     bootstrap.owner_values = lambda _settings: values  # type: ignore[assignment]
@@ -221,9 +222,8 @@ def check_git_and_confirmation_blocks_before_database() -> None:
         "identity fingerprint ignores the email",
     )
 
-    no_git_queries = lambda *_arguments: (_ for _ in ()).throw(  # type: ignore[assignment]
-        AssertionError("invalid SHA reached Git")
-    )
+    def no_git_queries(*_arguments: str) -> str:
+        raise AssertionError("invalid SHA reached Git")
     _check_apply_preflight_blocks(
         approved_sha=None,
         confirm="",
@@ -323,7 +323,7 @@ def check_source_contract() -> None:
     require('parser.add_argument("--password"' not in script_source, "password must not be a CLI argument")
     require("print(values.password" not in script_source, "owner password is printed")
     require("print(password_hash" not in script_source, "owner password hash is printed")
-    require(bootstrap.local_alembic_head() == "v371_email_identity_lifecycle", "unexpected Alembic head")
+    require(bootstrap.local_alembic_head() == EXPECTED_ALEMBIC_HEAD, "unexpected Alembic head")
 
 
 def main() -> None:

@@ -1,13 +1,13 @@
-# 이메일 인증·계정 복구·계정 삭제 준비 — v371
+# 이메일 인증·계정 복구·계정 삭제 준비 — v377
 
 ```txt
-latest: v371.email-verification-recovery-account-deletion-migration-prepared
-strict result: email-verification-recovery-account-deletion-migration-prepared
-next safe stage: implement-practical-email-verification-security-and-provider-rollout
+latest: v377.public-email-security-source-prepared
+strict result: public-email-security-source-prepared
+next safe stage: prepare-v377-private-email-environment
 public Render: backend/static 모두 계속 v351
-database migration: source only / not applied
+database migration: v371→v377 source only / local·Neon 모두 v295
 email provider: selected only / account·sender·API key not configured
-email rollout approval/execution: yes/no
+email rollout approval/execution: yes/source-prepared
 ```
 
 ## v376 실행 승인
@@ -17,12 +17,13 @@ email rollout approval/execution: yes/no
 ## 결론
 
 v371은 기존 v370의 아이디·비밀번호 계정에 **필수 이메일 인증**, 아이디 찾기,
-비밀번호 재설정, 계정 삭제를 더하는 로컬 source 준비 단계입니다. 가입은 아이디와
-이메일을 함께 받되, 인증 메일 링크를 완료하기 전에는 access token을 발급하지 않고
-게임에 들어갈 수 없게 합니다. 로그인할 때는 아이디 또는 이메일 중 하나를 사용할 수
-있습니다.
+비밀번호 재설정과 계정 삭제 lifecycle을 더했습니다. v377은 이 흐름을 공개하기 전에
+필요한 PostgreSQL HMAC rate bucket, JSON 파싱 전 body cap, stable auth error와 durable
+semantic outbox를 source로 준비합니다. 가입은 아이디와 이메일을 함께 받되, 인증 메일
+링크를 완료하기 전에는 access token을 발급하지 않고 게임에 들어갈 수 없게 합니다.
+로그인할 때는 아이디 또는 이메일 중 하나를 사용할 수 있습니다.
 
-이 단계에서는 migration 파일과 애플리케이션 코드를 준비할 뿐입니다. 실제 local/Neon
+이 checkpoint에서는 migration 파일과 애플리케이션 코드를 준비할 뿐입니다. 실제 local/Neon
 DB write, Alembic `upgrade`·`downgrade`·`stamp`, Brevo 가입·발신자 인증·API key 생성,
 실제 메일 발송, `.env` secret 주입, GHCR 게시, Render 환경변수 변경과 backend/static
 배포는 모두 **0회**입니다. 공개 Render는 계속 v351입니다.
@@ -32,7 +33,8 @@ DB write, Alembic `upgrade`·`downgrade`·`stamp`, Brevo 가입·발신자 인�
 ```txt
 회원가입
   → 아이디 + 이메일 + 비밀번호 입력
-  → 인증 메일 발송
+  → 가입과 인증 메일 요청을 durable queue에 함께 기록
+  → worker가 인증 메일 1회 전달 시도
   → 이메일 링크 확인
   → 로그인
   → 캐릭터 슬롯 8개
@@ -58,15 +60,17 @@ DB write, Alembic `upgrade`·`downgrade`·`stamp`, Brevo 가입·발신자 인�
   → 일반 회원 계정과 종속 데이터 영구 삭제
 ```
 
-아이디 찾기·인증 메일 재전송·비밀번호 재설정 요청은 계정이 존재하는지, 실제로
-메일을 보냈는지와 관계없이 같은 `202 accepted` 형태를 사용합니다. 공격자가 이메일로
-가입 여부를 알아내는 것을 줄이기 위한 경계입니다. 서버는 공급자 timeout이나 모호한
-결과를 자동 재시도하지 않으며, 사용자가 다시 요청했을 때만 새 일회용 링크를 만듭니다.
+회원가입·아이디 찾기·인증 메일 재전송·비밀번호 재설정·계정 삭제 메일 요청은 처리나
+전송 완료가 아니라 queue 접수를 뜻하는 `202 accepted` 문구를 사용합니다. discovery
+경로는 계정 존재와 실제 queue 상태를 공개 응답으로 구분하지 않고 최소 응답 시간과
+jitter를 적용합니다. 서버는 공급자 timeout이나 결과 불명 호출을 자동 재시도하지
+않으며, 사용자가 다시 요청한 경우에만 별도 semantic job을 접수합니다.
 
 ## DB migration 준비
 
-새 Alembic revision `v371_email_identity_lifecycle`은 현재 head
-`v295_initial_schema` 다음에 다음 구조를 추가하도록 준비합니다.
+Alembic source는 `v295_initial_schema` → `v371_email_identity_lifecycle` →
+`v377_auth_email_public_security` 순서입니다. local/Neon 실제 DB는 모두 여전히 v295입니다.
+v371 revision은 다음 identity 구조를 추가하도록 준비합니다.
 
 `users` 추가 열:
 
@@ -91,14 +95,27 @@ DB write, Alembic `upgrade`·`downgrade`·`stamp`, Brevo 가입·발신자 인�
 두 이메일 열은 `NULL`로 남겨 별도 owner 정책과 migration 실행 뒤 안전하게 보완합니다.
 새 회원가입만 유효한 이메일을 필수로 요구합니다.
 
-현재 revision 파일은 **source-only**입니다. migration을 적용하면 Neon schema가 실제로
+v377 revision은 다음 두 테이블을 추가하도록 준비합니다.
+
+- `auth_rate_limit_buckets`: 정책 scope와 `AUTH_ABUSE_SECRET` HMAC subject digest,
+  window/request/failure/cooldown 시각만 저장하며 원문 IP·이메일·아이디·action token은
+  저장하지 않음
+- `auth_email_outbox`: purpose, HMAC target digest, pending/preparing/sending과 terminal
+  상태, 최대 1회의 provider attempt와 제한된 message ID/error code만 저장하며 수신자,
+  원문 token, 제목·본문은 저장하지 않음
+
+현재 두 revision 파일은 **source-only**입니다. migration을 적용하면 schema가 실제로
 바뀌고 실행 중인 v351 backend와 schema 계약이 달라지므로 다음 세 작업을 섞지 않습니다.
 
-1. v371 source·dependency·테스트 준비와 commit
-2. 정확한 40자리 준비 SHA를 기호가 별도 승인한 뒤 migration preflight와 적용
-3. migration 완료 뒤 owner 관리자 bootstrap을 다시 별도 승인
+1. v377 source·dependency·focused 검사 준비와 clean/pushed exact commit
+2. 고정 격리 DB에서 synthetic data만 사용한 v295→v377→v295→v377 왕복
+3. 같은 source의 완료된 왕복 report와 각 target의 새 verified backup을 요구하는
+   local/Neon exact apply
 
-`alembic upgrade head`, `stamp`, 자동 startup migration은 승인 전에 실행하지 않습니다.
+일반 `alembic upgrade head`, `stamp`, 자동 startup migration은 사용하지 않습니다. 실제
+target apply는 lock/statement timeout, exact source·target·action·backup 확인을 모두 갖춘
+v377 guard만 사용하며 production DB downgrade·restore를 실행하지 않습니다. owner
+bootstrap은 이 rollout 승인에 포함되지 않은 별도 단계입니다.
 
 ## 이메일 유효성 검사 dependency
 
@@ -109,8 +126,8 @@ dependency로 사용하도록 준비했습니다. 패키지가 없으면 약한 
 
 기호의 승인으로 `email-validator==2.3.0`과 전이 dependency `dnspython==2.8.0`을
 `backend/.venv`, Linux lock 3개와 GHCR 재현성 hash에 반영했습니다. package를 임의로
-제거하면 이메일 동작은 계속 `503`으로 fail-closed합니다. migration, owner bootstrap과
-실제 회원가입 실행은 아직 별도 승인 전입니다.
+제거하면 이메일 동작은 계속 `503`으로 fail-closed합니다. migration과 실제 회원가입
+end-to-end는 아직 실행하지 않았고 owner bootstrap은 별도 승인 전입니다.
 
 ## API source 계약 — route map 확정
 
@@ -132,7 +149,8 @@ Bearer 로그인이 필요한 경로:
 - `GET /api/v1/auth/account-deletion/preview`
 - `POST /api/v1/auth/account-deletion/request`
 
-회원가입 응답에는 access token이 없고 `verification_required` 상태만 있습니다. 로그인
+회원가입도 queue 접수를 뜻하는 HTTP `202`이며 응답에는 access token이 없고
+`verification_required` 상태만 있습니다. 로그인
 token은 DB의 현재 `authVersion`을 함께 확인합니다. 이메일 인증과 비밀번호 재설정은
 계정의 `authVersion`을 증가시키고 남은 이메일 작업 token을 모두 소진 처리합니다.
 
@@ -148,7 +166,23 @@ token은 DB의 현재 `authVersion`을 함께 확인합니다. 이메일 인증�
 민감 token은 query string이 아니라 URL fragment에 놓고, 프런트는 읽은 직후
 `history.replaceState`로 주소 표시줄과 history에서 제거하도록 준비합니다.
 `index.html`은 `Referrer-Policy: no-referrer`를 사용합니다. API 응답·로그·관리자 화면은
-원문 token을 반환하지 않습니다.
+원문 token을 반환하지 않습니다. 프런트는 길이·문자·action allow-list가 맞지 않는
+fragment를 즉시 버리고, 정상 link는 `email_action_token_invalid`일 때만 폐기합니다.
+`429`, `413`, network/`5xx`에서는 현재 탭 메모리의 link를 보존해 안전하게 다시 시도합니다.
+
+v377은 모든 이메일 인증 POST에 두 단계 request protection을 적용합니다. pure-ASGI
+middleware가 body parsing 전에 IP bucket을 소비하고, Pydantic 검증 뒤 route가 normalized
+email·identifier·token·user subject bucket을 확인합니다. PostgreSQL에는 원문 subject가
+아니라 별도 `AUTH_ABUSE_SECRET` HMAC digest만 저장합니다. 반복 실패는 제한된 cooldown과
+응답 지연을 사용합니다.
+
+- `/api/v1/auth` raw body: 16,384바이트
+- 그 밖의 전체 HTTP raw body: 2,100,000바이트
+- 요청 제한: `429 auth_rate_limited`, `Retry-After` header와 같은 초 수의 response meta
+- 큰 body: JSON 파싱 전 `413 request_body_too_large`
+- 모든 auth 응답: `Cache-Control: no-store`
+- Render client IP: edge가 덮어쓴 정확한 `CF-Connecting-IP`만 신뢰, `X-Forwarded-For`는
+  사용하지 않음; header 누락·잘못된 IP는 `503 auth_protection_unavailable`
 
 정적 route map은 전체 48 operations, `GET 21 / POST 26 / DELETE 1`, 중복
 method/path 0으로 갱신했고 보고서 smoke가 통과했습니다. auth group은 12개입니다.
@@ -160,6 +194,18 @@ method/path 0으로 갱신했고 보고서 smoke가 통과했습니다. auth gro
 HTML과 plain-text 두 버전으로 렌더링합니다. 600px 안쪽의 어두운 남색 패널, 금색
 테두리·버튼, 모바일 폭 대응을 사용해 현재 게임 스타일과 맞춥니다. 사용자 아이디는 HTML
 escape하고, 제목에 아이디·이메일·token을 넣지 않습니다.
+
+API transaction은 메일을 직접 보내지 않고 semantic job만 durable outbox에 commit합니다.
+실제 계정이 없는 discovery 요청도 같은 형태의 decoy job을 기록할 수 있어 공개 응답과 DB
+처리 경로의 차이를 줄입니다. outbox에는 수신자 주소, 원문 action token, 렌더링한 제목·본문을
+보관하지 않습니다. worker가 `FOR UPDATE SKIP LOCKED`로 job을 claim한 뒤 현재 계정 이메일을
+다시 확인하고, 필요한 경우에만 새 token과 본문을 메모리에서 만듭니다.
+
+공급자 호출 직전에 `sending`, `attempt_count=1`을 commit하므로 호출을 시도한 job은 자동
+재시도하지 않습니다. 호출 전 멈춘 `preparing`만 다시 queue에 넣을 수 있고 오래된
+`sending`은 결과 불명 실패로 종료합니다. 인증 재전송·비밀번호 재설정·삭제 요청의 기존
+유효 link는 새 메일이 성공으로 확정되기 전에는 소진하지 않습니다. 새 전달 성공 뒤에만
+같은 계정·목적의 이전 token을 폐기하므로 공급자 실패가 기존 정상 link를 깨뜨리지 않습니다.
 
 Render Free는 outbound SMTP 포트 `25`, `465`, `587`을 막으므로 이 구성에서는 SMTP가
 동작하지 않습니다. [Render Free 공식 제한](https://render.com/docs/free)에 맞춰
@@ -198,10 +244,24 @@ Brevo 일반 API key는 send-only scope가 아니라
 [계정 전체 접근 권한](https://help.brevo.com/hc/en-us/articles/209467485-Create-and-manage-your-API-keys)을
 가진 credential입니다. 따라서 이 프로젝트 전용 key를 따로 만들고 짧은 만료일을
 선택하며, Render secret에만 저장하고 노출·미사용·integration 종료 시 즉시 삭제합니다.
-이 key의 account-wide 위험 때문에 `BREVO_API_KEY` 생성·주입은 migration 승인과 별개의
-사용자 확인 단계로 둡니다. 장기적으로 private OAuth app의
+이 key의 account-wide 위험 때문에 `BREVO_API_KEY` 생성·주입은 DB migration과 분리한
+사용자 행동 단계로 둡니다. 장기적으로 private OAuth app의
 `transactional.email:write` 최소 scope가 현재 비용·운영 조건에 맞는지 다시 검토할 수
-있지만 v371에서는 사용하지 않습니다.
+있지만 v377에서는 사용하지 않습니다.
+
+## 만료된 미인증 identity 회수
+
+가입만 하고 인증하지 않은 계정은 background bulk delete하지 않습니다. 같은 아이디나
+이메일로 새 가입 요청이 들어왔을 때 생성 후 168시간이 지난 충돌 계정을 row lock으로
+확인하고, 다음 조건을 모두 만족할 때만 그 요청 안에서 identity를 회수합니다.
+
+- 활성·비관리자·password-backed 계정이고 이메일이 아직 미인증
+- 관리자 role·감사 기록이 없음
+- save snapshot, item, inventory/equipment slot, character skill, mailbox 데이터가 없음
+
+하나라도 만족하지 않으면 기존 identity를 보존하고 conflict로 닫습니다. 이 정책은
+실제 사용 가능한 계정이나 진행 데이터를 정리 작업이 추측해 삭제하지 않도록 하는
+on-demand 최소 회수 경계입니다.
 
 ## 계정 삭제 안전 경계
 
@@ -271,35 +331,43 @@ fingerprint만 들어가며 비밀번호는 명령행·출력에 넣지 않습�
 
 ## 아직 남은 공개 보안 gate
 
-v371이 아래 항목을 모두 끝내는 것은 아닙니다. 공개 회원가입 전에 적어도 다음을
+v377 source가 아래 항목을 모두 끝내는 것은 아닙니다. 공개 회원가입 전에 적어도 다음을
 별도 검토·구현·검증합니다.
 
-1. 로그인·가입·인증 재전송·복구·삭제 요청의 IP/이메일별 rate limit과 반복 실패 지연, 만료된 미인증 계정의 안전한 정리·메일 소유자 회수 정책,
-   공개 실패 문구·응답 시간 차이로 계정 존재 여부나 인증 상태를 추정하지 못하게 하는 일반화 검토
-2. 서버측 session/refresh token, 기기별 원격 폐기 또는 현재 access token 정책 확정
-3. ASGI 계층의 JSON 파싱 전 raw request body cap
-4. 다중 기기 save revision, 낙관적 잠금과 충돌 해결
-5. HTTPS 강제, CSP/XSS 회귀와 browser token 저장 방식
-6. 개인정보 처리방침, 데이터 보관·삭제, 문의·복구 절차
-7. Brevo sender·anonymous tracking·1개월 retention·preview 미저장 실제 설정 검증
-8. backend image와 legacy static을 같은 exact-SHA 단위로 준비·게시·배포하고 rollback 검증
+1. 서버측 session/refresh token, 기기별 원격 폐기 또는 현재 access token 정책 확정
+2. 다중 기기 save revision, CAS·낙관적 잠금과 충돌 해결
+3. HTTPS 강제, CSP/XSS 회귀와 browser token 저장 방식
+4. 개인정보 처리방침, 데이터 보관·삭제, 문의·복구와 법적 보존 절차
+5. Brevo sender·anonymous tracking·1개월 retention·preview 미저장 실제 설정과 테스트 메일
+6. backend image와 legacy static을 같은 exact-SHA 단위로 준비·게시·배포하고 rollback 검증
 
 ## 승인 단위와 다음 순서
 
 ```txt
-1. email-validator 2.3.0 설치·Linux lock 및 v371 source 검증 commit
-2. exact SHA 승인 뒤 isolated PostgreSQL upgrade→downgrade→upgrade
-3. exact v371 migration 적용 SHA 별도 승인
-4. Brevo 계정·발신자·전용 API key와 Render secret 설정 별도 확인
-5. 실제 테스트 메일 1건 별도 확인
-6. exact owner bootstrap SHA 별도 승인과 1회 실행
-7. owner 이메일 인증·로그인·다중 캐릭터 로컬 통합 확인
-8. 공개 보안 gate 완료 뒤 backend/static 동시 release 별도 승인
+1. v377 source 준비 commit·push
+2. 같은 exact source로 isolated PostgreSQL v295→v377→v295→v377 왕복
+3. 완료된 왕복 report + local 새 backup 뒤 local exact apply
+4. 같은 report + Neon 새 backup 뒤 Neon exact apply
+5. Brevo 계정·발신자·전용 API key와 local/Render secret 설정
+6. 실제 테스트 메일과 가입·인증·복구·삭제 end-to-end 확인
+7. server session/revoke, save CAS, CSP/XSS/browser token, 개인정보 gate 완료
+8. exact v377 backend/static 준비·게시·배포와 rollback 확인
 ```
+
+v376에서 승인된 이메일 rollout 범위는 1~6과 필요한 release 준비까지 이어지므로 같은
+DB 단계를 다시 승인받지 않습니다. Brevo 가입·발신자 소유 확인·API key 입력처럼 Codex가
+대신할 수 없는 행동만 요청합니다. owner bootstrap은 이 목록과 별도입니다.
 
 ## 현재 검증 결과
 
+v377 source에서 현재 완료가 확인된 focused 결과:
+
+- backend v377 public auth security focused smoke: PASS
+- backend v377 semantic email outbox focused smoke: PASS
 - backend v371 이메일 lifecycle focused smoke: PASS
+
+아래는 v371 source-prepared checkpoint에서 완료한 과거 baseline입니다.
+
 - backend owner 관리자 one-shot fail-closed smoke: PASS
 - v371 migration source parity smoke: PASS
 - backend v370 account/auth와 account-admin 회귀 smoke: PASS
@@ -317,6 +385,7 @@ v371이 아래 항목을 모두 끝내는 것은 아닙니다. 공개 회원가�
 
 Browser URL 정책이 `data:` 이메일 HTML 미리보기를 차단해 우회하지 않았습니다. 따라서
 실제 이메일 클라이언트의 시각 QA는 Brevo sender 설정 뒤 테스트 메일 1건 단계로 남깁니다.
-전체 `bash tools/run_smoke_core.sh`는 PASS했고 독립 리뷰의 source-prepared 즉시 수정 blocker는 0건입니다. 현재 marker는 source와
-migration 파일의 준비를 뜻할 뿐 실제 migration·메일·owner bootstrap·공개 배포 완료를
-뜻하지 않습니다.
+기존 v371 browser 결과는 과거 baseline의 PASS이며 v377 전체
+`bash tools/run_smoke_core.sh`도 backend `.venv`·`DEBUG=false` 조건에서 PASS했습니다.
+migration roundtrip은 아직 이 source checkpoint의 완료 주장에 포함하지 않습니다. 현재 marker는 source와 migration 파일의 준비를 뜻할 뿐 실제 migration·메일·
+owner bootstrap·공개 배포 완료를 뜻하지 않습니다.

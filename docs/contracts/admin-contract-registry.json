@@ -74,7 +74,7 @@
     "Normal request payload aliases and representative FastAPI 422 validation detail are checked before service or DB execution",
     "Malformed JSON, empty body, and unsupported JSON content type keep stable FastAPI 422 type/loc/msg fields while input and ctx remain outside the contract",
     "JSON charset, absent Content-Type, invalid top-level JSON types, empty object versus empty body, and Accept behavior are checked before service or DB execution",
-    "Non-JSON media types and request size ownership are checked before service or DB execution without inventing an application body-size limit",
+    "Non-JSON media types and the configured pure-ASGI request body cap are checked before service or DB execution",
     "UTF-8 JSON text, Content-Type parameter normalization, header-name case insensitivity, and malformed byte parsing are checked before service or DB execution",
     "Duplicate Content-Type and Accept headers plus Content-Length and Transfer-Encoding metadata are observed at the ASGI boundary without claiming wire-level enforcement",
     "Repeated preview payload parsing, five apply-route write guards, and unsupported Idempotency-Key status are checked without service or DB execution",

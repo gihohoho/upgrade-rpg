@@ -1,5 +1,6 @@
+import asyncio
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -10,10 +11,12 @@ from starlette.middleware.gzip import GZipMiddleware
 from starlette.responses import JSONResponse
 
 from app.api.router import api_router
+from app.core.auth_errors import AuthFlowHTTPException, auth_error_response
 from app.core.config import settings
-from app.core.response import error_response
-from app.db.session import engine
-from app.services.auth_service import AuthFlowHTTPException
+from app.db.session import AsyncSessionLocal, engine
+from app.middleware.auth_ip_rate_limit import AuthIPRateLimitMiddleware
+from app.middleware.request_body_limit import RequestBodyLimitMiddleware
+from app.services.auth_email_outbox import run_auth_email_outbox_worker
 
 
 SENSITIVE_VALIDATION_FIELDS = frozenset(
@@ -93,29 +96,41 @@ async def auth_flow_error_handler(
     _request: Request,
     exc: AuthFlowHTTPException,
 ) -> JSONResponse:
-    detail = exc.detail if isinstance(exc.detail, dict) else {}
-    code = str(detail.get("code") or "auth_request_failed")[:80]
-    message = str(detail.get("message") or "계정 요청을 처리하지 못했습니다.")[:300]
-    return JSONResponse(
-        status_code=int(exc.status_code),
-        headers=exc.headers,
-        content=error_response(
-            type="auth.error",
-            code=code,
-            message=message,
-            payload={"status": "error", "code": code},
-            data={"status": "error"},
-            meta={"sensitiveInputReturned": False},
-        ),
-    )
+    return auth_error_response(exc)
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    """Release pooled DB connections on shutdown without running migrations."""
+    """Run the durable mail worker and release pooled connections on shutdown."""
+    stop_event: asyncio.Event | None = None
+    worker_task: asyncio.Task[None] | None = None
+    if (
+        settings.email_outbox_worker_enabled
+        and settings.brevo_ready
+        and settings.auth_abuse_ready
+    ):
+        stop_event = asyncio.Event()
+        worker_task = asyncio.create_task(
+            run_auth_email_outbox_worker(
+                stop_event=stop_event,
+                session_factory=AsyncSessionLocal,
+            ),
+            name="auth-email-outbox-worker",
+        )
     try:
         yield
     finally:
+        if stop_event is not None and worker_task is not None:
+            stop_event.set()
+            try:
+                await asyncio.wait_for(
+                    worker_task,
+                    timeout=float(settings.email_delivery_timeout_seconds) + 2.0,
+                )
+            except TimeoutError:
+                worker_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await worker_task
         await engine.dispose()
 
 
@@ -129,9 +144,19 @@ def create_app() -> FastAPI:
     app.add_exception_handler(RequestValidationError, request_validation_error_handler)
     app.add_exception_handler(AuthFlowHTTPException, auth_flow_error_handler)
 
-    # Large read-only master-data snapshots benefit from transport compression.
-    # Register GZip first so the subsequently registered CORS middleware remains
-    # the outer wrapper and also covers middleware-generated responses.
+    # Starlette wraps middleware in reverse registration order. Register the IP
+    # gate before the body boundary so the effective request order is CORS ->
+    # GZip -> body cap -> IP rate limit -> FastAPI parsing/dependencies.
+    app.add_middleware(
+        AuthIPRateLimitMiddleware,
+        auth_path_prefix=f"{settings.api_prefix.rstrip('/')}/auth",
+    )
+    app.add_middleware(
+        RequestBodyLimitMiddleware,
+        global_max_bytes=settings.request_body_limit_bytes,
+        auth_max_bytes=settings.auth_request_body_limit_bytes,
+        auth_path_prefix=f"{settings.api_prefix.rstrip('/')}/auth",
+    )
     app.add_middleware(GZipMiddleware, minimum_size=1024, compresslevel=5)
     app.add_middleware(
         CORSMiddleware,
@@ -139,6 +164,7 @@ def create_app() -> FastAPI:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["Retry-After"],
     )
 
     app.include_router(api_router, prefix=settings.api_prefix)

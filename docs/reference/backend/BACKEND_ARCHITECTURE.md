@@ -1,12 +1,12 @@
-# FastAPI 백엔드 구조 — v371
+# FastAPI 백엔드 구조 — v377
 
 ## 목표
 
 현재 브라우저 JS 안에 있는 저장/전투/드랍/강화 판정을 단계적으로 FastAPI로 옮깁니다.
 v370에서는 그 기반 위에 회원가입·로그인, 계정별 캐릭터 슬롯 8개, 캐릭터별 save
 snapshot과 관리자 회원 관리를 로컬 소스에 추가했습니다. v371은 필수 이메일 인증,
-아이디·비밀번호 복구, 계정 삭제, `authVersion` 폐기와 source-only DB migration을
-추가로 준비합니다.
+아이디·비밀번호 복구, 계정 삭제와 `authVersion` 폐기를 준비했고, v377은 그 위에
+PostgreSQL 기반 요청 제한, JSON 파싱 전 body cap과 durable email outbox를 추가합니다.
 
 ## 폴더 구조
 
@@ -17,6 +17,7 @@ backend/
     api/                   라우터 모음
     core/                  설정, 응답, 인증 공통
     db/                    DB 세션, Base
+    middleware/            JSON 파싱 전 body cap과 인증 IP gate
     models/                SQLAlchemy 모델
     schemas/               Pydantic 요청/응답 스키마
     services/              게임/관리자 비즈니스 로직
@@ -57,8 +58,11 @@ PostgreSQL은 유저 데이터와 마스터 데이터 저장 담당
 
 클라이언트가 보낸 `userId`로 소유자를 선택하지 않습니다. 저장 요청의 `snapshot`,
 슬롯 키와 캐릭터 고유 ID를 안정적으로 직렬화한 크기는 2,000,000바이트 이하로
-제한하지만, HTTP raw body를 JSON 파싱 전에 막는 ASGI 계층 cap은 공개 전 보강
-항목입니다.
+제한합니다. v377 pure-ASGI middleware는 그보다 바깥에서 모든 HTTP request body를
+2,100,000바이트, `/api/v1/auth` body를 16,384바이트로 제한하고 JSON 파싱 전에
+`413 request_body_too_large`로 닫습니다. `Content-Length`가 없거나 실제 body보다 작아도
+수신 byte를 직접 세며, 기존 save 계약의 JSON overhead는 100,000바이트 안에서만
+허용됩니다.
 
 정상 load의 authoritative 원본은 서버 DB snapshot입니다. backend에 snapshot이 있으면
 서버본을 사용하고 서로 다른 local은 활성값을 바꾸기 전에 복구 백업으로 보존합니다.
@@ -71,7 +75,7 @@ runtime을 pause한 뒤 기존 큐와 마지막 snapshot write를 drain하고, �
 선택 상태/token 정리와 reload를 실행합니다. 서버 revision과 낙관적 잠금이 아직 없으므로
 다중 기기 동시 저장 충돌 해결은 공개 전 후속입니다.
 
-## v371 이메일 identity와 token 구조
+## v377 이메일 identity, token과 semantic outbox
 
 `v371_email_identity_lifecycle` revision source는 `users`에 nullable legacy-safe
 `email_original`, unique/index `email_canonical`, `email_verified_at`, non-null
@@ -81,14 +85,22 @@ runtime을 pause한 뒤 기존 큐와 마지막 snapshot write를 drain하고, �
 `user_email_action_tokens`는 이메일 인증, 비밀번호 재설정, 일반 회원 계정 삭제의 세
 목적만 허용합니다. 원문 token은 `secrets.token_urlsafe(32)`로 만들고 링크에 한 번만
 전달하며 DB에는 별도 `EMAIL_TOKEN_SECRET` HMAC-SHA256 digest만 저장합니다. 목적,
-만료, 미사용 상태를 row lock 안에서 확인하고 사용 뒤에는 남은 계정 token을 소진합니다.
+만료, 미사용 상태를 row lock 안에서 확인합니다. 재전송할 때 기존의 아직 유효한 링크는
+먼저 폐기하지 않고, 새 링크가 공급자에서 성공으로 확정된 뒤에만 같은 목적의 이전
+token을 소진합니다.
 비밀번호 재설정은 password hash와 `authVersion` 증가를 같은 transaction으로 처리해
 기존 access token을 모두 거절합니다.
 
-메일 전달은 Render Free의 SMTP 포트 제한에 맞춰 Brevo HTTPS API를 worker thread에서
-한 번만 호출합니다. 자동 retry는 하지 않으며 provider timeout·오류를 제한된 code와
-message ID로만 기록합니다. 메일 본문·수신자별 token·API key는 로그에 넣지 않습니다.
-source-controlled HTML/plain-text 템플릿에는 외부 asset·script·tracking pixel이 없습니다.
+`v377_auth_email_public_security` revision source는 `auth_rate_limit_buckets`와
+`auth_email_outbox`를 추가합니다. outbox에는 목적, HMAC 처리한 대상 digest와 처리 상태만
+두며 수신자 주소, 원문 token, 렌더링한 제목·본문은 저장하지 않습니다. worker가
+PostgreSQL `FOR UPDATE SKIP LOCKED`로 semantic job을 단독 claim한 뒤에만 현재 수신자와
+새 token을 해석·생성하고 Brevo HTTPS API를 호출합니다. 공급자 호출을 시도한 job은
+성공·실패·결과 불명과 관계없이 자동 재시도하지 않습니다. 공급자 호출 전 중단된
+`preparing`만 다시 pending으로 돌릴 수 있고, 오래된 `sending`은 결과 불명 실패로
+종료합니다. 제한된 provider message ID·error code 외에 본문·수신자·token·API key를
+로그나 outbox 행에 넣지 않습니다. source-controlled HTML/plain-text 템플릿에는 외부
+asset·script·tracking pixel이 없습니다.
 
 `backend/scripts/bootstrap_owner_admin.py`는 FastAPI lifespan과 분리된 explicit
 one-shot 도구입니다. 기본 inspect는 read-only이고 실제 `--apply`는 DB migration head,
@@ -99,9 +111,15 @@ root·tracked script·tracked index/worktree clean, 환경·SHA·identity finger
 JWT secret과 공유하지 않고 성공 직후 `.env`에서 제거합니다. 이메일은 자동 인증하지
 않습니다.
 
-이 migration, owner script, Brevo 설정과 실제 메일은 아직 실행하지 않았습니다.
+v371→v377 migration source와 guard 도구는 준비됐지만, private environment preparation·격리 왕복·local/Neon migration,
+owner script, Brevo 설정과 실제 메일은 아직 실행하지 않았습니다.
 
-## v371 인증 경계
+Migration guard는 libpq가 URL의 host보다 실제 접속 주소에 사용할 수 있는 inherited
+`PGHOSTADDR`를 포함해 모든 `PG*` 기본값을 제거하고 trusted PostgreSQL client만 실행합니다.
+격리 왕복과 local/Neon backup·apply는 각 단계의 첫 mutation 전에 private exclusive marker를
+만들어 실패 뒤 같은 confirmation으로 다시 실행하는 경로도 닫습니다.
+
+## v377 인증 경계
 
 - 비밀번호는 직접 dependency인 `bcrypt 5.0.0`으로 해시하고 CPU 작업은 worker
   thread에서 수행합니다.
@@ -117,6 +135,16 @@ JWT secret과 공유하지 않고 성공 직후 `.env`에서 제거합니다. �
   기존 dev key를 두 번째 방어선으로 유지합니다.
 - 인증 경로의 FastAPI `422` handler는 `loc`·`type`·`msg`를 유지하지만 비밀번호·확인
   필드와 인증 body의 `input`을 제거합니다.
+- 로그인·가입·인증·복구·삭제 요청은 IP와 normalized subject별 PostgreSQL bucket을
+  사용합니다. DB에는 원문 IP·이메일·아이디·token 대신 별도 `AUTH_ABUSE_SECRET` HMAC
+  digest만 저장하고 반복 실패에는 cooldown과 제한된 응답 지연을 적용합니다.
+- Render production은 edge가 덮어쓴 단일 `CF-Connecting-IP`만 client IP로 신뢰합니다.
+  caller가 넣은 첫 항목이 남을 수 있는 `X-Forwarded-For`는 사용하지 않으며, 해당 header가
+  없거나 유효한 IP가 아니면 인증 요청 보호를 `503`으로 fail-closed합니다. local direct
+  mode는 socket peer만 사용합니다.
+- 인증 오류는 source-controlled stable code를 사용합니다. 요청 제한은 `429
+  auth_rate_limited`와 `Retry-After`, 너무 큰 body는 `413 request_body_too_large`를
+  반환하며 모든 `/api/v1/auth` 응답은 `Cache-Control: no-store`입니다.
 - SQLAlchemy engine은 application debug와 무관하게 `echo=False`,
   `hide_parameters=True`를 고정해 password hash와 raw snapshot bind 값을 숨깁니다.
 - 관리자 snapshot summary는 명시된 11개 진단 scalar allow-list와 문자열 160자 제한만
@@ -126,9 +154,14 @@ JWT secret과 공유하지 않고 성공 직후 `.env`에서 제거합니다. �
 복구 선택으로 돌아갑니다. network/timeout/`5xx`에서는 token과 선택 상태를 유지해 retry와
 다음 직렬 저장을 허용합니다.
 
-아이디 찾기·비밀번호 재설정·계정 삭제 source 흐름은 v371에서 준비하지만, 서버측
-session/refresh token, 개별 기기 원격 로그아웃, 인증·복구 요청 rate limit과 raw body
-cap은 아직 구현하지 않았으며 공개 전 보강 범위입니다.
+아이디 찾기·인증 재전송·비밀번호 재설정의 공개 응답은 실제 계정·메일 발송 여부와
+관계없이 queue 접수를 뜻하는 동일한 `202`를 사용하고 최소 응답 시간과 jitter를
+적용합니다. 가입 identity가 168시간 이상 미인증 상태로 방치된 경우에도 non-admin,
+활성 password 계정이며 역할·save·item·inventory·equipment·skill·mail·관리자 감사
+데이터가 전혀 없을 때만 다음 가입 요청 안에서 회수합니다.
+
+서버측 session/refresh token과 개별 기기 원격 폐기, save revision/CAS, CSP/XSS와 browser
+token 저장 정책, 개인정보 정책은 아직 공개 전 보강 범위입니다.
 
 ## API 응답 표준
 
@@ -156,17 +189,18 @@ cap은 아직 구현하지 않았으며 공개 전 보강 범위입니다.
 1. backend 뼈대·PostgreSQL schema·JSON seed·`/game/master-data`: 완료
 2. 인증된 `/game/load`, `/game/save`, 계정 캐릭터 슬롯: v370 로컬 구현 완료
 3. 회원가입·로그인과 관리자 회원 관리: v370 로컬 구현 완료
-4. 이메일 인증·아이디/비밀번호 복구·계정 삭제: v371 source/migration 준비 중
+4. 이메일 인증·아이디/비밀번호 복구·계정 삭제와 공개 요청 방어: v377 source/migration 준비 완료
 5. 장착/해제/강화 API 이전: 후속
 6. 보스 소환/전투/드랍 API 이전: 후속
 7. legacy 관리자 콘텐츠 API의 운영 인증·쓰기 절차: 추가 보강 후 공개
 8. Vue 관리자 페이지 이전: 후속, 현재 실제 화면은 legacy `admin.html`
 ```
 
-공개 Render backend는 계속 v351 exact image입니다. v371에서는 DB write·seed·migration,
-Brevo account/sender/API key, 실제 메일, owner bootstrap, Render env 변경, image 게시와
-deploy를 실행하지 않았습니다. v371 backend 이메일 lifecycle·owner one-shot·migration
-source, v370 backend 회귀, compileall, runtime blocking-I/O와 route map 48 operations
-(`GET 21 / POST 26 / DELETE 1`, duplicate 0)는 PASS입니다. root 최종 browser와 전체
-core도 PASS했고 독립 리뷰의 source-prepared 즉시 수정 blocker는 0건이며, v370의 route map 40 operations와 core PASS는 과거 baseline으로
-보존합니다. 상세 실제 결과는 `CURRENT_STATUS.md`에 기록합니다.
+공개 Render backend는 계속 v351 exact image이고 실제 local/Neon DB도 v295입니다. v377에서는
+DB write·seed·migration, Brevo account/sender/API key, 실제 메일, owner bootstrap, Render
+env 변경, image 게시와 deploy를 실행하지 않았습니다. 새 public-security·semantic-outbox와
+기존 v371 이메일 lifecycle focused source 검사 및 v377 전체 core smoke는 통과했으며,
+기존 browser 결과는 과거 baseline으로 보존합니다. 다음 안전 단계는 ignored dotenv·DB security artifact의 private
+ACL과 email/abuse secret을 먼저 준비한 뒤 고정된 격리 PostgreSQL의
+v295→v377→v295→v377 왕복을 수행하고 같은 source evidence와 새 backup을 요구하는 local/Neon exact
+apply입니다. 상세 실제 결과는 `CURRENT_STATUS.md`에 기록합니다.

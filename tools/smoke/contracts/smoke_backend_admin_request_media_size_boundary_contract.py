@@ -8,18 +8,19 @@ BACKEND = ROOT / "backend"
 if str(BACKEND) not in sys.path:
     sys.path.insert(0, str(BACKEND))
 
-from app.api.routes.admin_request_media_size_boundary_contract import (
+from app.api.routes.admin_request_media_size_boundary_contract import (  # noqa: E402
     get_admin_request_media_size_boundary_contract_readiness,
 )
 
 r = get_admin_request_media_size_boundary_contract_readiness()
 assert r["ok"], r["failedChecks"]
-assert r["version"] == "v243.backend-admin-request-media-size-boundary-contract"
+assert r["version"] == "v377.backend-admin-request-media-size-boundary-contract"
 assert r["caseCount"] == 6 and r["checkCount"] == 6
 assert r["dbWriteAttemptCount"] == 0 and r["serviceCallCount"] == 0
-assert r["sizePolicy"]["applicationLimitConfigured"] is False
-assert r["sizePolicy"]["applicationLimitBytes"] is None
-assert r["sizePolicy"]["enforcementOwner"] == "deployment-proxy-or-server-configuration"
+assert r["sizePolicy"]["applicationLimitConfigured"] is True
+assert r["sizePolicy"]["applicationLimitBytes"] == 2_100_000
+assert r["sizePolicy"]["authApplicationLimitBytes"] == 16_384
+assert r["sizePolicy"]["enforcementOwner"] == "pure-asgi-request-body-limit-middleware"
 checks = {item["key"]: item for item in r["checks"]}
 for key in ("octet-stream-json-bytes", "octet-stream-binary", "urlencoded-form", "multipart-form"):
     assert checks[key]["actualError"]["type"] == "model_attributes_type"
@@ -28,7 +29,7 @@ assert checks["octet-stream-empty"]["actualError"] == {
     "loc": ["body"],
     "msg": "Field required",
 }
-assert checks["moderate-json-body-no-app-limit"]["actualProbeLength"] == 65536
+assert checks["moderate-json-body-within-app-limit"]["actualProbeLength"] == 65536
 entry = (ROOT / "src/api/admin-page-readonly.js").read_text(encoding="utf-8")
 assert "requestMediaSizeBoundaryContractReady" in entry
 assert "backendRequestMediaSizeBoundaryContractReady" in entry

@@ -52,6 +52,13 @@ function testDeletedAccountLocalCleanup(authSource) {
 
 async function testApiContracts(clientSource) {
 	const calls = [];
+	const queuedMailPaths = new Set([
+		"/api/v1/auth/register",
+		"/api/v1/auth/resend-verification",
+		"/api/v1/auth/recover-username",
+		"/api/v1/auth/request-password-reset",
+		"/api/v1/auth/account-deletion/request",
+	]);
 	const context = {
 		URL,
 		AbortController,
@@ -61,8 +68,10 @@ async function testApiContracts(clientSource) {
 		sessionStorage: { getItem() { return null; }, setItem() {}, removeItem() {} },
 		RpgAuthSession: { getAccessToken() { return "safe-bearer"; } },
 		async fetch(url, options) {
-			calls.push({ url: new URL(String(url)), options });
-			return { ok: true, status: 200, async json() { return { ok: true, payload: {} }; } };
+			const parsedUrl = new URL(String(url));
+			const status = queuedMailPaths.has(parsedUrl.pathname) ? 202 : 200;
+			calls.push({ url: parsedUrl, options, status });
+			return { ok: true, status, async json() { return { ok: true, payload: { status: status === 202 ? "accepted" : "ok" } }; } };
 		},
 	};
 	context.window = context;
@@ -97,6 +106,54 @@ async function testApiContracts(clientSource) {
 	assert.equal(byPath.get("/api/v1/auth/account-deletion/request").options.headers.Authorization, "Bearer safe-bearer");
 	assert.equal(JSON.parse(byPath.get("/api/v1/auth/login").options.body).identifier, "user@example.com");
 	assert.equal(JSON.parse(byPath.get("/api/v1/auth/account-deletion/confirm").options.body).confirmText, "계정 삭제");
+	for (const queuedMailPath of queuedMailPaths) {
+		assert.equal(byPath.get(queuedMailPath).status, 202, `${queuedMailPath} was not exercised as an accepted queued request`);
+	}
+}
+
+function testSecurityErrorClassification(gateSource) {
+	const constantsStart = gateSource.indexOf("const SESSION_INVALID_ERROR_CODES");
+	const constantsEnd = gateSource.indexOf("const gate =", constantsStart);
+	const helpersStart = gateSource.indexOf("function getErrorCode");
+	const helpersEnd = gateSource.indexOf("function returnToLoginAfterSessionExpiry", helpersStart);
+	assert(constantsStart >= 0 && constantsEnd > constantsStart, "account security error constants are missing");
+	assert(helpersStart >= 0 && helpersEnd > helpersStart, "account security error helpers are missing");
+	const source = `${gateSource.slice(constantsStart, constantsEnd)}\n${gateSource.slice(helpersStart, helpersEnd)}`;
+	const context = { window: {} };
+	vm.runInNewContext(`${source}; window.helpers = { getErrorCode, getRetryAfterSeconds, isRateLimitError, isRequestBodyTooLargeError, isEmailActionTokenInvalidError, getRateLimitMessage, isAccountSessionInvalidError };`, context);
+	const helpers = context.window.helpers;
+	const envelopeError = (status, code, meta) => ({
+		status,
+		response: {
+			error: { code, message: "safe" },
+			meta: meta || {},
+		},
+	});
+
+	for (const code of [
+		"bearer_token_required",
+		"access_token_invalid",
+		"account_not_found",
+		"auth_version_stale",
+		"account_suspended",
+		"email_verification_required",
+	]) {
+		assert.equal(helpers.isAccountSessionInvalidError(envelopeError(code === "account_suspended" ? 403 : 401, code)), true, `${code} did not invalidate the session`);
+	}
+	for (const [status, code] of [[401, "invalid_credentials"], [403, "admin_account_deletion_blocked"], [403, "admin_permission_required"], [429, "auth_rate_limited"], [413, "request_body_too_large"]]) {
+		assert.equal(helpers.isAccountSessionInvalidError(envelopeError(status, code)), false, `${code} incorrectly invalidated the session`);
+	}
+	assert.equal(
+		helpers.getErrorCode({ status: 401, response: { payload: { status: "error" }, detail: { code: "auth_version_stale", message: "safe" } } }),
+		"auth_version_stale",
+		"FastAPI detail error code was masked by a generic payload status",
+	);
+	const limited = envelopeError(429, "auth_rate_limited", { retryAfterSeconds: 37 });
+	assert.equal(helpers.isRateLimitError(limited), true);
+	assert.equal(helpers.getRetryAfterSeconds(limited), 37);
+	assert.match(helpers.getRateLimitMessage(limited), /37초 후 다시 시도/);
+	assert.equal(helpers.isRequestBodyTooLargeError(envelopeError(413, "request_body_too_large")), true);
+	assert.equal(helpers.isEmailActionTokenInvalidError(envelopeError(400, "email_action_token_invalid")), true);
 }
 
 function testFragmentConsumption(gateSource) {
@@ -109,15 +166,26 @@ function testFragmentConsumption(gateSource) {
 		URLSearchParams,
 		document: { title: "Upgrade RPG" },
 		window: {
-			location: { hash: "#auth=reset-password&token=private-link-token", pathname: "/index.html", search: "?from=email" },
+			location: { hash: `#auth=reset-password&token=${"a".repeat(43)}`, pathname: "/index.html", search: "?from=email" },
 			history: { replaceState(_state, _title, value) { replacedUrl = value; } },
 		},
 	};
-	vm.runInNewContext(`const AUTH_LINK_ACTIONS = new Set(["verify-email", "reset-password", "delete-account"]); ${source}; window.result = consumeAuthLinkFragment();`, context);
+	vm.runInNewContext(`const AUTH_LINK_ACTIONS = new Set(["verify-email", "reset-password", "delete-account"]); const EMAIL_ACTION_TOKEN_PATTERN = /^[A-Za-z0-9_-]{32,256}$/; ${source}; window.result = consumeAuthLinkFragment();`, context);
 	assert.equal(context.window.result.action, "reset-password");
-	assert.equal(context.window.result.token, "private-link-token");
+	assert.equal(context.window.result.token, "a".repeat(43));
 	assert.equal(replacedUrl, "/index.html?from=email");
-	assert(!replacedUrl.includes("private-link-token"), "email action token remained in the cleaned browser URL");
+	assert(!replacedUrl.includes("a".repeat(43)), "email action token remained in the cleaned browser URL");
+	for (const [label, token] of [
+		["short", "a".repeat(31)],
+		["overlong", "a".repeat(257)],
+		["punctuation", `${"a".repeat(31)}!`],
+		["non-ascii", `${"a".repeat(31)}한`],
+	]) {
+		context.window.location.hash = `#auth=verify-email&token=${encodeURIComponent(token)}`;
+		vm.runInNewContext("window.invalidResult = consumeAuthLinkFragment();", context);
+		assert.equal(context.window.invalidResult.invalid, true, `${label} email action token was sent toward the API`);
+		assert.equal(context.window.invalidResult.token, "", `${label} email action token remained in memory`);
+	}
 }
 
 function testSameDocumentFragmentReload(gateSource) {
@@ -196,10 +264,10 @@ async function run() {
 
 	assert.match(html, /src\/styles\/account\.css\?v=371/);
 	assert.match(html, /<meta name="referrer" content="no-referrer" \/>/);
-	assert.match(html, /auth-session\.js\?v=371/);
+	assert.match(html, /auth-session\.js\?v=377/);
 	assert.match(html, /game-api-client\.js\?v=371/);
 	assert.match(html, /render-ui\.js\?v=371/);
-	assert.match(html, /account-gate\.js\?v=371/);
+	assert.match(html, /account-gate\.js\?v=377/);
 	assert.match(html, /id="game-account-bar"[^>]+aria-hidden="true"[^>]+hidden[^>]+inert/);
 	assert.match(adminHtml, /account-admin\.css\?v=371/);
 	assert.match(adminHtml, /admin-account-management\.js\?v=371/);
@@ -214,10 +282,29 @@ async function run() {
 	assert.match(gateSource, /requestAccountDeletion\(\{ password \}, \{ timeoutMs: 15000 \}\)/);
 	assert.match(gateSource, /renderVerificationPending\(email/);
 	assert.match(gateSource, /window\.RpgAuthSession\.clearSession\(\);[\s\S]+renderVerificationPending/);
-	assert.match(
-		gateSource,
-		/formType === "register" && errorCode === "verification_email_delivery_failed"[\s\S]+renderVerificationPending\(email, \{[\s\S]+계정은 만들어졌지만 인증메일 발송에 실패했습니다\. 잠시 후 다시 요청해주세요\.[\s\S]+tone: "error"/,
-	);
+	assert.doesNotMatch(gateSource, /verification_email_delivery_failed/);
+	assert.match(gateSource, /가입과 인증 메일 요청을 접수했습니다\. 메일 도착까지 몇 분 걸릴 수 있습니다\./);
+	assert.match(gateSource, /아이디 안내 메일 요청을 접수했습니다/);
+	assert.match(gateSource, /비밀번호 재설정 메일 요청을 접수했습니다/);
+	assert.match(gateSource, /삭제 확인 메일 요청을 접수했습니다/);
+	assert.doesNotMatch(gateSource, /인증 메일을 보냈습니다|인증 메일을 다시 보냈습니다|삭제 확인 메일을 보냈습니다/);
+	assert.match(gateSource, /const RATE_LIMIT_ERROR_CODE = "auth_rate_limited"/);
+	assert.match(gateSource, /const REQUEST_BODY_TOO_LARGE_ERROR_CODE = "request_body_too_large"/);
+	assert.match(gateSource, /meta\.retryAfterSeconds/);
+	assert.match(gateSource, /요청 데이터가 허용 크기를 넘었습니다/);
+	assert(gateSource.includes("const EMAIL_ACTION_TOKEN_PATTERN = /^[A-Za-z0-9_-]{32,256}$/;"));
+	assert.match(gateSource, /EMAIL_ACTION_TOKEN_PATTERN\.test\(token\)/);
+	assert.doesNotMatch(gateSource, /status >= 400 && status < 500/);
+	assert.match(gateSource, /if \(isEmailActionTokenInvalidError\(error\)\)[\s\S]+else if \(isRateLimitError\(error\)\)[\s\S]+인증 링크는 현재 탭의 메모리에 안전하게 보존했습니다/);
+	assert.match(gateSource, /재설정 링크는 현재 탭의 메모리에 안전하게 보존했습니다/);
+	assert.match(gateSource, /삭제 링크는 현재 탭의 메모리에 안전하게 보존했습니다/);
+	const resetHandler = gateSource.slice(gateSource.indexOf("async function handlePasswordResetSubmit"), gateSource.indexOf("async function handleAccountDeletionRequestSubmit"));
+	const deletionConfirmHandler = gateSource.slice(gateSource.indexOf("async function handleAccountDeletionConfirmSubmit"), gateSource.indexOf("async function handleCreateSubmit"));
+	assert.match(resetHandler, /error && error\.message[\s\S]+재설정 링크는 현재 탭의 메모리에 보존했습니다/);
+	assert.match(deletionConfirmHandler, /error && error\.message[\s\S]+삭제 링크는 현재 탭의 메모리에 보존했습니다/);
+	assert.match(authSource, /const SESSION_INVALID_ERROR_CODES = new Set/);
+	assert.match(authSource, /if \(isSessionInvalidError\(error\)\)/);
+	assert.doesNotMatch(authSource, /status === 401 \|\| status === 403/);
 	assert.match(gateSource, /replaceState\(null, document\.title, cleanUrl\)/);
 	assert.match(gateSource, /"recover-username":\s*\{/);
 	assert.match(gateSource, /"request-password-reset":\s*\{/);
@@ -245,13 +332,16 @@ async function run() {
 	assert.doesNotMatch(`${html}\n${adminHtml}\n${gateSource}\n${clientSource}`, /brevo|sendgrid|smtp/i);
 
 	await testApiContracts(clientSource);
+	testSecurityErrorClassification(gateSource);
 	testDeletedAccountLocalCleanup(authSource);
 	testFragmentConsumption(gateSource);
 	testSameDocumentFragmentReload(gateSource);
 	testTownOnlyAccountBar(gateSource);
 
 	console.log("v371 email account frontend smoke passed");
-	console.log("- email-only registration verification and generic recovery UX: ok");
+	console.log("- queued 202 email acceptance wording and generic recovery UX: ok");
+	console.log("- 429 Retry-After / 413 messaging and exact session-invalid code allowlist: ok");
+	console.log("- auth-link token memory preservation with exact invalid-token disposal: ok");
 	console.log("- fragment token immediate URL cleanup and public/bearer API split: ok");
 	console.log("- same-document auth fragment fail-closed reload without token access: ok");
 	console.log("- deletion preview + two-step custom confirmation: ok");

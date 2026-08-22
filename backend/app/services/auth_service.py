@@ -1,20 +1,33 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime, timedelta
-import hashlib
-import hmac
 import secrets
+import time
 from typing import Any, Callable
 
 from fastapi import HTTPException, status
-from sqlalchemy import and_, delete, func, or_, select, update
+from sqlalchemy import and_, delete, exists, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool
 
-from app.core.config import LOCAL_EMAIL_TOKEN_SECRET, settings
+from app.core.config import settings
+from app.core.auth_errors import AuthFlowHTTPException, auth_error as _auth_error
 from app.core.security import CurrentUser, create_access_token, hash_password, verify_password
-from app.models import AdminChangeLog, User, UserEmailActionToken, UserProfile, UserSaveSnapshot
+from app.models import (
+    AdminChangeLog,
+    AdminUserRole,
+    ItemInstance,
+    User,
+    UserCharacterSkill,
+    UserEmailActionToken,
+    UserEquipmentSlot,
+    UserInventorySlot,
+    UserMailboxMessage,
+    UserProfile,
+    UserSaveSnapshot,
+)
 from app.schemas.auth import (
     AccountDeletionConfirmRequest,
     AccountDeletionRequest,
@@ -27,32 +40,16 @@ from app.schemas.auth import (
     RegisterRequest,
     normalize_email_identity,
 )
-from app.services.auth_email_delivery import (
-    BrevoEmailDelivery,
-    EmailDeliveryError,
-    build_auth_action_url,
-    render_account_deletion,
-    render_email_verification,
-    render_password_reset,
-    render_username_recovery,
+from app.services.auth_email_outbox import (
+    EMAIL_PURPOSE_ACCOUNT_DELETION,
+    EMAIL_PURPOSE_PASSWORD_RESET,
+    EMAIL_PURPOSE_USERNAME_RECOVERY,
+    EMAIL_PURPOSE_VERIFY,
+    AuthEmailOutboxService,
 )
 
 
-EMAIL_PURPOSE_VERIFY = "verify_email"
-EMAIL_PURPOSE_PASSWORD_RESET = "password_reset"
-EMAIL_PURPOSE_ACCOUNT_DELETION = "account_deletion"
 ACCOUNT_CHARACTER_SLOT_KEYS = tuple(f"character-{index}" for index in range(1, 9))
-
-
-class AuthFlowHTTPException(HTTPException):
-    """HTTP error carrying a stable, non-sensitive account-flow code."""
-
-
-def _auth_error(status_code: int, code: str, message: str) -> AuthFlowHTTPException:
-    return AuthFlowHTTPException(
-        status_code=status_code,
-        detail={"code": str(code), "message": str(message)},
-    )
 
 
 def _as_utc(value: datetime) -> datetime:
@@ -70,20 +67,36 @@ class AuthService:
         now_factory: Callable[[], datetime] | None = None,
         provider_ready: bool | None = None,
         public_frontend_origin: str | None = None,
+        abuse_secret: str | None = None,
+        email_outbox: AuthEmailOutboxService | None = None,
+        monotonic_factory: Callable[[], float] | None = None,
+        sleep: Callable[[float], Any] | None = None,
+        discovery_floor_ms: int | None = None,
+        discovery_jitter_ms: int | None = None,
     ) -> None:
-        self.email_delivery = email_delivery or BrevoEmailDelivery()
         self.email_normalizer = email_normalizer or normalize_email_identity
-        self.token_secret = (
-            str(token_secret).strip()
-            if token_secret is not None
-            else settings.email_token_secret.get_secret_value().strip()
+        self.email_outbox = email_outbox or AuthEmailOutboxService(
+            email_delivery=email_delivery,
+            token_secret=token_secret,
+            abuse_secret=abuse_secret,
+            token_factory=token_factory,
+            now_factory=now_factory,
+            provider_ready=provider_ready,
+            public_frontend_origin=public_frontend_origin,
         )
-        self.token_factory = token_factory or (lambda: secrets.token_urlsafe(32))
         self.now_factory = now_factory or (lambda: datetime.now(UTC))
-        self.provider_ready = settings.brevo_ready if provider_ready is None else bool(provider_ready)
-        self.public_frontend_origin = str(
-            public_frontend_origin or settings.public_frontend_origin
-        ).rstrip("/")
+        self.monotonic_factory = monotonic_factory or time.monotonic
+        self.sleep = sleep or asyncio.sleep
+        self.discovery_floor_ms = int(
+            settings.auth_discovery_response_floor_ms
+            if discovery_floor_ms is None
+            else discovery_floor_ms
+        )
+        self.discovery_jitter_ms = int(
+            settings.auth_discovery_response_jitter_ms
+            if discovery_jitter_ms is None
+            else discovery_jitter_ms
+        )
 
     @staticmethod
     def serialize_current_user(current_user: CurrentUser) -> dict[str, Any]:
@@ -118,15 +131,22 @@ class AuthService:
             )
         ).scalar_one_or_none()
         if exact_existing is not None:
-            recovered = await self._retry_pending_registration(
+            if not self._registration_expired(exact_existing):
+                recovered = await self._retry_pending_registration(
+                    session,
+                    payload=payload,
+                    identity=identity,
+                    candidate=exact_existing,
+                )
+                if recovered is not None:
+                    return recovered
+            reclaimed = await self._reclaim_expired_registration_conflicts(
                 session,
-                payload=payload,
-                identity=identity,
-                candidate=exact_existing,
+                username=payload.username,
+                email_canonical=identity.canonical,
             )
-            if recovered is not None:
-                return recovered
-            raise self._account_identity_conflict()
+            if not reclaimed:
+                raise self._account_identity_conflict()
 
         conflicting_id = (
             await session.execute(
@@ -141,9 +161,15 @@ class AuthService:
             )
         ).scalar_one_or_none()
         if conflicting_id is not None:
-            await session.rollback()
-            await self._dummy_registration_password_check(payload)
-            raise self._account_identity_conflict()
+            reclaimed = await self._reclaim_expired_registration_conflicts(
+                session,
+                username=payload.username,
+                email_canonical=identity.canonical,
+            )
+            if not reclaimed:
+                await session.rollback()
+                await self._dummy_registration_password_check(payload)
+                raise self._account_identity_conflict()
 
         await session.rollback()
         password_hash = await run_in_threadpool(
@@ -164,12 +190,12 @@ class AuthService:
         try:
             await session.flush()
             session.add(UserProfile(user_id=user.id))
-            raw_token, token_row = self._new_token_row(
-                user_id=int(user.id),
+            await self.email_outbox.enqueue(
+                session,
                 purpose=EMAIL_PURPOSE_VERIFY,
-                expires_in_minutes=int(settings.email_verification_expire_minutes),
+                canonical_email=identity.canonical,
+                user_id=int(user.id),
             )
-            session.add(token_row)
             await session.commit()
         except IntegrityError as exc:
             await session.rollback()
@@ -185,21 +211,7 @@ class AuthService:
             await session.rollback()
             raise
 
-        registered_user = self.serialize_user(user)
-        try:
-            await self._deliver_action_token(
-                session,
-                user=user,
-                token_row=token_row,
-                raw_token=raw_token,
-            )
-        except EmailDeliveryError as exc:
-            raise _auth_error(
-                status.HTTP_503_SERVICE_UNAVAILABLE,
-                "verification_email_delivery_failed",
-                "인증 메일을 보내지 못했습니다. 잠시 후 다시 요청해주세요.",
-            ) from exc
-        return self._verification_required_result(registered_user)
+        return self._verification_required_result(self.serialize_user(user))
 
     async def _retry_pending_registration(
         self,
@@ -272,22 +284,18 @@ class AuthService:
                 await session.rollback()
                 return None
 
-        registered_user = self.serialize_user(locked_user)
         try:
-            await self._create_and_deliver_for_locked_user(
+            await self.email_outbox.enqueue(
                 session,
-                user=locked_user,
                 purpose=EMAIL_PURPOSE_VERIFY,
-                expires_in_minutes=int(settings.email_verification_expire_minutes),
-                hide_delivery_failure=False,
+                canonical_email=identity.canonical,
+                user_id=int(locked_user.id),
             )
-        except EmailDeliveryError as exc:
-            raise _auth_error(
-                status.HTTP_503_SERVICE_UNAVAILABLE,
-                "verification_email_delivery_failed",
-                "인증 메일을 보내지 못했습니다. 잠시 후 다시 요청해주세요.",
-            ) from exc
-        return self._verification_required_result(registered_user)
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        return self._verification_required_result(self.serialize_user(locked_user))
 
     @staticmethod
     async def _dummy_registration_password_check(payload: RegisterRequest) -> None:
@@ -296,12 +304,109 @@ class AuthService:
             payload.password.get_secret_value(),
         )
 
+    async def _reclaim_expired_registration_conflicts(
+        self,
+        session: AsyncSession,
+        *,
+        username: str,
+        email_canonical: str,
+    ) -> bool:
+        """Release only abandoned identities that never became usable accounts."""
+        await session.rollback()
+        conflicts = list(
+            (
+                await session.execute(
+                    select(User)
+                    .where(
+                        or_(
+                            User.username == username,
+                            User.email_canonical == email_canonical,
+                        )
+                    )
+                    .order_by(User.id)
+                    .execution_options(populate_existing=True)
+                    .with_for_update()
+                )
+            ).scalars()
+        )
+        if not conflicts:
+            await session.rollback()
+            return False
+
+        cutoff = self._now() - timedelta(hours=int(settings.unverified_account_ttl_hours))
+        reclaimable_ids: list[int] = []
+        for candidate in conflicts:
+            created_at = getattr(candidate, "created_at", None)
+            if (
+                candidate.is_admin
+                or not candidate.is_active
+                or candidate.email_verified_at is not None
+                or not candidate.email_canonical
+                or not candidate.password_hash
+                or created_at is None
+                or _as_utc(created_at) > cutoff
+            ):
+                await session.rollback()
+                return False
+            owned_data_present = bool(
+                (
+                    await session.execute(
+                        select(
+                            or_(
+                                exists().where(
+                                    AdminUserRole.user_id == int(candidate.id)
+                                ),
+                                exists().where(
+                                    UserSaveSnapshot.user_id == int(candidate.id)
+                                ),
+                                exists().where(ItemInstance.user_id == int(candidate.id)),
+                                exists().where(
+                                    UserInventorySlot.user_id == int(candidate.id)
+                                ),
+                                exists().where(
+                                    UserEquipmentSlot.user_id == int(candidate.id)
+                                ),
+                                exists().where(
+                                    UserCharacterSkill.user_id == int(candidate.id)
+                                ),
+                                exists().where(
+                                    UserMailboxMessage.user_id == int(candidate.id)
+                                ),
+                            )
+                        )
+                    )
+                ).scalar_one()
+            )
+            if owned_data_present or await self._admin_audit_count(
+                session,
+                user_id=int(candidate.id),
+            ):
+                await session.rollback()
+                return False
+            reclaimable_ids.append(int(candidate.id))
+
+        await session.execute(delete(User).where(User.id.in_(reclaimable_ids)))
+        await session.commit()
+        return True
+
+    def _registration_expired(self, user: User) -> bool:
+        created_at = getattr(user, "created_at", None)
+        if created_at is None:
+            return False
+        cutoff = self._now() - timedelta(hours=int(settings.unverified_account_ttl_hours))
+        return bool(
+            user.email_verified_at is None
+            and user.email_canonical
+            and _as_utc(created_at) <= cutoff
+        )
+
     @staticmethod
     def _verification_required_result(user: dict[str, Any]) -> dict[str, Any]:
         return {
             "status": "verification_required",
             "user": dict(user),
             "accessTokenIssued": False,
+            "emailRequestAccepted": True,
         }
 
     @staticmethod
@@ -378,6 +483,7 @@ class AuthService:
         session: AsyncSession,
         payload: EmailRequest,
     ) -> dict[str, Any]:
+        started_at = self.monotonic_factory()
         identity = self._normalize_email(payload.email)
         self._require_delivery_ready()
         user = (
@@ -385,14 +491,23 @@ class AuthService:
                 select(User).where(User.email_canonical == identity.canonical)
             )
         ).scalar_one_or_none()
-        if user and user.is_active and user.password_hash and not user.email_verified_at:
-            await self._issue_and_deliver(
+        eligible_user_id = (
+            int(user.id)
+            if user and user.is_active and user.password_hash and not user.email_verified_at
+            else None
+        )
+        try:
+            await self.email_outbox.enqueue(
                 session,
-                user=user,
                 purpose=EMAIL_PURPOSE_VERIFY,
-                expires_in_minutes=int(settings.email_verification_expire_minutes),
-                hide_delivery_failure=True,
+                canonical_email=identity.canonical,
+                user_id=eligible_user_id,
             )
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        await self._finish_discovery_delay(started_at)
         return self._generic_discovery_result("verification_email_if_eligible")
 
     async def recover_username(
@@ -400,6 +515,7 @@ class AuthService:
         session: AsyncSession,
         payload: EmailRequest,
     ) -> dict[str, Any]:
+        started_at = self.monotonic_factory()
         identity = self._normalize_email(payload.email)
         self._require_delivery_ready()
         user = (
@@ -407,20 +523,23 @@ class AuthService:
                 select(User).where(User.email_canonical == identity.canonical)
             )
         ).scalar_one_or_none()
-        recipient: str | None = None
-        username: str | None = None
-        if user and user.is_active and user.password_hash and user.email_verified_at:
-            recipient = str(user.email_canonical)
-            username = str(user.username)
-        await session.rollback()
-        if recipient and username:
-            try:
-                await self.email_delivery.send(
-                    recipient=recipient,
-                    rendered=render_username_recovery(username=username),
-                )
-            except EmailDeliveryError:
-                pass
+        eligible_user_id = (
+            int(user.id)
+            if user and user.is_active and user.password_hash and user.email_verified_at
+            else None
+        )
+        try:
+            await self.email_outbox.enqueue(
+                session,
+                purpose=EMAIL_PURPOSE_USERNAME_RECOVERY,
+                canonical_email=identity.canonical,
+                user_id=eligible_user_id,
+            )
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        await self._finish_discovery_delay(started_at)
         return self._generic_discovery_result("username_email_if_eligible")
 
     async def request_password_reset(
@@ -428,6 +547,7 @@ class AuthService:
         session: AsyncSession,
         payload: EmailRequest,
     ) -> dict[str, Any]:
+        started_at = self.monotonic_factory()
         identity = self._normalize_email(payload.email)
         self._require_delivery_ready()
         user = (
@@ -435,14 +555,23 @@ class AuthService:
                 select(User).where(User.email_canonical == identity.canonical)
             )
         ).scalar_one_or_none()
-        if user and user.is_active and user.password_hash and user.email_verified_at:
-            await self._issue_and_deliver(
+        eligible_user_id = (
+            int(user.id)
+            if user and user.is_active and user.password_hash and user.email_verified_at
+            else None
+        )
+        try:
+            await self.email_outbox.enqueue(
                 session,
-                user=user,
                 purpose=EMAIL_PURPOSE_PASSWORD_RESET,
-                expires_in_minutes=int(settings.password_reset_expire_minutes),
-                hide_delivery_failure=True,
+                canonical_email=identity.canonical,
+                user_id=eligible_user_id,
             )
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        await self._finish_discovery_delay(started_at)
         return self._generic_discovery_result("password_reset_email_if_eligible")
 
     async def reset_password(
@@ -548,22 +677,20 @@ class AuthService:
         if not password_ok:
             raise self._invalid_credentials()
         try:
-            await self._issue_and_deliver(
+            await self.email_outbox.enqueue(
                 session,
-                user=user,
                 purpose=EMAIL_PURPOSE_ACCOUNT_DELETION,
-                expires_in_minutes=int(settings.account_deletion_expire_minutes),
-                hide_delivery_failure=False,
+                canonical_email=str(user.email_canonical),
+                user_id=int(user.id),
             )
-        except EmailDeliveryError as exc:
-            raise _auth_error(
-                status.HTTP_503_SERVICE_UNAVAILABLE,
-                "account_deletion_email_delivery_failed",
-                "계정 삭제 확인 메일을 보내지 못했습니다. 잠시 후 다시 시도해주세요.",
-            ) from exc
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
         return {
-            "status": "confirmation_email_sent",
+            "status": "confirmation_email_queued",
             "accountDeleted": False,
+            "emailRequestAccepted": True,
         }
 
     async def confirm_account_deletion(
@@ -592,159 +719,6 @@ class AuthService:
             "status": "deleted",
             "deletedUserId": deleted_user_id,
         }
-
-    async def _issue_and_deliver(
-        self,
-        session: AsyncSession,
-        *,
-        user: User,
-        purpose: str,
-        expires_in_minutes: int,
-        hide_delivery_failure: bool,
-    ) -> None:
-        locked_user = (
-            await session.execute(
-                select(User)
-                .where(User.id == int(user.id))
-                .execution_options(populate_existing=True)
-                .with_for_update()
-            )
-        ).scalar_one_or_none()
-        if locked_user is None:
-            await session.rollback()
-            raise _auth_error(
-                status.HTTP_404_NOT_FOUND,
-                "account_not_found",
-                "계정을 찾을 수 없습니다.",
-            )
-        user = locked_user
-        await self._create_and_deliver_for_locked_user(
-            session,
-            user=user,
-            purpose=purpose,
-            expires_in_minutes=expires_in_minutes,
-            hide_delivery_failure=hide_delivery_failure,
-        )
-
-    async def _create_and_deliver_for_locked_user(
-        self,
-        session: AsyncSession,
-        *,
-        user: User,
-        purpose: str,
-        expires_in_minutes: int,
-        hide_delivery_failure: bool,
-    ) -> None:
-        now = self._now()
-        raw_token, token_row = self._new_token_row(
-            user_id=int(user.id),
-            purpose=purpose,
-            expires_in_minutes=expires_in_minutes,
-            now=now,
-        )
-        session.add(token_row)
-        try:
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-        try:
-            await self._deliver_action_token(
-                session,
-                user=user,
-                token_row=token_row,
-                raw_token=raw_token,
-            )
-        except EmailDeliveryError:
-            if not hide_delivery_failure:
-                raise
-
-    async def _deliver_action_token(
-        self,
-        session: AsyncSession,
-        *,
-        user: User,
-        token_row: UserEmailActionToken,
-        raw_token: str,
-    ) -> None:
-        attempted_at = self._now()
-        rendered = self._render_action_email(user=user, purpose=token_row.purpose, raw_token=raw_token)
-        try:
-            result = await self.email_delivery.send(
-                recipient=str(user.email_canonical),
-                rendered=rendered,
-            )
-        except EmailDeliveryError as exc:
-            token_row.delivery_attempted_at = attempted_at
-            token_row.delivery_status = "failed"
-            token_row.delivery_error_code = exc.code
-            token_row.provider_message_id = None
-            token_row.delivered_at = None
-            await self._commit_delivery_audit_best_effort(session)
-            raise
-        token_row.delivery_attempted_at = attempted_at
-        token_row.delivery_status = "sent"
-        token_row.delivery_error_code = None
-        token_row.provider_message_id = str(result.message_id)[:160]
-        token_row.delivered_at = self._now()
-        await self._commit_delivery_audit_best_effort(session)
-
-    @staticmethod
-    async def _commit_delivery_audit_best_effort(session: AsyncSession) -> None:
-        """Persist provider audit fields without changing the provider outcome."""
-        try:
-            await session.commit()
-        except Exception:
-            try:
-                await session.rollback()
-            except Exception:
-                pass
-
-    def _render_action_email(
-        self,
-        *,
-        user: User,
-        purpose: str,
-        raw_token: str,
-    ) -> Any:
-        actions = {
-            EMAIL_PURPOSE_VERIFY: ("verify-email", render_email_verification),
-            EMAIL_PURPOSE_PASSWORD_RESET: ("reset-password", render_password_reset),
-            EMAIL_PURPOSE_ACCOUNT_DELETION: ("delete-account", render_account_deletion),
-        }
-        action, renderer = actions[purpose]
-        action_url = build_auth_action_url(
-            action,
-            raw_token,
-            origin=self.public_frontend_origin,
-        )
-        return renderer(username=str(user.username), action_url=action_url)
-
-    def _new_token_row(
-        self,
-        *,
-        user_id: int,
-        purpose: str,
-        expires_in_minutes: int,
-        now: datetime | None = None,
-    ) -> tuple[str, UserEmailActionToken]:
-        self._require_token_secret()
-        raw_token = str(self.token_factory()).strip()
-        if (
-            len(raw_token) < 32
-            or len(raw_token) > 256
-            or not raw_token.isascii()
-            or any(not (character.isalnum() or character in "_-") for character in raw_token)
-        ):
-            raise RuntimeError("unsafe_email_token_factory_output")
-        issued_at = now or self._now()
-        return raw_token, UserEmailActionToken(
-            user_id=int(user_id),
-            purpose=purpose,
-            token_digest=self.digest_email_token(raw_token),
-            expires_at=issued_at + timedelta(minutes=max(5, int(expires_in_minutes))),
-            delivery_status="pending",
-        )
 
     async def _lock_action_token(
         self,
@@ -881,33 +855,48 @@ class AuthService:
             ) from exc
 
     def _require_delivery_ready(self) -> None:
-        self._require_token_secret()
-        if not self.provider_ready:
+        try:
+            self.email_outbox.require_ready()
+        except RuntimeError as exc:
+            code = str(exc)
+            if code == "email_token_secret_unavailable":
+                raise _auth_error(
+                    status.HTTP_503_SERVICE_UNAVAILABLE,
+                    code,
+                    "이메일 보안 설정이 아직 준비되지 않았습니다.",
+                ) from exc
+            if code == "auth_abuse_secret_unavailable":
+                raise _auth_error(
+                    status.HTTP_503_SERVICE_UNAVAILABLE,
+                    code,
+                    "계정 요청 보호 설정이 아직 준비되지 않았습니다.",
+                ) from exc
             raise _auth_error(
                 status.HTTP_503_SERVICE_UNAVAILABLE,
                 "email_delivery_unavailable",
                 "이메일 발송 설정이 아직 준비되지 않았습니다.",
-            )
+            ) from exc
 
-    def _require_token_secret(self) -> None:
-        if (
-            len(self.token_secret) < 32
-            or hmac.compare_digest(self.token_secret, LOCAL_EMAIL_TOKEN_SECRET)
-            or hmac.compare_digest(self.token_secret, settings.jwt_secret_key.strip())
-        ):
+    def digest_email_token(self, raw_token: str) -> str:
+        try:
+            return self.email_outbox.digest_email_token(raw_token)
+        except RuntimeError as exc:
             raise _auth_error(
                 status.HTTP_503_SERVICE_UNAVAILABLE,
                 "email_token_secret_unavailable",
                 "이메일 보안 설정이 아직 준비되지 않았습니다.",
-            )
+            ) from exc
 
-    def digest_email_token(self, raw_token: str) -> str:
-        self._require_token_secret()
-        return hmac.new(
-            self.token_secret.encode("utf-8"),
-            str(raw_token).encode("utf-8"),
-            hashlib.sha256,
-        ).hexdigest()
+    async def _finish_discovery_delay(self, started_at: float) -> None:
+        jitter_ms = (
+            secrets.randbelow(self.discovery_jitter_ms + 1)
+            if self.discovery_jitter_ms > 0
+            else 0
+        )
+        target_seconds = max(0, self.discovery_floor_ms + jitter_ms) / 1000
+        remaining = target_seconds - max(0.0, self.monotonic_factory() - started_at)
+        if remaining > 0:
+            await self.sleep(remaining)
 
     def _now(self) -> datetime:
         return _as_utc(self.now_factory())
@@ -929,6 +918,7 @@ class AuthService:
             "status": "accepted",
             "request": kind,
             "accountDisclosed": False,
+            "emailRequestAccepted": True,
         }
 
     @staticmethod

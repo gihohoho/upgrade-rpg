@@ -11,7 +11,8 @@ ADMIN_REQUEST_TRANSPORT_HEADER_OBSERVATION_CONTRACT: dict[str, Any] = {
     "status": "admin-request-transport-header-observation-v245",
     "policy": (
         "Duplicate headers and transport metadata are observed at the ASGI/TestClient boundary only; "
-        "wire framing, request-smuggling defense, and body-size enforcement remain deployment server or proxy responsibilities"
+        "wire framing and request-smuggling defense remain deployment server or proxy responsibilities, "
+        "while the application enforces its own bounded body size"
     ),
     "path": "/observe-request-transport",
     "cases": [
@@ -70,6 +71,7 @@ ADMIN_REQUEST_TRANSPORT_HEADER_OBSERVATION_CONTRACT: dict[str, Any] = {
         "testClientCanProveServerContentLengthRejection": False,
         "testClientCanProveRequestSmugglingDefense": False,
         "enforcementOwner": "deployment-proxy-or-asgi-server-configuration",
+        "applicationBodyLimitOwner": "pure-asgi-request-body-limit-middleware",
     },
 }
 

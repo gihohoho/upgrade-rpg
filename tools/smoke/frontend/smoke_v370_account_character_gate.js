@@ -28,8 +28,8 @@ async function run() {
 	assert.match(html, /<body class="account-gate-active">/);
 	assert.match(html, /id="game-root"[^>]+aria-hidden="true"[^>]+inert/);
 	assert.match(html, /src\/styles\/account\.css\?v=371/);
-	assert(html.indexOf("auth-session.js?v=371") < html.indexOf("game-api-client.js?v=371"));
-	assert(html.indexOf("account-gate.js?v=371") < html.indexOf("main.js?v=370"));
+	assert(html.indexOf("auth-session.js?v=377") < html.indexOf("game-api-client.js?v=371"));
+	assert(html.indexOf("account-gate.js?v=377") < html.indexOf("main.js?v=370"));
 	assert.match(html, /src\/systems\/combat-system\.js\?v=370/);
 	assert.match(html, /src\/api\/admin-readonly-overview\.js\?v=370/);
 
@@ -86,18 +86,52 @@ async function run() {
 	assert.equal(retryableRestore.reason, "session-unavailable");
 	assert.equal(retryableRestore.retryable, true);
 	assert.equal(localStorage.getItem(context.RpgAuthSession.ACCESS_TOKEN_KEY), "local-token", "network failure must preserve persistent token");
-	context.fetch = async () => ({ ok: false, status: 401, async json() { return { detail: "expired" }; } });
-	const expiredRestore = await context.RpgAuthSession.restoreSession({ timeoutMs: 0 });
-	assert.equal(expiredRestore.reason, "session-invalid");
-	assert.equal(localStorage.getItem(context.RpgAuthSession.ACCESS_TOKEN_KEY), null, "401 must discard expired token");
+	const errorResponse = (status, code) => ({
+		ok: false,
+		status,
+		async json() {
+			return code
+				? { ok: false, error: { code, message: "safe" }, payload: { status: "error", code } }
+				: { detail: "status without a stable auth code" };
+		},
+	});
+	assert.equal(context.RpgAuthSession.isSessionInvalidError({
+		status: 401,
+		response: { payload: { status: "error" }, detail: { code: "auth_version_stale" } },
+	}), true, "generic payload status masked a stable detail code");
+	for (const [status, code] of [
+		[401, "bearer_token_required"],
+		[401, "access_token_invalid"],
+		[401, "account_not_found"],
+		[401, "auth_version_stale"],
+		[403, "account_suspended"],
+		[403, "email_verification_required"],
+	]) {
+		context.RpgAuthSession.storeAccessToken(`invalid-${code}`, true);
+		context.fetch = async () => errorResponse(status, code);
+		const invalidRestore = await context.RpgAuthSession.restoreSession({ timeoutMs: 0 });
+		assert.equal(invalidRestore.reason, "session-invalid", `${code} did not invalidate the restored session`);
+		assert.equal(localStorage.getItem(context.RpgAuthSession.ACCESS_TOKEN_KEY), null, `${code} did not discard its unusable token`);
+	}
 	context.RpgAuthSession.storeAuthNotice("expired locally preserved");
 	assert.equal(context.RpgAuthSession.consumeAuthNotice(), "expired locally preserved");
 	assert.equal(context.RpgAuthSession.consumeAuthNotice(), "");
-	context.RpgAuthSession.storeAccessToken("inactive-token", true);
-	context.fetch = async () => ({ ok: false, status: 403, async json() { return { detail: "inactive" }; } });
-	const inactiveRestore = await context.RpgAuthSession.restoreSession({ timeoutMs: 0 });
-	assert.equal(inactiveRestore.reason, "session-invalid");
-	assert.equal(localStorage.getItem(context.RpgAuthSession.ACCESS_TOKEN_KEY), null, "403 inactive account must discard its unusable token");
+	for (const [status, code] of [
+		[401, "invalid_credentials"],
+		[403, "admin_account_deletion_blocked"],
+		[403, "admin_permission_required"],
+		[401, ""],
+		[403, ""],
+	]) {
+		const token = `preserved-${status}-${code || "no-code"}`;
+		context.RpgAuthSession.storeAccessToken(token, true);
+		context.fetch = async () => errorResponse(status, code);
+		const preservedRestore = await context.RpgAuthSession.restoreSession({ timeoutMs: 0 });
+		assert.equal(preservedRestore.reason, "session-unavailable", `${code || `bare-${status}`} was misclassified as session-invalid`);
+		assert.equal(preservedRestore.retryable, true);
+		assert.equal(preservedRestore.tokenPreserved, true);
+		assert.equal(localStorage.getItem(context.RpgAuthSession.ACCESS_TOKEN_KEY), token, `${code || `bare-${status}`} discarded the token`);
+	}
 
 	context.RpgAuthSession.storeAccessToken("queue-token", false);
 	context.RpgAuthSession.setCurrentUser({ id: 17, username: "safe_user", isAdmin: false });
@@ -276,7 +310,7 @@ async function run() {
 	console.log("- UUID character context / slot-index backend key: ok");
 	console.log("- session/local token persistence and bearer policy: ok");
 	console.log("- backend-authoritative load / displaced-local backup / auth-gated single boot: ok");
-	console.log("- serialized DB writes / pending-unsynced recovery / retryable network failure / 401+403 recovery: ok");
+	console.log("- serialized DB writes / pending-unsynced recovery / exact stable-code session invalidation: ok");
 	console.log("- escaped account UI / custom delete modal / responsive accessibility: ok");
 }
 

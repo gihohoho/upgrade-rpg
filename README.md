@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-웹 기반 방치형 Upgrade RPG 프로젝트입니다. 공개 버전은 v351, 로컬 checkpoint는 v376이며 Alembic source head는 v371, 실제 local/Neon DB는 v295입니다.
+웹 기반 방치형 Upgrade RPG 프로젝트입니다. 공개 버전은 v351, 로컬 source checkpoint와 Alembic head는 v377이며 실제 local/Neon DB는 아직 v295입니다.
 
 ## 새 작업 시작
 
@@ -105,7 +105,7 @@ cd "/c/Users/HOME/Desktop/Upgrade RPG"
 docker compose stop
 ```
 
-`docker compose down -v`, DB reset·seed, `alembic upgrade/downgrade/stamp`는 임의로 실행하지 않습니다. 새 PC나 빈 Docker volume에서 DB 상태 검사가 실패하면 Codex에게 먼저 확인합니다. v371 이메일 기능의 DB migration은 아직 적용 승인 전이므로 전체 이메일 가입 흐름은 로컬 end-to-end 완료 상태가 아닙니다.
+`docker compose down -v`, DB reset·seed, `alembic upgrade/downgrade/stamp`는 임의로 실행하지 않습니다. 새 PC나 빈 Docker volume에서 DB 상태 검사가 실패하면 Codex에게 먼저 확인합니다. v377 migration source는 준비됐지만 아직 적용하지 않았습니다. 다음 단계는 고정된 격리 DB 왕복 검증 뒤 local/Neon 각각의 새 backup과 exact apply이며, 전체 이메일 가입 흐름은 아직 end-to-end 완료 상태가 아닙니다.
 
 ## 핵심 폴더
 
@@ -124,5 +124,5 @@ target: linux/amd64
 database: Neon PostgreSQL 16 Singapore
 hosting: Render Free Web Service + Static Site
 public backend/static: v351 Live
-local checkpoint: v376 / migration source v371 / DB still v295
+local source checkpoint: v377 / migration source head v377 / DB still v295
 ```

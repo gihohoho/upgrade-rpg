@@ -1,13 +1,14 @@
-# Frontend Static Deployment and v371 Email Auth Release Boundary
+# Frontend Static Deployment and v377 Email Auth Release Boundary
 
 ## 결론
 
 실제 게임과 관리자 화면은 Vue shell이 아니라 루트 `index.html`, `admin.html`, `src/`입니다. 승인된 v348 준비 SHA로 Render Free Static Site에 이 legacy 화면을 배포했습니다.
 
-현재 공개본은 계속 v351입니다. v370의 로그인·계정별 캐릭터 슬롯 8개 기반과 v371의
+현재 공개본은 계속 v351입니다. v370의 로그인·계정별 캐릭터 슬롯 8개 기반, v371의
 필수 이메일 가입, 이메일 인증, 아이디 찾기, 비밀번호 재설정, 계정 삭제와 관리자 이메일
-상태 UI는 로컬 source에만 있으며 Render Static Site나 backend에 배포하지 않았습니다.
-공개 주소에서 v370/v371 계정 화면이 보이지 않는 것이 정상입니다.
+상태 UI, v377의 queue·rate-limit·body-limit 대응은 로컬 source에만 있으며 Render Static
+Site나 backend에 배포하지 않았습니다. 공개 주소에서 v370~v377 계정 화면이 보이지 않는
+것이 정상입니다.
 
 - 서비스 이름: `gihohoho-upgrade-rpg`
 - 게임 주소: `https://gihohoho-upgrade-rpg.onrender.com/index.html`
@@ -58,7 +59,7 @@ dev key는 사용자가 직접 입력할 때만 요청 header로 보내며 HTML�
 내장하지 않습니다. 비밀번호 해시, token과 전체 save snapshot은 회원 관리 표에
 표시하지 않습니다.
 
-v371 로컬 `index.html`은 signup에 이메일을 필수로 받고 로그인 입력을
+v377 로컬 `index.html`은 signup에 이메일을 필수로 받고 로그인 입력을
 `아이디 또는 이메일`로 바꿉니다. 이메일 action URL은 고정된 다음 fragment만
 허용합니다.
 
@@ -68,8 +69,11 @@ v371 로컬 `index.html`은 signup에 이메일을 필수로 받고 로그인 �
 /index.html#auth=delete-account&token=...
 ```
 
-프런트는 fragment token을 읽은 즉시 `history.replaceState`로 주소 표시줄과 history에서
-제거하며 `Referrer-Policy: no-referrer`를 유지합니다. 아이디 찾기·비밀번호 재설정과
+프런트는 길이·문자·action allow-list를 확인한 fragment token을 읽은 즉시
+`history.replaceState`로 주소 표시줄과 history에서 제거하며 `Referrer-Policy:
+no-referrer`를 유지합니다. 서버가 정확한 `email_action_token_invalid`를 반환했을 때만
+현재 link를 폐기하고, `429`·`413`·network/`5xx`에는 탭 메모리에 보존해 다시 시도합니다.
+아이디 찾기·비밀번호 재설정과
 계정 삭제의 경고·확인은 browser 기본 alert/confirm이 아니라 게임 스타일의 접근 가능한
 모달을 사용합니다. 계정 삭제는 현재 비밀번호, 이메일 링크, 정확한 `계정 삭제` 문구의
 세 단계를 UI에서도 빠뜨리지 않습니다.
@@ -83,10 +87,24 @@ v371 로컬 `index.html`은 signup에 이메일을 필수로 받고 로그인 �
 `node --check`도 PASS입니다. Browser가 `data:` 이메일 HTML preview를 차단해 우회하지
 않았으며 실제 메일 클라이언트 시각 QA는 Brevo sender 설정 뒤 테스트 메일 단계입니다.
 
-v371 static만 먼저 공개하면 이메일·복구 화면이 v351 backend의 없는 API와 schema를
-호출하므로 실패합니다. 공개 반영은 v371 migration 완료 뒤 backend image와 legacy
+v377 응답 문구는 메일 발송 완료를 단정하지 않습니다. 회원가입, 인증 재전송, 아이디
+찾기, 비밀번호 재설정과 계정 삭제 메일 요청의 `202`는 queue 접수만 뜻하며 UI는 “요청을
+접수했습니다. 도착까지 몇 분 걸릴 수 있습니다”라고 안내합니다. `429`는 응답의
+`Retry-After` 초를 표시하고, `413`은 새로고침 뒤 다시 시도하도록 설명합니다. 인증과
+session 오류는 stable code allow-list로만 token 폐기 여부를 결정합니다.
+
+v377 static만 먼저 공개하면 이메일·복구 화면이 v351 backend의 없는 API와 schema를
+호출하므로 실패합니다. 공개 반영은 v371→v377 migration 완료 뒤 backend image와 legacy
 static을 같은 exact-SHA 승인 단위로 준비하고, CORS·인증·캐시·rollback을 함께
 검증해야 합니다. auto-deploy와 자동 retry는 계속 끕니다.
+
+`deploy/v377-email-release-guard.example.json`과
+`tools/prepare_v377_email_release.py`는 그 미래 release의 fresh GitHub publish lifecycle,
+단일 `run_attempt=1`, 새 서명 image digest, 기존 Render service와 필수 환경변수 키 이름만
+검증하도록 source에 준비했습니다. focused 회귀는
+`tools/smoke/backend/smoke_v377_email_release.py`입니다. 이 도구의 기본 동작은 read-only이고
+GitHub·GHCR·Render·Brevo·공개 endpoint를 호출하지 않으므로 현재 v351 공개본이나 provider
+상태를 바꾸지 않았으며, 남은 공개 gate를 충족하거나 배포 승인을 대신하지 않습니다.
 
 v370의 정상 load는 서버 DB snapshot이 authoritative입니다. backend snapshot이 있으면
 그 내용을 사용하고 서로 다른 local은 `${saveKey}.pre-backend-recovery`에 먼저 백업합니다.
@@ -140,10 +158,12 @@ v350 당시에는 콘텐츠 추가·수정을 시작하기 좋은 시점이 아�
 
 ## 필요할 수 있는 사용자 조치
 
-`email-validator 2.3.0` 설치와 Linux lock 갱신은 v373에서 완료했습니다. 그 뒤의 isolated
-migration 검증, DB migration apply, Brevo 계정·발신자·전용 API key, owner bootstrap과
-공개 배포는 서로 다른 승인 단계입니다. 비밀번호, API key, dev key와 token은 채팅에
-보내지 않습니다.
-rate limit, 서버측 session/refresh·폐기, ASGI raw body cap, 다중 기기 revision,
-HTTPS/CSP/XSS, 개인정보·삭제 정책과 별도 exact-SHA gate 전에는 v371을 공개 배포하지
-않습니다.
+`email-validator 2.3.0` 설치·Linux lock과 v377 public-security source는 준비됐습니다.
+다음 순서는 고정 격리 DB 왕복 → local/Neon별 새 backup과 exact migration apply → Brevo
+계정·발신자·전용 API key·secret → 테스트 메일입니다. 비밀번호, API key, dev key와
+token은 채팅에 보내지 않습니다. owner bootstrap은 이메일 rollout과 별도입니다.
+
+서버측 session/refresh·기기별 폐기, 다중 기기 save revision/CAS, HTTPS/CSP/XSS와 browser
+token 저장 방식, 개인정보·삭제·법적 보존 정책, provider 실제 설정·테스트와 별도
+exact-SHA deploy gate 전에는 v377을 공개 배포하지 않습니다. 준비된 source-only release
+guard도 이 순서를 우회하지 않습니다.
