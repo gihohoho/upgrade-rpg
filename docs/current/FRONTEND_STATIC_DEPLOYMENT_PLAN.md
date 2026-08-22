@@ -161,9 +161,10 @@ v350 당시에는 콘텐츠 추가·수정을 시작하기 좋은 시점이 아�
 `email-validator 2.3.0` 설치·Linux lock, v377 public-security source와 private environment
 준비는 완료됐습니다. `8db9bcb` 격리 왕복·local backup은 새 canonicalization SHA에 stale이고
 첫 local apply는 Alembic 전에 안전 중단됐습니다. 기존 marker는 보존하고 `345872a`의 별도
-`recovery1` 왕복·fresh backup·local v377 apply를 각각 1회 완료했습니다. 다음 순서는 Brevo
-계정·발신자·전용 API key를 local에 구성하고 실제 테스트 메일을 확인하는 것입니다. 비밀번호, API key,
-dev key와 token은 채팅에 보내지 않으며 owner bootstrap은 이메일 rollout과 별도입니다.
+`recovery1` 왕복·fresh backup·local v377 apply를 각각 1회 완료했습니다. local Brevo 설정과
+실제 Naver 메일 인증·로그인·provider 응답 진단도 완료했습니다. 다음 순서는 final source의
+`recovery2` 왕복과 untouched Neon backup·exact apply입니다. 비밀번호, API key, dev key와
+token은 채팅에 보내지 않으며 owner bootstrap은 이메일 rollout과 별도입니다.
 
 서버측 session/refresh·기기별 폐기, 다중 기기 save revision/CAS, HTTPS/CSP/XSS와 browser
 token 저장 방식, 개인정보·삭제·법적 보존 정책, provider 실제 설정·테스트와 별도

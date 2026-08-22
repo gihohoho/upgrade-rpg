@@ -22,9 +22,9 @@ from pathlib import Path
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
-CHECKPOINT_VERSION = "v377.local-email-e2e-verified"
-CHECKPOINT_RESULT = "local-email-e2e-verified-provider-finalize-followup"
-NEXT_SAFE_STAGE = "diagnose-v377-brevo-delivery-finalize"
+CHECKPOINT_VERSION = "v377.deployment-recovery2-source-prepared"
+CHECKPOINT_RESULT = "deployment-recovery2-source-prepared"
+NEXT_SAFE_STAGE = "execute-v377-recovery2-roundtrip-and-neon"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 
@@ -358,7 +358,7 @@ legacy stale evidence: source {STALE_SOURCE_SHA} / preserved
 recovery1 roundtrip/local backup/apply: source {RECOVERY_SOURCE_SHA} / verified
 local auth POST: protection store available / legacy no-email login compatible
 local Brevo E2E: Naver delivery / link verification / login verified
-provider finalize: delivery_outcome_unknown follow-up
+provider finalize: local multi-worker ownership diagnosed / direct provider healthy
 Neon: untouched
 next safe stage: {NEXT_SAFE_STAGE}
 ```
@@ -438,9 +438,9 @@ local Brevo E2E는 완료했고 owner bootstrap·Render Brevo 설정·배포는 
 
 권장 범위:
 
-1. 실제 전달 뒤 outbox가 `delivery_outcome_unknown`으로 닫힌 provider finalize 경계를 진단합니다.
-2. 정상 2xx와 timeout·결과 불명 상태를 secret 없는 focused 회귀로 구분해 검증합니다.
-3. 이 후속 뒤에만 아직 시작하지 않은 Neon migration을 별도 exact 범위로 판단합니다.
+1. final clean pushed source에서 새 `recovery2` synthetic 왕복을 1회 실행합니다.
+2. 같은 SHA와 report로 untouched Neon backup·exact v377 apply를 각각 1회 실행합니다.
+3. Neon 확인 뒤 fresh signed backend image와 Render/static 단일 배포를 진행합니다.
 4. 서버측 session/revoke, save revision/CAS, CSP/XSS·브라우저 token과 개인정보 정책은 공개 회원가입을 열기 전에 마저 완료합니다.
 5. backend image와 legacy static은 모든 공개 gate가 닫힌 뒤 같은 exact-SHA 단위로 게시·배포합니다.
 """

@@ -75,9 +75,9 @@ v377 같은 실제 revision의 운영 migration은 전용 guard가 exact target 
 - apply/downgrade/stamp: local 1/0/0, Neon 0/0/0
 - local Brevo 실제 메일·인증·로그인 완료, owner bootstrap·Render app deploy는 migration 승인과 분리
 
-기존 marker나 evidence를 삭제·덮어쓰거나 같은 action을 재실행하지 않습니다. local 실제 메일은
-완료했지만 provider finalize 후속을 먼저 닫으며, Neon은 그 뒤 별도 fresh backup과 exact 범위로만
-진행합니다.
+기존 marker나 evidence를 삭제·덮어쓰거나 같은 action을 재실행하지 않습니다. local 실제 메일과
+provider 진단은 완료했고, final source용 `recovery2` isolated 왕복 뒤 Neon을 별도 fresh backup과
+exact 범위로만 진행합니다.
 
 ## v308 runtime hardening 이후에도 유지되는 원칙
 

@@ -114,8 +114,9 @@ JWT secret과 공유하지 않고 성공 직후 `.env`에서 제거합니다. �
 v371→v377 migration source와 guard 도구, private environment preparation을 완료했습니다.
 `8db9bcb` evidence는 stale history로 보존하고 `345872a` recovery1 왕복·local v295 backup·
 exact local v377 apply를 각각 1회 완료했습니다. local Brevo 설정과 실제 Naver 메일 인증·
-로그인은 완료했고, 정상 수신 뒤 outbox finalize의 `delivery_outcome_unknown` 관찰은 Neon 전
-후속으로 남겼습니다. Neon migration, owner script, Render Brevo 설정은 실행하지 않았습니다.
+로그인은 완료했고, `delivery_outcome_unknown` 관찰은 여러 local reload worker의 ownership
+단절로 좁혔습니다. 단일 provider 진단은 정상 message ID를 반환했습니다. Neon migration,
+owner script, Render Brevo 설정은 실행하지 않았습니다.
 
 Migration guard는 libpq가 URL의 host보다 실제 접속 주소에 사용할 수 있는 inherited
 `PGHOSTADDR`를 포함해 모든 `PG*` 기본값을 제거하고 trusted PostgreSQL client만 실행합니다.
@@ -201,7 +202,7 @@ token 저장 정책, 개인정보 정책은 아직 공개 전 보강 범위입�
 ```
 
 공개 Render backend는 계속 v351 exact image입니다. local DB는 v377, Neon은 v295입니다.
-DB seed, Neon migration, Brevo account/sender/API key, 실제 메일, owner bootstrap, Render env
-변경, image 게시와 deploy는 실행하지 않았습니다. private environment 준비는 535개 artifact
-ACL과 email/abuse secret 4개를 값 출력 없이 처리해 완료했습니다. 다음 안전 단계는 local
-Brevo provider 설정과 실제 이메일 E2E입니다. 상세 실제 결과는 `CURRENT_STATUS.md`에 기록합니다.
+DB seed, Neon migration, owner bootstrap, Render env 변경, image 게시와 deploy는 실행하지
+않았습니다. private environment 준비와 local Brevo 실제 이메일 E2E·provider 진단은 완료했습니다.
+다음 안전 단계는 recovery2 isolated 왕복과 untouched Neon입니다. 상세 실제 결과는
+`CURRENT_STATUS.md`에 기록합니다.

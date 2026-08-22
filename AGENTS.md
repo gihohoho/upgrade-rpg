@@ -88,13 +88,13 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v377.local-email-e2e-verified
-strict result: local-email-e2e-verified-provider-finalize-followup
-next safe stage: diagnose-v377-brevo-delivery-finalize
+latest: v377.deployment-recovery2-source-prepared
+strict result: deployment-recovery2-source-prepared
+next safe stage: execute-v377-recovery2-roundtrip-and-neon
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v295_initial_schema
 v377 apply/stamp/downgrade: local 1/0/0; Neon 0/0/0
-email rollout approval/execution: yes/local-provider-e2e-verified-finalize-followup
+email rollout approval/execution: yes/local-provider-e2e-verified-deployment-started
 public backend/static: v351 Live
 Render public preview: deployed
 production approval/execution: no/no
@@ -120,7 +120,8 @@ production approval/execution: no/no
 - `345872a`의 새 `recovery1` namespace에서 synthetic 왕복과 fresh local backup을 다시 검증한 뒤 local DB를 v377로 정확히 1회 upgrade했습니다. 기존 22개 table 데이터 보존과 25개 model table parity가 PASS했고 Neon은 v295 그대로입니다.
 - v295에서 생성된 이메일 없는 기존 계정은 아이디·비밀번호 로그인을 계속 허용하되 `emailVerified=false`로 정직하게 표시합니다. 이메일이 있는 신규 계정은 링크 인증 전 계속 차단합니다.
 - Brevo 전용 API key·검증된 sender·anonymous tracking·1개월 log retention·preview 미저장을 local 범위에서 준비했고, 실제 Naver 메일 수신→링크 인증→로그인→8개 캐릭터 슬롯 진입을 확인했습니다. key와 sender 값은 ignored `backend/.env`에만 있으며 Render에는 넣지 않았습니다.
-- 실제 메일은 도착했지만 해당 outbox 행은 provider 응답 완료가 모호해 `delivery_outcome_unknown`으로 안전 종료됐습니다. 자동 재시도나 중복 발송은 하지 않았으며, Neon 전에 정상 발송의 finalize 경로를 집중 진단합니다.
+- `delivery_outcome_unknown`은 Brevo 장애가 아니라 여러 로컬 reload worker가 겹친 실행 환경에서 provider 수락 뒤 worker ownership이 끊긴 안전 종료였습니다. 단일 직접 provider 진단은 2초 이내 message ID를 반환했고 production image는 reload 없이 worker 1개를 유지합니다.
+- 기존 recovery1 증거와 marker를 보존한 채 최종 배포 source용 `recovery2` isolated/Neon one-attempt namespace를 준비했습니다.
 - 공개 회원가입·새 이미지 배포 blocker는 server session/revoke, save CAS, CSP/XSS·브라우저 token, 개인정보 정책입니다. 이메일 rollout 내에서도 이 gate를 우회하지 않습니다.
 - 검증된 공개 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`, backend는 `https://upgrade-rpg-api.onrender.com`입니다.
 - 이전 배포·콘텐츠·이미지의 상세 이력은 `docs/archive/history/`와 Git history에서 필요할 때만 확인합니다.

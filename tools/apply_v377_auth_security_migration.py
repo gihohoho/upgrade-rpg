@@ -111,9 +111,9 @@ EXPECTED_V295_APPLICATION_SCHEMA_DIGEST = (
     "7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921"
 )
 BACKUP_MAX_AGE_SECONDS = 4 * 60 * 60
-TOOL_VERSION = "v377.auth-security-target-backup-apply-guard.recovery1.v4"
-BACKUP_ACTION = "create-fresh-v295-custom-backup-for-v377-recovery1"
-APPLY_ACTION = "apply-exact-v377-upgrade-recovery1-once-no-downgrade"
+TOOL_VERSION = "v377.auth-security-target-backup-apply-guard.recovery2.v1"
+BACKUP_ACTION = "create-fresh-v295-custom-backup-for-v377-recovery2"
+APPLY_ACTION = "apply-exact-v377-upgrade-recovery2-once-no-downgrade"
 ALEMBIC_TARGET_APPLICATION_NAME = "upgrade-rpg-v377-target-migration"
 DIGEST_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 ROUNDTRIP_MTIME_TOLERANCE_SECONDS = 60

@@ -5,13 +5,13 @@
 ## 상태 표식
 
 ```txt
-latest: v377.local-email-e2e-verified
-strict result: local-email-e2e-verified-provider-finalize-followup
-next safe stage: diagnose-v377-brevo-delivery-finalize
+latest: v377.deployment-recovery2-source-prepared
+strict result: deployment-recovery2-source-prepared
+next safe stage: execute-v377-recovery2-roundtrip-and-neon
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v295_initial_schema
 v377 apply/stamp/downgrade: local 1/0/0; Neon 0/0/0
-email rollout approval/execution: yes/local-provider-e2e-verified-finalize-followup
+email rollout approval/execution: yes/local-provider-e2e-verified-deployment-started
 public backend/static: v351 Live
 production approval/execution: no/no
 ```
@@ -66,7 +66,8 @@ production approval/execution: no/no
 - local v377 migration 후 인증 POST가 503 대신 정상 422/credential 판정까지 진행하고, 실제 브라우저에서도 보호 기능 오류가 사라짐을 확인했습니다.
 - 이메일 있는 미인증 계정 차단과 이메일 없는 legacy 계정 로그인·Bearer 복구 회귀 PASS
 - Brevo anonymous tracking·1개월 transactional log retention·preview 미저장과 local 호출 IP 허용을 확인했습니다. 실제 Naver 메일 수신, action-link 인증 HTTP 200, 실제 계정 로그인과 캐릭터 슬롯 8개 진입 PASS
-- IP 허용 전 첫 발송은 401로 terminal 실패했고 자동 재시도하지 않았습니다. 허용 뒤 새 발송은 실제 전달됐지만 outbox 행은 provider completion ambiguity로 `delivery_outcome_unknown` terminal이 됐습니다. token 인증은 정상 성공했으며 이 finalize 관찰은 Neon 전 focused 후속입니다.
+- IP 허용 전 첫 발송은 401로 terminal 실패했고 자동 재시도하지 않았습니다. 허용 뒤 실제 전달된 행의 `delivery_outcome_unknown`은 여러 local reload worker가 겹쳐 provider 수락 뒤 worker ownership이 끊긴 안전 종료로 좁혔습니다. 단일 직접 provider 진단은 2초 이내 message ID를 정상 반환했고 production image는 reload 없이 worker 1개입니다.
+- 기존 recovery1 증거를 재사용하지 않는 `recovery2` isolated/Neon one-attempt namespace와 focused smoke를 준비했습니다.
 
 ## 실행하지 않은 것
 
@@ -92,9 +93,9 @@ Brevo 실제 검증이 끝난 뒤에만 별도 exact-SHA release 판단에 사�
 
 ## 바로 다음 단계
 
-1. 정상 수신된 Brevo 메일의 outbox 행이 `sent` 대신 `delivery_outcome_unknown`으로 닫힌 원인을 provider response·worker finalize 경계에서 집중 진단합니다.
-2. 정상 2xx 응답은 `sent`, timeout·process ambiguity는 terminal unknown으로 남는 계약을 secret 없는 focused 회귀로 검증합니다.
-3. 이 후속이 끝난 뒤 untouched Neon 단계를 별도 exact 범위로 진행합니다.
+1. clean pushed exact SHA에서 `recovery2` synthetic 왕복을 1회 실행합니다.
+2. 같은 SHA/report로 untouched Neon fresh backup과 exact v377 apply를 각각 1회 실행합니다.
+3. Neon 확인 뒤 fresh publish lifecycle→signed backend digest→Render key-only env·단일 deploy→동일 source static deploy 순서로 진행합니다.
 
 기호의 v376 승인과 이번 local 복구 요청은 이메일 인증 rollout에 계속 적용됩니다. Brevo 가입·발신자 소유 확인·privacy 설정·API key 생성과 local 실제 인증은 완료됐습니다. owner bootstrap, DB reset·seed·restore와 이메일 인증에 무관한 기능 변경은 포함되지 않습니다.
 

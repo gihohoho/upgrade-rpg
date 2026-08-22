@@ -1,13 +1,13 @@
 # 이메일 인증·계정 복구·계정 삭제 준비 — v377
 
 ```txt
-latest: v377.local-email-e2e-verified
-strict result: local-email-e2e-verified-provider-finalize-followup
-next safe stage: diagnose-v377-brevo-delivery-finalize
+latest: v377.deployment-recovery2-source-prepared
+strict result: deployment-recovery2-source-prepared
+next safe stage: execute-v377-recovery2-roundtrip-and-neon
 public Render: backend/static 모두 계속 v351
 database migration: local v377 / Neon v295 / local apply 1회 / stamp·downgrade 0회
 email provider: local Brevo configured and real Naver delivery verified / Render pending
-email rollout approval/execution: yes/local-provider-e2e-verified-finalize-followup
+email rollout approval/execution: yes/local-provider-e2e-verified-deployment-started
 ```
 
 ## v376 실행 승인
@@ -32,8 +32,9 @@ v377로 1회 upgrade했습니다. Neon은 v295이고 stamp·downgrade는 0회입
 Brevo 프로젝트 전용 API key·검증된 sender와 privacy 설정을 local 범위에서 준비하고 실제
 Naver 메일 수신→링크 인증→로그인→캐릭터 슬롯 8개 진입까지 확인했습니다. 첫 발송은 local
 호출 IP 미허용으로 401 terminal 실패했고 자동 재시도하지 않았습니다. IP 허용 뒤 새 요청은
-실제 전달됐지만 outbox 행이 provider completion ambiguity로 `delivery_outcome_unknown` terminal이
-되어 Neon 전에 finalize 경계를 집중 진단합니다. GHCR 게시, Render 환경변수 변경과
+실제 전달됐지만 여러 local reload worker가 겹친 환경에서 provider 수락 뒤 worker ownership이
+끊겨 `delivery_outcome_unknown` terminal이 됐습니다. 단일 직접 provider 진단은 2초 이내
+message ID를 정상 반환했습니다. GHCR 게시, Render 환경변수 변경과
 backend/static 배포는 실행하지 않았습니다. 공개 Render는 계속 v351입니다.
 
 ## 사용자 흐름
@@ -117,9 +118,9 @@ local backup, 첫 실패 marker는 역사 증거로 보존합니다. `345872a`�
 namespace에서 새 왕복·backup·local apply를 각각 1회 완료했고 기존 22개 table 데이터
 변화 0과 25개 model table parity를 확인했습니다.
 
-다음 단계는 실제 전달된 Brevo 요청의 provider response·worker finalize 경계를 분석해 정상
-2xx가 `sent`로 마감되는지 secret 없는 focused 회귀로 확인하는 것입니다. 기존 marker·evidence
-삭제나 같은 action 재실행, 동일 메일 자동 재시도는 하지 않습니다.
+다음 단계는 기존 marker·evidence를 보존한 새 `recovery2` namespace에서 final clean pushed
+source의 isolated 왕복과 untouched Neon backup·apply를 각각 1회 수행하는 것입니다. 동일 메일
+자동 재시도나 기존 action 재실행은 하지 않습니다.
 
 일반 `alembic upgrade head`, `stamp`, 자동 startup migration은 사용하지 않습니다. 실제
 target apply는 lock/statement timeout, exact source·target·action·backup 확인을 모두 갖춘
@@ -355,7 +356,7 @@ v377 source가 아래 항목을 모두 끝내는 것은 아닙니다. 공개 회
 2. 다중 기기 save revision, CAS·낙관적 잠금과 충돌 해결
 3. HTTPS 강제, CSP/XSS 회귀와 browser token 저장 방식
 4. 개인정보 처리방침, 데이터 보관·삭제, 문의·복구와 법적 보존 절차
-5. local Brevo 실제 설정·메일은 완료; Render 전달 전 provider finalize 관찰과 key 회전 경계 검증
+5. local Brevo 실제 설정·메일·provider 진단 완료; Render 전달 전 key 회전·단일 worker 운영 검증
 6. backend image와 legacy static을 같은 exact-SHA 단위로 준비·게시·배포하고 rollback 검증
 
 ## 승인 단위와 다음 순서
@@ -364,8 +365,8 @@ v377 source가 아래 항목을 모두 끝내는 것은 아닙니다. 공개 회
 1. old `8db9bcb` evidence와 완료된 recovery1 marker·report 보존
 2. 완료: Brevo 계정·발신자·privacy 설정·전용 API key와 local 설정
 3. 완료: 실제 Naver 메일과 가입·인증·로그인·캐릭터 슬롯 진입
-4. 현재: 실제 전달 뒤 `delivery_outcome_unknown`이 된 provider finalize 경계 진단
-5. 진단 완료 뒤 untouched Neon의 backup·exact apply 검토
+4. 완료: local multi-worker ownership 단절과 단일 provider 정상 응답 진단
+5. 현재: final source의 recovery2 왕복 뒤 untouched Neon backup·exact apply
 6. 비밀번호 복구와 account deletion 실제 메일 흐름 확인
 7. server session/revoke, save CAS, CSP/XSS/browser token, 개인정보 gate 완료
 8. exact v377 backend/static 준비·게시·배포와 rollback 확인
@@ -407,4 +408,4 @@ Browser URL 정책이 `data:` 이메일 HTML 미리보기를 차단해 우회하
 `8db9bcb` migration evidence는 stale history로 보존했고 `345872a` recovery1 왕복·backup·local
 apply는 성공했습니다. local DB는 v377이고 인증 보호 503은 사라졌으며 Neon은 v295입니다.
 이 결과는 Neon migration·owner bootstrap·공개 배포 완료를 뜻하지 않습니다. local 실제 메일은
-완료했지만 provider finalize 후속은 남아 있습니다.
+완료했고 provider finalize 관찰은 local multi-worker 실행 상태로 좁혔습니다. Neon·공개 배포는 남아 있습니다.

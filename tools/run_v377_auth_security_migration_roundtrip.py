@@ -61,7 +61,7 @@ POSTGRES_CONTAINER = "upgrade_rpg_postgres"
 SOURCE_DATABASE = "rpg_game"
 SOURCE_DATABASE_USER = "rpg_user"
 SOURCE_DATABASE_PORT = 55432
-RECOVERY_NAMESPACE = "recovery1"
+RECOVERY_NAMESPACE = "recovery2"
 ISOLATED_DATABASE = f"rpg_game_v377_auth_security_{RECOVERY_NAMESPACE}_roundtrip"
 BASE_REVISION = "v295_initial_schema"
 EMAIL_REVISION = "v371_email_identity_lifecycle"
@@ -89,13 +89,13 @@ PROCESS_TIMEOUT_SECONDS = 150
 CONNECT_TIMEOUT_SECONDS = 20
 ALEMBIC_GUARD_MODE = "v377"
 ALEMBIC_ISOLATED_APPLICATION_NAME = "upgrade-rpg-v377-isolated-migration"
-TOOL_VERSION = "v377.auth-security-isolated-roundtrip-guard.recovery1.v2"
+TOOL_VERSION = "v377.auth-security-isolated-roundtrip-guard.recovery2.v1"
 REPORT_PATH = ROOT / (
     f"local-review-artifacts/alembic/v377_auth_security.{RECOVERY_NAMESPACE}.roundtrip.json"
 )
 REVIEW_ARTIFACT_ROOT = ROOT / "local-review-artifacts"
 EXECUTION_ACTION = (
-    "create-synthetic-v295-upgrade-downgrade-v295-reupgrade-v377-recovery1-once"
+    "create-synthetic-v295-upgrade-downgrade-v295-reupgrade-v377-recovery2-once"
 )
 SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 

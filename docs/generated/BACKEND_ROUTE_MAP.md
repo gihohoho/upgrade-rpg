@@ -5,8 +5,8 @@
 중요: v377 local migration과 인증 요청 보호 복구는 완료됐습니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
 
 ```txt
-latest: v377.local-email-e2e-verified
-strict result: local-email-e2e-verified-provider-finalize-followup
+latest: v377.deployment-recovery2-source-prepared
+strict result: deployment-recovery2-source-prepared
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v295_initial_schema
 actual target v377 apply: local 1 / Neon 0
@@ -15,9 +15,9 @@ legacy stale evidence: source 8db9bcb / preserved
 recovery1 roundtrip/local backup/apply: source 345872a / verified
 local auth POST: protection store available / legacy no-email login compatible
 local Brevo E2E: Naver delivery / link verification / login verified
-provider finalize: delivery_outcome_unknown follow-up
+provider finalize: local multi-worker ownership diagnosed / direct provider healthy
 Neon: untouched
-next safe stage: diagnose-v377-brevo-delivery-finalize
+next safe stage: execute-v377-recovery2-roundtrip-and-neon
 ```
 
 ## 생성 방식
@@ -206,7 +206,7 @@ next safe stage: diagnose-v377-brevo-delivery-finalize
 
 ## 다음 추천 단계
 
-`next safe stage: diagnose-v377-brevo-delivery-finalize`
+`next safe stage: execute-v377-recovery2-roundtrip-and-neon`
 
 private environment와 local migration은 완료했습니다. 이전 source `8db9bcb`의
 stale evidence와 실패 marker는 보존했고, source `345872a`의 별도 recovery1
@@ -216,8 +216,8 @@ local Brevo E2E는 완료했고 owner bootstrap·Render Brevo 설정·배포는 
 
 권장 범위:
 
-1. 실제 전달 뒤 outbox가 `delivery_outcome_unknown`으로 닫힌 provider finalize 경계를 진단합니다.
-2. 정상 2xx와 timeout·결과 불명 상태를 secret 없는 focused 회귀로 구분해 검증합니다.
-3. 이 후속 뒤에만 아직 시작하지 않은 Neon migration을 별도 exact 범위로 판단합니다.
+1. final clean pushed source에서 새 `recovery2` synthetic 왕복을 1회 실행합니다.
+2. 같은 SHA와 report로 untouched Neon backup·exact v377 apply를 각각 1회 실행합니다.
+3. Neon 확인 뒤 fresh signed backend image와 Render/static 단일 배포를 진행합니다.
 4. 서버측 session/revoke, save revision/CAS, CSP/XSS·브라우저 token과 개인정보 정책은 공개 회원가입을 열기 전에 마저 완료합니다.
 5. backend image와 legacy static은 모든 공개 gate가 닫힌 뒤 같은 exact-SHA 단위로 게시·배포합니다.

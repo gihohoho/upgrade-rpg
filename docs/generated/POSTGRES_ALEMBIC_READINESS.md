@@ -7,8 +7,8 @@
 ## v377 현재 overlay
 
 ```txt
-latest: v377.local-email-e2e-verified
-strict result: local-email-e2e-verified-provider-finalize-followup
+latest: v377.deployment-recovery2-source-prepared
+strict result: deployment-recovery2-source-prepared
 local Alembic source graph head: v377_auth_email_public_security
 local/Neon applied DB revision: v377_auth_email_public_security / v295_initial_schema
 actual target v377 apply: local 1 / Neon 0
@@ -17,11 +17,11 @@ legacy evidence: source 8db9bcb / stale and preserved
 recovery1 roundtrip/local backup/apply: source 345872a / verified
 local auth POST: protection store available / legacy no-email login compatible
 local Brevo E2E: Naver delivery / link verification / login verified
-provider finalize: delivery_outcome_unknown follow-up
+provider finalize: local multi-worker ownership diagnosed / direct provider healthy
 Neon: untouched
 model application tables: 25
 local/Neon application tables: 25 / 22
-next safe stage: diagnose-v377-brevo-delivery-finalize
+next safe stage: execute-v377-recovery2-roundtrip-and-neon
 ```
 
 v295는 최초 22-table baseline을 실제 DB에 적용한 역사이자 현재 Neon DB revision으로
@@ -40,7 +40,7 @@ private environment/ACL·email/abuse secret 준비와 local migration은 완료�
 `8db9bcb`의 stale evidence와 실패 marker는 보존했고, source
 `345872a`의 별도 recovery1 왕복·fresh backup·local v377 apply를 각각 1회
 검증했습니다. Neon은 접속·backup·apply를 시작하지 않았습니다. 다음은
-`diagnose-v377-brevo-delivery-finalize` 단계입니다.
+`execute-v377-recovery2-roundtrip-and-neon` 단계입니다.
 현재 `tools/run_smoke_core.sh`에서는 v295~v310 단일-head·no-next-revision 역사 계약에
 고정된 최초 revision 생성·수동 검토, isolated upgrade·downgrade·roundtrip,
 source·restore stamp guard, baseline completion, next-revision preflight와 deployment
@@ -336,11 +336,11 @@ revision만 거짓으로 올릴 수 있으므로 특히 금지합니다.
    생성되지 않았습니다. 그 private exclusive attempt marker는 남겨 두고 재실행하지 않았습니다.
 7. local actual DB는 v377이고 기존 22개 table 데이터 변화 0·25개 model table parity를
    확인했습니다. Neon은 v295이며 backup·apply를 시작하지 않았습니다.
-8. local 실제 메일·링크 인증·로그인은 완료했습니다. 다음 안전 단계는 실제 전달 뒤
-   `delivery_outcome_unknown`이 된 provider finalize 경계를 진단하는 `diagnose-v377-brevo-delivery-finalize`입니다.
+8. local 실제 메일·링크 인증·로그인과 provider 진단을 완료했습니다. 다음 안전 단계는
+   final source의 recovery2 왕복과 untouched Neon을 묶는 `execute-v377-recovery2-roundtrip-and-neon`입니다.
 
-현재는 **local email E2E verified with provider-finalize follow-up** 상태입니다. local DB
-schema와 legacy 데이터는 보존됐고 Neon DB와 Render provider 설정은 변경되지 않았습니다.
+현재는 **deployment recovery2 source prepared** 상태입니다. local DB schema와 legacy
+데이터는 보존됐고 Neon DB와 Render provider 설정은 아직 변경되지 않았습니다.
 
 ### Stage F — 운영·배포 runtime readiness
 

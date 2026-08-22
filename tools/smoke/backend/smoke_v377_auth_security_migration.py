@@ -340,7 +340,7 @@ def source_state_fixture() -> dict[str, Any]:
 def test_isolated_roundtrip_guard() -> None:
     legacy_database = "rpg_game_v377_auth_security_roundtrip"
     legacy_report = ROOT / "local-review-artifacts/alembic/v377_auth_security.roundtrip.json"
-    require(roundtrip.RECOVERY_NAMESPACE == "recovery1", "recovery namespace differs")
+    require(roundtrip.RECOVERY_NAMESPACE == "recovery2", "recovery namespace differs")
     require(
         roundtrip.ISOLATED_DATABASE != legacy_database
         and roundtrip.RECOVERY_NAMESPACE in roundtrip.ISOLATED_DATABASE,

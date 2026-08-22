@@ -3,13 +3,13 @@
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v377.local-email-e2e-verified
-strict result: local-email-e2e-verified-provider-finalize-followup
-next safe stage: diagnose-v377-brevo-delivery-finalize
+latest: v377.deployment-recovery2-source-prepared
+strict result: deployment-recovery2-source-prepared
+next safe stage: execute-v377-recovery2-roundtrip-and-neon
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v295_initial_schema
 v377 apply/stamp/downgrade: local 1/0/0; Neon 0/0/0
-email rollout approval/execution: yes/local-provider-e2e-verified-finalize-followup
+email rollout approval/execution: yes/local-provider-e2e-verified-deployment-started
 public backend/static: v351 Live
 ```
 
@@ -27,11 +27,11 @@ public backend/static: v351 Live
 - local DB는 같은 `345872a`에서 v377로 정확히 1회 upgrade했고 기존 22개 table 데이터 변화 0·25개 model table parity를 확인했습니다. stamp·downgrade·restore·reset·seed는 실행하지 않았습니다.
 - 인증 POST의 `auth_protection_unavailable` 503이 사라졌고 브라우저 로그인 요청이 정상 credential 판정까지 진행됩니다. 이메일 없는 기존 v295 계정은 아이디·비밀번호 접근을 유지하면서 `emailVerified=false`로 표시하고, 이메일이 있는 신규 계정은 링크 인증 전 계속 차단합니다.
 - Brevo transactional privacy는 anonymous tracking, 1개월 log retention, preview 미저장으로 확인했습니다. local 호출 IP를 허용한 뒤 실제 Naver 메일 1건 수신, 링크 인증 HTTP 200, 실제 계정 로그인과 빈 캐릭터 슬롯 8개 진입을 확인했습니다.
-- 첫 발송은 IP 미허용 상태에서 401로 실패했고 자동 재시도하지 않았습니다. 허용 뒤 새 요청은 실제 메일을 전달했지만 outbox 행은 provider 응답 완료가 모호해 `delivery_outcome_unknown`으로 안전 종료됐습니다. 인증 token과 로그인은 정상 동작했으며 Neon 전에는 이 finalize 관찰을 집중 진단합니다.
+- 첫 발송은 IP 미허용 상태에서 401로 실패했고 자동 재시도하지 않았습니다. 허용 뒤 새 요청은 실제 메일을 전달했지만 여러 local reload worker가 겹친 환경에서 provider 수락 뒤 worker ownership이 끊겨 `delivery_outcome_unknown`으로 안전 종료됐습니다. 단일 직접 provider 진단은 2초 이내 정상 message ID를 반환했고 token 인증·로그인은 정상입니다.
 - Neon은 접속하지 않았고 backup·apply marker도 없습니다.
 - actual target apply는 한 PostgreSQL transaction 안에서 기존 22개 table을 첫 조회 전에 `SHARE ROW EXCLUSIVE`로 잠근 뒤 fingerprint→backup 대조→Alembic→schema/data parity를 끝내고 commit합니다. 일반 조회는 유지하고 concurrent write만 유한 시간 차단하므로 Render를 멈추지 않습니다.
 - inherited `PGHOSTADDR`·`PGSERVICE`·`PGOPTIONS` 등 모든 `PG*` 기본값은 PostgreSQL subprocess와 sync connection에서 제거합니다. Windows client는 고정 PostgreSQL 16 절대 경로, POSIX client는 trusted owner와 group/world non-writable 경로만 허용합니다.
-- 기존 `8db9bcb` marker와 `recovery1` evidence는 모두 역사 증거로 보존하며 같은 action을 다시 실행하지 않습니다.
+- 기존 `8db9bcb` marker와 `recovery1` evidence는 모두 역사 증거로 보존하며 같은 action을 다시 실행하지 않습니다. 최종 배포 source와 Neon을 묶을 새 `recovery2` one-attempt namespace를 준비했습니다.
 - source-only email release guard는 미래 배포의 fresh GitHub publish lifecycle, 단일 시도·즉시 closure·rerun 금지, 새 서명 image digest, 기존 Render service와 필수 env key-name-only evidence만 검증합니다. 외부 network/provider를 호출하지 않았고 현재 공개 v351을 바꾸거나 배포 gate를 해제하지 않았습니다.
 - `email-validator==2.3.0`·`dnspython==2.8.0`은 backend `.venv`과 Linux runtime/musllinux/dev lock에 고정되어 있습니다.
 - v377 focused 검사와 설치된 Git Bash·backend `.venv`·`DEBUG=false` 조건의 전체 core smoke는 PASS했습니다. local migration은 완료됐지만 Neon migration·provider 발송·공개 배포 완료를 뜻하지 않습니다.
@@ -39,9 +39,10 @@ public backend/static: v351 Live
 
 ## 바로 할 일
 
-1. 실제 메일 전달 뒤 outbox가 `sent` 대신 `delivery_outcome_unknown`으로 닫힌 원인을 provider response·worker finalize 경계에서 집중 진단합니다.
-2. token·수신자·API key를 출력하지 않는 focused 회귀로 정상 2xx 응답의 `sent` finalize와 timeout의 terminal unknown을 구분해 검증합니다.
-3. 진단·필요한 source 수정이 끝난 뒤에만 untouched Neon의 fresh backup·exact v377 apply를 별도 exact 범위로 진행합니다.
+1. clean pushed exact SHA에서 `recovery2` synthetic `v295 → v377 → v295 → v377`을 1회 실행합니다.
+2. 같은 SHA와 roundtrip report로 untouched Neon의 fresh custom backup과 exact v377 apply를 각각 1회 실행합니다.
+3. Neon 검증 뒤 fresh GitHub publish lifecycle로 backend image를 1회 게시하고 새 digest만 Render에 적용합니다.
+4. backend 공개 검증 뒤 같은 exact source의 legacy static을 1회 배포합니다.
 
 배포를 판단할 때만 `deploy/v377-email-release-guard.example.json`과
 `tools/prepare_v377_email_release.py`의 source-only 계약을 사용하며, 준비됐다는 사실을 실제
