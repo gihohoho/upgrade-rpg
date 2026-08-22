@@ -8,4 +8,4 @@
 
 과거 문서를 처음부터 전부 읽지 말고, 작업에 직접 필요한 경우에만 [Docs Hub](docs/README.md)를 통해 reference, contracts, guides, archive history를 찾아보세요. 현재 다음 단계와 승인 경계는 `NEXT_CHAT_HANDOFF.md`만 기준으로 판단합니다.
 
-문서를 읽은 뒤 완료된 v377 source 구현이나 private environment 준비를 다시 전면 감사하지 말고 `prepare-v377-stale-evidence-recovery`를 이어서 진행해주세요. `8db9bcb`의 isolated 왕복·local backup은 새 canonicalization SHA에 stale이고, local apply는 Alembic 전에 안전 중단되어 report 없이 marker가 남았으며 DB는 v295입니다. 기존 action 재실행이나 marker/evidence 삭제·덮어쓰기 대신 새 namespace·artifact·confirmation을 쓰는 recovery 계약을 먼저 준비하고 exact 실행 범위를 별도 승인받으세요. Neon은 untouched로 유지합니다. DB reset·seed·restore·stamp·actual downgrade·자동 retry와 남은 공개 gate 우회는 하지 마세요.
+문서를 읽은 뒤 완료된 v377 source·private environment·local recovery migration을 다시 전면 감사하지 말고 `configure-v377-local-brevo-provider`를 이어서 진행해주세요. local DB는 v377이고 인증 요청 보호 503과 이메일 없는 기존 계정 로그인 차단은 해결됐으며 Neon은 untouched v295입니다. 기호가 직접 해야 하는 Brevo 계정·sender 소유 확인·privacy 설정·전용 API key 준비를 한 번에 안내한 뒤 key와 발신 이메일을 값 출력 없이 local dotenv에 넣고 실제 테스트 메일과 가입→인증→로그인을 확인하세요. 기존 marker/evidence 삭제·덮어쓰기, DB reset·seed·restore·stamp·actual downgrade·자동 retry와 남은 공개 gate 우회는 하지 마세요.

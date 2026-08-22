@@ -7,40 +7,38 @@
 ## v377 현재 overlay
 
 ```txt
-latest: v377.local-migration-preflight-safe-stop
-strict result: local-migration-preflight-safe-stop
+latest: v377.local-email-auth-unblocked
+strict result: local-email-auth-unblocked
 local Alembic source graph head: v377_auth_email_public_security
-local/live/Neon applied DB revision: v295_initial_schema
-actual target v377 apply: 0
+local/Neon applied DB revision: v377_auth_email_public_security / v295_initial_schema
+actual target v377 apply: local 1 / Neon 0
 private email environment: prepared
-isolated roundtrip evidence: succeeded on source 8db9bcb / stale for current source
-local backup evidence: succeeded on source 8db9bcb / stale for current source
-local apply: pre-Alembic false fingerprint safe-stop / report absent / attempt marker blocks retry
+legacy evidence: source 8db9bcb / stale and preserved
+recovery1 roundtrip/local backup/apply: source 345872a / verified
+local auth POST: protection store available / legacy no-email login compatible
 Neon: untouched
 model application tables: 25
-applied DB application tables: 22
-next safe stage: prepare-v377-stale-evidence-recovery
+local/Neon application tables: 25 / 22
+next safe stage: configure-v377-local-brevo-provider
 ```
 
-v295는 최초 22-table baseline을 실제 DB에 적용한 역사이자 현재 local/Neon DB revision으로
+v295는 최초 22-table baseline을 실제 DB에 적용한 역사이자 현재 Neon DB revision으로
 계속 유효합니다. local source graph에는 v295 뒤에 `v371_email_identity_lifecycle`과
 `v377_auth_email_public_security`이 차례로 준비됐으므로, `head`와 DB `current`를 같은
 말로 쓰지 않습니다.
 
 - source graph `head`: `v377_auth_email_public_security`
-- local/live/Neon DB `current`: `v295_initial_schema`
+- local/Neon DB `current`: `v377_auth_email_public_security` / `v295_initial_schema`
 - 차이: v371의 nullable email identity·`authVersion`과
   `user_email_action_tokens` 1개 table, v377의 durable auth rate-limit·semantic mail outbox
   2개 table
-- 실제 target 상태: local·Neon은 모두 v295, v377 apply 0회
+- 실제 target 상태: local v377 apply 1회, Neon v295 apply 0회
 
-private environment/ACL·email/abuse secret 준비는 완료했습니다. isolated
-v295→v377→v295→v377 왕복과 local fresh backup은 이전 source `8db9bcb`에서만
-성공했고 현재 source SHA에서는 stale evidence입니다. local apply는 Alembic 실행
-전 connection fingerprint false positive에서 fail-closed했으며 apply report는 없습니다.
-배타적 attempt marker가 남아 기존 confirmation으로 재실행할 수 없고, Neon은
-접속·backup·apply를 시작하지 않았습니다. 다음은 기존 marker를 우회하지 않는
-`prepare-v377-stale-evidence-recovery` 계약을 먼저 준비하는 단계입니다.
+private environment/ACL·email/abuse secret 준비와 local migration은 완료했습니다. source
+`8db9bcb`의 stale evidence와 실패 marker는 보존했고, source
+`345872a`의 별도 recovery1 왕복·fresh backup·local v377 apply를 각각 1회
+검증했습니다. Neon은 접속·backup·apply를 시작하지 않았습니다. 다음은
+`configure-v377-local-brevo-provider` 단계입니다.
 현재 `tools/run_smoke_core.sh`에서는 v295~v310 단일-head·no-next-revision 역사 계약에
 고정된 최초 revision 생성·수동 검토, isolated upgrade·downgrade·roundtrip,
 source·restore stamp guard, baseline completion, next-revision preflight와 deployment
@@ -96,7 +94,7 @@ v306 결과도 **v306 당시 model/schema**에 대한 역사이며 v377 현재 �
 | 항목 | 현재 상태 |
 |---|---|
 | SQLAlchemy model table 수 | 25개 |
-| 적용된 DB application table 수 | 22개 |
+| local/Neon DB application table 수 | 25개 / 22개 |
 | PostgreSQL `JSONB` mapped column | 26개 |
 | 큰 수/확률용 `Numeric` mapped column | 10개 |
 | `ForeignKey` 선언 | 24개 |
@@ -112,7 +110,7 @@ v306 결과도 **v306 당시 model/schema**에 대한 역사이며 v377 현재 �
 | Alembic versions 폴더 | 있음 |
 | Alembic revision 수 | 3개 |
 | local source graph head | `v377_auth_email_public_security` |
-| local/live/Neon DB current | `v295_initial_schema` |
+| local/Neon DB current | `v377_auth_email_public_security` / `v295_initial_schema` |
 | Alembic script template | 있음 |
 
 ## Python 의존성 선언
@@ -184,7 +182,7 @@ python -m pip install -e ".[dev]"
 - metadata: `Base.metadata`
 - online 방식: `async_engine_from_config()` + `connection.run_sync()`
 - source revision: 3개 / graph head `v377_auth_email_public_security`
-- 적용 DB current: `v295_initial_schema` / v371·v377 not applied
+- 적용 DB current: local `v377_auth_email_public_security` / Neon `v295_initial_schema`
 - `history`, `heads`, `current` 읽기 전용 수집 도구: `tools/check_alembic_readonly_state.py`
 - Docker/schema/table count/health 읽기 전용 수집 도구: `tools/check_postgres_runtime_readonly_state.py`
 - SQLAlchemy metadata/실제 PostgreSQL 상세 구조 비교: `tools/check_postgres_schema_equivalence.py`
@@ -286,7 +284,7 @@ v295 baseline 확정 상태:
 - classification: `alembic-managed-baseline-complete`
 - source/rehearsal: 23 public tables / 749 rows
 - application: 22 tables / 748 rows preserved
-- local/live/Neon DB current revision: `v295_initial_schema`
+- 당시 local/live/Neon DB current revision: `v295_initial_schema`
 - source/rehearsal application digest identical
 - v302/v304 execution reports verified
 
@@ -330,17 +328,17 @@ revision만 거짓으로 올릴 수 있으므로 특히 금지합니다.
 3. migration source parity, private artifact, exact endpoint, one-attempt guard는 DB 접속 없이
    focused smoke로 검증했습니다.
 4. private environment/ACL·email/abuse secret 준비는 완료했습니다.
-5. isolated roundtrip과 local backup은 source `8db9bcb`에서 성공했지만 source 수정
-   후 stale이며 새 apply의 선행 evidence로 사용할 수 없습니다.
-6. local apply는 pre-Alembic false fingerprint safe-stop으로 종료했고 apply report는
-   생성되지 않았습니다. private exclusive attempt marker는 남아 있으므로 재실행하지 않습니다.
-7. local·Neon actual DB는 계속 v295이고 actual target v377 apply는 0회입니다. Neon은
-   backup·apply 모두 시작하지 않았습니다.
-8. 다음 안전 단계는 marker 삭제·재사용을 전제하지 않는
-   `prepare-v377-stale-evidence-recovery` 계약을 준비하고 exact 실행 범위를 별도 승인받는 것입니다.
+5. source `8db9bcb` evidence는 stale history로 보존하고 source
+   `345872a`의 recovery1 왕복·local backup을 새 apply의 선행 evidence로 검증했습니다.
+6. 첫 local apply는 pre-Alembic false fingerprint safe-stop으로 종료했고 apply report는
+   생성되지 않았습니다. 그 private exclusive attempt marker는 남겨 두고 재실행하지 않았습니다.
+7. local actual DB는 v377이고 기존 22개 table 데이터 변화 0·25개 model table parity를
+   확인했습니다. Neon은 v295이며 backup·apply를 시작하지 않았습니다.
+8. 다음 안전 단계는 Brevo sender·전용 API key를 준비해 local 실제 메일을 검증하는
+   `configure-v377-local-brevo-provider`입니다.
 
-현재는 **local migration preflight safe-stop** 상태입니다. actual local/Neon target
-DB schema/data와 provider 상태는 변경되지 않았습니다.
+현재는 **local email auth unblocked** 상태입니다. local DB schema는 v377이고 legacy
+데이터는 보존됐으며 Neon DB와 provider 상태는 변경되지 않았습니다.
 
 ### Stage F — 운영·배포 runtime readiness
 

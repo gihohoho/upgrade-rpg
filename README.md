@@ -1,6 +1,6 @@
 # Upgrade RPG
 
-웹 기반 방치형 Upgrade RPG 프로젝트입니다. 공개 버전은 v351, 로컬 source checkpoint와 Alembic head는 v377이며 실제 local/Neon DB는 아직 v295입니다.
+웹 기반 방치형 Upgrade RPG 프로젝트입니다. 공개 버전은 v351, 로컬 source checkpoint와 Alembic head는 v377이며 실제 local/Neon DB는 v377/v295입니다.
 
 ## 새 작업 시작
 
@@ -105,7 +105,7 @@ cd "/c/Users/HOME/Desktop/Upgrade RPG"
 docker compose stop
 ```
 
-`docker compose down -v`, DB reset·seed, `alembic upgrade/downgrade/stamp`는 임의로 실행하지 않습니다. 새 PC나 빈 Docker volume에서 DB 상태 검사가 실패하면 Codex에게 먼저 확인합니다. v377 migration source는 준비됐지만 local/Neon에는 아직 적용하지 않았습니다. private environment 준비는 끝났고, `8db9bcb`의 격리 왕복·local backup은 canonicalization 수정 뒤 SHA-stale입니다. local apply는 Alembic 전에 안전 중단되어 DB가 v295 그대로이고 marker가 남았으므로 재실행하지 않습니다. 다음 단계는 새 namespace·artifact·confirmation의 recovery 절차를 준비하고 별도 승인받는 것이며, 전체 이메일 가입 흐름은 아직 end-to-end 완료 상태가 아닙니다.
+`docker compose down -v`, DB reset·seed, `alembic upgrade/downgrade/stamp`는 임의로 실행하지 않습니다. 새 PC나 빈 Docker volume에서 DB 상태 검사가 실패하면 Codex에게 먼저 확인합니다. local DB는 recovery1 검증 뒤 v377로 적용했고 Neon은 v295입니다. 인증 요청 보호 503과 이메일 없는 기존 계정 로그인 차단은 해결됐습니다. 다음 단계는 Brevo sender·전용 API key를 준비해 local 실제 이메일 가입 흐름을 검증하는 것입니다.
 
 ## 핵심 폴더
 
@@ -124,5 +124,5 @@ target: linux/amd64
 database: Neon PostgreSQL 16 Singapore
 hosting: Render Free Web Service + Static Site
 public backend/static: v351 Live
-local source checkpoint: v377 / migration source head v377 / DB still v295
+local source checkpoint: v377 / migration source head v377 / local DB v377 / Neon DB v295
 ```

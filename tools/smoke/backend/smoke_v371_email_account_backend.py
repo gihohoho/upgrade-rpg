@@ -257,6 +257,28 @@ async def test_register_login_and_generation() -> None:
     else:
         raise AssertionError("unverified account received a token")
 
+    legacy = user_row(verified=False, auth_version=3)
+    legacy.email_original = None
+    legacy.email_canonical = None
+    legacy_login = await auth.login(
+        FakeSession([[legacy]]),
+        LoginRequest(identifier="player22", password="account123"),
+    )
+    require(
+        legacy_login["status"] == "authenticated"
+        and legacy_login["user"]["email"] is None
+        and legacy_login["user"]["emailVerified"] is False,
+        "legacy account without an email could not retain password access",
+    )
+    legacy_current = await get_current_user(
+        authorization=f"Bearer {legacy_login['accessToken']}",
+        session=FakeSession(get_user=legacy),
+    )
+    require(
+        legacy_current.email is None and legacy_current.email_verified is False,
+        "legacy current-user state falsely reports an email verification",
+    )
+
     verified = user_row(verified=True, auth_version=7)
     logged_in = await auth.login(
         FakeSession([[verified]]),

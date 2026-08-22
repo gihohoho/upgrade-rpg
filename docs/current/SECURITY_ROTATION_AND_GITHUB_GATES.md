@@ -1,10 +1,10 @@
 # Security rotation and GitHub gates — v377
 
-## v377 local migration preflight safe-stop — 2026-08-22
+## v377 local email auth unblocked — 2026-08-22
 
 - Alembic source head는 `v295_initial_schema` → `v371_email_identity_lifecycle` →
   `v377_auth_email_public_security`입니다. v377은 `auth_rate_limit_buckets`와
-  `auth_email_outbox`를 추가하도록 준비했지만 local/Neon 실제 DB는 모두 v295이고 아직
+  `auth_email_outbox`를 추가했고 local DB에는 v377을 적용했습니다. Neon은 v295이며 아직
   apply·stamp하지 않았습니다.
 - 인증 rate bucket은 IP·이메일·아이디·user·action token 원문 대신 별도
   `AUTH_ABUSE_SECRET` HMAC-SHA256 digest와 source-controlled scope만 PostgreSQL에
@@ -68,9 +68,9 @@
   evidence를 요구합니다. `smoke_v377_email_release.py`가 과거 v351 evidence·digest·deploy ID
   재사용과 secret value·provider endpoint 기록을 차단하는 source 계약을 검증했습니다.
   기본 guard는 외부 network/provider mutation을 하지 않으며 배포 승인이나 실행이 아닙니다.
-- 실제 local/Neon DB write·migration, owner bootstrap, GitHub Actions·GHCR 게시, Render
-  env·서비스·deploy는 실행하지 않았습니다. `8db9bcb`의 local v295 custom backup 751 rows는
-  성공했지만 새 SHA에는 stale이며 공개 backend/static은 계속 v351입니다.
+- local DB는 `345872a` recovery1 evidence로 v377에 적용했습니다. Neon migration,
+  owner bootstrap, GitHub Actions·GHCR 게시, Render env·서비스·deploy는 실행하지 않았고
+  공개 backend/static은 계속 v351입니다.
 
 v376에서 기호는 이메일 인증 rollout에 한해 공개 보안 구현 → isolated migration 왕복 →
 local/Neon의 새 backup·exact migration → Brevo sender/key/secret → 테스트 메일 → 필요한
@@ -79,13 +79,10 @@ backend/static release 준비를 한 범위로 승인했습니다. 정상 경로
 namespace와 exact 범위를 별도로 승인받습니다. Codex가 대신할 수 없는 Brevo 가입·발신자
 소유 확인·API key 입력은 DB 단계 뒤 요청하며 owner bootstrap은 이 승인과 분리합니다.
 
-첫 local apply는 Alembic 실행 전에 cross-driver fingerprint 표현 차이를 실제 차이로 잘못
-판정해 안전 중단됐습니다. apply report는 없고 local DB는 v295 그대로이며 attempt marker를
-보존하므로 같은 action을 재실행하지 않습니다. Neon은 접속·backup·apply·marker가 모두
-없습니다. 다음 안전 단계는 old `8db9bcb` roundtrip/backup evidence와 기존 marker를 삭제하거나
-덮어쓰지 않고 새 namespace·artifact·confirmation을 쓰는 recovery 계약을 source로 준비한 뒤
-exact 실행 범위를 별도 승인받는 것입니다. fresh current-SHA evidence 없이는 local/Neon apply를
-거부합니다. 공개
+첫 local apply의 safe-stop evidence는 보존했고, 별도 `recovery1` namespace에서 synthetic
+왕복·fresh backup·local v377 apply를 각각 1회 완료했습니다. Neon은 접속·backup·apply·marker가
+모두 없습니다. 다음 안전 단계는 Brevo sender·privacy 설정·전용 API key를 준비하고 local
+실제 메일 E2E를 검증하는 것입니다. 공개
 blocker는 서버 session/refresh·기기별 폐기, save revision/CAS, CSP/XSS와 browser token,
 개인정보·법적 보존 정책, provider 실제 설정·테스트, exact deploy입니다. 자세한 계약은
 `ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md`에 있습니다. source-only release guard는

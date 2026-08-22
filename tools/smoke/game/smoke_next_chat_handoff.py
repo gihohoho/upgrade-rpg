@@ -7,11 +7,12 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v377.local-migration-preflight-safe-stop"
-RESULT = "local-migration-preflight-safe-stop"
-NEXT_STAGE = "prepare-v377-stale-evidence-recovery"
+VERSION = "v377.local-email-auth-unblocked"
+RESULT = "local-email-auth-unblocked"
+NEXT_STAGE = "configure-v377-local-brevo-provider"
 SOURCE_HEAD = "v377_auth_email_public_security"
-APPLIED_HEAD = "v295_initial_schema"
+LOCAL_APPLIED_HEAD = SOURCE_HEAD
+NEON_APPLIED_HEAD = "v295_initial_schema"
 
 
 def read(relative: str) -> str:
@@ -36,7 +37,8 @@ def main() -> int:
             RESULT,
             NEXT_STAGE,
             SOURCE_HEAD,
-            APPLIED_HEAD,
+            LOCAL_APPLIED_HEAD,
+            NEON_APPLIED_HEAD,
             "email-validator",
             "Brevo",
             "v351",
@@ -55,7 +57,7 @@ def main() -> int:
         "Linux runtime/musllinux/dev lock",
         "synthetic fixture",
         "migration",
-        "actual local/Neon apply",
+        "local v377 apply",
         "owner bootstrap",
         "docs/reference/",
         "docs/generated/",
@@ -67,6 +69,8 @@ def main() -> int:
         "stale",
         "cross-driver fingerprint",
         "attempt marker",
+        "recovery1",
+        "인증 POST",
         "Neon",
         "공개 전 필수 보강",
         "rate limit",
@@ -92,7 +96,7 @@ def main() -> int:
     )
     require_markers(
         "NEXT_CHAT_PROMPT.md",
-        "prepare-v377-stale-evidence-recovery",
+        "configure-v377-local-brevo-provider",
         "다시 전면 감사하지 말고",
     )
     require_markers(

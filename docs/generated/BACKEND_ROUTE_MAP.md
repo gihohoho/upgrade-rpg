@@ -2,19 +2,20 @@
 
 이 문서는 FastAPI route 파일을 정적으로 분석해서 현재 API 목록을 정리한 자동 보고서입니다.
 
-중요: v377 source는 준비됐지만 현재 체크포인트는 **local migration preflight safe-stop**입니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
+중요: v377 local migration과 인증 요청 보호 복구는 완료됐습니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
 
 ```txt
-latest: v377.local-migration-preflight-safe-stop
-strict result: local-migration-preflight-safe-stop
+latest: v377.local-email-auth-unblocked
+strict result: local-email-auth-unblocked
 source head: v377_auth_email_public_security
-local/Neon DB current: v295_initial_schema
-actual target v377 apply: 0
+local/Neon DB current: v377_auth_email_public_security / v295_initial_schema
+actual target v377 apply: local 1 / Neon 0
 private email environment: prepared
-isolated roundtrip/local backup evidence: source 8db9bcb only / stale
-local apply: pre-Alembic false fingerprint safe-stop / report absent / attempt marker blocks retry
+legacy stale evidence: source 8db9bcb / preserved
+recovery1 roundtrip/local backup/apply: source 345872a / verified
+local auth POST: protection store available / legacy no-email login compatible
 Neon: untouched
-next safe stage: prepare-v377-stale-evidence-recovery
+next safe stage: configure-v377-local-brevo-provider
 ```
 
 ## 생성 방식
@@ -203,19 +204,19 @@ next safe stage: prepare-v377-stale-evidence-recovery
 
 ## 다음 추천 단계
 
-`next safe stage: prepare-v377-stale-evidence-recovery`
+`next safe stage: configure-v377-local-brevo-provider`
 
-private environment 준비는 완료했습니다. isolated roundtrip과 local backup은 이전
-source `8db9bcb`에서만 성공해 현재 source의 선행 evidence로 쓸 수 없습니다.
-local apply는 Alembic 실행 전 false fingerprint에서 안전하게 중단됐고 report는
-생성되지 않았으며, attempt marker 때문에 기존 confirmation으로 재실행하지
-않습니다. Neon은 untouched이며 owner bootstrap·Brevo·배포도 여전히 별도입니다.
+private environment와 local migration은 완료했습니다. 이전 source `8db9bcb`의
+stale evidence와 실패 marker는 보존했고, source `345872a`의 별도 recovery1
+왕복·backup·local v377 apply를 각각 1회 검증했습니다. 인증 POST는 보호 store를 정상
+사용하고 이메일 없는 legacy 계정은 기존 로그인을 유지합니다. Neon은 untouched이며
+owner bootstrap·Brevo·배포는 여전히 별도입니다.
 
 권장 범위:
 
-1. 기존 private marker를 삭제·재사용하지 않는 stale-evidence recovery 계약을 먼저 준비합니다.
-2. 새 source SHA와 새로 승인된 one-attempt evidence chain으로만 local 절차를 재개합니다.
-3. local이 안전하게 완료된 뒤에만 아직 시작하지 않은 Neon 단계를 별도로 판단합니다.
-4. Brevo sender/API key와 Render secret을 구성하고 실제 테스트 메일로 발송·링크 흐름을 확인합니다.
+1. Brevo sender·transactional privacy·전용 API key를 준비합니다.
+2. local dotenv에 key와 발신 이메일을 값 출력 없이 넣고 backend를 재시작합니다.
+3. 실제 테스트 메일로 가입·인증·로그인·복구 흐름을 확인합니다.
+4. local 검증 뒤에만 아직 시작하지 않은 Neon migration을 별도 exact 범위로 판단합니다.
 5. 서버측 session/revoke, save revision/CAS, CSP/XSS·브라우저 token과 개인정보 정책은 공개 회원가입을 열기 전에 마저 완료합니다.
 6. backend image와 legacy static은 모든 공개 gate가 닫힌 뒤 같은 exact-SHA 단위로 게시·배포합니다.

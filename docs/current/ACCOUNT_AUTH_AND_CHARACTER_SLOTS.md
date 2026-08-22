@@ -1,11 +1,11 @@
 # 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v377.local-migration-preflight-safe-stop
-strict result: local-migration-preflight-safe-stop
-next safe stage: prepare-v377-stale-evidence-recovery
+latest: v377.local-email-auth-unblocked
+strict result: local-email-auth-unblocked
+next safe stage: configure-v377-local-brevo-provider
 public Render: backend/static 모두 계속 v351
-local/Neon DB: 모두 계속 v295
+local/Neon DB: v377 / v295
 ```
 
 v370의 로그인·캐릭터 슬롯·관리자 회원 관리 기반과 v371 이메일 identity lifecycle을
@@ -34,7 +34,7 @@ semantic email outbox와 만료된 미인증 identity의 안전한 회수를 sou
 v370은 새 테이블과 Alembic revision 없이 기존 구조를 사용했습니다. v371은 기존 행을
 거짓 이메일로 채우지 않으면서 신규 가입자의 이메일을 안전하게 관리하기 위해
 `v371_email_identity_lifecycle` revision source를 준비했습니다. v377 source head는 그
-다음 `v377_auth_email_public_security` revision이며, 아직 actual local/Neon DB에는 적용하지 않았습니다.
+다음 `v377_auth_email_public_security` revision이며, local DB에는 적용했고 Neon은 아직 v295입니다.
 
 - `users`: 아이디, nullable legacy-safe 원본/정규화 이메일, 인증 시각,
   `authVersion`, bcrypt 비밀번호 해시, 활성/정지, 관리자 여부
@@ -90,6 +90,9 @@ ID가 모두 일치해야만 요청을 허용합니다. 따라서 캐릭터를 �
   비밀번호로 로그인하면 기존 `JWT_SECRET_KEY`로 HS256 서명한 24시간 access token을
   발급합니다. 서버는 알고리즘을 고정하고 서명, 종류, 발급 시각, 만료 시각과 DB의 현재
   `authVersion`을 검사합니다.
+- v295 이전에 만들어져 email 열이 `NULL`인 기존 계정은 기존 아이디·비밀번호 접근을
+  유지합니다. 이 경우 응답은 `emailVerified=false`로 사실대로 표시하며, 이메일이 있는
+  신규 계정은 링크 인증 전 계속 차단합니다.
 - 로그인 유지가 꺼져 있으면 token은 `sessionStorage`, 사용자가 명시적으로 켜면
   `localStorage`에 저장합니다. 로그아웃은 클라이언트 token을 즉시 삭제합니다.
 - 매 인증 요청마다 DB의 계정을 다시 읽으므로 관리자가 계정을 정지하면 이미 발급된
@@ -251,8 +254,9 @@ v377은 로컬 source·migration 준비 단계이며 Render backend와 Static Si
 `email-validator 2.3.0`과 Linux dependency lock은 반영됐고 private environment 준비에서
 local/production의 `EMAIL_TOKEN_SECRET`·`AUTH_ABUSE_SECRET` 4개를 서로 다르게 생성했습니다.
 실제 값은 채팅에 보내지 않으며 Brevo 전용 API key와 발신자는 아직 필요합니다.
-`8db9bcb` 격리 왕복·local backup은 새 SHA에 stale이고 local apply marker가 소비됐으므로,
-다음 순서는 새 recovery namespace·artifact·confirmation 준비와 exact 범위 별도 승인입니다.
+`8db9bcb` 격리 왕복·local backup과 첫 실패 marker는 stale history로 보존했습니다.
+`345872a`의 별도 `recovery1` namespace에서 왕복·fresh backup·local v377 apply를 각각
+1회 완료했으므로, 다음 순서는 Brevo local provider 설정과 실제 테스트 메일입니다.
 owner bootstrap은 승인 범위 밖의 별도 단계이고 공개 release는 남은 blocker 완료 뒤 진행합니다.
 
 ## 검증 상태
@@ -285,7 +289,8 @@ console warn/error 0입니다. 이메일 renderer의 외부 asset 0·escape 구�
 검증했지만 Browser가 `data:` preview를 차단해 실제 메일 클라이언트 시각 QA는 Brevo
 테스트 메일 단계로 남습니다. v377 public-security·semantic-outbox와 기존 v371 이메일
 lifecycle focused source 검사 및 전체 core smoke는 PASS입니다. `8db9bcb` 격리 왕복과 local
-v295 backup 751 rows는 성공했지만 canonicalization 수정 뒤 SHA-stale입니다. local apply는
-Alembic 전에 안전 중단되어 report 없이 marker만 남고 DB는 v295이며 Neon은 untouched입니다.
-actual local/Neon Alembic mutation, Brevo 설정·발송, owner bootstrap, Render/GHCR 배포는
-실행하지 않았습니다.
+v295 backup 751 rows는 성공했지만 canonicalization 수정 뒤 SHA-stale입니다. 첫 local apply는
+Alembic 전에 안전 중단되어 report 없이 marker만 남았고 기존 namespace는 재사용하지 않습니다.
+`345872a` recovery1 격리 왕복·local backup·local v377 적용은 완료했습니다. 기존 22개
+table 데이터 보존과 25개 model table parity가 PASS했고 Neon은 untouched v295입니다.
+Brevo 설정·발송, owner bootstrap, Render/GHCR 배포는 실행하지 않았습니다.

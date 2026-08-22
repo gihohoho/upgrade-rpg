@@ -111,16 +111,16 @@ root·tracked script·tracked index/worktree clean, 환경·SHA·identity finger
 JWT secret과 공유하지 않고 성공 직후 `.env`에서 제거합니다. 이메일은 자동 인증하지
 않습니다.
 
-v371→v377 migration source와 guard 도구를 준비했고 private environment preparation도
-완료했습니다. `8db9bcb`의 격리 왕복과 local v295 backup은 성공했지만 canonicalization 수정
-뒤 SHA-stale입니다. local apply는 Alembic 전에 안전 중단됐고 Neon migration, owner script,
-Brevo 설정과 실제 메일은 실행하지 않았습니다.
+v371→v377 migration source와 guard 도구, private environment preparation을 완료했습니다.
+`8db9bcb` evidence는 stale history로 보존하고 `345872a` recovery1 왕복·local v295 backup·
+exact local v377 apply를 각각 1회 완료했습니다. Neon migration, owner script, Brevo 설정과
+실제 메일은 실행하지 않았습니다.
 
 Migration guard는 libpq가 URL의 host보다 실제 접속 주소에 사용할 수 있는 inherited
 `PGHOSTADDR`를 포함해 모든 `PG*` 기본값을 제거하고 trusted PostgreSQL client만 실행합니다.
 격리 왕복과 local/Neon backup·apply는 각 단계의 첫 mutation 전에 private exclusive marker를
 만듭니다. 기존 marker·evidence는 보존하며 실패 뒤 같은 confirmation으로 재실행하지 않습니다.
-후속 recovery는 새 namespace·artifact·confirmation과 별도 exact 승인을 요구합니다.
+완료된 recovery1 marker·evidence도 보존하며 같은 action을 재실행하지 않습니다.
 
 ## v377 인증 경계
 
@@ -192,18 +192,15 @@ token 저장 정책, 개인정보 정책은 아직 공개 전 보강 범위입�
 1. backend 뼈대·PostgreSQL schema·JSON seed·`/game/master-data`: 완료
 2. 인증된 `/game/load`, `/game/save`, 계정 캐릭터 슬롯: v370 로컬 구현 완료
 3. 회원가입·로그인과 관리자 회원 관리: v370 로컬 구현 완료
-4. 이메일 인증·아이디/비밀번호 복구·계정 삭제와 공개 요청 방어: v377 source/migration 준비 완료
+4. 이메일 인증·아이디/비밀번호 복구·계정 삭제와 공개 요청 방어: v377 source/local migration 완료
 5. 장착/해제/강화 API 이전: 후속
 6. 보스 소환/전투/드랍 API 이전: 후속
 7. legacy 관리자 콘텐츠 API의 운영 인증·쓰기 절차: 추가 보강 후 공개
 8. Vue 관리자 페이지 이전: 후속, 현재 실제 화면은 legacy `admin.html`
 ```
 
-공개 Render backend는 계속 v351 exact image이고 실제 local/Neon DB도 v295입니다. actual
-DB write·seed·migration, Brevo account/sender/API key, 실제 메일, owner bootstrap, Render
-env 변경, image 게시와 deploy는 실행하지 않았습니다. private environment 준비는 535개
-artifact ACL과 email/abuse secret 4개를 값 출력 없이 처리해 완료했습니다. `8db9bcb`의
-isolated 왕복과 local backup 751 rows는 새 SHA에 stale이며 local apply는 Alembic 전에
-안전 중단되어 report 없이 marker만 남았습니다. Neon은 untouched입니다. 다음 안전 단계는
-기존 marker·evidence를 보존하면서 새 recovery namespace·artifact·confirmation 계약을
-준비하고 exact 범위를 별도 승인받는 것입니다. 상세 실제 결과는 `CURRENT_STATUS.md`에 기록합니다.
+공개 Render backend는 계속 v351 exact image입니다. local DB는 v377, Neon은 v295입니다.
+DB seed, Neon migration, Brevo account/sender/API key, 실제 메일, owner bootstrap, Render env
+변경, image 게시와 deploy는 실행하지 않았습니다. private environment 준비는 535개 artifact
+ACL과 email/abuse secret 4개를 값 출력 없이 처리해 완료했습니다. 다음 안전 단계는 local
+Brevo provider 설정과 실제 이메일 E2E입니다. 상세 실제 결과는 `CURRENT_STATUS.md`에 기록합니다.

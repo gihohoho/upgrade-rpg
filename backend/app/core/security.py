@@ -247,7 +247,10 @@ async def get_current_user(
         )
     email = str(getattr(user, "email_original", None) or getattr(user, "email_canonical", None) or "").strip()
     email_verified = bool(email and getattr(user, "email_verified_at", None))
-    if not email_verified:
+    # A missing email identifies a legacy account created before v371. Such an
+    # account may keep using its existing password, while any account that has
+    # an email must still prove ownership before Bearer access is accepted.
+    if email and not email_verified:
         raise auth_error(
             status.HTTP_403_FORBIDDEN,
             "email_verification_required",
@@ -256,8 +259,8 @@ async def get_current_user(
     return CurrentUser(
         id=user.id,
         username=user.username,
-        email=email,
-        email_verified=True,
+        email=email or None,
+        email_verified=email_verified,
         auth_version=int(getattr(user, "auth_version", 0) or 0),
         is_admin=bool(user.is_admin),
     )

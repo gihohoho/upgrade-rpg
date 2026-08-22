@@ -6,7 +6,7 @@
 
 - [Current Status](CURRENT_STATUS.md): 현재 checkpoint, 검증, 금지 경계
 - [Account and Character Slots](ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md): 인증·캐릭터 슬롯·저장과 v377 공개 보안 경계
-- [Email Lifecycle](ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md): v377 이메일 lifecycle·outbox·migration safe-stop
+- [Email Lifecycle](ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md): v377 이메일 lifecycle·outbox·local migration·Brevo pending
 - [Security Gates](SECURITY_ROTATION_AND_GITHUB_GATES.md): secret, credential, stale evidence recovery와 공개 전 보안 gate
 
 ## 배포

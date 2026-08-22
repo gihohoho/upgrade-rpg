@@ -439,7 +439,10 @@ class AuthService:
                 "account_suspended",
                 "현재 이용이 중지된 계정입니다.",
             )
-        if not user.email_canonical or not user.email_verified_at:
+        # Accounts created before the email-identity migration have no email
+        # columns to verify. Preserve their username/password access while
+        # still blocking every email-bearing account until its link is used.
+        if user.email_canonical and not user.email_verified_at:
             raise _auth_error(
                 status.HTTP_403_FORBIDDEN,
                 "email_verification_required",
