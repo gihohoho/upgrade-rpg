@@ -519,6 +519,7 @@ class AuthEmailOutboxService:
             row.status = "sent"
             row.provider_message_id = safe_message_id
             row.error_code = None
+            row.completed_at = completed_at
             if token_row is not None:
                 await session.execute(
                     update(UserEmailActionToken)
@@ -546,7 +547,7 @@ class AuthEmailOutboxService:
                 token_row.delivered_at = None
                 token_row.provider_message_id = None
                 token_row.delivery_error_code = safe_error
-        row.completed_at = completed_at
+            row.completed_at = completed_at
         await session.commit()
 
     def new_token_row(

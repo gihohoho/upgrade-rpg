@@ -169,6 +169,11 @@ class ScriptedSession:
         return False
 
     async def execute(self, statement):  # type: ignore[no-untyped-def]
+        if self.label == "finalize" and self.owner.outbox.status == "sent":
+            require(
+                self.owner.outbox.completed_at is not None,
+                "sent outbox was autoflushed before its completed timestamp",
+            )
         self.statements.append(statement)
         require(bool(self.responses), f"unexpected outbox SQL in {self.label}: {statement}")
         response = self.responses.pop(0)
