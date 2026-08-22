@@ -1,9 +1,9 @@
 # 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v377.public-email-rollout-deployed
-strict result: public-email-rollout-deployed
-next safe stage: monitor-v377-public-email-delivery-and-remaining-account-gates
+latest: v377.public-email-delivery-repaired
+strict result: public-email-delivery-repaired
+next safe stage: confirm-test-mail-arrival-and-continue-remaining-account-gates
 public Render: backend/static v377 Live
 local/Neon DB: v377 / v377
 ```

@@ -494,26 +494,37 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "policy lifecycle supported-state list changed",
     )
     _require(
-        policy.get("priorApprovedPreparationSha") == PRIOR_APPROVED_PREPARATION_SHA,
-        "policy prior exact-SHA approval record changed",
+        policy.get("priorApprovedPreparationSha")
+        == lifecycle.get("priorApprovedPreparationSha"),
+        "policy/lifecycle prior exact-SHA approval differs",
     )
-    _require(policy.get("priorAttemptEvidence") == {
-        key: PRIOR_ATTEMPT_EVIDENCE[key]
-        for key in (
-            "recordCommitSha",
-            "runId",
-            "conclusion",
-            "registryLoginExecuted",
-            "imageBuildExecuted",
-            "imagePushExecuted",
-        )
-    }, "policy prior attempt evidence changed")
+    lifecycle_prior_attempt = lifecycle.get("priorAttemptEvidence")
+    _require(isinstance(lifecycle_prior_attempt, dict), "lifecycle prior attempt evidence is missing")
+    summary_keys = (
+        "recordCommitSha",
+        "runId",
+        "conclusion",
+        "registryLoginExecuted",
+        "imageBuildExecuted",
+        "imagePushExecuted",
+    )
+    _require(
+        policy.get("priorAttemptEvidence")
+        == {key: lifecycle_prior_attempt[key] for key in summary_keys},
+        "policy/lifecycle prior attempt evidence differs",
+    )
     policy_history = policy.get("attemptHistory")
-    _require(isinstance(policy_history, list) and len(policy_history) >= len(ATTEMPT_HISTORY), "policy attempt history was truncated")
-    _require(policy_history[: len(ATTEMPT_HISTORY)] == [
-        {key: item[key] for key in ("recordCommitSha", "runId", "conclusion", "registryLoginExecuted", "imageBuildExecuted", "imagePushExecuted")}
-        for item in ATTEMPT_HISTORY
-    ], "policy historical attempt prefix changed")
+    lifecycle_history = lifecycle.get("attemptHistory")
+    _require(isinstance(lifecycle_history, list), "lifecycle attempt history is missing")
+    _require(
+        policy_history
+        == [{key: item[key] for key in summary_keys} for item in lifecycle_history],
+        "policy/lifecycle attempt history differs",
+    )
+    _require(
+        policy.get("approvedPreparationSha") == lifecycle.get("approvedPreparationSha"),
+        "policy/lifecycle approved preparation differs",
+    )
     _full_sha_or_none(policy.get("approvedPreparationSha"), "policy approvedPreparationSha")
     current_policy_attempt = policy.get("currentAttemptEvidence")
     _require(isinstance(current_policy_attempt, dict), "policy current attempt evidence is missing")
@@ -521,6 +532,30 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _full_sha_or_none(current_policy_attempt.get("closureSha"), "policy closureSha")
     _full_sha_or_none(current_policy_attempt.get("recordCommitSha"), "policy recordCommitSha")
     _require(current_policy_attempt.get("conclusion") in {"success", "failure"}, "policy current attempt conclusion differs")
+    closure = lifecycle.get("closure")
+    observed = lifecycle.get("observedAttempt")
+    _require(isinstance(closure, dict), "lifecycle closure evidence is missing")
+    _require(isinstance(observed, dict), "lifecycle observed attempt is missing")
+    _require(
+        current_policy_attempt.get("authorizationSha")
+        == closure.get("authorizationSourceSha"),
+        "policy/lifecycle authorization evidence differs",
+    )
+    _require(
+        current_policy_attempt.get("closureSha") == closure.get("closureCommitSha"),
+        "policy/lifecycle closure evidence differs",
+    )
+    for policy_key, lifecycle_key in (
+        ("runId", "runId"),
+        ("runUrl", "runUrl"),
+        ("conclusion", "conclusion"),
+        ("imageDigest", "imageDigest"),
+        ("signatureVerified", "signatureVerified"),
+    ):
+        _require(
+            current_policy_attempt.get(policy_key) == observed.get(lifecycle_key),
+            f"policy/lifecycle {policy_key} evidence differs",
+        )
     _require(_bool(policy, "priorExactPreparationShaApproved") is True, "prior exact-SHA approval record is missing")
     _require(lifecycle.get("state") == policy.get("publishLifecycleState"), "policy/lifecycle state differs")
     _require(policy.get("githubRemote") == EXPECTED_REMOTE, "GitHub remote changed")
@@ -740,9 +775,9 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require("alembic" not in production_cmd, "container startup must not run Alembic")
 
     current_markers = (
-        "v377.public-email-rollout-deployed",
-        "public-email-rollout-deployed",
-        "monitor-v377-public-email-delivery-and-remaining-account-gates",
+        "v377.public-email-delivery-repaired",
+        "public-email-delivery-repaired",
+        "confirm-test-mail-arrival-and-continue-remaining-account-gates",
     )
     for path, text in (
         ("AGENTS.md", agents),
@@ -827,13 +862,15 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "publishGateReady": actions_result["publishGateReady"],
         "publishLifecycleState": actions_result["publishLifecycleState"],
         "publishLifecycleSupportedStates": list(LIFECYCLE_SUPPORTED_STATES),
+        "workflowExecutionHistoryCount": len(lifecycle["attemptHistory"]) + 1,
         "priorApprovedPreparationSha": lifecycle["priorApprovedPreparationSha"],
         "approvedPreparationSha": lifecycle["approvedPreparationSha"],
-        "authorizationSha": AUTHORIZATION_SHA,
-        "closureSha": CLOSURE_SHA,
-        "recordCommitSha": RECORD_COMMIT_SHA,
-        "currentRunId": CURRENT_RUN_ID,
-        "currentArtifactIds": CURRENT_ARTIFACT_IDS,
+        "authorizationSha": closure["authorizationSourceSha"],
+        "closureSha": closure["closureCommitSha"],
+        "recordCommitSha": current_policy_attempt["recordCommitSha"],
+        "currentRunId": current_policy_attempt["runId"],
+        "currentArtifactIds": current_policy_attempt["artifactIds"],
+        "currentImageDigest": current_policy_attempt["imageDigest"],
         "productionReference": EXPECTED_REFERENCE,
         "verifiedCandidateReference": VERIFIED_CANDIDATE_REFERENCE,
         "verifiedCandidateAppliedToRender": True,
@@ -873,7 +910,7 @@ def render(result: dict[str, Any]) -> str:
         "- workflow file/creation approved: yes/yes",
         f"- reviewed workflow source SHA-256: {result['workflowSourceSha256']}",
         f"- reviewed workflow semantic SHA-256: {result['workflowSemanticSha256']}",
-        "- workflow execution history: six prior attempts + one current successful attempt",
+        f"- workflow execution history: {result['workflowExecutionHistoryCount']} source-controlled attempts",
         "- action allowlist/full SHA enforcement: configured/configured (live rechecked 2026-07-27)",
         "- CI login/build/push approved/executed: yes/yes/yes / yes/yes/yes",
         "- publish environment/main-only: present/configured (live rechecked 2026-07-27)",
@@ -885,7 +922,7 @@ def render(result: dict[str, Any]) -> str:
         f"- approved preparation SHA: {result['approvedPreparationSha']}",
         f"- authorization/closure/record SHA: {result['authorizationSha']} / {result['closureSha']} / {result['recordCommitSha']}",
         f"- current run/artifact IDs: {result['currentRunId']} / {result['currentArtifactIds']}",
-        f"- verified image digest: {CURRENT_IMAGE_DIGEST}",
+        f"- latest verified image digest: {result['currentImageDigest']}",
         f"- current production reference: {EXPECTED_REFERENCE}",
         f"- verified candidate reference: {result['verifiedCandidateReference']}",
         "- generic production reference static/runtime applied: yes/no",

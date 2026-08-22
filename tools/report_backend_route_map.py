@@ -22,9 +22,9 @@ from pathlib import Path
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
-CHECKPOINT_VERSION = "v377.public-email-rollout-deployed"
-CHECKPOINT_RESULT = "public-email-rollout-deployed"
-NEXT_SAFE_STAGE = "monitor-v377-public-email-delivery-and-remaining-account-gates"
+CHECKPOINT_VERSION = "v377.public-email-delivery-repaired"
+CHECKPOINT_RESULT = "public-email-delivery-repaired"
+NEXT_SAFE_STAGE = "confirm-test-mail-arrival-and-continue-remaining-account-gates"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 

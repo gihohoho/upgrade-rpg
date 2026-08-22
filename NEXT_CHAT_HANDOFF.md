@@ -3,9 +3,9 @@
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v377.public-email-rollout-deployed
-strict result: public-email-rollout-deployed
-next safe stage: monitor-v377-public-email-delivery-and-remaining-account-gates
+latest: v377.public-email-delivery-repaired
+strict result: public-email-delivery-repaired
+next safe stage: confirm-test-mail-arrival-and-continue-remaining-account-gates
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -24,14 +24,17 @@ public backend/static: v377 Live
 - Render 기존 backend service에는 email/security 환경변수 35개를 값 노출 없이 저장했습니다. backend deploy `dep-da4qqi3tqb8s738l68h0`은 새 exact digest로 live이며 자동 retry는 없었습니다.
 - legacy static deploy `dep-da4qr867bikc73aekck0`은 commit `ceea14c20ac8604d453930d8f6c5127f00236352`에서 1회 build되어 live입니다.
 - 공개 backend health는 HTTP 200입니다. auth malformed/schema 요청은 422와 `Cache-Control: no-store`, 허용된 Naver 테스트 주소의 인증메일 재요청은 generic 202 accepted와 `no-store`를 반환해 이전 `auth_protection_unavailable`·이메일 보안 미준비 503이 사라졌습니다.
+- 첫 production 메일 미도착의 원인은 Brevo가 Render shared outbound IP를 차단한 것이었습니다. Render가 표시한 공식 CIDR `74.220.52.0/24`, `74.220.60.0/24`를 Brevo Authorized IP에 등록한 뒤 인증 메일이 provider에서 Delivered로 확인됐습니다.
+- 그 메일은 실제 전송됐지만 outbox 성공 마감 중 `completed_at`보다 먼저 `sent` 상태가 autoflush되어 CHECK 제약에 걸렸습니다. `de3ae5d`에서 성공 상태 필드 설정 순서를 고쳤고 회귀 검사를 추가했습니다.
+- 승인된 preparation `cd357de032425138d44323dd3060bbbf5b6a45d8`에서 authorization `46c9e7e33d866b160b6f4a8f36d5b68dabe3ece4`, immediate closure `e07474d5b5411dd805736687d1003f451298dae4`, evidence record `3e3516299a72e47c6d85597f8c0b60db5cb11a46`를 push했습니다. GitHub Actions run `32587614153`의 최초 1회가 signed digest `sha256:80e8f57618b2bd8bbac37fd63381e454434e06b67eff0cd8f4327796bdc1c677`를 게시했고 Render backend deploy `dep-da4tp7nqj5pc73b6l910`이 live입니다.
+- 배포 뒤 공개 비밀번호 재설정 요청은 202와 `no-store`였고, Neon의 최신 outbox와 token은 1회 시도로 `sent`, provider 기록 존재, 오류 없음으로 마감됐습니다. 이미 인증된 테스트 계정의 인증메일 재전송은 의도대로 suppressed됐습니다.
 - 공개 index는 로그인·회원가입·아이디 찾기·비밀번호 재설정·인증메일 재요청 UI를 표시하고, admin은 미로그인 상태에서 관리자 계정 확인 gate를 표시합니다.
 - owner bootstrap은 별도 one-shot이며 실행하지 않았습니다.
 
 ## 바로 할 일
 
-1. Naver 테스트 메일함에서 이번 공개 재요청 메일의 실제 도착 여부를 확인합니다. generic 202는 계정 존재 여부를 숨기므로 메일 미도착만으로 provider 실패를 단정하지 않습니다.
-2. 공개 로그와 outbox 상태를 값 노출 없이 관찰해 발송 행이 있으면 `sent` 또는 terminal 상태를 확인합니다. 같은 요청을 자동 재시도하지 않습니다.
-3. 공개 회원가입 확대 전에 server session/refresh/revoke, save revision/CAS, CSP/XSS·브라우저 token 저장 정책, 개인정보 보관·삭제·문의·복구 정책을 차례로 완료합니다.
+1. Naver 테스트 메일함에서 2026-08-23 02:32 KST 무렵 요청한 비밀번호 재설정 메일의 실제 도착 여부만 확인합니다. 서버·provider 접수와 outbox/token `sent`는 이미 확인했으므로 같은 요청을 반복하지 않습니다.
+2. 공개 회원가입 확대 전에 server session/refresh/revoke, save revision/CAS, CSP/XSS·브라우저 token 저장 정책, 개인정보 보관·삭제·문의·복구 정책을 차례로 완료합니다.
 
 ## 안전 경계
 

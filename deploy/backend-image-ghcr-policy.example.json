@@ -11,14 +11,14 @@
     "authorization-closed-awaiting-evidence",
     "attempt-recorded"
   ],
-  "priorApprovedPreparationSha": "5d139c2a6a81d5c715bd5607b88b1406f7e75b0a",
+  "priorApprovedPreparationSha": "d58d093fc5ac2a4ffefa812e7067cb3083ce8a7d",
   "priorAttemptEvidence": {
-    "recordCommitSha": "957f81a7e5dfbb420141561ca16c7814a45900c2",
-    "runId": 32576009404,
-    "conclusion": "failure",
-    "registryLoginExecuted": false,
-    "imageBuildExecuted": false,
-    "imagePushExecuted": false
+    "recordCommitSha": "ceea14c20ac8604d453930d8f6c5127f00236352",
+    "runId": 32576889295,
+    "conclusion": "success",
+    "registryLoginExecuted": true,
+    "imageBuildExecuted": true,
+    "imagePushExecuted": true
   },
   "attemptHistory": [
     {
@@ -92,22 +92,30 @@
       "registryLoginExecuted": false,
       "imageBuildExecuted": false,
       "imagePushExecuted": false
+    },
+    {
+      "recordCommitSha": "ceea14c20ac8604d453930d8f6c5127f00236352",
+      "runId": 32576889295,
+      "conclusion": "success",
+      "registryLoginExecuted": true,
+      "imageBuildExecuted": true,
+      "imagePushExecuted": true
     }
   ],
-  "approvedPreparationSha": "d58d093fc5ac2a4ffefa812e7067cb3083ce8a7d",
+  "approvedPreparationSha": "cd357de032425138d44323dd3060bbbf5b6a45d8",
   "currentAttemptEvidence": {
-    "authorizationSha": "e5d8724017a446be0eabadcfdfdc982aa8c0af3f",
-    "closureSha": "42fbf0a48b0431c5ce4b9e26bc0a1e47548b6534",
-    "recordCommitSha": "ceea14c20ac8604d453930d8f6c5127f00236352",
-    "runId": 32576889295,
-    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/32576889295",
+    "authorizationSha": "46c9e7e33d866b160b6f4a8f36d5b68dabe3ece4",
+    "closureSha": "e07474d5b5411dd805736687d1003f451298dae4",
+    "recordCommitSha": "3e3516299a72e47c6d85597f8c0b60db5cb11a46",
+    "runId": 32587614153,
+    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/32587614153",
     "conclusion": "success",
     "registryLoginExecuted": true,
     "imageBuildExecuted": true,
     "imagePushExecuted": true,
     "artifactCount": 2,
-    "artifactIds": [9476813865, 9476799888],
-    "imageDigest": "sha256:a91d020c6b8abfbbcca56c1ff3ff7736c155fd43d854398e42bb0e42450ec994",
+    "artifactIds": [9479502641, 9479487044],
+    "imageDigest": "sha256:80e8f57618b2bd8bbac37fd63381e454434e06b67eff0cd8f4327796bdc1c677",
     "signatureVerified": true
   },
   "priorExactPreparationShaApproved": true,

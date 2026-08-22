@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v377.public-email-rollout-deployed"
-RESULT = "public-email-rollout-deployed"
-NEXT_STAGE = "monitor-v377-public-email-delivery-and-remaining-account-gates"
+VERSION = "v377.public-email-delivery-repaired"
+RESULT = "public-email-delivery-repaired"
+NEXT_STAGE = "confirm-test-mail-arrival-and-continue-remaining-account-gates"
 SOURCE_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_HEAD = SOURCE_HEAD
 NEON_APPLIED_HEAD = SOURCE_HEAD
@@ -96,7 +96,7 @@ def main() -> int:
     )
     require_markers(
         "NEXT_CHAT_PROMPT.md",
-        "monitor-v377-public-email-delivery-and-remaining-account-gates",
+        "confirm-test-mail-arrival-and-continue-remaining-account-gates",
         "다시 전면 감사하거나 재실행하지 말고",
     )
     require_markers(

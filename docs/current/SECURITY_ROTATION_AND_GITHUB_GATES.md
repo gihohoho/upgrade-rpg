@@ -76,6 +76,20 @@
   signed digest `sha256:a91d020c6b8abfbbcca56c1ff3ff7736c155fd43d854398e42bb0e42450ec994`를 게시했고,
   Render backend `dep-da4qqi3tqb8s738l68h0`과 static `dep-da4qr867bikc73aekck0`이 live입니다.
   owner bootstrap은 실행하지 않았습니다.
+- production 메일 장애 조사에서 Brevo가 Render shared outbound IP를 차단한 사실을 확인했습니다.
+  Render 공식 CIDR `74.220.52.0/24`, `74.220.60.0/24`만 Brevo Authorized IP에 등록했고,
+  이후 인증 메일은 provider에서 Delivered로 확인됐습니다.
+- 실제 전송 뒤 outbox가 `sending`에 남은 것은 성공 finalize가 `completed_at`보다 먼저 `sent`를
+  autoflush해 DB CHECK 제약을 위반했기 때문입니다. `de3ae5d`에서 원자적 상태 설정 순서를 고치고
+  회귀 검사를 추가했습니다.
+- 사용자 승인 preparation `cd357de032425138d44323dd3060bbbf5b6a45d8`에서 authorization
+  `46c9e7e33d866b160b6f4a8f36d5b68dabe3ece4`, immediate closure
+  `e07474d5b5411dd805736687d1003f451298dae4`, evidence record
+  `3e3516299a72e47c6d85597f8c0b60db5cb11a46`를 push했습니다. GitHub Actions run
+  `32587614153`의 단일 attempt가 signed digest
+  `sha256:80e8f57618b2bd8bbac37fd63381e454434e06b67eff0cd8f4327796bdc1c677`를 게시했고,
+  Render backend `dep-da4tp7nqj5pc73b6l910`이 live입니다. 배포 뒤 공개 비밀번호 재설정 요청의
+  outbox/token은 1회 시도 `sent`, provider 기록 존재, 오류 없음으로 마감됐습니다.
 
 v376에서 기호는 이메일 인증 rollout에 한해 공개 보안 구현 → isolated migration 왕복 →
 local/Neon의 새 backup·exact migration → Brevo sender/key/secret → 테스트 메일 → 필요한

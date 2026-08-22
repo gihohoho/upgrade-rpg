@@ -5,9 +5,9 @@
 ## 상태 표식
 
 ```txt
-latest: v377.public-email-rollout-deployed
-strict result: public-email-rollout-deployed
-next safe stage: monitor-v377-public-email-delivery-and-remaining-account-gates
+latest: v377.public-email-delivery-repaired
+strict result: public-email-delivery-repaired
+next safe stage: confirm-test-mail-arrival-and-continue-remaining-account-gates
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -44,13 +44,16 @@ production approval/execution: yes/yes
 
 ## 공개 배포 상태
 
-- GitHub publish preparation `d58d093fc5ac2a4ffefa812e7067cb3083ce8a7d` 뒤 authorization `e5d8724017a446be0eabadcfdfdc982aa8c0af3f`, immediate closure `42fbf0a48b0431c5ce4b9e26bc0a1e47548b6534`, success record `ceea14c20ac8604d453930d8f6c5127f00236352`를 push했습니다.
-- GitHub Actions run `32576889295`, `run_attempt=1`은 validate, local build/SBOM/Trivy, publish/attest/sign/verify를 모두 성공했습니다. rerun은 하지 않았습니다.
-- 새 production image는 `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:a91d020c6b8abfbbcca56c1ff3ff7736c155fd43d854398e42bb0e42450ec994`입니다.
-- Render backend service에는 email/security 환경변수 35개를 key-name-only로 확인하고 secret 값 노출 없이 저장했습니다. deploy `dep-da4qqi3tqb8s738l68h0`은 새 digest로 live입니다.
+- 최초 v377 publish preparation `d58d093fc5ac2a4ffefa812e7067cb3083ce8a7d`와 GitHub Actions run `32576889295`는 기본 email/security image를 게시했습니다. 메일 finalize fix는 별도 preparation `cd357de032425138d44323dd3060bbbf5b6a45d8`과 GitHub Actions run `32587614153`, `run_attempt=1`로 게시했고 rerun하지 않았습니다.
+- 현재 production image는 `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:80e8f57618b2bd8bbac37fd63381e454434e06b67eff0cd8f4327796bdc1c677`입니다.
+- Render backend service에는 email/security 환경변수 35개를 key-name-only로 확인하고 secret 값 노출 없이 저장했습니다. deploy `dep-da4tp7nqj5pc73b6l910`은 현재 digest로 live입니다.
 - legacy static deploy `dep-da4qr867bikc73aekck0`은 commit `ceea14c20ac8604d453930d8f6c5127f00236352`를 build해 live입니다.
 - 공개 backend health는 HTTP 200입니다. 공개 인증 POST는 schema-invalid 요청에 422, 허용된 Naver 테스트 주소의 인증메일 재요청에 generic 202 accepted를 반환했고 두 응답 모두 `Cache-Control: no-store`였습니다.
 - 이전 `auth_protection_unavailable`과 “이메일 보안 설정이 아직 준비되지 않았습니다” 503은 공개 경로에서 재현되지 않습니다.
+- production 메일 장애의 첫 원인은 Brevo Authorized IP가 Render shared outbound IP를 허용하지 않은 것이었습니다. Render 공식 CIDR `74.220.52.0/24`, `74.220.60.0/24`를 등록한 뒤 실제 인증 메일이 provider에서 Delivered로 확인됐습니다.
+- 실제 전송 뒤 outbox가 `sending`에 남은 원인은 성공 finalize에서 `completed_at`보다 `sent`가 먼저 autoflush되어 DB CHECK 제약을 위반한 것이었습니다. `de3ae5d`가 필드 설정 순서를 고치고 fake autoflush 회귀를 추가했습니다.
+- fix publish preparation `cd357de032425138d44323dd3060bbbf5b6a45d8`, authorization `46c9e7e33d866b160b6f4a8f36d5b68dabe3ece4`, immediate closure `e07474d5b5411dd805736687d1003f451298dae4`, evidence record `3e3516299a72e47c6d85597f8c0b60db5cb11a46`를 push했습니다. GitHub Actions run `32587614153`, `run_attempt=1`이 취약점 차단·SBOM·provenance·Cosign 검증을 통과해 digest `sha256:80e8f57618b2bd8bbac37fd63381e454434e06b67eff0cd8f4327796bdc1c677`를 게시했습니다.
+- Render backend deploy `dep-da4tp7nqj5pc73b6l910`은 새 digest로 live이며 internal/public health가 200입니다. 배포 뒤 공개 비밀번호 재설정 요청은 202와 `no-store`, 최신 outbox/token은 1회 시도 `sent`, provider 기록 존재, 오류 없음입니다. 이미 인증된 계정의 인증메일 재전송은 의도대로 suppressed됐습니다.
 - 공개 index는 로그인·회원가입·계정 찾기·인증 도움 UI를 표시하며 admin은 미로그인 상태에서 관리자 계정 확인 gate를 표시합니다.
 
 ## 검증 결과
@@ -66,7 +69,7 @@ production approval/execution: yes/yes
 - owner bootstrap apply
 - DB reset·seed·restore·stamp·actual downgrade, production automatic retry
 - custom domain, DNS, 결제
-- 공개 테스트 메일함의 이번 재요청 메일 도착 확인과 provider log/outbox 관찰
+- 공개 테스트 메일함의 2026-08-23 02:32 KST 비밀번호 재설정 메일 도착 확인
 - server session/refresh/revoke, save revision/CAS, CSP/XSS·브라우저 token 정책, 개인정보 정책 구현
 
 ## 공개 전 필수 보강
@@ -81,9 +84,8 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. 허용된 Naver 테스트 메일함에서 공개 재요청의 실제 도착 여부를 확인합니다.
-2. secret·수신자·본문 없이 Render log와 outbox terminal 상태를 관찰합니다. 자동 재요청은 하지 않습니다.
-3. 남은 공개 계정 gate를 하나씩 구현하고 각 범위에 맞는 focused 검증을 수행합니다.
+1. 허용된 Naver 테스트 메일함에서 2026-08-23 02:32 KST 비밀번호 재설정 메일의 실제 도착 여부만 확인합니다. 서버·provider 접수와 outbox/token `sent`는 완료됐으므로 자동 재요청하지 않습니다.
+2. 남은 공개 계정 gate를 하나씩 구현하고 각 범위에 맞는 focused 검증을 수행합니다.
 
 ## 배포 주소
 

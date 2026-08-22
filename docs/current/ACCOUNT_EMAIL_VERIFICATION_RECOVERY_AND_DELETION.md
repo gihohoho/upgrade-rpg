@@ -1,9 +1,9 @@
 # 이메일 인증·계정 복구·계정 삭제 준비 — v377
 
 ```txt
-latest: v377.public-email-rollout-deployed
-strict result: public-email-rollout-deployed
-next safe stage: monitor-v377-public-email-delivery-and-remaining-account-gates
+latest: v377.public-email-delivery-repaired
+strict result: public-email-delivery-repaired
+next safe stage: confirm-test-mail-arrival-and-continue-remaining-account-gates
 public Render: backend/static v377 Live
 database migration: local/Neon v377 / apply 1회씩 / stamp·downgrade 0회
 email provider: local Brevo real Naver delivery verified / Render configured
@@ -36,6 +36,16 @@ Naver 메일 수신→링크 인증→로그인→캐릭터 슬롯 8개 진입�
 끊겨 `delivery_outcome_unknown` terminal이 됐습니다. 단일 직접 provider 진단은 2초 이내
 message ID를 정상 반환했습니다. GHCR signed image와 Render 환경변수·backend/static을
 단일 시도로 배포했고 공개 Render는 v377 live입니다.
+
+production에서 처음 인증 메일이 오지 않은 원인은 Brevo Authorized IP가 Render shared outbound
+IP를 차단한 것이었습니다. Render가 표시한 공식 CIDR `74.220.52.0/24`, `74.220.60.0/24`를
+Brevo에 등록한 뒤 실제 인증 메일은 provider에서 Delivered로 확인됐습니다. 이후 메일은 전송됐지만
+outbox 성공 finalize가 `completed_at`보다 먼저 `sent`를 autoflush해 DB CHECK 제약을 위반했고,
+`de3ae5d`에서 두 상태 필드를 await 전에 함께 설정하도록 고쳤습니다. 새 signed digest
+`sha256:80e8f57618b2bd8bbac37fd63381e454434e06b67eff0cd8f4327796bdc1c677`를 Render deploy
+`dep-da4tp7nqj5pc73b6l910`으로 배포한 뒤 공개 비밀번호 재설정 요청의 최신 outbox/token이
+1회 시도로 `sent`, provider 기록 존재, 오류 없음으로 마감됐습니다. 이미 인증된 계정의 인증메일
+재전송은 새 메일을 만들지 않고 의도대로 suppressed됩니다.
 
 ## 사용자 흐름
 

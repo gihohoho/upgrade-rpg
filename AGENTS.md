@@ -88,9 +88,9 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v377.public-email-rollout-deployed
-strict result: public-email-rollout-deployed
-next safe stage: monitor-v377-public-email-delivery-and-remaining-account-gates
+latest: v377.public-email-delivery-repaired
+strict result: public-email-delivery-repaired
+next safe stage: confirm-test-mail-arrival-and-continue-remaining-account-gates
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
