@@ -95,7 +95,15 @@ def test_static_and_lifecycle() -> dict:
 
     previous, prepared, opened, closed, recorded = lifecycle_fixture()
     require(prepared["attemptHistory"][:-1] == previous["attemptHistory"], "old attempt history changed")
-    require(prepared["attemptHistory"][-1]["imageDigest"] == OLD_IMAGE_DIGEST, "v351 attempt was not preserved")
+    current_policy = load_json(IMAGE_POLICY_PATH)["currentAttemptEvidence"]
+    require(
+        prepared["attemptHistory"][-1]["recordCommitSha"] == current_policy["recordCommitSha"],
+        "latest completed attempt was not preserved",
+    )
+    require(
+        prepared["attemptHistory"][-1]["conclusion"] == current_policy["conclusion"],
+        "latest completed attempt conclusion differs",
+    )
     require(prepared["observedAttempt"]["status"] == "not-dispatched", "fresh preparation reused old attempt")
     require(opened["publishReviewerGateReady"] is True, "owner authorization did not open the gate")
     require(closed["publishReviewerGateReady"] is False, "accepted run did not close the gate")
@@ -112,7 +120,7 @@ def test_static_and_lifecycle() -> dict:
     )
     expect_blocked(
         lambda: create_fresh_publish_preparation(prepared, policy),
-        "a second preparation from the same completed v351 evidence was accepted",
+        "a second preparation from the same completed evidence was accepted",
     )
     expect_blocked(
         lambda: record_publish_attempt(

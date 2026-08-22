@@ -288,9 +288,8 @@ def validate_static_guard(plan: dict[str, Any], *, root: Path = ROOT) -> dict[st
     observed = lifecycle.get("observedAttempt") or {}
     require(lifecycle.get("state") == "attempt-recorded", "current historical lifecycle must remain completed before fresh preparation")
     require(lifecycle.get("publishReviewerGateReady") is False, "current historical publish gate must remain closed")
-    require(observed.get("runAttempt") == 1 and observed.get("status") == "completed", "current v351 attempt evidence differs")
-    require(observed.get("imageDigest") == OLD_IMAGE_DIGEST, "current v351 image digest differs")
-    require(observed.get("signatureVerified") is True, "current v351 signature evidence differs")
+    require(observed.get("runAttempt") == 1 and observed.get("status") == "completed", "current publish attempt evidence differs")
+    _current_attempt_history_entry(lifecycle, load_json(IMAGE_POLICY_PATH))
 
     v351 = load_json(root / "deploy/review/render-v351-provider-release-v355.json")
     backend = v351.get("backend") or {}
@@ -316,18 +315,38 @@ def _current_attempt_history_entry(previous: dict[str, Any], policy: dict[str, A
     observed = previous.get("observedAttempt") or {}
     require(observed.get("runAttempt") == 1, "prior workflow rerun evidence is forbidden")
     require(observed.get("status") == "completed", "prior workflow attempt is incomplete")
-    digest = exact_digest(observed.get("imageDigest"), "prior image")
-    require(digest == OLD_IMAGE_DIGEST, "fresh v377 preparation must start from the completed v351 image")
-    require(observed.get("signatureVerified") is True, "prior signature evidence is incomplete")
-
     current = policy.get("currentAttemptEvidence") or {}
     require(current.get("authorizationSha") == authorization, "policy authorization evidence differs")
     require(current.get("closureSha") == closure_sha, "policy closure evidence differs")
     require(current.get("runId") == observed.get("runId"), "policy workflow run evidence differs")
     require(current.get("runUrl") == observed.get("runUrl"), "policy workflow URL evidence differs")
     require(current.get("conclusion") == observed.get("conclusion"), "policy workflow conclusion differs")
+    digest = observed.get("imageDigest")
+    if digest is not None:
+        exact_digest(digest, "prior image")
     require(current.get("imageDigest") == digest, "policy image digest evidence differs")
-    require(current.get("signatureVerified") is True, "policy signature evidence differs")
+    signature_verified = observed.get("signatureVerified")
+    require(isinstance(signature_verified, bool), "prior signature evidence differs")
+    require(current.get("signatureVerified") is signature_verified, "policy signature evidence differs")
+    conclusion = observed.get("conclusion")
+    require(conclusion in {
+        "success",
+        "failure",
+        "neutral",
+        "cancelled",
+        "skipped",
+        "timed_out",
+        "action_required",
+        "stale",
+        "startup_failure",
+    }, "prior workflow conclusion differs")
+    if conclusion == "success":
+        require(digest is not None, "successful prior attempt requires an image digest")
+        require(signature_verified is True, "successful prior attempt requires verified signature evidence")
+    artifact_count = current.get("artifactCount")
+    require(isinstance(artifact_count, int) and not isinstance(artifact_count, bool) and artifact_count >= 0, "policy artifact count differs")
+    for key in ("registryLoginExecuted", "imageBuildExecuted", "imagePushExecuted"):
+        require(isinstance(current.get(key), bool), f"policy {key} evidence differs")
     return {
         "preparationSha": approved,
         "authorizationSha": authorization,
@@ -339,9 +358,9 @@ def _current_attempt_history_entry(previous: dict[str, Any], policy: dict[str, A
         "registryLoginExecuted": current.get("registryLoginExecuted") is True,
         "imageBuildExecuted": current.get("imageBuildExecuted") is True,
         "imagePushExecuted": current.get("imagePushExecuted") is True,
-        "artifactCount": current.get("artifactCount"),
+        "artifactCount": artifact_count,
         "imageDigest": digest,
-        "signatureVerified": True,
+        "signatureVerified": signature_verified,
     }
 
 
@@ -349,7 +368,7 @@ def create_fresh_publish_preparation(
     previous: dict[str, Any],
     policy: dict[str, Any],
 ) -> dict[str, Any]:
-    """Reset a completed v351 lifecycle while appending immutable evidence."""
+    """Reset a completed lifecycle while appending immutable attempt evidence."""
     prior_history = previous.get("attemptHistory")
     require(isinstance(prior_history, list) and prior_history, "prior attempt history is missing")
     entry = _current_attempt_history_entry(previous, policy)
