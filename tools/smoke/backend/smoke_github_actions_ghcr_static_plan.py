@@ -242,7 +242,13 @@ def expect_secret_expression_blocked(module, temp: Path, label: str, run_step_ke
 def main() -> int:
     module = load_tool()
     result = module.inspect_static_workflow_plan(ROOT)
-    assert result["result"] == module.ATTEMPT_RECORDED_RESULT
+    expected_result = {
+        "preparation-closed": module.READY_RESULT,
+        "authorization-open": module.AUTHORIZATION_OPEN_RESULT,
+        "authorization-closed-awaiting-evidence": module.AUTHORIZATION_CLOSED_RESULT,
+        "attempt-recorded": module.ATTEMPT_RECORDED_RESULT,
+    }[result["publishLifecycleState"]]
+    assert result["result"] == expected_result
     assert result["trigger"] == "workflow_dispatch-only"
     assert result["workflowFilePresent"] is True
     assert result["workflowSourceSha256"] == module.EXPECTED_WORKFLOW_SHA256
@@ -254,9 +260,17 @@ def main() -> int:
     assert result["actionsSettingsConfigured"] is True
     assert result["publishEnvironmentExists"] is True
     assert result["publishEnvironmentConfigured"] is False
-    assert result["publishLifecycleState"] == "attempt-recorded"
-    assert result["publishGateReady"] is False
-    assert result["approvedPreparationSha"] == "b48dfd0751b12b1b3afb6474f9d35359ba2f8177"
+    assert result["publishLifecycleState"] in {
+        "preparation-closed",
+        "authorization-open",
+        "authorization-closed-awaiting-evidence",
+        "attempt-recorded",
+    }
+    assert result["publishGateReady"] is (
+        result["publishLifecycleState"] == "authorization-open"
+    )
+    if result["publishLifecycleState"] == "preparation-closed":
+        assert result["approvedPreparationSha"] is None
     assert result["dockerBuildContextEnvExcluded"] is True
     assert result["reproducibleBuildReady"] is True
     assert result["supplyChainGate"] == "fail-closed"

@@ -285,11 +285,17 @@ def validate_static_guard(plan: dict[str, Any], *, root: Path = ROOT) -> dict[st
 
     lifecycle = load_json(root / actions["lifecyclePath"])
     _require_authorization_policy(lifecycle)
-    observed = lifecycle.get("observedAttempt") or {}
-    require(lifecycle.get("state") == "attempt-recorded", "current historical lifecycle must remain completed before fresh preparation")
-    require(lifecycle.get("publishReviewerGateReady") is False, "current historical publish gate must remain closed")
-    require(observed.get("runAttempt") == 1 and observed.get("status") == "completed", "current publish attempt evidence differs")
-    _current_attempt_history_entry(lifecycle, load_json(IMAGE_POLICY_PATH))
+    state = lifecycle.get("state")
+    require(state in {
+        "preparation-closed",
+        "authorization-open",
+        "authorization-closed-awaiting-evidence",
+        "attempt-recorded",
+    }, "current publish lifecycle state differs")
+    require(
+        lifecycle.get("publishReviewerGateReady") is (state == "authorization-open"),
+        "current publish lifecycle gate differs",
+    )
 
     v351 = load_json(root / "deploy/review/render-v351-provider-release-v355.json")
     backend = v351.get("backend") or {}

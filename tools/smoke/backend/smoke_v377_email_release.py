@@ -7,6 +7,7 @@ import copy
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+import subprocess
 import sys
 
 
@@ -16,7 +17,6 @@ sys.path.insert(0, str(ROOT / "tools"))
 from prepare_v377_email_release import (  # noqa: E402
     IMAGE_POLICY_PATH,
     IMAGE_REPOSITORY,
-    LIFECYCLE_PATH,
     OLD_IMAGE_DIGEST,
     OLD_IMAGE_REFERENCE,
     PLAN_PATH,
@@ -61,8 +61,16 @@ def now_utc() -> str:
 
 
 def lifecycle_fixture() -> tuple[dict, dict, dict, dict, dict]:
-    previous = load_json(LIFECYCLE_PATH)
     policy = load_json(IMAGE_POLICY_PATH)
+    record_commit = policy["currentAttemptEvidence"]["recordCommitSha"]
+    previous = json.loads(
+        subprocess.check_output(
+            ["git", "show", f"{record_commit}:deploy/github-actions-ghcr-publish-lifecycle.json"],
+            cwd=ROOT,
+            text=True,
+            encoding="utf-8",
+        )
+    )
     prepared = create_fresh_publish_preparation(previous, policy)
     timestamp = now_utc()
     opened = open_publish_authorization(
