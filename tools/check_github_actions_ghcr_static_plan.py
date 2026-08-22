@@ -30,22 +30,22 @@ REPOSITORY = "gihohoho/upgrade-rpg"
 IMAGE_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 WORKFLOW_PATH = ".github/workflows/publish-backend-ghcr.yml"
 LIFECYCLE_PATH = "deploy/github-actions-ghcr-publish-lifecycle.json"
-LIFECYCLE_SCHEMA_VERSION = "v377.owner-only-publish-lifecycle-with-9-attempt-history"
-PRIOR_APPROVED_PREPARATION_SHA = "5d139c2a6a81d5c715bd5607b88b1406f7e75b0a"
+LIFECYCLE_SCHEMA_VERSION = "v377.owner-only-publish-lifecycle-with-10-attempt-history"
+PRIOR_APPROVED_PREPARATION_SHA = "d58d093fc5ac2a4ffefa812e7067cb3083ce8a7d"
 PRIOR_ATTEMPT_EVIDENCE = {
-    "preparationSha": "5d139c2a6a81d5c715bd5607b88b1406f7e75b0a",
-    "authorizationSha": "eba2577e677c84512836cdcc4fc654fac6f5ac2b",
-    "closureSha": "038fbfabcd1bba9db48e2946899fae5fadbf6fa4",
-    "recordCommitSha": "957f81a7e5dfbb420141561ca16c7814a45900c2",
-    "runId": 32576009404,
-    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/32576009404",
-    "conclusion": "failure",
-    "registryLoginExecuted": False,
-    "imageBuildExecuted": False,
-    "imagePushExecuted": False,
-    "artifactCount": 0,
-    "imageDigest": None,
-    "signatureVerified": False,
+    "preparationSha": "d58d093fc5ac2a4ffefa812e7067cb3083ce8a7d",
+    "authorizationSha": "e5d8724017a446be0eabadcfdfdc982aa8c0af3f",
+    "closureSha": "42fbf0a48b0431c5ce4b9e26bc0a1e47548b6534",
+    "recordCommitSha": "ceea14c20ac8604d453930d8f6c5127f00236352",
+    "runId": 32576889295,
+    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/32576889295",
+    "conclusion": "success",
+    "registryLoginExecuted": True,
+    "imageBuildExecuted": True,
+    "imagePushExecuted": True,
+    "artifactCount": 2,
+    "imageDigest": "sha256:a91d020c6b8abfbbcca56c1ff3ff7736c155fd43d854398e42bb0e42450ec994",
+    "signatureVerified": True,
 }
 ATTEMPT_HISTORY = [
     {
@@ -160,6 +160,21 @@ ATTEMPT_HISTORY = [
         "recordCommitSha": "e96f5380e5e6a96e740361e48b576c5d122c701c",
         "runId": 32575200877,
         "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/32575200877",
+        "conclusion": "failure",
+        "registryLoginExecuted": False,
+        "imageBuildExecuted": False,
+        "imagePushExecuted": False,
+        "artifactCount": 0,
+        "imageDigest": None,
+        "signatureVerified": False,
+    },
+    {
+        "preparationSha": "5d139c2a6a81d5c715bd5607b88b1406f7e75b0a",
+        "authorizationSha": "eba2577e677c84512836cdcc4fc654fac6f5ac2b",
+        "closureSha": "038fbfabcd1bba9db48e2946899fae5fadbf6fa4",
+        "recordCommitSha": "957f81a7e5dfbb420141561ca16c7814a45900c2",
+        "runId": 32576009404,
+        "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/32576009404",
         "conclusion": "failure",
         "registryLoginExecuted": False,
         "imageBuildExecuted": False,
