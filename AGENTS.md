@@ -88,16 +88,16 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v377.deployment-recovery2-source-prepared
-strict result: deployment-recovery2-source-prepared
-next safe stage: execute-v377-recovery2-roundtrip-and-neon
+latest: v377.public-email-rollout-deployed
+strict result: public-email-rollout-deployed
+next safe stage: monitor-v377-public-email-delivery-and-remaining-account-gates
 local source head: v377_auth_email_public_security
-local/Neon DB current: v377_auth_email_public_security / v295_initial_schema
-v377 apply/stamp/downgrade: local 1/0/0; Neon 0/0/0
-email rollout approval/execution: yes/local-provider-e2e-verified-deployment-started
-public backend/static: v351 Live
+local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
+v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
+email rollout approval/execution: yes/public-live
+public backend/static: v377 Live
 Render public preview: deployed
-production approval/execution: no/no
+production approval/execution: yes/yes
 ```
 
 - v371 source는 이메일 인증·복구·삭제, `authVersion`, Brevo HTTPS renderer/transport, owner bootstrap과 migration source를 준비했습니다.
@@ -117,11 +117,13 @@ production approval/execution: no/no
 - `8db9bcb`에서 synthetic isolated v295→v377→v295→v377과 local v295 custom backup 751 rows가 성공했지만, fingerprint canonicalization source 수정 뒤에는 둘 다 현재 SHA에 사용할 수 없는 stale evidence입니다.
 - 첫 local apply는 Alembic 실행 전에 cross-driver fingerprint 표현 차이를 실제 차이로 잘못 판정해 안전 중단됐습니다. apply report는 없고 local DB는 v295 그대로이며 attempt marker를 보존하므로 같은 action을 재실행하지 않습니다. Neon은 접속·backup·apply·marker가 모두 없습니다.
 - aware datetime과 Decimal fingerprint를 driver-independent하게 canonicalize했고 실제 local 751행의 asyncpg/psycopg read-only parity가 PASS했습니다. 이 source 수정으로 `8db9bcb` evidence는 현재 SHA에 stale입니다.
-- `345872a`의 새 `recovery1` namespace에서 synthetic 왕복과 fresh local backup을 다시 검증한 뒤 local DB를 v377로 정확히 1회 upgrade했습니다. 기존 22개 table 데이터 보존과 25개 model table parity가 PASS했고 Neon은 v295 그대로입니다.
+- `345872a`의 `recovery1`에서 local DB를 v377로 정확히 1회 upgrade했고, 최종 `recovery2`에서는 synthetic 왕복과 Neon fresh backup 뒤 Neon을 v377로 정확히 1회 upgrade했습니다. 두 실제 DB 모두 기존 22개 table 데이터 변화 0과 25개 model table parity를 확인했습니다.
 - v295에서 생성된 이메일 없는 기존 계정은 아이디·비밀번호 로그인을 계속 허용하되 `emailVerified=false`로 정직하게 표시합니다. 이메일이 있는 신규 계정은 링크 인증 전 계속 차단합니다.
 - Brevo 전용 API key·검증된 sender·anonymous tracking·1개월 log retention·preview 미저장을 local 범위에서 준비했고, 실제 Naver 메일 수신→링크 인증→로그인→8개 캐릭터 슬롯 진입을 확인했습니다. key와 sender 값은 ignored `backend/.env`에만 있으며 Render에는 넣지 않았습니다.
 - `delivery_outcome_unknown`은 Brevo 장애가 아니라 여러 로컬 reload worker가 겹친 실행 환경에서 provider 수락 뒤 worker ownership이 끊긴 안전 종료였습니다. 단일 직접 provider 진단은 2초 이내 message ID를 반환했고 production image는 reload 없이 worker 1개를 유지합니다.
-- 기존 recovery1 증거와 marker를 보존한 채 최종 배포 source용 `recovery2` isolated/Neon one-attempt namespace를 준비했습니다.
+- 기존 recovery1 증거와 marker를 보존한 채 `recovery2` isolated 왕복·Neon backup·Neon apply를 각각 1회 완료했습니다. reset·seed·restore·stamp·actual downgrade와 자동 retry는 실행하지 않았습니다.
+- GitHub Actions run `32576889295`의 단일 attempt가 새 signed digest `sha256:a91d020c6b8abfbbcca56c1ff3ff7736c155fd43d854398e42bb0e42450ec994`를 게시했고, Render backend deploy `dep-da4qqi3tqb8s738l68h0`와 static deploy `dep-da4qr867bikc73aekck0`이 live입니다.
+- Render에는 필수 email/security 환경변수 35개가 값 노출 없이 준비됐습니다. 공개 health는 HTTP 200이고 auth schema 오류는 422, 허용된 Naver 테스트 주소의 인증메일 재요청은 generic 202와 `Cache-Control: no-store`를 반환했습니다.
 - 공개 회원가입·새 이미지 배포 blocker는 server session/revoke, save CAS, CSP/XSS·브라우저 token, 개인정보 정책입니다. 이메일 rollout 내에서도 이 gate를 우회하지 않습니다.
 - 검증된 공개 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`, backend는 `https://upgrade-rpg-api.onrender.com`입니다.
 - 이전 배포·콘텐츠·이미지의 상세 이력은 `docs/archive/history/`와 Git history에서 필요할 때만 확인합니다.

@@ -7,12 +7,12 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v377.deployment-recovery2-source-prepared"
-RESULT = "deployment-recovery2-source-prepared"
-NEXT_STAGE = "execute-v377-recovery2-roundtrip-and-neon"
+VERSION = "v377.public-email-rollout-deployed"
+RESULT = "public-email-rollout-deployed"
+NEXT_STAGE = "monitor-v377-public-email-delivery-and-remaining-account-gates"
 SOURCE_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_HEAD = SOURCE_HEAD
-NEON_APPLIED_HEAD = "v295_initial_schema"
+NEON_APPLIED_HEAD = SOURCE_HEAD
 
 
 def read(relative: str) -> str:
@@ -41,7 +41,7 @@ def main() -> int:
             NEON_APPLIED_HEAD,
             "email-validator",
             "Brevo",
-            "v351",
+            "public backend/static: v377 Live",
         )
 
     prompt = read("NEXT_CHAT_PROMPT.md")
@@ -57,7 +57,7 @@ def main() -> int:
         "Linux runtime/musllinux/dev lock",
         "synthetic fixture",
         "migration",
-        "local v377 apply",
+        "local/Neon DB current",
         "owner bootstrap",
         "docs/reference/",
         "docs/generated/",
@@ -96,14 +96,14 @@ def main() -> int:
     )
     require_markers(
         "NEXT_CHAT_PROMPT.md",
-        "execute-v377-recovery2-roundtrip-and-neon",
-        "다시 전면 감사하지 말고",
+        "monitor-v377-public-email-delivery-and-remaining-account-gates",
+        "다시 전면 감사하거나 재실행하지 말고",
     )
     require_markers(
         "NEXT_CHAT_HANDOFF.md",
-        "실질적인 이메일 인증 기능 rollout을 승인",
-        "이 범위는 다시 승인받지 않습니다",
-        "Brevo 가입",
+        "이메일 인증 rollout",
+        "남은 공개 계정 gate",
+        "Naver 테스트",
     )
 
     for obsolete in (

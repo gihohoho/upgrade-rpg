@@ -161,12 +161,12 @@ v350 당시에는 콘텐츠 추가·수정을 시작하기 좋은 시점이 아�
 `email-validator 2.3.0` 설치·Linux lock, v377 public-security source와 private environment
 준비는 완료됐습니다. `8db9bcb` 격리 왕복·local backup은 새 canonicalization SHA에 stale이고
 첫 local apply는 Alembic 전에 안전 중단됐습니다. 기존 marker는 보존하고 `345872a`의 별도
-`recovery1` 왕복·fresh backup·local v377 apply를 각각 1회 완료했습니다. local Brevo 설정과
-실제 Naver 메일 인증·로그인·provider 응답 진단도 완료했습니다. 다음 순서는 final source의
-`recovery2` 왕복과 untouched Neon backup·exact apply입니다. 비밀번호, API key, dev key와
-token은 채팅에 보내지 않으며 owner bootstrap은 이메일 rollout과 별도입니다.
+`recovery1` local apply와 `recovery2` synthetic 왕복·Neon backup·exact v377 apply를 각각 1회
+완료했습니다. local Brevo 실제 Naver 메일 인증·로그인·provider 진단 뒤 signed backend image와
+legacy static을 각각 1회 공개 배포했습니다. static deploy `dep-da4qr867bikc73aekck0`은 commit
+`ceea14c20ac8604d453930d8f6c5127f00236352`에서 live입니다. 비밀번호, API key, dev key와 token은
+채팅에 보내지 않으며 owner bootstrap은 이메일 rollout과 별도입니다.
 
 서버측 session/refresh·기기별 폐기, 다중 기기 save revision/CAS, HTTPS/CSP/XSS와 browser
-token 저장 방식, 개인정보·삭제·법적 보존 정책, provider 실제 설정·테스트와 별도
-exact-SHA deploy gate 전에는 v377을 공개 배포하지 않습니다. 준비된 source-only release
-guard도 이 순서를 우회하지 않습니다.
+token 저장 방식, 개인정보·삭제·법적 보존 정책은 공개 회원가입 확대 전에 남은 gate입니다.
+완료된 v377 migration·publish·backend/static deploy를 단순 확인 목적으로 재실행하지 않습니다.

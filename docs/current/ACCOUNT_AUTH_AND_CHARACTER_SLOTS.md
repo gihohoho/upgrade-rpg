@@ -1,11 +1,11 @@
 # 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v377.deployment-recovery2-source-prepared
-strict result: deployment-recovery2-source-prepared
-next safe stage: execute-v377-recovery2-roundtrip-and-neon
-public Render: backend/static 모두 계속 v351
-local/Neon DB: v377 / v295
+latest: v377.public-email-rollout-deployed
+strict result: public-email-rollout-deployed
+next safe stage: monitor-v377-public-email-delivery-and-remaining-account-gates
+public Render: backend/static v377 Live
+local/Neon DB: v377 / v377
 ```
 
 v370의 로그인·캐릭터 슬롯·관리자 회원 관리 기반과 v371 이메일 identity lifecycle을
@@ -34,7 +34,7 @@ semantic email outbox와 만료된 미인증 identity의 안전한 회수를 sou
 v370은 새 테이블과 Alembic revision 없이 기존 구조를 사용했습니다. v371은 기존 행을
 거짓 이메일로 채우지 않으면서 신규 가입자의 이메일을 안전하게 관리하기 위해
 `v371_email_identity_lifecycle` revision source를 준비했습니다. v377 source head는 그
-다음 `v377_auth_email_public_security` revision이며, local DB에는 적용했고 Neon은 아직 v295입니다.
+다음 `v377_auth_email_public_security` revision이며, local/Neon DB에 각각 1회 적용했습니다.
 
 - `users`: 아이디, nullable legacy-safe 원본/정규화 이메일, 인증 시각,
   `authVersion`, bcrypt 비밀번호 해시, 활성/정지, 관리자 여부
@@ -237,9 +237,8 @@ password를 제거합니다.
 
 ## 공개 배포 전 남은 보안 보강
 
-v377은 로컬 source·migration 준비 단계이며 Render backend와 Static Site에는 배포하지
-않습니다.
-현재 공개본은 계속 v351입니다. 공개 회원가입을 열기 전 다음 항목을 별도 단계에서
+v377 source·migration·Render backend와 Static Site 배포는 완료됐습니다.
+공개 회원가입을 확대하기 전 다음 항목을 별도 단계에서
 결정하고 검증해야 합니다.
 
 1. 서버측 session/refresh token과 기기별 원격 폐기 또는 현재 access token 정책 확정
@@ -255,8 +254,8 @@ local/production의 `EMAIL_TOKEN_SECRET`·`AUTH_ABUSE_SECRET` 4개를 서로 다
 실제 값은 채팅에 보내지 않으며 local Brevo 전용 API key와 발신자 설정은 완료했습니다.
 `8db9bcb` 격리 왕복·local backup과 첫 실패 marker는 stale history로 보존했습니다.
 `345872a`의 별도 `recovery1` namespace에서 왕복·fresh backup·local v377 apply를 각각
-1회 완료했고 실제 Naver 메일 인증·로그인과 단일 provider 응답 진단도 성공했습니다. 다음
-순서는 final source의 `recovery2` 왕복과 untouched Neon backup·exact apply입니다.
+1회 완료했고 실제 Naver 메일 인증·로그인과 단일 provider 응답 진단도 성공했습니다.
+recovery2 왕복·Neon backup·exact apply와 signed backend/static 공개 배포도 각각 1회 완료했습니다.
 owner bootstrap은 승인 범위 밖의 별도 단계이고 공개 release는 남은 blocker 완료 뒤 진행합니다.
 
 ## 검증 상태
@@ -290,9 +289,9 @@ console warn/error 0입니다. 이메일 renderer의 외부 asset 0·escape 구�
 lifecycle focused source 검사 및 전체 core smoke는 PASS입니다. `8db9bcb` 격리 왕복과 local
 v295 backup 751 rows는 성공했지만 canonicalization 수정 뒤 SHA-stale입니다. 첫 local apply는
 Alembic 전에 안전 중단되어 report 없이 marker만 남았고 기존 namespace는 재사용하지 않습니다.
-`345872a` recovery1 격리 왕복·local backup·local v377 적용은 완료했습니다. 기존 22개
-table 데이터 보존과 25개 model table parity가 PASS했고 Neon은 untouched v295입니다.
+recovery1 local 적용과 recovery2 격리 왕복·Neon backup·Neon v377 적용을 완료했습니다. 기존 22개
+table 데이터 보존과 25개 model table parity가 두 실제 DB에서 PASS했습니다.
 local Brevo 설정·발송·인증·로그인은 완료했습니다. `delivery_outcome_unknown` 관찰은 여러
 local reload worker의 ownership 단절로 좁혔고 단일 provider 진단은 정상 message ID를
-반환했습니다. `recovery2` 배포 source guard를 준비했으며 owner bootstrap과 Render/GHCR
-배포는 아직 실행하지 않았습니다.
+반환했습니다. signed GHCR image와 Render backend/static은 공개 live이며 owner bootstrap은
+실행하지 않았습니다.

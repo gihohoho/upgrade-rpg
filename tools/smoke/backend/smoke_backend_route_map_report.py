@@ -14,16 +14,17 @@ RUN_SMOKE = ROOT / "tools/run_smoke_core.sh"
 
 REQUIRED_TEXT = [
     "Backend Route Map — v377",
-    "latest: v377.deployment-recovery2-source-prepared",
-    "strict result: deployment-recovery2-source-prepared",
-    "actual target v377 apply: local 1 / Neon 0",
+    "latest: v377.public-email-rollout-deployed",
+    "strict result: public-email-rollout-deployed",
+    "actual target v377 apply: local 1 / Neon 1",
     "private email environment: prepared",
     "source 8db9bcb / preserved",
     "source 345872a / verified",
     "protection store available / legacy no-email login compatible",
     "Naver delivery / link verification / login verified",
     "local multi-worker ownership diagnosed / direct provider healthy",
-    "Neon: untouched",
+    "recovery2 roundtrip/Neon backup/apply: verified / one attempt each",
+    "public backend/static: v377 live",
     "v377 이메일 계정 gate, 캐릭터 슬롯, 저장 브리지",
     "전체 route 수 | 48",
     "`DELETE` | 1",
@@ -46,7 +47,7 @@ REQUIRED_TEXT = [
     "POST /api/v1/admin/master-data/create-apply",
     "POST /api/v1/game/save",
     "query 이름은 `id`",
-    "execute-v377-recovery2-roundtrip-and-neon",
+    "monitor-v377-public-email-delivery-and-remaining-account-gates",
 ]
 
 FORBIDDEN_TEXT = [

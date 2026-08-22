@@ -5,19 +5,20 @@
 중요: v377 local migration과 인증 요청 보호 복구는 완료됐습니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
 
 ```txt
-latest: v377.deployment-recovery2-source-prepared
-strict result: deployment-recovery2-source-prepared
+latest: v377.public-email-rollout-deployed
+strict result: public-email-rollout-deployed
 source head: v377_auth_email_public_security
-local/Neon DB current: v377_auth_email_public_security / v295_initial_schema
-actual target v377 apply: local 1 / Neon 0
+local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
+actual target v377 apply: local 1 / Neon 1
 private email environment: prepared
 legacy stale evidence: source 8db9bcb / preserved
 recovery1 roundtrip/local backup/apply: source 345872a / verified
 local auth POST: protection store available / legacy no-email login compatible
 local Brevo E2E: Naver delivery / link verification / login verified
 provider finalize: local multi-worker ownership diagnosed / direct provider healthy
-Neon: untouched
-next safe stage: execute-v377-recovery2-roundtrip-and-neon
+recovery2 roundtrip/Neon backup/apply: verified / one attempt each
+public backend/static: v377 live
+next safe stage: monitor-v377-public-email-delivery-and-remaining-account-gates
 ```
 
 ## 생성 방식
@@ -206,18 +207,14 @@ next safe stage: execute-v377-recovery2-roundtrip-and-neon
 
 ## 다음 추천 단계
 
-`next safe stage: execute-v377-recovery2-roundtrip-and-neon`
+`next safe stage: monitor-v377-public-email-delivery-and-remaining-account-gates`
 
-private environment와 local migration은 완료했습니다. 이전 source `8db9bcb`의
-stale evidence와 실패 marker는 보존했고, source `345872a`의 별도 recovery1
-왕복·backup·local v377 apply를 각각 1회 검증했습니다. 인증 POST는 보호 store를 정상
-사용하고 이메일 없는 legacy 계정은 기존 로그인을 유지합니다. Neon은 untouched이며
-local Brevo E2E는 완료했고 owner bootstrap·Render Brevo 설정·배포는 여전히 별도입니다.
+private environment, local migration, recovery2 synthetic 왕복·Neon backup·exact v377 apply,
+signed backend image와 legacy static의 공개 배포를 승인된 단일 시도로 완료했습니다.
+인증 POST는 공개 서비스에서 422/202와 `Cache-Control: no-store` 계약을 확인했습니다.
 
 권장 범위:
 
-1. final clean pushed source에서 새 `recovery2` synthetic 왕복을 1회 실행합니다.
-2. 같은 SHA와 report로 untouched Neon backup·exact v377 apply를 각각 1회 실행합니다.
-3. Neon 확인 뒤 fresh signed backend image와 Render/static 단일 배포를 진행합니다.
-4. 서버측 session/revoke, save revision/CAS, CSP/XSS·브라우저 token과 개인정보 정책은 공개 회원가입을 열기 전에 마저 완료합니다.
-5. backend image와 legacy static은 모든 공개 gate가 닫힌 뒤 같은 exact-SHA 단위로 게시·배포합니다.
+1. 허용된 Naver 테스트 메일의 공개 delivery와 outbox terminal 상태를 값 노출 없이 관찰합니다.
+2. 서버측 session/revoke, save revision/CAS, CSP/XSS·브라우저 token과 개인정보 정책을 완료합니다.
+3. 완료된 migration·publish·Render deploy는 단순 확인을 위해 재실행하지 않습니다.

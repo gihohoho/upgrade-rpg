@@ -1,13 +1,13 @@
 # 이메일 인증·계정 복구·계정 삭제 준비 — v377
 
 ```txt
-latest: v377.deployment-recovery2-source-prepared
-strict result: deployment-recovery2-source-prepared
-next safe stage: execute-v377-recovery2-roundtrip-and-neon
-public Render: backend/static 모두 계속 v351
-database migration: local v377 / Neon v295 / local apply 1회 / stamp·downgrade 0회
-email provider: local Brevo configured and real Naver delivery verified / Render pending
-email rollout approval/execution: yes/local-provider-e2e-verified-deployment-started
+latest: v377.public-email-rollout-deployed
+strict result: public-email-rollout-deployed
+next safe stage: monitor-v377-public-email-delivery-and-remaining-account-gates
+public Render: backend/static v377 Live
+database migration: local/Neon v377 / apply 1회씩 / stamp·downgrade 0회
+email provider: local Brevo real Naver delivery verified / Render configured
+email rollout approval/execution: yes/public-live
 ```
 
 ## v376 실행 승인
@@ -27,15 +27,15 @@ semantic outbox를 source로 준비합니다. 가입은 아이디와 이메일�
 private environment 준비는 security artifact 535개의 ACL을 비공개로 고정하고 local/production에
 서로 다른 email/abuse secret 4개를 값 출력 없이 생성해 완료했습니다. `8db9bcb`의 synthetic
 isolated 왕복과 local v295 custom backup 751 rows도 각각 1회 성공했지만 canonicalization 수정
-뒤에는 SHA-stale입니다. 이후 `345872a`의 별도 recovery1 왕복·backup을 성공하고 local만
-v377로 1회 upgrade했습니다. Neon은 v295이고 stamp·downgrade는 0회입니다.
+뒤에는 SHA-stale입니다. 이후 recovery1에서 local을, recovery2에서 Neon을 fresh backup과
+함께 v377로 각각 1회 upgrade했습니다. stamp·downgrade는 0회입니다.
 Brevo 프로젝트 전용 API key·검증된 sender와 privacy 설정을 local 범위에서 준비하고 실제
 Naver 메일 수신→링크 인증→로그인→캐릭터 슬롯 8개 진입까지 확인했습니다. 첫 발송은 local
 호출 IP 미허용으로 401 terminal 실패했고 자동 재시도하지 않았습니다. IP 허용 뒤 새 요청은
 실제 전달됐지만 여러 local reload worker가 겹친 환경에서 provider 수락 뒤 worker ownership이
 끊겨 `delivery_outcome_unknown` terminal이 됐습니다. 단일 직접 provider 진단은 2초 이내
-message ID를 정상 반환했습니다. GHCR 게시, Render 환경변수 변경과
-backend/static 배포는 실행하지 않았습니다. 공개 Render는 계속 v351입니다.
+message ID를 정상 반환했습니다. GHCR signed image와 Render 환경변수·backend/static을
+단일 시도로 배포했고 공개 Render는 v377 live입니다.
 
 ## 사용자 흐름
 
@@ -78,7 +78,7 @@ jitter를 적용합니다. 서버는 공급자 timeout이나 결과 불명 호�
 ## DB migration 준비
 
 Alembic source는 `v295_initial_schema` → `v371_email_identity_lifecycle` →
-`v377_auth_email_public_security` 순서입니다. local DB는 v377이고 Neon은 여전히 v295입니다.
+`v377_auth_email_public_security` 순서입니다. local/Neon DB는 모두 v377입니다.
 v371 revision은 다음 identity 구조를 추가하도록 준비합니다.
 
 `users` 추가 열:
@@ -113,14 +113,14 @@ v377 revision은 다음 두 테이블을 추가하도록 준비합니다.
   상태, 최대 1회의 provider attempt와 제한된 message ID/error code만 저장하며 수신자,
   원문 token, 제목·본문은 저장하지 않음
 
-두 revision은 local DB에 적용했고 Neon은 아직 v295입니다. `8db9bcb`의 synthetic 왕복과
+두 revision은 local/Neon DB에 적용했습니다. `8db9bcb`의 synthetic 왕복과
 local backup, 첫 실패 marker는 역사 증거로 보존합니다. `345872a`의 별도 recovery1
 namespace에서 새 왕복·backup·local apply를 각각 1회 완료했고 기존 22개 table 데이터
 변화 0과 25개 model table parity를 확인했습니다.
 
-다음 단계는 기존 marker·evidence를 보존한 새 `recovery2` namespace에서 final clean pushed
-source의 isolated 왕복과 untouched Neon backup·apply를 각각 1회 수행하는 것입니다. 동일 메일
-자동 재시도나 기존 action 재실행은 하지 않습니다.
+recovery2 isolated 왕복·Neon backup·apply는 각각 1회 완료했습니다. 다음 단계는 공개 테스트
+메일 delivery와 outbox terminal 상태를 값 노출 없이 관찰하는 것입니다. 동일 메일 자동 재시도나
+기존 action 재실행은 하지 않습니다.
 
 일반 `alembic upgrade head`, `stamp`, 자동 startup migration은 사용하지 않습니다. 실제
 target apply는 lock/statement timeout, exact source·target·action·backup 확인을 모두 갖춘
@@ -366,10 +366,10 @@ v377 source가 아래 항목을 모두 끝내는 것은 아닙니다. 공개 회
 2. 완료: Brevo 계정·발신자·privacy 설정·전용 API key와 local 설정
 3. 완료: 실제 Naver 메일과 가입·인증·로그인·캐릭터 슬롯 진입
 4. 완료: local multi-worker ownership 단절과 단일 provider 정상 응답 진단
-5. 현재: final source의 recovery2 왕복 뒤 untouched Neon backup·exact apply
-6. 비밀번호 복구와 account deletion 실제 메일 흐름 확인
-7. server session/revoke, save CAS, CSP/XSS/browser token, 개인정보 gate 완료
-8. exact v377 backend/static 준비·게시·배포와 rollback 확인
+5. 완료: final source의 recovery2 왕복·Neon backup·exact apply
+6. 완료: exact v377 backend/static 준비·게시·배포와 공개 422/202/health 확인
+7. 현재: 공개 delivery와 outbox terminal 상태 관찰
+8. server session/revoke, save CAS, CSP/XSS/browser token, 개인정보 gate 완료
 ```
 
 v376에서 승인된 이메일 rollout의 정상 범위와 이번 local recovery 요청은 이어집니다. Brevo
@@ -406,6 +406,6 @@ Browser URL 정책이 `data:` 이메일 HTML 미리보기를 차단해 우회하
 기존 v371 browser 결과는 과거 baseline의 PASS이며 v377 전체
 `bash tools/run_smoke_core.sh`도 backend `.venv`·`DEBUG=false` 조건에서 PASS했습니다.
 `8db9bcb` migration evidence는 stale history로 보존했고 `345872a` recovery1 왕복·backup·local
-apply는 성공했습니다. local DB는 v377이고 인증 보호 503은 사라졌으며 Neon은 v295입니다.
-이 결과는 Neon migration·owner bootstrap·공개 배포 완료를 뜻하지 않습니다. local 실제 메일은
-완료했고 provider finalize 관찰은 local multi-worker 실행 상태로 좁혔습니다. Neon·공개 배포는 남아 있습니다.
+apply는 성공했습니다. local/Neon DB는 v377이고 인증 보호 503은 사라졌습니다.
+signed backend image와 static은 공개 live이며 owner bootstrap은 실행하지 않았습니다. local 실제 메일은
+완료했고 다음은 공개 delivery와 provider/outbox 상태 관찰입니다.

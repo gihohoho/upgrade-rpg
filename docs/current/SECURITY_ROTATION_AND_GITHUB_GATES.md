@@ -1,11 +1,11 @@
 # Security rotation and GitHub gates — v377
 
-## v377 local email E2E verified — 2026-08-22
+## v377 public email rollout deployed — 2026-08-22
 
 - Alembic source head는 `v295_initial_schema` → `v371_email_identity_lifecycle` →
   `v377_auth_email_public_security`입니다. v377은 `auth_rate_limit_buckets`와
-  `auth_email_outbox`를 추가했고 local DB에는 v377을 적용했습니다. Neon은 v295이며 아직
-  apply·stamp하지 않았습니다.
+  `auth_email_outbox`를 추가했고 local/Neon DB에 v377을 각각 정확히 1회 적용했습니다.
+  Neon stamp·downgrade·restore·reset·seed는 실행하지 않았습니다.
 - 인증 rate bucket은 IP·이메일·아이디·user·action token 원문 대신 별도
   `AUTH_ABUSE_SECRET` HMAC-SHA256 digest와 source-controlled scope만 PostgreSQL에
   저장합니다. 반복 실패 cooldown·응답 지연과 오래된 bucket retention도 DB 상태를
@@ -56,7 +56,7 @@
   private exclusive marker를 남겨 성공·실패 후 같은 시도를 다시 실행하지 못하게 합니다.
 - Brevo account와 검증된 sender, 1개월 만료 project API key, anonymous tracking, 1개월
   log retention, preview 미저장을 local 범위에서 준비했습니다. key와 sender 값은 ignored
-  `backend/.env`에만 있고 Render secret에는 아직 전달하지 않았습니다. 일반 Brevo API key는
+  `backend/.env`에 보존하고 Render에는 필요한 값만 UI를 통해 전달했습니다. 일반 Brevo API key는
   account-wide 권한이므로 노출·미사용·integration 종료 시 삭제합니다.
 - local 호출 IP 허용 뒤 실제 Naver 메일 수신, 링크 인증과 로그인을 확인했습니다. 실제 전달된
   요청의 `delivery_outcome_unknown`은 여러 local reload worker의 ownership 단절로 좁혔고,
@@ -71,9 +71,11 @@
   evidence를 요구합니다. `smoke_v377_email_release.py`가 과거 v351 evidence·digest·deploy ID
   재사용과 secret value·provider endpoint 기록을 차단하는 source 계약을 검증했습니다.
   기본 guard는 외부 network/provider mutation을 하지 않으며 배포 승인이나 실행이 아닙니다.
-- local DB는 `345872a` recovery1 evidence로 v377에 적용했습니다. Neon migration,
-  owner bootstrap, GitHub Actions·GHCR 게시, Render env·서비스·deploy는 실행하지 않았고
-  공개 backend/static은 계속 v351입니다.
+- local DB는 recovery1 evidence로, Neon은 recovery2 synthetic 왕복과 fresh backup evidence로
+  v377에 각각 정확히 1회 적용했습니다. GitHub Actions run `32576889295`의 단일 attempt가
+  signed digest `sha256:a91d020c6b8abfbbcca56c1ff3ff7736c155fd43d854398e42bb0e42450ec994`를 게시했고,
+  Render backend `dep-da4qqi3tqb8s738l68h0`과 static `dep-da4qr867bikc73aekck0`이 live입니다.
+  owner bootstrap은 실행하지 않았습니다.
 
 v376에서 기호는 이메일 인증 rollout에 한해 공개 보안 구현 → isolated migration 왕복 →
 local/Neon의 새 backup·exact migration → Brevo sender/key/secret → 테스트 메일 → 필요한
@@ -82,12 +84,11 @@ backend/static release 준비를 한 범위로 승인했습니다. 정상 경로
 namespace와 exact 범위를 별도로 승인받습니다. Codex가 대신할 수 없는 Brevo 가입·발신자
 소유 확인·privacy 설정·API key 입력은 완료했으며 owner bootstrap은 이 승인과 분리합니다.
 
-첫 local apply의 safe-stop evidence는 보존했고, 별도 `recovery1` namespace에서 synthetic
-왕복·fresh backup·local v377 apply를 각각 1회 완료했습니다. Neon은 접속·backup·apply·marker가
-모두 없습니다. 기존 recovery1과 분리된 `recovery2` one-attempt guard를 준비했으며 다음 안전
-단계는 final clean pushed source의 isolated 왕복과 untouched Neon backup·apply입니다. 공개
-blocker는 서버 session/refresh·기기별 폐기, save revision/CAS, CSP/XSS와 browser token,
-개인정보·법적 보존 정책, Render key 회전·단일 worker 운영, exact deploy입니다. 자세한 계약은
+첫 local apply의 safe-stop evidence는 보존했고, 별도 recovery1/recovery2 namespace에서 local과
+Neon의 synthetic 왕복·fresh backup·exact v377 apply를 각각 1회 완료했습니다. 공개 health 200,
+auth 422/202와 `Cache-Control: no-store`를 확인했습니다. 다음 안전 단계는 공개 delivery 관찰과
+서버 session/refresh·기기별 폐기, save revision/CAS, CSP/XSS와 browser token,
+개인정보·법적 보존 정책입니다. 자세한 계약은
 `ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md`에 있습니다. source-only release guard는
 이 blocker를 해제하거나 우회하지 않습니다.
 
