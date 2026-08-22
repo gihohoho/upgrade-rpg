@@ -12,7 +12,7 @@
   "workflowSourceSha256": "3331484f280a12a239275785bef625f18656c62ccbe33e8707a296ac2e204843",
   "workflowSemanticSha256": "526c4d21f9bc223e25829f60bf804f9167f6905b9129ffe1e70d85f354d57126",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
-  "publishLifecycleSchemaVersion": "v377.owner-only-publish-lifecycle-with-8-attempt-history",
+  "publishLifecycleSchemaVersion": "v377.owner-only-publish-lifecycle-with-9-attempt-history",
   "workflowFilePresent": true,
   "workflowCreationApproved": true,
   "workflowExecutionApproved": true,

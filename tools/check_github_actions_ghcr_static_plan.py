@@ -30,15 +30,15 @@ REPOSITORY = "gihohoho/upgrade-rpg"
 IMAGE_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 WORKFLOW_PATH = ".github/workflows/publish-backend-ghcr.yml"
 LIFECYCLE_PATH = "deploy/github-actions-ghcr-publish-lifecycle.json"
-LIFECYCLE_SCHEMA_VERSION = "v377.owner-only-publish-lifecycle-with-8-attempt-history"
-PRIOR_APPROVED_PREPARATION_SHA = "b97132bc02affdc75060763d1666993f52c586b2"
+LIFECYCLE_SCHEMA_VERSION = "v377.owner-only-publish-lifecycle-with-9-attempt-history"
+PRIOR_APPROVED_PREPARATION_SHA = "5d139c2a6a81d5c715bd5607b88b1406f7e75b0a"
 PRIOR_ATTEMPT_EVIDENCE = {
-    "preparationSha": "b97132bc02affdc75060763d1666993f52c586b2",
-    "authorizationSha": "81fe87632832ccade0f333f2d71602abbe92a308",
-    "closureSha": "54b97e015785d26e0232327eb7bd94386e5da428",
-    "recordCommitSha": "e96f5380e5e6a96e740361e48b576c5d122c701c",
-    "runId": 32575200877,
-    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/32575200877",
+    "preparationSha": "5d139c2a6a81d5c715bd5607b88b1406f7e75b0a",
+    "authorizationSha": "eba2577e677c84512836cdcc4fc654fac6f5ac2b",
+    "closureSha": "038fbfabcd1bba9db48e2946899fae5fadbf6fa4",
+    "recordCommitSha": "957f81a7e5dfbb420141561ca16c7814a45900c2",
+    "runId": 32576009404,
+    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/32576009404",
     "conclusion": "failure",
     "registryLoginExecuted": False,
     "imageBuildExecuted": False,
@@ -152,6 +152,21 @@ ATTEMPT_HISTORY = [
         "artifactCount": 2,
         "imageDigest": "sha256:143be5eb21ec8c9318c7d0c4f3fbd5ac2de32439977a1d660c7247b6d3a507ac",
         "signatureVerified": True,
+    },
+    {
+        "preparationSha": "b97132bc02affdc75060763d1666993f52c586b2",
+        "authorizationSha": "81fe87632832ccade0f333f2d71602abbe92a308",
+        "closureSha": "54b97e015785d26e0232327eb7bd94386e5da428",
+        "recordCommitSha": "e96f5380e5e6a96e740361e48b576c5d122c701c",
+        "runId": 32575200877,
+        "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/32575200877",
+        "conclusion": "failure",
+        "registryLoginExecuted": False,
+        "imageBuildExecuted": False,
+        "imagePushExecuted": False,
+        "artifactCount": 0,
+        "imageDigest": None,
+        "signatureVerified": False,
     },
     {**PRIOR_ATTEMPT_EVIDENCE},
 ]
