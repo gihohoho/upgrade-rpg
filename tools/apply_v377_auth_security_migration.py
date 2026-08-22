@@ -72,6 +72,7 @@ from run_v377_auth_security_migration_roundtrip import (
     ISOLATED_DATABASE,
     LOCK_TIMEOUT_MS,
     PROCESS_TIMEOUT_SECONDS,
+    RECOVERY_NAMESPACE,
     REVISION_SHA256,
     REPORT_PATH as ROUNDTRIP_REPORT_PATH,
     ROOT,
@@ -110,9 +111,9 @@ EXPECTED_V295_APPLICATION_SCHEMA_DIGEST = (
     "7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921"
 )
 BACKUP_MAX_AGE_SECONDS = 4 * 60 * 60
-TOOL_VERSION = "v377.auth-security-target-backup-apply-guard.v3"
-BACKUP_ACTION = "create-fresh-v295-custom-backup-for-v377"
-APPLY_ACTION = "apply-exact-v377-upgrade-once-no-downgrade"
+TOOL_VERSION = "v377.auth-security-target-backup-apply-guard.recovery1.v4"
+BACKUP_ACTION = "create-fresh-v295-custom-backup-for-v377-recovery1"
+APPLY_ACTION = "apply-exact-v377-upgrade-recovery1-once-no-downgrade"
 ALEMBIC_TARGET_APPLICATION_NAME = "upgrade-rpg-v377-target-migration"
 DIGEST_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 ROUNDTRIP_MTIME_TOLERANCE_SECONDS = 60
@@ -203,7 +204,8 @@ def _attempt_marker_path(target: TargetSpec, action: str) -> Path:
     require(action in kinds, "migration attempt action differs")
     require(target.label in {"local", "neon"}, "migration attempt target differs")
     return REPORT_DIRECTORY / (
-        f"v377_auth_security.{target.label}.{kinds[action]}-attempt.json"
+        f"v377_auth_security.{RECOVERY_NAMESPACE}.{target.label}."
+        f"{kinds[action]}-attempt.json"
     )
 
 
@@ -998,7 +1000,10 @@ def create_fresh_backup(
     before = collect_target_state(target)
     validate_base_target(before, target)
     timestamp = datetime.now(timezone(timedelta(hours=9))).strftime("%Y%m%d_%H%M%S_KST")
-    base_name = f"{target.label}_{target.database}_{timestamp}_pre_v377.custom.dump"
+    base_name = (
+        f"{target.label}_{target.database}_{timestamp}_pre_v377_"
+        f"{RECOVERY_NAMESPACE}.custom.dump"
+    )
     dump_path = _ensure_inside(BACKUP_DIRECTORY, BACKUP_DIRECTORY / base_name)
     partial_dump_path = dump_path.with_name(f".{dump_path.name}.partial")
     checksum_path = dump_path.with_name(f"{dump_path.name}.sha256")
@@ -1665,7 +1670,9 @@ def apply_exact_upgrade(
         "automaticRetry": False,
         "secretOrEndpointRecorded": False,
     }
-    path = REPORT_DIRECTORY / f"v377_auth_security.{target.label}.apply.json"
+    path = REPORT_DIRECTORY / (
+        f"v377_auth_security.{RECOVERY_NAMESPACE}.{target.label}.apply.json"
+    )
     try:
         ensure_private_path_location(ROOT, path)
         verify_private_directory(REPORT_DIRECTORY)

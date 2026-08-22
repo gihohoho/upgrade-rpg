@@ -338,6 +338,37 @@ def source_state_fixture() -> dict[str, Any]:
 
 
 def test_isolated_roundtrip_guard() -> None:
+    legacy_database = "rpg_game_v377_auth_security_roundtrip"
+    legacy_report = ROOT / "local-review-artifacts/alembic/v377_auth_security.roundtrip.json"
+    require(roundtrip.RECOVERY_NAMESPACE == "recovery1", "recovery namespace differs")
+    require(
+        roundtrip.ISOLATED_DATABASE != legacy_database
+        and roundtrip.RECOVERY_NAMESPACE in roundtrip.ISOLATED_DATABASE,
+        "recovery round-trip database can reuse the consumed legacy target",
+    )
+    require(
+        roundtrip.REPORT_PATH != legacy_report
+        and roundtrip.RECOVERY_NAMESPACE in roundtrip.REPORT_PATH.name,
+        "recovery round-trip report can overwrite consumed evidence",
+    )
+    require(
+        roundtrip.RECOVERY_NAMESPACE in roundtrip.EXECUTION_ACTION,
+        "recovery round-trip confirmation is not independently namespaced",
+    )
+    require(
+        target_guard.RECOVERY_NAMESPACE == roundtrip.RECOVERY_NAMESPACE
+        and roundtrip.RECOVERY_NAMESPACE in target_guard.BACKUP_ACTION
+        and roundtrip.RECOVERY_NAMESPACE in target_guard.APPLY_ACTION,
+        "target recovery actions are not tied to the round-trip namespace",
+    )
+    recovery_target = type("RecoveryTarget", (), {"label": "local"})()
+    for action in (target_guard.BACKUP_ACTION, target_guard.APPLY_ACTION):
+        marker = target_guard._attempt_marker_path(recovery_target, action)  # noqa: SLF001
+        require(
+            roundtrip.RECOVERY_NAMESPACE in marker.name,
+            "recovery target marker can collide with a consumed legacy marker",
+        )
+
     contract = roundtrip.validate_revision_contract(ROOT)
     require(contract["head"] == roundtrip.HEAD_REVISION, "revision contract head differs")
     require(
