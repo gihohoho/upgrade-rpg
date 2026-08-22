@@ -66,6 +66,7 @@ ISOLATED_DATABASE = f"rpg_game_v377_auth_security_{RECOVERY_NAMESPACE}_roundtrip
 BASE_REVISION = "v295_initial_schema"
 EMAIL_REVISION = "v371_email_identity_lifecycle"
 HEAD_REVISION = "v377_auth_email_public_security"
+SOURCE_CURRENT_REVISION = HEAD_REVISION
 REVISION_FILES = {
     BASE_REVISION: "v295_initial_schema_initial_postgresql_schema.py",
     EMAIL_REVISION: "v371_email_identity_lifecycle.py",
@@ -89,7 +90,7 @@ PROCESS_TIMEOUT_SECONDS = 150
 CONNECT_TIMEOUT_SECONDS = 20
 ALEMBIC_GUARD_MODE = "v377"
 ALEMBIC_ISOLATED_APPLICATION_NAME = "upgrade-rpg-v377-isolated-migration"
-TOOL_VERSION = "v377.auth-security-isolated-roundtrip-guard.recovery2.v1"
+TOOL_VERSION = "v377.auth-security-isolated-roundtrip-guard.recovery2.v2"
 REPORT_PATH = ROOT / (
     f"local-review-artifacts/alembic/v377_auth_security.{RECOVERY_NAMESPACE}.roundtrip.json"
 )
@@ -517,18 +518,17 @@ def collect_state(database: str) -> dict[str, Any]:
 
 def validate_source_state(state: dict[str, Any]) -> None:
     require(state.get("database") == SOURCE_DATABASE, "source DB identity differs")
-    require(state.get("revision") == [BASE_REVISION], "source DB must remain at exact v295")
     require(
-        state.get("publicTableCount") == EXPECTED_BASE_PUBLIC_TABLES,
-        "source v295 public table count differs",
+        state.get("revision") == [SOURCE_CURRENT_REVISION],
+        "source DB must remain at exact v377",
     )
     require(
-        len(state.get("publicTables") or []) == EXPECTED_BASE_PUBLIC_TABLES,
-        "source v295 public table list differs",
+        state.get("publicTableCount") == EXPECTED_HEAD_PUBLIC_TABLES,
+        "source v377 public table count differs",
     )
     require(
-        state.get("schemaDigest") == EXPECTED_V295_APPLICATION_SCHEMA_DIGEST,
-        "source v295 application schema digest differs",
+        len(state.get("publicTables") or []) == EXPECTED_HEAD_PUBLIC_TABLES,
+        "source v377 public table list differs",
     )
     for table in (
         "user_email_action_tokens",
@@ -536,8 +536,8 @@ def validate_source_state(state: dict[str, Any]) -> None:
         "auth_rate_limit_buckets",
     ):
         require(
-            table not in (state.get("publicTables") or []),
-            f"source v295 unexpectedly contains {table}",
+            table in (state.get("publicTables") or []),
+            f"source v377 is missing {table}",
         )
 
 
@@ -616,7 +616,11 @@ def model_table_differences(
     return differences
 
 
-def validate_model_parity(database: str) -> dict[str, Any]:
+def validate_model_parity(
+    database: str,
+    *,
+    synthetic_fixture_required: bool = True,
+) -> dict[str, Any]:
     verify_local_environment_file()
     settings, Base = load_backend_objects(ROOT)
     del settings
@@ -638,15 +642,16 @@ def validate_model_parity(database: str) -> dict[str, Any]:
                     )
                 )
             require(not differences, "v377 DB/model schema parity differs")
-            fixture = connection.execute(
-                text(
-                    "SELECT email_original, email_canonical, email_verified_at, auth_version "
-                    "FROM users WHERE username = :username"
-                ),
-                {"username": "v377_synthetic_legacy_user"},
-            ).one()
-            require(tuple(fixture[:3]) == (None, None, None), "legacy email columns were backfilled")
-            require(int(fixture[3]) == 0, "legacy auth_version default differs")
+            if synthetic_fixture_required:
+                fixture = connection.execute(
+                    text(
+                        "SELECT email_original, email_canonical, email_verified_at, auth_version "
+                        "FROM users WHERE username = :username"
+                    ),
+                    {"username": "v377_synthetic_legacy_user"},
+                ).one()
+                require(tuple(fixture[:3]) == (None, None, None), "legacy email columns were backfilled")
+                require(int(fixture[3]) == 0, "legacy auth_version default differs")
             return {"modelTableCount": len(model_tables), "differenceCount": 0}
     except V377RoundTripError:
         raise
@@ -765,6 +770,7 @@ def inspect_readiness(
     *,
     catalog: dict[str, dict[str, Any]] | None = None,
     source_state: dict[str, Any] | None = None,
+    source_model_parity: dict[str, int] | None = None,
     report_root: Path = ROOT,
     report_path: Path = REPORT_PATH,
 ) -> dict[str, Any]:
@@ -775,13 +781,24 @@ def inspect_readiness(
     require(ISOLATED_DATABASE not in observed_catalog, "fixed isolated database already exists")
     observed_source = source_state if source_state is not None else collect_state(SOURCE_DATABASE)
     validate_source_state(observed_source)
+    observed_source_parity = (
+        source_model_parity
+        if source_model_parity is not None
+        else validate_model_parity(SOURCE_DATABASE, synthetic_fixture_required=False)
+    )
+    require(
+        observed_source_parity
+        == {"modelTableCount": EXPECTED_HEAD_APPLICATION_TABLES, "differenceCount": 0},
+        "source v377 model parity differs",
+    )
     return {
         "toolVersion": TOOL_VERSION,
         "result": "ready-for-v377-isolated-roundtrip-execution",
         "readOnly": True,
         "mutationExecuted": False,
         "sourceDatabase": SOURCE_DATABASE,
-        "sourceCurrentRevision": BASE_REVISION,
+        "sourceCurrentRevision": SOURCE_CURRENT_REVISION,
+        "sourceModelParity": observed_source_parity,
         "targetDatabase": ISOLATED_DATABASE,
         "targetAbsent": True,
         "revisionContract": contract,
@@ -810,7 +827,8 @@ def execute_roundtrip(*, source_sha: str) -> dict[str, Any]:
         "startedAtUtc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "preparationCommitSha": source_sha,
         "sourceDatabase": SOURCE_DATABASE,
-        "sourceCurrentRevision": BASE_REVISION,
+        "sourceCurrentRevision": SOURCE_CURRENT_REVISION,
+        "sourceModelParity": readiness["sourceModelParity"],
         "targetDatabase": ISOLATED_DATABASE,
         "revisionContract": readiness["revisionContract"],
         "syntheticFixtureOnly": True,
@@ -942,7 +960,10 @@ def main() -> int:
             result = inspect_readiness()
             print("v377 isolated migration readiness (read-only)")
             print(f"- result: {result['result']}")
-            print(f"- source current / target head: {BASE_REVISION} / {HEAD_REVISION}")
+            print(
+                f"- source current / synthetic base / target head: "
+                f"{SOURCE_CURRENT_REVISION} / {BASE_REVISION} / {HEAD_REVISION}"
+            )
             print("- DB mutation attempted: no")
             return 0
 

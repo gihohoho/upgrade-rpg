@@ -78,6 +78,7 @@ from run_v377_auth_security_migration_roundtrip import (
     ROOT,
     SHA_PATTERN,
     SOURCE_DATABASE,
+    SOURCE_CURRENT_REVISION,
     SOURCE_DATABASE_PORT,
     SOURCE_DATABASE_USER,
     STATEMENT_TIMEOUT_MS,
@@ -111,7 +112,7 @@ EXPECTED_V295_APPLICATION_SCHEMA_DIGEST = (
     "7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921"
 )
 BACKUP_MAX_AGE_SECONDS = 4 * 60 * 60
-TOOL_VERSION = "v377.auth-security-target-backup-apply-guard.recovery2.v1"
+TOOL_VERSION = "v377.auth-security-target-backup-apply-guard.recovery2.v2"
 BACKUP_ACTION = "create-fresh-v295-custom-backup-for-v377-recovery2"
 APPLY_ACTION = "apply-exact-v377-upgrade-recovery2-once-no-downgrade"
 ALEMBIC_TARGET_APPLICATION_NAME = "upgrade-rpg-v377-target-migration"
@@ -752,6 +753,7 @@ def validate_roundtrip_payload(
         "preparationCommitSha",
         "sourceDatabase",
         "sourceCurrentRevision",
+        "sourceModelParity",
         "targetDatabase",
         "revisionContract",
         "syntheticFixtureOnly",
@@ -777,7 +779,11 @@ def validate_roundtrip_payload(
         "result": "v377-isolated-upgrade-downgrade-reupgrade-verified",
         "preparationCommitSha": source_sha,
         "sourceDatabase": SOURCE_DATABASE,
-        "sourceCurrentRevision": BASE_REVISION,
+        "sourceCurrentRevision": SOURCE_CURRENT_REVISION,
+        "sourceModelParity": {
+            "modelTableCount": EXPECTED_HEAD_APPLICATION_TABLES,
+            "differenceCount": 0,
+        },
         "targetDatabase": ISOLATED_DATABASE,
         "revisionContract": validate_revision_contract(ROOT),
         "syntheticFixtureOnly": True,

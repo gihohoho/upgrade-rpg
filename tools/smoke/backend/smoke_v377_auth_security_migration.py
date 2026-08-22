@@ -326,12 +326,15 @@ def catalog_fixture(*, include_isolated: bool) -> dict[str, dict[str, Any]]:
 def source_state_fixture() -> dict[str, Any]:
     return {
         "database": roundtrip.SOURCE_DATABASE,
-        "revision": [roundtrip.BASE_REVISION],
-        "publicTableCount": roundtrip.EXPECTED_BASE_PUBLIC_TABLES,
-        "schemaDigest": roundtrip.EXPECTED_V295_APPLICATION_SCHEMA_DIGEST,
+        "revision": [roundtrip.SOURCE_CURRENT_REVISION],
+        "publicTableCount": roundtrip.EXPECTED_HEAD_PUBLIC_TABLES,
+        "schemaDigest": "f" * 64,
         "publicTables": [
             "alembic_version",
             "users",
+            "user_email_action_tokens",
+            "auth_email_outbox",
+            "auth_rate_limit_buckets",
             *(f"legacy_table_{index}" for index in range(21)),
         ],
     }
@@ -405,6 +408,7 @@ def test_isolated_roundtrip_guard() -> None:
         readiness = roundtrip.inspect_readiness(
             catalog=catalog_fixture(include_isolated=False),
             source_state=source_state_fixture(),
+            source_model_parity={"modelTableCount": 25, "differenceCount": 0},
             report_root=report_root,
             report_path=report_path,
         )
@@ -414,6 +418,7 @@ def test_isolated_roundtrip_guard() -> None:
             lambda: roundtrip.inspect_readiness(
                 catalog=catalog_fixture(include_isolated=True),
                 source_state=source_state_fixture(),
+                source_model_parity={"modelTableCount": 25, "differenceCount": 0},
                 report_root=report_root,
                 report_path=report_path,
             ),
@@ -599,7 +604,8 @@ def completed_roundtrip_payload(source_sha: str) -> dict[str, Any]:
         "startedAtUtc": "2026-08-15T01:00:00Z",
         "preparationCommitSha": source_sha,
         "sourceDatabase": roundtrip.SOURCE_DATABASE,
-        "sourceCurrentRevision": roundtrip.BASE_REVISION,
+        "sourceCurrentRevision": roundtrip.SOURCE_CURRENT_REVISION,
+        "sourceModelParity": {"modelTableCount": 25, "differenceCount": 0},
         "targetDatabase": roundtrip.ISOLATED_DATABASE,
         "revisionContract": roundtrip.validate_revision_contract(ROOT),
         "syntheticFixtureOnly": True,
