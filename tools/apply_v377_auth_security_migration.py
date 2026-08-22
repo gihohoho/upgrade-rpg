@@ -25,6 +25,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 import hashlib
 import io
 import json
@@ -109,7 +110,7 @@ EXPECTED_V295_APPLICATION_SCHEMA_DIGEST = (
     "7cd69d4f4ee1a4b71c999d518379c1e6b782cb73f90adbf467d0b9b26846c921"
 )
 BACKUP_MAX_AGE_SECONDS = 4 * 60 * 60
-TOOL_VERSION = "v377.auth-security-target-backup-apply-guard.v2"
+TOOL_VERSION = "v377.auth-security-target-backup-apply-guard.v3"
 BACKUP_ACTION = "create-fresh-v295-custom-backup-for-v377"
 APPLY_ACTION = "apply-exact-v377-upgrade-once-no-downgrade"
 ALEMBIC_TARGET_APPLICATION_NAME = "upgrade-rpg-v377-target-migration"
@@ -363,6 +364,27 @@ def _stable_json_default(value: Any) -> Any:
             "type": "bytes",
             "sha256": hashlib.sha256(bytes(value)).hexdigest(),
         }
+    if isinstance(value, Decimal):
+        if value.is_nan():
+            canonical = "NaN"
+        elif value.is_infinite():
+            canonical = "-Infinity" if value.is_signed() else "Infinity"
+        elif value.is_zero():
+            canonical = "0"
+        else:
+            # Fixed-point formatting without a precision specifier is exact
+            # and does not round through the active decimal context.
+            canonical = format(value, "f")
+            if "." in canonical:
+                canonical = canonical.rstrip("0").rstrip(".")
+        return {"type": "Decimal", "value": canonical}
+    if isinstance(value, datetime):
+        # PostgreSQL drivers may represent the same timestamptz instant with
+        # different offsets. Canonicalize aware values to UTC, while leaving a
+        # naive value as the timezone-free wall-clock value it already is.
+        if value.tzinfo is not None and value.utcoffset() is not None:
+            value = value.astimezone(timezone.utc)
+        return {"type": type(value).__name__, "value": value.isoformat()}
     isoformat = getattr(value, "isoformat", None)
     if callable(isoformat):
         return {"type": type(value).__name__, "value": isoformat()}

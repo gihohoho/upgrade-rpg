@@ -22,6 +22,10 @@ from pathlib import Path
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
+CHECKPOINT_VERSION = "v377.local-migration-preflight-safe-stop"
+CHECKPOINT_RESULT = "local-migration-preflight-safe-stop"
+NEXT_SAFE_STAGE = "prepare-v377-stale-evidence-recovery"
+STALE_SOURCE_SHA = "8db9bcb"
 
 ROUTE_MODULES = [
     {
@@ -340,7 +344,20 @@ def render_report(root: Path) -> str:
 
 이 문서는 FastAPI route 파일을 정적으로 분석해서 현재 API 목록을 정리한 자동 보고서입니다.
 
-중요: v377은 **v371 이메일 계정 주기 위에 지속성 rate limit, JSON 파싱 전 body cap, semantic mail outbox와 안전한 미인증 identity 회수를 추가한 source-prepared 단계**입니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
+중요: v377 source는 준비됐지만 현재 체크포인트는 **local migration preflight safe-stop**입니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
+
+```txt
+latest: {CHECKPOINT_VERSION}
+strict result: {CHECKPOINT_RESULT}
+source head: v377_auth_email_public_security
+local/Neon DB current: v295_initial_schema
+actual target v377 apply: 0
+private email environment: prepared
+isolated roundtrip/local backup evidence: source {STALE_SOURCE_SHA} only / stale
+local apply: pre-Alembic false fingerprint safe-stop / report absent / attempt marker blocks retry
+Neon: untouched
+next safe stage: {NEXT_SAFE_STAGE}
+```
 
 ## 생성 방식
 
@@ -407,15 +424,19 @@ def render_report(root: Path) -> str:
 
 ## 다음 추천 단계
 
-`next safe stage: prepare-v377-private-email-environment`
+`next safe stage: {NEXT_SAFE_STAGE}`
 
-v377 source 검증 뒤에도 private environment/DB artifact preparation, isolated migration roundtrip, fresh local/Neon backup과 exact apply, Brevo 설정·테스트 메일과 배포는 순서대로 남습니다. owner bootstrap은 이 rollout과 분리된 별도 one-shot입니다.
+private environment 준비는 완료했습니다. isolated roundtrip과 local backup은 이전
+source `{STALE_SOURCE_SHA}`에서만 성공해 현재 source의 선행 evidence로 쓸 수 없습니다.
+local apply는 Alembic 실행 전 false fingerprint에서 안전하게 중단됐고 report는
+생성되지 않았으며, attempt marker 때문에 기존 confirmation으로 재실행하지
+않습니다. Neon은 untouched이며 owner bootstrap·Brevo·배포도 여전히 별도입니다.
 
 권장 범위:
 
-1. ignored dotenv와 기존 DB security artifact를 private ACL로 고정하고 email/abuse secret을 값 출력 없이 준비합니다.
-2. 고정 DB의 synthetic v295 fixture로 v377 upgrade→v295 downgrade→v377 re-upgrade를 한 번 검증합니다.
-3. 같은 source SHA의 완료 보고서와 fresh backup을 강제한 뒤 local, Neon을 exact v377로 적용합니다.
+1. 기존 private marker를 삭제·재사용하지 않는 stale-evidence recovery 계약을 먼저 준비합니다.
+2. 새 source SHA와 새로 승인된 one-attempt evidence chain으로만 local 절차를 재개합니다.
+3. local이 안전하게 완료된 뒤에만 아직 시작하지 않은 Neon 단계를 별도로 판단합니다.
 4. Brevo sender/API key와 Render secret을 구성하고 실제 테스트 메일로 발송·링크 흐름을 확인합니다.
 5. 서버측 session/revoke, save revision/CAS, CSP/XSS·브라우저 token과 개인정보 정책은 공개 회원가입을 열기 전에 마저 완료합니다.
 6. backend image와 legacy static은 모든 공개 gate가 닫힌 뒤 같은 exact-SHA 단위로 게시·배포합니다.

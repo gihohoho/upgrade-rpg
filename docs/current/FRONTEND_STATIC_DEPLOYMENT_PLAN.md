@@ -158,10 +158,12 @@ v350 당시에는 콘텐츠 추가·수정을 시작하기 좋은 시점이 아�
 
 ## 필요할 수 있는 사용자 조치
 
-`email-validator 2.3.0` 설치·Linux lock과 v377 public-security source는 준비됐습니다.
-다음 순서는 고정 격리 DB 왕복 → local/Neon별 새 backup과 exact migration apply → Brevo
-계정·발신자·전용 API key·secret → 테스트 메일입니다. 비밀번호, API key, dev key와
-token은 채팅에 보내지 않습니다. owner bootstrap은 이메일 rollout과 별도입니다.
+`email-validator 2.3.0` 설치·Linux lock, v377 public-security source와 private environment
+준비는 완료됐습니다. `8db9bcb` 격리 왕복·local backup은 새 canonicalization SHA에 stale이고
+local apply는 Alembic 전에 안전 중단됐습니다. 다음 순서는 기존 marker를 지우거나 재실행하지
+않는 새 recovery namespace·artifact·confirmation 준비와 exact 범위 별도 승인입니다. DB 단계
+완료 뒤 Brevo 계정·발신자·전용 API key와 테스트 메일로 이어집니다. 비밀번호, API key,
+dev key와 token은 채팅에 보내지 않으며 owner bootstrap은 이메일 rollout과 별도입니다.
 
 서버측 session/refresh·기기별 폐기, 다중 기기 save revision/CAS, HTTPS/CSP/XSS와 browser
 token 저장 방식, 개인정보·삭제·법적 보존 정책, provider 실제 설정·테스트와 별도

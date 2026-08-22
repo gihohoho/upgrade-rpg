@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v377.public-email-security-source-prepared"
-RESULT = "public-email-security-source-prepared"
-NEXT_STAGE = "prepare-v377-private-email-environment"
+VERSION = "v377.local-migration-preflight-safe-stop"
+RESULT = "local-migration-preflight-safe-stop"
+NEXT_STAGE = "prepare-v377-stale-evidence-recovery"
 SOURCE_HEAD = "v377_auth_email_public_security"
 APPLIED_HEAD = "v295_initial_schema"
 
@@ -53,9 +53,9 @@ def main() -> int:
         "NEXT_CHAT_HANDOFF.md",
         "바로 할 일",
         "Linux runtime/musllinux/dev lock",
-        "isolated PostgreSQL",
+        "synthetic fixture",
         "migration",
-        "DB write",
+        "actual local/Neon apply",
         "owner bootstrap",
         "docs/reference/",
         "docs/generated/",
@@ -63,7 +63,11 @@ def main() -> int:
     )
     require_markers(
         "docs/current/CURRENT_STATUS.md",
-        "source-prepared 즉시 수정 blocker는 없습니다",
+        "8db9bcb",
+        "stale",
+        "cross-driver fingerprint",
+        "attempt marker",
+        "Neon",
         "공개 전 필수 보강",
         "rate limit",
         "durable outbox/queue",
@@ -88,8 +92,8 @@ def main() -> int:
     )
     require_markers(
         "NEXT_CHAT_PROMPT.md",
-        "prepare-v377-private-email-environment",
-        "이미 승인된 범위를 다시 묻지 말고",
+        "prepare-v377-stale-evidence-recovery",
+        "다시 전면 감사하지 말고",
     )
     require_markers(
         "NEXT_CHAT_HANDOFF.md",

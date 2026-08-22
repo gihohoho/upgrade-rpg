@@ -105,7 +105,7 @@ cd "/c/Users/HOME/Desktop/Upgrade RPG"
 docker compose stop
 ```
 
-`docker compose down -v`, DB reset·seed, `alembic upgrade/downgrade/stamp`는 임의로 실행하지 않습니다. 새 PC나 빈 Docker volume에서 DB 상태 검사가 실패하면 Codex에게 먼저 확인합니다. v377 migration source는 준비됐지만 아직 적용하지 않았습니다. 다음 단계는 고정된 격리 DB 왕복 검증 뒤 local/Neon 각각의 새 backup과 exact apply이며, 전체 이메일 가입 흐름은 아직 end-to-end 완료 상태가 아닙니다.
+`docker compose down -v`, DB reset·seed, `alembic upgrade/downgrade/stamp`는 임의로 실행하지 않습니다. 새 PC나 빈 Docker volume에서 DB 상태 검사가 실패하면 Codex에게 먼저 확인합니다. v377 migration source는 준비됐지만 local/Neon에는 아직 적용하지 않았습니다. private environment 준비는 끝났고, `8db9bcb`의 격리 왕복·local backup은 canonicalization 수정 뒤 SHA-stale입니다. local apply는 Alembic 전에 안전 중단되어 DB가 v295 그대로이고 marker가 남았으므로 재실행하지 않습니다. 다음 단계는 새 namespace·artifact·confirmation의 recovery 절차를 준비하고 별도 승인받는 것이며, 전체 이메일 가입 흐름은 아직 end-to-end 완료 상태가 아닙니다.
 
 ## 핵심 폴더
 

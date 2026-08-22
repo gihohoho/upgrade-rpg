@@ -1,9 +1,9 @@
 # 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v377.public-email-security-source-prepared
-strict result: public-email-security-source-prepared
-next safe stage: prepare-v377-private-email-environment
+latest: v377.local-migration-preflight-safe-stop
+strict result: local-migration-preflight-safe-stop
+next safe stage: prepare-v377-stale-evidence-recovery
 public Render: backend/static 모두 계속 v351
 local/Neon DB: 모두 계속 v295
 ```
@@ -34,7 +34,7 @@ semantic email outbox와 만료된 미인증 identity의 안전한 회수를 sou
 v370은 새 테이블과 Alembic revision 없이 기존 구조를 사용했습니다. v371은 기존 행을
 거짓 이메일로 채우지 않으면서 신규 가입자의 이메일을 안전하게 관리하기 위해
 `v371_email_identity_lifecycle` revision source를 준비했습니다. v377 source head는 그
-다음 `v377_auth_email_public_security` revision이며, 아직 어떤 DB에도 적용하지 않았습니다.
+다음 `v377_auth_email_public_security` revision이며, 아직 actual local/Neon DB에는 적용하지 않았습니다.
 
 - `users`: 아이디, nullable legacy-safe 원본/정규화 이메일, 인증 시각,
   `authVersion`, bcrypt 비밀번호 해시, 활성/정지, 관리자 여부
@@ -248,11 +248,12 @@ v377은 로컬 source·migration 준비 단계이며 Render backend와 Static Si
 6. v377 backend image와 legacy static을 같은 승인 단위로 게시·배포하는 exact-SHA gate
 7. 소셜 로그인 도입 시 provider-neutral 연결 테이블과 계정 연결/해제 정책
 
-`email-validator 2.3.0`과 Linux dependency lock은 반영됐습니다. 별도
-`EMAIL_TOKEN_SECRET`, `AUTH_ABUSE_SECRET`, Brevo 전용 API key와 발신자, 새 DB migration은
-여전히 필요하며 실제 값은 채팅에 보내지 않습니다. 다음 순서는 exact source의 격리
-왕복 → local/Neon별 새 backup과 exact apply → Brevo 설정·테스트 메일입니다. owner
-bootstrap은 승인 범위 밖의 별도 단계이고, 공개 release는 남은 blocker 완료 뒤 진행합니다.
+`email-validator 2.3.0`과 Linux dependency lock은 반영됐고 private environment 준비에서
+local/production의 `EMAIL_TOKEN_SECRET`·`AUTH_ABUSE_SECRET` 4개를 서로 다르게 생성했습니다.
+실제 값은 채팅에 보내지 않으며 Brevo 전용 API key와 발신자는 아직 필요합니다.
+`8db9bcb` 격리 왕복·local backup은 새 SHA에 stale이고 local apply marker가 소비됐으므로,
+다음 순서는 새 recovery namespace·artifact·confirmation 준비와 exact 범위 별도 승인입니다.
+owner bootstrap은 승인 범위 밖의 별도 단계이고 공개 release는 남은 blocker 완료 뒤 진행합니다.
 
 ## 검증 상태
 
@@ -283,7 +284,8 @@ PASS입니다.
 console warn/error 0입니다. 이메일 renderer의 외부 asset 0·escape 구조는 smoke로
 검증했지만 Browser가 `data:` preview를 차단해 실제 메일 클라이언트 시각 QA는 Brevo
 테스트 메일 단계로 남습니다. v377 public-security·semantic-outbox와 기존 v371 이메일
-lifecycle focused source 검사 및 전체 core smoke는 PASS입니다. 격리 왕복은 아직 이 source
-checkpoint의 완료 주장에 포함하지 않습니다. 현재까지 실제 local/Neon DB write, seed,
-restore, Alembic mutation, Brevo 설정·발송, owner bootstrap, Render/GHCR 배포는 실행하지
-않았습니다.
+lifecycle focused source 검사 및 전체 core smoke는 PASS입니다. `8db9bcb` 격리 왕복과 local
+v295 backup 751 rows는 성공했지만 canonicalization 수정 뒤 SHA-stale입니다. local apply는
+Alembic 전에 안전 중단되어 report 없이 marker만 남고 DB는 v295이며 Neon은 untouched입니다.
+actual local/Neon Alembic mutation, Brevo 설정·발송, owner bootstrap, Render/GHCR 배포는
+실행하지 않았습니다.

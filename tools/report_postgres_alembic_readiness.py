@@ -17,10 +17,13 @@ from pathlib import Path
 
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/POSTGRES_ALEMBIC_READINESS.md")
+CHECKPOINT_VERSION = "v377.local-migration-preflight-safe-stop"
+CHECKPOINT_RESULT = "local-migration-preflight-safe-stop"
 SOURCE_GRAPH_HEAD = "v377_auth_email_public_security"
 APPLIED_DB_REVISION = "v295_initial_schema"
 APPLIED_DB_APPLICATION_TABLES = 22
-NEXT_SAFE_STAGE = "prepare-v377-private-email-environment"
+NEXT_SAFE_STAGE = "prepare-v377-stale-evidence-recovery"
+STALE_SOURCE_SHA = "8db9bcb"
 
 
 @dataclass(frozen=True)
@@ -147,9 +150,16 @@ def render(root: Path) -> str:
 ## v377 현재 overlay
 
 ```txt
+latest: {CHECKPOINT_VERSION}
+strict result: {CHECKPOINT_RESULT}
 local Alembic source graph head: {SOURCE_GRAPH_HEAD}
 local/live/Neon applied DB revision: {APPLIED_DB_REVISION}
-v377 revision state: source prepared / not applied
+actual target v377 apply: 0
+private email environment: prepared
+isolated roundtrip evidence: succeeded on source {STALE_SOURCE_SHA} / stale for current source
+local backup evidence: succeeded on source {STALE_SOURCE_SHA} / stale for current source
+local apply: pre-Alembic false fingerprint safe-stop / report absent / attempt marker blocks retry
+Neon: untouched
 model application tables: {len(models)}
 applied DB application tables: {APPLIED_DB_APPLICATION_TABLES}
 next safe stage: {NEXT_SAFE_STAGE}
@@ -165,12 +175,15 @@ v295는 최초 22-table baseline을 실제 DB에 적용한 역사이자 현재 l
 - 차이: v371의 nullable email identity·`authVersion`과
   `user_email_action_tokens` 1개 table, v377의 durable auth rate-limit·semantic mail outbox
   2개 table
-- 실제 상태: revision 파일과 model만 준비, `upgrade`·`downgrade`·`stamp` 0회
+- 실제 target 상태: local·Neon은 모두 v295, v377 apply 0회
 
-v371·v377 source parity smoke는 두 revision의 연결, upgrade/downgrade 대칭과 필수
-index/check/FK를 DB 접속 없이 검증해 PASS했습니다. 실제 migration apply에 앞서 clean
-pushed SHA에서 ignored dotenv·기존 DB 보안 artifact의 private ACL과 두 HMAC secret을
-값 출력 없이 준비한 뒤 isolated v295→v377→v295→v377 왕복을 한 번 검증합니다.
+private environment/ACL·email/abuse secret 준비는 완료했습니다. isolated
+v295→v377→v295→v377 왕복과 local fresh backup은 이전 source `{STALE_SOURCE_SHA}`에서만
+성공했고 현재 source SHA에서는 stale evidence입니다. local apply는 Alembic 실행
+전 connection fingerprint false positive에서 fail-closed했으며 apply report는 없습니다.
+배타적 attempt marker가 남아 기존 confirmation으로 재실행할 수 없고, Neon은
+접속·backup·apply를 시작하지 않았습니다. 다음은 기존 marker를 우회하지 않는
+`{NEXT_SAFE_STAGE}` 계약을 먼저 준비하는 단계입니다.
 현재 `tools/run_smoke_core.sh`에서는 v295~v310 단일-head·no-next-revision 역사 계약에
 고정된 최초 revision 생성·수동 검토, isolated upgrade·downgrade·roundtrip,
 source·restore stamp guard, baseline completion, next-revision preflight와 deployment
@@ -429,17 +442,18 @@ revision만 거짓으로 올릴 수 있으므로 특히 금지합니다.
    `v371_email_identity_lifecycle`이며 source graph는 v295→v371→v377 단일 head입니다.
 3. migration source parity, private artifact, exact endpoint, one-attempt guard는 DB 접속 없이
    focused smoke로 검증했습니다.
-4. 현재 local/Neon DB는 모두 v295이며 v377 autogenerate·upgrade·downgrade·stamp는
-   실행하지 않았습니다.
-5. 다음 안전 단계는 clean pushed SHA에서
-   `tools/prepare_v377_email_security_environment.py --apply`로 ignored dotenv와 기존 DB
-   artifact를 private ACL로 고정하고 `EMAIL_TOKEN_SECRET`·`AUTH_ABUSE_SECRET`을 값 출력
-   없이 준비하는 `prepare-v377-private-email-environment`입니다.
-6. 그다음 fixed isolated report 경로에서 v295→v377→v295→v377을 정확히 한 번 검증하고,
-   fresh backup과 one-transaction exact apply를 local, Neon 순서로 분리합니다.
+4. private environment/ACL·email/abuse secret 준비는 완료했습니다.
+5. isolated roundtrip과 local backup은 source `{STALE_SOURCE_SHA}`에서 성공했지만 source 수정
+   후 stale이며 새 apply의 선행 evidence로 사용할 수 없습니다.
+6. local apply는 pre-Alembic false fingerprint safe-stop으로 종료했고 apply report는
+   생성되지 않았습니다. private exclusive attempt marker는 남아 있으므로 재실행하지 않습니다.
+7. local·Neon actual DB는 계속 v295이고 actual target v377 apply는 0회입니다. Neon은
+   backup·apply 모두 시작하지 않았습니다.
+8. 다음 안전 단계는 marker 삭제·재사용을 전제하지 않는
+   `{NEXT_SAFE_STAGE}` 계약을 준비하고 exact 실행 범위를 별도 승인받는 것입니다.
 
-현재는 v377 revision **생성·source 검토 준비만 완료**했고 실제 환경·DB·provider는
-변경하지 않았습니다.
+현재는 **local migration preflight safe-stop** 상태입니다. actual local/Neon target
+DB schema/data와 provider 상태는 변경되지 않았습니다.
 
 ### Stage F — 운영·배포 runtime readiness
 

@@ -13,9 +13,11 @@
 
 ## 현재 DB 경계
 
-- Alembic source head: `v371_email_identity_lifecycle`
+- Alembic source head: `v377_auth_email_public_security`
 - 실제 local/Neon DB current: `v295_initial_schema`
-- v371 migration apply: 승인 전, 0회
+- v377 apply/stamp/downgrade: local·Neon 모두 0회
+- local apply preflight: Alembic 전 safe-stop, report 없음, marker 보존·재실행 금지
+- Neon: untouched, backup/apply marker 없음
 
 새 PC나 빈 Docker volume에서는 README의 서버 실행까지만 진행하고, schema reset·seed·migration은 Codex에게 현재 승인 범위를 확인한 뒤 진행합니다. `docker compose down -v`, `setup_dev_db.py --reset`, `alembic upgrade/downgrade/stamp`를 문제 해결용으로 사용하지 않습니다.
 
@@ -57,7 +59,11 @@ Docker Desktop과 `docker compose ps`를 먼저 확인합니다. 빈 DB인지, �
 
 ### 이메일 가입이 끝까지 진행되지 않음
 
-v371 이메일 lifecycle source와 dependency는 준비됐지만 DB migration, Brevo sender/key/secret과 실제 메일은 아직 승인·적용 전입니다. 현재 로컬에서는 전체 이메일 가입 end-to-end 성공을 정상 기대값으로 두지 않습니다.
+v377 이메일 lifecycle·공개 보안 source와 private environment 준비는 완료됐지만 실제 DB
+migration과 Brevo sender/key·실제 메일은 아직 완료되지 않았습니다. `8db9bcb`의 격리
+왕복·local backup은 새 SHA에 stale이고 local apply는 Alembic 전에 안전 중단됐으므로 같은
+action을 재실행하지 않습니다. 현재 로컬에서는 전체 이메일 가입 end-to-end 성공을 정상
+기대값으로 두지 않습니다.
 
 ## 추가 문서
 

@@ -2,6 +2,9 @@
 """DB/network-free parity and guard smoke for the v377 auth migration."""
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
+from decimal import Decimal, localcontext
+import hashlib
 import importlib.util
 import inspect as python_inspect
 import os
@@ -365,19 +368,26 @@ def test_isolated_roundtrip_guard() -> None:
         "roundtrip guard accepted downgrade base",
     )
 
-    readiness = roundtrip.inspect_readiness(
-        catalog=catalog_fixture(include_isolated=False),
-        source_state=source_state_fixture(),
-    )
-    require(readiness["syntheticFixtureOnly"], "roundtrip fixture is not synthetic-only")
-    require(not readiness["restoreExecuted"], "roundtrip guard permits a real restore")
-    expect_error(
-        lambda: roundtrip.inspect_readiness(
-            catalog=catalog_fixture(include_isolated=True),
+    with tempfile.TemporaryDirectory(prefix="upgrade-rpg-v377-readiness-") as temp:
+        report_root = Path(temp)
+        report_path = report_root / "roundtrip.json"
+        readiness = roundtrip.inspect_readiness(
+            catalog=catalog_fixture(include_isolated=False),
             source_state=source_state_fixture(),
-        ),
-        "roundtrip guard accepted an existing fixed target",
-    )
+            report_root=report_root,
+            report_path=report_path,
+        )
+        require(readiness["syntheticFixtureOnly"], "roundtrip fixture is not synthetic-only")
+        require(not readiness["restoreExecuted"], "roundtrip guard permits a real restore")
+        expect_error(
+            lambda: roundtrip.inspect_readiness(
+                catalog=catalog_fixture(include_isolated=True),
+                source_state=source_state_fixture(),
+                report_root=report_root,
+                report_path=report_path,
+            ),
+            "roundtrip guard accepted an existing fixed target",
+        )
 
     created_catalog = catalog_fixture(include_isolated=True)
     roundtrip.validate_isolated_catalog(
@@ -643,6 +653,86 @@ def test_target_apply_guard() -> None:
         "roundtrip_report"
         in python_inspect.signature(target_guard.apply_exact_upgrade).parameters,
         "target apply does not require round-trip evidence",
+    )
+
+    utc_instant = datetime(2026, 8, 22, 3, 4, 5, 123456, tzinfo=timezone.utc)
+    seoul_instant = datetime(
+        2026,
+        8,
+        22,
+        12,
+        4,
+        5,
+        123456,
+        tzinfo=timezone(timedelta(hours=9)),
+    )
+    utc_row = target_guard._stable_row_bytes((utc_instant,))  # noqa: SLF001
+    seoul_row = target_guard._stable_row_bytes((seoul_instant,))  # noqa: SLF001
+    require(
+        utc_row == seoul_row,
+        "same timestamptz instant differs across driver timezone offsets",
+    )
+    require(
+        hashlib.sha256(utc_row).digest() == hashlib.sha256(seoul_row).digest(),
+        "same timestamptz instant produces different legacy data digests",
+    )
+    naive_wall_clock = datetime(2026, 8, 22, 3, 4, 5, 123456)
+    require(
+        target_guard._stable_json_default(naive_wall_clock)  # noqa: SLF001
+        == {
+            "type": "datetime",
+            "value": "2026-08-22T03:04:05.123456",
+        },
+        "naive datetime must remain a timezone-free wall-clock value",
+    )
+    require(
+        target_guard._stable_row_bytes((naive_wall_clock,)) != utc_row,  # noqa: SLF001
+        "naive datetime was silently treated as a UTC instant",
+    )
+
+    exponent_numeric = Decimal("1E+28")
+    fixed_numeric = Decimal("10000000000000000000000000000")
+    require(exponent_numeric == fixed_numeric, "numeric regression fixture differs")
+    exponent_row = target_guard._stable_row_bytes((exponent_numeric,))  # noqa: SLF001
+    fixed_row = target_guard._stable_row_bytes((fixed_numeric,))  # noqa: SLF001
+    require(
+        exponent_row == fixed_row,
+        "equal Decimal values differ across driver exponent representations",
+    )
+    require(
+        hashlib.sha256(exponent_row).digest() == hashlib.sha256(fixed_row).digest(),
+        "equal Decimal values produce different legacy data digests",
+    )
+    require(
+        target_guard._stable_row_bytes((Decimal("123.45000"),))  # noqa: SLF001
+        == target_guard._stable_row_bytes((Decimal("123.45"),)),  # noqa: SLF001
+        "Decimal fractional trailing zeros were not canonicalized",
+    )
+    require(
+        target_guard._stable_row_bytes((Decimal("-0.000"),))  # noqa: SLF001
+        == target_guard._stable_row_bytes((Decimal("0E+28"),)),  # noqa: SLF001
+        "signed or exponent-form Decimal zero was not canonicalized",
+    )
+    with localcontext() as decimal_context:
+        decimal_context.prec = 2
+        exact_decimal = target_guard._stable_json_default(  # noqa: SLF001
+            Decimal("123456789.12345000")
+        )
+    require(
+        exact_decimal == {"type": "Decimal", "value": "123456789.12345"},
+        "Decimal fingerprint was rounded through the active context",
+    )
+    require(
+        target_guard._stable_json_default(Decimal("-NaN123"))  # noqa: SLF001
+        == target_guard._stable_json_default(Decimal("sNaN")),  # noqa: SLF001
+        "Decimal NaN forms were not canonicalized",
+    )
+    require(
+        target_guard._stable_json_default(Decimal("+Infinity"))  # noqa: SLF001
+        == {"type": "Decimal", "value": "Infinity"}
+        and target_guard._stable_json_default(Decimal("-Infinity"))  # noqa: SLF001
+        == {"type": "Decimal", "value": "-Infinity"},
+        "Decimal infinity signs were not canonicalized",
     )
 
     normalized_neon = target_guard._strip_verified_neon_query(  # noqa: SLF001

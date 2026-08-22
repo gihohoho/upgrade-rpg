@@ -1,6 +1,6 @@
 # Security rotation and GitHub gates — v377
 
-## v377 공개 이메일 보안 source 준비 상태 — 2026-08-15
+## v377 local migration preflight safe-stop — 2026-08-22
 
 - Alembic source head는 `v295_initial_schema` → `v371_email_identity_lifecycle` →
   `v377_auth_email_public_security`입니다. v377은 `auth_rate_limit_buckets`와
@@ -46,8 +46,9 @@
 - ignored local/production dotenv와 DB backup·migration evidence는 내용을 읽기 전에 exact
   path와 private permission을 검증합니다. Windows는 ACL 상속을 끄고 현재 사용자,
   LocalSystem, Builtin Administrators 세 SID만 FullControl로 허용하며, POSIX는 현재 owner의
-  `0600`/`0700`만 허용합니다. 기본 plan/inspect는 read-only이고 첫 environment `--apply`만
-  기존 broad ACL을 재귀적으로 고친 뒤 secret을 private staging file에 기록합니다.
+  `0600`/`0700`만 허용합니다. environment `--apply`는 기존 security artifact 535개의 ACL을
+  재귀적으로 고치고 local/production에 서로 다른 강한 email/abuse secret 4개를 값 출력 없이
+  기록해 완료했습니다.
 - migration guard는 inherited `PGHOSTADDR`·`PGSERVICE`·`PGOPTIONS`를 포함한 모든 `PG*`
   기본값을 subprocess와 sync psycopg connect 시점에 제거합니다. Windows PostgreSQL 16
   client는 고정 절대 경로, POSIX client는 root/current owner와 group/world non-writable
@@ -58,8 +59,9 @@
   Brevo API key는 account-wide 권한이므로 project 전용 key를 Render secret에만 두고
   노출·미사용·integration 종료 시 삭제합니다.
 - v377 public-security·semantic-outbox와 기존 v371 이메일 lifecycle focused source 검사,
-  backend `.venv`·`DEBUG=false` 조건의 v377 전체 core smoke는 PASS입니다. 기존 browser
-  결과는 과거 baseline이며 migration 왕복 완료를 이 source checkpoint에서 주장하지 않습니다.
+  backend `.venv`·`DEBUG=false` 조건의 v377 전체 core smoke는 PASS입니다. pushed SHA
+  `8db9bcb`에서 synthetic migration 왕복도 성공했지만 fingerprint canonicalization source
+  수정 뒤에는 현재 SHA의 apply gate에 사용할 수 없는 stale evidence입니다.
 - `deploy/v377-email-release-guard.example.json`과 `tools/prepare_v377_email_release.py`는
   미래 release마다 fresh GitHub publish lifecycle, 단일 `run_attempt=1`, 즉시 authorization
   closure, rerun 금지, 새 서명 image digest, 기존 Render service와 필수 env key-name-only
@@ -67,18 +69,23 @@
   재사용과 secret value·provider endpoint 기록을 차단하는 source 계약을 검증했습니다.
   기본 guard는 외부 network/provider mutation을 하지 않으며 배포 승인이나 실행이 아닙니다.
 - 실제 local/Neon DB write·migration, owner bootstrap, GitHub Actions·GHCR 게시, Render
-  env·서비스·deploy는 실행하지 않았습니다. 공개 backend/static은 계속 v351입니다.
+  env·서비스·deploy는 실행하지 않았습니다. `8db9bcb`의 local v295 custom backup 751 rows는
+  성공했지만 새 SHA에는 stale이며 공개 backend/static은 계속 v351입니다.
 
 v376에서 기호는 이메일 인증 rollout에 한해 공개 보안 구현 → isolated migration 왕복 →
 local/Neon의 새 backup·exact migration → Brevo sender/key/secret → 테스트 메일 → 필요한
-backend/static release 준비를 한 범위로 승인했습니다. 각 DB 단계를 다시 승인받지 않되
-fail-closed gate를 유지하고, Codex가 대신할 수 없는 Brevo 가입·발신자 소유 확인·API key
-입력만 요청합니다. owner bootstrap은 이 승인과 분리합니다.
+backend/static release 준비를 한 범위로 승인했습니다. 정상 경로의 같은 DB 단계를 반복
+승인받지는 않지만, 소비된 one-attempt marker 뒤 새 recovery는 단순 재시도가 아니므로 새
+namespace와 exact 범위를 별도로 승인받습니다. Codex가 대신할 수 없는 Brevo 가입·발신자
+소유 확인·API key 입력은 DB 단계 뒤 요청하며 owner bootstrap은 이 승인과 분리합니다.
 
-다음 안전 단계는 clean pushed SHA에서 ignored dotenv·기존 DB security artifact의 private ACL을
-먼저 고정하고 서로 다른 email/abuse secret을 값 출력 없이 준비하는 것입니다. 이어서 고정 격리
-PostgreSQL의 v295→v377→v295→v377 왕복을 1회 수행합니다. 그 완료 report와
-같은 source SHA, target별 새 verified backup 없이는 local/Neon apply를 거부합니다. 공개
+첫 local apply는 Alembic 실행 전에 cross-driver fingerprint 표현 차이를 실제 차이로 잘못
+판정해 안전 중단됐습니다. apply report는 없고 local DB는 v295 그대로이며 attempt marker를
+보존하므로 같은 action을 재실행하지 않습니다. Neon은 접속·backup·apply·marker가 모두
+없습니다. 다음 안전 단계는 old `8db9bcb` roundtrip/backup evidence와 기존 marker를 삭제하거나
+덮어쓰지 않고 새 namespace·artifact·confirmation을 쓰는 recovery 계약을 source로 준비한 뒤
+exact 실행 범위를 별도 승인받는 것입니다. fresh current-SHA evidence 없이는 local/Neon apply를
+거부합니다. 공개
 blocker는 서버 session/refresh·기기별 폐기, save revision/CAS, CSP/XSS와 browser token,
 개인정보·법적 보존 정책, provider 실제 설정·테스트, exact deploy입니다. 자세한 계약은
 `ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md`에 있습니다. source-only release guard는

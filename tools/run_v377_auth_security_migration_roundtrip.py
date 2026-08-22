@@ -760,9 +760,11 @@ def inspect_readiness(
     *,
     catalog: dict[str, dict[str, Any]] | None = None,
     source_state: dict[str, Any] | None = None,
+    report_root: Path = ROOT,
+    report_path: Path = REPORT_PATH,
 ) -> dict[str, Any]:
     contract = validate_revision_contract(ROOT)
-    validate_roundtrip_report_absent()
+    validate_roundtrip_report_absent(report_root, report_path)
     observed_catalog = catalog if catalog is not None else run_catalog()
     require(SOURCE_DATABASE in observed_catalog, "local source database is missing")
     require(ISOLATED_DATABASE not in observed_catalog, "fixed isolated database already exists")

@@ -5,18 +5,18 @@
 ## 상태 표식
 
 ```txt
-latest: v377.public-email-security-source-prepared
-strict result: public-email-security-source-prepared
-next safe stage: prepare-v377-private-email-environment
+latest: v377.local-migration-preflight-safe-stop
+strict result: local-migration-preflight-safe-stop
+next safe stage: prepare-v377-stale-evidence-recovery
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v295_initial_schema
 v377 apply/stamp/downgrade: 0/0/0
-email rollout approval/execution: yes/source-prepared
+email rollout approval/execution: yes/private-env-prepared-db-preflight-safe-stop
 public backend/static: v351 Live
 production approval/execution: no/no
 ```
 
-## v377 source-prepared 구현
+## v377 구현과 private environment 준비
 
 - `auth_rate_limit_buckets`는 scope와 domain-separated HMAC subject digest만 보존하고 원문 IP·email·username·identifier·Bearer/action token을 저장하지 않습니다. PostgreSQL upsert 후 row lock으로 동시 요청을 직렬화하고 fixed window, 반복 실패 cooldown, 유한 비동기 지연을 적용합니다.
 - auth 9개 POST의 IP 검사는 pure ASGI middleware에서 FastAPI JSON 파싱·schema·Bearer dependency보다 먼저 실행됩니다. 유효한 body는 route에서 subject bucket을 합쳐 credential/token 실패를 두 bucket에 기록합니다.
@@ -33,13 +33,17 @@ production approval/execution: no/no
 - `email-validator==2.3.0`과 `dnspython==2.8.0`은 backend `.venv`와 재현 가능한 Linux lock에 고정되어 있으며 누락 시 이메일 동작은 fail-closed합니다.
 - `prepare_v377_email_release.py`는 미래 release의 fresh publish lifecycle, 단일 `run_attempt=1`, 새 서명 image digest, 기존 Render service와 필수 환경변수 키 이름만 fail-closed로 검증합니다. 기본 동작은 read-only이며 GitHub·GHCR·Render·Brevo·공개 endpoint를 호출하지 않는 source-only guard입니다.
 - `private_artifacts.py`와 환경·migration guard는 secret·DB backup·evidence를 읽기 전에 exact path와 OS별 비공개 권한을 검증합니다. Windows에서는 현재 사용자·LocalSystem·Administrators만 명시적으로 허용하며 secret/backup 내용은 private file을 먼저 만든 뒤 기록합니다. 기본 plan/inspect는 권한을 바꾸지 않습니다.
+- 실제 environment `--apply`는 기존 security artifact 535개의 ACL을 비공개로 고정하고 local/production에 서로 다른 강한 email/abuse secret 4개를 값 출력 없이 생성해 완료했습니다. Brevo API key와 발신 이메일은 아직 없습니다.
 
 ## DB·migration 상태
 
 - Alembic graph의 단일 head는 `v295_initial_schema → v371_email_identity_lifecycle → v377_auth_email_public_security`입니다.
 - v377은 `auth_rate_limit_buckets`, `auth_email_outbox` 두 table과 관련 index·FK·CHECK만 추가합니다. v371 source를 수정하지 않습니다.
-- actual local/Neon DB는 계속 exact v295이며 v377 migration·backup·write는 아직 0회입니다.
-- 새 isolated runner는 기존 dump를 restore하지 않고 고정 빈 DB에 v295까지 upgrade한 뒤 비민감 synthetic legacy fixture를 삽입해 `v295 → v377 → v295 → v377`을 1회 검증합니다. DB 생성 전에 고정 private report를 배타적으로 만들고 그 report가 이미 있으면 성공·실패와 관계없이 재실행을 거부합니다.
+- actual local/Neon DB는 계속 exact v295이며 v377 apply·stamp·downgrade는 0회입니다.
+- pushed SHA `8db9bcb`에서 isolated runner가 비민감 synthetic fixture의 `v295 → v377 → v295 → v377`을 1회 성공했습니다. 같은 SHA에서 local v295 custom backup 751 rows도 1회 성공했습니다.
+- fingerprint canonicalization source 수정 뒤에는 위 roundtrip report와 local backup이 현재 SHA의 guard에 사용할 수 없는 stale evidence입니다. 파일과 marker는 역사 증거로 보존하고 삭제·덮어쓰기하지 않습니다.
+- 첫 local apply는 Alembic 실행 전에 cross-driver fingerprint 표현 차이를 실제 차이로 잘못 판정해 안전 중단됐습니다. apply report는 없고 local DB는 v295 그대로이며 local apply attempt marker가 남아 같은 action을 재실행하지 않습니다.
+- Neon은 접속하지 않았고 backup·apply·attempt marker도 없습니다.
 - target backup/apply guard는 같은 clean pushed source SHA의 완료된 고정 roundtrip report와 fresh custom backup을 필수로 검증합니다. 기존 22 table은 migration 전 열과 PK 순서로 before/after digest가 정확히 일치해야 합니다.
 - actual target apply는 한 synchronous PostgreSQL transaction에서 고정 5초 lock timeout·120초 statement timeout을 설정하고 기존 22개 table을 첫 SELECT 전에 정렬된 `SHARE ROW EXCLUSIVE`로 잠급니다. 같은 connection에서 fingerprint→backup 대조→Alembic→schema/data parity를 끝낸 뒤 한 번 commit하고, 실패하면 전체 rollback합니다. 일반 reader는 허용되고 writer만 유한 시간 대기하므로 Render pause는 필요 없습니다.
 - PostgreSQL subprocess와 sync psycopg connection은 inherited `PG*` 값을 모두 제거합니다. Windows는 고정 PostgreSQL 16 절대 경로, POSIX는 root/current owner이면서 group/world non-writable인 resolved client 경로만 허용합니다.
@@ -56,12 +60,14 @@ production approval/execution: no/no
 - v371 email backend·frontend, v370 auth/character/admin, admin media contract·Neon production Settings focused 회귀 PASS
 - 관련 Python Ruff·compileall, JavaScript syntax, runtime blocking-I/O, `git diff --check` PASS
 - 설치된 Git Bash에서 backend `.venv`를 활성화하고 `DEBUG=false`로 실행한 전체 core smoke PASS
-- source-prepared 즉시 수정 blocker는 없습니다. 실제 DB 왕복·backup·apply와 provider 검증은 아직 실행 전입니다.
+- aware datetime UTC 변환과 Decimal 고정값 canonicalization 회귀 및 실제 local 751행 asyncpg/psycopg read-only fingerprint parity PASS
+- 실제 DB가 바뀌기 전에 fingerprint canonicalization 문제가 발견되어 안전하게 멈췄습니다. source 수정 뒤 old evidence의 SHA-stale 상태와 소비된 attempt marker를 다루는 별도 recovery 계약이 필요합니다.
 
 ## 실행하지 않은 것
 
-- isolated PostgreSQL runner, local/Neon backup·v377 migration, DB reset·seed·restore·stamp·actual downgrade
-- Brevo 가입·sender 확인·API key·secret 주입, 실제 메일·메일 클라이언트 QA
+- actual local/Neon v377 migration, DB reset·seed·restore·stamp·actual downgrade
+- 새 namespace·artifact·confirmation을 쓰는 recovery 실행과 untouched Neon의 backup/apply
+- Brevo 가입·sender 확인·전용 API key와 실제 provider/Render 설정, 실제 메일·메일 클라이언트 QA
 - owner bootstrap apply
 - GitHub Actions, GHCR image 게시, Render env·backend deploy, legacy static 배포
 - custom domain, DNS, 결제
@@ -82,12 +88,11 @@ Brevo 실제 검증이 끝난 뒤에만 별도 exact-SHA release 판단에 사�
 
 ## 바로 다음 단계
 
-1. 같은 clean pushed SHA에서 environment `--apply`를 먼저 한 번 실행해 ignored dotenv와 기존 DB security artifact를 private ACL로 고정하고 email/abuse secret을 값 출력 없이 생성합니다.
-2. fixed isolated DB의 synthetic v295→v377→v295→v377을 1회 실행합니다.
-3. 완료 보고서로 local·Neon의 fresh backup과 exact v377 upgrade를 순서대로 실행하고 기존 22 table의 row digest 변경 0을 확인합니다.
-4. 기호가 직접 완료해야 하는 Brevo 행동을 한 번에 요청한 뒤 실제 테스트 메일 E2E를 수행합니다.
+1. old `8db9bcb` roundtrip/backup evidence가 현재 SHA에는 stale이고 기존 attempt가 소비됐다는 사실을 고정한 채 새 recovery namespace·artifact·confirmation 계약을 준비합니다.
+2. recovery의 exact 실행 범위를 별도 승인받은 뒤에만 local을 다시 검토하고, 성공할 때만 untouched Neon 단계로 진행합니다.
+3. DB 단계가 끝난 뒤 기호가 직접 완료해야 하는 Brevo 행동을 한 번에 요청하고 실제 테스트 메일 E2E를 수행합니다.
 
-기호의 v376 승인은 이 이메일 인증 rollout 범위에 계속 적용됩니다. 같은 범위를 다시 묻지 않으며 Brevo 가입·발신자 소유 확인·API key 입력처럼 Codex가 대신할 수 없는 행동만 모아 요청합니다. owner bootstrap, DB reset·seed·restore와 이메일 인증에 무관한 기능 변경은 포함되지 않습니다.
+기호의 v376 승인은 이메일 인증 rollout의 원래 범위에 계속 적용됩니다. 다만 소비된 one-attempt marker 뒤 새 recovery 실행은 기존 action의 단순 재시도가 아니므로 새 namespace와 exact 범위를 별도로 승인받습니다. Brevo 가입·발신자 소유 확인·API key 입력처럼 Codex가 대신할 수 없는 행동은 DB 단계 뒤 모아 요청합니다. owner bootstrap, DB reset·seed·restore와 이메일 인증에 무관한 기능 변경은 포함되지 않습니다.
 
 ## 배포와 기존 게임 상태
 

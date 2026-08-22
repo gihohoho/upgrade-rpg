@@ -34,8 +34,11 @@ Windows exact DACL/POSIX owner-mode 검증과 내용 기록 전 private atomic c
 trust 경계를 담당합니다. `deploy/v377-email-release-guard.example.json`,
 `tools/prepare_v377_email_release.py`, `tools/smoke/backend/smoke_v377_email_release.py`는
 미래의 GitHub Actions/GHCR/기존 Render service 단일 배포에 필요한 source-only guard와
-회귀 검사를 정의합니다. 이 구조 설명은 source 준비를 뜻하며 실제 DB·provider·배포
-실행 완료를 뜻하지 않습니다.
+회귀 검사를 정의합니다. private environment 준비는 완료됐지만 `8db9bcb`의 격리 왕복과
+local backup은 canonicalization 수정 뒤 SHA-stale이며, local apply는 Alembic 전에 안전
+중단되어 marker만 보존합니다. 다음 구조 변경은 기존 marker를 지우지 않는 새
+recovery namespace·artifact·confirmation 계약이며 실제 local/Neon DB·provider·배포 완료를
+뜻하지 않습니다.
 
 ## 문서
 

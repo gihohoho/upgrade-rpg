@@ -111,13 +111,16 @@ root·tracked script·tracked index/worktree clean, 환경·SHA·identity finger
 JWT secret과 공유하지 않고 성공 직후 `.env`에서 제거합니다. 이메일은 자동 인증하지
 않습니다.
 
-v371→v377 migration source와 guard 도구는 준비됐지만, private environment preparation·격리 왕복·local/Neon migration,
-owner script, Brevo 설정과 실제 메일은 아직 실행하지 않았습니다.
+v371→v377 migration source와 guard 도구를 준비했고 private environment preparation도
+완료했습니다. `8db9bcb`의 격리 왕복과 local v295 backup은 성공했지만 canonicalization 수정
+뒤 SHA-stale입니다. local apply는 Alembic 전에 안전 중단됐고 Neon migration, owner script,
+Brevo 설정과 실제 메일은 실행하지 않았습니다.
 
 Migration guard는 libpq가 URL의 host보다 실제 접속 주소에 사용할 수 있는 inherited
 `PGHOSTADDR`를 포함해 모든 `PG*` 기본값을 제거하고 trusted PostgreSQL client만 실행합니다.
 격리 왕복과 local/Neon backup·apply는 각 단계의 첫 mutation 전에 private exclusive marker를
-만들어 실패 뒤 같은 confirmation으로 다시 실행하는 경로도 닫습니다.
+만듭니다. 기존 marker·evidence는 보존하며 실패 뒤 같은 confirmation으로 재실행하지 않습니다.
+후속 recovery는 새 namespace·artifact·confirmation과 별도 exact 승인을 요구합니다.
 
 ## v377 인증 경계
 
@@ -196,11 +199,11 @@ token 저장 정책, 개인정보 정책은 아직 공개 전 보강 범위입�
 8. Vue 관리자 페이지 이전: 후속, 현재 실제 화면은 legacy `admin.html`
 ```
 
-공개 Render backend는 계속 v351 exact image이고 실제 local/Neon DB도 v295입니다. v377에서는
+공개 Render backend는 계속 v351 exact image이고 실제 local/Neon DB도 v295입니다. actual
 DB write·seed·migration, Brevo account/sender/API key, 실제 메일, owner bootstrap, Render
-env 변경, image 게시와 deploy를 실행하지 않았습니다. 새 public-security·semantic-outbox와
-기존 v371 이메일 lifecycle focused source 검사 및 v377 전체 core smoke는 통과했으며,
-기존 browser 결과는 과거 baseline으로 보존합니다. 다음 안전 단계는 ignored dotenv·DB security artifact의 private
-ACL과 email/abuse secret을 먼저 준비한 뒤 고정된 격리 PostgreSQL의
-v295→v377→v295→v377 왕복을 수행하고 같은 source evidence와 새 backup을 요구하는 local/Neon exact
-apply입니다. 상세 실제 결과는 `CURRENT_STATUS.md`에 기록합니다.
+env 변경, image 게시와 deploy는 실행하지 않았습니다. private environment 준비는 535개
+artifact ACL과 email/abuse secret 4개를 값 출력 없이 처리해 완료했습니다. `8db9bcb`의
+isolated 왕복과 local backup 751 rows는 새 SHA에 stale이며 local apply는 Alembic 전에
+안전 중단되어 report 없이 marker만 남았습니다. Neon은 untouched입니다. 다음 안전 단계는
+기존 marker·evidence를 보존하면서 새 recovery namespace·artifact·confirmation 계약을
+준비하고 exact 범위를 별도 승인받는 것입니다. 상세 실제 결과는 `CURRENT_STATUS.md`에 기록합니다.

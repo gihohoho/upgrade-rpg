@@ -88,13 +88,13 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v377.public-email-security-source-prepared
-strict result: public-email-security-source-prepared
-next safe stage: prepare-v377-private-email-environment
+latest: v377.local-migration-preflight-safe-stop
+strict result: local-migration-preflight-safe-stop
+next safe stage: prepare-v377-stale-evidence-recovery
 local source head: v377_auth_email_public_security
 local/Neon DB current: v295_initial_schema
-v377 migration applied: no
-email rollout approval/execution: yes/source-prepared
+v377 apply/stamp/downgrade: 0/0/0
+email rollout approval/execution: yes/private-env-prepared-db-preflight-safe-stop
 public backend/static: v351 Live
 Render public preview: deployed
 production approval/execution: no/no
@@ -110,10 +110,14 @@ production approval/execution: no/no
 - Obsidian 1.13.7 재실행 뒤 북마크 8개, Graph 색상 그룹 13개, Local Graph 깊이 3과 필수 pane을 확인했고, CSS PostCSS AST 동등성·문서/정적 배포 focused·전체 core smoke가 PASS했습니다.
 - v376에서 실행 환경 사전 고정, 범위별 단일 검증, 성공 후 중복 확인 금지와 작업별 자체 피드백을 영구 규칙으로 추가했습니다. 기호는 실질적인 이메일 인증 rollout에 필요한 보안 구현·migration·provider 설정·테스트 메일·배포를 승인했습니다.
 - README 명령 계약·위험 명령 차단·Markdown 링크/중복/크기와 handoff readiness가 PASS했고, 현재 legacy 게임/관리자 HTTP 200과 기존 PostgreSQL healthy를 읽기 전용으로 확인했습니다.
-- Brevo 계정·발신자·API key·secret, 실제 메일, DB migration, owner bootstrap, 새 image/static 배포는 실행하지 않았습니다.
+- Brevo 계정·발신자·API key, 실제 메일, DB migration, owner bootstrap, 새 image/static 배포는 실행하지 않았습니다.
 - v377 source는 PostgreSQL HMAC rate limit, auth IP 사전 보호, JSON 파싱 전 body cap, semantic mail outbox, 안전한 미인증 identity 회수와 202/429/413 frontend 계약을 추가했습니다.
 - v377 focused 검사와 설치된 Git Bash·backend `.venv`·`DEBUG=false` 조건의 전체 core smoke가 PASS했습니다.
-- 실제 isolated/local/Neon DB, Brevo/Render secret·테스트 메일·새 배포는 아직 실행하지 않았습니다. 다음 안전 단계는 clean pushed SHA에서 ignored dotenv와 기존 DB security artifact를 private ACL로 고정하고 email/abuse secret을 값 출력 없이 준비한 뒤 isolated v295→v377→v295→v377을 1회 검증하는 것입니다.
+- private environment 준비는 535개 기존 artifact의 ACL을 비공개로 고정하고 local/production에 서로 다른 email/abuse secret 4개를 값 출력 없이 생성해 완료했습니다. Brevo key와 발신 이메일은 아직 없습니다.
+- `8db9bcb`에서 synthetic isolated v295→v377→v295→v377과 local v295 custom backup 751 rows가 성공했지만, fingerprint canonicalization source 수정 뒤에는 둘 다 현재 SHA에 사용할 수 없는 stale evidence입니다.
+- 첫 local apply는 Alembic 실행 전에 cross-driver fingerprint 표현 차이를 실제 차이로 잘못 판정해 안전 중단됐습니다. apply report는 없고 local DB는 v295 그대로이며 attempt marker를 보존하므로 같은 action을 재실행하지 않습니다. Neon은 접속·backup·apply·marker가 모두 없습니다.
+- aware datetime과 Decimal fingerprint를 driver-independent하게 canonicalize했고 실제 local 751행의 asyncpg/psycopg read-only parity가 PASS했습니다. 이 source 수정으로 `8db9bcb` evidence는 현재 SHA에 stale입니다.
+- 다음 단계는 기존 marker나 evidence를 삭제·덮어쓰지 않고 새 namespace·artifact·confirmation을 쓰는 recovery 절차를 source로 준비한 뒤 exact 범위를 별도 승인받는 것입니다.
 - 공개 회원가입·새 이미지 배포 blocker는 server session/revoke, save CAS, CSP/XSS·브라우저 token, 개인정보 정책입니다. 이메일 rollout 내에서도 이 gate를 우회하지 않습니다.
 - 검증된 공개 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`, backend는 `https://upgrade-rpg-api.onrender.com`입니다.
 - 이전 배포·콘텐츠·이미지의 상세 이력은 `docs/archive/history/`와 Git history에서 필요할 때만 확인합니다.

@@ -1,18 +1,18 @@
 # 이메일 인증·계정 복구·계정 삭제 준비 — v377
 
 ```txt
-latest: v377.public-email-security-source-prepared
-strict result: public-email-security-source-prepared
-next safe stage: prepare-v377-private-email-environment
+latest: v377.local-migration-preflight-safe-stop
+strict result: local-migration-preflight-safe-stop
+next safe stage: prepare-v377-stale-evidence-recovery
 public Render: backend/static 모두 계속 v351
-database migration: v371→v377 source only / local·Neon 모두 v295
+database migration: local·Neon 모두 v295 / apply·stamp·downgrade 0회
 email provider: selected only / account·sender·API key not configured
-email rollout approval/execution: yes/source-prepared
+email rollout approval/execution: yes/private-env-prepared-db-preflight-safe-stop
 ```
 
 ## v376 실행 승인
 
-기호는 실질적인 이메일 인증 rollout에 필요한 공개 보안 구현, 필요한 unapplied migration source, isolated PostgreSQL 왕복, gate 통과 뒤 local/Neon migration, Brevo/Render secret 설정, 테스트 메일, backend/static 배포와 실제 이메일 end-to-end 확인을 승인했습니다. 같은 범위를 단계마다 다시 묻지 않으며, Brevo 가입·발신자 소유 확인·API key 입력처럼 Codex가 대신할 수 없는 행동만 한 번에 요청합니다. owner bootstrap, DB reset·seed·restore와 이메일 인증에 무관한 기능 변경은 포함되지 않습니다.
+기호는 실질적인 이메일 인증 rollout에 필요한 공개 보안 구현, 필요한 unapplied migration source, isolated PostgreSQL 왕복, gate 통과 뒤 local/Neon migration, Brevo/Render secret 설정, 테스트 메일, backend/static 배포와 실제 이메일 end-to-end 확인을 승인했습니다. 정상 경로의 같은 범위를 단계마다 다시 묻지 않지만, 소비된 one-attempt marker 뒤 새 recovery는 새 namespace와 exact 범위를 별도로 승인받습니다. Brevo 가입·발신자 소유 확인·API key 입력처럼 Codex가 대신할 수 없는 행동은 DB 단계 뒤 한 번에 요청합니다. owner bootstrap, DB reset·seed·restore와 이메일 인증에 무관한 기능 변경은 포함되지 않습니다.
 
 ## 결론
 
@@ -23,10 +23,12 @@ semantic outbox를 source로 준비합니다. 가입은 아이디와 이메일�
 링크를 완료하기 전에는 access token을 발급하지 않고 게임에 들어갈 수 없게 합니다.
 로그인할 때는 아이디 또는 이메일 중 하나를 사용할 수 있습니다.
 
-이 checkpoint에서는 migration 파일과 애플리케이션 코드를 준비할 뿐입니다. 실제 local/Neon
-DB write, Alembic `upgrade`·`downgrade`·`stamp`, Brevo 가입·발신자 인증·API key 생성,
-실제 메일 발송, `.env` secret 주입, GHCR 게시, Render 환경변수 변경과 backend/static
-배포는 모두 **0회**입니다. 공개 Render는 계속 v351입니다.
+private environment 준비는 security artifact 535개의 ACL을 비공개로 고정하고 local/production에
+서로 다른 email/abuse secret 4개를 값 출력 없이 생성해 완료했습니다. `8db9bcb`의 synthetic
+isolated 왕복과 local v295 custom backup 751 rows도 각각 1회 성공했지만 canonicalization 수정
+뒤에는 SHA-stale입니다. actual local/Neon Alembic `upgrade`·`stamp`·`downgrade`는 0회이고,
+Brevo 가입·발신자 인증·API key 생성, 실제 메일 발송, GHCR 게시, Render 환경변수 변경과
+backend/static 배포는 실행하지 않았습니다. 공개 Render는 계속 v351입니다.
 
 ## 사용자 흐름
 
@@ -104,13 +106,13 @@ v377 revision은 다음 두 테이블을 추가하도록 준비합니다.
   상태, 최대 1회의 provider attempt와 제한된 message ID/error code만 저장하며 수신자,
   원문 token, 제목·본문은 저장하지 않음
 
-현재 두 revision 파일은 **source-only**입니다. migration을 적용하면 schema가 실제로
-바뀌고 실행 중인 v351 backend와 schema 계약이 달라지므로 다음 세 작업을 섞지 않습니다.
+두 revision은 source에 준비됐지만 actual local/Neon DB에는 적용되지 않았습니다. `8db9bcb`의
+synthetic 왕복과 local backup은 성공했으나 canonicalization 수정 뒤 SHA-stale이고, 첫 local
+apply는 Alembic 전에 fingerprint 표현 차이로 안전 중단됐습니다. report는 없고 DB는 v295이며
+attempt marker를 보존합니다. Neon은 untouched입니다.
 
-1. v377 source·dependency·focused 검사 준비와 clean/pushed exact commit
-2. 고정 격리 DB에서 synthetic data만 사용한 v295→v377→v295→v377 왕복
-3. 같은 source의 완료된 왕복 report와 각 target의 새 verified backup을 요구하는
-   local/Neon exact apply
+다음 단계는 기존 marker·evidence 삭제나 같은 action 재실행이 아니라 새
+recovery namespace·artifact·confirmation 계약 준비와 exact 범위 별도 승인입니다.
 
 일반 `alembic upgrade head`, `stamp`, 자동 startup migration은 사용하지 않습니다. 실제
 target apply는 lock/statement timeout, exact source·target·action·backup 확인을 모두 갖춘
@@ -126,8 +128,8 @@ dependency로 사용하도록 준비했습니다. 패키지가 없으면 약한 
 
 기호의 승인으로 `email-validator==2.3.0`과 전이 dependency `dnspython==2.8.0`을
 `backend/.venv`, Linux lock 3개와 GHCR 재현성 hash에 반영했습니다. package를 임의로
-제거하면 이메일 동작은 계속 `503`으로 fail-closed합니다. migration과 실제 회원가입
-end-to-end는 아직 실행하지 않았고 owner bootstrap은 별도 승인 전입니다.
+제거하면 이메일 동작은 계속 `503`으로 fail-closed합니다. actual local/Neon migration과
+실제 회원가입 end-to-end는 아직 실행하지 않았고 owner bootstrap은 별도 승인 전입니다.
 
 ## API source 계약 — route map 확정
 
@@ -344,19 +346,20 @@ v377 source가 아래 항목을 모두 끝내는 것은 아닙니다. 공개 회
 ## 승인 단위와 다음 순서
 
 ```txt
-1. v377 source 준비 commit·push
-2. 같은 exact source로 isolated PostgreSQL v295→v377→v295→v377 왕복
-3. 완료된 왕복 report + local 새 backup 뒤 local exact apply
-4. 같은 report + Neon 새 backup 뒤 Neon exact apply
-5. Brevo 계정·발신자·전용 API key와 local/Render secret 설정
+1. old `8db9bcb` evidence와 소비된 marker를 보존하는 recovery 계약 준비
+2. 새 namespace·artifact·confirmation과 exact 실행 범위 별도 승인
+3. 승인된 fresh current-SHA evidence로 local을 다시 검토
+4. local 성공 뒤 untouched Neon의 backup·exact apply 검토
+5. Brevo 계정·발신자·전용 API key와 필요한 local/Render 설정
 6. 실제 테스트 메일과 가입·인증·복구·삭제 end-to-end 확인
 7. server session/revoke, save CAS, CSP/XSS/browser token, 개인정보 gate 완료
 8. exact v377 backend/static 준비·게시·배포와 rollback 확인
 ```
 
-v376에서 승인된 이메일 rollout 범위는 1~6과 필요한 release 준비까지 이어지므로 같은
-DB 단계를 다시 승인받지 않습니다. Brevo 가입·발신자 소유 확인·API key 입력처럼 Codex가
-대신할 수 없는 행동만 요청합니다. owner bootstrap은 이 목록과 별도입니다.
+v376에서 승인된 이메일 rollout의 정상 범위는 이어지지만 2~4의 recovery는 소비된
+one-attempt marker 뒤 새 절차이므로 exact 범위를 별도로 승인받습니다. Brevo 가입·발신자
+소유 확인·API key 입력처럼 Codex가 대신할 수 없는 행동은 DB 단계 뒤 요청합니다. owner
+bootstrap은 이 목록과 별도입니다.
 
 ## 현재 검증 결과
 
@@ -387,5 +390,6 @@ Browser URL 정책이 `data:` 이메일 HTML 미리보기를 차단해 우회하
 실제 이메일 클라이언트의 시각 QA는 Brevo sender 설정 뒤 테스트 메일 1건 단계로 남깁니다.
 기존 v371 browser 결과는 과거 baseline의 PASS이며 v377 전체
 `bash tools/run_smoke_core.sh`도 backend `.venv`·`DEBUG=false` 조건에서 PASS했습니다.
-migration roundtrip은 아직 이 source checkpoint의 완료 주장에 포함하지 않습니다. 현재 marker는 source와 migration 파일의 준비를 뜻할 뿐 실제 migration·메일·
-owner bootstrap·공개 배포 완료를 뜻하지 않습니다.
+`8db9bcb` migration roundtrip은 성공했지만 canonicalization 수정 뒤 현재 SHA에는 stale입니다.
+local apply는 Alembic 전에 안전 중단됐고 report 없이 marker만 남았으며 local DB는 v295입니다.
+이 결과는 actual local/Neon migration·메일·owner bootstrap·공개 배포 완료를 뜻하지 않습니다.

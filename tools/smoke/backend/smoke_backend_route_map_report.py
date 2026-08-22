@@ -14,6 +14,13 @@ RUN_SMOKE = ROOT / "tools/run_smoke_core.sh"
 
 REQUIRED_TEXT = [
     "Backend Route Map — v377",
+    "latest: v377.local-migration-preflight-safe-stop",
+    "strict result: local-migration-preflight-safe-stop",
+    "actual target v377 apply: 0",
+    "private email environment: prepared",
+    "source 8db9bcb only / stale",
+    "pre-Alembic false fingerprint safe-stop / report absent / attempt marker blocks retry",
+    "Neon: untouched",
     "v377 이메일 계정 gate, 캐릭터 슬롯, 저장 브리지",
     "전체 route 수 | 48",
     "`DELETE` | 1",
@@ -36,7 +43,7 @@ REQUIRED_TEXT = [
     "POST /api/v1/admin/master-data/create-apply",
     "POST /api/v1/game/save",
     "query 이름은 `id`",
-    "prepare-v377-private-email-environment",
+    "prepare-v377-stale-evidence-recovery",
 ]
 
 FORBIDDEN_TEXT = [
