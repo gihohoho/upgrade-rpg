@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v377.local-email-auth-unblocked"
-RESULT = "local-email-auth-unblocked"
-NEXT_STAGE = "configure-v377-local-brevo-provider"
+VERSION = "v377.local-email-e2e-verified"
+RESULT = "local-email-e2e-verified-provider-finalize-followup"
+NEXT_STAGE = "diagnose-v377-brevo-delivery-finalize"
 SOURCE_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_HEAD = SOURCE_HEAD
 NEON_APPLIED_HEAD = "v295_initial_schema"
@@ -96,7 +96,7 @@ def main() -> int:
     )
     require_markers(
         "NEXT_CHAT_PROMPT.md",
-        "configure-v377-local-brevo-provider",
+        "diagnose-v377-brevo-delivery-finalize",
         "다시 전면 감사하지 말고",
     )
     require_markers(

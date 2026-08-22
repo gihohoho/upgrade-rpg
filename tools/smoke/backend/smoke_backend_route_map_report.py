@@ -14,13 +14,15 @@ RUN_SMOKE = ROOT / "tools/run_smoke_core.sh"
 
 REQUIRED_TEXT = [
     "Backend Route Map — v377",
-    "latest: v377.local-email-auth-unblocked",
-    "strict result: local-email-auth-unblocked",
+    "latest: v377.local-email-e2e-verified",
+    "strict result: local-email-e2e-verified-provider-finalize-followup",
     "actual target v377 apply: local 1 / Neon 0",
     "private email environment: prepared",
     "source 8db9bcb / preserved",
     "source 345872a / verified",
     "protection store available / legacy no-email login compatible",
+    "Naver delivery / link verification / login verified",
+    "delivery_outcome_unknown follow-up",
     "Neon: untouched",
     "v377 이메일 계정 gate, 캐릭터 슬롯, 저장 브리지",
     "전체 route 수 | 48",
@@ -44,7 +46,7 @@ REQUIRED_TEXT = [
     "POST /api/v1/admin/master-data/create-apply",
     "POST /api/v1/game/save",
     "query 이름은 `id`",
-    "configure-v377-local-brevo-provider",
+    "diagnose-v377-brevo-delivery-finalize",
 ]
 
 FORBIDDEN_TEXT = [

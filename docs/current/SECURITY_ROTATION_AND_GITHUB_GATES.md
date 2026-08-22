@@ -1,6 +1,6 @@
 # Security rotation and GitHub gates — v377
 
-## v377 local email auth unblocked — 2026-08-22
+## v377 local email E2E verified — 2026-08-22
 
 - Alembic source head는 `v295_initial_schema` → `v371_email_identity_lifecycle` →
   `v377_auth_email_public_security`입니다. v377은 `auth_rate_limit_buckets`와
@@ -54,10 +54,13 @@
   client는 고정 절대 경로, POSIX client는 root/current owner와 group/world non-writable
   resolved 경로만 허용합니다. isolated roundtrip과 target별 backup·apply는 첫 mutation 전에
   private exclusive marker를 남겨 성공·실패 후 같은 시도를 다시 실행하지 못하게 합니다.
-- Brevo account, sender 인증, project API key, Render secret, anonymous tracking, 1개월
-  log retention, preview 미저장과 실제 테스트 메일은 아직 실행하지 않았습니다. 일반
-  Brevo API key는 account-wide 권한이므로 project 전용 key를 Render secret에만 두고
-  노출·미사용·integration 종료 시 삭제합니다.
+- Brevo account와 검증된 sender, 1개월 만료 project API key, anonymous tracking, 1개월
+  log retention, preview 미저장을 local 범위에서 준비했습니다. key와 sender 값은 ignored
+  `backend/.env`에만 있고 Render secret에는 아직 전달하지 않았습니다. 일반 Brevo API key는
+  account-wide 권한이므로 노출·미사용·integration 종료 시 삭제합니다.
+- local 호출 IP 허용 뒤 실제 Naver 메일 수신, 링크 인증과 로그인을 확인했습니다. 실제 전달된
+  요청의 outbox가 provider completion ambiguity로 `delivery_outcome_unknown` terminal이 된
+  관찰은 자동 재시도 없이 보존하고 Neon 전 focused 진단 대상으로 둡니다.
 - v377 public-security·semantic-outbox와 기존 v371 이메일 lifecycle focused source 검사,
   backend `.venv`·`DEBUG=false` 조건의 v377 전체 core smoke는 PASS입니다. pushed SHA
   `8db9bcb`에서 synthetic migration 왕복도 성공했지만 fingerprint canonicalization source
@@ -77,14 +80,14 @@ local/Neon의 새 backup·exact migration → Brevo sender/key/secret → 테스
 backend/static release 준비를 한 범위로 승인했습니다. 정상 경로의 같은 DB 단계를 반복
 승인받지는 않지만, 소비된 one-attempt marker 뒤 새 recovery는 단순 재시도가 아니므로 새
 namespace와 exact 범위를 별도로 승인받습니다. Codex가 대신할 수 없는 Brevo 가입·발신자
-소유 확인·API key 입력은 DB 단계 뒤 요청하며 owner bootstrap은 이 승인과 분리합니다.
+소유 확인·privacy 설정·API key 입력은 완료했으며 owner bootstrap은 이 승인과 분리합니다.
 
 첫 local apply의 safe-stop evidence는 보존했고, 별도 `recovery1` namespace에서 synthetic
 왕복·fresh backup·local v377 apply를 각각 1회 완료했습니다. Neon은 접속·backup·apply·marker가
-모두 없습니다. 다음 안전 단계는 Brevo sender·privacy 설정·전용 API key를 준비하고 local
-실제 메일 E2E를 검증하는 것입니다. 공개
+모두 없습니다. 다음 안전 단계는 실제 전달 뒤 outbox finalize가 모호했던 원인을 진단하고
+정상 2xx와 timeout terminal 계약을 focused 검증하는 것입니다. 공개
 blocker는 서버 session/refresh·기기별 폐기, save revision/CAS, CSP/XSS와 browser token,
-개인정보·법적 보존 정책, provider 실제 설정·테스트, exact deploy입니다. 자세한 계약은
+개인정보·법적 보존 정책, provider finalize 후속, exact deploy입니다. 자세한 계약은
 `ACCOUNT_EMAIL_VERIFICATION_RECOVERY_AND_DELETION.md`에 있습니다. source-only release guard는
 이 blocker를 해제하거나 우회하지 않습니다.
 

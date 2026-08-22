@@ -1,9 +1,9 @@
 # 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v377.local-email-auth-unblocked
-strict result: local-email-auth-unblocked
-next safe stage: configure-v377-local-brevo-provider
+latest: v377.local-email-e2e-verified
+strict result: local-email-e2e-verified-provider-finalize-followup
+next safe stage: diagnose-v377-brevo-delivery-finalize
 public Render: backend/static 모두 계속 v351
 local/Neon DB: v377 / v295
 ```
@@ -246,17 +246,17 @@ v377은 로컬 source·migration 준비 단계이며 Render backend와 Static Si
 2. 다중 기기 동시 접속의 save revision, CAS·낙관적 잠금과 충돌 해결
 3. HTTPS 전용 동작, CSP와 XSS 회귀, browser token 저장 방식 재검토
 4. 이용약관·개인정보 고지와 계정/데이터 삭제·법적 보존 정책
-5. Brevo sender, anonymous transactional tracking, 1개월 log retention, preview 미저장과
-   실제 테스트 메일 검증
+5. local Brevo 설정·실제 메일은 완료; Render 전달 전 provider finalize 관찰과 key 회전 검증
 6. v377 backend image와 legacy static을 같은 승인 단위로 게시·배포하는 exact-SHA gate
 7. 소셜 로그인 도입 시 provider-neutral 연결 테이블과 계정 연결/해제 정책
 
 `email-validator 2.3.0`과 Linux dependency lock은 반영됐고 private environment 준비에서
 local/production의 `EMAIL_TOKEN_SECRET`·`AUTH_ABUSE_SECRET` 4개를 서로 다르게 생성했습니다.
-실제 값은 채팅에 보내지 않으며 Brevo 전용 API key와 발신자는 아직 필요합니다.
+실제 값은 채팅에 보내지 않으며 local Brevo 전용 API key와 발신자 설정은 완료했습니다.
 `8db9bcb` 격리 왕복·local backup과 첫 실패 marker는 stale history로 보존했습니다.
 `345872a`의 별도 `recovery1` namespace에서 왕복·fresh backup·local v377 apply를 각각
-1회 완료했으므로, 다음 순서는 Brevo local provider 설정과 실제 테스트 메일입니다.
+1회 완료했고 실제 Naver 메일 인증·로그인도 성공했습니다. 다음 순서는 실제 전달 뒤
+`delivery_outcome_unknown`으로 닫힌 provider finalize 경계의 focused 진단입니다.
 owner bootstrap은 승인 범위 밖의 별도 단계이고 공개 release는 남은 blocker 완료 뒤 진행합니다.
 
 ## 검증 상태
@@ -286,11 +286,12 @@ PASS입니다.
 실제 Chrome에서 로그인·회원가입·아이디 찾기·비밀번호 재설정 custom modal을 확인했고,
 기본 viewport와 `390×844`에서 mobile `document.scrollWidth=390`, horizontal overflow 0,
 console warn/error 0입니다. 이메일 renderer의 외부 asset 0·escape 구조는 smoke로
-검증했지만 Browser가 `data:` preview를 차단해 실제 메일 클라이언트 시각 QA는 Brevo
-테스트 메일 단계로 남습니다. v377 public-security·semantic-outbox와 기존 v371 이메일
+검증했고 실제 Naver 메일함에서 메일 도착과 링크 동작을 확인했습니다. v377 public-security·semantic-outbox와 기존 v371 이메일
 lifecycle focused source 검사 및 전체 core smoke는 PASS입니다. `8db9bcb` 격리 왕복과 local
 v295 backup 751 rows는 성공했지만 canonicalization 수정 뒤 SHA-stale입니다. 첫 local apply는
 Alembic 전에 안전 중단되어 report 없이 marker만 남았고 기존 namespace는 재사용하지 않습니다.
 `345872a` recovery1 격리 왕복·local backup·local v377 적용은 완료했습니다. 기존 22개
 table 데이터 보존과 25개 model table parity가 PASS했고 Neon은 untouched v295입니다.
-Brevo 설정·발송, owner bootstrap, Render/GHCR 배포는 실행하지 않았습니다.
+local Brevo 설정·발송·인증·로그인은 완료했습니다. 정상 수신 뒤 outbox finalize의
+`delivery_outcome_unknown` 관찰은 후속 진단으로 남기고, owner bootstrap과 Render/GHCR
+배포는 실행하지 않았습니다.

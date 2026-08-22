@@ -5,13 +5,13 @@
 ## 상태 표식
 
 ```txt
-latest: v377.local-email-auth-unblocked
-strict result: local-email-auth-unblocked
-next safe stage: configure-v377-local-brevo-provider
+latest: v377.local-email-e2e-verified
+strict result: local-email-e2e-verified-provider-finalize-followup
+next safe stage: diagnose-v377-brevo-delivery-finalize
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v295_initial_schema
 v377 apply/stamp/downgrade: local 1/0/0; Neon 0/0/0
-email rollout approval/execution: yes/local-migration-applied-provider-pending
+email rollout approval/execution: yes/local-provider-e2e-verified-finalize-followup
 public backend/static: v351 Live
 production approval/execution: no/no
 ```
@@ -33,7 +33,7 @@ production approval/execution: no/no
 - `email-validator==2.3.0`과 `dnspython==2.8.0`은 backend `.venv`와 재현 가능한 Linux lock에 고정되어 있으며 누락 시 이메일 동작은 fail-closed합니다.
 - `prepare_v377_email_release.py`는 미래 release의 fresh publish lifecycle, 단일 `run_attempt=1`, 새 서명 image digest, 기존 Render service와 필수 환경변수 키 이름만 fail-closed로 검증합니다. 기본 동작은 read-only이며 GitHub·GHCR·Render·Brevo·공개 endpoint를 호출하지 않는 source-only guard입니다.
 - `private_artifacts.py`와 환경·migration guard는 secret·DB backup·evidence를 읽기 전에 exact path와 OS별 비공개 권한을 검증합니다. Windows에서는 현재 사용자·LocalSystem·Administrators만 명시적으로 허용하며 secret/backup 내용은 private file을 먼저 만든 뒤 기록합니다. 기본 plan/inspect는 권한을 바꾸지 않습니다.
-- 실제 environment `--apply`는 기존 security artifact 535개의 ACL을 비공개로 고정하고 local/production에 서로 다른 강한 email/abuse secret 4개를 값 출력 없이 생성해 완료했습니다. Brevo API key와 발신 이메일은 아직 없습니다.
+- 실제 environment `--apply`는 기존 security artifact 535개의 ACL을 비공개로 고정하고 local/production에 서로 다른 강한 email/abuse secret 4개를 값 출력 없이 생성해 완료했습니다. local `backend/.env`에는 프로젝트 전용 Brevo API key와 검증된 sender를 값 출력 없이 추가했고 production dotenv와 Render env는 바꾸지 않았습니다.
 - 이메일 없는 기존 v295 계정은 아이디·비밀번호 접근을 유지하면서 `emailVerified=false`로 반환합니다. 이메일이 있는 신규 계정은 인증 링크 완료 전 access token과 Bearer 접근을 계속 차단합니다.
 
 ## DB·migration 상태
@@ -65,11 +65,13 @@ production approval/execution: no/no
 - aware datetime UTC 변환과 Decimal 고정값 canonicalization 회귀 및 실제 local 751행 asyncpg/psycopg read-only fingerprint parity PASS
 - local v377 migration 후 인증 POST가 503 대신 정상 422/credential 판정까지 진행하고, 실제 브라우저에서도 보호 기능 오류가 사라짐을 확인했습니다.
 - 이메일 있는 미인증 계정 차단과 이메일 없는 legacy 계정 로그인·Bearer 복구 회귀 PASS
+- Brevo anonymous tracking·1개월 transactional log retention·preview 미저장과 local 호출 IP 허용을 확인했습니다. 실제 Naver 메일 수신, action-link 인증 HTTP 200, 실제 계정 로그인과 캐릭터 슬롯 8개 진입 PASS
+- IP 허용 전 첫 발송은 401로 terminal 실패했고 자동 재시도하지 않았습니다. 허용 뒤 새 발송은 실제 전달됐지만 outbox 행은 provider completion ambiguity로 `delivery_outcome_unknown` terminal이 됐습니다. token 인증은 정상 성공했으며 이 finalize 관찰은 Neon 전 focused 후속입니다.
 
 ## 실행하지 않은 것
 
 - untouched Neon의 backup/apply, DB reset·seed·restore·stamp·actual downgrade
-- Brevo 가입·sender 확인·전용 API key와 실제 provider/Render 설정, 실제 메일·메일 클라이언트 QA
+- Render의 Brevo secret/provider 설정과 공개 메일 QA; local Brevo 설정·실제 메일 E2E는 완료
 - owner bootstrap apply
 - GitHub Actions, GHCR image 게시, Render env·backend deploy, legacy static 배포
 - custom domain, DNS, 결제
@@ -82,7 +84,7 @@ v377에서 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회�
 2. 다중 기기 save revision/CAS와 충돌 해결
 3. HTTPS/CSP/XSS 회귀, 브라우저 token 저장 정책
 4. 개인정보 보관·삭제·문의·복구 정책
-5. Brevo sender, anonymous tracking, 1개월 log retention, preview 미저장과 전용 API key 회전 실제 검증
+5. local에서 확인한 Brevo sender·privacy 설정을 Render에 안전하게 전달하고 key 회전·운영 보관 경계를 검증
 6. backend image와 legacy static의 같은 exact-SHA 게시·배포·rollback 검증
 
 source-only release guard는 이 마지막 실행을 대신하거나 허가하지 않습니다. 위 1∼5번과
@@ -90,11 +92,11 @@ Brevo 실제 검증이 끝난 뒤에만 별도 exact-SHA release 판단에 사�
 
 ## 바로 다음 단계
 
-1. 기호가 Brevo Free 계정·sender 소유 확인·transactional privacy 설정·전용 API key를 준비합니다.
-2. `BREVO_API_KEY`와 `BREVO_FROM_EMAIL`을 값 출력 없이 local dotenv에 넣고 backend를 재시작합니다.
-3. 실제 테스트 메일 1건과 가입→인증→로그인→복구를 확인한 뒤 untouched Neon 단계를 별도 exact 범위로 진행합니다.
+1. 정상 수신된 Brevo 메일의 outbox 행이 `sent` 대신 `delivery_outcome_unknown`으로 닫힌 원인을 provider response·worker finalize 경계에서 집중 진단합니다.
+2. 정상 2xx 응답은 `sent`, timeout·process ambiguity는 terminal unknown으로 남는 계약을 secret 없는 focused 회귀로 검증합니다.
+3. 이 후속이 끝난 뒤 untouched Neon 단계를 별도 exact 범위로 진행합니다.
 
-기호의 v376 승인과 이번 local 복구 요청은 이메일 인증 rollout에 계속 적용됩니다. Brevo 가입·발신자 소유 확인·privacy 설정·API key 생성처럼 Codex가 대신할 수 없는 행동만 모아 요청합니다. owner bootstrap, DB reset·seed·restore와 이메일 인증에 무관한 기능 변경은 포함되지 않습니다.
+기호의 v376 승인과 이번 local 복구 요청은 이메일 인증 rollout에 계속 적용됩니다. Brevo 가입·발신자 소유 확인·privacy 설정·API key 생성과 local 실제 인증은 완료됐습니다. owner bootstrap, DB reset·seed·restore와 이메일 인증에 무관한 기능 변경은 포함되지 않습니다.
 
 ## 배포와 기존 게임 상태
 

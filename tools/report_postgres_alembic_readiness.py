@@ -17,14 +17,14 @@ from pathlib import Path
 
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/POSTGRES_ALEMBIC_READINESS.md")
-CHECKPOINT_VERSION = "v377.local-email-auth-unblocked"
-CHECKPOINT_RESULT = "local-email-auth-unblocked"
+CHECKPOINT_VERSION = "v377.local-email-e2e-verified"
+CHECKPOINT_RESULT = "local-email-e2e-verified-provider-finalize-followup"
 SOURCE_GRAPH_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_DB_REVISION = SOURCE_GRAPH_HEAD
 NEON_APPLIED_DB_REVISION = "v295_initial_schema"
 LOCAL_APPLIED_DB_APPLICATION_TABLES = 25
 NEON_APPLIED_DB_APPLICATION_TABLES = 22
-NEXT_SAFE_STAGE = "configure-v377-local-brevo-provider"
+NEXT_SAFE_STAGE = "diagnose-v377-brevo-delivery-finalize"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 
@@ -162,6 +162,8 @@ private email environment: prepared
 legacy evidence: source {STALE_SOURCE_SHA} / stale and preserved
 recovery1 roundtrip/local backup/apply: source {RECOVERY_SOURCE_SHA} / verified
 local auth POST: protection store available / legacy no-email login compatible
+local Brevo E2E: Naver delivery / link verification / login verified
+provider finalize: delivery_outcome_unknown follow-up
 Neon: untouched
 model application tables: {len(models)}
 local/Neon application tables: {LOCAL_APPLIED_DB_APPLICATION_TABLES} / {NEON_APPLIED_DB_APPLICATION_TABLES}
@@ -450,11 +452,11 @@ revision만 거짓으로 올릴 수 있으므로 특히 금지합니다.
    생성되지 않았습니다. 그 private exclusive attempt marker는 남겨 두고 재실행하지 않았습니다.
 7. local actual DB는 v377이고 기존 22개 table 데이터 변화 0·25개 model table parity를
    확인했습니다. Neon은 v295이며 backup·apply를 시작하지 않았습니다.
-8. 다음 안전 단계는 Brevo sender·전용 API key를 준비해 local 실제 메일을 검증하는
-   `{NEXT_SAFE_STAGE}`입니다.
+8. local 실제 메일·링크 인증·로그인은 완료했습니다. 다음 안전 단계는 실제 전달 뒤
+   `delivery_outcome_unknown`이 된 provider finalize 경계를 진단하는 `{NEXT_SAFE_STAGE}`입니다.
 
-현재는 **local email auth unblocked** 상태입니다. local DB schema는 v377이고 legacy
-데이터는 보존됐으며 Neon DB와 provider 상태는 변경되지 않았습니다.
+현재는 **local email E2E verified with provider-finalize follow-up** 상태입니다. local DB
+schema와 legacy 데이터는 보존됐고 Neon DB와 Render provider 설정은 변경되지 않았습니다.
 
 ### Stage F — 운영·배포 runtime readiness
 

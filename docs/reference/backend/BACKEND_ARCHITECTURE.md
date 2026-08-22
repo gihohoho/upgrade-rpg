@@ -113,8 +113,9 @@ JWT secret과 공유하지 않고 성공 직후 `.env`에서 제거합니다. �
 
 v371→v377 migration source와 guard 도구, private environment preparation을 완료했습니다.
 `8db9bcb` evidence는 stale history로 보존하고 `345872a` recovery1 왕복·local v295 backup·
-exact local v377 apply를 각각 1회 완료했습니다. Neon migration, owner script, Brevo 설정과
-실제 메일은 실행하지 않았습니다.
+exact local v377 apply를 각각 1회 완료했습니다. local Brevo 설정과 실제 Naver 메일 인증·
+로그인은 완료했고, 정상 수신 뒤 outbox finalize의 `delivery_outcome_unknown` 관찰은 Neon 전
+후속으로 남겼습니다. Neon migration, owner script, Render Brevo 설정은 실행하지 않았습니다.
 
 Migration guard는 libpq가 URL의 host보다 실제 접속 주소에 사용할 수 있는 inherited
 `PGHOSTADDR`를 포함해 모든 `PG*` 기본값을 제거하고 trusted PostgreSQL client만 실행합니다.

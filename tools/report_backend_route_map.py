@@ -22,9 +22,9 @@ from pathlib import Path
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
-CHECKPOINT_VERSION = "v377.local-email-auth-unblocked"
-CHECKPOINT_RESULT = "local-email-auth-unblocked"
-NEXT_SAFE_STAGE = "configure-v377-local-brevo-provider"
+CHECKPOINT_VERSION = "v377.local-email-e2e-verified"
+CHECKPOINT_RESULT = "local-email-e2e-verified-provider-finalize-followup"
+NEXT_SAFE_STAGE = "diagnose-v377-brevo-delivery-finalize"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 
@@ -357,6 +357,8 @@ private email environment: prepared
 legacy stale evidence: source {STALE_SOURCE_SHA} / preserved
 recovery1 roundtrip/local backup/apply: source {RECOVERY_SOURCE_SHA} / verified
 local auth POST: protection store available / legacy no-email login compatible
+local Brevo E2E: Naver delivery / link verification / login verified
+provider finalize: delivery_outcome_unknown follow-up
 Neon: untouched
 next safe stage: {NEXT_SAFE_STAGE}
 ```
@@ -432,16 +434,15 @@ private environment와 local migration은 완료했습니다. 이전 source `{ST
 stale evidence와 실패 marker는 보존했고, source `{RECOVERY_SOURCE_SHA}`의 별도 recovery1
 왕복·backup·local v377 apply를 각각 1회 검증했습니다. 인증 POST는 보호 store를 정상
 사용하고 이메일 없는 legacy 계정은 기존 로그인을 유지합니다. Neon은 untouched이며
-owner bootstrap·Brevo·배포는 여전히 별도입니다.
+local Brevo E2E는 완료했고 owner bootstrap·Render Brevo 설정·배포는 여전히 별도입니다.
 
 권장 범위:
 
-1. Brevo sender·transactional privacy·전용 API key를 준비합니다.
-2. local dotenv에 key와 발신 이메일을 값 출력 없이 넣고 backend를 재시작합니다.
-3. 실제 테스트 메일로 가입·인증·로그인·복구 흐름을 확인합니다.
-4. local 검증 뒤에만 아직 시작하지 않은 Neon migration을 별도 exact 범위로 판단합니다.
-5. 서버측 session/revoke, save revision/CAS, CSP/XSS·브라우저 token과 개인정보 정책은 공개 회원가입을 열기 전에 마저 완료합니다.
-6. backend image와 legacy static은 모든 공개 gate가 닫힌 뒤 같은 exact-SHA 단위로 게시·배포합니다.
+1. 실제 전달 뒤 outbox가 `delivery_outcome_unknown`으로 닫힌 provider finalize 경계를 진단합니다.
+2. 정상 2xx와 timeout·결과 불명 상태를 secret 없는 focused 회귀로 구분해 검증합니다.
+3. 이 후속 뒤에만 아직 시작하지 않은 Neon migration을 별도 exact 범위로 판단합니다.
+4. 서버측 session/revoke, save revision/CAS, CSP/XSS·브라우저 token과 개인정보 정책은 공개 회원가입을 열기 전에 마저 완료합니다.
+5. backend image와 legacy static은 모든 공개 gate가 닫힌 뒤 같은 exact-SHA 단위로 게시·배포합니다.
 """
 
 

@@ -1,13 +1,13 @@
 # 이메일 인증·계정 복구·계정 삭제 준비 — v377
 
 ```txt
-latest: v377.local-email-auth-unblocked
-strict result: local-email-auth-unblocked
-next safe stage: configure-v377-local-brevo-provider
+latest: v377.local-email-e2e-verified
+strict result: local-email-e2e-verified-provider-finalize-followup
+next safe stage: diagnose-v377-brevo-delivery-finalize
 public Render: backend/static 모두 계속 v351
 database migration: local v377 / Neon v295 / local apply 1회 / stamp·downgrade 0회
-email provider: selected only / account·sender·API key not configured
-email rollout approval/execution: yes/local-migration-applied-provider-pending
+email provider: local Brevo configured and real Naver delivery verified / Render pending
+email rollout approval/execution: yes/local-provider-e2e-verified-finalize-followup
 ```
 
 ## v376 실행 승인
@@ -29,7 +29,11 @@ private environment 준비는 security artifact 535개의 ACL을 비공개로 �
 isolated 왕복과 local v295 custom backup 751 rows도 각각 1회 성공했지만 canonicalization 수정
 뒤에는 SHA-stale입니다. 이후 `345872a`의 별도 recovery1 왕복·backup을 성공하고 local만
 v377로 1회 upgrade했습니다. Neon은 v295이고 stamp·downgrade는 0회입니다.
-Brevo 가입·발신자 인증·API key 생성, 실제 메일 발송, GHCR 게시, Render 환경변수 변경과
+Brevo 프로젝트 전용 API key·검증된 sender와 privacy 설정을 local 범위에서 준비하고 실제
+Naver 메일 수신→링크 인증→로그인→캐릭터 슬롯 8개 진입까지 확인했습니다. 첫 발송은 local
+호출 IP 미허용으로 401 terminal 실패했고 자동 재시도하지 않았습니다. IP 허용 뒤 새 요청은
+실제 전달됐지만 outbox 행이 provider completion ambiguity로 `delivery_outcome_unknown` terminal이
+되어 Neon 전에 finalize 경계를 집중 진단합니다. GHCR 게시, Render 환경변수 변경과
 backend/static 배포는 실행하지 않았습니다. 공개 Render는 계속 v351입니다.
 
 ## 사용자 흐름
@@ -113,8 +117,9 @@ local backup, 첫 실패 marker는 역사 증거로 보존합니다. `345872a`�
 namespace에서 새 왕복·backup·local apply를 각각 1회 완료했고 기존 22개 table 데이터
 변화 0과 25개 model table parity를 확인했습니다.
 
-다음 단계는 Brevo sender·전용 API key를 local에 넣고 실제 테스트 메일과 링크 흐름을
-확인하는 것입니다. 기존 marker·evidence 삭제나 같은 action 재실행은 하지 않습니다.
+다음 단계는 실제 전달된 Brevo 요청의 provider response·worker finalize 경계를 분석해 정상
+2xx가 `sent`로 마감되는지 secret 없는 focused 회귀로 확인하는 것입니다. 기존 marker·evidence
+삭제나 같은 action 재실행, 동일 메일 자동 재시도는 하지 않습니다.
 
 일반 `alembic upgrade head`, `stamp`, 자동 startup migration은 사용하지 않습니다. 실제
 target apply는 lock/statement timeout, exact source·target·action·backup 확인을 모두 갖춘
@@ -131,7 +136,7 @@ dependency로 사용하도록 준비했습니다. 패키지가 없으면 약한 
 기호의 승인으로 `email-validator==2.3.0`과 전이 dependency `dnspython==2.8.0`을
 `backend/.venv`, Linux lock 3개와 GHCR 재현성 hash에 반영했습니다. package를 임의로
 제거하면 이메일 동작은 계속 `503`으로 fail-closed합니다. local migration은 완료됐지만
-Brevo가 비어 있어 실제 회원가입 end-to-end는 아직 실행하지 않았고 owner bootstrap은 별도 승인 전입니다.
+local Brevo 실제 회원가입·인증·로그인은 완료했고 owner bootstrap은 별도 승인 전입니다.
 
 ## API source 계약 — route map 확정
 
@@ -220,7 +225,7 @@ Brevo의 고정 HTTPS API `POST https://api.brevo.com/v3/smtp/email`만 사용�
 [무료 한도](https://help.brevo.com/hc/en-us/articles/208580669-FAQs-What-are-the-limits-of-the-Free-plan),
 [전송 API](https://developers.brevo.com/docs/send-a-transactional-email))
 
-실제 Brevo 사용 전에 기호가 직접 해야 하는 작업은 다음 세 가지입니다.
+local 실제 Brevo 검증을 위해 기호가 직접 해야 했던 다음 세 가지는 완료됐습니다.
 
 1. Brevo Free 계정 만들기
 2. 발신 이메일 주소의 6자리 인증 완료
@@ -228,6 +233,10 @@ Brevo의 고정 HTTPS API `POST https://api.brevo.com/v3/smtp/email`만 사용�
 
 API key, 발신 이메일과 `EMAIL_TOKEN_SECRET` 값은 채팅·Git·문서·로그에 넣지 않고
 Git/Docker 제외 `.env`와 Render secret에만 저장합니다.
+
+local 프로젝트 key는 1개월 만료로 만들고 ignored `backend/.env`에만 저장했습니다. Render
+secret에는 아직 전달하지 않았으며, 실제 sender 주소·key·수신자·action token은 문서와
+Git evidence에 기록하지 않습니다.
 
 ## Brevo 개인정보·credential gate
 
@@ -243,6 +252,10 @@ Transactional log와 전송한 HTML preview는 기본값으로 무기한 보존�
 - log retention: 공급자가 허용하는 최단 기간인 1개월
 - email preview: 새 메일에 대해 `Never store previews`
 - 별도 CSV export나 장기 local 보관: 하지 않음
+
+위 anonymous tracking·1개월 log retention·`Never store previews`는 실제 Brevo 계정에서
+확인·저장했습니다. local 호출 IP만 API key 허용 목록에 추가했으며 그 주소도 문서나
+artifact에 남기지 않습니다.
 
 Brevo 일반 API key는 send-only scope가 아니라
 [계정 전체 접근 권한](https://help.brevo.com/hc/en-us/articles/209467485-Create-and-manage-your-API-keys)을
@@ -342,25 +355,25 @@ v377 source가 아래 항목을 모두 끝내는 것은 아닙니다. 공개 회
 2. 다중 기기 save revision, CAS·낙관적 잠금과 충돌 해결
 3. HTTPS 강제, CSP/XSS 회귀와 browser token 저장 방식
 4. 개인정보 처리방침, 데이터 보관·삭제, 문의·복구와 법적 보존 절차
-5. Brevo sender·anonymous tracking·1개월 retention·preview 미저장 실제 설정과 테스트 메일
+5. local Brevo 실제 설정·메일은 완료; Render 전달 전 provider finalize 관찰과 key 회전 경계 검증
 6. backend image와 legacy static을 같은 exact-SHA 단위로 준비·게시·배포하고 rollback 검증
 
 ## 승인 단위와 다음 순서
 
 ```txt
 1. old `8db9bcb` evidence와 완료된 recovery1 marker·report 보존
-2. Brevo 계정·발신자·privacy 설정·전용 API key 준비
-3. 필요한 local 설정과 backend 재시작
-4. 실제 테스트 메일과 가입·인증·로그인·복구 end-to-end 확인
-5. local 성공 뒤 untouched Neon의 backup·exact apply 검토
-6. account deletion 실제 메일 흐름 확인
+2. 완료: Brevo 계정·발신자·privacy 설정·전용 API key와 local 설정
+3. 완료: 실제 Naver 메일과 가입·인증·로그인·캐릭터 슬롯 진입
+4. 현재: 실제 전달 뒤 `delivery_outcome_unknown`이 된 provider finalize 경계 진단
+5. 진단 완료 뒤 untouched Neon의 backup·exact apply 검토
+6. 비밀번호 복구와 account deletion 실제 메일 흐름 확인
 7. server session/revoke, save CAS, CSP/XSS/browser token, 개인정보 gate 완료
 8. exact v377 backend/static 준비·게시·배포와 rollback 확인
 ```
 
-v376에서 승인된 이메일 rollout의 정상 범위와 이번 local recovery 요청은 이어집니다. Brevo 가입·발신자
-소유 확인·API key 입력처럼 Codex가 대신할 수 없는 행동은 DB 단계 뒤 요청합니다. owner
-bootstrap은 이 목록과 별도입니다.
+v376에서 승인된 이메일 rollout의 정상 범위와 이번 local recovery 요청은 이어집니다. Brevo
+가입·발신자 소유 확인·privacy 설정·API key 입력은 완료했습니다. owner bootstrap은 이 목록과
+별도입니다.
 
 ## 현재 검증 결과
 
@@ -387,10 +400,11 @@ v377 source에서 현재 완료가 확인된 focused 결과:
   console warn/error 0
 - 이메일 renderer: 외부 asset 0, HTML escape와 plain-text fallback 구조 smoke PASS
 
-Browser URL 정책이 `data:` 이메일 HTML 미리보기를 차단해 우회하지 않았습니다. 따라서
-실제 이메일 클라이언트의 시각 QA는 Brevo sender 설정 뒤 테스트 메일 1건 단계로 남깁니다.
+Browser URL 정책이 `data:` 이메일 HTML 미리보기를 차단해 우회하지 않았습니다. 실제 Naver
+메일함에서 제목·발신자·인증 링크 도착과 링크 동작을 확인했습니다.
 기존 v371 browser 결과는 과거 baseline의 PASS이며 v377 전체
 `bash tools/run_smoke_core.sh`도 backend `.venv`·`DEBUG=false` 조건에서 PASS했습니다.
 `8db9bcb` migration evidence는 stale history로 보존했고 `345872a` recovery1 왕복·backup·local
 apply는 성공했습니다. local DB는 v377이고 인증 보호 503은 사라졌으며 Neon은 v295입니다.
-이 결과는 Neon migration·실제 메일·owner bootstrap·공개 배포 완료를 뜻하지 않습니다.
+이 결과는 Neon migration·owner bootstrap·공개 배포 완료를 뜻하지 않습니다. local 실제 메일은
+완료했지만 provider finalize 후속은 남아 있습니다.
