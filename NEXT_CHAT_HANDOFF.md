@@ -3,15 +3,15 @@
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v378.game-ui-admin-routing-source-prepared
-strict result: game-ui-admin-routing-source-prepared
-next safe stage: approve-and-deploy-v378-static-once
+latest: v378.game-ui-admin-routing-public-live
+strict result: game-ui-admin-routing-public-live
+next safe stage: approve-production-admin-recovery
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
 email rollout approval/execution: yes/public-live
-public backend/static: v377 Live
-v378 production approval/execution: no/no
+public backend/static: v377/v378 Live
+v378 production approval/execution: yes/yes
 ```
 
 ## 이번 체크포인트
@@ -22,7 +22,7 @@ v378 production approval/execution: no/no
 - 로컬 화면은 과거 localStorage에 남은 production URL이나 `127.0.0.1:8001` 같은 stale 포트를 무시하고 `http://127.0.0.1:8000/api/v1`로 고정합니다. 배포 화면은 Render API로 고정하며 관리자 페이지의 `기본값` 복원도 현재 환경 주소를 사용합니다.
 - 실제 Chrome에서 stale `8001`로 향하던 `Failed to fetch`를 재현한 뒤 수정본이 로컬 API의 정상 인증 오류 응답까지 도달함을 확인했습니다. backend/static 서버 재시작은 필요하지 않습니다.
 - local과 Neon 모두 `local-dev` legacy row만 `is_admin=true`이지만 password가 없고 이메일 미인증이라 로그인 가능한 관리자가 아닙니다. production의 로그인 가능 계정 `admin`은 현재 `is_admin=false`입니다. dev key는 두 ignored dotenv에 존재하지만 값은 Git·문서·채팅에 기록하지 않습니다.
-- 이번 단계는 frontend/static source 준비와 검사만 수행했습니다. DB·계정 권한·secret·provider·Render/GHCR 배포는 변경하지 않았으며 v378 static 배포는 clean pushed exact SHA 승인을 기다립니다.
+- 승인 SHA `c56525394a4099160e7a32e93dc2d3a0d54568b3`의 legacy static을 Render deploy `dep-da5vn3m417fc738rs2bg`로 정확히 1회 배포했습니다. build는 298개 파일, secret 포함 없음으로 끝났고 public index/admin·v378 핵심 자산이 HTTP 200이며 미로그인 배포 화면에서 테스트 패널이 denied/hidden임을 확인했습니다. backend·DB·secret은 변경하지 않았고 자동 재시도도 없었습니다.
 - v371 이메일 인증·복구·삭제와 v377 rate limit, JSON 파싱 전 body cap, semantic outbox, 미인증 identity 회수, 202·429·413 frontend 계약이 공개 서비스에 배포됐습니다.
 - private environment와 ACL 준비, `email-validator==2.3.0`·`dnspython==2.8.0` Linux runtime/musllinux/dev lock, local Brevo 실제 Naver 메일→링크 인증→로그인→캐릭터 슬롯 8개 E2E는 완료 증거로 보존합니다.
 - stale `8db9bcb`와 `recovery1` marker/evidence는 삭제·덮어쓰기하지 않았습니다. 최종 `recovery2` synthetic fixture의 `v295 → v377 → v295 → v377`을 1회 통과한 뒤 untouched Neon의 fresh custom backup과 v295→v377 apply를 각각 1회 완료했습니다.
@@ -41,8 +41,8 @@ v378 production approval/execution: no/no
 
 ## 바로 할 일
 
-1. clean pushed v378 exact SHA를 기호가 승인하면 legacy static만 1회 배포하고 일반 계정/관리자 계정 UI를 각각 확인합니다. backend image·DB·secret은 이 배포에 포함하지 않습니다.
-2. 현재 로그인 가능한 관리자가 없으므로 production의 기존 `admin` 계정을 관리자화할지, 새 owner를 만들지 별도 guarded recovery 설계와 exact DB-write 승인을 받습니다. 비밀번호나 dev key를 채팅에 복사하지 않습니다.
+1. 현재 로그인 가능한 관리자가 없으므로 production의 기존 `admin` 계정을 관리자화할지, 새 owner를 만들지 별도 guarded recovery 설계와 exact DB-write 승인을 받습니다. 비밀번호나 dev key를 채팅에 복사하지 않습니다.
+2. 관리자 복구를 승인하면 새 배포 없이 관리자 계정에서 테스트 패널·지급 모달·MASTER DATA/SAVE DATA 배지가 표시되는지만 확인합니다.
 3. 공개 회원가입 확대 전에 server session/refresh/revoke, save revision/CAS, CSP/XSS·브라우저 token 저장 정책, 개인정보 보관·삭제·문의·복구 정책을 차례로 완료합니다.
 
 ## 안전 경계

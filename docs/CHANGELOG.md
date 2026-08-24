@@ -1,9 +1,10 @@
-# v378.game-ui-admin-routing-source-prepared
+# v378.game-ui-admin-routing-public-live
 
 - 특Q·특W 첫 전용 강화권을 저장·표시·전투 모두 `Lv.1`로 맞추고, 탈리스만 A/B의 SQ·SW 보너스 상속과 관련 설명·metadata를 제거했습니다. 기존 R·T / F·D 보너스는 유지합니다.
 - `접속 캐릭터` 바를 마을 전용으로 바꾸고, 배포 테스트 패널·지급 모달·MASTER DATA/SAVE DATA 개발 배지를 관리자에게만 보이도록 fail-closed UI gate를 추가했습니다. 로컬 테스트 UI는 유지합니다.
 - 로컬/배포 API 주소를 환경별 exact 값으로 고정해 stale localStorage의 production URL 또는 잘못된 local port가 `Failed to fetch`를 만들지 않게 했습니다. 배포 관리자 페이지의 API 기본값 복원도 배포 주소를 유지합니다.
-- focused game/frontend smoke, JavaScript syntax, legacy static build, 실제 로컬 Chrome API 도달을 검증했습니다. DB·계정 권한·secret·provider·production 배포는 변경하지 않았습니다.
+- focused game/frontend smoke, JavaScript syntax, legacy static build, 실제 로컬 Chrome API 도달과 전체 core smoke를 검증했습니다.
+- 승인 SHA `c56525394a4099160e7a32e93dc2d3a0d54568b3`을 Render deploy `dep-da5vn3m417fc738rs2bg`로 정확히 1회 static 배포했습니다. public index/admin·핵심 v378 자산은 HTTP 200이며 backend·DB·secret은 변경하지 않았습니다.
 
 # v376.execution-feedback-email-verification-rollout-approved
 

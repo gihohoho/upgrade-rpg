@@ -1,10 +1,10 @@
 # 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v378.game-ui-admin-routing-source-prepared
-strict result: game-ui-admin-routing-source-prepared
-next safe stage: approve-and-deploy-v378-static-once
-public Render: backend/static v377 Live
+latest: v378.game-ui-admin-routing-public-live
+strict result: game-ui-admin-routing-public-live
+next safe stage: approve-production-admin-recovery
+public Render: backend v377 / static v378 Live
 local/Neon DB: v377 / v377
 ```
 

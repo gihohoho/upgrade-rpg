@@ -20,8 +20,8 @@ BASELINE_DOC = ROOT / "docs/reference/database/POSTGRES_ALEMBIC_BASELINE_STRATEG
 
 REQUIRED_REPORT_TEXT = [
     "PostgreSQL / Alembic Readiness — v377",
-    "latest: v378.game-ui-admin-routing-source-prepared",
-    "strict result: game-ui-admin-routing-source-prepared",
+    "latest: v378.game-ui-admin-routing-public-live",
+    "strict result: game-ui-admin-routing-public-live",
     "local Alembic source graph head: v377_auth_email_public_security",
     "local/Neon applied DB revision: v377_auth_email_public_security / v377_auth_email_public_security",
     "actual target v377 apply: local 1 / Neon 1",
@@ -35,7 +35,7 @@ REQUIRED_REPORT_TEXT = [
     "public backend/static: v377 live",
     "model application tables: 25",
     "local/Neon application tables: 25 / 25",
-    "next safe stage: approve-and-deploy-v378-static-once",
+    "next safe stage: approve-production-admin-recovery",
     "SQLAlchemy model table 수 | 25개",
     "local/Neon DB application table 수 | 25개 / 25개",
     "Alembic asyncpg-compatible online env | 있음",

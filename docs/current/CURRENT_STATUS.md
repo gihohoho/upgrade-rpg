@@ -5,16 +5,16 @@
 ## 상태 표식
 
 ```txt
-latest: v378.game-ui-admin-routing-source-prepared
-strict result: game-ui-admin-routing-source-prepared
-next safe stage: approve-and-deploy-v378-static-once
+latest: v378.game-ui-admin-routing-public-live
+strict result: game-ui-admin-routing-public-live
+next safe stage: approve-production-admin-recovery
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
 email rollout approval/execution: yes/public-live
-public backend/static: v377 Live
+public backend/static: v377/v378 Live
 production approval/execution: yes/yes
-v378 production approval/execution: no/no
+v378 production approval/execution: yes/yes
 ```
 
 ## v378 게임 UI·환경 라우팅 소스 준비
@@ -25,7 +25,7 @@ v378 production approval/execution: no/no
 - 로컬 API는 `127.0.0.1:8000/api/v1`, 배포 API는 Render 주소로 고정합니다. stale production URL과 stale local port를 무시하며 배포 관리자 페이지의 API `기본값` 버튼도 배포 주소를 유지합니다.
 - 실제 브라우저에서 로컬 stale `8001` 실패를 확인하고 수정 뒤 `Failed to fetch` 대신 로컬 backend의 정상 인증 오류 응답이 표시되는 데까지 검증했습니다.
 - local/Neon의 `local-dev` legacy 관리자 row는 password가 없어 로그인할 수 없습니다. production의 로그인 가능한 `admin` 계정은 관리자 권한이 없습니다. 두 환경의 dev key는 private ignored dotenv에만 있으며 값은 보고하지 않습니다.
-- v378은 아직 배포하지 않았습니다. 공개 backend/static은 v377 Live이며, static 1회 배포에는 새 clean pushed exact SHA 승인이 필요합니다.
+- 승인 SHA `c56525394a4099160e7a32e93dc2d3a0d54568b3`의 v378 legacy static은 Render deploy `dep-da5vn3m417fc738rs2bg`로 정확히 1회 배포되어 live입니다. 298개 파일 build와 secret 미포함, public index/admin·핵심 v378 자산 HTTP 200, 미로그인 테스트 패널 denied/hidden을 확인했습니다. backend·DB·secret은 변경하지 않았습니다.
 
 ## v377 구현과 환경
 
@@ -95,8 +95,8 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. clean pushed v378 exact SHA를 승인받은 뒤 legacy static만 1회 배포하고 일반 계정/관리자 계정 UI를 각각 확인합니다.
-2. 로그인 가능한 production 관리자가 없으므로 기존 `admin` 승격 또는 새 owner 생성 중 하나를 별도 guarded recovery와 exact DB-write 승인으로 진행합니다.
+1. 로그인 가능한 production 관리자가 없으므로 기존 `admin` 승격 또는 새 owner 생성 중 하나를 별도 guarded recovery와 exact DB-write 승인으로 진행합니다.
+2. 승인된 관리자 복구 뒤 배포를 반복하지 않고 관리자 전용 테스트 UI 노출만 확인합니다.
 3. 남은 공개 계정 gate를 하나씩 구현하고 각 범위에 맞는 focused 검증을 수행합니다.
 
 ## 배포 주소

@@ -11,21 +11,23 @@
 
 ## 사용자와 작업 방식
 
-- 사용자는 코딩을 거의 모르는 **기호**입니다. 항상 쉽고 구체적인 한국어로 설명합니다.
-- 모든 터미널 명령 바로 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적습니다.
+- 사용자는 코딩을 잘 모르는 **기호**입니다. 항상 쉽고 구체적인 한국어로 설명하고 기록합니다.
+- `.env`와 같은 환경변수와 로컬파일사용 및 브라우저탐색 등 전체 권한을 승인합니다.
+- 사용자가 직접 실행해야하는 명령에 한해서 바로 위에 실행 위치, Python `.venv` 상태, 새 설치 여부를 적습니다.
 - backend 가상환경은 `backend/.venv`입니다. Git Bash에서는 `backend`에서 `source .venv/Scripts/activate`로 켭니다.
 - Vue/npm은 `frontend/vue-app`에서 실행하며 Python `.venv`가 필요 없습니다.
 - 필요한 extension, 권한, 설치, 외부 계정 작업이 있으면 기호에게 요청하고 해결될 때까지 handoff에 남깁니다.
 - Codex는 정상 실행 중인 backend `127.0.0.1:8000`, Vue `127.0.0.1:5173`, legacy static `127.0.0.1:5500` 서버를 재사용합니다.
 - legacy 브라우저 검증은 `http://127.0.0.1:5500/index.html`과 `/admin.html`을 사용합니다. `file://`는 사용하지 않습니다.
 - Windows 전역 `DEBUG=release`는 backend 설정과 충돌하므로 backend 검사 자식 프로세스에서만 `DEBUG=false`로 덮어씁니다.
-- 변경·검증 뒤 Codex가 직접 `git status`, 선택적 stage, commit, push를 수행합니다. 사용자 변경은 stage하지 않습니다. ZIP과 Git 명령 안내는 요청받지 않는 한 제공하지 않습니다.
+- 변경·검증 뒤 Codex가 직접 `git status`, 선택적 stage, commit, push를 수행합니다. 사용자 변경은 stage하지 않습니다.
 - 서버를 재시작하지 않았으면 완료 답변에 `서버 재시작 불필요`라고 적습니다.
-- 모든 작업의 마지막에는 [AGENTS.md](AGENTS.md), [NEXT_CHAT_HANDOFF.md](NEXT_CHAT_HANDOFF.md), [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)를 현재 상태와 맞추고, 변경 주제와 관련된 Markdown을 전수 검색해 통합·이동·archive·삭제 필요 여부까지 점검합니다. 의미 없는 복사본이나 단계별 새 문서를 만들지 않습니다.
+- 모든 작업의 마지막에는 [AGENTS.md](AGENTS.md), [NEXT_CHAT_HANDOFF.md](NEXT_CHAT_HANDOFF.md), [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)를 현재 상태와 맞추고, 변경 주제와 관련된 Markdown을 선택적으로 검색해 통합·이동·archive·삭제 필요 여부까지 점검합니다. 관련없는 Markdown문서를 전부 점검하지 않고, 의미 없는 복사본이나 단계별 새 문서를 만들지 않습니다.
 - Obsidian의 ignored 로컬 vault 설정, 북마크, 검색, Graph 색상 그룹과 workspace는 사용자가 직접 관리하지 않고 Codex가 탐색 효율 중심으로 유지합니다. Graph가 복잡해져도 문서 범위를 숨기기보다 폴더별로 구분하며, 프로젝트 동작은 Obsidian에 의존하지 않습니다.
 
 ## 실행 효율과 자체 피드백
 
+- 실행 효율과 자체 피드백의 목적은 CODEX의 작업속도 최적화와 작업 효율성 극대화 입니다.
 - 작업 시작 시 변경 범위, 필요한 실행 환경, 검증 목록을 한 번 정하고 같은 확인을 습관적으로 반복하지 않습니다. 간단한 문서 작업에는 sub-agent, 브라우저, 서버 상태 확인, 전체 core smoke를 사용하지 않습니다.
 - PowerShell에서 `bash`만 호출하면 WSL로 잘못 연결될 수 있습니다. 전체 core smoke는 항상 설치된 Git Bash를 명시하고 같은 명령 안에서 `source backend/.venv/Scripts/activate`, `DEBUG=false`, `bash tools/run_smoke_core.sh` 순서로 실행합니다.
 - 문서만 바꾼 작업은 문서 구조·handoff·strict readiness만 한 번 검사합니다. 포맷만 바꾼 CSS는 AST 의미 동등성과 관련 focused smoke만 검사합니다. 동작 코드의 전체 core는 통합이 끝난 뒤 한 번만 실행하며, 이후 결과 문구만 고친 경우 다시 실행하지 않습니다.
@@ -88,19 +90,20 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v378.game-ui-admin-routing-source-prepared
-strict result: game-ui-admin-routing-source-prepared
-next safe stage: approve-and-deploy-v378-static-once
+latest: v378.game-ui-admin-routing-public-live
+strict result: game-ui-admin-routing-public-live
+next safe stage: approve-production-admin-recovery
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
 email rollout approval/execution: yes/public-live
-public backend/static: v377 Live
+public backend/static: v377/v378 Live
 Render public preview: deployed
 production approval/execution: yes/yes
-v378 production approval/execution: no/no
+v378 production approval/execution: yes/yes
 ```
 
+- v378 legacy static은 승인 SHA `c56525394a4099160e7a32e93dc2d3a0d54568b3`에서 Render deploy `dep-da5vn3m417fc738rs2bg`로 정확히 1회 배포되어 live입니다. backend·DB·secret은 변경하지 않았습니다.
 - v371 source는 이메일 인증·복구·삭제, `authVersion`, Brevo HTTPS renderer/transport, owner bootstrap과 migration source를 준비했습니다.
 - v372는 기능을 바꾸지 않고 Markdown 243개를 95개로 정리하고 `docs/current`의 실제 현재 문서를 11개로 줄였습니다. entry/current/reference/generated/archive 역할과 구조 smoke를 고정했습니다.
 - v373은 승인된 `email-validator==2.3.0`과 전이 의존성 `dnspython==2.8.0`을 backend `.venv`와 재현 가능한 Linux runtime/dev lock에 반영했습니다. dependency가 임의로 빠지면 이메일 동작은 계속 503으로 fail-closed합니다.
