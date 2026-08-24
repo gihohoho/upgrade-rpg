@@ -10,7 +10,22 @@
 		return String(value || "").replace(/\/+$/, "");
 	}
 
+	function getRuntimeConfig() {
+		return window.RpgRuntimeConfig && typeof window.RpgRuntimeConfig === "object"
+			? window.RpgRuntimeConfig
+			: null;
+	}
+
+	function getEnvironmentDefaultApiBaseUrl() {
+		const runtimeConfig = getRuntimeConfig();
+		if (runtimeConfig && runtimeConfig.isLocal === false && runtimeConfig.apiBaseUrl) {
+			return trimTrailingSlash(runtimeConfig.apiBaseUrl);
+		}
+		return DEFAULT_API_BASE_URL;
+	}
+
 	function getApiBaseUrl() {
+		const runtimeConfig = getRuntimeConfig();
 		const configuredFromWindow = window.__UPGRADE_RPG_API_BASE_URL__;
 		let configuredFromStorage = null;
 
@@ -20,12 +35,32 @@
 			configuredFromStorage = null;
 		}
 
+		if (runtimeConfig && runtimeConfig.isLocal === true) {
+			return DEFAULT_API_BASE_URL;
+		}
+
+		if (runtimeConfig && runtimeConfig.isLocal === false && runtimeConfig.apiBaseUrl) {
+			return trimTrailingSlash(runtimeConfig.apiBaseUrl);
+		}
+
 		return trimTrailingSlash(configuredFromWindow || configuredFromStorage || DEFAULT_API_BASE_URL);
 	}
 
 	function setApiBaseUrl(baseUrl) {
 		const nextBaseUrl = trimTrailingSlash(baseUrl);
 		if (!nextBaseUrl) throw new Error("API base URL이 비어 있습니다.");
+		const runtimeConfig = getRuntimeConfig();
+		if (runtimeConfig && runtimeConfig.isLocal === true && nextBaseUrl !== DEFAULT_API_BASE_URL) {
+			throw new Error("로컬 화면의 API 주소는 127.0.0.1:8000으로 고정됩니다.");
+		}
+		if (
+			runtimeConfig
+			&& runtimeConfig.isLocal === false
+			&& runtimeConfig.apiBaseUrl
+			&& nextBaseUrl !== trimTrailingSlash(runtimeConfig.apiBaseUrl)
+		) {
+			throw new Error("배포 화면의 API 주소는 배포 설정값으로 고정됩니다.");
+		}
 
 		window.__UPGRADE_RPG_API_BASE_URL__ = nextBaseUrl;
 		try {
@@ -673,6 +708,7 @@
 		API_BASE_URL_STORAGE_KEY,
 		ADMIN_WRITE_DEV_KEY_STORAGE_KEY,
 		DEFAULT_REQUEST_TIMEOUT_MS,
+		getEnvironmentDefaultApiBaseUrl,
 		getApiBaseUrl,
 		setApiBaseUrl,
 		getAdminWriteDevKey,

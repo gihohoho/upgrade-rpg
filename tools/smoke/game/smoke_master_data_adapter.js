@@ -222,10 +222,10 @@ function buildApiPayloadFromSeed({ includeAssets = false } = {}) {
 assert(fs.existsSync(adapterPath), "src/api/master-data-adapter.js 파일이 없습니다.");
 
 const indexHtml = fs.readFileSync(indexPath, "utf8");
-const clientTagIndex = indexHtml.indexOf('src="src/api/game-api-client.js"');
+const clientTagIndex = indexHtml.indexOf('src="src/api/game-api-client.js?v=378"');
 const bridgeTagIndex = indexHtml.indexOf('src="src/api/master-data-bridge.js"');
 const adapterTagIndex = indexHtml.indexOf('src="src/api/master-data-adapter.js"');
-const dataTagIndex = indexHtml.indexOf('src="src/data/skills.js"');
+const dataTagIndex = indexHtml.indexOf('src="src/data/skills.js?v=378"');
 assert(clientTagIndex >= 0, "index.html에 game-api-client.js script 태그가 없습니다.");
 assert(bridgeTagIndex >= 0, "index.html에 master-data-bridge.js script 태그가 없습니다.");
 assert(adapterTagIndex >= 0, "index.html에 master-data-adapter.js script 태그가 없습니다.");

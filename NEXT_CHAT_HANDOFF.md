@@ -1,20 +1,28 @@
-# Upgrade RPG Codex handoff — v377
+# Upgrade RPG Codex handoff — v378
 
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v377.public-email-delivery-repaired
-strict result: public-email-delivery-repaired
-next safe stage: confirm-test-mail-arrival-and-continue-remaining-account-gates
+latest: v378.game-ui-admin-routing-source-prepared
+strict result: game-ui-admin-routing-source-prepared
+next safe stage: approve-and-deploy-v378-static-once
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
 email rollout approval/execution: yes/public-live
 public backend/static: v377 Live
+v378 production approval/execution: no/no
 ```
 
 ## 이번 체크포인트
 
+- 특Q(SQ)·특W(SW)는 첫 전용 강화권 사용 뒤 저장·표시·전투 유효 레벨이 모두 1이며, 탈리스만 A/B의 일반 스킬 보너스를 더 이상 상속하지 않습니다. 기존 R·T와 F·D 보너스는 유지하고 source/generated skill metadata와 탈리스만 설명도 같은 계약으로 맞췄습니다.
+- 상단 `접속 캐릭터` 바는 계정·캐릭터가 있고 현재 구역이 `town`일 때만 표시합니다. 초기 상태와 동기화 실패도 hidden/inert로 닫힙니다.
+- 로컬에서는 기존 테스트 편의를 유지하지만 배포 origin에서는 로그인 사용자의 `isAdmin=true`일 때만 테스트 패널·테스트 지급 모달·MASTER DATA/SAVE DATA 개발 배지를 표시합니다. 이는 화면 노출 계약이며 client-authoritative save의 근본 치트 방지는 향후 server save 검증/CAS 범위입니다.
+- 로컬 화면은 과거 localStorage에 남은 production URL이나 `127.0.0.1:8001` 같은 stale 포트를 무시하고 `http://127.0.0.1:8000/api/v1`로 고정합니다. 배포 화면은 Render API로 고정하며 관리자 페이지의 `기본값` 복원도 현재 환경 주소를 사용합니다.
+- 실제 Chrome에서 stale `8001`로 향하던 `Failed to fetch`를 재현한 뒤 수정본이 로컬 API의 정상 인증 오류 응답까지 도달함을 확인했습니다. backend/static 서버 재시작은 필요하지 않습니다.
+- local과 Neon 모두 `local-dev` legacy row만 `is_admin=true`이지만 password가 없고 이메일 미인증이라 로그인 가능한 관리자가 아닙니다. production의 로그인 가능 계정 `admin`은 현재 `is_admin=false`입니다. dev key는 두 ignored dotenv에 존재하지만 값은 Git·문서·채팅에 기록하지 않습니다.
+- 이번 단계는 frontend/static source 준비와 검사만 수행했습니다. DB·계정 권한·secret·provider·Render/GHCR 배포는 변경하지 않았으며 v378 static 배포는 clean pushed exact SHA 승인을 기다립니다.
 - v371 이메일 인증·복구·삭제와 v377 rate limit, JSON 파싱 전 body cap, semantic outbox, 미인증 identity 회수, 202·429·413 frontend 계약이 공개 서비스에 배포됐습니다.
 - private environment와 ACL 준비, `email-validator==2.3.0`·`dnspython==2.8.0` Linux runtime/musllinux/dev lock, local Brevo 실제 Naver 메일→링크 인증→로그인→캐릭터 슬롯 8개 E2E는 완료 증거로 보존합니다.
 - stale `8db9bcb`와 `recovery1` marker/evidence는 삭제·덮어쓰기하지 않았습니다. 최종 `recovery2` synthetic fixture의 `v295 → v377 → v295 → v377`을 1회 통과한 뒤 untouched Neon의 fresh custom backup과 v295→v377 apply를 각각 1회 완료했습니다.
@@ -33,8 +41,9 @@ public backend/static: v377 Live
 
 ## 바로 할 일
 
-1. Naver 테스트 메일함에서 2026-08-23 02:32 KST 무렵 요청한 비밀번호 재설정 메일의 실제 도착 여부만 확인합니다. 서버·provider 접수와 outbox/token `sent`는 이미 확인했으므로 같은 요청을 반복하지 않습니다.
-2. 공개 회원가입 확대 전에 server session/refresh/revoke, save revision/CAS, CSP/XSS·브라우저 token 저장 정책, 개인정보 보관·삭제·문의·복구 정책을 차례로 완료합니다.
+1. clean pushed v378 exact SHA를 기호가 승인하면 legacy static만 1회 배포하고 일반 계정/관리자 계정 UI를 각각 확인합니다. backend image·DB·secret은 이 배포에 포함하지 않습니다.
+2. 현재 로그인 가능한 관리자가 없으므로 production의 기존 `admin` 계정을 관리자화할지, 새 owner를 만들지 별도 guarded recovery 설계와 exact DB-write 승인을 받습니다. 비밀번호나 dev key를 채팅에 복사하지 않습니다.
+3. 공개 회원가입 확대 전에 server session/refresh/revoke, save revision/CAS, CSP/XSS·브라우저 token 저장 정책, 개인정보 보관·삭제·문의·복구 정책을 차례로 완료합니다.
 
 ## 안전 경계
 

@@ -262,14 +262,13 @@ assert(
 );
 
 const indexSource = read("index.html");
-for (const script of [
-	"src/data/skills.js",
-	"src/utils/icon-utils.js",
-	"src/rules/boss-display-rules.js",
-	"src/ui/render-ui.js",
-	"src/api/master-data-runtime-switch.js",
+for (const [script, expectedCacheVersion] of [
+	["src/data/skills.js", 378],
+	["src/utils/icon-utils.js", assetVersion],
+	["src/rules/boss-display-rules.js", assetVersion],
+	["src/ui/render-ui.js", 378],
+	["src/api/master-data-runtime-switch.js", assetVersion],
 ]) {
-	const expectedCacheVersion = script === "src/app/main.js" ? 370 : assetVersion;
 	assert(
 		indexSource.includes(`src=\"${script}?v=${expectedCacheVersion}\"`),
 		`${script}: index cache key must be v${expectedCacheVersion}`,

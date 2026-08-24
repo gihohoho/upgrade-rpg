@@ -775,9 +775,9 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require("alembic" not in production_cmd, "container startup must not run Alembic")
 
     current_markers = (
-        "v377.public-email-delivery-repaired",
-        "public-email-delivery-repaired",
-        "confirm-test-mail-arrival-and-continue-remaining-account-gates",
+        "v378.game-ui-admin-routing-source-prepared",
+        "game-ui-admin-routing-source-prepared",
+        "approve-and-deploy-v378-static-once",
     )
     for path, text in (
         ("AGENTS.md", agents),

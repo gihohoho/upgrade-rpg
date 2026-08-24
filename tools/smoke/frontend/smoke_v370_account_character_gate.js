@@ -27,10 +27,10 @@ async function run() {
 
 	assert.match(html, /<body class="account-gate-active">/);
 	assert.match(html, /id="game-root"[^>]+aria-hidden="true"[^>]+inert/);
-	assert.match(html, /src\/styles\/account\.css\?v=371/);
-	assert(html.indexOf("auth-session.js?v=377") < html.indexOf("game-api-client.js?v=371"));
-	assert(html.indexOf("account-gate.js?v=377") < html.indexOf("main.js?v=370"));
-	assert.match(html, /src\/systems\/combat-system\.js\?v=370/);
+	assert.match(html, /src\/styles\/account\.css\?v=378/);
+	assert(html.indexOf("auth-session.js?v=377") < html.indexOf("game-api-client.js?v=378"));
+	assert(html.indexOf("account-gate.js?v=378") < html.indexOf("main.js?v=370"));
+	assert.match(html, /src\/systems\/combat-system\.js\?v=378/);
 	assert.match(html, /src\/api\/admin-readonly-overview\.js\?v=370/);
 
 	const localStorage = createStorage();

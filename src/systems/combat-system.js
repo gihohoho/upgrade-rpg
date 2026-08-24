@@ -173,13 +173,13 @@ function playerAttack() {
 		let isTalisman = eq.isTalisman || name.includes("탈리스만");
 		return isTalisman ? (parseInt(eq.level) || 0) + 1 : 0;
 	};
-	let tBonusA = getEquippedTalismanBonus(12); // R, T, SQ
-	let tBonusB = getEquippedTalismanBonus(13); // F, D, SW
+	let tBonusA = getEquippedTalismanBonus(12); // R, T
+	let tBonusB = getEquippedTalismanBonus(13); // F, D
 
 	// 🌟 Q스킬 (광검 마스터리 -> 유성락 각성)
 	let lsObj = currentSkills && currentSkills.lightsabre ? currentSkills.lightsabre : { level: 0 };
 	if (lsObj.level > 0) {
-		let actualLevel = lsObj.level + (lsObj.isUpgraded ? tBonusA : 0); // SQ 보너스
+		let actualLevel = lsObj.level;
 		if (lsObj.isUpgraded) {
 			if (rollSkillProc(0.005, t)) {
 				let lsDamage = actualLevel * t.attack * 200000;
@@ -212,7 +212,7 @@ function playerAttack() {
 	// 🌟 W스킬 (참철식 -> 무형참 각성)
 	let isObj = currentSkills && currentSkills.ironStrike ? currentSkills.ironStrike : { level: 0 };
 	if (isObj.level > 0) {
-		let actualLevel = isObj.level + (isObj.isUpgraded ? tBonusB : 0); // SW 보너스
+		let actualLevel = isObj.level;
 		if (isObj.isUpgraded) {
 			if (rollSkillProc(0.005, t)) {
 				let isDamage = actualLevel * t.attack * 320000;

@@ -6,7 +6,7 @@
 	const WRAPPER_ID = "backend-save-data-dev-badge-wrap";
 	const STYLE_ID = "backend-save-data-dev-badge-style";
 	const STORAGE_KEY = "upgradeRpgShowBackendSaveDataDevBadge";
-	const VERSION = "v111.backend-save-data-dev-badge-admin-overview";
+	const VERSION = "v378.backend-save-data-dev-badge-admin-visibility";
 
 	let currentAction = null;
 	let lastLoadResult = null;
@@ -51,8 +51,19 @@
 	}
 
 	function shouldCreateControls() {
-		const stored = readStorage(STORAGE_KEY);
-		return isLocalDevelopment() || stored === "1" || stored === "0";
+		if (window.RpgGameDevUiAccess && typeof window.RpgGameDevUiAccess.canUseGameDevUi === "function") {
+			return window.RpgGameDevUiAccess.canUseGameDevUi();
+		}
+		return isLocalDevelopment();
+	}
+
+	function removeControls() {
+		const wrapper = document.getElementById(WRAPPER_ID);
+		if (wrapper) wrapper.remove();
+		const badge = document.getElementById(BADGE_ID);
+		if (badge) badge.remove();
+		const toggle = document.getElementById(TOGGLE_ID);
+		if (toggle) toggle.remove();
 	}
 
 	function shouldShowBadgeByDefault() {
@@ -397,7 +408,10 @@
 	}
 
 	async function runBadgeAction(action) {
-		if (currentAction) return;
+		if (currentAction || !shouldCreateControls()) {
+			if (!shouldCreateControls()) removeControls();
+			return;
+		}
 		currentAction = action;
 		refreshBackendSaveDataDevBadge({ flash: true });
 		try {
@@ -472,7 +486,10 @@
 	}
 
 	function refreshBackendSaveDataDevBadge(options = {}) {
-		if (!shouldCreateControls()) return { ok: true, version: VERSION, visible: false, skipped: true };
+		if (!shouldCreateControls()) {
+			removeControls();
+			return { ok: true, version: VERSION, visible: false, skipped: true };
+		}
 		const badge = attachBadgeToPreferredParent(createBadge());
 		const toggle = attachBadgeToPreferredParent(createToggle());
 		const policy = getPolicy();
@@ -592,6 +609,6 @@
 	if (typeof window.isAccountCharacterGameBooted === "function" && window.isAccountCharacterGameBooted()) {
 		startBadgeAutoRefresh();
 	} else {
-		window.addEventListener("upgrade-rpg:account-game-ready", startBadgeAutoRefresh, { once: true });
+		window.addEventListener("upgrade-rpg:account-game-ready", startBadgeAutoRefresh);
 	}
 })();

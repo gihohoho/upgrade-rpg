@@ -76,7 +76,7 @@ const skillMasterData = {
 			effectHtml: "-기본 공격 시 0.5% 확률로 발동<br>-단일 적에게 스킬레벨 x 공격력 x 200000의 스킬데미지",
 			baseProcRate: 0.5,
 			damageMultiplier: 200000,
-			bonusGroup: "talismanA",
+			bonusGroup: null,
 		},
 	},
 	ironStrike: {
@@ -100,7 +100,7 @@ const skillMasterData = {
 			effectHtml: "-기본 공격 시 0.5% 확률로 발동<br>-단일 적에게 스킬레벨 x 공격력 x 320000의 스킬데미지",
 			baseProcRate: 0.5,
 			damageMultiplier: 320000,
-			bonusGroup: "talismanB",
+			bonusGroup: null,
 		},
 	},
 	overdrive: {

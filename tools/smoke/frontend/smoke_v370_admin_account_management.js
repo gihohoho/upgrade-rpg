@@ -221,7 +221,7 @@ async function testRuntimeGateAndEscaping() {
 
 function testStaticContract() {
   const authScriptIndex = HTML.indexOf('src/api/auth-session.js?v=377');
-  const clientScriptIndex = HTML.indexOf('src/api/game-api-client.js?v=371');
+  const clientScriptIndex = HTML.indexOf('src/api/game-api-client.js?v=378');
   const accountScriptIndex = HTML.indexOf('src/api/admin/admin-account-management.js?v=371');
   const legacyScriptIndex = HTML.indexOf('src/api/admin-page-readonly.js?v=370');
   requireCondition(authScriptIndex >= 0 && authScriptIndex < clientScriptIndex, "admin page does not load auth session before API client");

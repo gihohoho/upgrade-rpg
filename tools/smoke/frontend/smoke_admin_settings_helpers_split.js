@@ -119,6 +119,7 @@ const fakeDocument = {
 };
 
 let apiBaseUrl = "http://localhost:8000";
+let environmentDefaultApiBaseUrl = "http://localhost:8000";
 let writeKey = "";
 const sandbox = {
   window: {},
@@ -131,6 +132,7 @@ sandbox.window = sandbox;
 sandbox.location = { href: "http://localhost/admin.html" };
 sandbox.RpgGameApi = {
   DEFAULT_API_BASE_URL: "http://localhost:8000",
+  getEnvironmentDefaultApiBaseUrl() { return environmentDefaultApiBaseUrl; },
   getApiBaseUrl() { return apiBaseUrl; },
   setApiBaseUrl(value) { apiBaseUrl = value || this.DEFAULT_API_BASE_URL; return apiBaseUrl; },
   getAdminWriteDevKey() { return writeKey; },
@@ -162,6 +164,9 @@ elements.get("[data-admin-api-base-url]").value = "http://localhost:9100";
 assert(api.saveApiBaseUrlFromInput() === "http://localhost:9100", "API URL should save through RpgGameApi");
 assert(lastStatus.kind === "ok", "saving API URL should set ok status");
 assert(api.resetApiBaseUrl() === "http://localhost:8000", "API URL should reset to default");
+environmentDefaultApiBaseUrl = "https://upgrade-rpg-api.onrender.com/api/v1";
+assert(api.resetApiBaseUrl() === environmentDefaultApiBaseUrl, "production API URL should reset to the deployed default");
+environmentDefaultApiBaseUrl = "http://localhost:8000";
 assert(!api.hasAdminWriteDevKey(), "write key should start empty");
 elements.get("[data-admin-write-dev-key]").value = "local-admin-dev-key";
 api.saveAdminWriteDevKeyFromInput();

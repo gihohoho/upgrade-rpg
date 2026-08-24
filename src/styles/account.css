@@ -739,7 +739,9 @@ body.account-gate-active {
 	font-family: "돋움", Dotum, sans-serif;
 }
 
-.game-account-bar[hidden] {
+.game-account-bar[hidden],
+.game-account-bar[data-zone-visible="hidden"],
+[data-admin-dev-ui][hidden] {
 	display: none !important;
 }
 

@@ -17,14 +17,14 @@ from pathlib import Path
 
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/POSTGRES_ALEMBIC_READINESS.md")
-CHECKPOINT_VERSION = "v377.public-email-delivery-repaired"
-CHECKPOINT_RESULT = "public-email-delivery-repaired"
+CHECKPOINT_VERSION = "v378.game-ui-admin-routing-source-prepared"
+CHECKPOINT_RESULT = "game-ui-admin-routing-source-prepared"
 SOURCE_GRAPH_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_DB_REVISION = SOURCE_GRAPH_HEAD
 NEON_APPLIED_DB_REVISION = SOURCE_GRAPH_HEAD
 LOCAL_APPLIED_DB_APPLICATION_TABLES = 25
 NEON_APPLIED_DB_APPLICATION_TABLES = 25
-NEXT_SAFE_STAGE = "confirm-test-mail-arrival-and-continue-remaining-account-gates"
+NEXT_SAFE_STAGE = "approve-and-deploy-v378-static-once"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 

@@ -6,7 +6,8 @@
 	const WRAPPER_ID = "backend-master-data-dev-badge-wrap";
 	const STYLE_ID = "backend-master-data-dev-badge-style";
 	const STORAGE_KEY = "upgradeRpgShowBackendMasterDataDevBadge";
-	const VERSION = "v104.backend-master-data-dev-badge-hud-top-align";
+	const VERSION = "v378.backend-master-data-dev-badge-admin-visibility";
+	let badgeAutoRefreshStarted = false;
 
 	function isLocalDevelopment() {
 		try {
@@ -19,8 +20,19 @@
 	}
 
 	function shouldCreateControls() {
-		const stored = readStorage(STORAGE_KEY);
-		return isLocalDevelopment() || stored === "1" || stored === "0";
+		if (window.RpgGameDevUiAccess && typeof window.RpgGameDevUiAccess.canUseGameDevUi === "function") {
+			return window.RpgGameDevUiAccess.canUseGameDevUi();
+		}
+		return isLocalDevelopment();
+	}
+
+	function removeControls() {
+		const wrapper = document.getElementById(WRAPPER_ID);
+		if (wrapper) wrapper.remove();
+		const badge = document.getElementById(BADGE_ID);
+		if (badge) badge.remove();
+		const toggle = document.getElementById(TOGGLE_ID);
+		if (toggle) toggle.remove();
 	}
 
 	function readStorage(key) {
@@ -325,6 +337,10 @@
 	}
 
 	function handleBadgeClick(event) {
+		if (!shouldCreateControls()) {
+			removeControls();
+			return;
+		}
 		const button = event.target && event.target.closest ? event.target.closest("button[data-md-action]") : null;
 		if (!button) return;
 		const action = button.getAttribute("data-md-action");
@@ -355,7 +371,10 @@
 	}
 
 	function refreshBackendMasterDataDevBadge(options = {}) {
-		if (!shouldCreateControls()) return { ok: true, version: VERSION, visible: false, skipped: true };
+		if (!shouldCreateControls()) {
+			removeControls();
+			return { ok: true, version: VERSION, visible: false, skipped: true };
+		}
 		const badge = attachBadgeToPreferredParent(createBadge());
 		const toggle = attachBadgeToPreferredParent(createToggle());
 		const policy = getPolicy();
@@ -434,7 +453,8 @@
 	}
 
 	function startBadgeAutoRefresh() {
-		if (!shouldCreateControls()) return;
+		if (badgeAutoRefreshStarted || !shouldCreateControls()) return;
+		badgeAutoRefreshStarted = true;
 		const refresh = () => {
 			try {
 				refreshBackendMasterDataDevBadge();
@@ -472,5 +492,9 @@
 	window.hideBackendMasterDataDevBadge = hideBackendMasterDataDevBadge;
 	window.toggleBackendMasterDataDevBadge = toggleBackendMasterDataDevBadge;
 
-	startBadgeAutoRefresh();
+	if (isLocalDevelopment() || (typeof window.isAccountCharacterGameBooted === "function" && window.isAccountCharacterGameBooted())) {
+		startBadgeAutoRefresh();
+	} else {
+		window.addEventListener("upgrade-rpg:account-game-ready", startBadgeAutoRefresh);
+	}
 })();

@@ -88,9 +88,9 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v377.public-email-delivery-repaired
-strict result: public-email-delivery-repaired
-next safe stage: confirm-test-mail-arrival-and-continue-remaining-account-gates
+latest: v378.game-ui-admin-routing-source-prepared
+strict result: game-ui-admin-routing-source-prepared
+next safe stage: approve-and-deploy-v378-static-once
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -98,6 +98,7 @@ email rollout approval/execution: yes/public-live
 public backend/static: v377 Live
 Render public preview: deployed
 production approval/execution: yes/yes
+v378 production approval/execution: no/no
 ```
 
 - v371 source는 이메일 인증·복구·삭제, `authVersion`, Brevo HTTPS renderer/transport, owner bootstrap과 migration source를 준비했습니다.

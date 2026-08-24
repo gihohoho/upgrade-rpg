@@ -155,16 +155,14 @@ function getTalismanCategoryInfo(item) {
 			typeName: "[탈리스만 B]",
 			slotName: "탈리스만B",
 			statsHtml: `<div style="color:#ffcc00; font-size:14px; margin-bottom:2px;">F 스킬 레벨 증가 <span style="color:#88ff88;">${levelBonus}</span></div>
-         <div style="color:#ffcc00; font-size:14px; margin-bottom:2px;">D 스킬 레벨 증가 <span style="color:#88ff88;">${levelBonus}</span></div>
-         <div style="color:#ffcc00; font-size:14px; margin-bottom:2px;">SW 스킬 레벨 증가 <span style="color:#88ff88;">${levelBonus}</span></div>`,
+		 <div style="color:#ffcc00; font-size:14px; margin-bottom:2px;">D 스킬 레벨 증가 <span style="color:#88ff88;">${levelBonus}</span></div>`,
 		};
 	}
 	return {
 		typeName: "[탈리스만 A]",
 		slotName: "탈리스만A",
 		statsHtml: `<div style="color:#ffcc00; font-size:14px; margin-bottom:2px;">R 스킬 레벨 증가 <span style="color:#88ff88;">${levelBonus}</span></div>
-         <div style="color:#ffcc00; font-size:14px; margin-bottom:2px;">T 스킬 레벨 증가 <span style="color:#88ff88;">${levelBonus}</span></div>
-         <div style="color:#ffcc00; font-size:14px; margin-bottom:2px;">SQ 스킬 레벨 증가 <span style="color:#88ff88;">${levelBonus}</span></div>`,
+		 <div style="color:#ffcc00; font-size:14px; margin-bottom:2px;">T 스킬 레벨 증가 <span style="color:#88ff88;">${levelBonus}</span></div>`,
 	};
 }
 
@@ -1374,6 +1372,20 @@ function renderTownHub() {
 	}
 }
 
+function syncRenderedAccountBarTownVisibility() {
+	if (window.RpgAccountGate && typeof window.RpgAccountGate.syncAccountBarTownVisibility === "function") {
+		return window.RpgAccountGate.syncAccountBarTownVisibility(currentZoneType);
+	}
+	const accountBar = document.getElementById("game-account-bar");
+	if (!accountBar) return false;
+	accountBar.hidden = true;
+	accountBar.setAttribute("aria-hidden", "true");
+	accountBar.toggleAttribute("inert", true);
+	accountBar.inert = true;
+	accountBar.dataset.zoneVisible = "hidden";
+	return false;
+}
+
 function updateFullUI() {
 	if (typeof updateAutoSpecialBossButton === "function") updateAutoSpecialBossButton();
 	if (typeof refreshOnOffButtonVisuals === "function") refreshOnOffButtonVisuals();
@@ -1442,9 +1454,7 @@ function updateFullUI() {
 	}
 
 	renderTownHub();
-	if (window.RpgAccountGate && typeof window.RpgAccountGate.syncAccountBarTownVisibility === "function") {
-		window.RpgAccountGate.syncAccountBarTownVisibility(currentZoneType);
-	}
+	syncRenderedAccountBarTownVisibility();
 	updateGoldUI();
 	updateCombatUI();
 
@@ -2102,10 +2112,10 @@ function renderSkills() {
 		let bonusLevel = 0;
 
 		if (baseLevel > 0) {
-			if (sk.id === "baldo" || sk.id === "illusionSword" || (sk.id === "lightsabre" && pSk.isUpgraded)) {
+			if (sk.id === "baldo" || sk.id === "illusionSword") {
 				bonusLevel = tBonusA;
 			}
-			if (sk.id === "deepSword" || sk.id === "tempestStrike" || (sk.id === "ironStrike" && pSk.isUpgraded)) {
+			if (sk.id === "deepSword" || sk.id === "tempestStrike") {
 				bonusLevel = tBonusB;
 			}
 		}

@@ -1,20 +1,31 @@
-# Current Status — v377
+# Current Status — v378
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v377.public-email-delivery-repaired
-strict result: public-email-delivery-repaired
-next safe stage: confirm-test-mail-arrival-and-continue-remaining-account-gates
+latest: v378.game-ui-admin-routing-source-prepared
+strict result: game-ui-admin-routing-source-prepared
+next safe stage: approve-and-deploy-v378-static-once
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
 email rollout approval/execution: yes/public-live
 public backend/static: v377 Live
 production approval/execution: yes/yes
+v378 production approval/execution: no/no
 ```
+
+## v378 게임 UI·환경 라우팅 소스 준비
+
+- SQ·SW의 첫 전용 강화권은 저장·화면·전투 계산에서 모두 `Lv.1`입니다. 탈리스만 A/B는 더 이상 SQ·SW에 합산되지 않으며 R·T / F·D 보너스만 유지합니다. 브라우저 source와 generated skill seed, 탈리스만 설명도 동기화했습니다.
+- `접속 캐릭터` 바는 `town`에서만 표시하고 필드·보스·초기 상태에서는 hidden/inert로 닫습니다.
+- 배포 origin의 테스트 패널·지급 모달·MASTER DATA/SAVE DATA 개발 배지는 현재 로그인 사용자가 관리자일 때만 표시합니다. 로컬 개발 origin은 기존 테스트 편의를 유지합니다. 이 UI gate는 server-authoritative anti-cheat 경계가 아니며 그 범위는 save revision/CAS와 함께 남아 있습니다.
+- 로컬 API는 `127.0.0.1:8000/api/v1`, 배포 API는 Render 주소로 고정합니다. stale production URL과 stale local port를 무시하며 배포 관리자 페이지의 API `기본값` 버튼도 배포 주소를 유지합니다.
+- 실제 브라우저에서 로컬 stale `8001` 실패를 확인하고 수정 뒤 `Failed to fetch` 대신 로컬 backend의 정상 인증 오류 응답이 표시되는 데까지 검증했습니다.
+- local/Neon의 `local-dev` legacy 관리자 row는 password가 없어 로그인할 수 없습니다. production의 로그인 가능한 `admin` 계정은 관리자 권한이 없습니다. 두 환경의 dev key는 private ignored dotenv에만 있으며 값은 보고하지 않습니다.
+- v378은 아직 배포하지 않았습니다. 공개 backend/static은 v377 Live이며, static 1회 배포에는 새 clean pushed exact SHA 승인이 필요합니다.
 
 ## v377 구현과 환경
 
@@ -84,8 +95,9 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. 허용된 Naver 테스트 메일함에서 2026-08-23 02:32 KST 비밀번호 재설정 메일의 실제 도착 여부만 확인합니다. 서버·provider 접수와 outbox/token `sent`는 완료됐으므로 자동 재요청하지 않습니다.
-2. 남은 공개 계정 gate를 하나씩 구현하고 각 범위에 맞는 focused 검증을 수행합니다.
+1. clean pushed v378 exact SHA를 승인받은 뒤 legacy static만 1회 배포하고 일반 계정/관리자 계정 UI를 각각 확인합니다.
+2. 로그인 가능한 production 관리자가 없으므로 기존 `admin` 승격 또는 새 owner 생성 중 하나를 별도 guarded recovery와 exact DB-write 승인으로 진행합니다.
+3. 남은 공개 계정 gate를 하나씩 구현하고 각 범위에 맞는 focused 검증을 수행합니다.
 
 ## 배포 주소
 

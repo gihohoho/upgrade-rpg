@@ -170,7 +170,10 @@
 
   function resetApiBaseUrl() {
     ensureApi();
-    const next = window.RpgGameApi.setApiBaseUrl(window.RpgGameApi.DEFAULT_API_BASE_URL);
+    const defaultApiBaseUrl = typeof window.RpgGameApi.getEnvironmentDefaultApiBaseUrl === "function"
+      ? window.RpgGameApi.getEnvironmentDefaultApiBaseUrl()
+      : window.RpgGameApi.DEFAULT_API_BASE_URL;
+    const next = window.RpgGameApi.setApiBaseUrl(defaultApiBaseUrl);
     syncApiInput();
     setStatus(`API URL 기본값 복구: ${next}`, "ok");
     return next;

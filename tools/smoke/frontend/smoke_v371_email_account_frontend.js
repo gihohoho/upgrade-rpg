@@ -262,12 +262,12 @@ async function run() {
 	const accountCss = read("src/styles/account.css");
 	const adminSource = read("src/api/admin/admin-account-management.js");
 
-	assert.match(html, /src\/styles\/account\.css\?v=371/);
+	assert.match(html, /src\/styles\/account\.css\?v=378/);
 	assert.match(html, /<meta name="referrer" content="no-referrer" \/>/);
 	assert.match(html, /auth-session\.js\?v=377/);
-	assert.match(html, /game-api-client\.js\?v=371/);
-	assert.match(html, /render-ui\.js\?v=371/);
-	assert.match(html, /account-gate\.js\?v=377/);
+	assert.match(html, /game-api-client\.js\?v=378/);
+	assert.match(html, /render-ui\.js\?v=378/);
+	assert.match(html, /account-gate\.js\?v=378/);
 	assert.match(html, /id="game-account-bar"[^>]+aria-hidden="true"[^>]+hidden[^>]+inert/);
 	assert.match(adminHtml, /account-admin\.css\?v=371/);
 	assert.match(adminHtml, /admin-account-management\.js\?v=371/);

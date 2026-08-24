@@ -1,9 +1,9 @@
 # 이메일 인증·계정 복구·계정 삭제 준비 — v377
 
 ```txt
-latest: v377.public-email-delivery-repaired
-strict result: public-email-delivery-repaired
-next safe stage: confirm-test-mail-arrival-and-continue-remaining-account-gates
+latest: v378.game-ui-admin-routing-source-prepared
+strict result: game-ui-admin-routing-source-prepared
+next safe stage: approve-and-deploy-v378-static-once
 public Render: backend/static v377 Live
 database migration: local/Neon v377 / apply 1회씩 / stamp·downgrade 0회
 email provider: local Brevo real Naver delivery verified / Render configured

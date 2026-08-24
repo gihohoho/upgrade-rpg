@@ -33,7 +33,7 @@ assertContains("src/api/admin-readonly-overview.js", [
 ]);
 
 assertContains("src/api/save-data-dev-badge.js", [
-  "v111.backend-save-data-dev-badge-admin-overview",
+  "v378.backend-save-data-dev-badge-admin-visibility",
   'data-sd-action="admin"',
   "openAdminReadOnlyOverviewModal",
 ]);
