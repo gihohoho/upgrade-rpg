@@ -14,8 +14,8 @@ RUN_SMOKE = ROOT / "tools/run_smoke_core.sh"
 
 REQUIRED_TEXT = [
     "Backend Route Map — v377",
-    "latest: v379.vue-typescript-pinia-foundation",
-    "strict result: vue-typescript-pinia-foundation",
+    "latest: v380.vue-auth-character-gate",
+    "strict result: vue-auth-character-gate",
     "actual target v377 apply: local 1 / Neon 1",
     "private email environment: prepared",
     "source 8db9bcb / preserved",
@@ -24,7 +24,7 @@ REQUIRED_TEXT = [
     "Naver delivery / link verification / login verified",
     "local multi-worker ownership diagnosed / direct provider healthy",
     "recovery2 roundtrip/Neon backup/apply: verified / one attempt each",
-    "public backend/static: v377 live",
+    "public backend/static: v377/v378 live",
     "v377 이메일 계정 gate, 캐릭터 슬롯, 저장 브리지",
     "전체 route 수 | 48",
     "`DELETE` | 1",
@@ -47,7 +47,7 @@ REQUIRED_TEXT = [
     "POST /api/v1/admin/master-data/create-apply",
     "POST /api/v1/game/save",
     "query 이름은 `id`",
-    "migrate-vue-auth-character-gate",
+    "migrate-vue-admin-auth-routing",
 ]
 
 FORBIDDEN_TEXT = [

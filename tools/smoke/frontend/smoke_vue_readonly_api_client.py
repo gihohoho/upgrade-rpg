@@ -91,8 +91,8 @@ def main() -> None:
         raise AssertionError(f"Missing Vue read-only API client files: {missing}")
 
     package = json.loads((VUE_APP / "package.json").read_text(encoding="utf-8"))
-    if package.get("version") != "0.0.0-v379":
-        raise AssertionError("Vue package version must be 0.0.0-v379")
+    if package.get("version") != "0.0.0-v380":
+        raise AssertionError("Vue package version must be 0.0.0-v380")
 
     config = read("src/api/config.js")
     assert_contains(config, "http://127.0.0.1:8000/api/v1", "default API base URL")
@@ -138,10 +138,12 @@ def main() -> None:
     assert_contains(game_api, "includeAssets = false", "safe asset default")
     assert_contains(game_api, "fetchSaveSlots", "game save slot wrapper")
 
-    for shell in ["src/pages/AdminShell.vue", "src/pages/GameShell.vue"]:
-        text = read(shell)
-        assert_contains(text, "@/api", f"{shell} imports API route constants")
-        assert_contains(text, "GET", f"{shell} labels read-only route method")
+    admin_shell = read("src/pages/AdminShell.vue")
+    assert_contains(admin_shell, "@/api", "Admin shell imports API route constants")
+    assert_contains(admin_shell, "GET", "Admin shell labels read-only route method")
+
+    game_shell = read("src/pages/GameShell.vue")
+    assert_contains(game_shell, "AccountGate", "Game shell uses the typed account gate")
 
     docs = read("docs/reference/frontend/VUE_READONLY_API_CLIENT.md")
     assert_contains(docs, "v272", "read-only API client doc version")

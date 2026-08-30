@@ -1,13 +1,13 @@
-# Current Status — v379
+# Current Status — v380
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v379.vue-typescript-pinia-foundation
-strict result: vue-typescript-pinia-foundation
-next safe stage: migrate-vue-auth-character-gate
+latest: v380.vue-auth-character-gate
+strict result: vue-auth-character-gate
+next safe stage: migrate-vue-admin-auth-routing
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -16,7 +16,17 @@ public backend/static: v377/v378 Live
 production approval/execution: yes/yes
 v378 production approval/execution: yes/yes
 v379 production approval/execution: no/no
+v380 production approval/execution: no/no
 ```
+
+## v380 Vue 인증·캐릭터 gate
+
+- `/game`은 typed API client와 Pinia account store를 통해 로그인·가입·이메일 인증 안내·재전송·세션 확인을 처리합니다. 응답은 `no-store`, timeout, `Retry-After`, 안전한 `422` 필드 오류 계약을 유지합니다.
+- legacy와 같은 access-token·선택 캐릭터 localStorage key를 사용합니다. `401/403` session invalid는 인증을 지우고, network·timeout·`5xx`는 token과 선택 상태를 보존한 채 재시도 화면으로 전환합니다.
+- 인증 성공 뒤 계정별 슬롯 8개를 조회하고 캐릭터 생성·선택·이름 확인 삭제를 Vue modal로 제공합니다. 서버가 반환한 소유 슬롯만 선택할 수 있습니다.
+- 캐릭터 선택 뒤에도 현재 단계에서는 게임 boot, server snapshot load, runtime timer, 자동 저장을 시작하지 않습니다. 이 경계는 저장·runtime 이식 단계까지 명시적으로 닫혀 있습니다.
+- `npm ci`, TypeScript/Vite production build, Vue focused smoke와 실제 Chrome desktop/mobile 검증이 PASS했습니다. 브라우저 검증은 DB를 바꾸지 않도록 실제 로그인·가입·메일 재전송·캐릭터 write를 제출하지 않고 client-side 전환과 레이아웃만 확인했습니다.
+- 공개 legacy frontend, backend, DB, env, secret과 Render 배포는 변경하지 않았습니다. Vue v380 production 승인과 실행은 없습니다.
 
 ## v379 Vue TypeScript·Pinia 기반
 
@@ -106,9 +116,9 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. 로그인 가능한 production 관리자가 없으므로 기존 `admin` 승격 또는 새 owner 생성 중 하나를 별도 guarded recovery와 exact DB-write 승인으로 진행합니다.
-2. 승인된 관리자 복구 뒤 배포를 반복하지 않고 관리자 전용 테스트 UI 노출만 확인합니다.
-3. 남은 공개 계정 gate를 하나씩 구현하고 각 범위에 맞는 focused 검증을 수행합니다.
+1. 기존 Vue 관리자 read-only 조회를 typed component/store로 정리하고 account store의 `isAdmin`을 사용하는 `/admin` route guard를 구현합니다.
+2. 일반 사용자에게 관리자 UI를 렌더링하지 않고 기존 Preview → 확인 modal → Apply 계약을 유지합니다.
+3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 
 ## 배포 주소
 

@@ -1,16 +1,17 @@
-# Vue/FastAPI/DB 전체 전환 계획 — v379
+# Vue/FastAPI/DB 전체 전환 계획 — v380
 
 ## 현재 결론
 
 `frontend/vue-app/`은 더 이상 단순 실험용 shell이 아니라 전체 프론트엔드를 옮길 작업공간입니다. 다만 공개 서비스의 `index.html`, `admin.html`, 루트 `src/`는 Vue 기능이 같은 수준으로 검증될 때까지 기준 구현으로 유지합니다.
 
-v379에서 시작한 기반:
+v379에서 시작해 v380까지 완료한 기반:
 
 - Vue 3 + Vite + Vue Router
 - 새 Vue 코드의 TypeScript 적용
 - Pinia 공통 상태 관리
 - 반응형 sidebar, 공통 card, focus/skip-link 접근성
 - 기존 FastAPI read-only API client와 관리자 GET 화면 유지
+- typed auth/account API, Pinia account store, 로그인·이메일·8칸 캐릭터 gate
 - legacy, backend, DB, 공개 배포 변경 없음
 
 ## TypeScript를 쓰는 이유
@@ -40,7 +41,7 @@ Vue 자체는 JavaScript만으로도 사용할 수 있습니다. 이 프로젝�
 
 ## 작업 순서
 
-### 1. 공통 기반 — v379 진행
+### 1. 공통 기반 — v379 완료
 
 - TypeScript compiler와 `vue-tsc` 도입
 - Pinia 등록 및 typed app store 생성
@@ -48,14 +49,16 @@ Vue 자체는 JavaScript만으로도 사용할 수 있습니다. 이 프로젝�
 - 공통 layout/navigation/card 디자인 정리
 - desktop/mobile과 keyboard focus 검증
 
-### 2. 로그인·이메일·캐릭터 선택
+### 2. 로그인·이메일·캐릭터 선택 — v380 완료
 
 - 로그인, 가입, 이메일 인증·재전송
 - 오류 코드별 사용자 메시지
 - 계정별 캐릭터 슬롯 8개와 캐릭터 선택·생성
 - 인증 전 게임 boot와 자동 저장 차단
+- legacy와 같은 token·선택 캐릭터 key, session invalid와 network 오류 분기
+- 생성·선택·이름 확인 삭제 modal, desktop/mobile 접근성 검증
 
-### 3. 관리자 화면
+### 3. 관리자 화면 — 다음 단계
 
 - 기존 read-only 조회를 typed component/store로 정리
 - 관리자 인증과 route guard

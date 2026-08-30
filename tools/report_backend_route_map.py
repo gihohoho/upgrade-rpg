@@ -22,9 +22,9 @@ from pathlib import Path
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
-CHECKPOINT_VERSION = "v379.vue-typescript-pinia-foundation"
-CHECKPOINT_RESULT = "vue-typescript-pinia-foundation"
-NEXT_SAFE_STAGE = "migrate-vue-auth-character-gate"
+CHECKPOINT_VERSION = "v380.vue-auth-character-gate"
+CHECKPOINT_RESULT = "vue-auth-character-gate"
+NEXT_SAFE_STAGE = "migrate-vue-admin-auth-routing"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 
@@ -360,7 +360,7 @@ local auth POST: protection store available / legacy no-email login compatible
 local Brevo E2E: Naver delivery / link verification / login verified
 provider finalize: local multi-worker ownership diagnosed / direct provider healthy
 recovery2 roundtrip/Neon backup/apply: verified / one attempt each
-public backend/static: v377 live
+public backend/static: v377/v378 live
 next safe stage: {NEXT_SAFE_STAGE}
 ```
 
@@ -437,8 +437,8 @@ signed backend image와 legacy static의 공개 배포를 승인된 단일 시�
 
 권장 범위:
 
-1. 허용된 Naver 테스트 메일의 공개 delivery와 outbox terminal 상태를 값 노출 없이 관찰합니다.
-2. 서버측 session/revoke, save revision/CAS, CSP/XSS·브라우저 token과 개인정보 정책을 완료합니다.
+1. Vue 관리자 read-only 조회를 typed component/store로 정리하고 `isAdmin` route guard를 연결합니다.
+2. production 관리자 복구와 실제 관리자 write는 별도 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 3. 완료된 migration·publish·Render deploy는 단순 확인을 위해 재실행하지 않습니다.
 """
 

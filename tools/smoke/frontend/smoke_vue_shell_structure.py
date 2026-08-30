@@ -85,10 +85,12 @@ def main() -> None:
     assert_contains(store, "defineStore('app'", "typed app store")
     assert_contains(store, "MigrationMilestone", "migration milestone type")
 
-    for vue_file in ["src/pages/AdminShell.vue", "src/pages/GameShell.vue"]:
-        text = read(vue_file)
-        assert_contains(text, "ShellCard", vue_file)
-        assert_contains(text, "legacy", vue_file)
+    admin_shell = read("src/pages/AdminShell.vue")
+    assert_contains(admin_shell, "ShellCard", "Admin shell card")
+    assert_contains(admin_shell, "legacy", "Admin legacy boundary")
+
+    game_shell = read("src/pages/GameShell.vue")
+    assert_contains(game_shell, "AccountGate", "Game account gate")
 
     all_source_files = list((VUE_APP / "src").rglob("*"))
     for source_file in all_source_files:

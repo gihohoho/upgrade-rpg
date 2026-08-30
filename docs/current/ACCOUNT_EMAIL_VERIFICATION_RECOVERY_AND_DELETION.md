@@ -1,9 +1,9 @@
 # 이메일 인증·계정 복구·계정 삭제 준비 — v377
 
 ```txt
-latest: v379.vue-typescript-pinia-foundation
-strict result: vue-typescript-pinia-foundation
-next safe stage: migrate-vue-auth-character-gate
+latest: v380.vue-auth-character-gate
+strict result: vue-auth-character-gate
+next safe stage: migrate-vue-admin-auth-routing
 public Render: backend v377 / static v378 Live
 database migration: local/Neon v377 / apply 1회씩 / stamp·downgrade 0회
 email provider: local Brevo real Naver delivery verified / Render configured

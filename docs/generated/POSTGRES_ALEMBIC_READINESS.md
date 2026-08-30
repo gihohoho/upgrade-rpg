@@ -7,8 +7,8 @@
 ## v377 현재 overlay
 
 ```txt
-latest: v379.vue-typescript-pinia-foundation
-strict result: vue-typescript-pinia-foundation
+latest: v380.vue-auth-character-gate
+strict result: vue-auth-character-gate
 local Alembic source graph head: v377_auth_email_public_security
 local/Neon applied DB revision: v377_auth_email_public_security / v377_auth_email_public_security
 actual target v377 apply: local 1 / Neon 1
@@ -19,10 +19,10 @@ local auth POST: protection store available / legacy no-email login compatible
 local Brevo E2E: Naver delivery / link verification / login verified
 provider finalize: local multi-worker ownership diagnosed / direct provider healthy
 recovery2 roundtrip/Neon backup/apply: verified / one attempt each
-public backend/static: v377 live
+public backend/static: v377/v378 live
 model application tables: 25
 local/Neon application tables: 25 / 25
-next safe stage: migrate-vue-auth-character-gate
+next safe stage: migrate-vue-admin-auth-routing
 ```
 
 v295는 최초 22-table baseline을 실제 DB에 적용한 역사이자 현재 Neon DB revision으로
@@ -41,7 +41,7 @@ private environment/ACL·email/abuse secret 준비와 local migration은 완료�
 `8db9bcb`의 stale evidence와 실패 marker는 보존했고, source
 `345872a`의 별도 recovery1 왕복·fresh backup·local v377 apply를 각각 1회
 검증했습니다. recovery2 synthetic 왕복·Neon fresh backup·exact v377 apply도 각각 1회
-완료했으며 다음은 `migrate-vue-auth-character-gate` 단계입니다.
+완료했으며 다음은 `migrate-vue-admin-auth-routing` 단계입니다.
 현재 `tools/run_smoke_core.sh`에서는 v295~v310 단일-head·no-next-revision 역사 계약에
 고정된 최초 revision 생성·수동 검토, isolated upgrade·downgrade·roundtrip,
 source·restore stamp guard, baseline completion, next-revision preflight와 deployment
@@ -337,8 +337,8 @@ revision만 거짓으로 올릴 수 있으므로 특히 금지합니다.
    생성되지 않았습니다. 그 private exclusive attempt marker는 남겨 두고 재실행하지 않았습니다.
 7. local/Neon actual DB는 모두 v377이고 기존 22개 table 데이터 변화 0·25개 model table parity를
    확인했습니다. recovery2 Neon backup과 apply는 각각 한 번만 실행했습니다.
-8. local 실제 메일·링크 인증·로그인과 공개 backend/static 배포를 완료했습니다. 다음 안전 단계는
-   공개 delivery 관찰과 남은 계정 gate를 묶는 `migrate-vue-auth-character-gate`입니다.
+8. local 실제 메일·링크 인증·로그인, 공개 backend/static 배포와 Vue 인증·캐릭터 gate를 완료했습니다.
+   다음 안전 단계는 Vue 관리자 인증·route guard를 이식하는 `migrate-vue-admin-auth-routing`입니다.
 
 현재는 **public email rollout deployed** 상태입니다. local/Neon DB schema와 legacy
 데이터는 보존됐고 signed backend image와 legacy static이 공개 live입니다.

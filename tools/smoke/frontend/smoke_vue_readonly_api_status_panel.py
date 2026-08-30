@@ -62,8 +62,8 @@ def main() -> None:
         raise AssertionError(f"Missing Vue read-only API status panel files: {missing}")
 
     package = json.loads((VUE_APP / "package.json").read_text(encoding="utf-8"))
-    if package.get("version") != "0.0.0-v379":
-        raise AssertionError("Vue package version must be 0.0.0-v379")
+    if package.get("version") != "0.0.0-v380":
+        raise AssertionError("Vue package version must be 0.0.0-v380")
 
     health_api = read("src/api/healthReadOnlyApi.js")
     assert_contains(health_api, "HEALTH_READONLY_ROUTES", "health API route import")
@@ -92,10 +92,7 @@ def main() -> None:
     assert_no_mutation_patterns("src/pages/AdminShell.vue")
 
     game_shell = read("src/pages/GameShell.vue")
-    assert_contains(game_shell, "ReadOnlyApiStatusPanel", "game shell status panel")
-    assert_contains(game_shell, "healthReadOnlyApi.fetchHealth", "game health check")
-    assert_contains(game_shell, "아직 자동 호출하지", "game DB-dependent API exclusion note")
-    assert_no_mutation_patterns("src/pages/GameShell.vue")
+    assert_contains(game_shell, "AccountGate", "game shell account gate")
 
     css = read("src/styles/base.css")
     assert_contains(css, ".api-status-panel", "status panel CSS")
