@@ -1,9 +1,9 @@
 # 이메일 인증·계정 복구·계정 삭제 준비 — v377
 
 ```txt
-latest: v378.game-ui-admin-routing-public-live
-strict result: game-ui-admin-routing-public-live
-next safe stage: approve-production-admin-recovery
+latest: v379.vue-typescript-pinia-foundation
+strict result: vue-typescript-pinia-foundation
+next safe stage: migrate-vue-auth-character-gate
 public Render: backend v377 / static v378 Live
 database migration: local/Neon v377 / apply 1회씩 / stamp·downgrade 0회
 email provider: local Brevo real Naver delivery verified / Render configured

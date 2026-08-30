@@ -78,7 +78,7 @@ Adminer 로컬 접속값은 `PostgreSQL / postgres / rpg_user / rpg_password / r
 
 ### 선택: Vue 개발 화면
 
-현재 실제 게임은 legacy 화면이며 Vue는 전환 실험용입니다.
+현재 실제 게임은 legacy 화면이며 Vue는 전체 프론트엔드 전환 작업공간입니다. 기능 동등성이 확인될 때까지 공개 화면은 legacy를 유지합니다.
 
 - 실행 위치: `frontend/vue-app` 폴더
 - Python `.venv` 상태: 필요 없음
@@ -111,7 +111,7 @@ docker compose stop
 
 - `index.html`, `admin.html`, `src/`: 실제 legacy 게임과 관리자 화면
 - `backend/`: FastAPI, SQLAlchemy, Alembic
-- `frontend/vue-app/`: Vue 전환 실험
+- `frontend/vue-app/`: Vue TypeScript + Pinia 전체 전환 작업공간
 - `deploy/`: 배포 계약과 정제된 증거
 - `docs/`: 현재 상태, reference, 계약, guide, archive
 - `tools/`: checker, report, smoke

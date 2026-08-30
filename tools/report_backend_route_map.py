@@ -22,9 +22,9 @@ from pathlib import Path
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
-CHECKPOINT_VERSION = "v378.game-ui-admin-routing-public-live"
-CHECKPOINT_RESULT = "game-ui-admin-routing-public-live"
-NEXT_SAFE_STAGE = "approve-production-admin-recovery"
+CHECKPOINT_VERSION = "v379.vue-typescript-pinia-foundation"
+CHECKPOINT_RESULT = "vue-typescript-pinia-foundation"
+NEXT_SAFE_STAGE = "migrate-vue-auth-character-gate"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 

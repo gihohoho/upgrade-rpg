@@ -1,13 +1,14 @@
 <template>
   <ShellCard
     label="Game"
-    title="게임 화면 Vue 이식 준비"
-    description="현재 실제 게임은 아직 루트 index.html과 legacy src/에서 실행합니다. v272에서는 Vue shell에서 FastAPI health GET만 먼저 확인합니다."
+    title="게임 화면 전환 준비"
+    description="현재 서비스 중인 게임은 그대로 유지합니다. v379부터 TypeScript·Pinia 기반 위에 계정과 캐릭터 선택부터 순서대로 옮깁니다."
   >
     <ul class="shell-list">
       <li>legacy 기준 진입점: <code>index.html</code></li>
-      <li>나중에 이식할 후보: <code>src/state</code>, <code>src/systems</code>, <code>src/ui</code></li>
-      <li>이번 단계에서는 장비/스킬/보스/필드 같은 게임 콘텐츠를 추가하지 않습니다.</li>
+      <li>새 Vue 화면 기반: <code>TypeScript</code>, <code>Pinia</code>, <code>Vue Router</code></li>
+      <li>다음 순서: 로그인·이메일 인증 → 캐릭터 선택 → 실제 게임 UI</li>
+      <li>게임 규칙은 UI와 분리해 기존 검증 결과를 유지하며 옮깁니다.</li>
     </ul>
 
     <ReadOnlyApiStatusPanel
@@ -17,7 +18,7 @@
     />
 
     <section class="api-route-preview" aria-label="Game read-only API route preview">
-      <h3>v272 읽기 전용 게임 API 준비 목록</h3>
+      <h3>읽기 전용 게임 API 준비 목록</h3>
       <p>세이브 저장 같은 write API는 아직 Vue client에 연결하지 않았습니다.</p>
       <ul class="api-route-preview__list">
         <li v-for="route in gameRoutes" :key="route.name">

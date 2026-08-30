@@ -1,78 +1,41 @@
-# Upgrade RPG Vue App Shell — v281
+# Upgrade RPG Vue App — v379
 
-이 폴더는 기존 게임/관리자 화면을 바로 대체하지 않는 Vue 준비 앱입니다.
+이 폴더는 Upgrade RPG 전체 프론트엔드를 Vue로 옮기는 작업공간입니다. 현재 공개 게임과 관리자 화면은 아직 루트 `index.html`, `admin.html`, legacy `src/`를 사용합니다.
 
-실제 화면은 계속 루트 `index.html`, `admin.html`, legacy `src/`를 사용합니다.
+## 현재 범위
 
-## 현재 Vue 연결 범위
+- Vue 3 + Vite + Vue Router
+- 새 Vue 코드 TypeScript
+- Pinia 공통 상태
+- 반응형 공통 layout과 접근성 기반
+- `/game`: FastAPI health GET
+- `/admin`: 기존 read-only 도메인·카탈로그·상세·관계 조회
 
-`/game`은 `GET /health`를 사용합니다.
+write API, 실제 save, 인증 token 처리는 이후 기능 단계에서 기존 보안 계약과 함께 옮깁니다.
 
-`/admin`은 아래 GET을 사용합니다.
+## 설치와 실행
 
-- `/health`
-- `/admin/requirements`
-- `/admin/master-data/domains`
-- `/admin/master-data/catalog`
-- `/admin/master-data/detail`
-- `/admin/master-data/relations`
+실행 위치: `frontend/vue-app`
 
-지원 기능:
-
-- 도메인 선택
-- 검색, 활성/비활성 필터, 정렬, 페이지네이션
-- scalar/JSON 안전 상세
-- 관계 그룹 표
-- 연관 row 상세 이동
-- `이전 상세로`
-
-아직 연결하지 않은 것:
-
-- 관계 편집
-- Preview/Apply/write
-- 인증/token/interceptor
-
-## 설치
-
-v280~v281에서 새 라이브러리나 프레임워크는 없습니다.
-
-실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 필요 없음 / 꺼져 있어도 됨
+Python `.venv`: 필요 없음
 
 ```bash
-npm install
-```
-
-## Vue 실행
-
-실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 필요 없음 / 꺼져 있어도 됨
-
-```bash
+npm ci
 npm run dev
 ```
 
-## FastAPI 실행
+확인 주소:
 
-실행 위치: 프로젝트 루트  
-`.venv` 상태: 꺼져 있다면 켜야 함
-
-```bash
-.venv\Scripts\activate
+```txt
+http://127.0.0.1:5173/game
+http://127.0.0.1:5173/admin
 ```
 
-실행 위치: `backend` 폴더  
-`.venv` 상태: 켜진 상태
+## 검사와 빌드
 
 ```bash
-python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-## 빌드 확인
-
-실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 필요 없음
-
-```bash
+npm run typecheck
 npm run build
 ```
+
+`npm run build`는 먼저 TypeScript 검사를 실행한 뒤 Vite production bundle을 만듭니다.

@@ -1,13 +1,13 @@
-# Current Status — v378
+# Current Status — v379
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v378.game-ui-admin-routing-public-live
-strict result: game-ui-admin-routing-public-live
-next safe stage: approve-production-admin-recovery
+latest: v379.vue-typescript-pinia-foundation
+strict result: vue-typescript-pinia-foundation
+next safe stage: migrate-vue-auth-character-gate
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -15,7 +15,18 @@ email rollout approval/execution: yes/public-live
 public backend/static: v377/v378 Live
 production approval/execution: yes/yes
 v378 production approval/execution: yes/yes
+v379 production approval/execution: no/no
 ```
+
+## v379 Vue TypeScript·Pinia 기반
+
+- `frontend/vue-app`은 더 이상 read-only 실험 shell이 아니라 전체 프론트엔드 전환 작업공간입니다. 실제 공개 게임은 기능 동등성과 배포 승인이 끝날 때까지 legacy `index.html`, `admin.html`, 루트 `src/`를 유지합니다.
+- Vue entry와 Router를 TypeScript로 전환하고 `strict`, `allowJs`, `vue-tsc`를 적용했습니다. 기존 JavaScript API 모듈은 유지하면서 새로 이식하는 Vue 코드부터 typed module로 바꿉니다.
+- Pinia app store는 공통 navigation과 전환 단계만 소유합니다. 계정·캐릭터·server snapshot·runtime 상태는 다음 기능 단계에서 서로 분리된 store와 domain module로 추가합니다.
+- 공통 화면은 desktop sidebar, mobile drawer, skip-link, focus-visible, 의미 있는 section heading을 갖춘 반응형 Vue layout으로 정리했습니다.
+- `npm ci`, `npm run build`의 TypeScript+Vite build, Vue focused smoke가 PASS했습니다. 실제 Chrome에서 `/game`→`/admin` routing, FastAPI health, 375px mobile menu, 가로 overflow 없음, console error 없음도 확인했습니다.
+- 관리자 GET 화면의 401은 관리자 인증을 아직 Vue로 옮기지 않은 현재 계약입니다. write API, save, token 처리, backend, DB, env, secret, legacy 공개 화면과 Render 배포는 변경하지 않았습니다.
+- 다음 단계는 로그인·가입·이메일 인증과 8개 캐릭터 슬롯 gate를 Vue로 옮기는 것입니다. production 관리자 복구는 별도 exact DB-write 승인 전까지 보류합니다.
 
 ## v378 게임 UI·환경 라우팅 소스 준비
 

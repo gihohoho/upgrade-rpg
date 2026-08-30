@@ -1,21 +1,27 @@
-# Upgrade RPG Codex handoff — v378
+# Upgrade RPG Codex handoff — v379
 
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v378.game-ui-admin-routing-public-live
-strict result: game-ui-admin-routing-public-live
-next safe stage: approve-production-admin-recovery
+latest: v379.vue-typescript-pinia-foundation
+strict result: vue-typescript-pinia-foundation
+next safe stage: migrate-vue-auth-character-gate
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
 email rollout approval/execution: yes/public-live
 public backend/static: v377/v378 Live
 v378 production approval/execution: yes/yes
+v379 production approval/execution: no/no
 ```
 
 ## 이번 체크포인트
 
+- 사용자가 전체 프론트엔드를 Vue로 전환하기로 결정했고, 새 Vue 코드에는 TypeScript를 사용하되 legacy JavaScript는 실제 이식 순서에 맞춰 점진 변환합니다.
+- `frontend/vue-app`에 TypeScript strict 기반, `vue-tsc`, Pinia app store, typed Router entry를 추가했습니다. 기존 JavaScript read-only API client는 `allowJs` 경계 안에서 계속 사용합니다.
+- 공통 Vue 화면은 sidebar navigation, 전환 단계 표시, 반응형 mobile drawer, skip-link와 focus-visible을 갖춘 새 design shell로 바꿨습니다. 기존 게임 정체성은 유지하되 legacy HTML 배치를 그대로 복제하지 않습니다.
+- `npm ci`, TypeScript 검사와 Vite production build, Vue 5개 focused smoke가 PASS했습니다. 실제 Chrome에서 `/game`·`/admin`, backend health, 375px mobile 메뉴와 overflow, console 오류 없음을 확인했습니다.
+- 기존 공개 legacy 화면·backend·DB·env·secret·Render 배포는 변경하지 않았습니다. Vue v379 production 승인과 실행은 모두 없습니다.
 - 특Q(SQ)·특W(SW)는 첫 전용 강화권 사용 뒤 저장·표시·전투 유효 레벨이 모두 1이며, 탈리스만 A/B의 일반 스킬 보너스를 더 이상 상속하지 않습니다. 기존 R·T와 F·D 보너스는 유지하고 source/generated skill metadata와 탈리스만 설명도 같은 계약으로 맞췄습니다.
 - 상단 `접속 캐릭터` 바는 계정·캐릭터가 있고 현재 구역이 `town`일 때만 표시합니다. 초기 상태와 동기화 실패도 hidden/inert로 닫힙니다.
 - 로컬에서는 기존 테스트 편의를 유지하지만 배포 origin에서는 로그인 사용자의 `isAdmin=true`일 때만 테스트 패널·테스트 지급 모달·MASTER DATA/SAVE DATA 개발 배지를 표시합니다. 이는 화면 노출 계약이며 client-authoritative save의 근본 치트 방지는 향후 server save 검증/CAS 범위입니다.
@@ -41,9 +47,9 @@ v378 production approval/execution: yes/yes
 
 ## 바로 할 일
 
-1. 현재 로그인 가능한 관리자가 없으므로 production의 기존 `admin` 계정을 관리자화할지, 새 owner를 만들지 별도 guarded recovery 설계와 exact DB-write 승인을 받습니다. 비밀번호나 dev key를 채팅에 복사하지 않습니다.
-2. 관리자 복구를 승인하면 새 배포 없이 관리자 계정에서 테스트 패널·지급 모달·MASTER DATA/SAVE DATA 배지가 표시되는지만 확인합니다.
-3. 공개 회원가입 확대 전에 server session/refresh/revoke, save revision/CAS, CSP/XSS·브라우저 token 저장 정책, 개인정보 보관·삭제·문의·복구 정책을 차례로 완료합니다.
+1. legacy `account-gate.js`와 인증 API 계약을 기준으로 Vue 로그인·가입·이메일 인증 화면과 typed account store/API 경계를 먼저 만듭니다.
+2. 인증 성공 뒤 계정별 캐릭터 슬롯 8개, 캐릭터 생성·선택까지 연결하되 게임 boot와 자동 저장은 선택 완료 전 시작하지 않습니다.
+3. production 관리자 복구는 현재 Vue 작업과 분리하며 기존 `admin` 승격 또는 새 owner 생성의 exact DB-write 승인을 받기 전에는 실행하지 않습니다.
 
 ## 안전 경계
 

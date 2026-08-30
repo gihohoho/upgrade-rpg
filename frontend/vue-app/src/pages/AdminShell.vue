@@ -1,8 +1,8 @@
 <template>
   <ShellCard
     label="Admin"
-    title="관리자 페이지 Vue 이식 준비"
-    description="현재 실제 관리자 도구는 아직 루트 admin.html에서 실행합니다. v276~v281에서는 안전한 GET 도메인·카탈로그·상세·관계 조회만 Vue shell에서 확인합니다."
+    title="관리자 화면 전환 준비"
+    description="현재 실제 관리자 도구는 계속 admin.html에서 실행합니다. Vue 화면에는 검증된 읽기 전용 조회를 유지하고, 인증 흐름 다음 단계에서 권한 기반 화면으로 확장합니다."
   >
     <ul class="shell-list">
       <li>legacy 기준 진입점: <code>admin.html</code></li>

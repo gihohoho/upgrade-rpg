@@ -11,10 +11,14 @@ REQUIRED_FILES = [
     "package.json",
     "index.html",
     "vite.config.js",
+    "tsconfig.json",
     "README.md",
-    "src/main.js",
+    "src/main.ts",
+    "src/env.d.ts",
     "src/App.vue",
-    "src/router/index.js",
+    "src/router/index.ts",
+    "src/stores/app.ts",
+    "src/stores/index.ts",
     "src/pages/AdminShell.vue",
     "src/pages/GameShell.vue",
     "src/components/ShellCard.vue",
@@ -50,27 +54,36 @@ def main() -> None:
     if package.get("private") is not True:
         raise AssertionError("Vue package must stay private")
 
-    expected_dependencies = ["vue", "vue-router", "vite", "@vitejs/plugin-vue"]
+    expected_dependencies = ["vue", "vue-router", "pinia", "vite", "@vitejs/plugin-vue"]
     dependencies = package.get("dependencies", {})
     for dependency in expected_dependencies:
         if dependency not in dependencies:
             raise AssertionError(f"Missing Vue dependency: {dependency}")
 
     scripts = package.get("scripts", {})
-    for script in ["dev", "build", "preview"]:
+    for script in ["dev", "typecheck", "build", "preview"]:
         if script not in scripts:
             raise AssertionError(f"Missing npm script: {script}")
 
-    router = read("src/router/index.js")
+    router = read("src/router/index.ts")
     assert_contains(router, "path: '/game'", "router game route")
     assert_contains(router, "path: '/admin'", "router admin route")
     assert_contains(router, "legacyEntry: 'index.html'", "game legacy entry metadata")
     assert_contains(router, "legacyEntry: 'admin.html'", "admin legacy entry metadata")
 
     app_vue = read("src/App.vue")
-    assert_contains(app_vue, "<RouterLink to=\"/game\">", "App game navigation")
-    assert_contains(app_vue, "<RouterLink to=\"/admin\">", "App admin navigation")
+    assert_contains(app_vue, "to=\"/game\"", "App game navigation")
+    assert_contains(app_vue, "to=\"/admin\"", "App admin navigation")
     assert_contains(app_vue, "<RouterView />", "App router view")
+    assert_contains(app_vue, "useAppStore", "App Pinia store")
+
+    main_ts = read("src/main.ts")
+    assert_contains(main_ts, "createPinia", "Vue Pinia bootstrap")
+    assert_contains(main_ts, ".use(createPinia())", "Vue Pinia registration")
+
+    store = read("src/stores/app.ts")
+    assert_contains(store, "defineStore('app'", "typed app store")
+    assert_contains(store, "MigrationMilestone", "migration milestone type")
 
     for vue_file in ["src/pages/AdminShell.vue", "src/pages/GameShell.vue"]:
         text = read(vue_file)
@@ -88,11 +101,12 @@ def main() -> None:
 
     project_structure = (ROOT / "docs" / "current" / "PROJECT_STRUCTURE.md").read_text(encoding="utf-8")
     assert_contains(project_structure, "frontend/vue-app/", "PROJECT_STRUCTURE Vue app path")
-    assert_contains(project_structure, "v272", "PROJECT_STRUCTURE version")
+    assert_contains(project_structure, "TypeScript + Pinia", "PROJECT_STRUCTURE Vue foundation")
 
-    transition_plan = (ROOT / "docs" / "current" / "VUE_FASTAPI_DB_TRANSITION_PLAN.md").read_text(encoding="utf-8")
-    assert_contains(transition_plan, "Vue shell", "transition plan Vue shell note")
-    assert_contains(transition_plan, "npm install", "transition plan install guide")
+    transition_plan = (ROOT / "docs" / "reference" / "frontend" / "VUE_FASTAPI_DB_TRANSITION_PLAN.md").read_text(encoding="utf-8")
+    assert_contains(transition_plan, "TypeScript", "transition plan TypeScript decision")
+    assert_contains(transition_plan, "Pinia", "transition plan Pinia decision")
+    assert_contains(transition_plan, "npm ci", "transition plan install guide")
 
     if re.search(r"route path.*변경", transition_plan) and "변경하지 않았" not in transition_plan:
         raise AssertionError("Transition plan must explicitly preserve route paths")

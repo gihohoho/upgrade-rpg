@@ -1,8 +1,8 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import AdminShell from '@/pages/AdminShell.vue';
 import GameShell from '@/pages/GameShell.vue';
 
-export const routes = [
+export const routes: RouteRecordRaw[] = [
   {
     path: '/',
     redirect: '/game',
@@ -28,4 +28,5 @@ export const routes = [
 export const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior: () => ({ top: 0 }),
 });

@@ -17,7 +17,7 @@ Upgrade RPG/
 │  ├─ alembic/                  v371 identity + v377 보안 revision source
 │  ├─ requirements/             reproducible dependency inputs/locks
 │  └─ scripts/                  backend 전용 one-shot/read-only 도구
-├─ frontend/vue-app/            Vue read-only 전환 실험
+├─ frontend/vue-app/            Vue TypeScript + Pinia 전체 전환 작업공간
 ├─ deploy/                      배포 계약·예시·정제된 증거·v377 release guard
 └─ tools/                       checker·report·smoke·migration/release guard·maintenance
 ```
