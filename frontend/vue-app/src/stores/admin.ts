@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
-import { adminReadOnlyApi } from '@/api';
+import { adminPreviewApi, adminReadOnlyApi } from '@/api';
+import type { AdminPreviewEnvelope, AdminPreviewKind, JsonRecord } from '@/api/adminPreviewApi';
 import { useAccountStore } from './account';
 
 export type AdminAccessStage = 'idle' | 'checking' | 'login' | 'forbidden' | 'ready' | 'retry';
@@ -27,10 +28,24 @@ interface RelationsQuery extends DetailQuery {
   limit?: number;
 }
 
+interface ChangeLogQuery {
+  limit?: number;
+  sort?: string;
+  action?: string;
+  targetType?: string;
+  targetId?: string;
+  changedKey?: string;
+  applied?: boolean;
+}
+
 export const useAdminStore = defineStore('admin', () => {
   const account = useAccountStore();
   const accessStage = ref<AdminAccessStage>('idle');
   const accessMessage = ref('');
+  const previewBusy = ref(false);
+  const previewKind = ref<AdminPreviewKind | null>(null);
+  const previewResult = ref<AdminPreviewEnvelope | null>(null);
+  const previewError = ref('');
   const busy = computed(() => account.busy || accessStage.value === 'checking');
 
   function updateAccessFromAccount() {
@@ -69,6 +84,7 @@ export const useAdminStore = defineStore('admin', () => {
     await account.logout();
     accessStage.value = 'login';
     accessMessage.value = '';
+    clearPreview();
   }
 
   function requestOptions(options: RequestOptions = {}) {
@@ -90,6 +106,7 @@ export const useAdminStore = defineStore('admin', () => {
           accessStage.value = 'forbidden';
           accessMessage.value = '현재 계정의 관리자 권한이 확인되지 않아 관리자 화면을 닫았습니다.';
         }
+        clearPreview();
       }
       throw error;
     }
@@ -115,10 +132,69 @@ export const useAdminStore = defineStore('admin', () => {
     return guardRequest(() => adminReadOnlyApi.fetchMasterRelations(query, requestOptions(options)));
   }
 
+  function fetchMasterCreateBlueprint(domain: string, options: RequestOptions = {}) {
+    return guardRequest(() => adminReadOnlyApi.fetchMasterCreateBlueprint({ domain }, requestOptions(options)));
+  }
+
+  function fetchChangeLogs(query: ChangeLogQuery = {}, options: RequestOptions = {}) {
+    return guardRequest(() => adminReadOnlyApi.fetchChangeLogs(query, requestOptions(options)));
+  }
+
+  function fetchChangeLogDetail(changeLogId: number, options: RequestOptions = {}) {
+    return guardRequest(() => adminReadOnlyApi.fetchChangeLogDetail({ changeLogId }, requestOptions(options)));
+  }
+
+  function clearPreview() {
+    previewKind.value = null;
+    previewResult.value = null;
+    previewError.value = '';
+  }
+
+  async function runPreview(kind: AdminPreviewKind, request: () => Promise<AdminPreviewEnvelope>) {
+    previewBusy.value = true;
+    previewKind.value = kind;
+    previewResult.value = null;
+    previewError.value = '';
+    try {
+      const response = await guardRequest(request);
+      previewResult.value = response;
+      return response;
+    } catch (error) {
+      previewError.value = String((error as { message?: string })?.message || 'Preview 요청을 처리하지 못했습니다.');
+      throw error;
+    } finally {
+      previewBusy.value = false;
+    }
+  }
+
+  function previewCreate(payload: { domain: string; draft: JsonRecord; reason?: string; signal?: AbortSignal }) {
+    return runPreview('create', () => adminPreviewApi.previewCreate({ ...payload, token: account.accessToken }));
+  }
+
+  function previewEdit(payload: { domain: string; rowId: number; draft: JsonRecord; baseValues: JsonRecord; reason?: string; signal?: AbortSignal }) {
+    return runPreview('edit', () => adminPreviewApi.previewEdit({ ...payload, token: account.accessToken }));
+  }
+
+  function previewRollback(payload: { changeLogId: number; reason?: string; signal?: AbortSignal }) {
+    return runPreview('rollback', () => adminPreviewApi.previewRollback({ ...payload, token: account.accessToken }));
+  }
+
+  function previewCreateDelete(payload: { changeLogId: number; reason?: string; signal?: AbortSignal }) {
+    return runPreview('create-delete', () => adminPreviewApi.previewCreateDelete({ ...payload, token: account.accessToken }));
+  }
+
+  function previewCreateDeleteRestore(payload: { changeLogId: number; reason?: string; signal?: AbortSignal }) {
+    return runPreview('create-delete-restore', () => adminPreviewApi.previewCreateDeleteRestore({ ...payload, token: account.accessToken }));
+  }
+
   return {
     accessStage,
     accessMessage,
     busy,
+    previewBusy,
+    previewKind,
+    previewResult,
+    previewError,
     checkAccess,
     login,
     logout,
@@ -127,5 +203,14 @@ export const useAdminStore = defineStore('admin', () => {
     fetchMasterCatalog,
     fetchMasterDetail,
     fetchMasterRelations,
+    fetchMasterCreateBlueprint,
+    fetchChangeLogs,
+    fetchChangeLogDetail,
+    clearPreview,
+    previewCreate,
+    previewEdit,
+    previewRollback,
+    previewCreateDelete,
+    previewCreateDeleteRestore,
   };
 });

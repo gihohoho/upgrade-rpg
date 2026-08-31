@@ -81,7 +81,7 @@ def main() -> None:
     assert_contains(shell, "selectionHistory", "selection history state")
     assert_contains(shell, "handleRelatedRowSelected", "related selection handler")
     assert_contains(shell, "handleBackSelection", "related selection back handler")
-    assert_contains(shell, "관계 편집과 Preview/Apply/write는 계속 제외", "write exclusion note")
+    assert_contains(shell, "Apply/dev key/write는 계속 제외", "write exclusion note")
     assert_read_only("src/pages/AdminShell.vue")
 
     css = read("src/styles/base.css")
@@ -90,14 +90,14 @@ def main() -> None:
     assert_contains(css, ".admin-relations-group__limited", "relations limited CSS")
 
     app = read("src/App.vue")
-    assert_contains(app, "Upgrade RPG · v381", "Vue shell visible version")
+    assert_contains(app, "Upgrade RPG · v382", "Vue shell visible version")
 
     docs = read("docs/reference/frontend/VUE_ADMIN_READONLY_CATALOG.md")
     assert_contains(docs, "v280", "relations panel doc version")
     assert_contains(docs, "v281", "related detail navigation doc version")
     assert_contains(docs, "GET /api/v1/admin/master-data/relations", "relations endpoint doc")
     assert_contains(docs, "이전 상세로", "history navigation doc")
-    assert_contains(docs, "Preview/Apply/write", "write exclusion doc")
+    assert_contains(docs, "Apply/write UI 연결", "write exclusion doc")
 
     print("OK: Vue admin read-only relations/navigation smoke passed")
 

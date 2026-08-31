@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v381
+# Upgrade RPG Codex handoff — v382
 
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v381.vue-admin-auth-routing
-strict result: vue-admin-auth-routing
-next safe stage: migrate-vue-admin-preview-workflows
+latest: v382.vue-admin-preview-workflows
+strict result: vue-admin-preview-workflows
+next safe stage: prepare-vue-admin-apply-confirmation-gates
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -15,24 +15,19 @@ v378 production approval/execution: yes/yes
 v379 production approval/execution: no/no
 v380 production approval/execution: no/no
 v381 production approval/execution: no/no
+v382 production approval/execution: no/no
 ```
 
 ## 이번 체크포인트
 
+- Vue 관리자 화면에 신규 생성, 선택 row 수정, 일반 변경 rollback, 생성 row 삭제, 삭제 row 복원의 Preview 작업대를 추가했습니다. typed `adminPreviewApi`와 Pinia admin store가 허용된 Preview POST 5개만 호출하고 body의 `dryRun`을 항상 `true`로 고정합니다.
+- 생성은 서버 blueprint의 기본값·필수·고유·관계 선택지를 사용하고, 수정은 선택 row의 현재 scalar 값을 stale 기준으로 함께 보냅니다. 되돌리기는 최근 변경 이력과 상세 availability를 먼저 GET으로 확인합니다.
+- 결과 화면은 diff, stale 충돌, 거부 필드, 현재값 불일치, 의존성 blocker, id/code conflict와 서버 경고를 분리합니다. Apply endpoint·확인 문구·`X-Admin-Dev-Key` 입력은 존재하지 않습니다.
+- 로컬 backend는 `backend/.venv`와 `DEBUG=false`로 다시 켰지만 Docker Desktop과 프로젝트 PostgreSQL이 꺼져 `/health/db`가 500이므로 실제 로그인 E2E는 아직 완료하지 못했습니다. Docker container 시작은 별도 exact 승인을 받은 뒤 수행합니다.
+- 기존 공개 legacy·backend source·DB schema/data·env·secret·Render 배포는 변경하지 않았습니다. Vue v382 production 승인과 실행은 모두 없습니다.
 - Vue `/admin`은 shared Pinia의 account/admin store로 session과 `isAdmin`을 확인하는 route guard를 통과해야만 `AdminShell`을 생성합니다. 미로그인·비관리자·network 오류는 `/admin/access`의 전용 로그인·거부·재시도 화면으로 분리했습니다.
 - 기존 관리자 requirements·도메인·카탈로그·상세·관계 GET을 typed admin store 경계로 모으고 모든 요청에 Bearer와 `cache: no-store`를 적용했습니다. GET에서 401/403이 발생하면 관리자 UI를 즉시 내리고 재로그인 화면으로 돌아갑니다.
 - 실제 Chrome에서 미로그인 `/admin` → `/admin/access?reason=login` 전환, 관리자 패널 DOM 0개·로그인 폼 1개, desktop/mobile 가로 overflow 없음을 확인했습니다. 실제 로그인 제출과 관리자 API/DB write는 실행하지 않았습니다.
-- 기존 공개 legacy 화면·backend·DB·env·secret·Render 배포는 변경하지 않았습니다. Vue v381 production 승인과 실행은 모두 없습니다.
-- Vue `/game`에 기존 FastAPI 계약을 그대로 사용하는 typed auth/account API client와 Pinia account store를 추가했습니다. 로그인·가입·이메일 인증 안내·재전송, 세션 복구, 안정적인 오류 분류를 한 경계에서 처리합니다.
-- 로그인 뒤 계정별 캐릭터 슬롯 8개를 조회하고 생성·선택·이름 확인 삭제까지 Vue modal로 연결했습니다. 소유하지 않은 슬롯 선택을 막고 선택 완료 전에는 게임 boot·snapshot load·자동 저장을 시작하지 않습니다.
-- legacy와 같은 access-token·선택 캐릭터 storage key를 사용하되 `401/403` session invalid만 인증을 지우고 network·timeout·`5xx`는 token을 보존해 재시도합니다.
-- `npm ci`, `vue-tsc`, production build, Vue focused smoke가 PASS했습니다. 실제 Chrome desktop/mobile에서 로그인·가입 tab, 인증 안내 전환, 390px 가로 overflow 없음과 화면 배치를 확인했습니다. 실제 인증 요청·계정·캐릭터 DB write는 이 검증에서 실행하지 않았습니다.
-- 기존 공개 legacy 화면·backend·DB·env·secret·Render 배포는 변경하지 않았습니다. Vue v380 production 승인과 실행은 모두 없습니다.
-- 사용자가 전체 프론트엔드를 Vue로 전환하기로 결정했고, 새 Vue 코드에는 TypeScript를 사용하되 legacy JavaScript는 실제 이식 순서에 맞춰 점진 변환합니다.
-- `frontend/vue-app`에 TypeScript strict 기반, `vue-tsc`, Pinia app store, typed Router entry를 추가했습니다. 기존 JavaScript read-only API client는 `allowJs` 경계 안에서 계속 사용합니다.
-- 공통 Vue 화면은 sidebar navigation, 전환 단계 표시, 반응형 mobile drawer, skip-link와 focus-visible을 갖춘 새 design shell로 바꿨습니다. 기존 게임 정체성은 유지하되 legacy HTML 배치를 그대로 복제하지 않습니다.
-- `npm ci`, TypeScript 검사와 Vite production build, Vue 5개 focused smoke가 PASS했습니다. 실제 Chrome에서 `/game`·`/admin`, backend health, 375px mobile 메뉴와 overflow, console 오류 없음을 확인했습니다.
-- 기존 공개 legacy 화면·backend·DB·env·secret·Render 배포는 변경하지 않았습니다. Vue v379 production 승인과 실행은 모두 없습니다.
 - 특Q(SQ)·특W(SW)는 첫 전용 강화권 사용 뒤 저장·표시·전투 유효 레벨이 모두 1이며, 탈리스만 A/B의 일반 스킬 보너스를 더 이상 상속하지 않습니다. 기존 R·T와 F·D 보너스는 유지하고 source/generated skill metadata와 탈리스만 설명도 같은 계약으로 맞췄습니다.
 - 상단 `접속 캐릭터` 바는 계정·캐릭터가 있고 현재 구역이 `town`일 때만 표시합니다. 초기 상태와 동기화 실패도 hidden/inert로 닫힙니다.
 - 로컬에서는 기존 테스트 편의를 유지하지만 배포 origin에서는 로그인 사용자의 `isAdmin=true`일 때만 테스트 패널·테스트 지급 모달·MASTER DATA/SAVE DATA 개발 배지를 표시합니다. 이는 화면 노출 계약이며 client-authoritative save의 근본 치트 방지는 향후 server save 검증/CAS 범위입니다.
@@ -58,8 +53,8 @@ v381 production approval/execution: no/no
 
 ## 바로 할 일
 
-1. 기존 관리자 create/edit/rollback API 중 side-effect가 없는 Preview만 typed API/store로 이식하고, 변경 전후 diff·stale·차단 사유를 Vue 확인 화면에 표시합니다.
-2. Preview 화면에는 실제 적용 버튼을 연결하지 않습니다. 향후 Apply는 게임 UI 확인 modal, exact 확인 문구, dev key, 재검증을 함께 설계한 별도 단계로 유지합니다.
+1. Docker Desktop과 기존 프로젝트 `postgres` 컨테이너 시작을 exact 승인받아 로컬 DB health를 복구한 뒤, 일반 계정 로그인과 가능한 범위의 관리자 gate를 실제 브라우저에서 확인합니다.
+2. Apply 확인 UI는 Preview 결과의 최신 재검증, 게임식 확인 modal, exact 확인 문구와 dev key를 함께 설계하되 실제 endpoint 연결과 DB write는 별도 승인을 받기 전까지 실행하지 않습니다.
 3. production 관리자 복구는 Vue 화면 이식과 분리하며 기존 `admin` 승격 또는 새 owner 생성의 exact DB-write 승인을 받기 전에는 실행하지 않습니다.
 
 ## 안전 경계

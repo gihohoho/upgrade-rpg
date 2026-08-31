@@ -1,4 +1,4 @@
-# Vue App Shell — v273 + v381 auth routing
+# Vue App Shell — v273 + v382 admin Preview
 
 ## 한 줄 요약
 
@@ -23,6 +23,8 @@ v270에서 `frontend/vue-app/`에 Vue 기본 shell을 추가했고, v271에서 �
 | `/admin/access` | `AdminAccessPage.vue` | 관리자 로그인·권한 거부·재시도 |
 
 v381부터 `/admin`은 `isAdmin=true` route guard를 통과해야 합니다. 통과 전에는 `AdminShell`과 관리자 GET 패널을 렌더링하지 않으며, 통과한 GET 요청은 Bearer token과 `no-store`를 사용합니다.
+
+v382부터 인증된 관리자 shell 안에 생성·수정·되돌리기 Preview 작업대를 렌더링합니다. 이 작업대의 POST는 `dryRun: true`이고 실제 Apply와 dev key 입력은 없습니다.
 
 ## v272에서 화면에 표시하는 것
 

@@ -1,9 +1,9 @@
 # 이메일 인증·계정 복구·계정 삭제 준비 — v377
 
 ```txt
-latest: v381.vue-admin-auth-routing
-strict result: vue-admin-auth-routing
-next safe stage: migrate-vue-admin-preview-workflows
+latest: v382.vue-admin-preview-workflows
+strict result: vue-admin-preview-workflows
+next safe stage: prepare-vue-admin-apply-confirmation-gates
 public Render: backend v377 / static v378 Live
 database migration: local/Neon v377 / apply 1회씩 / stamp·downgrade 0회
 email provider: local Brevo real Naver delivery verified / Render configured

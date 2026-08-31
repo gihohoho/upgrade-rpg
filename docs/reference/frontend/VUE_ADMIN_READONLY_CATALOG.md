@@ -1,4 +1,4 @@
-# Vue Admin Read-only Catalog — v276~v281 + v381 auth
+# Vue Admin Catalog and Preview — v276~v282 + v381~v382
 
 ## 목적
 
@@ -13,6 +13,7 @@ legacy `admin.html`을 바로 Vue로 대체하지 않고, FastAPI의 안전한 �
 - v280: 선택 row의 관계 그룹 조회
 - v281: 관계 row의 상세 이동과 이전 상세 돌아가기
 - v381: `isAdmin=true` route guard, Bearer GET, 비관리자 UI 비렌더링
+- v382: 생성·수정·rollback·생성 삭제·복원 dry-run Preview 작업대
 
 실제 관리자 운영 화면은 계속 루트 `admin.html`입니다. Vue `/admin`은 이식 준비와 조회 검증 화면입니다.
 
@@ -22,7 +23,27 @@ legacy `admin.html`을 바로 Vue로 대체하지 않고, FastAPI의 안전한 �
 - 미로그인·비관리자·network 오류는 `/admin/access`의 로그인·거부·재시도 화면으로 분리합니다.
 - requirements·도메인·카탈로그·상세·관계 GET에는 같은 Bearer token과 `cache: no-store`를 사용합니다.
 - 관리자 GET의 401은 stale 인증을 정리하고, 403은 일반 게임 session을 보존한 채 관리자 권한만 내립니다.
-- Vue에는 `X-Admin-Dev-Key`, Preview/Apply와 실제 write를 연결하지 않았습니다.
+- Vue에는 `X-Admin-Dev-Key`, Apply와 실제 write를 연결하지 않았습니다.
+
+## v382 — side-effect 없는 Preview
+
+`AdminPreviewWorkspace.vue`는 현재 도메인·선택 row·최근 변경 이력을 사용해 다음 경로만 호출합니다.
+
+```txt
+POST /api/v1/admin/master-data/create-preview
+POST /api/v1/admin/master-data/edit-preview
+POST /api/v1/admin/change-logs/{id}/rollback-preview
+POST /api/v1/admin/change-logs/{id}/create-delete-preview
+POST /api/v1/admin/change-logs/{id}/create-delete-restore-preview
+```
+
+- typed `adminPreviewApi.ts`가 모든 body의 `dryRun`을 `true`로 고정합니다.
+- Pinia admin store가 기존 Bearer session과 401/403 경계를 재사용합니다.
+- 생성은 GET blueprint의 기본값·필수·고유·관계 선택지를 사용합니다.
+- 수정은 GET detail의 현재 scalar 값을 `baseValues`로 함께 보내 stale을 검출합니다.
+- 되돌리기는 GET change logs/detail의 availability를 확인한 뒤 맞는 Preview만 활성화합니다.
+- 결과는 diff, stale, rejected field, current mismatch, dependency blocker, validation conflict와 warning을 분리합니다.
+- Apply route·확인 문구·dev key 입력은 화면과 API client에 존재하지 않습니다.
 
 ## 현재 GET 연결 범위
 
@@ -33,6 +54,9 @@ GET /api/v1/admin/master-data/domains
 GET /api/v1/admin/master-data/catalog
 GET /api/v1/admin/master-data/detail
 GET /api/v1/admin/master-data/relations
+GET /api/v1/admin/master-data/create-blueprint
+GET /api/v1/admin/change-logs
+GET /api/v1/admin/change-logs/{id}
 ```
 
 ## v278 — 카탈로그 조회 조건
@@ -120,8 +144,8 @@ group.limited
 - 기존 API 응답 body
 - Write Guard
 - 실제 write 로직
-- 관리자 Preview/Apply 요청 body
-- Preview/Apply/write UI 연결
+- 관리자 Apply 요청 body와 write route
+- Apply/write UI 연결
 - 기존 smoke/contract 의미
 - 게임 콘텐츠
 
@@ -175,14 +199,15 @@ http://127.0.0.1:5173/admin
 
 ## 사용자가 확인할 사항
 
-1. 카탈로그 `상세 보기`를 누르면 상세와 관계 패널이 함께 표시되는지 확인합니다.
+1. 카탈로그 `상세 보기`를 누르면 상세·관계와 수정 Preview 기준값이 함께 표시되는지 확인합니다.
 2. 관계가 있는 row에서 그룹별 관련 row 표가 나오는지 확인합니다.
 3. 관계가 없는 row는 오류가 아니라 빈 상태 안내가 나오는지 확인합니다.
 4. `이 row 상세`를 누르면 연관 row의 상세와 관계로 바뀌는지 확인합니다.
 5. `이전 상세로`를 누르면 직전 상세로 돌아오는지 확인합니다.
 6. `선택 해제` 후 상세와 관계 패널이 idle 상태가 되는지 확인합니다.
 7. 브라우저 콘솔에 CORS 또는 JavaScript 오류가 없는지 확인합니다.
+8. Preview 결과에 `dryRun=true`, DB write 차단, diff·stale·차단 사유가 구분되는지 확인합니다.
 
 ## 다음 안전 단계
 
-다음은 PostgreSQL/Alembic 도입 준비 문서를 현재 backend 모델과 실행 환경 기준으로 구체화합니다. 실제 DB 구조와 `.env`는 사용자 승인 전 변경하지 않습니다.
+다음은 Apply 전에 최신 Preview를 다시 확인하는 게임식 확인 modal·exact 확인 문구·dev key 경계를 설계합니다. 실제 Apply endpoint와 DB write는 별도 승인 전에는 연결하지 않습니다.

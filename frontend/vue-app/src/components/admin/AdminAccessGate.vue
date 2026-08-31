@@ -79,7 +79,7 @@
 
     <div class="admin-access-boundary">
       <strong>보호 범위</strong>
-      <p>일반 계정에는 관리자 컴포넌트를 렌더링하지 않으며, 관리자 GET 요청에도 Bearer 인증을 함께 보냅니다. 실제 변경 기능과 dev key는 아직 연결하지 않습니다.</p>
+      <p>일반 계정에는 관리자 컴포넌트를 렌더링하지 않으며, 관리자 GET과 dry-run Preview 요청에 Bearer 인증을 함께 보냅니다. 실제 Apply와 dev key는 아직 연결하지 않습니다.</p>
     </div>
   </section>
 </template>

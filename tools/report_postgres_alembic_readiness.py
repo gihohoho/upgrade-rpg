@@ -17,14 +17,14 @@ from pathlib import Path
 
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/POSTGRES_ALEMBIC_READINESS.md")
-CHECKPOINT_VERSION = "v381.vue-admin-auth-routing"
-CHECKPOINT_RESULT = "vue-admin-auth-routing"
+CHECKPOINT_VERSION = "v382.vue-admin-preview-workflows"
+CHECKPOINT_RESULT = "vue-admin-preview-workflows"
 SOURCE_GRAPH_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_DB_REVISION = SOURCE_GRAPH_HEAD
 NEON_APPLIED_DB_REVISION = SOURCE_GRAPH_HEAD
 LOCAL_APPLIED_DB_APPLICATION_TABLES = 25
 NEON_APPLIED_DB_APPLICATION_TABLES = 25
-NEXT_SAFE_STAGE = "migrate-vue-admin-preview-workflows"
+NEXT_SAFE_STAGE = "prepare-vue-admin-apply-confirmation-gates"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 

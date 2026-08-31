@@ -1,12 +1,12 @@
-# Vue API Layer — v277 + v381 admin auth
+# Vue API Layer — v277 + v382 admin Preview
 
-이 폴더는 Vue 앱의 FastAPI read-only client 공간입니다.
+이 폴더는 Vue 앱의 FastAPI 조회와 side-effect 없는 Preview client 공간입니다.
 
 원칙:
 
-- `GET`만 사용
-- `POST`, `PUT`, `PATCH`, `DELETE` 미사용
-- Preview/Apply/write 미연결
+- 일반 조회는 `GET`만 사용
+- 관리자 Preview 5개만 `POST`와 `dryRun: true` 사용
+- Apply/`PUT`/`PATCH`/write `DELETE` 미연결
 - 공개 GET 인증 interceptor 미구현
 - 관리자 GET은 typed admin store가 Bearer와 `no-store`를 전달
 - `.env` 변경 없음
@@ -19,6 +19,12 @@
 - `GET /api/v1/admin/master-data/catalog`
 - `GET /api/v1/admin/master-data/detail`
 - `GET /api/v1/admin/master-data/relations`
+- `GET /api/v1/admin/master-data/create-blueprint`
+- `GET /api/v1/admin/change-logs`, `/change-logs/{id}`
+- `POST /api/v1/admin/master-data/create-preview`, `/edit-preview`
+- `POST /api/v1/admin/change-logs/{id}/rollback-preview`, `/create-delete-preview`, `/create-delete-restore-preview`
+
+`adminPreviewApi.ts`만 Preview POST를 소유합니다. 이 모듈에는 Apply route, 확인 문구, `X-Admin-Dev-Key`가 없습니다.
 
 도메인 응답:
 

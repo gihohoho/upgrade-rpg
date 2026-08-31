@@ -62,8 +62,8 @@ def main() -> None:
         raise AssertionError(f"Missing Vue read-only API status panel files: {missing}")
 
     package = json.loads((VUE_APP / "package.json").read_text(encoding="utf-8"))
-    if package.get("version") != "0.0.0-v381":
-        raise AssertionError("Vue package version must be 0.0.0-v381")
+    if package.get("version") != "0.0.0-v382":
+        raise AssertionError("Vue package version must be 0.0.0-v382")
 
     health_api = read("src/api/healthReadOnlyApi.js")
     assert_contains(health_api, "HEALTH_READONLY_ROUTES", "health API route import")
@@ -88,7 +88,7 @@ def main() -> None:
     assert_contains(admin_shell, "healthReadOnlyApi.fetchHealth", "admin health check")
     assert_contains(admin_shell, "admin.fetchRequirements", "authenticated admin requirements check")
     assert_contains(admin_shell, "준비 완료", "admin requirements meaningful status")
-    assert_contains(admin_shell, "Preview/Apply/write", "admin write exclusion note")
+    assert_contains(admin_shell, "Apply/dev key/write", "admin write exclusion note")
     assert_no_mutation_patterns("src/pages/AdminShell.vue")
 
     game_shell = read("src/pages/GameShell.vue")
@@ -103,7 +103,7 @@ def main() -> None:
     assert_contains(docs, "v272", "read-only API doc version")
     assert_contains(docs, "/health", "doc health endpoint")
     assert_contains(docs, "/admin/requirements", "doc admin requirements endpoint")
-    assert_contains(docs, "Preview/Apply/write", "doc write exclusion")
+    assert_contains(docs, "Apply/write와 dev key는 계속 제외", "doc write exclusion")
     assert_contains(docs, "`.venv` 상태", "doc venv guidance")
     assert_contains(docs, "npm run dev", "doc npm dev guidance")
 

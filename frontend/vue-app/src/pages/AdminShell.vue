@@ -1,8 +1,8 @@
 <template>
   <ShellCard
     label="Admin"
-    title="관리자 화면 전환 준비"
-    description="서버에서 관리자 권한을 확인한 계정에만 검증된 읽기 전용 조회를 표시합니다. 실제 관리자 변경 도구는 계속 admin.html에서 실행합니다."
+    title="관리자 조회와 변경 전 검증"
+    description="서버에서 관리자 권한을 확인한 계정에만 조회와 dry-run Preview를 표시합니다. 실제 Apply는 계속 admin.html에서만 실행합니다."
   >
     <section class="admin-session-bar" aria-label="현재 관리자 계정">
       <div>
@@ -17,9 +17,9 @@
 
     <ul class="shell-list">
       <li>legacy 기준 진입점: <code>admin.html</code></li>
-      <li>현재 Vue 연결 범위: 상태 확인, 도메인 목록, 검색/상태/정렬/페이지네이션, 상세, 관계 그룹</li>
+      <li>현재 Vue 연결 범위: 상태 확인, 도메인·카탈로그·상세·관계 조회, 생성·수정·되돌리기 Preview</li>
       <li>연관 row 상세 이동과 이전 상세 돌아가기는 GET 조회만 사용합니다.</li>
-      <li>관계 편집과 Preview/Apply/write는 계속 제외합니다.</li>
+      <li>Preview POST는 항상 <code>dryRun: true</code>이며 Apply/dev key/write는 계속 제외합니다.</li>
     </ul>
 
     <ReadOnlyApiStatusPanel
@@ -56,9 +56,16 @@
       @related-row-selected="handleRelatedRowSelected"
     />
 
+    <AdminPreviewWorkspace
+      :domain="selectedDomain?.key || ''"
+      :domain-label="selectedDomain?.label || ''"
+      :row-id="selectedRow?.domain === selectedDomain?.key ? selectedRow?.rowId : undefined"
+      :row-title="selectedRow?.domain === selectedDomain?.key ? selectedRow?.title : ''"
+    />
+
     <section class="api-route-preview" aria-label="Admin read-only API route preview">
       <h3>읽기 전용 관리자 API 준비 목록</h3>
-      <p>도메인·카탈로그·상세·관계 GET까지 화면에 연결했습니다. 관계 편집과 모든 Preview/Apply/write는 제외합니다.</p>
+      <p>도메인·카탈로그·상세·관계 GET을 연결했습니다. 별도 Preview 작업대는 허용된 dry-run POST만 사용하고 Apply/write는 제외합니다.</p>
       <ul class="api-route-preview__list">
         <li v-for="route in adminRoutes" :key="route.name">
           <code>GET</code>
@@ -79,6 +86,7 @@ import AdminMasterDomainPanel from '@/components/AdminMasterDomainPanel.vue';
 import AdminMasterCatalogMiniPanel from '@/components/AdminMasterCatalogMiniPanel.vue';
 import AdminMasterDetailPanel from '@/components/AdminMasterDetailPanel.vue';
 import AdminMasterRelationsPanel from '@/components/AdminMasterRelationsPanel.vue';
+import AdminPreviewWorkspace from '@/components/admin/AdminPreviewWorkspace.vue';
 import { ADMIN_READONLY_ROUTES, healthReadOnlyApi } from '@/api';
 import { useAccountStore, useAdminStore } from '@/stores';
 

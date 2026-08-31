@@ -104,13 +104,13 @@ def main() -> None:
     assert_contains(admin_shell, "searchable-fields", "domain search metadata bridge")
     assert_contains(admin_shell, "handleRowSelected", "admin selected row bridge")
     assert_contains(admin_shell, "준비 완료", "requirements meaningful summary")
-    assert_contains(admin_shell, "관계 편집과 Preview/Apply/write", "admin mutation exclusion note")
+    assert_contains(admin_shell, "Apply/dev key/write는 계속 제외", "admin mutation exclusion note")
     assert_contains(admin_shell, "useAdminStore", "typed admin store boundary")
     assert_contains(admin_shell, "isAdmin=true", "server admin identity copy")
     assert_read_only("src/pages/AdminShell.vue")
 
     app = read("src/App.vue")
-    assert_contains(app, "Upgrade RPG · v381", "Vue shell visible version")
+    assert_contains(app, "Upgrade RPG · v382", "Vue shell visible version")
 
     css = read("src/styles/base.css")
     assert_contains(css, ".admin-catalog-controls", "admin catalog controls CSS")
@@ -125,7 +125,7 @@ def main() -> None:
     assert_contains(docs, "enabled", "catalog enabled query doc")
     assert_contains(docs, "GET /api/v1/admin/master-data/detail", "detail endpoint doc")
     assert_contains(docs, "GET /api/v1/admin/master-data/relations", "relations endpoint note")
-    assert_contains(docs, "Preview/Apply/write", "write exclusion note")
+    assert_contains(docs, "Apply/write UI 연결", "write exclusion note")
     assert_contains(docs, "`.venv` 상태", "venv guidance")
     assert_contains(docs, "npm run dev", "Vue run guidance")
 

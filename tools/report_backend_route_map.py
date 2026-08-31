@@ -22,9 +22,9 @@ from pathlib import Path
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
-CHECKPOINT_VERSION = "v381.vue-admin-auth-routing"
-CHECKPOINT_RESULT = "vue-admin-auth-routing"
-NEXT_SAFE_STAGE = "migrate-vue-admin-preview-workflows"
+CHECKPOINT_VERSION = "v382.vue-admin-preview-workflows"
+CHECKPOINT_RESULT = "vue-admin-preview-workflows"
+NEXT_SAFE_STAGE = "prepare-vue-admin-apply-confirmation-gates"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 

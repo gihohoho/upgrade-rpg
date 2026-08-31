@@ -93,8 +93,8 @@ http://127.0.0.1:8000/api/v1
 | masterCreateBlueprint | `/admin/master-data/create-blueprint` | 아직 미사용 |
 | masterDetail | `/admin/master-data/detail` | 아직 미사용 |
 | masterRelations | `/admin/master-data/relations` | 아직 미사용 |
-| changeLogs | `/admin/change-logs` | 아직 미사용 |
-| changeLogDetail | `/admin/change-logs/{changeLogId}` | 아직 미사용 |
+| changeLogs | `/admin/change-logs` | v382 rollback Preview 이력 선택 |
+| changeLogDetail | `/admin/change-logs/{changeLogId}` | v382 Preview availability 확인 |
 
 ## 현재 준비된 게임 GET 경로
 
@@ -106,13 +106,12 @@ http://127.0.0.1:8000/api/v1
 
 ## 일부러 제외한 것
 
-Preview/Apply/write 계열은 아직 Vue 화면에 실제 연결하지 않습니다.
+실제 DB write와 Apply 계열은 아직 Vue 화면에 연결하지 않습니다. v382에서 관리자 Preview만 예외적으로 연결했습니다.
 
 - `POST /game/save`
-- 관리자 Preview 계열 POST
 - 관리자 Apply 계열 POST
-- Rollback Preview/Apply 계열 POST
-- 생성 row 삭제/복원 Preview/Apply 계열 POST
+- Rollback Apply 계열 POST
+- 생성 row 삭제/복원 Apply 계열 POST
 - 일반 공개 GET의 인증 interceptor
 - 관리자 GET 이외 route의 access token 처리
 - Write Guard 처리
@@ -120,7 +119,7 @@ Preview/Apply/write 계열은 아직 Vue 화면에 실제 연결하지 않습니
 - DB 구조 변경
 - 기존 API 응답 body 변경
 
-v381부터 관리자 GET은 예외적으로 typed admin store가 account store의 Bearer token을 전달하고, 401/403에서 관리자 화면을 내립니다. Preview/Apply/write는 계속 제외합니다.
+v381부터 관리자 GET은 typed admin store가 account store의 Bearer token을 전달하고 401/403에서 관리자 화면을 내립니다. v382는 같은 경계에서 허용된 Preview POST 5개만 `dryRun: true`로 호출합니다. Apply/write와 dev key는 계속 제외합니다.
 
 ## 사용자가 확인해야 할 것
 
@@ -207,7 +206,7 @@ Vue `/admin`에서 아래 GET이 추가로 실제 호출됩니다.
 
 도메인 목록은 `response.payload.domains`, 카탈로그는 `response.payload.columns`와 `response.payload.rows`를 사용합니다.
 카탈로그는 현재 `limit=20`, `page=1`, `sort=id_asc`로 고정했습니다.
-검색/필터/페이지네이션/detail/relations/Preview/Apply/write는 아직 연결하지 않습니다.
+이 문장은 v277 당시 범위 기록입니다. 현재 검색/필터/페이지네이션/detail/relations와 v382 Preview까지 연결됐고 Apply/write는 제외합니다.
 
 
 ## v278~v281 실제 연결 확장
@@ -216,4 +215,8 @@ Vue `/admin`은 기존 read-only client를 사용해 카탈로그의 `query`, `e
 선택 row 상세는 `fetchMasterDetail({ domain, rowId })`를 사용하며 wrapper가 backend query 이름 `id`로 변환합니다.
 
 상세는 `payload.fields`, `payload.jsonFields`, `payload.assetFields`, `payload.relationHints`를 표시합니다.
-관계는 `fetchMasterRelations({ domain, rowId, limit: 20 })`로 조회하고 `payload.groups[].columns/rows`를 표시합니다. 연관 row 이동은 다시 GET detail/relations만 호출합니다. Preview/Apply/write는 호출하지 않습니다.
+관계는 `fetchMasterRelations({ domain, rowId, limit: 20 })`로 조회하고 `payload.groups[].columns/rows`를 표시합니다. 연관 row 이동은 다시 GET detail/relations만 호출합니다.
+
+## v382 Preview client
+
+`adminPreviewApi.ts`는 생성·수정·일반 rollback·생성 삭제·복원 Preview 경로만 소유합니다. method는 POST이지만 body를 `dryRun: true`로 고정하며 확인 문구, Apply path, dev key header는 정의하지 않습니다. Pinia store는 Preview 결과와 오류를 한 곳에서 관리하고 기존 관리자 401/403 처리도 재사용합니다.

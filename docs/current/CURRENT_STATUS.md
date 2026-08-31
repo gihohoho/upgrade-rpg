@@ -1,13 +1,13 @@
-# Current Status — v381
+# Current Status — v382
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v381.vue-admin-auth-routing
-strict result: vue-admin-auth-routing
-next safe stage: migrate-vue-admin-preview-workflows
+latest: v382.vue-admin-preview-workflows
+strict result: vue-admin-preview-workflows
+next safe stage: prepare-vue-admin-apply-confirmation-gates
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -18,7 +18,16 @@ v378 production approval/execution: yes/yes
 v379 production approval/execution: no/no
 v380 production approval/execution: no/no
 v381 production approval/execution: no/no
+v382 production approval/execution: no/no
 ```
+
+## v382 Vue 관리자 Preview 작업대
+
+- typed `adminPreviewApi`와 Pinia admin store가 생성·수정·일반 rollback·생성 row 삭제·삭제 row 복원 Preview POST 5개만 호출합니다. 모든 body는 `dryRun: true`로 고정하며 Apply route, 확인 문구와 dev key header는 Vue에 연결하지 않았습니다.
+- 생성 화면은 서버 blueprint의 필드·기본값·필수·고유·관계 선택지를 사용합니다. 수정 화면은 선택 row의 현재 scalar 값을 기준값으로 함께 보내 stale 충돌을 검출하고, 되돌리기 화면은 최근 이력과 상세 availability GET 뒤 맞는 Preview만 허용합니다.
+- 결과는 변경 diff, stale, 거부 필드, 현재값 불일치, 의존성 blocker, id/code conflict와 warnings를 분리해 표시합니다. 비관리자에게는 기존 route guard 때문에 컴포넌트 자체가 생성되지 않습니다.
+- 로컬 backend는 `backend/.venv`·`DEBUG=false`로 시작했지만 Docker Desktop과 프로젝트 PostgreSQL이 꺼져 `/api/v1/health/db`가 500입니다. 실제 로그인 E2E는 Docker container 시작 exact 승인 전까지 미완료입니다.
+- backend source·DB schema/data·env·secret·legacy 공개 화면·Render 배포는 변경하지 않았습니다. v382 production 승인과 실행은 없습니다.
 
 ## v381 Vue 관리자 인증·route guard
 
@@ -35,15 +44,6 @@ v381 production approval/execution: no/no
 - 캐릭터 선택 뒤에도 현재 단계에서는 게임 boot, server snapshot load, runtime timer, 자동 저장을 시작하지 않습니다. 이 경계는 저장·runtime 이식 단계까지 명시적으로 닫혀 있습니다.
 - `npm ci`, TypeScript/Vite production build, Vue focused smoke와 실제 Chrome desktop/mobile 검증이 PASS했습니다. 브라우저 검증은 DB를 바꾸지 않도록 실제 로그인·가입·메일 재전송·캐릭터 write를 제출하지 않고 client-side 전환과 레이아웃만 확인했습니다.
 - 공개 legacy frontend, backend, DB, env, secret과 Render 배포는 변경하지 않았습니다. Vue v380 production 승인과 실행은 없습니다.
-
-## v379 Vue TypeScript·Pinia 기반
-
-- `frontend/vue-app`은 더 이상 read-only 실험 shell이 아니라 전체 프론트엔드 전환 작업공간입니다. 실제 공개 게임은 기능 동등성과 배포 승인이 끝날 때까지 legacy `index.html`, `admin.html`, 루트 `src/`를 유지합니다.
-- Vue entry와 Router를 TypeScript로 전환하고 `strict`, `allowJs`, `vue-tsc`를 적용했습니다. 기존 JavaScript API 모듈은 유지하면서 새로 이식하는 Vue 코드부터 typed module로 바꿉니다.
-- Pinia app store는 공통 navigation과 전환 단계만 소유합니다. 계정·캐릭터·server snapshot·runtime 상태는 다음 기능 단계에서 서로 분리된 store와 domain module로 추가합니다.
-- 공통 화면은 desktop sidebar, mobile drawer, skip-link, focus-visible, 의미 있는 section heading을 갖춘 반응형 Vue layout으로 정리했습니다.
-- `npm ci`, `npm run build`의 TypeScript+Vite build, Vue focused smoke가 PASS했습니다. 실제 Chrome에서 `/game`→`/admin` routing, FastAPI health, 375px mobile menu, 가로 overflow 없음, console error 없음도 확인했습니다.
-- 이 단계에서는 backend·DB·secret·legacy 공개 화면과 Render 배포를 변경하지 않았습니다.
 
 ## v378 게임 UI·환경 라우팅 소스 준비
 
@@ -123,8 +123,8 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. 기존 관리자 create/edit/rollback 중 side-effect 없는 Preview만 typed API/store로 이식하고 diff·stale·차단 사유를 Vue에 표시합니다.
-2. Preview 단계에는 실제 Apply 버튼과 dev key를 연결하지 않습니다. Apply는 확인 modal·exact 문구·재검증을 묶은 별도 단계로 유지합니다.
+1. Docker Desktop과 기존 프로젝트 PostgreSQL container 시작을 exact 승인받아 로컬 DB health와 로그인 E2E를 확인합니다.
+2. Apply 확인 UI는 최신 Preview 재검증·게임식 확인 modal·exact 문구·dev key를 묶어 설계하되 실제 endpoint 연결과 DB write는 별도 승인 전까지 실행하지 않습니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 
 ## 배포 주소

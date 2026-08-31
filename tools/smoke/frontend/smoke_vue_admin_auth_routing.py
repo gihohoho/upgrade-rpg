@@ -69,7 +69,7 @@ def main() -> None:
         'autocomplete="current-password"',
         "admin.accessStage === 'forbidden'",
         "관리자 컴포넌트를 렌더링하지 않으며",
-        "실제 변경 기능과 dev key는 아직 연결하지 않습니다",
+        "실제 Apply와 dev key는 아직 연결하지 않습니다",
     ]:
         assert_contains(gate, marker, "admin access gate")
 

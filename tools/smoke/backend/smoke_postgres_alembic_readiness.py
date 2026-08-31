@@ -20,8 +20,8 @@ BASELINE_DOC = ROOT / "docs/reference/database/POSTGRES_ALEMBIC_BASELINE_STRATEG
 
 REQUIRED_REPORT_TEXT = [
     "PostgreSQL / Alembic Readiness — v377",
-    "latest: v381.vue-admin-auth-routing",
-    "strict result: vue-admin-auth-routing",
+    "latest: v382.vue-admin-preview-workflows",
+    "strict result: vue-admin-preview-workflows",
     "local Alembic source graph head: v377_auth_email_public_security",
     "local/Neon applied DB revision: v377_auth_email_public_security / v377_auth_email_public_security",
     "actual target v377 apply: local 1 / Neon 1",
@@ -35,7 +35,7 @@ REQUIRED_REPORT_TEXT = [
     "public backend/static: v377/v378 live",
     "model application tables: 25",
     "local/Neon application tables: 25 / 25",
-    "next safe stage: migrate-vue-admin-preview-workflows",
+    "next safe stage: prepare-vue-admin-apply-confirmation-gates",
     "SQLAlchemy model table 수 | 25개",
     "local/Neon DB application table 수 | 25개 / 25개",
     "Alembic asyncpg-compatible online env | 있음",

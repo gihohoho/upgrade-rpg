@@ -9,5 +9,6 @@ export {
   fillRouteParams,
 } from './readOnlyRoutes';
 export { adminReadOnlyApi } from './adminReadOnlyApi';
+export { ADMIN_PREVIEW_ROUTES, adminPreviewApi } from './adminPreviewApi';
 export { gameReadOnlyApi } from './gameReadOnlyApi';
 export { healthReadOnlyApi } from './healthReadOnlyApi';
