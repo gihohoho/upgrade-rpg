@@ -1,10 +1,10 @@
-# Vue/FastAPI/DB 전체 전환 계획 — v380
+# Vue/FastAPI/DB 전체 전환 계획 — v381
 
 ## 현재 결론
 
 `frontend/vue-app/`은 더 이상 단순 실험용 shell이 아니라 전체 프론트엔드를 옮길 작업공간입니다. 다만 공개 서비스의 `index.html`, `admin.html`, 루트 `src/`는 Vue 기능이 같은 수준으로 검증될 때까지 기준 구현으로 유지합니다.
 
-v379에서 시작해 v380까지 완료한 기반:
+v379에서 시작해 v381까지 완료한 기반:
 
 - Vue 3 + Vite + Vue Router
 - 새 Vue 코드의 TypeScript 적용
@@ -12,6 +12,7 @@ v379에서 시작해 v380까지 완료한 기반:
 - 반응형 sidebar, 공통 card, focus/skip-link 접근성
 - 기존 FastAPI read-only API client와 관리자 GET 화면 유지
 - typed auth/account API, Pinia account store, 로그인·이메일·8칸 캐릭터 gate
+- typed admin access store, `/admin` route guard, Bearer 관리자 GET
 - legacy, backend, DB, 공개 배포 변경 없음
 
 ## TypeScript를 쓰는 이유
@@ -58,12 +59,13 @@ Vue 자체는 JavaScript만으로도 사용할 수 있습니다. 이 프로젝�
 - legacy와 같은 token·선택 캐릭터 key, session invalid와 network 오류 분기
 - 생성·선택·이름 확인 삭제 modal, desktop/mobile 접근성 검증
 
-### 3. 관리자 화면 — 다음 단계
+### 3. 관리자 화면 — v381 인증 경계 완료, Preview 다음
 
-- 기존 read-only 조회를 typed component/store로 정리
-- 관리자 인증과 route guard
-- Preview → 확인 modal → Apply 순서 유지
-- 일반 사용자에게 관리자 UI를 렌더링하지 않음
+- 기존 read-only 조회를 typed store 경계로 정리 — 완료
+- 관리자 인증과 route guard — 완료
+- 일반 사용자에게 관리자 UI를 렌더링하지 않음 — 완료
+- side-effect 없는 Preview를 먼저 이식하고 diff·stale·차단 사유 표시 — 다음
+- Preview → 확인 modal → Apply 순서와 실제 write는 별도 단계 유지
 
 ### 4. 게임 domain 분리
 

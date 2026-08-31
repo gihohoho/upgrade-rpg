@@ -90,6 +90,9 @@ export const useAccountStore = defineStore('account', () => {
 
   const occupiedCount = computed(() => slots.value.filter((slot) => slot.occupied && !slot.unavailable).length);
   const hasReadyContext = computed(() => Boolean(token.value && user.value && selectedCharacter.value?.accountCharacterId));
+  const accessToken = computed(() => token.value);
+  const isAuthenticated = computed(() => Boolean(token.value && user.value));
+  const isAdmin = computed(() => Boolean(user.value?.isAdmin));
 
   function setNotice(message = '', tone: NoticeTone = '') {
     notice.value = message;
@@ -124,6 +127,16 @@ export const useAccountStore = defineStore('account', () => {
     writeStorage(window.localStorage, ACCESS_TOKEN_KEY, '');
     writeStorage(window.sessionStorage, ACCESS_TOKEN_KEY, '');
     clearSelectedCharacter();
+  }
+
+  function invalidateSession(message = '로그인 정보가 만료되었습니다. 다시 로그인해 주세요.') {
+    clearSession();
+    stage.value = 'anonymous';
+    setNotice(message, 'error');
+  }
+
+  function markAdminDenied() {
+    if (user.value) user.value = { ...user.value, isAdmin: false };
   }
 
   function restoreSelectedCharacter() {
@@ -240,14 +253,39 @@ export const useAccountStore = defineStore('account', () => {
     }
   }
 
-  async function login(identifier: string, password: string, keepLogin: boolean) {
+  async function ensureSession() {
+    if (token.value && user.value) return true;
+    if (!token.value && !restoreToken()) {
+      stage.value = 'anonymous';
+      return false;
+    }
+    busy.value = true;
+    setNotice();
+    try {
+      const response = await authApi.me(token.value);
+      user.value = response.payload.user;
+      return true;
+    } catch (error) {
+      if (isSessionInvalid(error)) {
+        invalidateSession();
+      } else {
+        stage.value = 'retry';
+        setNotice(friendlyError(error), 'error');
+      }
+      return false;
+    } finally {
+      busy.value = false;
+    }
+  }
+
+  async function loginSession(identifier: string, password: string, keepLogin: boolean) {
     busy.value = true;
     setNotice();
     try {
       const response = await authApi.login({ identifier: identifier.trim(), password });
       storeToken(response.payload.accessToken, keepLogin);
       user.value = response.payload.user;
-      await loadCharacters({ restoreSelection: true });
+      return true;
     } catch (error) {
       const apiError = error instanceof ApiRequestError ? error : null;
       if (apiError?.code === 'email_verification_required') {
@@ -255,8 +293,16 @@ export const useAccountStore = defineStore('account', () => {
         stage.value = 'verification';
       }
       setNotice(friendlyError(error), 'error');
+      return false;
     } finally {
       busy.value = false;
+    }
+  }
+
+  async function login(identifier: string, password: string, keepLogin: boolean) {
+    const authenticated = await loginSession(identifier, password, keepLogin);
+    if (authenticated) {
+      await loadCharacters({ restoreSelection: true });
     }
   }
 
@@ -365,7 +411,12 @@ export const useAccountStore = defineStore('account', () => {
     noticeTone,
     occupiedCount,
     hasReadyContext,
+    accessToken,
+    isAuthenticated,
+    isAdmin,
     initialize,
+    ensureSession,
+    loginSession,
     login,
     register,
     resendVerification,
@@ -376,5 +427,7 @@ export const useAccountStore = defineStore('account', () => {
     changeCharacter,
     logout,
     showLogin,
+    invalidateSession,
+    markAdminDenied,
   };
 });

@@ -153,7 +153,9 @@
 
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import { adminReadOnlyApi } from '@/api';
+import { useAdminStore } from '@/stores';
+
+const admin = useAdminStore();
 
 const props = defineProps({
   domain: {
@@ -289,7 +291,7 @@ async function loadCatalog() {
   emit('row-selected', null);
 
   try {
-    const response = await adminReadOnlyApi.fetchMasterCatalog(
+    const response = await admin.fetchMasterCatalog(
       {
         domain: props.domain,
         limit: 20,

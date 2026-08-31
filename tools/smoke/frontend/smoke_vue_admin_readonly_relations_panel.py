@@ -59,7 +59,7 @@ def main() -> None:
         raise AssertionError(f"Missing Vue relations files: {missing}")
 
     relations = read("src/components/AdminMasterRelationsPanel.vue")
-    assert_contains(relations, "adminReadOnlyApi.fetchMasterRelations", "relations GET wrapper call")
+    assert_contains(relations, "admin.fetchMasterRelations", "authenticated relations GET store call")
     assert_contains(relations, "{ domain: props.domain, rowId: props.rowId, limit: 20 }", "relations safe query args")
     assert_contains(relations, "payload.groups", "relations groups payload")
     assert_contains(relations, "group.columns", "relations group columns")
@@ -90,7 +90,7 @@ def main() -> None:
     assert_contains(css, ".admin-relations-group__limited", "relations limited CSS")
 
     app = read("src/App.vue")
-    assert_contains(app, "Upgrade RPG · v380", "Vue shell visible version")
+    assert_contains(app, "Upgrade RPG · v381", "Vue shell visible version")
 
     docs = read("docs/reference/frontend/VUE_ADMIN_READONLY_CATALOG.md")
     assert_contains(docs, "v280", "relations panel doc version")

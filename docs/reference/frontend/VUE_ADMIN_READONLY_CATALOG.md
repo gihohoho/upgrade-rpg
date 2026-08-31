@@ -1,4 +1,4 @@
-# Vue Admin Read-only Catalog — v276~v281
+# Vue Admin Read-only Catalog — v276~v281 + v381 auth
 
 ## 목적
 
@@ -12,8 +12,17 @@ legacy `admin.html`을 바로 Vue로 대체하지 않고, FastAPI의 안전한 �
 - v279: 선택 row의 안전한 상세 조회
 - v280: 선택 row의 관계 그룹 조회
 - v281: 관계 row의 상세 이동과 이전 상세 돌아가기
+- v381: `isAdmin=true` route guard, Bearer GET, 비관리자 UI 비렌더링
 
 실제 관리자 운영 화면은 계속 루트 `admin.html`입니다. Vue `/admin`은 이식 준비와 조회 검증 화면입니다.
+
+## v381 — 관리자 인증 경계
+
+- `/admin`은 shared Pinia account/admin store가 현재 session과 서버 `isAdmin`을 확인한 뒤에만 `AdminShell`을 렌더링합니다.
+- 미로그인·비관리자·network 오류는 `/admin/access`의 로그인·거부·재시도 화면으로 분리합니다.
+- requirements·도메인·카탈로그·상세·관계 GET에는 같은 Bearer token과 `cache: no-store`를 사용합니다.
+- 관리자 GET의 401은 stale 인증을 정리하고, 403은 일반 게임 session을 보존한 채 관리자 권한만 내립니다.
+- Vue에는 `X-Admin-Dev-Key`, Preview/Apply와 실제 write를 연결하지 않았습니다.
 
 ## 현재 GET 연결 범위
 

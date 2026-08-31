@@ -1686,3 +1686,158 @@ code {
     width: 100%;
   }
 }
+
+.admin-access-card {
+  width: min(100%, 720px);
+  margin: 34px auto 0;
+  overflow: hidden;
+  padding: 30px;
+  border: 1px solid rgba(211, 222, 255, 0.14);
+  border-radius: 24px;
+  background: rgba(18, 25, 43, 0.92);
+  box-shadow: 0 26px 90px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(18px);
+}
+
+.admin-access-card__mark {
+  color: #f5e9c2;
+  background: linear-gradient(145deg, #7c68dd, #3d2d83);
+}
+
+.admin-access-state,
+.admin-access-denied {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.admin-access-state strong,
+.admin-access-denied strong {
+  display: block;
+  color: #f0f3ff;
+  font-size: 16px;
+}
+
+.admin-access-state p,
+.admin-access-denied p,
+.admin-access-boundary p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.admin-access-state .account-button,
+.admin-access-denied .account-form__actions {
+  margin-top: 16px;
+}
+
+.admin-access-state[data-tone="error"],
+.admin-access-denied {
+  border-color: rgba(245, 176, 91, 0.25);
+  background: rgba(131, 82, 27, 0.09);
+}
+
+.admin-access-denied__icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 13px;
+  color: #ffe2a8;
+  background: rgba(213, 145, 57, 0.16);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.admin-access-form {
+  margin-top: 24px;
+}
+
+.admin-access-boundary {
+  margin-top: 22px;
+  padding: 16px 18px;
+  border: 1px dashed rgba(139, 124, 255, 0.28);
+  border-radius: 16px;
+  background: rgba(139, 124, 255, 0.06);
+}
+
+.admin-access-boundary strong {
+  color: #dcd6ff;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.admin-session-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 22px 30px 0;
+  padding: 15px 17px;
+  border: 1px solid rgba(101, 214, 164, 0.2);
+  border-radius: 16px;
+  background: rgba(51, 152, 106, 0.08);
+}
+
+.admin-session-bar > div {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 5px 10px;
+}
+
+.admin-session-bar__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #bff1d8;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.admin-session-bar__status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+.admin-session-bar strong {
+  color: #fff;
+  font-size: 14px;
+}
+
+.admin-session-bar small {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+@media (max-width: 720px) {
+  .admin-access-card {
+    margin-top: 8px;
+    padding: 22px 18px;
+    border-radius: 20px;
+  }
+
+  .admin-access-state,
+  .admin-access-denied,
+  .admin-session-bar {
+    display: grid;
+  }
+
+  .admin-session-bar {
+    margin: 18px 20px 0;
+  }
+
+  .admin-session-bar .account-button {
+    width: 100%;
+  }
+}

@@ -21,12 +21,14 @@ export function buildApiUrl(path, query = {}) {
   return url.toString();
 }
 
-export async function requestReadOnly(path, { query = {}, signal } = {}) {
+export async function requestReadOnly(path, { query = {}, signal, token = '' } = {}) {
   const url = buildApiUrl(path, query);
   const response = await fetch(url, {
     method: 'GET',
+    cache: 'no-store',
     headers: {
       Accept: 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     signal,
   });

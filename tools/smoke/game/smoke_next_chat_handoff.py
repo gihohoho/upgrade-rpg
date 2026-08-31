@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v380.vue-auth-character-gate"
-RESULT = "vue-auth-character-gate"
-NEXT_STAGE = "migrate-vue-admin-auth-routing"
+VERSION = "v381.vue-admin-auth-routing"
+RESULT = "vue-admin-auth-routing"
+NEXT_STAGE = "migrate-vue-admin-preview-workflows"
 SOURCE_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_HEAD = SOURCE_HEAD
 NEON_APPLIED_HEAD = SOURCE_HEAD
@@ -96,7 +96,7 @@ def main() -> int:
     )
     require_markers(
         "NEXT_CHAT_PROMPT.md",
-        "migrate-vue-admin-auth-routing",
+        "migrate-vue-admin-preview-workflows",
         "다시 전면 감사하거나 재실행하지 말고",
     )
     require_markers(

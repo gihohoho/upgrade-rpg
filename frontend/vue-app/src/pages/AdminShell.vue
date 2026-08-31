@@ -2,8 +2,19 @@
   <ShellCard
     label="Admin"
     title="관리자 화면 전환 준비"
-    description="현재 실제 관리자 도구는 계속 admin.html에서 실행합니다. Vue 화면에는 검증된 읽기 전용 조회를 유지하고, 인증 흐름 다음 단계에서 권한 기반 화면으로 확장합니다."
+    description="서버에서 관리자 권한을 확인한 계정에만 검증된 읽기 전용 조회를 표시합니다. 실제 관리자 변경 도구는 계속 admin.html에서 실행합니다."
   >
+    <section class="admin-session-bar" aria-label="현재 관리자 계정">
+      <div>
+        <span class="admin-session-bar__status"><i aria-hidden="true" /> 관리자 인증 완료</span>
+        <strong>{{ account.user?.username }}</strong>
+        <small>서버가 확인한 <code>isAdmin=true</code> 계정으로만 아래 조회 화면을 생성했습니다.</small>
+      </div>
+      <button class="account-button account-button--ghost" type="button" :disabled="admin.busy" @click="logoutAdmin">
+        관리자 로그아웃
+      </button>
+    </section>
+
     <ul class="shell-list">
       <li>legacy 기준 진입점: <code>admin.html</code></li>
       <li>현재 Vue 연결 범위: 상태 확인, 도메인 목록, 검색/상태/정렬/페이지네이션, 상세, 관계 그룹</li>
@@ -25,13 +36,13 @@
       :searchable-fields="selectedDomain?.searchableFields || []"
       :supports-enabled-filter="Boolean(selectedDomain?.supportsEnabledFilter)"
       :default-sort="selectedDomain?.defaultSort || 'id_asc'"
-      :selected-row-id="selectedRow?.domain === selectedDomain?.key ? selectedRow?.rowId : null"
+      :selected-row-id="selectedRow?.domain === selectedDomain?.key ? selectedRow?.rowId : undefined"
       @row-selected="handleRowSelected"
     />
 
     <AdminMasterDetailPanel
       :domain="selectedRow?.domain || ''"
-      :row-id="selectedRow?.rowId || null"
+      :row-id="selectedRow?.rowId || undefined"
       :row-title="selectedRow?.title || ''"
       :navigation-depth="selectionHistory.length"
       @back-selection="handleBackSelection"
@@ -40,7 +51,7 @@
 
     <AdminMasterRelationsPanel
       :domain="selectedRow?.domain || ''"
-      :row-id="selectedRow?.rowId || null"
+      :row-id="selectedRow?.rowId || undefined"
       :row-title="selectedRow?.title || ''"
       @related-row-selected="handleRelatedRowSelected"
     />
@@ -59,19 +70,39 @@
   </ShellCard>
 </template>
 
-<script setup>
-import { ref } from 'vue';
+<script setup lang="ts">
+import { ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import ShellCard from '@/components/ShellCard.vue';
 import ReadOnlyApiStatusPanel from '@/components/ReadOnlyApiStatusPanel.vue';
 import AdminMasterDomainPanel from '@/components/AdminMasterDomainPanel.vue';
 import AdminMasterCatalogMiniPanel from '@/components/AdminMasterCatalogMiniPanel.vue';
 import AdminMasterDetailPanel from '@/components/AdminMasterDetailPanel.vue';
 import AdminMasterRelationsPanel from '@/components/AdminMasterRelationsPanel.vue';
-import { ADMIN_READONLY_ROUTES, adminReadOnlyApi, healthReadOnlyApi } from '@/api';
+import { ADMIN_READONLY_ROUTES, healthReadOnlyApi } from '@/api';
+import { useAccountStore, useAdminStore } from '@/stores';
 
-const selectedDomain = ref(null);
-const selectedRow = ref(null);
-const selectionHistory = ref([]);
+interface AdminDomain {
+  key: string;
+  label?: string;
+  searchableFields?: string[];
+  supportsEnabledFilter?: boolean;
+  defaultSort?: string;
+}
+
+interface AdminRowSelection {
+  domain: string;
+  rowId: number;
+  title: string;
+}
+
+const router = useRouter();
+const account = useAccountStore();
+const admin = useAdminStore();
+
+const selectedDomain = ref<AdminDomain | null>(null);
+const selectedRow = ref<AdminRowSelection | null>(null);
+const selectionHistory = ref<AdminRowSelection[]>([]);
 const adminRoutes = Object.entries(ADMIN_READONLY_ROUTES).map(([name, path]) => ({ name, path }));
 
 const adminStatusChecks = [
@@ -85,26 +116,29 @@ const adminStatusChecks = [
     key: 'admin-requirements',
     label: 'Admin /requirements',
     description: '관리자 read-only 화면의 기본 요구사항 응답만 확인합니다. write 요청이 아닙니다.',
-    run: () => adminReadOnlyApi.fetchRequirements(),
-    summarize: (response) => ({
-      type: response?.type || '',
-      status: response?.data?.readOnlyOverviewReady ? '준비 완료' : '확인 필요',
-    }),
+    run: () => admin.fetchRequirements(),
+    summarize: (response: unknown) => {
+      const value = response as { type?: string; data?: { readOnlyOverviewReady?: boolean } };
+      return {
+        type: value?.type || '',
+        status: value?.data?.readOnlyOverviewReady ? '준비 완료' : '확인 필요',
+      };
+    },
   },
 ];
 
-function handleDomainSelected(domain) {
+function handleDomainSelected(domain: AdminDomain | null) {
   selectedDomain.value = domain;
   selectedRow.value = null;
   selectionHistory.value = [];
 }
 
-function handleRowSelected(row) {
+function handleRowSelected(row: AdminRowSelection | null) {
   selectedRow.value = row;
   selectionHistory.value = [];
 }
 
-function handleRelatedRowSelected(row) {
+function handleRelatedRowSelected(row: AdminRowSelection | null) {
   if (!row?.domain || !row?.rowId) return;
   if (selectedRow.value) {
     selectionHistory.value.push(selectedRow.value);
@@ -120,4 +154,15 @@ function clearRowSelection() {
   selectedRow.value = null;
   selectionHistory.value = [];
 }
+
+async function logoutAdmin() {
+  await admin.logout();
+}
+
+watch(
+  () => admin.accessStage,
+  (stage) => {
+    if (stage !== 'ready') void router.replace({ name: 'admin-access' });
+  },
+);
 </script>

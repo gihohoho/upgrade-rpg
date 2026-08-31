@@ -1,13 +1,13 @@
-# Current Status — v380
+# Current Status — v381
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v380.vue-auth-character-gate
-strict result: vue-auth-character-gate
-next safe stage: migrate-vue-admin-auth-routing
+latest: v381.vue-admin-auth-routing
+strict result: vue-admin-auth-routing
+next safe stage: migrate-vue-admin-preview-workflows
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -17,7 +17,15 @@ production approval/execution: yes/yes
 v378 production approval/execution: yes/yes
 v379 production approval/execution: no/no
 v380 production approval/execution: no/no
+v381 production approval/execution: no/no
 ```
+
+## v381 Vue 관리자 인증·route guard
+
+- `/admin`은 Pinia account/admin store가 session과 서버 `isAdmin`을 확인한 뒤에만 `AdminShell`을 생성합니다. 나머지는 `/admin/access`의 로그인·거부·재시도 화면으로 분리합니다.
+- 관리자 GET은 typed store를 거쳐 Bearer와 `no-store`를 사용합니다. 401은 재로그인, 403은 일반 세션을 보존한 권한 거부로 UI를 내리며 write API와 dev key는 연결하지 않았습니다.
+- Chrome desktop/mobile에서 미로그인 redirect, 관리자 패널 DOM 0개·로그인 폼 1개, overflow 없음을 확인했습니다. 로그인 제출·관리자 API·DB write는 실행하지 않았습니다.
+- `npm ci`, production build와 focused smoke가 PASS했습니다. 공개 legacy·backend·DB·secret·Render와 v381 배포는 변경하지 않았습니다.
 
 ## v380 Vue 인증·캐릭터 gate
 
@@ -35,8 +43,7 @@ v380 production approval/execution: no/no
 - Pinia app store는 공통 navigation과 전환 단계만 소유합니다. 계정·캐릭터·server snapshot·runtime 상태는 다음 기능 단계에서 서로 분리된 store와 domain module로 추가합니다.
 - 공통 화면은 desktop sidebar, mobile drawer, skip-link, focus-visible, 의미 있는 section heading을 갖춘 반응형 Vue layout으로 정리했습니다.
 - `npm ci`, `npm run build`의 TypeScript+Vite build, Vue focused smoke가 PASS했습니다. 실제 Chrome에서 `/game`→`/admin` routing, FastAPI health, 375px mobile menu, 가로 overflow 없음, console error 없음도 확인했습니다.
-- 관리자 GET 화면의 401은 관리자 인증을 아직 Vue로 옮기지 않은 현재 계약입니다. write API, save, token 처리, backend, DB, env, secret, legacy 공개 화면과 Render 배포는 변경하지 않았습니다.
-- 다음 단계는 로그인·가입·이메일 인증과 8개 캐릭터 슬롯 gate를 Vue로 옮기는 것입니다. production 관리자 복구는 별도 exact DB-write 승인 전까지 보류합니다.
+- 이 단계에서는 backend·DB·secret·legacy 공개 화면과 Render 배포를 변경하지 않았습니다.
 
 ## v378 게임 UI·환경 라우팅 소스 준비
 
@@ -116,8 +123,8 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. 기존 Vue 관리자 read-only 조회를 typed component/store로 정리하고 account store의 `isAdmin`을 사용하는 `/admin` route guard를 구현합니다.
-2. 일반 사용자에게 관리자 UI를 렌더링하지 않고 기존 Preview → 확인 modal → Apply 계약을 유지합니다.
+1. 기존 관리자 create/edit/rollback 중 side-effect 없는 Preview만 typed API/store로 이식하고 diff·stale·차단 사유를 Vue에 표시합니다.
+2. Preview 단계에는 실제 Apply 버튼과 dev key를 연결하지 않습니다. Apply는 확인 modal·exact 문구·재검증을 묶은 별도 단계로 유지합니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 
 ## 배포 주소

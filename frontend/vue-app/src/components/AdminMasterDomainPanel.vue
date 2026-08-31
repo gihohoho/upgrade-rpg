@@ -62,7 +62,9 @@
 
 <script setup>
 import { onMounted, ref } from 'vue';
-import { adminReadOnlyApi } from '@/api';
+import { useAdminStore } from '@/stores';
+
+const admin = useAdminStore();
 
 const emit = defineEmits(['domain-selected']);
 
@@ -107,7 +109,7 @@ async function loadDomains() {
   errorMessage.value = '';
 
   try {
-    const response = await adminReadOnlyApi.fetchMasterDomains();
+    const response = await admin.fetchMasterDomains();
     const normalized = normalizeDomains(response);
     domains.value = normalized.domains;
     defaultDomain.value = normalized.defaultDomain;

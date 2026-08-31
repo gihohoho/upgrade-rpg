@@ -105,7 +105,9 @@
 
 <script setup>
 import { onBeforeUnmount, ref, watch } from 'vue';
-import { adminReadOnlyApi } from '@/api';
+import { useAdminStore } from '@/stores';
+
+const admin = useAdminStore();
 
 const props = defineProps({
   domain: {
@@ -195,7 +197,7 @@ async function loadRelations() {
   errorMessage.value = '';
 
   try {
-    const response = await adminReadOnlyApi.fetchMasterRelations(
+    const response = await admin.fetchMasterRelations(
       { domain: props.domain, rowId: props.rowId, limit: 20 },
       { signal: activeController.signal },
     );

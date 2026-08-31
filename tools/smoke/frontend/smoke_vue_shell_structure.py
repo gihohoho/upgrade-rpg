@@ -18,6 +18,7 @@ REQUIRED_FILES = [
     "src/App.vue",
     "src/router/index.ts",
     "src/stores/app.ts",
+    "src/stores/pinia.ts",
     "src/stores/index.ts",
     "src/pages/AdminShell.vue",
     "src/pages/GameShell.vue",
@@ -78,8 +79,11 @@ def main() -> None:
     assert_contains(app_vue, "useAppStore", "App Pinia store")
 
     main_ts = read("src/main.ts")
-    assert_contains(main_ts, "createPinia", "Vue Pinia bootstrap")
-    assert_contains(main_ts, ".use(createPinia())", "Vue Pinia registration")
+    assert_contains(main_ts, "import { pinia }", "Vue shared Pinia bootstrap")
+    assert_contains(main_ts, ".use(pinia)", "Vue Pinia registration")
+
+    pinia = read("src/stores/pinia.ts")
+    assert_contains(pinia, "createPinia()", "shared Pinia instance")
 
     store = read("src/stores/app.ts")
     assert_contains(store, "defineStore('app'", "typed app store")

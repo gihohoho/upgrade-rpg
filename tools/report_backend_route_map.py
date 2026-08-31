@@ -22,9 +22,9 @@ from pathlib import Path
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
-CHECKPOINT_VERSION = "v380.vue-auth-character-gate"
-CHECKPOINT_RESULT = "vue-auth-character-gate"
-NEXT_SAFE_STAGE = "migrate-vue-admin-auth-routing"
+CHECKPOINT_VERSION = "v381.vue-admin-auth-routing"
+CHECKPOINT_RESULT = "vue-admin-auth-routing"
+NEXT_SAFE_STAGE = "migrate-vue-admin-preview-workflows"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 
@@ -437,8 +437,8 @@ signed backend image와 legacy static의 공개 배포를 승인된 단일 시�
 
 권장 범위:
 
-1. Vue 관리자 read-only 조회를 typed component/store로 정리하고 `isAdmin` route guard를 연결합니다.
-2. production 관리자 복구와 실제 관리자 write는 별도 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
+1. side-effect 없는 관리자 create/edit/rollback Preview를 typed API/store와 Vue diff 화면으로 이식합니다.
+2. production 관리자 복구, dev key와 실제 Apply는 별도 exact DB-write 승인을 받기 전까지 연결하지 않습니다.
 3. 완료된 migration·publish·Render deploy는 단순 확인을 위해 재실행하지 않습니다.
 """
 

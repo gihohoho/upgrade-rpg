@@ -17,14 +17,14 @@ from pathlib import Path
 
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/POSTGRES_ALEMBIC_READINESS.md")
-CHECKPOINT_VERSION = "v380.vue-auth-character-gate"
-CHECKPOINT_RESULT = "vue-auth-character-gate"
+CHECKPOINT_VERSION = "v381.vue-admin-auth-routing"
+CHECKPOINT_RESULT = "vue-admin-auth-routing"
 SOURCE_GRAPH_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_DB_REVISION = SOURCE_GRAPH_HEAD
 NEON_APPLIED_DB_REVISION = SOURCE_GRAPH_HEAD
 LOCAL_APPLIED_DB_APPLICATION_TABLES = 25
 NEON_APPLIED_DB_APPLICATION_TABLES = 25
-NEXT_SAFE_STAGE = "migrate-vue-admin-auth-routing"
+NEXT_SAFE_STAGE = "migrate-vue-admin-preview-workflows"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 
@@ -453,8 +453,8 @@ revision만 거짓으로 올릴 수 있으므로 특히 금지합니다.
    생성되지 않았습니다. 그 private exclusive attempt marker는 남겨 두고 재실행하지 않았습니다.
 7. local/Neon actual DB는 모두 v377이고 기존 22개 table 데이터 변화 0·25개 model table parity를
    확인했습니다. recovery2 Neon backup과 apply는 각각 한 번만 실행했습니다.
-8. local 실제 메일·링크 인증·로그인, 공개 backend/static 배포와 Vue 인증·캐릭터 gate를 완료했습니다.
-   다음 안전 단계는 Vue 관리자 인증·route guard를 이식하는 `{NEXT_SAFE_STAGE}`입니다.
+8. local 실제 메일·링크 인증·로그인, 공개 backend/static 배포와 Vue 인증·관리자 route guard를 완료했습니다.
+   다음 안전 단계는 side-effect 없는 관리자 Preview 흐름을 이식하는 `{NEXT_SAFE_STAGE}`입니다.
 
 현재는 **public email rollout deployed** 상태입니다. local/Neon DB schema와 legacy
 데이터는 보존됐고 signed backend image와 legacy static이 공개 live입니다.

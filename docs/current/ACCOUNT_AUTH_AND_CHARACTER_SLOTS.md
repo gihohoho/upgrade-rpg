@@ -1,9 +1,9 @@
 # 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v380.vue-auth-character-gate
-strict result: vue-auth-character-gate
-next safe stage: migrate-vue-admin-auth-routing
+latest: v381.vue-admin-auth-routing
+strict result: vue-admin-auth-routing
+next safe stage: migrate-vue-admin-preview-workflows
 public Render: backend v377 / static v378 Live
 local/Neon DB: v377 / v377
 ```

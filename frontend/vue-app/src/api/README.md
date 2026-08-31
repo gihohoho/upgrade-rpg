@@ -1,4 +1,4 @@
-# Vue API Layer — v277
+# Vue API Layer — v277 + v381 admin auth
 
 이 폴더는 Vue 앱의 FastAPI read-only client 공간입니다.
 
@@ -7,7 +7,8 @@
 - `GET`만 사용
 - `POST`, `PUT`, `PATCH`, `DELETE` 미사용
 - Preview/Apply/write 미연결
-- 인증 interceptor 미구현
+- 공개 GET 인증 interceptor 미구현
+- 관리자 GET은 typed admin store가 Bearer와 `no-store`를 전달
 - `.env` 변경 없음
 
 ## 현재 실제 화면 연결
@@ -16,6 +17,8 @@
 - `GET /api/v1/admin/requirements`
 - `GET /api/v1/admin/master-data/domains`
 - `GET /api/v1/admin/master-data/catalog`
+- `GET /api/v1/admin/master-data/detail`
+- `GET /api/v1/admin/master-data/relations`
 
 도메인 응답:
 

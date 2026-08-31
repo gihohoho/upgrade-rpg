@@ -10,6 +10,7 @@ python tools/smoke/frontend/smoke_vue_readonly_api_status_panel.py
 python tools/smoke/frontend/smoke_vue_admin_readonly_catalog_panel.py
 python tools/smoke/frontend/smoke_vue_admin_readonly_relations_panel.py
 python tools/smoke/frontend/smoke_vue_auth_character_gate.py
+python tools/smoke/frontend/smoke_vue_admin_auth_routing.py
 node --check frontend/vue-app/vite.config.js
 
 if [ -d "frontend/vue-app/node_modules" ]; then

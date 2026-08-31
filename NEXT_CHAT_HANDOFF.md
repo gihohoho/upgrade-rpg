@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v380
+# Upgrade RPG Codex handoff — v381
 
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v380.vue-auth-character-gate
-strict result: vue-auth-character-gate
-next safe stage: migrate-vue-admin-auth-routing
+latest: v381.vue-admin-auth-routing
+strict result: vue-admin-auth-routing
+next safe stage: migrate-vue-admin-preview-workflows
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -14,10 +14,15 @@ public backend/static: v377/v378 Live
 v378 production approval/execution: yes/yes
 v379 production approval/execution: no/no
 v380 production approval/execution: no/no
+v381 production approval/execution: no/no
 ```
 
 ## 이번 체크포인트
 
+- Vue `/admin`은 shared Pinia의 account/admin store로 session과 `isAdmin`을 확인하는 route guard를 통과해야만 `AdminShell`을 생성합니다. 미로그인·비관리자·network 오류는 `/admin/access`의 전용 로그인·거부·재시도 화면으로 분리했습니다.
+- 기존 관리자 requirements·도메인·카탈로그·상세·관계 GET을 typed admin store 경계로 모으고 모든 요청에 Bearer와 `cache: no-store`를 적용했습니다. GET에서 401/403이 발생하면 관리자 UI를 즉시 내리고 재로그인 화면으로 돌아갑니다.
+- 실제 Chrome에서 미로그인 `/admin` → `/admin/access?reason=login` 전환, 관리자 패널 DOM 0개·로그인 폼 1개, desktop/mobile 가로 overflow 없음을 확인했습니다. 실제 로그인 제출과 관리자 API/DB write는 실행하지 않았습니다.
+- 기존 공개 legacy 화면·backend·DB·env·secret·Render 배포는 변경하지 않았습니다. Vue v381 production 승인과 실행은 모두 없습니다.
 - Vue `/game`에 기존 FastAPI 계약을 그대로 사용하는 typed auth/account API client와 Pinia account store를 추가했습니다. 로그인·가입·이메일 인증 안내·재전송, 세션 복구, 안정적인 오류 분류를 한 경계에서 처리합니다.
 - 로그인 뒤 계정별 캐릭터 슬롯 8개를 조회하고 생성·선택·이름 확인 삭제까지 Vue modal로 연결했습니다. 소유하지 않은 슬롯 선택을 막고 선택 완료 전에는 게임 boot·snapshot load·자동 저장을 시작하지 않습니다.
 - legacy와 같은 access-token·선택 캐릭터 storage key를 사용하되 `401/403` session invalid만 인증을 지우고 network·timeout·`5xx`는 token을 보존해 재시도합니다.
@@ -53,8 +58,8 @@ v380 production approval/execution: no/no
 
 ## 바로 할 일
 
-1. 기존 Vue 관리자 read-only 조회를 typed component/store로 정리하고 계정 store의 `isAdmin`을 기준으로 `/admin` route guard와 비관리자 UI 비렌더링을 연결합니다.
-2. 관리자 write는 기존 Preview → 게임 UI 확인 modal → Apply 순서를 유지하고, 실제 write API 호출은 별도 범위와 검증 경계를 정한 뒤 진행합니다.
+1. 기존 관리자 create/edit/rollback API 중 side-effect가 없는 Preview만 typed API/store로 이식하고, 변경 전후 diff·stale·차단 사유를 Vue 확인 화면에 표시합니다.
+2. Preview 화면에는 실제 적용 버튼을 연결하지 않습니다. 향후 Apply는 게임 UI 확인 modal, exact 확인 문구, dev key, 재검증을 함께 설계한 별도 단계로 유지합니다.
 3. production 관리자 복구는 Vue 화면 이식과 분리하며 기존 `admin` 승격 또는 새 owner 생성의 exact DB-write 승인을 받기 전에는 실행하지 않습니다.
 
 ## 안전 경계

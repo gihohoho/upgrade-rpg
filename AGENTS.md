@@ -90,9 +90,9 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v380.vue-auth-character-gate
-strict result: vue-auth-character-gate
-next safe stage: migrate-vue-admin-auth-routing
+latest: v381.vue-admin-auth-routing
+strict result: vue-admin-auth-routing
+next safe stage: migrate-vue-admin-preview-workflows
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -103,11 +103,13 @@ production approval/execution: yes/yes
 v378 production approval/execution: yes/yes
 v379 production approval/execution: no/no
 v380 production approval/execution: no/no
+v381 production approval/execution: no/no
 ```
 
 - v379에서 `frontend/vue-app`을 전체 프론트엔드 전환 작업공간으로 전환하고 새 Vue 기반에 TypeScript, Pinia, typed Router entry, 반응형 공통 layout과 접근성 기본 규칙을 적용했습니다. 기존 legacy 공개 화면·backend·DB·secret·배포는 변경하지 않았습니다.
 - v380에서 typed auth/account API와 Pinia account store, 로그인·가입·이메일 인증 안내·재전송, 세션 복구와 8칸 캐릭터 생성·선택·삭제 gate를 Vue로 이식했습니다. 캐릭터 선택 전후 모두 게임 boot·snapshot·자동 저장은 후속 단계까지 차단합니다.
-- Vue v380 `npm ci`, `vue-tsc`, production build, Vue focused smoke와 실제 desktop/mobile browser 검증이 PASS했습니다. 다음은 관리자 인증·route guard 이식이며 production 관리자 복구는 별도 DB-write 승인 전까지 보류합니다.
+- v381은 관리자 access store와 `/admin` route guard를 추가했습니다. `isAdmin=true`만 관리자 UI와 Bearer·`no-store` GET을 사용하고 나머지는 `/admin/access`로 보냅니다.
+- Vue v381 build·focused smoke·desktop/mobile 검증이 PASS했습니다. 다음은 side-effect 없는 Preview 이식이며 production 관리자 복구와 Apply는 별도 DB-write 승인 전까지 보류합니다.
 - v378 legacy static은 승인 SHA `c56525394a4099160e7a32e93dc2d3a0d54568b3`에서 Render deploy `dep-da5vn3m417fc738rs2bg`로 정확히 1회 배포되어 live입니다. backend·DB·secret은 변경하지 않았습니다.
 - v371 source는 이메일 인증·복구·삭제, `authVersion`, Brevo HTTPS renderer/transport, owner bootstrap과 migration source를 준비했습니다.
 - v372는 기능을 바꾸지 않고 Markdown 243개를 95개로 정리하고 `docs/current`의 실제 현재 문서를 11개로 줄였습니다. entry/current/reference/generated/archive 역할과 구조 smoke를 고정했습니다.

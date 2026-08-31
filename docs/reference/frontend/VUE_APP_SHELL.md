@@ -1,4 +1,4 @@
-# Vue App Shell — v273
+# Vue App Shell — v273 + v381 auth routing
 
 ## 한 줄 요약
 
@@ -20,6 +20,9 @@ v270에서 `frontend/vue-app/`에 Vue 기본 shell을 추가했고, v271에서 �
 | `/` | redirect | `/game`으로 이동 |
 | `/game` | `GameShell.vue` | 게임 Vue 이식 준비 화면 |
 | `/admin` | `AdminShell.vue` | 관리자 Vue 이식 준비 화면 |
+| `/admin/access` | `AdminAccessPage.vue` | 관리자 로그인·권한 거부·재시도 |
+
+v381부터 `/admin`은 `isAdmin=true` route guard를 통과해야 합니다. 통과 전에는 `AdminShell`과 관리자 GET 패널을 렌더링하지 않으며, 통과한 GET 요청은 Bearer token과 `no-store`를 사용합니다.
 
 ## v272에서 화면에 표시하는 것
 

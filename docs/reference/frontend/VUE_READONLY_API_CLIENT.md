@@ -113,12 +113,14 @@ Preview/Apply/write 계열은 아직 Vue 화면에 실제 연결하지 않습니
 - 관리자 Apply 계열 POST
 - Rollback Preview/Apply 계열 POST
 - 생성 row 삭제/복원 Preview/Apply 계열 POST
-- 인증 interceptor
-- access token 처리
+- 일반 공개 GET의 인증 interceptor
+- 관리자 GET 이외 route의 access token 처리
 - Write Guard 처리
 - `.env` 생성/수정
 - DB 구조 변경
 - 기존 API 응답 body 변경
+
+v381부터 관리자 GET은 예외적으로 typed admin store가 account store의 Bearer token을 전달하고, 401/403에서 관리자 화면을 내립니다. Preview/Apply/write는 계속 제외합니다.
 
 ## 사용자가 확인해야 할 것
 

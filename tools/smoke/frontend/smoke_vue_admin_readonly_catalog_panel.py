@@ -61,14 +61,14 @@ def main() -> None:
         raise AssertionError(f"Missing Vue admin read-only catalog files: {missing}")
 
     domain_panel = read("src/components/AdminMasterDomainPanel.vue")
-    assert_contains(domain_panel, "adminReadOnlyApi.fetchMasterDomains()", "domain GET wrapper call")
+    assert_contains(domain_panel, "admin.fetchMasterDomains()", "authenticated domain GET store call")
     assert_contains(domain_panel, "payload.domains", "domain list payload path")
     assert_contains(domain_panel, "defaultDomain", "default domain selection")
     assert_contains(domain_panel, "domain-selected", "domain selection event")
     assert_read_only("src/components/AdminMasterDomainPanel.vue")
 
     catalog_panel = read("src/components/AdminMasterCatalogMiniPanel.vue")
-    assert_contains(catalog_panel, "adminReadOnlyApi.fetchMasterCatalog", "catalog GET wrapper call")
+    assert_contains(catalog_panel, "admin.fetchMasterCatalog", "authenticated catalog GET store call")
     assert_contains(catalog_panel, "limit: 20", "catalog safe page size")
     assert_contains(catalog_panel, "query: appliedQuery.value", "catalog search query")
     assert_contains(catalog_panel, "enabled: props.supportsEnabledFilter", "catalog enabled query")
@@ -85,7 +85,7 @@ def main() -> None:
     assert_read_only("src/components/AdminMasterCatalogMiniPanel.vue")
 
     detail_panel = read("src/components/AdminMasterDetailPanel.vue")
-    assert_contains(detail_panel, "adminReadOnlyApi.fetchMasterDetail", "detail GET wrapper call")
+    assert_contains(detail_panel, "admin.fetchMasterDetail", "authenticated detail GET store call")
     assert_contains(detail_panel, "{ domain: props.domain, rowId: props.rowId }", "detail query wrapper args")
     assert_contains(detail_panel, "payload.fields", "detail scalar fields payload")
     assert_contains(detail_panel, "payload.jsonFields", "detail JSON fields payload")
@@ -105,10 +105,12 @@ def main() -> None:
     assert_contains(admin_shell, "handleRowSelected", "admin selected row bridge")
     assert_contains(admin_shell, "준비 완료", "requirements meaningful summary")
     assert_contains(admin_shell, "관계 편집과 Preview/Apply/write", "admin mutation exclusion note")
+    assert_contains(admin_shell, "useAdminStore", "typed admin store boundary")
+    assert_contains(admin_shell, "isAdmin=true", "server admin identity copy")
     assert_read_only("src/pages/AdminShell.vue")
 
     app = read("src/App.vue")
-    assert_contains(app, "Upgrade RPG · v380", "Vue shell visible version")
+    assert_contains(app, "Upgrade RPG · v381", "Vue shell visible version")
 
     css = read("src/styles/base.css")
     assert_contains(css, ".admin-catalog-controls", "admin catalog controls CSS")
