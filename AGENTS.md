@@ -90,9 +90,9 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v384.vue-game-domain-foundation
-strict result: vue-game-domain-foundation
-next safe stage: migrate-vue-game-shell-town-hud
+latest: v385.vue-game-town-hud-shell
+strict result: vue-game-town-hud-shell
+next safe stage: migrate-vue-game-field-combat-ui-foundation
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -107,8 +107,10 @@ v381 production approval/execution: no/no
 v382 production approval/execution: no/no
 v383 production approval/execution: no/no
 v384 production approval/execution: no/no
+v385 production approval/execution: no/no
 ```
 
+- v385는 캐릭터 선택 뒤 마을 전용 접속 캐릭터 바, 시설, HUD, 능력치와 기본 스킬을 typed adapter/Pinia로 이식했습니다. 슬롯 요약과 기본 domain 상태를 화면에서 구분하고 snapshot load/save·전투 timer는 시작하지 않았으며 desktop/mobile·modal·focused smoke가 PASS했습니다.
 - v384는 legacy game JS 8개/3,481줄의 전역 의존성을 보고서로 고정하고 state/save·slot·공격/필드·보스 규칙·action result를 Vue 독립 typed domain으로 분리했습니다. legacy 동등성·순수 경계·Vue build/focused smoke가 PASS했고 v384 배포는 없습니다.
 - v379~v381은 TypeScript·Pinia·Router와 로그인·8칸 캐릭터·관리자 인증을, v382~v383은 `dryRun: true` Preview와 write-locked 확인 modal을 이식했습니다. Apply route/header/write는 없습니다.
 - Docker PostgreSQL·로컬 로그인은 기호가 확인했습니다. production 관리자 복구·Apply write는 별도 exact 승인까지 보류합니다.

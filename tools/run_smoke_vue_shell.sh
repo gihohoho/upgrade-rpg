@@ -12,8 +12,10 @@ python tools/smoke/frontend/smoke_vue_admin_readonly_relations_panel.py
 python tools/smoke/frontend/smoke_vue_auth_character_gate.py
 python tools/smoke/frontend/smoke_vue_admin_auth_routing.py
 python tools/smoke/frontend/smoke_vue_admin_preview_workflows.py
+python tools/smoke/frontend/smoke_vue_admin_apply_confirmation_gates.py
 python tools/report_vue_game_domain_dependencies.py --check
 node tools/smoke/frontend/smoke_vue_game_domain_foundation.js
+node tools/smoke/frontend/smoke_vue_game_town_hud.js
 node --check frontend/vue-app/vite.config.js
 
 if [ -d "frontend/vue-app/node_modules" ]; then

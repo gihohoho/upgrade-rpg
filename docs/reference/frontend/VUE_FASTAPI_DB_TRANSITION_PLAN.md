@@ -1,10 +1,10 @@
-# Vue/FastAPI/DB 전체 전환 계획 — v384
+# Vue/FastAPI/DB 전체 전환 계획 — v385
 
 ## 현재 결론
 
 `frontend/vue-app/`은 더 이상 단순 실험용 shell이 아니라 전체 프론트엔드를 옮길 작업공간입니다. 다만 공개 서비스의 `index.html`, `admin.html`, 루트 `src/`는 Vue 기능이 같은 수준으로 검증될 때까지 기준 구현으로 유지합니다.
 
-v379에서 시작해 v384까지 완료한 기반:
+v379에서 시작해 v385까지 완료한 기반:
 
 - Vue 3 + Vite + Vue Router
 - 새 Vue 코드의 TypeScript 적용
@@ -16,6 +16,7 @@ v379에서 시작해 v384까지 완료한 기반:
 - typed 관리자 dry-run Preview API/store와 diff·stale·차단 화면
 - 최신 Preview SHA-256 재검증, exact 문구와 민감 입력 삭제를 포함한 write-locked 확인 modal
 - legacy game state·systems·rules 의존성 보고서와 Vue 독립 typed domain
+- 캐릭터 슬롯 요약과 기본 domain 상태를 구분해 표시하는 마을/HUD adapter·Pinia·반응형 UI
 - legacy, backend, DB, 공개 배포 변경 없음
 
 ## TypeScript를 쓰는 이유
@@ -80,10 +81,11 @@ Vue 자체는 JavaScript만으로도 사용할 수 있습니다. 이 프로젝�
 
 상세 inventory는 [Vue Game Domain Dependencies](../../generated/VUE_GAME_DOMAIN_DEPENDENCIES.md)를 따릅니다.
 
-### 5. 게임 UI — 다음
+### 5. 게임 UI — 진행 중
 
-- 마을/HUD
-- 전투와 보스
+- 마을/HUD — v385 완료
+- 필드 전투 UI 기반 — 다음
+- 전투 runtime과 보스
 - 인벤토리·장비·보관함·휴지통
 - 스킬·강화·상점·설정
 - 반응형, keyboard, modal, tooltip 통합

@@ -110,8 +110,8 @@ def main() -> None:
     assert_contains(gate, "account.initialize()", "account restore on mount")
     assert_contains(gate, "account.stage === 'retry'", "network retry state")
     assert_contains(gate, "로그인 정보는 삭제하지 않았습니다", "network token preservation copy")
-    assert_contains(gate, "게임 시작 준비 중", "runtime boot remains disabled")
-    assert_contains(gate, "실제 게임 snapshot load와 자동 저장은 다음", "runtime boundary copy")
+    assert_contains(gate, "<GameTownShell v-else />", "ready character enters the Vue town shell")
+    assert_contains(gate, "import GameTownShell", "town shell component boundary")
 
     game_shell = read("src/pages/GameShell.vue")
     assert_contains(game_shell, "<AccountGate />", "game shell account gate mount")

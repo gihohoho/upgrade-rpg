@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v384
+# Upgrade RPG Codex handoff — v385
 
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v384.vue-game-domain-foundation
-strict result: vue-game-domain-foundation
-next safe stage: migrate-vue-game-shell-town-hud
+latest: v385.vue-game-town-hud-shell
+strict result: vue-game-town-hud-shell
+next safe stage: migrate-vue-game-field-combat-ui-foundation
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -18,17 +18,20 @@ v381 production approval/execution: no/no
 v382 production approval/execution: no/no
 v383 production approval/execution: no/no
 v384 production approval/execution: no/no
+v385 production approval/execution: no/no
 ```
 
 ## 이번 체크포인트
 
-- legacy `src/state`, `src/systems`, `src/rules`의 JavaScript 8개/3,481줄을 조사해 browser·난수·시각·timer와 암묵적 전역 의존성을 `docs/generated/VUE_GAME_DOMAIN_DEPENDENCIES.md`에 자동 생성합니다.
-- `frontend/vue-app/src/game/domain`에 기본 state/save payload, inventory slot, 공격·필드 상태, 보스/심연 규칙, action result의 Vue 독립 TypeScript 경계를 추가했습니다. domain은 DOM·storage·fetch를 직접 사용하지 않고 난수와 현재 시각은 호출자가 주입합니다.
-- 고정 fixture를 legacy와 typed domain에 각각 넣는 동일 입력·출력 회귀, 입력 불변성, 금지 의존성 검사와 Vue typecheck/build·focused smoke가 PASS했습니다.
-- 실제 game boot·snapshot load/save·전투 timer와 UI 연결은 시작하지 않았습니다. legacy·backend·DB·env·secret·Render도 변경하지 않았고 v384 production 승인/실행은 없습니다.
+- `frontend/vue-app/src/game/adapters/townHud.ts`와 Pinia game store가 선택 슬롯의 이름·레벨·골드·최근 구역 요약을 v384 기본 domain 상태와 결합해 표시 전용 마을 view model을 만듭니다. 입력 source를 바꾸거나 network·storage·timer를 사용하지 않습니다.
+- 캐릭터 선택 뒤 `GameTownShell`이 마을 전용 접속 캐릭터 바, 시설, 이동/시스템 HUD, 능력치와 기본 스킬을 표시합니다. 상세 능력치가 아직 server snapshot이 아닌 기본 domain 값임을 화면에 명시합니다.
+- 기록관·도감·랭킹·우편함·인벤토리·필드·보스·수동 저장은 접근 가능한 안내 modal만 열며 실제 기능을 실행하지 않습니다. Escape 닫기와 focus 복귀, 모바일 전용 sidebar 닫기 버튼도 연결했습니다.
+- adapter 동등성·입력 불변성·금지 의존성, Pinia UI-only 경계, Vue typecheck/build·focused smoke와 실제 desktop/mobile·modal·가로 넘침·console 검증이 PASS했습니다. 임시 browser harness는 제거했습니다.
+- 실제 snapshot load/save·자동 저장·전투 timer, backend·DB·env·secret·legacy·Render는 변경하지 않았고 v385 production 승인/실행은 없습니다.
+- v384는 legacy game JS 8개/3,481줄의 의존성을 보고서로 고정하고 state/save·slot·공격/필드·보스 규칙·action result를 Vue 독립 typed domain으로 분리했습니다.
 - v381~v383 관리자 Vue는 `isAdmin=true` route guard, Bearer GET, `dryRun: true` Preview 5종과 SHA-256·exact 문구 재검증 modal까지 이식했습니다. 비밀번호·dev key는 저장·전송하지 않고 Apply route/header/write와 최종 버튼은 잠겨 있습니다.
-- 기호가 Docker·로컬 로그인 정상 동작을 확인했습니다. v384 `npm ci`, build(75 modules), focused smoke가 PASS했고 Vue dev server는 `127.0.0.1:5173`에서 실행 중입니다.
-- 기존 공개 legacy·backend·DB·env·secret·Render는 변경하지 않았고 Vue v382~v384 production 승인/실행은 없습니다.
+- 기호가 Docker·로컬 로그인 정상 동작을 확인했습니다. Vue dev server는 `127.0.0.1:5173`에서 실행 중이며 반복 로그인 검사는 하지 않습니다.
+- 기존 공개 legacy·backend·DB·env·secret·Render는 변경하지 않았고 Vue v382~v385 production 승인/실행은 없습니다.
 - 특Q(SQ)·특W(SW)는 첫 전용 강화권 사용 뒤 저장·표시·전투 유효 레벨이 모두 1이며, 탈리스만 A/B의 일반 스킬 보너스를 더 이상 상속하지 않습니다. 기존 R·T와 F·D 보너스는 유지하고 source/generated skill metadata와 탈리스만 설명도 같은 계약으로 맞췄습니다.
 - 상단 `접속 캐릭터` 바는 계정·캐릭터가 있고 현재 구역이 `town`일 때만 표시합니다. 초기 상태와 동기화 실패도 hidden/inert로 닫힙니다.
 - 로컬에서는 기존 테스트 편의를 유지하지만 배포 origin에서는 로그인 사용자의 `isAdmin=true`일 때만 테스트 패널·테스트 지급 모달·MASTER DATA/SAVE DATA 개발 배지를 표시합니다. 이는 화면 노출 계약이며 client-authoritative save의 근본 치트 방지는 향후 server save 검증/CAS 범위입니다.
@@ -54,7 +57,7 @@ v384 production approval/execution: no/no
 
 ## 바로 할 일
 
-1. 다음 Vue 전환 단계는 마을/HUD를 typed game domain adapter에 연결하는 `migrate-vue-game-shell-town-hud`입니다. 실제 snapshot load/save·전투 timer는 아직 연결하지 않습니다.
+1. 다음 Vue 전환 단계는 표시 전용 필드 전투 화면과 action adapter를 준비하는 `migrate-vue-game-field-combat-ui-foundation`입니다. 실제 snapshot load/save·자동 저장·전투 timer와 난수 orchestration은 아직 연결하지 않습니다.
 2. 실제 관리자 Apply API, 비밀번호 재인증 request, dev key header와 DB write는 연결하지 않습니다. 진행하려면 작업 종류와 exact DB-write 범위를 별도로 승인받습니다.
 3. production 관리자 복구는 Vue 화면 이식과 분리하며 기존 `admin` 승격 또는 새 owner 생성의 exact DB-write 승인을 받기 전에는 실행하지 않습니다.
 

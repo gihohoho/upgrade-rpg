@@ -63,7 +63,7 @@ python tools/report_vue_game_domain_dependencies.py --check
 node tools/smoke/frontend/smoke_vue_game_domain_foundation.js
 ```
 
-`docs/generated/VUE_GAME_DOMAIN_DEPENDENCIES.md`에 legacy state·systems·rules의 browser·난수·시각·timer 의존성과 v384 typed domain 분리 경계를 기록합니다. 검사는 고정 입력에서 legacy와 TypeScript 결과가 같은지 확인하며 DB·서버·배포를 변경하지 않습니다.
+`docs/generated/VUE_GAME_DOMAIN_DEPENDENCIES.md`에 legacy state·systems·rules의 browser·난수·시각·timer 의존성과 v384 typed domain 분리 경계를 기록합니다. v385 마을/HUD smoke는 이 domain을 표시 전용 adapter와 Pinia에서 사용하되 snapshot load/save·전투 timer를 시작하지 않는지 확인합니다. 검사는 DB·서버·배포를 변경하지 않습니다.
 
 ## PostgreSQL/Alembic readiness 보고서
 
