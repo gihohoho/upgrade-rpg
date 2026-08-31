@@ -14,8 +14,8 @@ export const useAppStore = defineStore('app', () => {
   const milestones = ref<MigrationMilestone[]>([
     { key: 'foundation', label: 'Vue 공통 기반', state: 'done' },
     { key: 'account', label: '계정·캐릭터', state: 'done' },
-    { key: 'admin', label: '관리자 화면', state: 'active' },
-    { key: 'game', label: '게임 화면', state: 'waiting' },
+    { key: 'admin', label: '관리자 화면', state: 'done' },
+    { key: 'game', label: '게임 화면', state: 'active' },
     { key: 'cutover', label: '기본 화면 전환', state: 'waiting' },
   ]);
 

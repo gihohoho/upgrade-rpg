@@ -41,6 +41,7 @@ const required = [
   "docs/generated/BACKEND_STRUCTURE_PLAN.md",
   "docs/generated/LEGACY_PATH_DEPENDENCIES.md",
   "docs/generated/POSTGRES_ALEMBIC_READINESS.md",
+  "docs/generated/VUE_GAME_DOMAIN_DEPENDENCIES.md",
   "docs/archive/history/ADMIN_AND_BACKEND_HISTORY.md",
   "docs/archive/history/DATA_AND_SEED_HISTORY.md",
   "docs/archive/history/GAME_UI_RUNTIME_HISTORY.md",

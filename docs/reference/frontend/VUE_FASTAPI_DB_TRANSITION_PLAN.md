@@ -1,10 +1,10 @@
-# Vue/FastAPI/DB 전체 전환 계획 — v383
+# Vue/FastAPI/DB 전체 전환 계획 — v384
 
 ## 현재 결론
 
 `frontend/vue-app/`은 더 이상 단순 실험용 shell이 아니라 전체 프론트엔드를 옮길 작업공간입니다. 다만 공개 서비스의 `index.html`, `admin.html`, 루트 `src/`는 Vue 기능이 같은 수준으로 검증될 때까지 기준 구현으로 유지합니다.
 
-v379에서 시작해 v383까지 완료한 기반:
+v379에서 시작해 v384까지 완료한 기반:
 
 - Vue 3 + Vite + Vue Router
 - 새 Vue 코드의 TypeScript 적용
@@ -15,6 +15,7 @@ v379에서 시작해 v383까지 완료한 기반:
 - typed admin access store, `/admin` route guard, Bearer 관리자 GET
 - typed 관리자 dry-run Preview API/store와 diff·stale·차단 화면
 - 최신 Preview SHA-256 재검증, exact 문구와 민감 입력 삭제를 포함한 write-locked 확인 modal
+- legacy game state·systems·rules 의존성 보고서와 Vue 독립 typed domain
 - legacy, backend, DB, 공개 배포 변경 없음
 
 ## TypeScript를 쓰는 이유
@@ -70,13 +71,16 @@ Vue 자체는 JavaScript만으로도 사용할 수 있습니다. 이 프로젝�
 - Preview → 최신 재검증 → exact 문구·본인 확인 modal — 완료
 - 실제 재인증 request, dev key header, Apply와 DB write — 별도 exact 승인까지 잠금 유지
 
-### 4. 게임 domain 분리 — 다음
+### 4. 게임 domain 분리 — v384 기반 완료
 
-- `src/state`, `src/systems`, `src/rules`의 전역 의존성 목록화
-- 계산 로직을 Vue와 독립된 TypeScript module로 이전
-- 기존 smoke와 동일 입력/출력 회귀 검증
+- `src/state`, `src/systems`, `src/rules`의 전역 의존성 목록화 — 완료
+- 기본 state/save payload, slot, 공격·필드 상태, 보스 규칙, action result 계산을 Vue 독립 TypeScript module로 이전 — 완료
+- 고정 입력에서 legacy와 동일한 출력 회귀 검증 — 완료
+- 남은 전투·아이템 orchestration의 DOM·timer·난수 adapter 분리 — 각 게임 UI 단계에서 계속
 
-### 5. 게임 UI
+상세 inventory는 [Vue Game Domain Dependencies](../../generated/VUE_GAME_DOMAIN_DEPENDENCIES.md)를 따릅니다.
+
+### 5. 게임 UI — 다음
 
 - 마을/HUD
 - 전투와 보스

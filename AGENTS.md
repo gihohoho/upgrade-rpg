@@ -90,9 +90,9 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v383.vue-admin-apply-confirmation-gates
-strict result: vue-admin-apply-confirmation-gates
-next safe stage: migrate-vue-game-domain-foundation
+latest: v384.vue-game-domain-foundation
+strict result: vue-game-domain-foundation
+next safe stage: migrate-vue-game-shell-town-hud
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -106,12 +106,12 @@ v380 production approval/execution: no/no
 v381 production approval/execution: no/no
 v382 production approval/execution: no/no
 v383 production approval/execution: no/no
+v384 production approval/execution: no/no
 ```
 
-- v379~v381에서 `frontend/vue-app`을 TypeScript·Pinia·typed Router 기반 전체 전환 공간으로 바꾸고, 로그인·이메일·8칸 캐릭터 gate와 `isAdmin=true` 관리자 route guard·Bearer GET을 이식했습니다. legacy·backend·DB·배포는 변경하지 않았습니다.
-- v382는 생성·수정·일반 rollback·생성 삭제·복원 Preview를 typed API/store와 Vue 작업대로 이식했습니다. POST는 `dryRun: true`이며 Apply·확인 문구·dev key는 미연결입니다.
-- v383은 ready Preview 재검증·SHA-256 비교, 서버 exact 문구, 비밀번호·dev key 미전송 입력과 영향 확인 modal을 준비했습니다. Apply route/header/write는 없고 최종 버튼은 항상 잠겨 있습니다.
-- Docker PostgreSQL·로컬 로그인은 기호가 직접 확인했습니다. v383 build·focused smoke·modal 브라우저 검증은 PASS했고 production 관리자 복구·Apply write는 별도 exact 승인까지 보류합니다.
+- v384는 legacy game JS 8개/3,481줄의 전역 의존성을 보고서로 고정하고 state/save·slot·공격/필드·보스 규칙·action result를 Vue 독립 typed domain으로 분리했습니다. legacy 동등성·순수 경계·Vue build/focused smoke가 PASS했고 v384 배포는 없습니다.
+- v379~v381은 TypeScript·Pinia·Router와 로그인·8칸 캐릭터·관리자 인증을, v382~v383은 `dryRun: true` Preview와 write-locked 확인 modal을 이식했습니다. Apply route/header/write는 없습니다.
+- Docker PostgreSQL·로컬 로그인은 기호가 확인했습니다. production 관리자 복구·Apply write는 별도 exact 승인까지 보류합니다.
 - v378 legacy static은 승인 SHA `c56525394a4099160e7a32e93dc2d3a0d54568b3`에서 Render deploy `dep-da5vn3m417fc738rs2bg`로 정확히 1회 배포되어 live입니다. backend·DB·secret은 변경하지 않았습니다.
 - v371 source는 이메일 인증·복구·삭제, `authVersion`, Brevo HTTPS renderer/transport, owner bootstrap과 migration source를 준비했습니다.
 - v372는 기능을 바꾸지 않고 Markdown 243개를 95개로 정리하고 `docs/current`의 실제 현재 문서를 11개로 줄였습니다. entry/current/reference/generated/archive 역할과 구조 smoke를 고정했습니다.

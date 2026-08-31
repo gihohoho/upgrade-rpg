@@ -52,6 +52,19 @@ docs/generated/LEGACY_PATH_DEPENDENCIES.md
 
 이 도구는 새 contract가 아닙니다. Vue/FastAPI/DB 전환 전에 기존 legacy 경로를 움직여도 되는지 판단하기 위한 보조 도구입니다.
 
+## Vue game domain 의존성 보고서
+
+실행 위치: 프로젝트 루트
+Python `.venv` 상태: 필요 없음
+
+```bash
+python tools/report_vue_game_domain_dependencies.py
+python tools/report_vue_game_domain_dependencies.py --check
+node tools/smoke/frontend/smoke_vue_game_domain_foundation.js
+```
+
+`docs/generated/VUE_GAME_DOMAIN_DEPENDENCIES.md`에 legacy state·systems·rules의 browser·난수·시각·timer 의존성과 v384 typed domain 분리 경계를 기록합니다. 검사는 고정 입력에서 legacy와 TypeScript 결과가 같은지 확인하며 DB·서버·배포를 변경하지 않습니다.
+
 ## PostgreSQL/Alembic readiness 보고서
 
 실행 위치: 프로젝트 루트  

@@ -1,13 +1,13 @@
-# Current Status — v383
+# Current Status — v384
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v383.vue-admin-apply-confirmation-gates
-strict result: vue-admin-apply-confirmation-gates
-next safe stage: migrate-vue-game-domain-foundation
+latest: v384.vue-game-domain-foundation
+strict result: vue-game-domain-foundation
+next safe stage: migrate-vue-game-shell-town-hud
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -20,7 +20,14 @@ v380 production approval/execution: no/no
 v381 production approval/execution: no/no
 v382 production approval/execution: no/no
 v383 production approval/execution: no/no
+v384 production approval/execution: no/no
 ```
+
+## v384 Vue game domain 기반
+
+- legacy game JavaScript 8개/3,481줄의 전역·DOM·난수·시각·timer 의존성을 [자동 생성 보고서](../generated/VUE_GAME_DOMAIN_DEPENDENCIES.md)로 고정했습니다.
+- state/save·slot·공격/필드·보스 규칙·action result를 Vue 독립 TypeScript로 분리하고 난수·시각은 주입합니다. legacy 동등성·입력 불변성·금지 의존성·Vue build/focused smoke가 PASS했습니다.
+- game boot·snapshot load/save·전투 timer와 legacy·backend·DB·env·secret·Render는 바꾸지 않았고 v384 배포는 없습니다. 다음은 마을/HUD domain adapter입니다.
 
 ## v383 Vue 관리자 Apply 확인 경계
 
@@ -123,7 +130,7 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. Vue 전체 전환 순서에 따라 legacy 게임의 전역 state·systems·rules 의존성을 목록화하고 Vue와 독립된 typed game domain 기반을 준비합니다.
+1. Vue 전체 전환 순서에 따라 마을/HUD를 typed game domain adapter에 연결합니다. 실제 snapshot load/save와 전투 timer는 이 UI 단계와 분리합니다.
 2. 실제 관리자 Apply API·재인증·dev key header·DB write 연결은 이번 단계에 포함되지 않았습니다. 필요하면 작업 종류와 정확한 DB-write 범위를 별도 승인받습니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 

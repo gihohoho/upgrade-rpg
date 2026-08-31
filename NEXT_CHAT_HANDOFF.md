@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v383
+# Upgrade RPG Codex handoff — v384
 
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v383.vue-admin-apply-confirmation-gates
-strict result: vue-admin-apply-confirmation-gates
-next safe stage: migrate-vue-game-domain-foundation
+latest: v384.vue-game-domain-foundation
+strict result: vue-game-domain-foundation
+next safe stage: migrate-vue-game-shell-town-hud
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -17,22 +17,18 @@ v380 production approval/execution: no/no
 v381 production approval/execution: no/no
 v382 production approval/execution: no/no
 v383 production approval/execution: no/no
+v384 production approval/execution: no/no
 ```
 
 ## 이번 체크포인트
 
-- Vue 관리자 Preview 결과에 실제 write 없는 `Apply 확인 절차 준비` modal을 추가했습니다. 적용 준비 상태와 server `confirmTextRequired`가 모두 있을 때만 열립니다.
-- 같은 request snapshot을 Preview 전용 endpoint로 다시 계산하고 정렬 payload의 SHA-256 지문, ready 상태, exact 문구가 직전 결과와 같을 때만 최신 재검증을 통과합니다. 달라지면 준비를 차단하고 새 Preview 결과 검토를 요구합니다.
-- modal은 exact 확인 문구, 현재 비밀번호, 관리자 dev key, 영향 확인을 받지만 민감 입력을 저장·로그·전송하지 않고 닫기/unmount에서 지웁니다. 모든 경계가 준비돼도 최종 버튼은 항상 disabled이며 Vue에는 Apply route/header/`dryRun: false`가 없습니다.
-- 기호가 Docker 시작과 로컬 서비스·로그인 정상 동작을 직접 확인했습니다. 이를 반복하지 않았고, 자동화 브라우저에서는 실제 component를 임시 harness로 렌더링해 네 단계 완료 뒤 영구 잠금과 닫기 뒤 민감 입력 삭제를 확인한 다음 harness를 제거했습니다.
-- `npm ci`, TypeScript/Vite production build(75 modules), Vue focused smoke 9개와 실제 component 브라우저 검증이 PASS했습니다. Vue dev server는 `127.0.0.1:5173`에서 다시 실행 중입니다.
-- Vue 관리자 화면에 신규 생성, 선택 row 수정, 일반 변경 rollback, 생성 row 삭제, 삭제 row 복원의 Preview 작업대를 추가했습니다. typed `adminPreviewApi`와 Pinia admin store가 허용된 Preview POST 5개만 호출하고 body의 `dryRun`을 항상 `true`로 고정합니다.
-- 생성은 서버 blueprint의 기본값·필수·고유·관계 선택지를 사용하고, 수정은 선택 row의 현재 scalar 값을 stale 기준으로 함께 보냅니다. 되돌리기는 최근 변경 이력과 상세 availability를 먼저 GET으로 확인합니다.
-- 결과 화면은 diff, stale 충돌, 거부 필드, 현재값 불일치, 의존성 blocker, id/code conflict와 서버 경고를 분리합니다. 확인 문구는 response-only로 사용하며 Apply endpoint와 dev key header는 존재하지 않습니다.
-- 기존 공개 legacy·backend source·DB schema/data·env·secret·Render 배포는 변경하지 않았습니다. Vue v382·v383 production 승인과 실행은 모두 없습니다.
-- Vue `/admin`은 shared Pinia의 account/admin store로 session과 `isAdmin`을 확인하는 route guard를 통과해야만 `AdminShell`을 생성합니다. 미로그인·비관리자·network 오류는 `/admin/access`의 전용 로그인·거부·재시도 화면으로 분리했습니다.
-- 기존 관리자 requirements·도메인·카탈로그·상세·관계 GET을 typed admin store 경계로 모으고 모든 요청에 Bearer와 `cache: no-store`를 적용했습니다. GET에서 401/403이 발생하면 관리자 UI를 즉시 내리고 재로그인 화면으로 돌아갑니다.
-- 실제 Chrome에서 미로그인 `/admin` → `/admin/access?reason=login` 전환, 관리자 패널 DOM 0개·로그인 폼 1개, desktop/mobile 가로 overflow 없음을 확인했습니다. 실제 로그인 제출과 관리자 API/DB write는 실행하지 않았습니다.
+- legacy `src/state`, `src/systems`, `src/rules`의 JavaScript 8개/3,481줄을 조사해 browser·난수·시각·timer와 암묵적 전역 의존성을 `docs/generated/VUE_GAME_DOMAIN_DEPENDENCIES.md`에 자동 생성합니다.
+- `frontend/vue-app/src/game/domain`에 기본 state/save payload, inventory slot, 공격·필드 상태, 보스/심연 규칙, action result의 Vue 독립 TypeScript 경계를 추가했습니다. domain은 DOM·storage·fetch를 직접 사용하지 않고 난수와 현재 시각은 호출자가 주입합니다.
+- 고정 fixture를 legacy와 typed domain에 각각 넣는 동일 입력·출력 회귀, 입력 불변성, 금지 의존성 검사와 Vue typecheck/build·focused smoke가 PASS했습니다.
+- 실제 game boot·snapshot load/save·전투 timer와 UI 연결은 시작하지 않았습니다. legacy·backend·DB·env·secret·Render도 변경하지 않았고 v384 production 승인/실행은 없습니다.
+- v381~v383 관리자 Vue는 `isAdmin=true` route guard, Bearer GET, `dryRun: true` Preview 5종과 SHA-256·exact 문구 재검증 modal까지 이식했습니다. 비밀번호·dev key는 저장·전송하지 않고 Apply route/header/write와 최종 버튼은 잠겨 있습니다.
+- 기호가 Docker·로컬 로그인 정상 동작을 확인했습니다. v384 `npm ci`, build(75 modules), focused smoke가 PASS했고 Vue dev server는 `127.0.0.1:5173`에서 실행 중입니다.
+- 기존 공개 legacy·backend·DB·env·secret·Render는 변경하지 않았고 Vue v382~v384 production 승인/실행은 없습니다.
 - 특Q(SQ)·특W(SW)는 첫 전용 강화권 사용 뒤 저장·표시·전투 유효 레벨이 모두 1이며, 탈리스만 A/B의 일반 스킬 보너스를 더 이상 상속하지 않습니다. 기존 R·T와 F·D 보너스는 유지하고 source/generated skill metadata와 탈리스만 설명도 같은 계약으로 맞췄습니다.
 - 상단 `접속 캐릭터` 바는 계정·캐릭터가 있고 현재 구역이 `town`일 때만 표시합니다. 초기 상태와 동기화 실패도 hidden/inert로 닫힙니다.
 - 로컬에서는 기존 테스트 편의를 유지하지만 배포 origin에서는 로그인 사용자의 `isAdmin=true`일 때만 테스트 패널·테스트 지급 모달·MASTER DATA/SAVE DATA 개발 배지를 표시합니다. 이는 화면 노출 계약이며 client-authoritative save의 근본 치트 방지는 향후 server save 검증/CAS 범위입니다.
@@ -58,7 +54,7 @@ v383 production approval/execution: no/no
 
 ## 바로 할 일
 
-1. 다음 Vue 전환 단계는 legacy 게임의 전역 state·systems·rules 의존성을 목록화하고 Vue와 독립된 TypeScript game domain 기반을 준비하는 `migrate-vue-game-domain-foundation`입니다.
+1. 다음 Vue 전환 단계는 마을/HUD를 typed game domain adapter에 연결하는 `migrate-vue-game-shell-town-hud`입니다. 실제 snapshot load/save·전투 timer는 아직 연결하지 않습니다.
 2. 실제 관리자 Apply API, 비밀번호 재인증 request, dev key header와 DB write는 연결하지 않습니다. 진행하려면 작업 종류와 exact DB-write 범위를 별도로 승인받습니다.
 3. production 관리자 복구는 Vue 화면 이식과 분리하며 기존 `admin` 승격 또는 새 owner 생성의 exact DB-write 승인을 받기 전에는 실행하지 않습니다.
 

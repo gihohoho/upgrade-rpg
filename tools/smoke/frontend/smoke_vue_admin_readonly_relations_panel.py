@@ -90,7 +90,7 @@ def main() -> None:
     assert_contains(css, ".admin-relations-group__limited", "relations limited CSS")
 
     app = read("src/App.vue")
-    assert_contains(app, "Upgrade RPG · v383", "Vue shell visible version")
+    assert_contains(app, "Upgrade RPG · v384", "Vue shell visible version")
 
     docs = read("docs/reference/frontend/VUE_ADMIN_READONLY_CATALOG.md")
     assert_contains(docs, "v280", "relations panel doc version")

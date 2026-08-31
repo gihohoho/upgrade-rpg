@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v383.vue-admin-apply-confirmation-gates"
-RESULT = "vue-admin-apply-confirmation-gates"
-NEXT_STAGE = "migrate-vue-game-domain-foundation"
+VERSION = "v384.vue-game-domain-foundation"
+RESULT = "vue-game-domain-foundation"
+NEXT_STAGE = "migrate-vue-game-shell-town-hud"
 SOURCE_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_HEAD = SOURCE_HEAD
 NEON_APPLIED_HEAD = SOURCE_HEAD
@@ -96,7 +96,7 @@ def main() -> int:
     )
     require_markers(
         "NEXT_CHAT_PROMPT.md",
-        "migrate-vue-game-domain-foundation",
+        "migrate-vue-game-shell-town-hud",
         "다시 전면 감사하거나 재실행하지 말고",
     )
     require_markers(
