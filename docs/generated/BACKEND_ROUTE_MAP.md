@@ -5,8 +5,8 @@
 중요: v377 local migration과 인증 요청 보호 복구는 완료됐습니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
 
 ```txt
-latest: v382.vue-admin-preview-workflows
-strict result: vue-admin-preview-workflows
+latest: v383.vue-admin-apply-confirmation-gates
+strict result: vue-admin-apply-confirmation-gates
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 actual target v377 apply: local 1 / Neon 1
@@ -18,7 +18,7 @@ local Brevo E2E: Naver delivery / link verification / login verified
 provider finalize: local multi-worker ownership diagnosed / direct provider healthy
 recovery2 roundtrip/Neon backup/apply: verified / one attempt each
 public backend/static: v377/v378 live
-next safe stage: prepare-vue-admin-apply-confirmation-gates
+next safe stage: migrate-vue-game-domain-foundation
 ```
 
 ## 생성 방식
@@ -125,7 +125,7 @@ next safe stage: prepare-vue-admin-apply-confirmation-gates
 
 ## Vue 연결 보류 route
 
-아래 route는 DB 상태 확인, 기존 관리자 Preview/Apply 또는 아직 Vue에 연결하지 않은 경로입니다.
+아래 route에는 DB 상태 확인, Vue에서 `dryRun: true`로만 연결한 관리자 Preview, 실제 Apply와 아직 연결하지 않은 경로가 함께 있습니다. 표의 보류 이유는 실제 write 연결 판단에만 사용합니다.
 
 | route | group | response type | 보류 이유 |
 | --- | --- | --- | --- |
@@ -207,7 +207,7 @@ next safe stage: prepare-vue-admin-apply-confirmation-gates
 
 ## 다음 추천 단계
 
-`next safe stage: prepare-vue-admin-apply-confirmation-gates`
+`next safe stage: migrate-vue-game-domain-foundation`
 
 private environment, local migration, recovery2 synthetic 왕복·Neon backup·exact v377 apply,
 signed backend image와 legacy static의 공개 배포를 승인된 단일 시도로 완료했습니다.
@@ -215,6 +215,6 @@ signed backend image와 legacy static의 공개 배포를 승인된 단일 시�
 
 권장 범위:
 
-1. side-effect 없는 관리자 create/edit/rollback Preview를 typed API/store와 Vue diff 화면으로 이식합니다.
-2. production 관리자 복구, dev key와 실제 Apply는 별도 exact DB-write 승인을 받기 전까지 연결하지 않습니다.
-3. 완료된 migration·publish·Render deploy는 단순 확인을 위해 재실행하지 않습니다.
+1. v382 Preview와 v383 write-locked 확인 modal까지 완료했으므로 다음은 legacy 게임 state·systems·rules를 Vue와 독립된 typed domain으로 분리합니다.
+2. production 관리자 복구, 재인증 request, dev key header와 실제 Apply는 별도 exact DB-write 승인을 받기 전까지 연결하지 않습니다.
+3. 완료된 migration·publish·Render deploy와 기호가 확인한 Docker·로그인은 단순 확인을 위해 재실행하지 않습니다.

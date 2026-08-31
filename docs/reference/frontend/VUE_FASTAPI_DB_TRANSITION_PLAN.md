@@ -1,10 +1,10 @@
-# Vue/FastAPI/DB 전체 전환 계획 — v382
+# Vue/FastAPI/DB 전체 전환 계획 — v383
 
 ## 현재 결론
 
 `frontend/vue-app/`은 더 이상 단순 실험용 shell이 아니라 전체 프론트엔드를 옮길 작업공간입니다. 다만 공개 서비스의 `index.html`, `admin.html`, 루트 `src/`는 Vue 기능이 같은 수준으로 검증될 때까지 기준 구현으로 유지합니다.
 
-v379에서 시작해 v382까지 완료한 기반:
+v379에서 시작해 v383까지 완료한 기반:
 
 - Vue 3 + Vite + Vue Router
 - 새 Vue 코드의 TypeScript 적용
@@ -14,6 +14,7 @@ v379에서 시작해 v382까지 완료한 기반:
 - typed auth/account API, Pinia account store, 로그인·이메일·8칸 캐릭터 gate
 - typed admin access store, `/admin` route guard, Bearer 관리자 GET
 - typed 관리자 dry-run Preview API/store와 diff·stale·차단 화면
+- 최신 Preview SHA-256 재검증, exact 문구와 민감 입력 삭제를 포함한 write-locked 확인 modal
 - legacy, backend, DB, 공개 배포 변경 없음
 
 ## TypeScript를 쓰는 이유
@@ -60,15 +61,16 @@ Vue 자체는 JavaScript만으로도 사용할 수 있습니다. 이 프로젝�
 - legacy와 같은 token·선택 캐릭터 key, session invalid와 network 오류 분기
 - 생성·선택·이름 확인 삭제 modal, desktop/mobile 접근성 검증
 
-### 3. 관리자 화면 — v382 Preview 완료, Apply 경계 다음
+### 3. 관리자 화면 — v383 확인 경계 준비 완료
 
 - 기존 read-only 조회를 typed store 경계로 정리 — 완료
 - 관리자 인증과 route guard — 완료
 - 일반 사용자에게 관리자 UI를 렌더링하지 않음 — 완료
 - side-effect 없는 Preview를 먼저 이식하고 diff·stale·차단 사유 표시 — 완료
-- Preview → 확인 modal → Apply 순서와 실제 write는 별도 단계 유지 — 다음
+- Preview → 최신 재검증 → exact 문구·본인 확인 modal — 완료
+- 실제 재인증 request, dev key header, Apply와 DB write — 별도 exact 승인까지 잠금 유지
 
-### 4. 게임 domain 분리
+### 4. 게임 domain 분리 — 다음
 
 - `src/state`, `src/systems`, `src/rules`의 전역 의존성 목록화
 - 계산 로직을 Vue와 독립된 TypeScript module로 이전

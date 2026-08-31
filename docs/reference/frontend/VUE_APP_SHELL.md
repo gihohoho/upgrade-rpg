@@ -1,4 +1,4 @@
-# Vue App Shell — v273 + v382 admin Preview
+# Vue App Shell — v273 + v383 admin confirmation boundary
 
 ## 한 줄 요약
 
@@ -25,6 +25,8 @@ v270에서 `frontend/vue-app/`에 Vue 기본 shell을 추가했고, v271에서 �
 v381부터 `/admin`은 `isAdmin=true` route guard를 통과해야 합니다. 통과 전에는 `AdminShell`과 관리자 GET 패널을 렌더링하지 않으며, 통과한 GET 요청은 Bearer token과 `no-store`를 사용합니다.
 
 v382부터 인증된 관리자 shell 안에 생성·수정·되돌리기 Preview 작업대를 렌더링합니다. 이 작업대의 POST는 `dryRun: true`이고 실제 Apply와 dev key 입력은 없습니다.
+
+v383부터 ready Preview에는 실제 write 없는 확인 modal 진입 버튼이 나타납니다. modal은 동일 Preview 재검증, server exact 문구, 현재 비밀번호·dev key 미전송 입력과 영향 확인을 제공하지만 최종 Apply 버튼은 항상 잠겨 있고 Apply API/header는 연결하지 않습니다.
 
 ## v272에서 화면에 표시하는 것
 

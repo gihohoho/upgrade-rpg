@@ -1,4 +1,4 @@
-# Vue API Layer — v277 + v382 admin Preview
+# Vue API Layer — v277 + v383 admin confirmation boundary
 
 이 폴더는 Vue 앱의 FastAPI 조회와 side-effect 없는 Preview client 공간입니다.
 
@@ -24,7 +24,7 @@
 - `POST /api/v1/admin/master-data/create-preview`, `/edit-preview`
 - `POST /api/v1/admin/change-logs/{id}/rollback-preview`, `/create-delete-preview`, `/create-delete-restore-preview`
 
-`adminPreviewApi.ts`만 Preview POST를 소유합니다. 이 모듈에는 Apply route, 확인 문구, `X-Admin-Dev-Key`가 없습니다.
+`adminPreviewApi.ts`만 Preview POST를 소유합니다. Preview 응답의 `confirmTextRequired`는 화면에 표시할 수 있지만 요청 body에는 넣지 않습니다. 이 모듈에는 Apply route와 dev key header가 없습니다.
 
 도메인 응답:
 

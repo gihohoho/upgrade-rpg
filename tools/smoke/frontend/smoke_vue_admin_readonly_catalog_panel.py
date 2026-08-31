@@ -104,13 +104,13 @@ def main() -> None:
     assert_contains(admin_shell, "searchable-fields", "domain search metadata bridge")
     assert_contains(admin_shell, "handleRowSelected", "admin selected row bridge")
     assert_contains(admin_shell, "준비 완료", "requirements meaningful summary")
-    assert_contains(admin_shell, "Apply/dev key/write는 계속 제외", "admin mutation exclusion note")
+    assert_contains(admin_shell, "Apply API/dev key 헤더/write는 계속 제외", "admin mutation exclusion note")
     assert_contains(admin_shell, "useAdminStore", "typed admin store boundary")
     assert_contains(admin_shell, "isAdmin=true", "server admin identity copy")
     assert_read_only("src/pages/AdminShell.vue")
 
     app = read("src/App.vue")
-    assert_contains(app, "Upgrade RPG · v382", "Vue shell visible version")
+    assert_contains(app, "Upgrade RPG · v383", "Vue shell visible version")
 
     css = read("src/styles/base.css")
     assert_contains(css, ".admin-catalog-controls", "admin catalog controls CSS")

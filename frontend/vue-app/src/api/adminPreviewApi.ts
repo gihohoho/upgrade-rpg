@@ -28,6 +28,7 @@ export interface AdminPreviewPayload extends JsonRecord {
   domainLabel?: string;
   id?: number;
   changeLogId?: number;
+  confirmTextRequired?: string;
   createApplyReady?: boolean;
   editApplyReady?: boolean;
   applyReady?: boolean;

@@ -41,7 +41,7 @@ def main() -> None:
         if marker == "cache":
             continue
         require(api, marker, "typed Preview request boundary")
-    for forbidden in ["-apply", "confirmText", "X-Admin-Dev-Key", "ADMIN_WRITE_DEV_KEY", "dryRun: false"]:
+    for forbidden in ["/master-data/create-apply", "/master-data/edit-apply", "/rollback-apply", "/create-delete-apply", "/create-delete-restore-apply", "X-Admin-Dev-Key", "ADMIN_WRITE_DEV_KEY", "dryRun: false"]:
         if forbidden in api:
             raise AssertionError(f"Preview API connected forbidden write marker: {forbidden}")
 
@@ -66,14 +66,14 @@ def main() -> None:
         "되돌리기 Preview",
         "stale 충돌",
         "차단·검증 사유",
-        "Apply 미연결",
+        "Apply 쓰기 잠금",
         "baseValues",
         "loadChangeLogDetail",
         "dependencyChecks",
         "currentMismatches",
     ]:
         require(workspace, marker, "Vue Preview workspace")
-    for forbidden in ["X-Admin-Dev-Key", "ADMIN_WRITE_DEV_KEY", "confirmText", "applyAdmin", "-apply"]:
+    for forbidden in ["X-Admin-Dev-Key", "ADMIN_WRITE_DEV_KEY", "applyAdmin", "/master-data/create-apply", "/master-data/edit-apply", "/rollback-apply", "/create-delete-apply", "/create-delete-restore-apply"]:
         if forbidden in workspace:
             raise AssertionError(f"Preview workspace connected forbidden write marker: {forbidden}")
 
@@ -85,7 +85,7 @@ def main() -> None:
     for marker in [".admin-preview-workspace", ".admin-preview-tabs", ".admin-preview-diff-table", ".admin-preview-result__section--stale"]:
         require(css, marker, "Preview responsive styles")
 
-    print("OK: Vue admin create/edit/rollback dry-run Preview workflows passed")
+    print("OK: Vue admin create/edit/rollback dry-run Preview workflows passed with response-only confirmation phrase")
 
 
 if __name__ == "__main__":

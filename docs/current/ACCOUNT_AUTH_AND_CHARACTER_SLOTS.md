@@ -1,9 +1,9 @@
 # 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v382.vue-admin-preview-workflows
-strict result: vue-admin-preview-workflows
-next safe stage: prepare-vue-admin-apply-confirmation-gates
+latest: v383.vue-admin-apply-confirmation-gates
+strict result: vue-admin-apply-confirmation-gates
+next safe stage: migrate-vue-game-domain-foundation
 public Render: backend v377 / static v378 Live
 local/Neon DB: v377 / v377
 ```

@@ -81,7 +81,7 @@ def main() -> None:
     assert_contains(shell, "selectionHistory", "selection history state")
     assert_contains(shell, "handleRelatedRowSelected", "related selection handler")
     assert_contains(shell, "handleBackSelection", "related selection back handler")
-    assert_contains(shell, "Apply/dev key/write는 계속 제외", "write exclusion note")
+    assert_contains(shell, "Apply API/dev key 헤더/write는 계속 제외", "write exclusion note")
     assert_read_only("src/pages/AdminShell.vue")
 
     css = read("src/styles/base.css")
@@ -90,7 +90,7 @@ def main() -> None:
     assert_contains(css, ".admin-relations-group__limited", "relations limited CSS")
 
     app = read("src/App.vue")
-    assert_contains(app, "Upgrade RPG · v382", "Vue shell visible version")
+    assert_contains(app, "Upgrade RPG · v383", "Vue shell visible version")
 
     docs = read("docs/reference/frontend/VUE_ADMIN_READONLY_CATALOG.md")
     assert_contains(docs, "v280", "relations panel doc version")

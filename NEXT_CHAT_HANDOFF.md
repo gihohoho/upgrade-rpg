@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v382
+# Upgrade RPG Codex handoff — v383
 
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v382.vue-admin-preview-workflows
-strict result: vue-admin-preview-workflows
-next safe stage: prepare-vue-admin-apply-confirmation-gates
+latest: v383.vue-admin-apply-confirmation-gates
+strict result: vue-admin-apply-confirmation-gates
+next safe stage: migrate-vue-game-domain-foundation
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -16,15 +16,20 @@ v379 production approval/execution: no/no
 v380 production approval/execution: no/no
 v381 production approval/execution: no/no
 v382 production approval/execution: no/no
+v383 production approval/execution: no/no
 ```
 
 ## 이번 체크포인트
 
+- Vue 관리자 Preview 결과에 실제 write 없는 `Apply 확인 절차 준비` modal을 추가했습니다. 적용 준비 상태와 server `confirmTextRequired`가 모두 있을 때만 열립니다.
+- 같은 request snapshot을 Preview 전용 endpoint로 다시 계산하고 정렬 payload의 SHA-256 지문, ready 상태, exact 문구가 직전 결과와 같을 때만 최신 재검증을 통과합니다. 달라지면 준비를 차단하고 새 Preview 결과 검토를 요구합니다.
+- modal은 exact 확인 문구, 현재 비밀번호, 관리자 dev key, 영향 확인을 받지만 민감 입력을 저장·로그·전송하지 않고 닫기/unmount에서 지웁니다. 모든 경계가 준비돼도 최종 버튼은 항상 disabled이며 Vue에는 Apply route/header/`dryRun: false`가 없습니다.
+- 기호가 Docker 시작과 로컬 서비스·로그인 정상 동작을 직접 확인했습니다. 이를 반복하지 않았고, 자동화 브라우저에서는 실제 component를 임시 harness로 렌더링해 네 단계 완료 뒤 영구 잠금과 닫기 뒤 민감 입력 삭제를 확인한 다음 harness를 제거했습니다.
+- `npm ci`, TypeScript/Vite production build(75 modules), Vue focused smoke 9개와 실제 component 브라우저 검증이 PASS했습니다. Vue dev server는 `127.0.0.1:5173`에서 다시 실행 중입니다.
 - Vue 관리자 화면에 신규 생성, 선택 row 수정, 일반 변경 rollback, 생성 row 삭제, 삭제 row 복원의 Preview 작업대를 추가했습니다. typed `adminPreviewApi`와 Pinia admin store가 허용된 Preview POST 5개만 호출하고 body의 `dryRun`을 항상 `true`로 고정합니다.
 - 생성은 서버 blueprint의 기본값·필수·고유·관계 선택지를 사용하고, 수정은 선택 row의 현재 scalar 값을 stale 기준으로 함께 보냅니다. 되돌리기는 최근 변경 이력과 상세 availability를 먼저 GET으로 확인합니다.
-- 결과 화면은 diff, stale 충돌, 거부 필드, 현재값 불일치, 의존성 blocker, id/code conflict와 서버 경고를 분리합니다. Apply endpoint·확인 문구·`X-Admin-Dev-Key` 입력은 존재하지 않습니다.
-- 로컬 backend는 `backend/.venv`와 `DEBUG=false`로 다시 켰지만 Docker Desktop과 프로젝트 PostgreSQL이 꺼져 `/health/db`가 500이므로 실제 로그인 E2E는 아직 완료하지 못했습니다. Docker container 시작은 별도 exact 승인을 받은 뒤 수행합니다.
-- 기존 공개 legacy·backend source·DB schema/data·env·secret·Render 배포는 변경하지 않았습니다. Vue v382 production 승인과 실행은 모두 없습니다.
+- 결과 화면은 diff, stale 충돌, 거부 필드, 현재값 불일치, 의존성 blocker, id/code conflict와 서버 경고를 분리합니다. 확인 문구는 response-only로 사용하며 Apply endpoint와 dev key header는 존재하지 않습니다.
+- 기존 공개 legacy·backend source·DB schema/data·env·secret·Render 배포는 변경하지 않았습니다. Vue v382·v383 production 승인과 실행은 모두 없습니다.
 - Vue `/admin`은 shared Pinia의 account/admin store로 session과 `isAdmin`을 확인하는 route guard를 통과해야만 `AdminShell`을 생성합니다. 미로그인·비관리자·network 오류는 `/admin/access`의 전용 로그인·거부·재시도 화면으로 분리했습니다.
 - 기존 관리자 requirements·도메인·카탈로그·상세·관계 GET을 typed admin store 경계로 모으고 모든 요청에 Bearer와 `cache: no-store`를 적용했습니다. GET에서 401/403이 발생하면 관리자 UI를 즉시 내리고 재로그인 화면으로 돌아갑니다.
 - 실제 Chrome에서 미로그인 `/admin` → `/admin/access?reason=login` 전환, 관리자 패널 DOM 0개·로그인 폼 1개, desktop/mobile 가로 overflow 없음을 확인했습니다. 실제 로그인 제출과 관리자 API/DB write는 실행하지 않았습니다.
@@ -53,8 +58,8 @@ v382 production approval/execution: no/no
 
 ## 바로 할 일
 
-1. Docker Desktop과 기존 프로젝트 `postgres` 컨테이너 시작을 exact 승인받아 로컬 DB health를 복구한 뒤, 일반 계정 로그인과 가능한 범위의 관리자 gate를 실제 브라우저에서 확인합니다.
-2. Apply 확인 UI는 Preview 결과의 최신 재검증, 게임식 확인 modal, exact 확인 문구와 dev key를 함께 설계하되 실제 endpoint 연결과 DB write는 별도 승인을 받기 전까지 실행하지 않습니다.
+1. 다음 Vue 전환 단계는 legacy 게임의 전역 state·systems·rules 의존성을 목록화하고 Vue와 독립된 TypeScript game domain 기반을 준비하는 `migrate-vue-game-domain-foundation`입니다.
+2. 실제 관리자 Apply API, 비밀번호 재인증 request, dev key header와 DB write는 연결하지 않습니다. 진행하려면 작업 종류와 exact DB-write 범위를 별도로 승인받습니다.
 3. production 관리자 복구는 Vue 화면 이식과 분리하며 기존 `admin` 승격 또는 새 owner 생성의 exact DB-write 승인을 받기 전에는 실행하지 않습니다.
 
 ## 안전 경계

@@ -1,4 +1,4 @@
-# Vue Admin Catalog and Preview — v276~v282 + v381~v382
+# Vue Admin Catalog, Preview and Confirmation Gate — v276~v282 + v381~v383
 
 ## 목적
 
@@ -14,6 +14,7 @@ legacy `admin.html`을 바로 Vue로 대체하지 않고, FastAPI의 안전한 �
 - v281: 관계 row의 상세 이동과 이전 상세 돌아가기
 - v381: `isAdmin=true` route guard, Bearer GET, 비관리자 UI 비렌더링
 - v382: 생성·수정·rollback·생성 삭제·복원 dry-run Preview 작업대
+- v383: 최신 Preview 재검증과 실제 write 없는 Apply 확인 modal
 
 실제 관리자 운영 화면은 계속 루트 `admin.html`입니다. Vue `/admin`은 이식 준비와 조회 검증 화면입니다.
 
@@ -44,6 +45,19 @@ POST /api/v1/admin/change-logs/{id}/create-delete-restore-preview
 - 되돌리기는 GET change logs/detail의 availability를 확인한 뒤 맞는 Preview만 활성화합니다.
 - 결과는 diff, stale, rejected field, current mismatch, dependency blocker, validation conflict와 warning을 분리합니다.
 - Apply route·확인 문구·dev key 입력은 화면과 API client에 존재하지 않습니다.
+
+## v383 — Apply 전 확인 경계
+
+`AdminApplyConfirmationGate.vue`는 Preview 결과가 ready이고 server response의 `confirmTextRequired`가 있을 때만 열립니다.
+
+- parent workspace는 사용자가 보낸 Preview request snapshot을 메모리에 보존합니다.
+- modal의 `Preview 다시 검증`은 그 snapshot을 같은 Preview endpoint와 `dryRun: true`로 다시 보냅니다.
+- response payload를 key 정렬한 뒤 SHA-256 지문으로 비교하고, ready 상태와 exact 확인 문구까지 같아야 최신 상태로 인정합니다.
+- 결과가 바뀌면 입력 준비를 차단하고 새 Preview 결과를 처음부터 검토하도록 안내합니다.
+- 현재 비밀번호와 dev key는 component local memory에만 두며 API·저장소·로그로 보내지 않습니다. 닫기와 unmount에서 세 민감 입력을 모두 지웁니다.
+- 최종 버튼은 모든 준비 조건을 충족해도 항상 disabled입니다. Apply route, dev key header와 `dryRun: false`는 Vue source에 없습니다.
+
+이 단계는 UX와 안전 경계를 검증하는 준비입니다. 실제 재인증 request, Apply request, DB write 권한을 부여하지 않습니다.
 
 ## 현재 GET 연결 범위
 
@@ -207,7 +221,9 @@ http://127.0.0.1:5173/admin
 6. `선택 해제` 후 상세와 관계 패널이 idle 상태가 되는지 확인합니다.
 7. 브라우저 콘솔에 CORS 또는 JavaScript 오류가 없는지 확인합니다.
 8. Preview 결과에 `dryRun=true`, DB write 차단, diff·stale·차단 사유가 구분되는지 확인합니다.
+9. ready Preview에서 확인 modal을 열고 재검증·exact 문구·본인 확인·영향 확인 뒤에도 실제 Apply 버튼이 잠겨 있는지 확인합니다.
+10. modal을 닫았다 다시 열면 확인 문구·비밀번호·dev key 입력이 모두 지워졌는지 확인합니다.
 
 ## 다음 안전 단계
 
-다음은 Apply 전에 최신 Preview를 다시 확인하는 게임식 확인 modal·exact 확인 문구·dev key 경계를 설계합니다. 실제 Apply endpoint와 DB write는 별도 승인 전에는 연결하지 않습니다.
+관리자 확인 경계 준비는 완료했습니다. 전체 Vue 전환의 다음 단계는 legacy 게임의 state·systems·rules 의존성을 분리하는 typed game domain 기반입니다. 실제 Apply endpoint와 DB write는 작업 종류와 exact 범위를 별도 승인받기 전에는 연결하지 않습니다.

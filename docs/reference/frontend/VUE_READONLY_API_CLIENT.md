@@ -206,7 +206,7 @@ Vue `/admin`에서 아래 GET이 추가로 실제 호출됩니다.
 
 도메인 목록은 `response.payload.domains`, 카탈로그는 `response.payload.columns`와 `response.payload.rows`를 사용합니다.
 카탈로그는 현재 `limit=20`, `page=1`, `sort=id_asc`로 고정했습니다.
-이 문장은 v277 당시 범위 기록입니다. 현재 검색/필터/페이지네이션/detail/relations와 v382 Preview까지 연결됐고 Apply/write는 제외합니다.
+이 문장은 v277 당시 범위 기록입니다. 현재 검색/필터/페이지네이션/detail/relations, v382 Preview와 v383 response-only 확인 경계까지 연결됐고 Apply/write는 제외합니다.
 
 
 ## v278~v281 실제 연결 확장
@@ -220,3 +220,7 @@ Vue `/admin`은 기존 read-only client를 사용해 카탈로그의 `query`, `e
 ## v382 Preview client
 
 `adminPreviewApi.ts`는 생성·수정·일반 rollback·생성 삭제·복원 Preview 경로만 소유합니다. method는 POST이지만 body를 `dryRun: true`로 고정하며 확인 문구, Apply path, dev key header는 정의하지 않습니다. Pinia store는 Preview 결과와 오류를 한 곳에서 관리하고 기존 관리자 401/403 처리도 재사용합니다.
+
+## v383 response-only 확인 문구
+
+typed Preview payload는 server가 내려주는 `confirmTextRequired`를 읽을 수 있습니다. 이 값은 확인 modal 표시와 exact 일치 검사에만 사용하며 Preview request body에는 넣지 않습니다. 같은 request의 최신 Preview 재검증도 기존 Preview client만 재사용하고 Apply route, dev key header, 현재 비밀번호는 API layer로 전달하지 않습니다.

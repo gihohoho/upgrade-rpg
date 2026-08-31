@@ -14,8 +14,8 @@ RUN_SMOKE = ROOT / "tools/run_smoke_core.sh"
 
 REQUIRED_TEXT = [
     "Backend Route Map — v377",
-    "latest: v382.vue-admin-preview-workflows",
-    "strict result: vue-admin-preview-workflows",
+    "latest: v383.vue-admin-apply-confirmation-gates",
+    "strict result: vue-admin-apply-confirmation-gates",
     "actual target v377 apply: local 1 / Neon 1",
     "private email environment: prepared",
     "source 8db9bcb / preserved",
@@ -47,7 +47,7 @@ REQUIRED_TEXT = [
     "POST /api/v1/admin/master-data/create-apply",
     "POST /api/v1/game/save",
     "query 이름은 `id`",
-    "prepare-vue-admin-apply-confirmation-gates",
+    "migrate-vue-game-domain-foundation",
 ]
 
 FORBIDDEN_TEXT = [

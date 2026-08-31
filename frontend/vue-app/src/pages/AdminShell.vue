@@ -2,7 +2,7 @@
   <ShellCard
     label="Admin"
     title="관리자 조회와 변경 전 검증"
-    description="서버에서 관리자 권한을 확인한 계정에만 조회와 dry-run Preview를 표시합니다. 실제 Apply는 계속 admin.html에서만 실행합니다."
+    description="서버에서 관리자 권한을 확인한 계정에만 조회·dry-run Preview·Apply 전 확인 준비 화면을 표시합니다. 실제 Apply는 아직 연결하지 않았습니다."
   >
     <section class="admin-session-bar" aria-label="현재 관리자 계정">
       <div>
@@ -17,9 +17,9 @@
 
     <ul class="shell-list">
       <li>legacy 기준 진입점: <code>admin.html</code></li>
-      <li>현재 Vue 연결 범위: 상태 확인, 도메인·카탈로그·상세·관계 조회, 생성·수정·되돌리기 Preview</li>
+      <li>현재 Vue 연결 범위: 상태 확인, 도메인·카탈로그·상세·관계 조회, 생성·수정·되돌리기 Preview, Apply 전 확인 준비</li>
       <li>연관 row 상세 이동과 이전 상세 돌아가기는 GET 조회만 사용합니다.</li>
-      <li>Preview POST는 항상 <code>dryRun: true</code>이며 Apply/dev key/write는 계속 제외합니다.</li>
+      <li>Preview POST는 항상 <code>dryRun: true</code>입니다. 최신 결과 재검증과 민감 입력 경계는 있지만 Apply API/dev key 헤더/write는 계속 제외합니다.</li>
     </ul>
 
     <ReadOnlyApiStatusPanel
@@ -65,7 +65,7 @@
 
     <section class="api-route-preview" aria-label="Admin read-only API route preview">
       <h3>읽기 전용 관리자 API 준비 목록</h3>
-      <p>도메인·카탈로그·상세·관계 GET을 연결했습니다. 별도 Preview 작업대는 허용된 dry-run POST만 사용하고 Apply/write는 제외합니다.</p>
+      <p>도메인·카탈로그·상세·관계 GET을 연결했습니다. Preview 작업대와 확인 모달은 허용된 dry-run POST만 사용하고 Apply/write는 제외합니다.</p>
       <ul class="api-route-preview__list">
         <li v-for="route in adminRoutes" :key="route.name">
           <code>GET</code>

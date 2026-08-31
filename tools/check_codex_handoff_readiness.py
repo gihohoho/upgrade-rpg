@@ -775,9 +775,9 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require("alembic" not in production_cmd, "container startup must not run Alembic")
 
     current_markers = (
-        "v382.vue-admin-preview-workflows",
-        "vue-admin-preview-workflows",
-        "prepare-vue-admin-apply-confirmation-gates",
+        "v383.vue-admin-apply-confirmation-gates",
+        "vue-admin-apply-confirmation-gates",
+        "migrate-vue-game-domain-foundation",
     )
     for path, text in (
         ("AGENTS.md", agents),

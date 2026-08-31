@@ -2,19 +2,19 @@
   <section class="admin-preview-workspace" aria-labelledby="admin-preview-title">
     <div class="admin-preview-workspace__header">
       <div>
-        <p class="admin-readonly-panel__eyebrow">v382 · guarded Preview workspace</p>
+        <p class="admin-readonly-panel__eyebrow">v383 · guarded confirmation workspace</p>
         <h3 id="admin-preview-title">변경 전 안전 미리보기</h3>
         <p>
           생성·수정·되돌리기 요청을 <code>dryRun: true</code>로만 검사합니다.
           서버가 계산한 diff, stale 충돌과 차단 사유를 확인할 수 있지만 DB에는 적용되지 않습니다.
         </p>
       </div>
-      <span class="admin-preview-lock"><i aria-hidden="true" /> Apply 미연결</span>
+      <span class="admin-preview-lock"><i aria-hidden="true" /> Apply 쓰기 잠금</span>
     </div>
 
     <div class="admin-preview-boundary" role="note">
       <strong>안전 경계</strong>
-      <span>이 화면에는 Apply endpoint, 확인 문구, dev key 입력이 없습니다. 모든 POST는 Preview 전용 경로로만 제한됩니다.</span>
+      <span>최신 Preview 재검증과 확인 입력 경계만 준비했습니다. Apply endpoint와 dev key 헤더는 연결하지 않았고 모든 POST는 Preview 전용 경로로만 제한됩니다.</span>
     </div>
 
     <nav class="admin-preview-tabs" aria-label="관리자 Preview 종류">
@@ -239,14 +239,44 @@
         <h5>서버 경고</h5>
         <ul class="admin-preview-warning-list"><li v-for="warning in previewWarnings" :key="warning">{{ translateReason(warning) }}</li></ul>
       </section>
+
+      <div class="admin-preview-apply-preparation">
+        <div>
+          <strong>Apply 전 확인 절차</strong>
+          <span v-if="previewReady && confirmationText">서버 확인 문구가 포함된 안전한 Preview입니다. 실제 쓰기 없이 마지막 확인 경계를 점검할 수 있습니다.</span>
+          <span v-else-if="previewReady">Preview는 통과했지만 서버 확인 문구가 없어 준비 절차를 열 수 없습니다.</span>
+          <span v-else>차단 사유를 해결하고 Preview를 다시 실행해야 확인 절차를 준비할 수 있습니다.</span>
+        </div>
+        <button
+          type="button"
+          class="admin-readonly-panel__button"
+          :disabled="!applyGateAvailable"
+          data-testid="admin-apply-gate-open"
+          @click="openApplyGate"
+        >
+          Apply 확인 절차 준비
+        </button>
+      </div>
     </section>
+
+    <AdminApplyConfirmationGate
+      :open="applyGateOpen"
+      :title="gatePreview?.title || previewTitle"
+      :confirmation-text="gatePreview?.confirmationText || ''"
+      :baseline-fingerprint="gatePreview?.baselineFingerprint || ''"
+      :revalidation-state="revalidationState"
+      :revalidation-message="revalidationMessage"
+      @close="closeApplyGate"
+      @revalidate="revalidateLatestPreview"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useAdminStore } from '@/stores';
-import type { AdminPreviewChange, AdminPreviewKind, AdminPreviewPayload, JsonRecord } from '@/api/adminPreviewApi';
+import AdminApplyConfirmationGate from '@/components/admin/AdminApplyConfirmationGate.vue';
+import type { AdminPreviewChange, AdminPreviewEnvelope, AdminPreviewKind, AdminPreviewPayload, JsonRecord } from '@/api/adminPreviewApi';
 
 interface BlueprintOption { value: unknown; label?: string }
 interface BlueprintField { key: string; label?: string; inputKind?: string; required?: boolean; unique?: boolean; futureEditable?: boolean; defaultValue?: unknown; note?: string; relation?: { options?: BlueprintOption[] } }
@@ -257,6 +287,16 @@ interface ChangeLogDetail extends JsonRecord { rollback?: { available?: boolean 
 type WorkspaceTab = 'create' | 'edit' | 'rollback';
 type RollbackKind = Extract<AdminPreviewKind, 'rollback' | 'create-delete' | 'create-delete-restore'>;
 type LoadStatus = 'idle' | 'loading' | 'success' | 'error';
+type RevalidationState = 'idle' | 'checking' | 'success' | 'changed' | 'error';
+type PreviewRequest =
+  | { kind: 'create'; domain: string; draft: JsonRecord; reason: string }
+  | { kind: 'edit'; domain: string; rowId: number; draft: JsonRecord; baseValues: JsonRecord; reason: string }
+  | { kind: RollbackKind; changeLogId: number; reason: string };
+interface GatePreview {
+  title: string;
+  confirmationText: string;
+  baselineFingerprint: string;
+}
 
 const props = defineProps<{ domain: string; domainLabel?: string; rowId?: number; rowTitle?: string }>();
 const admin = useAdminStore();
@@ -285,6 +325,12 @@ const changeLogDetail = ref<ChangeLogDetail | null>(null);
 const changeLogId = ref<number | null>(null);
 const rollbackKind = ref<RollbackKind>('rollback');
 const rollbackReason = ref('');
+const lastPreviewRequest = ref<PreviewRequest | null>(null);
+const lastPreviewFingerprint = ref('');
+const applyGateOpen = ref(false);
+const gatePreview = ref<GatePreview | null>(null);
+const revalidationState = ref<RevalidationState>('idle');
+const revalidationMessage = ref('같은 초안을 최신 서버 상태로 다시 검증해 주세요.');
 
 let blueprintController: AbortController | null = null;
 let editController: AbortController | null = null;
@@ -295,6 +341,7 @@ const blueprintFields = computed(() => (blueprint.value?.fields || []).filter((f
 const validChangeLogId = computed(() => Number.isInteger(Number(changeLogId.value)) && Number(changeLogId.value) > 0);
 const previewPayload = computed<AdminPreviewPayload | null>(() => admin.previewResult?.payload || null);
 const previewWarnings = computed(() => Array.isArray(previewPayload.value?.warnings) ? previewPayload.value!.warnings! : []);
+const confirmationText = computed(() => String(previewPayload.value?.confirmTextRequired || '').trim());
 
 const rollbackOptions = computed(() => [
   { kind: 'rollback' as const, label: '일반 수정 되돌리기', description: 'update 이력의 현재값이 변경 직후 값과 같은지 검사', available: availability('rollback') },
@@ -312,6 +359,12 @@ const previewReady = computed(() => {
   if (admin.previewKind === 'create-delete') return payload.createDeleteReady === true;
   return payload.createDeleteRestoreReady === true;
 });
+const applyGateAvailable = computed(() => (
+  previewReady.value
+  && confirmationText.value.length > 0
+  && Boolean(lastPreviewRequest.value)
+  && lastPreviewFingerprint.value.length > 0
+));
 
 const previewTitle = computed(() => ({
   create: '신규 생성 초안', edit: '선택 row 수정 초안', rollback: '일반 수정 되돌리기',
@@ -353,7 +406,7 @@ function firstArray(...values: unknown[]): AdminPreviewChange[] {
 
 function setTab(tab: WorkspaceTab) {
   activeTab.value = tab;
-  admin.clearPreview();
+  invalidatePreview();
   if (tab === 'rollback' && changeLogsStatus.value === 'idle') void loadChangeLogs();
 }
 
@@ -371,7 +424,7 @@ function isNumberField(field: BlueprintField) {
 
 function resetCreateDraft() {
   createDraft.value = { ...(blueprint.value?.defaultDraft || {}) };
-  admin.clearPreview();
+  invalidatePreview();
 }
 
 async function loadBlueprint() {
@@ -398,7 +451,8 @@ async function loadBlueprint() {
 
 async function runCreatePreview() {
   if (!props.domain || !blueprintFields.value.length) return;
-  try { await admin.previewCreate({ domain: props.domain, draft: { ...createDraft.value }, reason: createReason.value }); } catch { /* store renders the error */ }
+  const request: PreviewRequest = { kind: 'create', domain: props.domain, draft: cloneRecord(createDraft.value), reason: createReason.value };
+  await runAndRememberPreview(request);
 }
 
 async function loadEditBaseline() {
@@ -419,7 +473,7 @@ async function loadEditBaseline() {
     editSelectedKeys.value = [];
     editStatus.value = payload?.status === 'loaded' ? 'success' : 'error';
     if (editStatus.value === 'error') editError.value = '선택한 row의 현재값을 불러오지 못했습니다.';
-    admin.clearPreview();
+    invalidatePreview();
   } catch (error) {
     if (controller.signal.aborted || editController !== controller) return;
     editStatus.value = 'error';
@@ -435,7 +489,8 @@ async function runEditPreview() {
   if (!props.domain || !props.rowId || !editSelectedKeys.value.length) return;
   const draft = Object.fromEntries(editSelectedKeys.value.map((key) => [key, editDraft.value[key]]));
   const baseValues = Object.fromEntries(editSelectedKeys.value.map((key) => [key, editBaseValues.value[key]]));
-  try { await admin.previewEdit({ domain: props.domain, rowId: props.rowId, draft, baseValues, reason: editReason.value }); } catch { /* store renders the error */ }
+  const request: PreviewRequest = { kind: 'edit', domain: props.domain, rowId: props.rowId, draft: cloneRecord(draft), baseValues: cloneRecord(baseValues), reason: editReason.value };
+  await runAndRememberPreview(request);
 }
 
 async function loadChangeLogs() {
@@ -475,7 +530,7 @@ async function loadChangeLogDetail() {
     changeLogDetailStatus.value = 'success';
     const firstAvailable = rollbackOptions.value.find((option) => option.available === true);
     if (firstAvailable) rollbackKind.value = firstAvailable.kind;
-    admin.clearPreview();
+    invalidatePreview();
   } catch (error) {
     if (requestId !== logDetailRequestId) return;
     changeLogDetail.value = null;
@@ -491,12 +546,105 @@ function availability(key: 'rollback' | 'createDelete' | 'createDeleteRestore'):
 
 async function runRollbackPreview() {
   if (!validChangeLogId.value || !rollbackKindAvailable.value) return;
-  const payload = { changeLogId: Number(changeLogId.value), reason: rollbackReason.value };
+  const request: PreviewRequest = { kind: rollbackKind.value, changeLogId: Number(changeLogId.value), reason: rollbackReason.value };
+  await runAndRememberPreview(request);
+}
+
+async function executePreview(request: PreviewRequest): Promise<AdminPreviewEnvelope> {
+  if (request.kind === 'create') return admin.previewCreate({ domain: request.domain, draft: cloneRecord(request.draft), reason: request.reason });
+  if (request.kind === 'edit') return admin.previewEdit({ domain: request.domain, rowId: request.rowId, draft: cloneRecord(request.draft), baseValues: cloneRecord(request.baseValues), reason: request.reason });
+  const payload = { changeLogId: request.changeLogId, reason: request.reason };
+  if (request.kind === 'rollback') return admin.previewRollback(payload);
+  if (request.kind === 'create-delete') return admin.previewCreateDelete(payload);
+  return admin.previewCreateDeleteRestore(payload);
+}
+
+async function runAndRememberPreview(request: PreviewRequest) {
+  closeApplyGate();
   try {
-    if (rollbackKind.value === 'rollback') await admin.previewRollback(payload);
-    else if (rollbackKind.value === 'create-delete') await admin.previewCreateDelete(payload);
-    else await admin.previewCreateDeleteRestore(payload);
+    const response = await executePreview(request);
+    const fingerprint = await fingerprintPayload(response.payload);
+    if (admin.previewResult !== response) return;
+    lastPreviewRequest.value = clonePreviewRequest(request);
+    lastPreviewFingerprint.value = fingerprint;
   } catch { /* store renders the error */ }
+}
+
+function openApplyGate() {
+  if (!applyGateAvailable.value) return;
+  gatePreview.value = {
+    title: previewTitle.value,
+    confirmationText: confirmationText.value,
+    baselineFingerprint: lastPreviewFingerprint.value,
+  };
+  revalidationState.value = 'idle';
+  revalidationMessage.value = '같은 초안을 최신 서버 상태로 다시 검증해 주세요.';
+  applyGateOpen.value = true;
+}
+
+function closeApplyGate() {
+  applyGateOpen.value = false;
+  gatePreview.value = null;
+  revalidationState.value = 'idle';
+  revalidationMessage.value = '같은 초안을 최신 서버 상태로 다시 검증해 주세요.';
+}
+
+async function revalidateLatestPreview() {
+  if (!lastPreviewRequest.value || !gatePreview.value) return;
+  const activeGate = gatePreview.value;
+  revalidationState.value = 'checking';
+  revalidationMessage.value = '서버에서 같은 Preview를 다시 계산하고 있습니다.';
+  try {
+    const response = await executePreview(clonePreviewRequest(lastPreviewRequest.value));
+    const latestFingerprint = await fingerprintPayload(response.payload);
+    if (!applyGateOpen.value || gatePreview.value !== activeGate) return;
+    const stillReady = previewReady.value;
+    const sameConfirmation = String(response.payload.confirmTextRequired || '').trim() === activeGate.confirmationText;
+    if (latestFingerprint === activeGate.baselineFingerprint && stillReady && sameConfirmation) {
+      revalidationState.value = 'success';
+      revalidationMessage.value = '최신 Preview가 직전 결과와 일치하고 적용 준비 상태도 유지됩니다.';
+      return;
+    }
+    lastPreviewFingerprint.value = latestFingerprint;
+    revalidationState.value = 'changed';
+    revalidationMessage.value = '서버 상태 또는 Preview 결과가 달라졌습니다. 창을 닫고 새 결과를 처음부터 검토해 주세요.';
+  } catch (error) {
+    if (!applyGateOpen.value || gatePreview.value !== activeGate) return;
+    revalidationState.value = 'error';
+    revalidationMessage.value = formatError(error);
+  }
+}
+
+function invalidatePreview() {
+  admin.clearPreview();
+  lastPreviewRequest.value = null;
+  lastPreviewFingerprint.value = '';
+  closeApplyGate();
+}
+
+function cloneRecord(value: JsonRecord): JsonRecord {
+  return JSON.parse(JSON.stringify(value)) as JsonRecord;
+}
+
+function clonePreviewRequest(request: PreviewRequest): PreviewRequest {
+  return JSON.parse(JSON.stringify(request)) as PreviewRequest;
+}
+
+function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value as JsonRecord)
+      .filter(([, item]) => item !== undefined)
+      .sort(([left], [right]) => left.localeCompare(right));
+    return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${stableJson(item)}`).join(',')}}`;
+  }
+  return JSON.stringify(value) ?? 'null';
+}
+
+async function fingerprintPayload(payload: AdminPreviewPayload) {
+  const bytes = new TextEncoder().encode(stableJson(payload));
+  const digest = await window.crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
 function formatValue(value: unknown) {
@@ -552,11 +700,31 @@ watch(() => [props.domain, props.rowId], () => {
   if (props.domain && props.rowId) void loadEditBaseline();
 });
 
+watch(createDraft, () => {
+  if (admin.previewKind === 'create') invalidatePreview();
+}, { deep: true });
+
+watch(createReason, () => {
+  if (admin.previewKind === 'create') invalidatePreview();
+});
+
+watch([editDraft, editSelectedKeys], () => {
+  if (admin.previewKind === 'edit') invalidatePreview();
+}, { deep: true });
+
+watch(editReason, () => {
+  if (admin.previewKind === 'edit') invalidatePreview();
+});
+
+watch([changeLogId, rollbackKind, rollbackReason], () => {
+  if (admin.previewKind && !['create', 'edit'].includes(admin.previewKind)) invalidatePreview();
+});
+
 onBeforeUnmount(() => {
   logDetailRequestId += 1;
   blueprintController?.abort();
   editController?.abort();
   logController?.abort();
-  admin.clearPreview();
+  invalidatePreview();
 });
 </script>
