@@ -1,13 +1,13 @@
-# Current Status — v388
+# Current Status — v389
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v388.vue-game-inventory-equipment-ui-foundation
-strict result: vue-game-inventory-equipment-ui-foundation
-next safe stage: migrate-vue-game-storage-trash-ui-foundation
+latest: v389.vue-game-storage-trash-ui-foundation
+strict result: vue-game-storage-trash-ui-foundation
+next safe stage: migrate-vue-game-skill-enhancement-ui-foundation
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -25,25 +25,19 @@ v385 production approval/execution: no/no
 v386 production approval/execution: no/no
 v387 production approval/execution: no/no
 v388 production approval/execution: no/no
+v389 production approval/execution: no/no
 ```
 
-## v388 인벤토리·장비 UI 기반
+## v389 보관함·휴지통 UI 기반
 
-- master-data item template을 Pinia에 보존하고 순수 adapter가 15개 장비·24개 가방 표시 슬롯을 만듭니다. 60칸·첫 빈 칸·상대 순서 보존 정렬을 typed slot helper로 계산하며 입력은 바꾸지 않습니다.
-- 선택과 `위로 정렬 미리보기`는 `inventory.preview.open/compact` 표시만 바꿉니다. 실제 snapshot·장착·사용·판매·강화·보관함/휴지통 이동·save는 잠겨 있습니다.
-- 마을 왕복·접속 캐릭터 바 비노출·15/24 슬롯·정렬 전후 첫 빈 칸 2/8번·선택 유지·desktop/mobile 4열·가로 넘침 없음·Vite error overlay 0과 focused smoke가 PASS했습니다. backend·DB·legacy·Render·배포는 바꾸지 않았습니다.
+- 순수 adapter가 보관함·휴지통을 각각 20개 표시 슬롯과 60칸 계약으로 만들고, 두 공간의 첫 빈 칸과 상대 순서 보존 정렬을 독립적으로 계산합니다. source 입력은 바꾸지 않습니다.
+- 선택과 두 `위로 정렬 미리보기`만 화면 상태를 바꿉니다. 가방/보관함 이동·휴지통 이동/복구·영구 삭제·snapshot·save는 잠겨 있습니다.
+- 마을 왕복·접속 캐릭터 바 비노출·각 20슬롯·정렬 전후 첫 빈 칸 2/7번·선택 유지·독립 정렬·desktop/mobile 4열·가로 넘침 없음·Vite error overlay 0과 focused smoke가 PASS했습니다. backend·DB·legacy·Render·배포는 바꾸지 않았습니다.
 
-## v387 보스 전투 UI 기반
+## v386~v388 이전 Vue 게임 UI
 
-- 기존 master-data 요청의 활성 보스를 Pinia에 보존하고 순수 adapter가 타입·티어·HP·소환 조건·쿨타임, typed 스킬 드랍률과 첫 장비 스킬 보정 규칙을 표시합니다. source 입력은 바꾸지 않습니다.
-- 일반/특수 탭과 보스 선택은 `boss.preview.select` 표시 상태만 바꾸며 실제 소환·snapshot·HP·난수 드랍·보상·쿨타임·save·timer를 변경하지 않습니다.
-- 마을→보스→마을, 보스에서 접속 캐릭터 바 비노출, desktop/mobile·단일 열·가로 넘침 없음·console 0과 Vue 전체 focused smoke/build가 PASS했습니다. backend·DB·legacy·Render와 v387 배포는 변경하지 않았습니다.
-
-## v386 필드 전투 UI 기반
-
-- `baseUrl`을 제거하고 `@/* → ./src/*` alias를 유지했습니다. TypeScript 5.9 설정 해석과 Vue typecheck가 PASS했습니다.
-- 기존 master-data 요청의 활성 필드를 표시 전용 adapter로 넘겨 최근 저장 구역, HP·골드·입장 조건·기본 공격·스킬과 action 안내를 표시합니다. 구역 선택은 화면만 바꾸며 snapshot·HP·골드·save·timer·난수를 변경하지 않습니다.
-- 마을→필드→마을, 필드에서 접속 캐릭터 바 비노출, desktop/mobile 4개 묶음·가로 넘침 없음·console과 focused smoke가 PASS했습니다. backend·DB·legacy·Render와 v386 배포는 변경하지 않았습니다.
+- v386~v387은 `baseUrl` 제거와 master-data 필드·보스의 표시 전용 전투 UI를, v388은 15개 장비·24개 가방 슬롯과 첫 빈 칸·상대 순서 보존 정렬을 이식했습니다.
+- 실제 HP·골드·보상·쿨타임·장착·사용·판매·강화·이동·save·timer·난수는 바꾸지 않았고 각 desktop/mobile·focused smoke가 PASS했습니다.
 
 ## v385 마을·HUD
 
@@ -135,7 +129,7 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. Vue 전체 전환 순서에 따라 보관함·휴지통 표시와 빈 칸 유지·첫 빈 칸·수동 정렬 domain adapter 기반을 이식합니다. 실제 snapshot load/save·아이템 이동/복구/삭제·자동 저장은 아직 연결하지 않습니다.
+1. Vue 전체 전환 순서에 따라 typed skill/enhancement rule을 사용하는 스킬·강화 표시 UI를 이식합니다. 실제 스킬 사용·강화·재료 소비·snapshot load/save·자동 저장은 아직 연결하지 않습니다.
 2. 실제 관리자 Apply API·재인증·dev key header·DB write 연결은 이번 단계에 포함되지 않았습니다. 필요하면 작업 종류와 정확한 DB-write 범위를 별도 승인받습니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 

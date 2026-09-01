@@ -62,8 +62,8 @@ def main() -> None:
         raise AssertionError(f"Missing Vue read-only API status panel files: {missing}")
 
     package = json.loads((VUE_APP / "package.json").read_text(encoding="utf-8"))
-    if package.get("version") != "0.0.0-v388":
-        raise AssertionError("Vue package version must be 0.0.0-v388")
+    if package.get("version") != "0.0.0-v389":
+        raise AssertionError("Vue package version must be 0.0.0-v389")
 
     health_api = read("src/api/healthReadOnlyApi.js")
     assert_contains(health_api, "HEALTH_READONLY_ROUTES", "health API route import")

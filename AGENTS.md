@@ -90,9 +90,9 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v388.vue-game-inventory-equipment-ui-foundation
-strict result: vue-game-inventory-equipment-ui-foundation
-next safe stage: migrate-vue-game-storage-trash-ui-foundation
+latest: v389.vue-game-storage-trash-ui-foundation
+strict result: vue-game-storage-trash-ui-foundation
+next safe stage: migrate-vue-game-skill-enhancement-ui-foundation
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -111,9 +111,10 @@ v385 production approval/execution: no/no
 v386 production approval/execution: no/no
 v387 production approval/execution: no/no
 v388 production approval/execution: no/no
+v389 production approval/execution: no/no
 ```
 
-- v388은 master-data 아이템을 15개 장비·24개 가방 슬롯 표시 모델로 바꾸고 빈 칸·첫 빈 칸·상대 순서 보존 수동 정렬 규칙을 연결했습니다. 실제 snapshot·장착·사용·판매·강화·이동·save는 잠겨 있으며 desktop/mobile·focused smoke가 PASS했습니다.
+- v388~v389는 master-data 아이템을 장비·가방·보관함·휴지통 표시 모델로 바꾸고 빈 칸·첫 빈 칸·상대 순서 보존 독립 정렬 규칙을 연결했습니다. 실제 snapshot·장착·사용·판매·강화·이동·복구·삭제·save는 잠겨 있으며 desktop/mobile·focused smoke가 PASS했습니다.
 - v386~v387은 폐기 예정 `baseUrl`을 제거하고 master-data 필드·보스와 typed 전투 규칙을 표시 전용 UI로 이식했습니다. HP·골드·보상·쿨타임·save·timer·난수는 바꾸지 않았습니다.
 - v385는 캐릭터 선택 뒤 마을 전용 접속 캐릭터 바, 시설, HUD, 능력치와 기본 스킬을 typed adapter/Pinia로 이식했습니다. 슬롯 요약과 기본 domain 상태를 화면에서 구분하고 snapshot load/save·전투 timer는 시작하지 않았으며 desktop/mobile·modal·focused smoke가 PASS했습니다.
 - v384는 legacy game JS 8개/3,481줄의 전역 의존성을 보고서로 고정하고 state/save·slot·공격/필드·보스 규칙·action result를 Vue 독립 typed domain으로 분리했습니다. legacy 동등성·순수 경계·Vue build/focused smoke가 PASS했고 v384 배포는 없습니다.

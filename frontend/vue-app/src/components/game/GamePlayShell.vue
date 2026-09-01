@@ -1,5 +1,6 @@
 <template>
-  <GameInventoryEquipmentShell v-if="game.isInventory" />
+  <GameStorageTrashShell v-if="game.isStorageTrash" />
+  <GameInventoryEquipmentShell v-else-if="game.isInventory" />
   <GameBossCombatShell v-else-if="game.isBoss" />
   <GameFieldCombatShell v-else-if="game.isField" />
   <GameTownShell v-else />
@@ -7,6 +8,7 @@
 
 <script setup lang="ts">
 import GameInventoryEquipmentShell from './GameInventoryEquipmentShell.vue';
+import GameStorageTrashShell from './GameStorageTrashShell.vue';
 import GameBossCombatShell from './GameBossCombatShell.vue';
 import GameFieldCombatShell from './GameFieldCombatShell.vue';
 import GameTownShell from './GameTownShell.vue';

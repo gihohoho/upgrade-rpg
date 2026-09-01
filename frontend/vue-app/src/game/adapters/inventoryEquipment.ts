@@ -98,7 +98,7 @@ const FRAME_LABELS: Record<ItemFrameTone, string> = {
 };
 
 export function createInventoryEquipmentViewModel(source: InventoryEquipmentSource): InventoryEquipmentViewModel {
-  const items = source.itemTemplates.slice().sort(compareTemplates).map(normalizeItem);
+  const items = source.itemTemplates.slice().sort(compareTemplates).map(normalizeInventoryItemTemplate);
   if (!items.length) throw new Error('아이템 master-data가 없습니다.');
 
   const equipmentSlots = createEquipmentSlots(items);
@@ -157,7 +157,7 @@ function compareTemplates(left: ItemTemplateOption, right: ItemTemplateOption): 
     || left.code.localeCompare(right.code);
 }
 
-function normalizeItem(item: ItemTemplateOption): InventoryItemView {
+export function normalizeInventoryItemTemplate(item: ItemTemplateOption): InventoryItemView {
   const options = asRecord(item.options);
   const raw = asRecord(options.raw);
   const tier = nullableTier(options.tier ?? raw.tier ?? item.grade);

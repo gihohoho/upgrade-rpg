@@ -1,7 +1,10 @@
 <template>
   <div v-if="inventory && town" class="inventory-shell" data-zone="inventory">
     <header class="inventory-command-bar">
-      <button type="button" @click="game.returnTown"><span aria-hidden="true">←</span> 마을로 돌아가기</button>
+      <div class="inventory-command-bar__actions">
+        <button type="button" @click="game.returnTown"><span aria-hidden="true">←</span> 마을로</button>
+        <button type="button" @click="game.enterStorageTrashPreview"><span aria-hidden="true">▦</span> 보관함·휴지통</button>
+      </div>
       <div>
         <span>Inventory · equipment UI</span>
         <strong>{{ inventory.characterName }}의 장비 보관 화면</strong>
