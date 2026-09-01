@@ -17,14 +17,14 @@ from pathlib import Path
 
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/POSTGRES_ALEMBIC_READINESS.md")
-CHECKPOINT_VERSION = "v386.vue-game-field-combat-ui-foundation"
-CHECKPOINT_RESULT = "vue-game-field-combat-ui-foundation"
+CHECKPOINT_VERSION = "v387.vue-game-boss-combat-ui-foundation"
+CHECKPOINT_RESULT = "vue-game-boss-combat-ui-foundation"
 SOURCE_GRAPH_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_DB_REVISION = SOURCE_GRAPH_HEAD
 NEON_APPLIED_DB_REVISION = SOURCE_GRAPH_HEAD
 LOCAL_APPLIED_DB_APPLICATION_TABLES = 25
 NEON_APPLIED_DB_APPLICATION_TABLES = 25
-NEXT_SAFE_STAGE = "migrate-vue-game-boss-combat-ui-foundation"
+NEXT_SAFE_STAGE = "migrate-vue-game-inventory-equipment-ui-foundation"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 

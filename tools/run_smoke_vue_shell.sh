@@ -17,6 +17,7 @@ python tools/report_vue_game_domain_dependencies.py --check
 node tools/smoke/frontend/smoke_vue_game_domain_foundation.js
 node tools/smoke/frontend/smoke_vue_game_town_hud.js
 node tools/smoke/frontend/smoke_vue_game_field_combat_ui.js
+node tools/smoke/frontend/smoke_vue_game_boss_combat_ui.js
 node --check frontend/vue-app/vite.config.js
 
 if [ -d "frontend/vue-app/node_modules" ]; then

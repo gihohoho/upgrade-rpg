@@ -183,9 +183,9 @@ node tools/smoke/frontend/smoke_vue_game_domain_foundation.js
 
 ## 다음 안전 단계
 
-`next safe stage: migrate-vue-game-boss-combat-ui-foundation`
+`next safe stage: migrate-vue-game-inventory-equipment-ui-foundation`
 
-v386에서 필드 전투 UI와 action adapter를 연결했습니다. 다음은 timer 없이 보스 전투 UI와 rule adapter 기반을 준비하며, legacy 공개 화면, 저장 load/save, 전투 timer, 관리자 Apply, DB write와 production 배포는 변경하지 않습니다.
+v387에서 보스 전투 UI와 rule adapter를 연결했습니다. 다음은 실제 item write 없이 인벤토리·장비 UI와 slot adapter 기반을 준비하며, legacy 공개 화면, 저장 load/save, 전투 timer, 관리자 Apply, DB write와 production 배포는 변경하지 않습니다.
 """
 
 

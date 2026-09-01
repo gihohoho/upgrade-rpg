@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import { accountApi } from '@/api/accountApi';
 import { authApi } from '@/api/authApi';
 import { ApiRequestError } from '@/api/http';
-import type { AccountCharacterSlot, AuthUser, CharacterOption, FieldZoneOption } from '@/api/contracts';
+import type { AccountCharacterSlot, AuthUser, BossOption, CharacterOption, FieldZoneOption } from '@/api/contracts';
 
 const ACCESS_TOKEN_KEY = 'upgradeRpgAccountAccessToken';
 const SELECTED_CHARACTER_KEY = 'upgradeRpgSelectedAccountCharacter';
@@ -84,6 +84,7 @@ export const useAccountStore = defineStore('account', () => {
     { code: 'weapon_master', name: '검신', description: '검을 다루는 기본 캐릭터', isEnabled: true },
   ]);
   const fieldZones = ref<FieldZoneOption[]>([]);
+  const bosses = ref<BossOption[]>([]);
   const selectedCharacter = ref<AccountCharacterSlot | null>(null);
   const pendingEmail = ref('');
   const notice = ref('');
@@ -196,6 +197,13 @@ export const useAccountStore = defineStore('account', () => {
         fieldZones.value = (optionsResult.value.payload.fieldZones ?? [])
           .filter((zone) => zone.isEnabled)
           .sort((left, right) => left.sortOrder - right.sortOrder || left.code.localeCompare(right.code));
+        bosses.value = (optionsResult.value.payload.bosses ?? [])
+          .filter((boss) => boss.isEnabled)
+          .sort((left, right) => (
+            left.bossType.localeCompare(right.bossType)
+            || (left.tier ?? Number.MAX_SAFE_INTEGER) - (right.tier ?? Number.MAX_SAFE_INTEGER)
+            || left.code.localeCompare(right.code)
+          ));
       }
       selectedCharacter.value = options.restoreSelection === false ? null : restoreSelectedCharacter();
       stage.value = selectedCharacter.value ? 'ready' : 'characters';
@@ -410,6 +418,7 @@ export const useAccountStore = defineStore('account', () => {
     slots,
     characterOptions,
     fieldZones,
+    bosses,
     selectedCharacter,
     pendingEmail,
     notice,

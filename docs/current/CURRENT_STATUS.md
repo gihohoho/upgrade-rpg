@@ -1,13 +1,13 @@
-# Current Status — v386
+# Current Status — v387
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v386.vue-game-field-combat-ui-foundation
-strict result: vue-game-field-combat-ui-foundation
-next safe stage: migrate-vue-game-boss-combat-ui-foundation
+latest: v387.vue-game-boss-combat-ui-foundation
+strict result: vue-game-boss-combat-ui-foundation
+next safe stage: migrate-vue-game-inventory-equipment-ui-foundation
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -23,7 +23,14 @@ v383 production approval/execution: no/no
 v384 production approval/execution: no/no
 v385 production approval/execution: no/no
 v386 production approval/execution: no/no
+v387 production approval/execution: no/no
 ```
+
+## v387 보스 전투 UI 기반
+
+- 기존 master-data 요청의 활성 보스를 Pinia에 보존하고 순수 adapter가 타입·티어·HP·소환 조건·쿨타임, typed 스킬 드랍률과 첫 장비 스킬 보정 규칙을 표시합니다. source 입력은 바꾸지 않습니다.
+- 일반/특수 탭과 보스 선택은 `boss.preview.select` 표시 상태만 바꾸며 실제 소환·snapshot·HP·난수 드랍·보상·쿨타임·save·timer를 변경하지 않습니다.
+- 마을→보스→마을, 보스에서 접속 캐릭터 바 비노출, desktop/mobile·단일 열·가로 넘침 없음·console 0과 Vue 전체 focused smoke/build가 PASS했습니다. backend·DB·legacy·Render와 v387 배포는 변경하지 않았습니다.
 
 ## v386 필드 전투 UI 기반
 
@@ -121,7 +128,7 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. Vue 전체 전환 순서에 따라 보스 목록·전투 표시와 domain rule adapter 기반을 이식합니다. 실제 snapshot load/save·자동 저장·전투 timer와 난수 orchestration은 아직 연결하지 않습니다.
+1. Vue 전체 전환 순서에 따라 인벤토리·장비 표시와 빈 칸 유지·첫 빈 칸·수동 정렬 domain adapter 기반을 이식합니다. 실제 snapshot load/save·아이템 이동/사용·자동 저장은 아직 연결하지 않습니다.
 2. 실제 관리자 Apply API·재인증·dev key header·DB write 연결은 이번 단계에 포함되지 않았습니다. 필요하면 작업 종류와 정확한 DB-write 범위를 별도 승인받습니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 

@@ -1,9 +1,11 @@
 <template>
-  <GameFieldCombatShell v-if="game.isField" />
+  <GameBossCombatShell v-if="game.isBoss" />
+  <GameFieldCombatShell v-else-if="game.isField" />
   <GameTownShell v-else />
 </template>
 
 <script setup lang="ts">
+import GameBossCombatShell from './GameBossCombatShell.vue';
 import GameFieldCombatShell from './GameFieldCombatShell.vue';
 import GameTownShell from './GameTownShell.vue';
 import { useGameStore } from '@/stores';

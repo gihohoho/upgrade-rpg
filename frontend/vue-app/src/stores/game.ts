@@ -1,6 +1,7 @@
 import { computed, ref, shallowRef } from 'vue';
 import { defineStore } from 'pinia';
-import type { AccountCharacterSlot, FieldZoneOption } from '@/api/contracts';
+import type { AccountCharacterSlot, BossOption, FieldZoneOption } from '@/api/contracts';
+import { createBossCombatViewModel, type BossCombatViewModel } from '@/game/adapters/bossCombat';
 import { createFieldCombatViewModel, type FieldCombatViewModel } from '@/game/adapters/fieldCombat';
 import {
   createTownHudViewModel,
@@ -13,7 +14,9 @@ export const useGameStore = defineStore('game', () => {
   const model = shallowRef<TownHudViewModel | null>(null);
   const fieldModel = shallowRef<FieldCombatViewModel | null>(null);
   const fieldZoneSources = shallowRef<FieldZoneOption[]>([]);
-  const screen = ref<'town' | 'field'>('town');
+  const bossModel = shallowRef<BossCombatViewModel | null>(null);
+  const bossSources = shallowRef<BossOption[]>([]);
+  const screen = ref<'town' | 'field' | 'boss'>('town');
   const contextSignature = ref('');
   const activeFeatureKey = ref<TownFeatureKey | null>(null);
 
@@ -22,6 +25,7 @@ export const useGameStore = defineStore('game', () => {
   ));
   const isTown = computed(() => screen.value === 'town' && model.value?.zoneType === 'town');
   const isField = computed(() => screen.value === 'field' && fieldModel.value?.zoneType === 'field');
+  const isBoss = computed(() => screen.value === 'boss' && bossModel.value?.zoneType === 'boss');
 
   function enterTown(slot: AccountCharacterSlot, characterLabel: string) {
     if (!slot.occupied || !slot.accountCharacterId || !slot.accountCharacter) {
@@ -47,6 +51,8 @@ export const useGameStore = defineStore('game', () => {
     contextSignature.value = signature;
     fieldModel.value = null;
     fieldZoneSources.value = [];
+    bossModel.value = null;
+    bossSources.value = [];
     activeFeatureKey.value = null;
   }
 
@@ -77,9 +83,34 @@ export const useGameStore = defineStore('game', () => {
     });
   }
 
+  function enterBossPreview(bosses: BossOption[]) {
+    if (!model.value || !bosses.length) return false;
+    bossSources.value = bosses.slice();
+    bossModel.value = createBossCombatViewModel({
+      town: model.value,
+      bosses: bossSources.value,
+      preferredIndex: 0,
+      createdAt: 0,
+    });
+    screen.value = 'boss';
+    activeFeatureKey.value = null;
+    return true;
+  }
+
+  function selectBossPreview(index: number) {
+    if (!model.value || !bossSources.value.length) return;
+    bossModel.value = createBossCombatViewModel({
+      town: model.value,
+      bosses: bossSources.value,
+      preferredIndex: index,
+      createdAt: 0,
+    });
+  }
+
   function returnTown() {
     screen.value = 'town';
     fieldModel.value = null;
+    bossModel.value = null;
   }
 
   function openFeature(key: TownFeatureKey) {
@@ -94,6 +125,8 @@ export const useGameStore = defineStore('game', () => {
     model.value = null;
     fieldModel.value = null;
     fieldZoneSources.value = [];
+    bossModel.value = null;
+    bossSources.value = [];
     screen.value = 'town';
     contextSignature.value = '';
     activeFeatureKey.value = null;
@@ -102,12 +135,16 @@ export const useGameStore = defineStore('game', () => {
   return {
     model,
     fieldModel,
+    bossModel,
     activeFeature,
     isTown,
     isField,
+    isBoss,
     enterTown,
     enterFieldPreview,
     selectFieldPreview,
+    enterBossPreview,
+    selectBossPreview,
     returnTown,
     openFeature,
     closeFeature,

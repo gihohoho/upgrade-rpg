@@ -71,7 +71,12 @@
           <div>
             <button type="button" aria-haspopup="dialog" @click="openFeature('inventory', $event)"><span aria-hidden="true">囊</span>인벤토리</button>
             <button class="is-active" type="button" aria-current="location"><span aria-hidden="true">里</span>마을</button>
-            <button type="button" aria-haspopup="dialog" @click="openFeature('boss', $event)"><span aria-hidden="true">王</span>보스존</button>
+            <button
+              type="button"
+              :disabled="!account.bosses.length"
+              :title="account.bosses.length ? '보스 전투 표시 화면으로 이동합니다' : '보스 master-data를 불러오지 못했습니다'"
+              @click="enterBossPreview"
+            ><span aria-hidden="true">王</span>보스존</button>
             <button
               type="button"
               :disabled="!account.fieldZones.length"
@@ -191,6 +196,10 @@ function closeFeature() {
 
 function enterFieldPreview() {
   game.enterFieldPreview(account.fieldZones);
+}
+
+function enterBossPreview() {
+  game.enterBossPreview(account.bosses);
 }
 
 function changeCharacter() {

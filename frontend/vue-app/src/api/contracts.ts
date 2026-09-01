@@ -96,7 +96,22 @@ export interface FieldZoneOption {
   isEnabled: boolean;
 }
 
+export interface BossOption {
+  code: string;
+  name: string;
+  tier: number | null;
+  bossType: 'normal' | 'special';
+  hp: number | string;
+  imageUrl?: string | null;
+  hasImage?: boolean;
+  description?: string | null;
+  summonRules?: Record<string, unknown> | null;
+  cooldownSeconds: number;
+  isEnabled: boolean;
+}
+
 export interface MasterDataCharacterPayload {
   characters: CharacterOption[];
   fieldZones?: FieldZoneOption[];
+  bosses?: BossOption[];
 }
