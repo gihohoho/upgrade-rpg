@@ -1,8 +1,12 @@
 import { computed, ref, shallowRef } from 'vue';
 import { defineStore } from 'pinia';
-import type { AccountCharacterSlot, BossOption, FieldZoneOption } from '@/api/contracts';
+import type { AccountCharacterSlot, BossOption, FieldZoneOption, ItemTemplateOption } from '@/api/contracts';
 import { createBossCombatViewModel, type BossCombatViewModel } from '@/game/adapters/bossCombat';
 import { createFieldCombatViewModel, type FieldCombatViewModel } from '@/game/adapters/fieldCombat';
+import {
+  createInventoryEquipmentViewModel,
+  type InventoryEquipmentViewModel,
+} from '@/game/adapters/inventoryEquipment';
 import {
   createTownHudViewModel,
   TOWN_FEATURES,
@@ -16,7 +20,11 @@ export const useGameStore = defineStore('game', () => {
   const fieldZoneSources = shallowRef<FieldZoneOption[]>([]);
   const bossModel = shallowRef<BossCombatViewModel | null>(null);
   const bossSources = shallowRef<BossOption[]>([]);
-  const screen = ref<'town' | 'field' | 'boss'>('town');
+  const inventoryModel = shallowRef<InventoryEquipmentViewModel | null>(null);
+  const itemTemplateSources = shallowRef<ItemTemplateOption[]>([]);
+  const inventoryCompactedPreview = ref(false);
+  const selectedInventoryItemCode = ref<string | null>(null);
+  const screen = ref<'town' | 'field' | 'boss' | 'inventory'>('town');
   const contextSignature = ref('');
   const activeFeatureKey = ref<TownFeatureKey | null>(null);
 
@@ -26,6 +34,7 @@ export const useGameStore = defineStore('game', () => {
   const isTown = computed(() => screen.value === 'town' && model.value?.zoneType === 'town');
   const isField = computed(() => screen.value === 'field' && fieldModel.value?.zoneType === 'field');
   const isBoss = computed(() => screen.value === 'boss' && bossModel.value?.zoneType === 'boss');
+  const isInventory = computed(() => screen.value === 'inventory' && inventoryModel.value?.zoneType === 'inventory');
 
   function enterTown(slot: AccountCharacterSlot, characterLabel: string) {
     if (!slot.occupied || !slot.accountCharacterId || !slot.accountCharacter) {
@@ -53,6 +62,10 @@ export const useGameStore = defineStore('game', () => {
     fieldZoneSources.value = [];
     bossModel.value = null;
     bossSources.value = [];
+    inventoryModel.value = null;
+    itemTemplateSources.value = [];
+    inventoryCompactedPreview.value = false;
+    selectedInventoryItemCode.value = null;
     activeFeatureKey.value = null;
   }
 
@@ -107,10 +120,46 @@ export const useGameStore = defineStore('game', () => {
     });
   }
 
+  function enterInventoryPreview(itemTemplates: ItemTemplateOption[]) {
+    if (!model.value || !itemTemplates.length) return false;
+    itemTemplateSources.value = itemTemplates.slice();
+    inventoryCompactedPreview.value = false;
+    selectedInventoryItemCode.value = null;
+    rebuildInventoryPreview();
+    screen.value = 'inventory';
+    activeFeatureKey.value = null;
+    return true;
+  }
+
+  function selectInventoryPreview(itemCode: string) {
+    if (!itemTemplateSources.value.length) return;
+    selectedInventoryItemCode.value = itemCode;
+    rebuildInventoryPreview();
+  }
+
+  function toggleInventoryCompactPreview() {
+    if (!itemTemplateSources.value.length) return;
+    inventoryCompactedPreview.value = !inventoryCompactedPreview.value;
+    rebuildInventoryPreview();
+  }
+
+  function rebuildInventoryPreview() {
+    if (!model.value || !itemTemplateSources.value.length) return;
+    inventoryModel.value = createInventoryEquipmentViewModel({
+      town: model.value,
+      itemTemplates: itemTemplateSources.value,
+      compactPreview: inventoryCompactedPreview.value,
+      preferredItemCode: selectedInventoryItemCode.value,
+      createdAt: 0,
+    });
+    selectedInventoryItemCode.value = inventoryModel.value.selectedItem.code;
+  }
+
   function returnTown() {
     screen.value = 'town';
     fieldModel.value = null;
     bossModel.value = null;
+    inventoryModel.value = null;
   }
 
   function openFeature(key: TownFeatureKey) {
@@ -127,6 +176,10 @@ export const useGameStore = defineStore('game', () => {
     fieldZoneSources.value = [];
     bossModel.value = null;
     bossSources.value = [];
+    inventoryModel.value = null;
+    itemTemplateSources.value = [];
+    inventoryCompactedPreview.value = false;
+    selectedInventoryItemCode.value = null;
     screen.value = 'town';
     contextSignature.value = '';
     activeFeatureKey.value = null;
@@ -136,15 +189,20 @@ export const useGameStore = defineStore('game', () => {
     model,
     fieldModel,
     bossModel,
+    inventoryModel,
     activeFeature,
     isTown,
     isField,
     isBoss,
+    isInventory,
     enterTown,
     enterFieldPreview,
     selectFieldPreview,
     enterBossPreview,
     selectBossPreview,
+    enterInventoryPreview,
+    selectInventoryPreview,
+    toggleInventoryCompactPreview,
     returnTown,
     openFeature,
     closeFeature,

@@ -90,9 +90,9 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v387.vue-game-boss-combat-ui-foundation
-strict result: vue-game-boss-combat-ui-foundation
-next safe stage: migrate-vue-game-inventory-equipment-ui-foundation
+latest: v388.vue-game-inventory-equipment-ui-foundation
+strict result: vue-game-inventory-equipment-ui-foundation
+next safe stage: migrate-vue-game-storage-trash-ui-foundation
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -110,18 +110,17 @@ v384 production approval/execution: no/no
 v385 production approval/execution: no/no
 v386 production approval/execution: no/no
 v387 production approval/execution: no/no
+v388 production approval/execution: no/no
 ```
 
-- v387은 PostgreSQL master-data 보스 목록과 typed 보스 드랍 규칙을 표시 전용 보스 선택·전투 UI로 이식했습니다. 실제 소환·HP·보상·쿨타임·save·timer·난수는 바꾸지 않으며 desktop/mobile·focused smoke가 PASS했습니다.
-- v386은 폐기 예정 `baseUrl` 없이 alias를 유지하고 master-data 필드와 기본 domain 계산을 표시 전용 필드 전투 UI로 이식했습니다. HP·골드·save·timer·난수는 바꾸지 않았습니다.
+- v388은 master-data 아이템을 15개 장비·24개 가방 슬롯 표시 모델로 바꾸고 빈 칸·첫 빈 칸·상대 순서 보존 수동 정렬 규칙을 연결했습니다. 실제 snapshot·장착·사용·판매·강화·이동·save는 잠겨 있으며 desktop/mobile·focused smoke가 PASS했습니다.
+- v386~v387은 폐기 예정 `baseUrl`을 제거하고 master-data 필드·보스와 typed 전투 규칙을 표시 전용 UI로 이식했습니다. HP·골드·보상·쿨타임·save·timer·난수는 바꾸지 않았습니다.
 - v385는 캐릭터 선택 뒤 마을 전용 접속 캐릭터 바, 시설, HUD, 능력치와 기본 스킬을 typed adapter/Pinia로 이식했습니다. 슬롯 요약과 기본 domain 상태를 화면에서 구분하고 snapshot load/save·전투 timer는 시작하지 않았으며 desktop/mobile·modal·focused smoke가 PASS했습니다.
 - v384는 legacy game JS 8개/3,481줄의 전역 의존성을 보고서로 고정하고 state/save·slot·공격/필드·보스 규칙·action result를 Vue 독립 typed domain으로 분리했습니다. legacy 동등성·순수 경계·Vue build/focused smoke가 PASS했고 v384 배포는 없습니다.
 - v379~v381은 TypeScript·Pinia·Router와 로그인·8칸 캐릭터·관리자 인증을, v382~v383은 `dryRun: true` Preview와 write-locked 확인 modal을 이식했습니다. Apply route/header/write는 없습니다.
 - Docker PostgreSQL·로컬 로그인은 기호가 확인했습니다. production 관리자 복구·Apply write는 별도 exact 승인까지 보류합니다.
 - v378 legacy static은 승인 SHA `c56525394a4099160e7a32e93dc2d3a0d54568b3`에서 Render deploy `dep-da5vn3m417fc738rs2bg`로 정확히 1회 배포되어 live입니다. backend·DB·secret은 변경하지 않았습니다.
-- v371 source는 이메일 인증·복구·삭제, `authVersion`, Brevo HTTPS renderer/transport, owner bootstrap과 migration source를 준비했습니다.
-- v372는 기능을 바꾸지 않고 Markdown 243개를 95개로 정리하고 `docs/current`의 실제 현재 문서를 11개로 줄였습니다. entry/current/reference/generated/archive 역할과 구조 smoke를 고정했습니다.
-- v373은 승인된 `email-validator==2.3.0`과 전이 의존성 `dnspython==2.8.0`을 backend `.venv`와 재현 가능한 Linux runtime/dev lock에 반영했습니다. dependency가 임의로 빠지면 이메일 동작은 계속 503으로 fail-closed합니다.
+- v371~v373은 이메일 lifecycle·owner/migration source, 문서 체계와 `email-validator==2.3.0`·`dnspython==2.8.0` 재현 lock을 준비했습니다. dependency가 빠지면 이메일 동작은 503으로 fail-closed합니다.
 - Obsidian 1.13.7에서 저장소 루트를 `Upgrade RPG` local vault로 등록하고 ignored `.obsidian/` 설정과 핵심 문서·색인의 표준 Markdown 링크를 연결했습니다. Obsidian은 로컬 탐색기이며 Git source of truth를 대체하지 않습니다.
 - Linux lock check, `pip check`, email normalize/import-failure 503, v371/v370 focused, GHCR 재현성, compileall, blocking-I/O, 문서 구조와 전체 core smoke가 PASS했습니다.
 - v376에서 실행 환경 사전 고정, 범위별 단일 검증, 성공 후 중복 확인 금지와 작업별 자체 피드백을 영구 규칙으로 추가했습니다. 기호는 실질적인 이메일 인증 rollout에 필요한 보안 구현·migration·provider 설정·테스트 메일·배포를 승인했습니다.

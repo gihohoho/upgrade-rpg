@@ -69,7 +69,12 @@
         <div class="town-hud__group">
           <strong>이동 / 진입</strong>
           <div>
-            <button type="button" aria-haspopup="dialog" @click="openFeature('inventory', $event)"><span aria-hidden="true">囊</span>인벤토리</button>
+            <button
+              type="button"
+              :disabled="!account.itemTemplates.length"
+              :title="account.itemTemplates.length ? '인벤토리·장비 표시 화면으로 이동합니다' : '아이템 master-data를 불러오지 못했습니다'"
+              @click="enterInventoryPreview"
+            ><span aria-hidden="true">囊</span>인벤토리</button>
             <button class="is-active" type="button" aria-current="location"><span aria-hidden="true">里</span>마을</button>
             <button
               type="button"
@@ -200,6 +205,10 @@ function enterFieldPreview() {
 
 function enterBossPreview() {
   game.enterBossPreview(account.bosses);
+}
+
+function enterInventoryPreview() {
+  game.enterInventoryPreview(account.itemTemplates);
 }
 
 function changeCharacter() {

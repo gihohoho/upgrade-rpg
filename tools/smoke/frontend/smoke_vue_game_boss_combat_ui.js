@@ -66,7 +66,7 @@ function assertStaticBoundary() {
     requireMarker(store, marker, "boss game store");
   }
   const playShell = read("src/components/game/GamePlayShell.vue");
-  requireMarker(playShell, 'v-if="game.isBoss"', "game screen switch");
+  requireMarker(playShell, 'v-else-if="game.isBoss"', "game screen switch");
   requireMarker(playShell, "GameBossCombatShell", "game screen switch");
 
   const component = read("src/components/game/GameBossCombatShell.vue");

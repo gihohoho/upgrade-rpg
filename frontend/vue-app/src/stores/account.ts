@@ -3,7 +3,14 @@ import { defineStore } from 'pinia';
 import { accountApi } from '@/api/accountApi';
 import { authApi } from '@/api/authApi';
 import { ApiRequestError } from '@/api/http';
-import type { AccountCharacterSlot, AuthUser, BossOption, CharacterOption, FieldZoneOption } from '@/api/contracts';
+import type {
+  AccountCharacterSlot,
+  AuthUser,
+  BossOption,
+  CharacterOption,
+  FieldZoneOption,
+  ItemTemplateOption,
+} from '@/api/contracts';
 
 const ACCESS_TOKEN_KEY = 'upgradeRpgAccountAccessToken';
 const SELECTED_CHARACTER_KEY = 'upgradeRpgSelectedAccountCharacter';
@@ -85,6 +92,7 @@ export const useAccountStore = defineStore('account', () => {
   ]);
   const fieldZones = ref<FieldZoneOption[]>([]);
   const bosses = ref<BossOption[]>([]);
+  const itemTemplates = ref<ItemTemplateOption[]>([]);
   const selectedCharacter = ref<AccountCharacterSlot | null>(null);
   const pendingEmail = ref('');
   const notice = ref('');
@@ -202,6 +210,13 @@ export const useAccountStore = defineStore('account', () => {
           .sort((left, right) => (
             left.bossType.localeCompare(right.bossType)
             || (left.tier ?? Number.MAX_SAFE_INTEGER) - (right.tier ?? Number.MAX_SAFE_INTEGER)
+            || left.code.localeCompare(right.code)
+          ));
+        itemTemplates.value = (optionsResult.value.payload.itemTemplates ?? [])
+          .slice()
+          .sort((left, right) => (
+            left.itemType.localeCompare(right.itemType)
+            || left.name.localeCompare(right.name)
             || left.code.localeCompare(right.code)
           ));
       }
@@ -419,6 +434,7 @@ export const useAccountStore = defineStore('account', () => {
     characterOptions,
     fieldZones,
     bosses,
+    itemTemplates,
     selectedCharacter,
     pendingEmail,
     notice,

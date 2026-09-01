@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v387
+# Upgrade RPG Codex handoff — v388
 
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v387.vue-game-boss-combat-ui-foundation
-strict result: vue-game-boss-combat-ui-foundation
-next safe stage: migrate-vue-game-inventory-equipment-ui-foundation
+latest: v388.vue-game-inventory-equipment-ui-foundation
+strict result: vue-game-inventory-equipment-ui-foundation
+next safe stage: migrate-vue-game-storage-trash-ui-foundation
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -21,18 +21,19 @@ v384 production approval/execution: no/no
 v385 production approval/execution: no/no
 v386 production approval/execution: no/no
 v387 production approval/execution: no/no
+v388 production approval/execution: no/no
 ```
 
 ## 이번 체크포인트
 
-- account master-data 응답의 활성 보스 목록을 Pinia에 보존하고 `bossCombat.ts`가 타입·티어·HP·소환 조건·쿨타임과 typed 보스 스킬 드랍/첫 장비 보정 규칙을 표시 전용 view model로 만듭니다. source 입력은 바꾸지 않습니다.
-- 마을의 보스존 버튼은 첫 일반 보스로 이동합니다. 일반/특수 탭, 이전/다음, 6개 묶음 선택은 화면과 `boss.preview.select` action 안내만 바꿉니다.
-- 보스 화면에는 마을 전용 접속 캐릭터 바가 렌더링되지 않습니다. 마을→보스, 일반→특수, 보스→마을, desktop/mobile 단일 열·가로 넘침 없음·console 0과 focused smoke가 PASS했고 임시 harness는 제거했습니다.
-- 실제 소환·snapshot load/save·자동 저장·전투 timer·HP 감소·난수 드랍·보상·쿨타임 변경, backend·DB·env·secret·legacy·Render는 변경하지 않았고 v387 production 승인/실행은 없습니다.
-- v384~v386의 typed domain·마을/HUD·필드 UI와 폐기 예정 `baseUrl` 제거 상태를 유지합니다. 관리자 Apply route/header/write도 계속 없습니다.
+- 기존 account master-data 요청의 아이템 template을 Pinia에 보존하고 순수 `inventoryEquipment.ts` adapter가 15개 장비 슬롯과 빈 칸을 포함한 24개 가방 표시 슬롯을 만듭니다. source 입력은 바꾸지 않습니다.
+- 마을 인벤토리 버튼은 표시 전용 장비·가방 화면으로 이동합니다. 선택과 `위로 정렬 미리보기`는 화면 model만 다시 만들며 첫 빈 칸과 아이템 상대 순서를 보존합니다.
+- 인벤토리 화면에는 마을 전용 접속 캐릭터 바가 렌더링되지 않습니다. 마을→인벤토리→마을, 15/24 슬롯, 정렬 전 2번·정렬 후 8번 첫 빈 칸, 선택 유지, desktop/mobile 4열·가로 넘침 없음·Vite error overlay 0과 focused smoke가 PASS했고 임시 harness는 제거했습니다.
+- 실제 snapshot load/save·자동 저장·장착·사용·판매·강화·보관함/휴지통 이동, backend·DB·env·secret·legacy·Render는 변경하지 않았고 v388 production 승인/실행은 없습니다.
+- v384~v387의 typed domain·마을/HUD·필드·보스 UI와 폐기 예정 `baseUrl` 제거 상태를 유지합니다. 관리자 Apply route/header/write도 계속 없습니다.
 - v381~v383 관리자 Vue는 `isAdmin=true` route guard, Bearer GET, `dryRun: true` Preview 5종과 SHA-256·exact 문구 재검증 modal까지 이식했습니다. 비밀번호·dev key는 저장·전송하지 않고 Apply route/header/write와 최종 버튼은 잠겨 있습니다.
 - 기호가 Docker·로컬 로그인 정상 동작을 확인했습니다. Vue dev server는 `127.0.0.1:5173`에서 실행 중이며 반복 로그인 검사는 하지 않습니다.
-- 기존 공개 legacy·backend·DB·env·secret·Render는 변경하지 않았고 Vue v382~v387 production 승인/실행은 없습니다.
+- 기존 공개 legacy·backend·DB·env·secret·Render는 변경하지 않았고 Vue v382~v388 production 승인/실행은 없습니다.
 - 특Q(SQ)·특W(SW)는 첫 전용 강화권 사용 뒤 저장·표시·전투 유효 레벨이 모두 1이며, 탈리스만 A/B의 일반 스킬 보너스를 더 이상 상속하지 않습니다. 기존 R·T와 F·D 보너스는 유지하고 source/generated skill metadata와 탈리스만 설명도 같은 계약으로 맞췄습니다.
 - 상단 `접속 캐릭터` 바는 계정·캐릭터가 있고 현재 구역이 `town`일 때만 표시합니다. 초기 상태와 동기화 실패도 hidden/inert로 닫힙니다.
 - 로컬에서는 기존 테스트 편의를 유지하지만 배포 origin에서는 로그인 사용자의 `isAdmin=true`일 때만 테스트 패널·테스트 지급 모달·MASTER DATA/SAVE DATA 개발 배지를 표시합니다. 이는 화면 노출 계약이며 client-authoritative save의 근본 치트 방지는 향후 server save 검증/CAS 범위입니다.
@@ -58,7 +59,7 @@ v387 production approval/execution: no/no
 
 ## 바로 할 일
 
-1. 다음 Vue 전환 단계는 빈 칸 유지·첫 빈 칸·수동 정렬 계약을 보존하는 표시 전용 인벤토리·장비 UI를 준비하는 `migrate-vue-game-inventory-equipment-ui-foundation`입니다. 실제 snapshot load/save·아이템 이동/사용·자동 저장은 아직 연결하지 않습니다.
+1. 다음 Vue 전환 단계는 빈 칸 유지·첫 빈 칸·수동 정렬 계약을 이어받는 표시 전용 보관함·휴지통 UI를 준비하는 `migrate-vue-game-storage-trash-ui-foundation`입니다. 실제 snapshot load/save·아이템 이동/복구/삭제·자동 저장은 아직 연결하지 않습니다.
 2. 실제 관리자 Apply API, 비밀번호 재인증 request, dev key header와 DB write는 연결하지 않습니다. 진행하려면 작업 종류와 exact DB-write 범위를 별도로 승인받습니다.
 3. production 관리자 복구는 Vue 화면 이식과 분리하며 기존 `admin` 승격 또는 새 owner 생성의 exact DB-write 승인을 받기 전에는 실행하지 않습니다.
 

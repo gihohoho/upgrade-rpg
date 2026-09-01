@@ -96,6 +96,22 @@ export interface FieldZoneOption {
   isEnabled: boolean;
 }
 
+export interface ItemTemplateOption {
+  code: string;
+  name: string;
+  itemType: string;
+  grade?: string | null;
+  iconUrl?: string | null;
+  hasIcon?: boolean;
+  description?: string | null;
+  stackable: boolean;
+  equipSlot?: string | number | null;
+  enhanceGroupCode?: string | null;
+  baseStats?: Record<string, unknown> | null;
+  options?: Record<string, unknown> | null;
+  adminNote?: string | null;
+}
+
 export interface BossOption {
   code: string;
   name: string;
@@ -114,4 +130,5 @@ export interface MasterDataCharacterPayload {
   characters: CharacterOption[];
   fieldZones?: FieldZoneOption[];
   bosses?: BossOption[];
+  itemTemplates?: ItemTemplateOption[];
 }

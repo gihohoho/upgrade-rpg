@@ -1,13 +1,13 @@
-# Current Status — v387
+# Current Status — v388
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v387.vue-game-boss-combat-ui-foundation
-strict result: vue-game-boss-combat-ui-foundation
-next safe stage: migrate-vue-game-inventory-equipment-ui-foundation
+latest: v388.vue-game-inventory-equipment-ui-foundation
+strict result: vue-game-inventory-equipment-ui-foundation
+next safe stage: migrate-vue-game-storage-trash-ui-foundation
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -24,7 +24,14 @@ v384 production approval/execution: no/no
 v385 production approval/execution: no/no
 v386 production approval/execution: no/no
 v387 production approval/execution: no/no
+v388 production approval/execution: no/no
 ```
+
+## v388 인벤토리·장비 UI 기반
+
+- master-data item template을 Pinia에 보존하고 순수 adapter가 15개 장비·24개 가방 표시 슬롯을 만듭니다. 60칸·첫 빈 칸·상대 순서 보존 정렬을 typed slot helper로 계산하며 입력은 바꾸지 않습니다.
+- 선택과 `위로 정렬 미리보기`는 `inventory.preview.open/compact` 표시만 바꿉니다. 실제 snapshot·장착·사용·판매·강화·보관함/휴지통 이동·save는 잠겨 있습니다.
+- 마을 왕복·접속 캐릭터 바 비노출·15/24 슬롯·정렬 전후 첫 빈 칸 2/8번·선택 유지·desktop/mobile 4열·가로 넘침 없음·Vite error overlay 0과 focused smoke가 PASS했습니다. backend·DB·legacy·Render·배포는 바꾸지 않았습니다.
 
 ## v387 보스 전투 UI 기반
 
@@ -128,7 +135,7 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. Vue 전체 전환 순서에 따라 인벤토리·장비 표시와 빈 칸 유지·첫 빈 칸·수동 정렬 domain adapter 기반을 이식합니다. 실제 snapshot load/save·아이템 이동/사용·자동 저장은 아직 연결하지 않습니다.
+1. Vue 전체 전환 순서에 따라 보관함·휴지통 표시와 빈 칸 유지·첫 빈 칸·수동 정렬 domain adapter 기반을 이식합니다. 실제 snapshot load/save·아이템 이동/복구/삭제·자동 저장은 아직 연결하지 않습니다.
 2. 실제 관리자 Apply API·재인증·dev key header·DB write 연결은 이번 단계에 포함되지 않았습니다. 필요하면 작업 종류와 정확한 DB-write 범위를 별도 승인받습니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 
