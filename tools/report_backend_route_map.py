@@ -22,9 +22,9 @@ from pathlib import Path
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
-CHECKPOINT_VERSION = "v385.vue-game-town-hud-shell"
-CHECKPOINT_RESULT = "vue-game-town-hud-shell"
-NEXT_SAFE_STAGE = "migrate-vue-game-field-combat-ui-foundation"
+CHECKPOINT_VERSION = "v386.vue-game-field-combat-ui-foundation"
+CHECKPOINT_RESULT = "vue-game-field-combat-ui-foundation"
+NEXT_SAFE_STAGE = "migrate-vue-game-boss-combat-ui-foundation"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 
@@ -437,7 +437,7 @@ signed backend image와 legacy static의 공개 배포를 승인된 단일 시�
 
 권장 범위:
 
-1. v385에서 표시 전용 마을/HUD를 연결했으므로 다음은 timer 없이 필드 전투 UI와 action adapter 기반을 준비합니다.
+1. v386에서 표시 전용 필드 전투 UI와 action adapter를 연결했으므로 다음은 timer 없이 보스 전투 UI와 rule adapter 기반을 준비합니다.
 2. production 관리자 복구, 재인증 request, dev key header와 실제 Apply는 별도 exact DB-write 승인을 받기 전까지 연결하지 않습니다.
 3. 완료된 migration·publish·Render deploy와 기호가 확인한 Docker·로그인은 단순 확인을 위해 재실행하지 않습니다.
 """

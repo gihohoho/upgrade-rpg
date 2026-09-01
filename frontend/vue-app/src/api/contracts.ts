@@ -84,6 +84,19 @@ export interface CharacterOption {
   isEnabled: boolean;
 }
 
+export interface FieldZoneOption {
+  code: string;
+  name: string;
+  sortOrder: number;
+  enemyHp: number | string;
+  goldReward: number | string;
+  description?: string | null;
+  entryRules?: Record<string, unknown> | null;
+  farmRules?: Record<string, unknown> | null;
+  isEnabled: boolean;
+}
+
 export interface MasterDataCharacterPayload {
   characters: CharacterOption[];
+  fieldZones?: FieldZoneOption[];
 }

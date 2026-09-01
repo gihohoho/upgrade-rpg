@@ -8,6 +8,7 @@ const VUE_ROOT = path.join(ROOT, "frontend/vue-app");
 const REQUIRED_FILES = [
   "src/game/adapters/townHud.ts",
   "src/stores/game.ts",
+  "src/components/game/GamePlayShell.vue",
   "src/components/game/GameTownShell.vue",
 ];
 
@@ -86,8 +87,8 @@ function assertStaticBoundary() {
   assert.ok(!component.includes("confirm(") && !component.includes("alert("), "town HUD must not use browser alert/confirm");
 
   const gate = read("src/components/account/AccountGate.vue");
-  requireMarker(gate, "<GameTownShell v-else />", "account ready gate");
-  requireMarker(gate, "import GameTownShell", "account ready gate");
+  requireMarker(gate, "<GamePlayShell v-else />", "account ready gate");
+  requireMarker(gate, "import GamePlayShell", "account ready gate");
 
   const styles = read("src/styles/base.css");
   for (const selector of [
@@ -134,6 +135,8 @@ function assertAdapterBehavior() {
   assert.strictEqual(model.goldLabel, "1.25B");
   assert.strictEqual(model.levelLabel, "Lv.7");
   assert.strictEqual(model.recentSaveZoneLabel, "최근 저장 · 필드 3");
+  assert.strictEqual(model.recentSaveZoneIndex, 2);
+  assert.strictEqual(model.recentSaveZoneType, "field");
   assert.strictEqual(model.stats.find((item) => item.key === "attack").value, "1250A");
   assert.strictEqual(model.skills.find((item) => item.slotKey === "Q").level, 1);
   assert.strictEqual(model.skills.find((item) => item.slotKey === "W").level, 0);

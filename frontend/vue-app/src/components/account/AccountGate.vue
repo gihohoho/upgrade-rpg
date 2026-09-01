@@ -21,7 +21,7 @@
     <AuthPanel v-else-if="account.stage === 'anonymous' || account.stage === 'verification'" />
     <CharacterPanel v-else-if="account.stage === 'characters'" />
 
-    <GameTownShell v-else />
+    <GamePlayShell v-else />
   </div>
 </template>
 
@@ -29,7 +29,7 @@
 import { onMounted } from 'vue';
 import AuthPanel from './AuthPanel.vue';
 import CharacterPanel from './CharacterPanel.vue';
-import GameTownShell from '@/components/game/GameTownShell.vue';
+import GamePlayShell from '@/components/game/GamePlayShell.vue';
 import { useAccountStore } from '@/stores';
 
 const account = useAccountStore();

@@ -90,9 +90,9 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v385.vue-game-town-hud-shell
-strict result: vue-game-town-hud-shell
-next safe stage: migrate-vue-game-field-combat-ui-foundation
+latest: v386.vue-game-field-combat-ui-foundation
+strict result: vue-game-field-combat-ui-foundation
+next safe stage: migrate-vue-game-boss-combat-ui-foundation
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -108,8 +108,10 @@ v382 production approval/execution: no/no
 v383 production approval/execution: no/no
 v384 production approval/execution: no/no
 v385 production approval/execution: no/no
+v386 production approval/execution: no/no
 ```
 
+- v386은 폐기 예정 `baseUrl` 없이 alias를 유지하고 PostgreSQL master-data 필드 목록·기본 domain 계산·action result를 표시 전용 필드 전투 UI로 이식했습니다. HP·골드·save를 바꾸거나 timer·난수를 시작하지 않으며 desktop/mobile·focused smoke가 PASS했습니다.
 - v385는 캐릭터 선택 뒤 마을 전용 접속 캐릭터 바, 시설, HUD, 능력치와 기본 스킬을 typed adapter/Pinia로 이식했습니다. 슬롯 요약과 기본 domain 상태를 화면에서 구분하고 snapshot load/save·전투 timer는 시작하지 않았으며 desktop/mobile·modal·focused smoke가 PASS했습니다.
 - v384는 legacy game JS 8개/3,481줄의 전역 의존성을 보고서로 고정하고 state/save·slot·공격/필드·보스 규칙·action result를 Vue 독립 typed domain으로 분리했습니다. legacy 동등성·순수 경계·Vue build/focused smoke가 PASS했고 v384 배포는 없습니다.
 - v379~v381은 TypeScript·Pinia·Router와 로그인·8칸 캐릭터·관리자 인증을, v382~v383은 `dryRun: true` Preview와 write-locked 확인 modal을 이식했습니다. Apply route/header/write는 없습니다.
@@ -120,9 +122,6 @@ v385 production approval/execution: no/no
 - v373은 승인된 `email-validator==2.3.0`과 전이 의존성 `dnspython==2.8.0`을 backend `.venv`와 재현 가능한 Linux runtime/dev lock에 반영했습니다. dependency가 임의로 빠지면 이메일 동작은 계속 503으로 fail-closed합니다.
 - Obsidian 1.13.7에서 저장소 루트를 `Upgrade RPG` local vault로 등록하고 ignored `.obsidian/` 설정과 핵심 문서·색인의 표준 Markdown 링크를 연결했습니다. Obsidian은 로컬 탐색기이며 Git source of truth를 대체하지 않습니다.
 - Linux lock check, `pip check`, email normalize/import-failure 503, v371/v370 focused, GHCR 재현성, compileall, blocking-I/O, 문서 구조와 전체 core smoke가 PASS했습니다.
-- v374는 루트 README에 최초 준비·DB/backend/legacy/Vue·확인 URL·안전 종료를 위치/`.venv`/설치 상태와 함께 통합하고, Obsidian Graph·Local Graph·Backlinks·Bookmarks의 실제 사용법을 문서화했습니다.
-- v375는 사용자용 Obsidian 사용 설명을 추적 문서에서 제거하고, ignored 로컬 vault의 북마크·저장 검색·전역/로컬 Graph·workspace를 Codex가 직접 관리하도록 전환했습니다. 의미가 동일한 `src/styles/style.css` 포맷 정렬도 검증 뒤 함께 반영합니다.
-- Obsidian 1.13.7 재실행 뒤 북마크 8개, Graph 색상 그룹 13개, Local Graph 깊이 3과 필수 pane을 확인했고, CSS PostCSS AST 동등성·문서/정적 배포 focused·전체 core smoke가 PASS했습니다.
 - v376에서 실행 환경 사전 고정, 범위별 단일 검증, 성공 후 중복 확인 금지와 작업별 자체 피드백을 영구 규칙으로 추가했습니다. 기호는 실질적인 이메일 인증 rollout에 필요한 보안 구현·migration·provider 설정·테스트 메일·배포를 승인했습니다.
 - README 명령 계약·위험 명령 차단·Markdown 링크/중복/크기와 handoff readiness가 PASS했고, 현재 legacy 게임/관리자 HTTP 200과 기존 PostgreSQL healthy를 읽기 전용으로 확인했습니다.
 - Brevo local 계정·발신자·API key와 실제 메일 인증은 완료했습니다. owner bootstrap, Render secret, 새 image/static 배포는 실행하지 않았습니다.

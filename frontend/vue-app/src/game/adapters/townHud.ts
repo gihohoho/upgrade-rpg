@@ -60,6 +60,8 @@ export interface TownHudViewModel {
   levelLabel: string;
   goldLabel: string;
   recentSaveZoneLabel: string;
+  recentSaveZoneIndex: number | null;
+  recentSaveZoneType: string | null;
   updatedAt: string | null;
   stats: TownHudStat[];
   skills: TownHudSkill[];
@@ -171,6 +173,8 @@ export function createTownHudViewModel(source: TownHudSource): TownHudViewModel 
       : `Lv.${Math.max(0, Math.trunc(source.progress.level))}`,
     goldLabel: formatCompactNumber(summaryGold ?? 0),
     recentSaveZoneLabel: formatRecentSaveZone(source.progress),
+    recentSaveZoneIndex: source.progress?.currentZoneIndex ?? null,
+    recentSaveZoneType: source.progress?.currentZoneType ?? null,
     updatedAt: source.progress?.updatedAt ?? null,
     stats,
     skills,

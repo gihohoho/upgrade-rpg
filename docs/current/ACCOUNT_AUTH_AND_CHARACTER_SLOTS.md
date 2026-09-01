@@ -1,9 +1,9 @@
 # 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v385.vue-game-town-hud-shell
-strict result: vue-game-town-hud-shell
-next safe stage: migrate-vue-game-field-combat-ui-foundation
+latest: v386.vue-game-field-combat-ui-foundation
+strict result: vue-game-field-combat-ui-foundation
+next safe stage: migrate-vue-game-boss-combat-ui-foundation
 public Render: backend v377 / static v378 Live
 local/Neon DB: v377 / v377
 ```

@@ -14,8 +14,8 @@ RUN_SMOKE = ROOT / "tools/run_smoke_core.sh"
 
 REQUIRED_TEXT = [
     "Backend Route Map — v377",
-    "latest: v385.vue-game-town-hud-shell",
-    "strict result: vue-game-town-hud-shell",
+    "latest: v386.vue-game-field-combat-ui-foundation",
+    "strict result: vue-game-field-combat-ui-foundation",
     "actual target v377 apply: local 1 / Neon 1",
     "private email environment: prepared",
     "source 8db9bcb / preserved",
@@ -47,7 +47,7 @@ REQUIRED_TEXT = [
     "POST /api/v1/admin/master-data/create-apply",
     "POST /api/v1/game/save",
     "query 이름은 `id`",
-    "migrate-vue-game-field-combat-ui-foundation",
+    "migrate-vue-game-boss-combat-ui-foundation",
 ]
 
 FORBIDDEN_TEXT = [

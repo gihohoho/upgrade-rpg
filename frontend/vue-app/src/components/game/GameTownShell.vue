@@ -72,7 +72,12 @@
             <button type="button" aria-haspopup="dialog" @click="openFeature('inventory', $event)"><span aria-hidden="true">囊</span>인벤토리</button>
             <button class="is-active" type="button" aria-current="location"><span aria-hidden="true">里</span>마을</button>
             <button type="button" aria-haspopup="dialog" @click="openFeature('boss', $event)"><span aria-hidden="true">王</span>보스존</button>
-            <button type="button" aria-haspopup="dialog" @click="openFeature('field', $event)"><span aria-hidden="true">野</span>필드존</button>
+            <button
+              type="button"
+              :disabled="!account.fieldZones.length"
+              :title="account.fieldZones.length ? '필드 전투 표시 화면으로 이동합니다' : '필드 master-data를 불러오지 못했습니다'"
+              @click="enterFieldPreview"
+            ><span aria-hidden="true">野</span>필드존</button>
           </div>
         </div>
         <div class="town-hud__group">
@@ -182,6 +187,10 @@ function openFeature(key: TownFeatureKey, event: Event) {
 function closeFeature() {
   game.closeFeature();
   void nextTick(() => featureTrigger.value?.focus());
+}
+
+function enterFieldPreview() {
+  game.enterFieldPreview(account.fieldZones);
 }
 
 function changeCharacter() {

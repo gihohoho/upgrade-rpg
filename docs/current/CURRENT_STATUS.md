@@ -1,13 +1,13 @@
-# Current Status — v385
+# Current Status — v386
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v385.vue-game-town-hud-shell
-strict result: vue-game-town-hud-shell
-next safe stage: migrate-vue-game-field-combat-ui-foundation
+latest: v386.vue-game-field-combat-ui-foundation
+strict result: vue-game-field-combat-ui-foundation
+next safe stage: migrate-vue-game-boss-combat-ui-foundation
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -22,7 +22,14 @@ v382 production approval/execution: no/no
 v383 production approval/execution: no/no
 v384 production approval/execution: no/no
 v385 production approval/execution: no/no
+v386 production approval/execution: no/no
 ```
+
+## v386 필드 전투 UI 기반
+
+- `baseUrl`을 제거하고 `@/* → ./src/*` alias를 유지했습니다. TypeScript 5.9 설정 해석과 Vue typecheck가 PASS했습니다.
+- 기존 master-data 요청의 활성 필드를 표시 전용 adapter로 넘겨 최근 저장 구역, HP·골드·입장 조건·기본 공격·스킬과 action 안내를 표시합니다. 구역 선택은 화면만 바꾸며 snapshot·HP·골드·save·timer·난수를 변경하지 않습니다.
+- 마을→필드→마을, 필드에서 접속 캐릭터 바 비노출, desktop/mobile 4개 묶음·가로 넘침 없음·console과 focused smoke가 PASS했습니다. backend·DB·legacy·Render와 v386 배포는 변경하지 않았습니다.
 
 ## v385 마을·HUD
 
@@ -35,29 +42,6 @@ v385 production approval/execution: no/no
 - legacy game JavaScript 8개/3,481줄의 browser·runtime 의존성을 [자동 생성 보고서](../generated/VUE_GAME_DOMAIN_DEPENDENCIES.md)로 고정했습니다.
 - state/save·slot·전투 규칙·action result를 순수 TypeScript로 분리했고 legacy 동등성 검사가 PASS했습니다.
 - snapshot load/save·전투 timer와 legacy·backend·DB·Render는 바꾸지 않았습니다.
-
-## v383 Vue 관리자 Apply 확인 경계
-
-- ready Preview와 server `confirmTextRequired`가 있을 때만 확인 modal을 엽니다. 같은 Preview request를 `dryRun: true`로 재실행해 정렬 payload SHA-256·ready 상태·exact 문구가 모두 같아야 통과하며, 달라지면 새 결과 재검토를 요구합니다.
-- exact 문구·현재 비밀번호·dev key·영향 확인을 받지만 민감 값은 저장·로그·전송하지 않고 닫기/unmount에서 지웁니다. 모든 조건을 채워도 최종 버튼은 항상 disabled이고 Apply route/header/DB write는 없습니다.
-- 기호가 Docker와 로컬 로그인 정상 동작을 직접 확인했습니다. 자동화 로그인은 반복하지 않고 실제 component harness로 잠금과 입력 삭제를 확인한 뒤 harness를 제거했습니다.
-- `npm ci`, build(75 modules), Vue focused smoke 9개와 브라우저 동작 검증이 PASS했습니다. legacy·backend·DB·env·secret·Render는 바꾸지 않았고 v383 배포 승인/실행은 없습니다.
-
-## v382 Vue 관리자 Preview 작업대
-
-- typed API/Pinia가 생성·수정·일반 rollback·생성 삭제·복원 Preview 5개만 `dryRun: true`로 호출합니다. blueprint·scalar 기준값·change-log availability를 사용하고 diff·stale·거부·의존성·conflict를 분리합니다.
-- `isAdmin=true` route guard 밖에서는 렌더링하지 않습니다. backend·DB·secret·legacy·Render와 v382 배포는 변경하지 않았습니다.
-
-## v381 Vue 관리자 인증·route guard
-
-- `/admin`은 session과 server `isAdmin`을 확인한 뒤에만 렌더링하며 미로그인·비관리자·network 오류는 `/admin/access`로 분리합니다. Bearer GET의 401은 재로그인, 403은 일반 session을 보존한 권한 거부로 처리합니다.
-- desktop/mobile redirect·비렌더링·overflow와 build/focused smoke가 PASS했습니다. 로그인 제출·DB write·v381 배포는 없었습니다.
-
-## v380 Vue 인증·캐릭터 gate
-
-- typed auth API/Pinia가 로그인·가입·이메일 안내·재전송·session과 계정별 8칸 캐릭터 생성·선택·이름 확인 삭제를 처리합니다. legacy token/선택 key와 401/403 대 network/5xx 보존 분기를 유지합니다.
-- 캐릭터 선택 뒤에도 game boot·snapshot load·timer·자동 저장은 시작하지 않습니다.
-- build·focused smoke·desktop/mobile 검증이 PASS했고 공개 legacy·backend·DB·secret·v380 배포는 변경하지 않았습니다.
 
 ## v378 게임 UI·환경 라우팅 소스 준비
 
@@ -137,7 +121,7 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. Vue 전체 전환 순서에 따라 필드 전투 화면의 표시 전용 상태·action adapter를 이식합니다. 실제 snapshot load/save·자동 저장·전투 timer와 난수 orchestration은 아직 연결하지 않습니다.
+1. Vue 전체 전환 순서에 따라 보스 목록·전투 표시와 domain rule adapter 기반을 이식합니다. 실제 snapshot load/save·자동 저장·전투 timer와 난수 orchestration은 아직 연결하지 않습니다.
 2. 실제 관리자 Apply API·재인증·dev key header·DB write 연결은 이번 단계에 포함되지 않았습니다. 필요하면 작업 종류와 정확한 DB-write 범위를 별도 승인받습니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 
