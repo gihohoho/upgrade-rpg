@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v389
+# Upgrade RPG Codex handoff — v390
 
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v389.vue-game-storage-trash-ui-foundation
-strict result: vue-game-storage-trash-ui-foundation
-next safe stage: migrate-vue-game-skill-enhancement-ui-foundation
+latest: v390.vue-game-skill-enhancement-ui-foundation
+strict result: vue-game-skill-enhancement-ui-foundation
+next safe stage: migrate-vue-game-shop-settings-ui-foundation
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -23,18 +23,20 @@ v386 production approval/execution: no/no
 v387 production approval/execution: no/no
 v388 production approval/execution: no/no
 v389 production approval/execution: no/no
+v390 production approval/execution: no/no
 ```
 
 ## 이번 체크포인트
 
-- `storageTrash.ts`는 기존 master-data 아이템을 보관함·휴지통 각각 20개 표시 슬롯과 60칸 계약으로 만들고 두 공간의 빈 칸·첫 빈 칸·상대 순서 보존 정렬을 독립적으로 계산합니다. source 입력은 바꾸지 않습니다.
-- 가방·장비 화면에서 보관함·휴지통으로 이동할 수 있습니다. 선택과 두 `위로 정렬 미리보기`는 화면 model만 바꾸며, 가방/보관함 양방향 이동·휴지통 이동/복구·영구 삭제 버튼은 비활성화했습니다.
-- 마을→가방·장비→보관함·휴지통→가방·장비→마을, 접속 캐릭터 바 비노출, 각 20슬롯, 정렬 전/후 첫 빈 칸 2/7번, 선택 유지, 독립 정렬, desktop/mobile 4열·가로 넘침 없음·Vite error overlay 0과 focused smoke가 PASS했고 임시 harness는 제거했습니다.
-- 실제 snapshot load/save·자동 저장·아이템 이동·복구·삭제·사용·판매·강화, backend·DB·env·secret·legacy·Render는 변경하지 않았고 v389 production 승인/실행은 없습니다.
-- v384~v388의 typed domain·마을/HUD·필드·보스·인벤토리/장비 UI와 `baseUrl` 제거 상태를 유지합니다. 관리자 Apply route/header/write도 계속 없습니다.
+- `skillEnhancement.ts`는 공개 master-data의 스킬·캐릭터 연결·레벨과 강화 그룹·단계를 기본 typed domain에 결합해 스킬 10단계와 강화 대상·단계별 확률·비용·재료·결과 능력치 view model을 순수하게 만듭니다. source 입력은 바꾸지 않습니다.
+- 스킬 화면은 `Q → W → E → R → T → F → D → SQ → SW → M`, 기본/장비 보너스/표시 레벨, 발동률·계수·쿨타임·전용 강화권 규칙을 보여 줍니다. SQ·SW는 기존 Q·W 레벨과 관계없이 첫 전용 강화권 결과가 Lv.1이며 탈리스만 A/B 보너스를 상속하지 않습니다.
+- 강화 작업대는 일반 장비의 아이템 기본 비용과 탈리스만/휘장의 동일 +0 재료 `2^현재 강화` 규칙을 구분합니다. 스킬강화권 사용·장비 강화·Gold/재료 소비·난수·snapshot·save 버튼은 비활성화했습니다.
+- 마을→스킬·강화→인벤토리→마을 왕복, 접속 캐릭터 바 마을 전용 복원, SQ·SW 규칙, 탈리스만 +2→+3 재료 4개, desktop/mobile 390×844·가로 넘침 없음과 focused smoke가 PASS했고 임시 browser fixture는 제거했습니다.
+- 실제 snapshot load/save·자동 저장·스킬 사용·장비 강화·Gold/재료 소비·난수·아이템 이동/복구/삭제, backend·DB·env·secret·legacy·Render는 변경하지 않았고 v390 production 승인/실행은 없습니다.
+- v384~v389의 typed domain·마을/HUD·필드·보스·인벤토리/장비·보관함/휴지통 UI와 `baseUrl` 제거 상태를 유지합니다. 관리자 Apply route/header/write도 계속 없습니다.
 - v381~v383 관리자 Vue는 `isAdmin=true` route guard, Bearer GET, `dryRun: true` Preview 5종과 SHA-256·exact 문구 재검증 modal까지 이식했습니다. 비밀번호·dev key는 저장·전송하지 않고 Apply route/header/write와 최종 버튼은 잠겨 있습니다.
 - 기호가 Docker·로컬 로그인 정상 동작을 확인했습니다. Vue dev server는 `127.0.0.1:5173`에서 실행 중이며 반복 로그인 검사는 하지 않습니다.
-- 기존 공개 legacy·backend·DB·env·secret·Render는 변경하지 않았고 Vue v382~v389 production 승인/실행은 없습니다.
+- 기존 공개 legacy·backend·DB·env·secret·Render는 변경하지 않았고 Vue v382~v390 production 승인/실행은 없습니다.
 - 특Q(SQ)·특W(SW)는 첫 전용 강화권 사용 뒤 저장·표시·전투 유효 레벨이 모두 1이며, 탈리스만 A/B의 일반 스킬 보너스를 더 이상 상속하지 않습니다. 기존 R·T와 F·D 보너스는 유지하고 source/generated skill metadata와 탈리스만 설명도 같은 계약으로 맞췄습니다.
 - 상단 `접속 캐릭터` 바는 계정·캐릭터가 있고 현재 구역이 `town`일 때만 표시합니다. 초기 상태와 동기화 실패도 hidden/inert로 닫힙니다.
 - 로컬에서는 기존 테스트 편의를 유지하지만 배포 origin에서는 로그인 사용자의 `isAdmin=true`일 때만 테스트 패널·테스트 지급 모달·MASTER DATA/SAVE DATA 개발 배지를 표시합니다. 이는 화면 노출 계약이며 client-authoritative save의 근본 치트 방지는 향후 server save 검증/CAS 범위입니다.
@@ -60,7 +62,7 @@ v389 production approval/execution: no/no
 
 ## 바로 할 일
 
-1. 다음 Vue 전환 단계는 typed skill/enhancement rule을 사용하는 표시 전용 스킬·강화 UI를 준비하는 `migrate-vue-game-skill-enhancement-ui-foundation`입니다. 실제 스킬 사용·강화·재료 소비·snapshot load/save·자동 저장은 아직 연결하지 않습니다.
+1. 다음 Vue 전환 단계는 표시 전용 상점·설정 화면을 준비하는 `migrate-vue-game-shop-settings-ui-foundation`입니다. 실제 구매·판매·Gold/아이템 변경·설정 저장·snapshot load/save·자동 저장은 아직 연결하지 않습니다.
 2. 실제 관리자 Apply API, 비밀번호 재인증 request, dev key header와 DB write는 연결하지 않습니다. 진행하려면 작업 종류와 exact DB-write 범위를 별도로 승인받습니다.
 3. production 관리자 복구는 Vue 화면 이식과 분리하며 기존 `admin` 승격 또는 새 owner 생성의 exact DB-write 승인을 받기 전에는 실행하지 않습니다.
 

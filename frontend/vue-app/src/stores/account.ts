@@ -7,9 +7,14 @@ import type {
   AccountCharacterSlot,
   AuthUser,
   BossOption,
+  CharacterSkillOption,
   CharacterOption,
+  EnhancementGroupOption,
+  EnhancementLevelOption,
   FieldZoneOption,
   ItemTemplateOption,
+  SkillLevelOption,
+  SkillOption,
 } from '@/api/contracts';
 
 const ACCESS_TOKEN_KEY = 'upgradeRpgAccountAccessToken';
@@ -93,6 +98,11 @@ export const useAccountStore = defineStore('account', () => {
   const fieldZones = ref<FieldZoneOption[]>([]);
   const bosses = ref<BossOption[]>([]);
   const itemTemplates = ref<ItemTemplateOption[]>([]);
+  const skills = ref<SkillOption[]>([]);
+  const characterSkills = ref<CharacterSkillOption[]>([]);
+  const skillLevels = ref<SkillLevelOption[]>([]);
+  const enhancementGroups = ref<EnhancementGroupOption[]>([]);
+  const enhancementLevels = ref<EnhancementLevelOption[]>([]);
   const selectedCharacter = ref<AccountCharacterSlot | null>(null);
   const pendingEmail = ref('');
   const notice = ref('');
@@ -219,6 +229,25 @@ export const useAccountStore = defineStore('account', () => {
             || left.name.localeCompare(right.name)
             || left.code.localeCompare(right.code)
           ));
+        skills.value = (optionsResult.value.payload.skills ?? [])
+          .slice()
+          .sort((left, right) => left.slotKey.localeCompare(right.slotKey) || left.code.localeCompare(right.code));
+        characterSkills.value = (optionsResult.value.payload.characterSkills ?? [])
+          .slice()
+          .sort((left, right) => (
+            left.characterCode.localeCompare(right.characterCode)
+            || left.sortOrder - right.sortOrder
+            || left.skillCode.localeCompare(right.skillCode)
+          ));
+        skillLevels.value = (optionsResult.value.payload.skillLevels ?? [])
+          .slice()
+          .sort((left, right) => left.skillCode.localeCompare(right.skillCode) || left.level - right.level);
+        enhancementGroups.value = (optionsResult.value.payload.enhancementGroups ?? [])
+          .filter((group) => group.isEnabled)
+          .sort((left, right) => left.code.localeCompare(right.code));
+        enhancementLevels.value = (optionsResult.value.payload.enhancementLevels ?? [])
+          .slice()
+          .sort((left, right) => left.groupCode.localeCompare(right.groupCode) || left.fromLevel - right.fromLevel);
       }
       selectedCharacter.value = options.restoreSelection === false ? null : restoreSelectedCharacter();
       stage.value = selectedCharacter.value ? 'ready' : 'characters';
@@ -435,6 +464,11 @@ export const useAccountStore = defineStore('account', () => {
     fieldZones,
     bosses,
     itemTemplates,
+    skills,
+    characterSkills,
+    skillLevels,
+    enhancementGroups,
+    enhancementLevels,
     selectedCharacter,
     pendingEmail,
     notice,

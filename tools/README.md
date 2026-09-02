@@ -63,7 +63,7 @@ python tools/report_vue_game_domain_dependencies.py --check
 node tools/smoke/frontend/smoke_vue_game_domain_foundation.js
 ```
 
-`docs/generated/VUE_GAME_DOMAIN_DEPENDENCIES.md`에 legacy state·systems·rules의 browser·난수·시각·timer 의존성과 v384 typed domain 분리 경계를 기록합니다. v385~v389 smoke는 마을/HUD·필드·보스·가방/장비·보관함/휴지통 adapter가 snapshot load/save·전투 timer·난수·아이템 이동/복구/삭제를 시작하거나 HP·보상·쿨타임을 바꾸지 않는지 확인합니다. 검사는 DB·서버·배포를 변경하지 않습니다.
+`docs/generated/VUE_GAME_DOMAIN_DEPENDENCIES.md`에 legacy state·systems·rules의 browser·난수·시각·timer 의존성과 v384 typed domain 분리 경계를 기록합니다. v385~v390 smoke는 마을/HUD·필드·보스·가방/장비·보관함/휴지통·스킬/강화 adapter가 snapshot load/save·전투 timer·난수·아이템/스킬/Gold/재료를 바꾸지 않는지 확인합니다. 검사는 DB·서버·배포를 변경하지 않습니다.
 
 ## PostgreSQL/Alembic readiness 보고서
 

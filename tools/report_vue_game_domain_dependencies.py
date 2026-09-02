@@ -183,9 +183,9 @@ node tools/smoke/frontend/smoke_vue_game_domain_foundation.js
 
 ## 다음 안전 단계
 
-`next safe stage: migrate-vue-game-skill-enhancement-ui-foundation`
+`next safe stage: migrate-vue-game-shop-settings-ui-foundation`
 
-v389에서 보관함·휴지통의 빈 칸 유지·첫 빈 칸·상대 순서 보존 독립 정렬 규칙을 표시 전용 UI와 연결했습니다. 다음은 실제 skill/item write 없이 스킬·강화 UI 기반을 준비하며, legacy 공개 화면, 저장 load/save, 전투 timer, 관리자 Apply, DB write와 production 배포는 변경하지 않습니다.
+v390에서 스킬 10단계와 SQ·SW 첫 Lv.1, 강화 확률·비용·재료·결과 능력치 규칙을 표시 전용 UI와 연결했습니다. 다음은 실제 구매·판매·설정 저장 없이 상점·설정 UI 기반을 준비하며, legacy 공개 화면, 저장 load/save, 전투 timer, 관리자 Apply, DB write와 production 배포는 변경하지 않습니다.
 """
 
 

@@ -126,9 +126,61 @@ export interface BossOption {
   isEnabled: boolean;
 }
 
+export interface SkillOption {
+  code: string;
+  name: string;
+  slotKey: string;
+  description?: string | null;
+  iconUrl?: string | null;
+  hasIcon?: boolean;
+  procRate?: number | string | null;
+  cooldownSeconds?: number | null;
+  options?: Record<string, unknown> | null;
+}
+
+export interface CharacterSkillOption {
+  characterCode: string;
+  skillCode: string;
+  sortOrder: number;
+  isDefault: boolean;
+}
+
+export interface SkillLevelOption {
+  skillCode: string;
+  level: number;
+  damageMultiplier: number | string;
+  procRateBonus: number | string;
+  options?: Record<string, unknown> | null;
+}
+
+export interface EnhancementGroupOption {
+  code: string;
+  name: string;
+  description?: string | null;
+  maxLevel: number;
+  rules?: Record<string, unknown> | null;
+  isEnabled: boolean;
+}
+
+export interface EnhancementLevelOption {
+  groupCode: string;
+  fromLevel: number;
+  toLevel: number;
+  successRate: number | string;
+  goldCost: number | string;
+  materialRules?: Record<string, unknown> | null;
+  resultStats?: Record<string, unknown> | null;
+  failRules?: Record<string, unknown> | null;
+}
+
 export interface MasterDataCharacterPayload {
   characters: CharacterOption[];
   fieldZones?: FieldZoneOption[];
   bosses?: BossOption[];
   itemTemplates?: ItemTemplateOption[];
+  skills?: SkillOption[];
+  characterSkills?: CharacterSkillOption[];
+  skillLevels?: SkillLevelOption[];
+  enhancementGroups?: EnhancementGroupOption[];
+  enhancementLevels?: EnhancementLevelOption[];
 }

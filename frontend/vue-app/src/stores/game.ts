@@ -1,6 +1,16 @@
 import { computed, ref, shallowRef } from 'vue';
 import { defineStore } from 'pinia';
-import type { AccountCharacterSlot, BossOption, FieldZoneOption, ItemTemplateOption } from '@/api/contracts';
+import type {
+  AccountCharacterSlot,
+  BossOption,
+  CharacterSkillOption,
+  EnhancementGroupOption,
+  EnhancementLevelOption,
+  FieldZoneOption,
+  ItemTemplateOption,
+  SkillLevelOption,
+  SkillOption,
+} from '@/api/contracts';
 import { createBossCombatViewModel, type BossCombatViewModel } from '@/game/adapters/bossCombat';
 import { createFieldCombatViewModel, type FieldCombatViewModel } from '@/game/adapters/fieldCombat';
 import {
@@ -12,6 +22,10 @@ import {
   type StorageTrashContainerKey,
   type StorageTrashViewModel,
 } from '@/game/adapters/storageTrash';
+import {
+  createSkillEnhancementViewModel,
+  type SkillEnhancementViewModel,
+} from '@/game/adapters/skillEnhancement';
 import {
   createTownHudViewModel,
   TOWN_FEATURES,
@@ -35,7 +49,16 @@ export const useGameStore = defineStore('game', () => {
   const selectedStorageTrashItemCode = ref<string | null>(null);
   const selectedStorageTrashContainer = ref<StorageTrashContainerKey | null>(null);
   const storageTrashLastAction = ref<StorageTrashContainerKey | null>(null);
-  const screen = ref<'town' | 'field' | 'boss' | 'inventory' | 'storage-trash'>('town');
+  const skillEnhancementModel = shallowRef<SkillEnhancementViewModel | null>(null);
+  const skillSources = shallowRef<SkillOption[]>([]);
+  const characterSkillSources = shallowRef<CharacterSkillOption[]>([]);
+  const skillLevelSources = shallowRef<SkillLevelOption[]>([]);
+  const enhancementGroupSources = shallowRef<EnhancementGroupOption[]>([]);
+  const enhancementLevelSources = shallowRef<EnhancementLevelOption[]>([]);
+  const selectedSkillId = ref<string | null>(null);
+  const selectedEnhancementItemCode = ref<string | null>(null);
+  const selectedEnhancementLevel = ref<number | null>(null);
+  const screen = ref<'town' | 'field' | 'boss' | 'inventory' | 'storage-trash' | 'skill-enhancement'>('town');
   const contextSignature = ref('');
   const activeFeatureKey = ref<TownFeatureKey | null>(null);
 
@@ -47,6 +70,7 @@ export const useGameStore = defineStore('game', () => {
   const isBoss = computed(() => screen.value === 'boss' && bossModel.value?.zoneType === 'boss');
   const isInventory = computed(() => screen.value === 'inventory' && inventoryModel.value?.zoneType === 'inventory');
   const isStorageTrash = computed(() => screen.value === 'storage-trash' && storageTrashModel.value?.zoneType === 'storage-trash');
+  const isSkillEnhancement = computed(() => screen.value === 'skill-enhancement' && skillEnhancementModel.value?.zoneType === 'skill-enhancement');
 
   function enterTown(slot: AccountCharacterSlot, characterLabel: string) {
     if (!slot.occupied || !slot.accountCharacterId || !slot.accountCharacter) {
@@ -79,6 +103,7 @@ export const useGameStore = defineStore('game', () => {
     inventoryCompactedPreview.value = false;
     selectedInventoryItemCode.value = null;
     resetStorageTrashPreview();
+    resetSkillEnhancementPreview();
     activeFeatureKey.value = null;
   }
 
@@ -211,9 +236,70 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function returnInventoryPreview() {
+    if (!inventoryModel.value && model.value && itemTemplateSources.value.length) rebuildInventoryPreview();
     if (!inventoryModel.value) returnTown();
-    else screen.value = 'inventory';
+    screen.value = 'inventory';
     storageTrashModel.value = null;
+  }
+
+  function enterSkillEnhancementPreview(source: {
+    skills: SkillOption[];
+    characterSkills: CharacterSkillOption[];
+    skillLevels: SkillLevelOption[];
+    itemTemplates: ItemTemplateOption[];
+    enhancementGroups: EnhancementGroupOption[];
+    enhancementLevels: EnhancementLevelOption[];
+  }) {
+    if (!model.value || !source.skills.length || !source.enhancementGroups.length || !source.enhancementLevels.length) return false;
+    skillSources.value = source.skills.slice();
+    characterSkillSources.value = source.characterSkills.slice();
+    skillLevelSources.value = source.skillLevels.slice();
+    if (source.itemTemplates.length) itemTemplateSources.value = source.itemTemplates.slice();
+    enhancementGroupSources.value = source.enhancementGroups.slice();
+    enhancementLevelSources.value = source.enhancementLevels.slice();
+    selectedSkillId.value = null;
+    selectedEnhancementItemCode.value = null;
+    selectedEnhancementLevel.value = null;
+    rebuildSkillEnhancementPreview();
+    screen.value = 'skill-enhancement';
+    activeFeatureKey.value = null;
+    return true;
+  }
+
+  function selectSkillEnhancementSkill(skillId: string) {
+    selectedSkillId.value = skillId;
+    rebuildSkillEnhancementPreview();
+  }
+
+  function selectEnhancementItem(itemCode: string) {
+    selectedEnhancementItemCode.value = itemCode;
+    selectedEnhancementLevel.value = null;
+    rebuildSkillEnhancementPreview();
+  }
+
+  function selectEnhancementLevel(fromLevel: number) {
+    selectedEnhancementLevel.value = fromLevel;
+    rebuildSkillEnhancementPreview();
+  }
+
+  function rebuildSkillEnhancementPreview() {
+    if (!model.value || !skillSources.value.length || !itemTemplateSources.value.length) return;
+    skillEnhancementModel.value = createSkillEnhancementViewModel({
+      town: model.value,
+      skills: skillSources.value,
+      characterSkills: characterSkillSources.value,
+      skillLevels: skillLevelSources.value,
+      itemTemplates: itemTemplateSources.value,
+      enhancementGroups: enhancementGroupSources.value,
+      enhancementLevels: enhancementLevelSources.value,
+      preferredSkillId: selectedSkillId.value,
+      preferredItemCode: selectedEnhancementItemCode.value,
+      preferredEnhancementLevel: selectedEnhancementLevel.value,
+      createdAt: 0,
+    });
+    selectedSkillId.value = skillEnhancementModel.value.selectedSkill.id;
+    selectedEnhancementItemCode.value = skillEnhancementModel.value.selectedEnhancementItem.code;
+    selectedEnhancementLevel.value = skillEnhancementModel.value.selectedEnhancementStep.fromLevel;
   }
 
   function returnTown() {
@@ -222,6 +308,7 @@ export const useGameStore = defineStore('game', () => {
     bossModel.value = null;
     inventoryModel.value = null;
     storageTrashModel.value = null;
+    skillEnhancementModel.value = null;
   }
 
   function openFeature(key: TownFeatureKey) {
@@ -243,6 +330,7 @@ export const useGameStore = defineStore('game', () => {
     inventoryCompactedPreview.value = false;
     selectedInventoryItemCode.value = null;
     resetStorageTrashPreview();
+    resetSkillEnhancementPreview();
     screen.value = 'town';
     contextSignature.value = '';
     activeFeatureKey.value = null;
@@ -257,18 +345,32 @@ export const useGameStore = defineStore('game', () => {
     storageTrashLastAction.value = null;
   }
 
+  function resetSkillEnhancementPreview() {
+    skillEnhancementModel.value = null;
+    skillSources.value = [];
+    characterSkillSources.value = [];
+    skillLevelSources.value = [];
+    enhancementGroupSources.value = [];
+    enhancementLevelSources.value = [];
+    selectedSkillId.value = null;
+    selectedEnhancementItemCode.value = null;
+    selectedEnhancementLevel.value = null;
+  }
+
   return {
     model,
     fieldModel,
     bossModel,
     inventoryModel,
     storageTrashModel,
+    skillEnhancementModel,
     activeFeature,
     isTown,
     isField,
     isBoss,
     isInventory,
     isStorageTrash,
+    isSkillEnhancement,
     enterTown,
     enterFieldPreview,
     selectFieldPreview,
@@ -281,6 +383,10 @@ export const useGameStore = defineStore('game', () => {
     selectStorageTrashPreview,
     toggleStorageTrashCompactPreview,
     returnInventoryPreview,
+    enterSkillEnhancementPreview,
+    selectSkillEnhancementSkill,
+    selectEnhancementItem,
+    selectEnhancementLevel,
     returnTown,
     openFeature,
     closeFeature,

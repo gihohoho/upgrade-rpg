@@ -94,7 +94,12 @@
           <strong>성장 / 시스템</strong>
           <div>
             <button type="button" aria-haspopup="dialog" @click="openFeature('save', $event)"><span aria-hidden="true">存</span>수동 저장</button>
-            <button type="button" disabled title="아이템 UI 이전 뒤 활성화됩니다"><span aria-hidden="true">鍛</span>초보자 장비</button>
+            <button
+              type="button"
+              :disabled="!canEnterSkillEnhancement"
+              :title="canEnterSkillEnhancement ? '스킬·강화 규칙 화면으로 이동합니다' : '스킬·강화 master-data를 불러오지 못했습니다'"
+              @click="enterSkillEnhancementPreview"
+            ><span aria-hidden="true">鍛</span>스킬·강화</button>
             <button type="button" disabled title="설정 UI 이전 뒤 활성화됩니다"><span aria-hidden="true">設</span>설정</button>
             <button type="button" disabled title="전투 runtime 이전 뒤 활성화됩니다"><span aria-hidden="true">自</span>특보 자동</button>
           </div>
@@ -181,6 +186,12 @@ const selectedCharacterLabel = computed(() => {
   const code = account.selectedCharacter?.accountCharacter?.characterCode;
   return account.characterOptions.find((option) => option.code === code)?.name ?? code ?? '캐릭터';
 });
+const canEnterSkillEnhancement = computed(() => (
+  account.skills.length > 0
+  && account.enhancementGroups.length > 0
+  && account.enhancementLevels.length > 0
+  && account.itemTemplates.some((item) => Boolean(item.enhanceGroupCode))
+));
 
 watchEffect(() => {
   const slot = account.selectedCharacter;
@@ -209,6 +220,17 @@ function enterBossPreview() {
 
 function enterInventoryPreview() {
   game.enterInventoryPreview(account.itemTemplates);
+}
+
+function enterSkillEnhancementPreview() {
+  game.enterSkillEnhancementPreview({
+    skills: account.skills,
+    characterSkills: account.characterSkills,
+    skillLevels: account.skillLevels,
+    itemTemplates: account.itemTemplates,
+    enhancementGroups: account.enhancementGroups,
+    enhancementLevels: account.enhancementLevels,
+  });
 }
 
 function changeCharacter() {

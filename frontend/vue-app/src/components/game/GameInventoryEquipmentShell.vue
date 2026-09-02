@@ -4,6 +4,12 @@
       <div class="inventory-command-bar__actions">
         <button type="button" @click="game.returnTown"><span aria-hidden="true">←</span> 마을로</button>
         <button type="button" @click="game.enterStorageTrashPreview"><span aria-hidden="true">▦</span> 보관함·휴지통</button>
+        <button
+          type="button"
+          :disabled="!canEnterSkillEnhancement"
+          :title="canEnterSkillEnhancement ? '스킬·강화 규칙 화면으로 이동합니다' : '스킬·강화 master-data를 불러오지 못했습니다'"
+          @click="enterSkillEnhancementPreview"
+        ><span aria-hidden="true">鍛</span> 스킬·강화</button>
       </div>
       <div>
         <span>Inventory · equipment UI</span>
@@ -151,8 +157,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { ItemFrameTone } from '@/game/adapters/inventoryEquipment';
-import { useGameStore } from '@/stores';
+import { useAccountStore, useGameStore } from '@/stores';
 
+const account = useAccountStore();
 const game = useGameStore();
 const inventory = computed(() => game.inventoryModel);
 const town = computed(() => game.model);
@@ -163,6 +170,23 @@ const selectedLocationLabel = computed(() => {
   const container = inventory.value.selectedLocation === 'equipment' ? '장착 장비' : '가방';
   return `${container} ${inventory.value.selectedSlotNumber}번`;
 });
+const canEnterSkillEnhancement = computed(() => (
+  account.skills.length > 0
+  && account.enhancementGroups.length > 0
+  && account.enhancementLevels.length > 0
+  && account.itemTemplates.some((item) => Boolean(item.enhanceGroupCode))
+));
+
+function enterSkillEnhancementPreview() {
+  game.enterSkillEnhancementPreview({
+    skills: account.skills,
+    characterSkills: account.characterSkills,
+    skillLevels: account.skillLevels,
+    itemTemplates: account.itemTemplates,
+    enhancementGroups: account.enhancementGroups,
+    enhancementLevels: account.enhancementLevels,
+  });
+}
 
 function slotClass(frame: ItemFrameTone | undefined, itemCode: string | undefined) {
   return {

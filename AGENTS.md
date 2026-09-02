@@ -90,9 +90,9 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v389.vue-game-storage-trash-ui-foundation
-strict result: vue-game-storage-trash-ui-foundation
-next safe stage: migrate-vue-game-skill-enhancement-ui-foundation
+latest: v390.vue-game-skill-enhancement-ui-foundation
+strict result: vue-game-skill-enhancement-ui-foundation
+next safe stage: migrate-vue-game-shop-settings-ui-foundation
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -112,8 +112,10 @@ v386 production approval/execution: no/no
 v387 production approval/execution: no/no
 v388 production approval/execution: no/no
 v389 production approval/execution: no/no
+v390 production approval/execution: no/no
 ```
 
+- v390은 master-data 스킬 10단계와 장비 강화 확률·비용·재료를 표시 전용 UI로 이식했습니다. SQ·SW 첫 Lv.1과 보너스 비상속, 탈리스만/휘장 `2^현재 강화` 재료 규칙을 고정했고 실제 사용·강화·소비·난수·snapshot·save는 잠겨 있으며 desktop/mobile·focused smoke가 PASS했습니다.
 - v388~v389는 master-data 아이템을 장비·가방·보관함·휴지통 표시 모델로 바꾸고 빈 칸·첫 빈 칸·상대 순서 보존 독립 정렬 규칙을 연결했습니다. 실제 snapshot·장착·사용·판매·강화·이동·복구·삭제·save는 잠겨 있으며 desktop/mobile·focused smoke가 PASS했습니다.
 - v386~v387은 폐기 예정 `baseUrl`을 제거하고 master-data 필드·보스와 typed 전투 규칙을 표시 전용 UI로 이식했습니다. HP·골드·보상·쿨타임·save·timer·난수는 바꾸지 않았습니다.
 - v385는 캐릭터 선택 뒤 마을 전용 접속 캐릭터 바, 시설, HUD, 능력치와 기본 스킬을 typed adapter/Pinia로 이식했습니다. 슬롯 요약과 기본 domain 상태를 화면에서 구분하고 snapshot load/save·전투 timer는 시작하지 않았으며 desktop/mobile·modal·focused smoke가 PASS했습니다.

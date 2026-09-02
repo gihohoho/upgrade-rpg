@@ -1,13 +1,13 @@
-# Current Status — v389
+# Current Status — v390
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v389.vue-game-storage-trash-ui-foundation
-strict result: vue-game-storage-trash-ui-foundation
-next safe stage: migrate-vue-game-skill-enhancement-ui-foundation
+latest: v390.vue-game-skill-enhancement-ui-foundation
+strict result: vue-game-skill-enhancement-ui-foundation
+next safe stage: migrate-vue-game-shop-settings-ui-foundation
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -26,7 +26,14 @@ v386 production approval/execution: no/no
 v387 production approval/execution: no/no
 v388 production approval/execution: no/no
 v389 production approval/execution: no/no
+v390 production approval/execution: no/no
 ```
+
+## v390 스킬·강화 UI 기반
+
+- 공개 master-data의 스킬·캐릭터 연결·레벨과 강화 그룹·단계를 account store와 순수 adapter에 연결해 스킬 10단계와 장비별 규칙을 표시합니다.
+- `Q → W → E → R → T → F → D → SQ → SW → M`의 레벨·효과·강화권과 장비 단계별 확률·비용·재료를 보여 줍니다. SQ·SW 첫 전용 강화권은 기존 Q·W와 무관하게 Lv.1이고 탈리스만 보너스를 상속하지 않으며, 탈리스만/휘장 재료는 `2^현재 강화`입니다.
+- 선택만 표시 model을 바꾸고 실제 사용·강화·Gold/재료·난수·snapshot/save·runtime은 잠급니다. 마을/인벤토리 왕복, 접속 캐릭터 바 복원, desktop/mobile `390×844`·가로 넘침 없음과 focused smoke가 PASS했고 임시 fixture를 제거했습니다. backend·DB·legacy·Render·배포는 바꾸지 않았습니다.
 
 ## v389 보관함·휴지통 UI 기반
 

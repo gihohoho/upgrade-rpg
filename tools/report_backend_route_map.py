@@ -22,9 +22,9 @@ from pathlib import Path
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
-CHECKPOINT_VERSION = "v389.vue-game-storage-trash-ui-foundation"
-CHECKPOINT_RESULT = "vue-game-storage-trash-ui-foundation"
-NEXT_SAFE_STAGE = "migrate-vue-game-skill-enhancement-ui-foundation"
+CHECKPOINT_VERSION = "v390.vue-game-skill-enhancement-ui-foundation"
+CHECKPOINT_RESULT = "vue-game-skill-enhancement-ui-foundation"
+NEXT_SAFE_STAGE = "migrate-vue-game-shop-settings-ui-foundation"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 
@@ -437,7 +437,7 @@ signed backend image와 legacy static의 공개 배포를 승인된 단일 시�
 
 권장 범위:
 
-1. v389에서 표시 전용 보관함·휴지통 UI와 독립 정렬 adapter를 연결했으므로 다음은 쓰기 없이 스킬·강화 UI 기반을 준비합니다.
+1. v390에서 표시 전용 스킬·강화 UI와 master-data 규칙 adapter를 연결했으므로 다음은 쓰기 없이 상점·설정 UI 기반을 준비합니다.
 2. production 관리자 복구, 재인증 request, dev key header와 실제 Apply는 별도 exact DB-write 승인을 받기 전까지 연결하지 않습니다.
 3. 완료된 migration·publish·Render deploy와 기호가 확인한 Docker·로그인은 단순 확인을 위해 재실행하지 않습니다.
 """
