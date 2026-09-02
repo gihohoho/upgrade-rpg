@@ -1,13 +1,13 @@
-# Current Status — v390
+# Current Status — v391
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v390.vue-game-skill-enhancement-ui-foundation
-strict result: vue-game-skill-enhancement-ui-foundation
-next safe stage: migrate-vue-game-shop-settings-ui-foundation
+latest: v391.vue-game-shop-settings-ui-foundation
+strict result: vue-game-shop-settings-ui-foundation
+next safe stage: migrate-vue-game-combat-runtime-foundation
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -27,36 +27,21 @@ v387 production approval/execution: no/no
 v388 production approval/execution: no/no
 v389 production approval/execution: no/no
 v390 production approval/execution: no/no
+v391 production approval/execution: no/no
 ```
 
-## v390 스킬·강화 UI 기반
+## v391 상점·설정 UI 기반
 
-- 공개 master-data의 스킬·캐릭터 연결·레벨과 강화 그룹·단계를 account store와 순수 adapter에 연결해 스킬 10단계와 장비별 규칙을 표시합니다.
-- `Q → W → E → R → T → F → D → SQ → SW → M`의 레벨·효과·강화권과 장비 단계별 확률·비용·재료를 보여 줍니다. SQ·SW 첫 전용 강화권은 기존 Q·W와 무관하게 Lv.1이고 탈리스만 보너스를 상속하지 않으며, 탈리스만/휘장 재료는 `2^현재 강화`입니다.
-- 선택만 표시 model을 바꾸고 실제 사용·강화·Gold/재료·난수·snapshot/save·runtime은 잠급니다. 마을/인벤토리 왕복, 접속 캐릭터 바 복원, desktop/mobile `390×844`·가로 넘침 없음과 focused smoke가 PASS했고 임시 fixture를 제거했습니다. backend·DB·legacy·Render·배포는 바꾸지 않았습니다.
+- 순수 adapter가 공개 item master-data를 분류별 카탈로그로 바꾸고 `baseCost`는 강화 기준 비용, `sellPrice`는 등록된 판매 값으로만 표시합니다. legacy에는 구매 계약이 없고 기존 “판매”는 Gold 지급이 아닌 휴지통 이동이므로 구매·판매 가격과 거래 동작을 만들지 않았습니다.
+- 일반 보스 자동 소환·특수 보스 자동 사냥·일반 보스 장비 드랍은 Pinia의 임시 preview state에서만 토글하고 기본값으로 복원합니다. runtime·storage·snapshot에는 반영하지 않으며 수동 저장과 캐릭터 초기화도 잠갔습니다.
+- 마을/인벤토리 왕복, 접속 캐릭터 바 마을 전용 복원, 카테고리·아이템 선택, 설정 토글·복원, desktop/mobile `390×844`·가로 넘침 없음과 focused smoke가 PASS했고 임시 fixture를 제거했습니다. backend·DB·legacy·Render·배포는 바꾸지 않았습니다.
 
-## v389 보관함·휴지통 UI 기반
+## v384~v390 이전 Vue 게임 기반
 
-- 순수 adapter가 보관함·휴지통을 각각 20개 표시 슬롯과 60칸 계약으로 만들고, 두 공간의 첫 빈 칸과 상대 순서 보존 정렬을 독립적으로 계산합니다. source 입력은 바꾸지 않습니다.
-- 선택과 두 `위로 정렬 미리보기`만 화면 상태를 바꿉니다. 가방/보관함 이동·휴지통 이동/복구·영구 삭제·snapshot·save는 잠겨 있습니다.
-- 마을 왕복·접속 캐릭터 바 비노출·각 20슬롯·정렬 전후 첫 빈 칸 2/7번·선택 유지·독립 정렬·desktop/mobile 4열·가로 넘침 없음·Vite error overlay 0과 focused smoke가 PASS했습니다. backend·DB·legacy·Render·배포는 바꾸지 않았습니다.
-
-## v386~v388 이전 Vue 게임 UI
-
-- v386~v387은 `baseUrl` 제거와 master-data 필드·보스의 표시 전용 전투 UI를, v388은 15개 장비·24개 가방 슬롯과 첫 빈 칸·상대 순서 보존 정렬을 이식했습니다.
-- 실제 HP·골드·보상·쿨타임·장착·사용·판매·강화·이동·save·timer·난수는 바꾸지 않았고 각 desktop/mobile·focused smoke가 PASS했습니다.
-
-## v385 마을·HUD
-
-- 캐릭터 선택 뒤 마을에서만 접속 캐릭터 바·시설·HUD·능력치·스킬을 표시합니다. 슬롯의 이름·레벨·골드·최근 구역과 아직 load하지 않은 domain 능력치를 구분합니다.
-- 미연결 기능은 접근 가능한 안내 modal만 엽니다. snapshot load/save·자동 저장·전투 timer와 backend·DB·legacy·Render는 변경하지 않았습니다.
-- adapter/Pinia 경계, desktop/mobile·modal·가로 넘침·console, Vue build·focused smoke가 PASS했습니다.
-
-## v384 Vue game domain 기반
-
-- legacy game JavaScript 8개/3,481줄의 browser·runtime 의존성을 [자동 생성 보고서](../generated/VUE_GAME_DOMAIN_DEPENDENCIES.md)로 고정했습니다.
-- state/save·slot·전투 규칙·action result를 순수 TypeScript로 분리했고 legacy 동등성 검사가 PASS했습니다.
-- snapshot load/save·전투 timer와 legacy·backend·DB·Render는 바꾸지 않았습니다.
+- v384는 legacy game JavaScript의 의존성을 [자동 생성 보고서](../generated/VUE_GAME_DOMAIN_DEPENDENCIES.md)로 고정하고 state/save·slot·전투 규칙·action result를 순수 TypeScript로 분리했습니다.
+- v385~v387은 마을 전용 접속 캐릭터 바·HUD와 master-data 필드·보스 표시 UI를, v388~v389는 15개 장비·24개 가방 및 보관함·휴지통의 빈 칸·독립 정렬 규칙을 이식했습니다.
+- v390은 스킬 10단계와 강화 규칙, SQ·SW 첫 Lv.1·보너스 비상속, 탈리스만/휘장 `2^현재 강화` 재료를 표시합니다.
+- 각 desktop/mobile·focused smoke가 PASS했습니다. 실제 HP·Gold·보상·쿨타임·아이템/스킬 변경·snapshot/save·timer·난수와 backend·DB·legacy·Render는 바꾸지 않았습니다.
 
 ## v378 게임 UI·환경 라우팅 소스 준비
 
@@ -136,7 +121,7 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. Vue 전체 전환 순서에 따라 typed skill/enhancement rule을 사용하는 스킬·강화 표시 UI를 이식합니다. 실제 스킬 사용·강화·재료 소비·snapshot load/save·자동 저장은 아직 연결하지 않습니다.
+1. Vue 전체 전환 순서에 따라 typed 전투 계산을 사용하는 client combat runtime controller와 timer lifecycle을 분리합니다. server snapshot load/save·자동 저장·Gold/아이템 보상·난수 드랍은 이 단계에 함께 연결하지 않습니다.
 2. 실제 관리자 Apply API·재인증·dev key header·DB write 연결은 이번 단계에 포함되지 않았습니다. 필요하면 작업 종류와 정확한 DB-write 범위를 별도 승인받습니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 

@@ -5,8 +5,8 @@
 중요: v377 local migration과 인증 요청 보호 복구는 완료됐습니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
 
 ```txt
-latest: v390.vue-game-skill-enhancement-ui-foundation
-strict result: vue-game-skill-enhancement-ui-foundation
+latest: v391.vue-game-shop-settings-ui-foundation
+strict result: vue-game-shop-settings-ui-foundation
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 actual target v377 apply: local 1 / Neon 1
@@ -18,7 +18,7 @@ local Brevo E2E: Naver delivery / link verification / login verified
 provider finalize: local multi-worker ownership diagnosed / direct provider healthy
 recovery2 roundtrip/Neon backup/apply: verified / one attempt each
 public backend/static: v377/v378 live
-next safe stage: migrate-vue-game-shop-settings-ui-foundation
+next safe stage: migrate-vue-game-combat-runtime-foundation
 ```
 
 ## 생성 방식
@@ -207,7 +207,7 @@ next safe stage: migrate-vue-game-shop-settings-ui-foundation
 
 ## 다음 추천 단계
 
-`next safe stage: migrate-vue-game-shop-settings-ui-foundation`
+`next safe stage: migrate-vue-game-combat-runtime-foundation`
 
 private environment, local migration, recovery2 synthetic 왕복·Neon backup·exact v377 apply,
 signed backend image와 legacy static의 공개 배포를 승인된 단일 시도로 완료했습니다.
@@ -215,6 +215,6 @@ signed backend image와 legacy static의 공개 배포를 승인된 단일 시�
 
 권장 범위:
 
-1. v390에서 표시 전용 스킬·강화 UI와 master-data 규칙 adapter를 연결했으므로 다음은 쓰기 없이 상점·설정 UI 기반을 준비합니다.
+1. v391에서 거래 없는 상점 카탈로그와 runtime·저장 없는 설정 미리보기를 연결했으므로 다음은 server save·보상·난수 드랍과 분리해 client 전투 runtime controller 기반을 준비합니다.
 2. production 관리자 복구, 재인증 request, dev key header와 실제 Apply는 별도 exact DB-write 승인을 받기 전까지 연결하지 않습니다.
 3. 완료된 migration·publish·Render deploy와 기호가 확인한 Docker·로그인은 단순 확인을 위해 재실행하지 않습니다.

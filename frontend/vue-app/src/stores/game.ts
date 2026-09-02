@@ -27,6 +27,14 @@ import {
   type SkillEnhancementViewModel,
 } from '@/game/adapters/skillEnhancement';
 import {
+  cloneDefaultSettingPreview,
+  createShopSettingsViewModel,
+  type SettingPreviewKey,
+  type SettingPreviewState,
+  type ShopCategoryKey,
+  type ShopSettingsViewModel,
+} from '@/game/adapters/shopSettings';
+import {
   createTownHudViewModel,
   TOWN_FEATURES,
   type TownFeatureKey,
@@ -58,7 +66,12 @@ export const useGameStore = defineStore('game', () => {
   const selectedSkillId = ref<string | null>(null);
   const selectedEnhancementItemCode = ref<string | null>(null);
   const selectedEnhancementLevel = ref<number | null>(null);
-  const screen = ref<'town' | 'field' | 'boss' | 'inventory' | 'storage-trash' | 'skill-enhancement'>('town');
+  const shopSettingsModel = shallowRef<ShopSettingsViewModel | null>(null);
+  const selectedShopCategory = ref<ShopCategoryKey>('all');
+  const selectedShopItemCode = ref<string | null>(null);
+  const settingPreview = ref<SettingPreviewState>(cloneDefaultSettingPreview());
+  const shopSettingsLastAction = ref<string | null>(null);
+  const screen = ref<'town' | 'field' | 'boss' | 'inventory' | 'storage-trash' | 'skill-enhancement' | 'shop-settings'>('town');
   const contextSignature = ref('');
   const activeFeatureKey = ref<TownFeatureKey | null>(null);
 
@@ -71,6 +84,7 @@ export const useGameStore = defineStore('game', () => {
   const isInventory = computed(() => screen.value === 'inventory' && inventoryModel.value?.zoneType === 'inventory');
   const isStorageTrash = computed(() => screen.value === 'storage-trash' && storageTrashModel.value?.zoneType === 'storage-trash');
   const isSkillEnhancement = computed(() => screen.value === 'skill-enhancement' && skillEnhancementModel.value?.zoneType === 'skill-enhancement');
+  const isShopSettings = computed(() => screen.value === 'shop-settings' && shopSettingsModel.value?.zoneType === 'shop-settings');
 
   function enterTown(slot: AccountCharacterSlot, characterLabel: string) {
     if (!slot.occupied || !slot.accountCharacterId || !slot.accountCharacter) {
@@ -104,6 +118,7 @@ export const useGameStore = defineStore('game', () => {
     selectedInventoryItemCode.value = null;
     resetStorageTrashPreview();
     resetSkillEnhancementPreview();
+    resetShopSettingsPreview();
     activeFeatureKey.value = null;
   }
 
@@ -302,6 +317,60 @@ export const useGameStore = defineStore('game', () => {
     selectedEnhancementLevel.value = skillEnhancementModel.value.selectedEnhancementStep.fromLevel;
   }
 
+  function enterShopSettingsPreview(itemTemplates: ItemTemplateOption[]) {
+    if (!model.value || !itemTemplates.length) return false;
+    itemTemplateSources.value = itemTemplates.slice();
+    selectedShopCategory.value = 'all';
+    selectedShopItemCode.value = null;
+    settingPreview.value = cloneDefaultSettingPreview();
+    shopSettingsLastAction.value = null;
+    rebuildShopSettingsPreview();
+    screen.value = 'shop-settings';
+    activeFeatureKey.value = null;
+    return true;
+  }
+
+  function selectShopCategory(category: ShopCategoryKey) {
+    selectedShopCategory.value = category;
+    selectedShopItemCode.value = null;
+    shopSettingsLastAction.value = null;
+    rebuildShopSettingsPreview();
+  }
+
+  function selectShopItem(itemCode: string) {
+    selectedShopItemCode.value = itemCode;
+    shopSettingsLastAction.value = null;
+    rebuildShopSettingsPreview();
+  }
+
+  function toggleSettingPreview(key: SettingPreviewKey) {
+    settingPreview.value = { ...settingPreview.value, [key]: !settingPreview.value[key] };
+    const definition = shopSettingsModel.value?.settings.find((setting) => setting.key === key);
+    shopSettingsLastAction.value = `${definition?.label ?? key} ${settingPreview.value[key] ? 'ON' : 'OFF'}`;
+    rebuildShopSettingsPreview();
+  }
+
+  function resetSettingPreview() {
+    settingPreview.value = cloneDefaultSettingPreview();
+    shopSettingsLastAction.value = '기본값 복원';
+    rebuildShopSettingsPreview();
+  }
+
+  function rebuildShopSettingsPreview() {
+    if (!model.value || !itemTemplateSources.value.length) return;
+    shopSettingsModel.value = createShopSettingsViewModel({
+      town: model.value,
+      itemTemplates: itemTemplateSources.value,
+      preferredCategory: selectedShopCategory.value,
+      preferredItemCode: selectedShopItemCode.value,
+      settingPreview: settingPreview.value,
+      lastAction: shopSettingsLastAction.value,
+      createdAt: 0,
+    });
+    selectedShopCategory.value = shopSettingsModel.value.selectedCategory;
+    selectedShopItemCode.value = shopSettingsModel.value.selectedItem.code;
+  }
+
   function returnTown() {
     screen.value = 'town';
     fieldModel.value = null;
@@ -309,6 +378,7 @@ export const useGameStore = defineStore('game', () => {
     inventoryModel.value = null;
     storageTrashModel.value = null;
     skillEnhancementModel.value = null;
+    shopSettingsModel.value = null;
   }
 
   function openFeature(key: TownFeatureKey) {
@@ -331,6 +401,7 @@ export const useGameStore = defineStore('game', () => {
     selectedInventoryItemCode.value = null;
     resetStorageTrashPreview();
     resetSkillEnhancementPreview();
+    resetShopSettingsPreview();
     screen.value = 'town';
     contextSignature.value = '';
     activeFeatureKey.value = null;
@@ -357,6 +428,14 @@ export const useGameStore = defineStore('game', () => {
     selectedEnhancementLevel.value = null;
   }
 
+  function resetShopSettingsPreview() {
+    shopSettingsModel.value = null;
+    selectedShopCategory.value = 'all';
+    selectedShopItemCode.value = null;
+    settingPreview.value = cloneDefaultSettingPreview();
+    shopSettingsLastAction.value = null;
+  }
+
   return {
     model,
     fieldModel,
@@ -364,6 +443,7 @@ export const useGameStore = defineStore('game', () => {
     inventoryModel,
     storageTrashModel,
     skillEnhancementModel,
+    shopSettingsModel,
     activeFeature,
     isTown,
     isField,
@@ -371,6 +451,7 @@ export const useGameStore = defineStore('game', () => {
     isInventory,
     isStorageTrash,
     isSkillEnhancement,
+    isShopSettings,
     enterTown,
     enterFieldPreview,
     selectFieldPreview,
@@ -387,6 +468,11 @@ export const useGameStore = defineStore('game', () => {
     selectSkillEnhancementSkill,
     selectEnhancementItem,
     selectEnhancementLevel,
+    enterShopSettingsPreview,
+    selectShopCategory,
+    selectShopItem,
+    toggleSettingPreview,
+    resetSettingPreview,
     returnTown,
     openFeature,
     closeFeature,

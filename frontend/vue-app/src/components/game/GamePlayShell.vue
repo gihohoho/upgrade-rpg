@@ -1,5 +1,6 @@
 <template>
-  <GameSkillEnhancementShell v-if="game.isSkillEnhancement" />
+  <GameShopSettingsShell v-if="game.isShopSettings" />
+  <GameSkillEnhancementShell v-else-if="game.isSkillEnhancement" />
   <GameStorageTrashShell v-else-if="game.isStorageTrash" />
   <GameInventoryEquipmentShell v-else-if="game.isInventory" />
   <GameBossCombatShell v-else-if="game.isBoss" />
@@ -9,6 +10,7 @@
 
 <script setup lang="ts">
 import GameInventoryEquipmentShell from './GameInventoryEquipmentShell.vue';
+import GameShopSettingsShell from './GameShopSettingsShell.vue';
 import GameSkillEnhancementShell from './GameSkillEnhancementShell.vue';
 import GameStorageTrashShell from './GameStorageTrashShell.vue';
 import GameBossCombatShell from './GameBossCombatShell.vue';

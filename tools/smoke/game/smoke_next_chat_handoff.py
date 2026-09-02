@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v390.vue-game-skill-enhancement-ui-foundation"
-RESULT = "vue-game-skill-enhancement-ui-foundation"
-NEXT_STAGE = "migrate-vue-game-shop-settings-ui-foundation"
+VERSION = "v391.vue-game-shop-settings-ui-foundation"
+RESULT = "vue-game-shop-settings-ui-foundation"
+NEXT_STAGE = "migrate-vue-game-combat-runtime-foundation"
 SOURCE_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_HEAD = SOURCE_HEAD
 NEON_APPLIED_HEAD = SOURCE_HEAD
@@ -96,7 +96,7 @@ def main() -> int:
     )
     require_markers(
         "NEXT_CHAT_PROMPT.md",
-        "migrate-vue-game-shop-settings-ui-foundation",
+        "migrate-vue-game-combat-runtime-foundation",
         "다시 전면 감사하거나 재실행하지 말고",
     )
     require_markers(

@@ -100,7 +100,12 @@
               :title="canEnterSkillEnhancement ? '스킬·강화 규칙 화면으로 이동합니다' : '스킬·강화 master-data를 불러오지 못했습니다'"
               @click="enterSkillEnhancementPreview"
             ><span aria-hidden="true">鍛</span>스킬·강화</button>
-            <button type="button" disabled title="설정 UI 이전 뒤 활성화됩니다"><span aria-hidden="true">設</span>설정</button>
+            <button
+              type="button"
+              :disabled="!account.itemTemplates.length"
+              :title="account.itemTemplates.length ? '상점 카탈로그·설정 미리보기로 이동합니다' : '아이템 master-data를 불러오지 못했습니다'"
+              @click="enterShopSettingsPreview"
+            ><span aria-hidden="true">店</span>상점·설정</button>
             <button type="button" disabled title="전투 runtime 이전 뒤 활성화됩니다"><span aria-hidden="true">自</span>특보 자동</button>
           </div>
         </div>
@@ -231,6 +236,10 @@ function enterSkillEnhancementPreview() {
     enhancementGroups: account.enhancementGroups,
     enhancementLevels: account.enhancementLevels,
   });
+}
+
+function enterShopSettingsPreview() {
+  game.enterShopSettingsPreview(account.itemTemplates);
 }
 
 function changeCharacter() {

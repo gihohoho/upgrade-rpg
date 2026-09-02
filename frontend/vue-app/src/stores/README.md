@@ -5,7 +5,8 @@ v379부터 Pinia를 공통 상태 관리 기준으로 사용합니다.
 - `app.ts`: navigation과 Vue 전환 단계처럼 앱 전체에서 공유하는 UI 상태
 - `account.ts`: 인증 token, 계정, 이메일 gate와 캐릭터 슬롯 상태
 - `admin.ts`: `isAdmin` 접근 상태, Bearer 관리자 GET과 dry-run Preview 상태·오류 경계
-- 게임 runtime은 기능을 이식할 때 별도 store로 추가
+- `game.ts`: 마을부터 상점·설정까지 표시 전용 화면 상태와 adapter 입력을 관리하며 runtime·storage·fetch를 직접 사용하지 않음
+- 실제 게임 runtime은 다음 단계에서 표시 state와 분리된 controller/store로 추가
 - 서버 snapshot과 저장 revision은 임의의 UI 상태와 섞지 않음
 - component 안에서 직접 전역 객체를 만들지 않음
 

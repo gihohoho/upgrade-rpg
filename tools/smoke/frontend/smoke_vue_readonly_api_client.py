@@ -91,8 +91,8 @@ def main() -> None:
         raise AssertionError(f"Missing Vue read-only API client files: {missing}")
 
     package = json.loads((VUE_APP / "package.json").read_text(encoding="utf-8"))
-    if package.get("version") != "0.0.0-v390":
-        raise AssertionError("Vue package version must be 0.0.0-v390")
+    if package.get("version") != "0.0.0-v391":
+        raise AssertionError("Vue package version must be 0.0.0-v391")
 
     config = read("src/api/config.js")
     assert_contains(config, "http://127.0.0.1:8000/api/v1", "default API base URL")

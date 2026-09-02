@@ -4,6 +4,7 @@
       <div class="inventory-command-bar__actions">
         <button type="button" @click="game.returnTown"><span aria-hidden="true">←</span> 마을로</button>
         <button type="button" @click="game.enterStorageTrashPreview"><span aria-hidden="true">▦</span> 보관함·휴지통</button>
+        <button type="button" @click="game.enterShopSettingsPreview(account.itemTemplates)"><span aria-hidden="true">店</span> 상점·설정</button>
         <button
           type="button"
           :disabled="!canEnterSkillEnhancement"

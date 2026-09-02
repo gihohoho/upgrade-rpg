@@ -90,9 +90,9 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v390.vue-game-skill-enhancement-ui-foundation
-strict result: vue-game-skill-enhancement-ui-foundation
-next safe stage: migrate-vue-game-shop-settings-ui-foundation
+latest: v391.vue-game-shop-settings-ui-foundation
+strict result: vue-game-shop-settings-ui-foundation
+next safe stage: migrate-vue-game-combat-runtime-foundation
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -113,14 +113,15 @@ v387 production approval/execution: no/no
 v388 production approval/execution: no/no
 v389 production approval/execution: no/no
 v390 production approval/execution: no/no
+v391 production approval/execution: no/no
 ```
 
-- v390은 master-data 스킬 10단계와 장비 강화 확률·비용·재료를 표시 전용 UI로 이식했습니다. SQ·SW 첫 Lv.1과 보너스 비상속, 탈리스만/휘장 `2^현재 강화` 재료 규칙을 고정했고 실제 사용·강화·소비·난수·snapshot·save는 잠겨 있으며 desktop/mobile·focused smoke가 PASS했습니다.
-- v388~v389는 master-data 아이템을 장비·가방·보관함·휴지통 표시 모델로 바꾸고 빈 칸·첫 빈 칸·상대 순서 보존 독립 정렬 규칙을 연결했습니다. 실제 snapshot·장착·사용·판매·강화·이동·복구·삭제·save는 잠겨 있으며 desktop/mobile·focused smoke가 PASS했습니다.
-- v386~v387은 폐기 예정 `baseUrl`을 제거하고 master-data 필드·보스와 typed 전투 규칙을 표시 전용 UI로 이식했습니다. HP·골드·보상·쿨타임·save·timer·난수는 바꾸지 않았습니다.
-- v385는 캐릭터 선택 뒤 마을 전용 접속 캐릭터 바, 시설, HUD, 능력치와 기본 스킬을 typed adapter/Pinia로 이식했습니다. 슬롯 요약과 기본 domain 상태를 화면에서 구분하고 snapshot load/save·전투 timer는 시작하지 않았으며 desktop/mobile·modal·focused smoke가 PASS했습니다.
-- v384는 legacy game JS 8개/3,481줄의 전역 의존성을 보고서로 고정하고 state/save·slot·공격/필드·보스 규칙·action result를 Vue 독립 typed domain으로 분리했습니다. legacy 동등성·순수 경계·Vue build/focused smoke가 PASS했고 v384 배포는 없습니다.
-- v379~v381은 TypeScript·Pinia·Router와 로그인·8칸 캐릭터·관리자 인증을, v382~v383은 `dryRun: true` Preview와 write-locked 확인 modal을 이식했습니다. Apply route/header/write는 없습니다.
+- v391은 구매 계약 없는 legacy 경계를 지켜 비용 정보 카탈로그와 보스 자동·장비 드랍 설정 미리보기를 이식했습니다. 거래·Gold/아이템·runtime·설정 저장·snapshot/save는 잠겼고 desktop/mobile·focused smoke가 PASS했습니다.
+- v390은 스킬 10단계·강화 규칙 UI와 SQ·SW 첫 Lv.1, 보너스 비상속, 탈리스만/휘장 `2^현재 강화` 재료 규칙을 고정했습니다. 사용·강화·소비·난수·snapshot/save는 잠겼습니다.
+- v388~v389는 장비·가방·보관함·휴지통 표시 모델과 빈 칸·첫 빈 칸·상대 순서 보존 독립 정렬을 연결했습니다. 실제 아이템 변경·save는 잠겼습니다.
+- v386~v387은 `baseUrl`을 제거하고 master-data 필드·보스의 표시 UI를 이식했습니다. HP·Gold·보상·쿨타임·save·timer·난수는 바꾸지 않았습니다.
+- v384~v385는 Vue 독립 typed game domain과 마을 전용 접속 캐릭터 바·HUD를 이식했고 legacy 동등성·반응형 검사가 PASS했습니다.
+- v379~v383은 TypeScript·Pinia·Router, 계정·8칸 캐릭터·관리자 인증, `dryRun: true` Preview와 write-locked modal을 이식했습니다. Apply write는 없습니다.
 - Docker PostgreSQL·로컬 로그인은 기호가 확인했습니다. production 관리자 복구·Apply write는 별도 exact 승인까지 보류합니다.
 - v378 legacy static은 승인 SHA `c56525394a4099160e7a32e93dc2d3a0d54568b3`에서 Render deploy `dep-da5vn3m417fc738rs2bg`로 정확히 1회 배포되어 live입니다. backend·DB·secret은 변경하지 않았습니다.
 - v371~v373은 이메일 lifecycle·owner/migration source, 문서 체계와 `email-validator==2.3.0`·`dnspython==2.8.0` 재현 lock을 준비했습니다. dependency가 빠지면 이메일 동작은 503으로 fail-closed합니다.
