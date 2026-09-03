@@ -1,6 +1,13 @@
 <template>
-  <div v-if="game.model" class="town-shell" data-zone="town">
-    <header v-if="game.isTown" class="town-session-bar" aria-label="마을 접속 캐릭터">
+  <div
+    v-if="game.model"
+    class="town-shell"
+    :class="{ 'town-shell--background': background }"
+    data-zone="town"
+    :aria-hidden="background || undefined"
+    :inert="background"
+  >
+    <header v-if="game.isTown && !background" class="town-session-bar" aria-label="마을 접속 캐릭터">
       <div class="town-session-bar__identity">
         <span>접속 캐릭터</span>
         <strong>{{ game.model.characterName }}</strong>
@@ -183,6 +190,7 @@ import { TOWN_FEATURES, type TownFeatureKey } from '@/game/adapters/townHud';
 
 const account = useAccountStore();
 const game = useGameStore();
+const { background = false } = defineProps<{ background?: boolean }>();
 const modalPanel = ref<HTMLElement | null>(null);
 const modalClose = ref<HTMLButtonElement | null>(null);
 const featureTrigger = ref<HTMLElement | null>(null);
@@ -200,6 +208,7 @@ const canEnterSkillEnhancement = computed(() => (
 
 watchEffect(() => {
   const slot = account.selectedCharacter;
+  if (background && game.model) return;
   if (slot?.occupied && slot.accountCharacter) game.enterTown(slot, selectedCharacterLabel.value);
   else game.resetShell();
 });

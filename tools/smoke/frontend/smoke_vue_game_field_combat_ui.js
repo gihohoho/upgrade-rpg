@@ -73,7 +73,7 @@ function assertStaticBoundary() {
   }
 
   const playShell = read("src/components/game/GamePlayShell.vue");
-  requireMarker(playShell, 'v-else-if="game.isField"', "game screen switch");
+  requireMarker(playShell, 'v-else-if="game.isField || game.utilityBackground === \'field\'"', "game screen switch");
   requireMarker(playShell, "GameFieldCombatShell", "game screen switch");
 
   const component = read("src/components/game/GameFieldCombatShell.vue");

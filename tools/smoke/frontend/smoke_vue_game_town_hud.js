@@ -69,7 +69,7 @@ function assertStaticBoundary() {
   const component = read("src/components/game/GameTownShell.vue");
   for (const marker of [
     'data-zone="town"',
-    'v-if="game.isTown"',
+    'v-if="game.isTown && !background"',
     "접속 캐릭터",
     "마을 시설",
     'aria-label="캐릭터 HUD"',

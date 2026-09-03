@@ -7,8 +7,8 @@
 ## v377 현재 overlay
 
 ```txt
-latest: v391.vue-game-shop-settings-ui-foundation
-strict result: vue-game-shop-settings-ui-foundation
+latest: v392.vue-game-legacy-frame-modal-readability
+strict result: vue-game-legacy-frame-modal-readability
 local Alembic source graph head: v377_auth_email_public_security
 local/Neon applied DB revision: v377_auth_email_public_security / v377_auth_email_public_security
 actual target v377 apply: local 1 / Neon 1

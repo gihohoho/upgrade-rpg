@@ -90,8 +90,8 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v391.vue-game-shop-settings-ui-foundation
-strict result: vue-game-shop-settings-ui-foundation
+latest: v392.vue-game-legacy-frame-modal-readability
+strict result: vue-game-legacy-frame-modal-readability
 next safe stage: migrate-vue-game-combat-runtime-foundation
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
@@ -114,8 +114,10 @@ v388 production approval/execution: no/no
 v389 production approval/execution: no/no
 v390 production approval/execution: no/no
 v391 production approval/execution: no/no
+v392 production approval/execution: no/no
 ```
 
+- v392는 넓은 Vue 게임 화면에 legacy형 `내 정보·장비`/`가방·Gold` 좌우 창을 복원하고, 주요 기능을 배경을 잠그는 공통 modal로 바꿨습니다. 좁은 화면은 하단 버튼과 모바일 modal을 사용하며 7~10px 보조 글자를 최소 12px로 올렸습니다. desktop/mobile browser와 focused smoke가 PASS했고 snapshot/save·아이템/Gold·runtime·backend·DB·배포는 바꾸지 않았습니다.
 - v391은 구매 계약 없는 legacy 경계를 지켜 비용 정보 카탈로그와 보스 자동·장비 드랍 설정 미리보기를 이식했습니다. 거래·Gold/아이템·runtime·설정 저장·snapshot/save는 잠겼고 desktop/mobile·focused smoke가 PASS했습니다.
 - v390은 스킬 10단계·강화 규칙 UI와 SQ·SW 첫 Lv.1, 보너스 비상속, 탈리스만/휘장 `2^현재 강화` 재료 규칙을 고정했습니다. 사용·강화·소비·난수·snapshot/save는 잠겼습니다.
 - v388~v389는 장비·가방·보관함·휴지통 표시 모델과 빈 칸·첫 빈 칸·상대 순서 보존 독립 정렬을 연결했습니다. 실제 아이템 변경·save는 잠겼습니다.

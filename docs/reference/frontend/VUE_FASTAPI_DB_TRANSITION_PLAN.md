@@ -1,10 +1,10 @@
-# Vue/FastAPI/DB 전체 전환 계획 — v391
+# Vue/FastAPI/DB 전체 전환 계획 — v392
 
 ## 현재 결론
 
 `frontend/vue-app/`은 더 이상 단순 실험용 shell이 아니라 전체 프론트엔드를 옮길 작업공간입니다. 다만 공개 서비스의 `index.html`, `admin.html`, 루트 `src/`는 Vue 기능이 같은 수준으로 검증될 때까지 기준 구현으로 유지합니다.
 
-v379에서 시작해 v391까지 완료한 기반:
+v379에서 시작해 v392까지 완료한 기반:
 
 - Vue 3 + Vite + Vue Router
 - 새 Vue 코드의 TypeScript 적용
@@ -23,6 +23,7 @@ v379에서 시작해 v391까지 완료한 기반:
 - 보관함·휴지통의 빈 칸·첫 빈 칸·독립 수동 정렬과 파괴적 작업 잠금을 보여주는 표시 전용 UI
 - 스킬 10단계와 강화 확률·비용·재료·결과 능력치, SQ·SW 첫 Lv.1 규칙을 보여주는 표시 전용 UI
 - 구매 계약을 임의로 만들지 않는 item master-data 상점 카탈로그와 기존 전투 옵션의 임시 설정 미리보기 UI
+- legacy형 데스크톱 내 정보/장비·가방/Gold 좌우 창, 접근 가능한 utility/mobile modal과 최소 12px 게임 가독성 계층
 - legacy, backend, DB, 공개 배포 변경 없음
 
 ## TypeScript를 쓰는 이유
@@ -96,8 +97,9 @@ Vue 자체는 JavaScript만으로도 사용할 수 있습니다. 이 프로젝�
 - 보관함·휴지통 UI 기반 — v389 완료
 - 스킬·강화 UI 기반 — v390 완료
 - 상점·설정 UI 기반 — v391 완료
+- legacy 게임 프레임·modal·가독성 복원 — v392 완료
 - 실제 전투 runtime — 다음
-- 반응형, keyboard, modal, tooltip 통합
+- tooltip 통합과 세부 시각 조정
 
 ### 6. 저장과 runtime
 

@@ -22,6 +22,7 @@ node tools/smoke/frontend/smoke_vue_game_inventory_equipment_ui.js
 node tools/smoke/frontend/smoke_vue_game_storage_trash_ui.js
 node tools/smoke/frontend/smoke_vue_game_skill_enhancement_ui.js
 node tools/smoke/frontend/smoke_vue_game_shop_settings_ui.js
+node tools/smoke/frontend/smoke_vue_game_legacy_frame_modal_readability.js
 node --check frontend/vue-app/vite.config.js
 
 if [ -d "frontend/vue-app/node_modules" ]; then

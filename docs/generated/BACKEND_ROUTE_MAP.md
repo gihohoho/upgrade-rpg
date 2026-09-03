@@ -5,8 +5,8 @@
 중요: v377 local migration과 인증 요청 보호 복구는 완료됐습니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
 
 ```txt
-latest: v391.vue-game-shop-settings-ui-foundation
-strict result: vue-game-shop-settings-ui-foundation
+latest: v392.vue-game-legacy-frame-modal-readability
+strict result: vue-game-legacy-frame-modal-readability
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 actual target v377 apply: local 1 / Neon 1
@@ -215,6 +215,6 @@ signed backend image와 legacy static의 공개 배포를 승인된 단일 시�
 
 권장 범위:
 
-1. v391에서 거래 없는 상점 카탈로그와 runtime·저장 없는 설정 미리보기를 연결했으므로 다음은 server save·보상·난수 드랍과 분리해 client 전투 runtime controller 기반을 준비합니다.
+1. v392에서 legacy형 좌우 게임 창·utility modal·최소 12px 가독성을 복원했으므로 다음은 server save·보상·난수 드랍과 분리해 client 전투 runtime controller 기반을 준비합니다.
 2. production 관리자 복구, 재인증 request, dev key header와 실제 Apply는 별도 exact DB-write 승인을 받기 전까지 연결하지 않습니다.
 3. 완료된 migration·publish·Render deploy와 기호가 확인한 Docker·로그인은 단순 확인을 위해 재실행하지 않습니다.

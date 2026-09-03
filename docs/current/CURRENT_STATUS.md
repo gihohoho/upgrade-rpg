@@ -1,12 +1,12 @@
-# Current Status — v391
+# Current Status — v392
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v391.vue-game-shop-settings-ui-foundation
-strict result: vue-game-shop-settings-ui-foundation
+latest: v392.vue-game-legacy-frame-modal-readability
+strict result: vue-game-legacy-frame-modal-readability
 next safe stage: migrate-vue-game-combat-runtime-foundation
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
@@ -28,7 +28,16 @@ v388 production approval/execution: no/no
 v389 production approval/execution: no/no
 v390 production approval/execution: no/no
 v391 production approval/execution: no/no
+v392 production approval/execution: no/no
 ```
+
+## v392 legacy 게임 프레임·modal·가독성 복원
+
+- 넓은 화면은 중앙 게임 양옆에 legacy형 `내 정보·장비·능력치·스킬`과 `가방·Gold·보관함·상점` 창을 고정 표시합니다. 아이템은 실제 보유품이 아닌 master-data 표시 모델입니다.
+- 인벤토리·보관함/휴지통·스킬/강화·상점/설정은 화면 교체가 아니라 현재 마을/필드/보스 위 공통 modal window로 열립니다. 배경은 `inert`로 잠그고 dialog 이름, 닫기 버튼, 바깥 영역 닫기, Escape와 초점 이동을 연결했으며 X로 닫으면 원래 구역을 복원합니다.
+- `1500px` 미만에서는 좌우 창을 접고 하단 `내 정보`·`가방` 버튼과 모바일 modal로 접근합니다. 게임 보조 문구·버튼·슬롯 글자는 기존 7~10px 대신 최소 12px 가독성 계층을 적용했습니다.
+- desktop `1920×1080`, mobile `390×844`에서 좌우 창과 utility/mobile modal을 확인했습니다. Vue build·focused smoke가 PASS했고 임시 fixture는 제거했습니다.
+- 실제 snapshot load/save, 아이템·Gold 변경, 전투 runtime, backend·DB·legacy·Render·배포는 변경하지 않았습니다.
 
 ## v391 상점·설정 UI 기반
 

@@ -17,8 +17,8 @@ from pathlib import Path
 
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/POSTGRES_ALEMBIC_READINESS.md")
-CHECKPOINT_VERSION = "v391.vue-game-shop-settings-ui-foundation"
-CHECKPOINT_RESULT = "vue-game-shop-settings-ui-foundation"
+CHECKPOINT_VERSION = "v392.vue-game-legacy-frame-modal-readability"
+CHECKPOINT_RESULT = "vue-game-legacy-frame-modal-readability"
 SOURCE_GRAPH_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_DB_REVISION = SOURCE_GRAPH_HEAD
 NEON_APPLIED_DB_REVISION = SOURCE_GRAPH_HEAD

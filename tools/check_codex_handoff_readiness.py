@@ -775,8 +775,8 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require("alembic" not in production_cmd, "container startup must not run Alembic")
 
     current_markers = (
-        "v391.vue-game-shop-settings-ui-foundation",
-        "vue-game-shop-settings-ui-foundation",
+        "v392.vue-game-legacy-frame-modal-readability",
+        "vue-game-legacy-frame-modal-readability",
         "migrate-vue-game-combat-runtime-foundation",
     )
     for path, text in (

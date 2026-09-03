@@ -1,8 +1,8 @@
 # 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v391.vue-game-shop-settings-ui-foundation
-strict result: vue-game-shop-settings-ui-foundation
+latest: v392.vue-game-legacy-frame-modal-readability
+strict result: vue-game-legacy-frame-modal-readability
 next safe stage: migrate-vue-game-combat-runtime-foundation
 public Render: backend v377 / static v378 Live
 local/Neon DB: v377 / v377

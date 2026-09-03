@@ -1,10 +1,10 @@
-# Upgrade RPG Codex handoff — v391
+# Upgrade RPG Codex handoff — v392
 
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v391.vue-game-shop-settings-ui-foundation
-strict result: vue-game-shop-settings-ui-foundation
+latest: v392.vue-game-legacy-frame-modal-readability
+strict result: vue-game-legacy-frame-modal-readability
 next safe stage: migrate-vue-game-combat-runtime-foundation
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
@@ -25,19 +25,21 @@ v388 production approval/execution: no/no
 v389 production approval/execution: no/no
 v390 production approval/execution: no/no
 v391 production approval/execution: no/no
+v392 production approval/execution: no/no
 ```
 
 ## 이번 체크포인트
 
-- `shopSettings.ts`는 공개 item master-data를 카탈로그로 바꾸고 등록된 `baseCost`를 강화 기준 비용, `sellPrice`를 판매 값으로만 표시합니다. legacy에 구매 계약이 없고 기존 “판매”도 Gold 지급이 아닌 휴지통 이동이므로 임의의 구매·판매 가격이나 거래 기능을 만들지 않았습니다.
-- 설정 화면은 legacy의 일반 보스 자동 소환·특수 보스 자동 사냥·일반 보스 장비 드랍 기본값을 별도 Pinia preview state에서만 토글합니다. 기본값 복원도 화면 모델만 다시 만들며 runtime·localStorage·server snapshot을 바꾸지 않습니다.
-- 구매·판매와 수동 저장·캐릭터 초기화 버튼은 명시적으로 비활성화했고, Gold/아이템 변경·설정 영구 저장·snapshot load/save·자동 저장·전투 runtime은 전혀 실행하지 않습니다.
-- 마을→상점·설정→인벤토리→마을 왕복, 접속 캐릭터 바 마을 전용 복원, 분류·아이템 선택, 설정 ON/OFF·기본값 복원, desktop/mobile `390×844`·가로 넘침 없음과 focused smoke가 PASS했고 임시 browser fixture는 제거했습니다.
-- backend·DB·env·secret·legacy·Render는 변경하지 않았고 v391 production 승인/실행은 없습니다.
+- v392는 Vue 이식 중 지나치게 단순화됐던 legacy 게임 창 구조를 복원했습니다. `1500px` 이상 넓은 화면에서 왼쪽 `내 정보·장비·능력치·스킬`, 오른쪽 `가방·Gold·보관함·상점` 창을 중앙 마을/전투 화면과 함께 계속 표시합니다.
+- 인벤토리·보관함/휴지통·스킬/강화·상점/설정은 더 이상 전체 게임 화면을 교체하지 않고, 현재 마을/필드/보스 화면을 잠근 채 그 위에 `role="dialog"`·`aria-modal="true"`인 공통 게임 창으로 열립니다. X·바깥 영역·Escape로 닫으면 원래 구역으로 돌아가고 초점도 창으로 이동합니다.
+- 좁은 화면에서는 좌우 창을 숨기고 하단 `내 정보`·`가방` 버튼으로 같은 정보를 모바일 modal에서 엽니다. 기존 7~10px 보조 문구·버튼·슬롯 표시는 공통 가독성 계층에서 최소 12px로 올렸습니다.
+- 실제 desktop `1920×1080`, mobile `390×844`에서 좌우 패널·가방 modal·보관함 modal·모바일 정보 modal과 가로 배치를 확인했고 임시 browser fixture는 제거했습니다. snapshot load/save·아이템/Gold 변경·전투 runtime은 연결하지 않았습니다.
+- backend·DB·env·secret·legacy·Render는 변경하지 않았고 v392 production 승인/실행은 없습니다.
+- v391 상점 카탈로그와 임시 설정 preview는 거래·Gold/아이템·runtime·설정 저장·snapshot/save를 계속 잠급니다.
 - v384~v390의 typed domain·마을/HUD·필드·보스·인벤토리/장비·보관함/휴지통·스킬/강화 UI와 `baseUrl` 제거 상태를 유지합니다. 관리자 Apply route/header/write도 계속 없습니다.
 - v381~v383 관리자 Vue는 `isAdmin=true` route guard, Bearer GET, `dryRun: true` Preview 5종과 SHA-256·exact 문구 재검증 modal까지 이식했습니다. 비밀번호·dev key는 저장·전송하지 않고 Apply route/header/write와 최종 버튼은 잠겨 있습니다.
 - 기호가 Docker·로컬 로그인 정상 동작을 확인했습니다. Vue dev server는 `127.0.0.1:5173`에서 실행 중이며 반복 로그인 검사는 하지 않습니다.
-- 기존 공개 legacy·backend·DB·env·secret·Render는 변경하지 않았고 Vue v382~v391 production 승인/실행은 없습니다.
+- 기존 공개 legacy·backend·DB·env·secret·Render는 변경하지 않았고 Vue v382~v392 production 승인/실행은 없습니다.
 - 특Q(SQ)·특W(SW)는 첫 전용 강화권 사용 뒤 저장·표시·전투 유효 레벨이 모두 1이며, 탈리스만 A/B의 일반 스킬 보너스를 더 이상 상속하지 않습니다. 기존 R·T와 F·D 보너스는 유지하고 source/generated skill metadata와 탈리스만 설명도 같은 계약으로 맞췄습니다.
 - 상단 `접속 캐릭터` 바는 계정·캐릭터가 있고 현재 구역이 `town`일 때만 표시합니다. 초기 상태와 동기화 실패도 hidden/inert로 닫힙니다.
 - 로컬에서는 기존 테스트 편의를 유지하지만 배포 origin에서는 로그인 사용자의 `isAdmin=true`일 때만 테스트 패널·테스트 지급 모달·MASTER DATA/SAVE DATA 개발 배지를 표시합니다. 이는 화면 노출 계약이며 client-authoritative save의 근본 치트 방지는 향후 server save 검증/CAS 범위입니다.

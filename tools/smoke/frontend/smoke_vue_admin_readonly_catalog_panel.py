@@ -110,7 +110,7 @@ def main() -> None:
     assert_read_only("src/pages/AdminShell.vue")
 
     app = read("src/App.vue")
-    assert_contains(app, "Upgrade RPG · v391", "Vue shell visible version")
+    assert_contains(app, "Upgrade RPG · v392", "Vue shell visible version")
 
     css = read("src/styles/base.css")
     assert_contains(css, ".admin-catalog-controls", "admin catalog controls CSS")

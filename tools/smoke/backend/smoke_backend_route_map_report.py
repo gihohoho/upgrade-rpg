@@ -14,8 +14,8 @@ RUN_SMOKE = ROOT / "tools/run_smoke_core.sh"
 
 REQUIRED_TEXT = [
     "Backend Route Map — v377",
-    "latest: v391.vue-game-shop-settings-ui-foundation",
-    "strict result: vue-game-shop-settings-ui-foundation",
+    "latest: v392.vue-game-legacy-frame-modal-readability",
+    "strict result: vue-game-legacy-frame-modal-readability",
     "actual target v377 apply: local 1 / Neon 1",
     "private email environment: prepared",
     "source 8db9bcb / preserved",

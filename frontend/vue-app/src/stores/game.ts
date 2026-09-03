@@ -72,6 +72,7 @@ export const useGameStore = defineStore('game', () => {
   const settingPreview = ref<SettingPreviewState>(cloneDefaultSettingPreview());
   const shopSettingsLastAction = ref<string | null>(null);
   const screen = ref<'town' | 'field' | 'boss' | 'inventory' | 'storage-trash' | 'skill-enhancement' | 'shop-settings'>('town');
+  const utilityOrigin = ref<'town' | 'field' | 'boss'>('town');
   const contextSignature = ref('');
   const activeFeatureKey = ref<TownFeatureKey | null>(null);
 
@@ -85,6 +86,13 @@ export const useGameStore = defineStore('game', () => {
   const isStorageTrash = computed(() => screen.value === 'storage-trash' && storageTrashModel.value?.zoneType === 'storage-trash');
   const isSkillEnhancement = computed(() => screen.value === 'skill-enhancement' && skillEnhancementModel.value?.zoneType === 'skill-enhancement');
   const isShopSettings = computed(() => screen.value === 'shop-settings' && shopSettingsModel.value?.zoneType === 'shop-settings');
+  const isUtilityScreen = computed(() => (
+    isInventory.value
+    || isStorageTrash.value
+    || isSkillEnhancement.value
+    || isShopSettings.value
+  ));
+  const utilityBackground = computed(() => isUtilityScreen.value ? utilityOrigin.value : null);
 
   function enterTown(slot: AccountCharacterSlot, characterLabel: string) {
     if (!slot.occupied || !slot.accountCharacterId || !slot.accountCharacter) {
@@ -98,6 +106,7 @@ export const useGameStore = defineStore('game', () => {
       characterLabel,
     ].join(':');
     screen.value = 'town';
+    utilityOrigin.value = 'town';
     if (signature === contextSignature.value && model.value) return;
     model.value = createTownHudViewModel({
       accountCharacterId: slot.accountCharacterId,
@@ -135,6 +144,7 @@ export const useGameStore = defineStore('game', () => {
       createdAt: 0,
     });
     screen.value = 'field';
+    utilityOrigin.value = 'field';
     activeFeatureKey.value = null;
     return true;
   }
@@ -159,6 +169,7 @@ export const useGameStore = defineStore('game', () => {
       createdAt: 0,
     });
     screen.value = 'boss';
+    utilityOrigin.value = 'boss';
     activeFeatureKey.value = null;
     return true;
   }
@@ -175,6 +186,7 @@ export const useGameStore = defineStore('game', () => {
 
   function enterInventoryPreview(itemTemplates: ItemTemplateOption[]) {
     if (!model.value || !itemTemplates.length) return false;
+    captureUtilityOrigin();
     itemTemplateSources.value = itemTemplates.slice();
     inventoryCompactedPreview.value = false;
     selectedInventoryItemCode.value = null;
@@ -266,6 +278,7 @@ export const useGameStore = defineStore('game', () => {
     enhancementLevels: EnhancementLevelOption[];
   }) {
     if (!model.value || !source.skills.length || !source.enhancementGroups.length || !source.enhancementLevels.length) return false;
+    captureUtilityOrigin();
     skillSources.value = source.skills.slice();
     characterSkillSources.value = source.characterSkills.slice();
     skillLevelSources.value = source.skillLevels.slice();
@@ -319,6 +332,7 @@ export const useGameStore = defineStore('game', () => {
 
   function enterShopSettingsPreview(itemTemplates: ItemTemplateOption[]) {
     if (!model.value || !itemTemplates.length) return false;
+    captureUtilityOrigin();
     itemTemplateSources.value = itemTemplates.slice();
     selectedShopCategory.value = 'all';
     selectedShopItemCode.value = null;
@@ -373,12 +387,25 @@ export const useGameStore = defineStore('game', () => {
 
   function returnTown() {
     screen.value = 'town';
+    utilityOrigin.value = 'town';
     fieldModel.value = null;
     bossModel.value = null;
     inventoryModel.value = null;
     storageTrashModel.value = null;
     skillEnhancementModel.value = null;
     shopSettingsModel.value = null;
+  }
+
+  function closeUtilityPreview() {
+    if (utilityOrigin.value === 'field' && fieldModel.value) screen.value = 'field';
+    else if (utilityOrigin.value === 'boss' && bossModel.value) screen.value = 'boss';
+    else screen.value = 'town';
+  }
+
+  function captureUtilityOrigin() {
+    if (screen.value === 'town' || screen.value === 'field' || screen.value === 'boss') {
+      utilityOrigin.value = screen.value;
+    }
   }
 
   function openFeature(key: TownFeatureKey) {
@@ -403,6 +430,7 @@ export const useGameStore = defineStore('game', () => {
     resetSkillEnhancementPreview();
     resetShopSettingsPreview();
     screen.value = 'town';
+    utilityOrigin.value = 'town';
     contextSignature.value = '';
     activeFeatureKey.value = null;
   }
@@ -452,6 +480,8 @@ export const useGameStore = defineStore('game', () => {
     isStorageTrash,
     isSkillEnhancement,
     isShopSettings,
+    isUtilityScreen,
+    utilityBackground,
     enterTown,
     enterFieldPreview,
     selectFieldPreview,
@@ -473,6 +503,7 @@ export const useGameStore = defineStore('game', () => {
     selectShopItem,
     toggleSettingPreview,
     resetSettingPreview,
+    closeUtilityPreview,
     returnTown,
     openFeature,
     closeFeature,

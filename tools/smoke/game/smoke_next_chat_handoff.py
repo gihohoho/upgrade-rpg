@@ -7,8 +7,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v391.vue-game-shop-settings-ui-foundation"
-RESULT = "vue-game-shop-settings-ui-foundation"
+VERSION = "v392.vue-game-legacy-frame-modal-readability"
+RESULT = "vue-game-legacy-frame-modal-readability"
 NEXT_STAGE = "migrate-vue-game-combat-runtime-foundation"
 SOURCE_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_HEAD = SOURCE_HEAD

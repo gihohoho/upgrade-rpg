@@ -65,4 +65,4 @@ node tools/smoke/frontend/smoke_vue_game_domain_foundation.js
 
 `next safe stage: migrate-vue-game-combat-runtime-foundation`
 
-v391에서 구매 계약을 만들지 않는 상점 카탈로그와 runtime·저장 없는 설정 미리보기를 연결했습니다. 다음은 server snapshot load/save·자동 저장·Gold/아이템 보상·난수 드랍과 분리해 client 전투 runtime controller와 timer lifecycle 기반을 준비하며, legacy 공개 화면, 관리자 Apply, DB write와 production 배포는 변경하지 않습니다.
+v392에서 legacy형 데스크톱 내 정보/장비·가방/Gold 좌우 창, 접근 가능한 utility/mobile modal과 최소 12px 게임 가독성을 복원했습니다. 다음은 server snapshot load/save·자동 저장·Gold/아이템 보상·난수 드랍과 분리해 client 전투 runtime controller와 timer lifecycle 기반을 준비하며, legacy 공개 화면, 관리자 Apply, DB write와 production 배포는 변경하지 않습니다.
