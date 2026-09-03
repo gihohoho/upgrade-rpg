@@ -166,7 +166,7 @@ def render_report(root: Path) -> str:
 
 - 기본 player/server/client/runtime state와 save payload shape
 - 인벤토리·보관함·휴지통의 빈 칸 유지, 첫 빈 칸, 비우기, 수동 정렬
-- 공격속도 clamp와 기본 공격력, 큰 수 표기, 기본 공격 피해식
+- 공격속도 clamp·기본 공격력·기본 공격 간격, 큰 수 표기, 기본 공격 피해식
 - 필드 respawn 만료 시 HP 복구
 - 보스 스킬 드랍률, 최초 장비 보너스 대상, 심연의 편린 특수 능력치
 - action result/log/effect/UI request shape
@@ -183,9 +183,9 @@ node tools/smoke/frontend/smoke_vue_game_domain_foundation.js
 
 ## 다음 안전 단계
 
-`next safe stage: migrate-vue-game-combat-runtime-foundation`
+`next safe stage: migrate-vue-game-server-snapshot-load-foundation`
 
-v392에서 legacy형 데스크톱 내 정보/장비·가방/Gold 좌우 창, 접근 가능한 utility/mobile modal과 최소 12px 게임 가독성을 복원했습니다. 다음은 server snapshot load/save·자동 저장·Gold/아이템 보상·난수 드랍과 분리해 client 전투 runtime controller와 timer lifecycle 기반을 준비하며, legacy 공개 화면, 관리자 Apply, DB write와 production 배포는 변경하지 않습니다.
+v393에서 빈 게임 화면 회귀를 고치고 typed 기본 공격 계산을 쓰는 client-only 전투 runtime과 단일 timer lifecycle을 준비했습니다. 다음은 save write·자동 저장·Gold/아이템 보상·난수 드랍과 분리해 선택 캐릭터의 server snapshot read/load와 typed normalize/apply 경계를 연결하며, legacy 공개 화면, 관리자 Apply, DB write와 production 배포는 변경하지 않습니다.
 """
 
 

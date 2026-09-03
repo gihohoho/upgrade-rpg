@@ -90,9 +90,9 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v392.vue-game-legacy-frame-modal-readability
-strict result: vue-game-legacy-frame-modal-readability
-next safe stage: migrate-vue-game-combat-runtime-foundation
+latest: v393.vue-game-combat-runtime-foundation
+strict result: vue-game-combat-runtime-foundation
+next safe stage: migrate-vue-game-server-snapshot-load-foundation
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -115,8 +115,10 @@ v389 production approval/execution: no/no
 v390 production approval/execution: no/no
 v391 production approval/execution: no/no
 v392 production approval/execution: no/no
+v393 production approval/execution: no/no
 ```
 
+- v393은 `game.model` 생성 전에 마을 initializer까지 막아 게임이 비던 순환 렌더 조건을 제거했습니다. 필드·보스에는 typed 기본 공격 계산과 legacy-equivalent 간격을 쓰는 client-only runtime을 연결하고 대상 전환·수동 정지/재개·utility/mobile modal·탭 비활성·마을 복귀·component 해제 때 단일 timer를 정리합니다. 브라우저·smoke·Vue build가 PASS했으며 server snapshot/save·Gold/아이템 보상·난수·재등장·backend·DB·배포는 바꾸지 않았습니다.
 - v392는 넓은 Vue 게임 화면에 legacy형 `내 정보·장비`/`가방·Gold` 좌우 창을 복원하고, 주요 기능을 배경을 잠그는 공통 modal로 바꿨습니다. 좁은 화면은 하단 버튼과 모바일 modal을 사용하며 7~10px 보조 글자를 최소 12px로 올렸습니다. desktop/mobile browser와 focused smoke가 PASS했고 snapshot/save·아이템/Gold·runtime·backend·DB·배포는 바꾸지 않았습니다.
 - v391은 구매 계약 없는 legacy 경계를 지켜 비용 정보 카탈로그와 보스 자동·장비 드랍 설정 미리보기를 이식했습니다. 거래·Gold/아이템·runtime·설정 저장·snapshot/save는 잠겼고 desktop/mobile·focused smoke가 PASS했습니다.
 - v390은 스킬 10단계·강화 규칙 UI와 SQ·SW 첫 Lv.1, 보너스 비상속, 탈리스만/휘장 `2^현재 강화` 재료 규칙을 고정했습니다. 사용·강화·소비·난수·snapshot/save는 잠겼습니다.
@@ -128,12 +130,9 @@ v392 production approval/execution: no/no
 - v378 legacy static은 승인 SHA `c56525394a4099160e7a32e93dc2d3a0d54568b3`에서 Render deploy `dep-da5vn3m417fc738rs2bg`로 정확히 1회 배포되어 live입니다. backend·DB·secret은 변경하지 않았습니다.
 - v371~v373은 이메일 lifecycle·owner/migration source, 문서 체계와 `email-validator==2.3.0`·`dnspython==2.8.0` 재현 lock을 준비했습니다. dependency가 빠지면 이메일 동작은 503으로 fail-closed합니다.
 - Obsidian 1.13.7에서 저장소 루트를 `Upgrade RPG` local vault로 등록하고 ignored `.obsidian/` 설정과 핵심 문서·색인의 표준 Markdown 링크를 연결했습니다. Obsidian은 로컬 탐색기이며 Git source of truth를 대체하지 않습니다.
-- Linux lock check, `pip check`, email normalize/import-failure 503, v371/v370 focused, GHCR 재현성, compileall, blocking-I/O, 문서 구조와 전체 core smoke가 PASS했습니다.
 - v376에서 실행 환경 사전 고정, 범위별 단일 검증, 성공 후 중복 확인 금지와 작업별 자체 피드백을 영구 규칙으로 추가했습니다. 기호는 실질적인 이메일 인증 rollout에 필요한 보안 구현·migration·provider 설정·테스트 메일·배포를 승인했습니다.
-- README 명령 계약·위험 명령 차단·Markdown 링크/중복/크기와 handoff readiness가 PASS했고, 현재 legacy 게임/관리자 HTTP 200과 기존 PostgreSQL healthy를 읽기 전용으로 확인했습니다.
 - Brevo local 계정·발신자·API key와 실제 메일 인증은 완료했습니다. owner bootstrap, Render secret, 새 image/static 배포는 실행하지 않았습니다.
 - v377 source는 PostgreSQL HMAC rate limit, auth IP 사전 보호, JSON 파싱 전 body cap, semantic mail outbox, 안전한 미인증 identity 회수와 202/429/413 frontend 계약을 추가했습니다.
-- v377 focused 검사와 설치된 Git Bash·backend `.venv`·`DEBUG=false` 조건의 전체 core smoke가 PASS했습니다.
 - private environment 준비는 535개 기존 artifact의 ACL을 비공개로 고정하고 local/production에 서로 다른 email/abuse secret 4개를 값 출력 없이 생성해 완료했습니다. local Brevo key와 검증된 발신자는 ignored `backend/.env`에 값 출력 없이 준비했고 Render에는 아직 전달하지 않았습니다.
 - `8db9bcb`에서 synthetic isolated v295→v377→v295→v377과 local v295 custom backup 751 rows가 성공했지만, fingerprint canonicalization source 수정 뒤에는 둘 다 현재 SHA에 사용할 수 없는 stale evidence입니다.
 - 첫 local apply는 Alembic 실행 전에 cross-driver fingerprint 표현 차이를 실제 차이로 잘못 판정해 안전 중단됐습니다. apply report는 없고 local DB는 v295 그대로이며 attempt marker를 보존하므로 같은 action을 재실행하지 않습니다. Neon은 접속·backup·apply·marker가 모두 없습니다.

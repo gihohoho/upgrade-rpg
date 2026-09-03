@@ -6723,3 +6723,130 @@ code {
   .shop-settings-data-boundary { padding: 14px; }
   .shop-settings-action-preview dl { grid-template-columns: 1fr; }
 }
+
+/* v393: client-only combat runtime controls shared by field and boss screens. */
+.combat-runtime-panel {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.75fr) minmax(360px, 1.35fr) minmax(270px, 1fr);
+  align-items: center;
+  gap: 18px;
+  padding: 16px 18px;
+  border: 1px solid rgba(74, 175, 139, 0.22);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(62, 177, 136, 0.12), transparent 38%),
+    linear-gradient(135deg, rgba(11, 25, 25, 0.97), rgba(10, 15, 19, 0.98));
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.025);
+}
+
+.combat-runtime-panel[data-tone="boss"] {
+  border-color: rgba(218, 116, 75, 0.24);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(193, 75, 54, 0.14), transparent 38%),
+    linear-gradient(135deg, rgba(29, 17, 18, 0.97), rgba(13, 14, 19, 0.98));
+}
+
+.combat-runtime-panel__heading,
+.combat-runtime-panel__heading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.combat-runtime-panel__heading > div > span {
+  color: #63b99c;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.combat-runtime-panel[data-tone="boss"] .combat-runtime-panel__heading > div > span { color: #d58b69; }
+.combat-runtime-panel__heading strong { color: #f2efe3; font-size: 16px; }
+
+.combat-runtime-panel__status {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 7px;
+  margin-top: 5px;
+  color: #a9b1ae;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.combat-runtime-panel__status i,
+.field-command-bar__status[data-state="running"] i,
+.boss-command-bar__status[data-state="running"] i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #54d6a8;
+  box-shadow: 0 0 12px rgba(84, 214, 168, 0.7);
+}
+
+.combat-runtime-panel__status[data-state="paused"] i { background: #e4b553; box-shadow: 0 0 12px rgba(228, 181, 83, 0.62); }
+.combat-runtime-panel__status[data-state="defeated"] i { background: #e06e66; box-shadow: 0 0 12px rgba(224, 110, 102, 0.65); }
+.combat-runtime-panel__status[data-state="idle"] i { background: #77817e; box-shadow: none; }
+
+.combat-runtime-panel > dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  margin: 0;
+}
+
+.combat-runtime-panel > dl div {
+  min-width: 0;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(2, 8, 10, 0.42);
+}
+
+.combat-runtime-panel dt { color: #818d89; font-size: 12px; }
+.combat-runtime-panel dd {
+  overflow: hidden;
+  margin: 4px 0 0;
+  color: #dfddd2;
+  font-size: 13px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.combat-runtime-panel__actions {
+  display: grid;
+  gap: 7px;
+}
+
+.combat-runtime-panel__actions button {
+  min-height: 38px;
+  border: 1px solid rgba(83, 208, 165, 0.42);
+  border-radius: 10px;
+  color: #d6fff1;
+  background: rgba(34, 130, 98, 0.22);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.combat-runtime-panel[data-tone="boss"] .combat-runtime-panel__actions button {
+  border-color: rgba(223, 127, 88, 0.44);
+  color: #ffe0d1;
+  background: rgba(147, 62, 42, 0.24);
+}
+
+.combat-runtime-panel__actions button:hover { filter: brightness(1.16); }
+.combat-runtime-panel__actions button:focus-visible { outline: 3px solid #f1c663; outline-offset: 2px; }
+.combat-runtime-panel__actions span { color: #8f9995; font-size: 12px; line-height: 1.5; }
+
+@media (max-width: 1100px) {
+  .combat-runtime-panel { grid-template-columns: minmax(190px, 0.7fr) minmax(0, 1.3fr); }
+  .combat-runtime-panel__actions { grid-column: 1 / -1; grid-template-columns: minmax(180px, 0.45fr) minmax(0, 1fr); align-items: center; }
+}
+
+@media (max-width: 760px) {
+  .combat-runtime-panel { grid-template-columns: 1fr; gap: 13px; padding: 15px; }
+  .combat-runtime-panel > dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .combat-runtime-panel__actions { grid-column: auto; grid-template-columns: 1fr; }
+}

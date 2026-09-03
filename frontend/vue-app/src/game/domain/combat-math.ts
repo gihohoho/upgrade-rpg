@@ -20,6 +20,11 @@ export function getBaseAttackByAttackSpeed(value: unknown): number {
   return Math.floor(BASE_ATTACK_AT_START_SPEED + (attackSpeed - FIELD_START_ATTACK_SPEED) * BASE_ATTACK_GAIN_PER_ASPD);
 }
 
+export function getBasicAttackIntervalMs(value: unknown): number {
+  const attackSpeed = clampFieldAttackSpeed(value);
+  return Math.max(560 / (1 + attackSpeed / 100), 100);
+}
+
 export function formatCompactNumber(input: unknown, significantDigits = 4): string {
   const num = Number(input);
   if (Number.isNaN(num) || input === undefined || num === 0) return '0A';

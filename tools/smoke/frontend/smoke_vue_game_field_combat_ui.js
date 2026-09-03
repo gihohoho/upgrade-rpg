@@ -84,8 +84,11 @@ function assertStaticBoundary() {
     'aria-label="전투 준비 HUD"',
     "game.selectFieldPreview",
     "game.returnTown",
-    "구역을 눌러도 실제 전투나 저장은 시작되지 않습니다",
-    "snapshot load/save·자동 저장·전투 timer·난수 판정은 아직 연결하지 않습니다",
+    'aria-label="클라이언트 전투 실행 상태"',
+    "game.pauseCombatRuntime('manual')",
+    "game.resumeCombatRuntime('manual')",
+    "기본 공격 timer는 동작하지만 서버 캐릭터와 보상에는 반영되지 않습니다",
+    "snapshot load/save·자동 저장·Gold·아이템 보상·난수 판정·자동 재등장은 아직 연결하지 않습니다",
   ]) {
     requireMarker(component, marker, "field combat component");
   }
@@ -104,6 +107,7 @@ function assertStaticBoundary() {
     ".field-zone-browser__rail",
     ".field-combat-dashboard",
     ".field-data-boundary",
+    ".combat-runtime-panel",
     "@media (max-width: 480px)",
   ]) {
     requireMarker(styles, selector, "field combat responsive CSS");
@@ -177,7 +181,7 @@ function assertAdapterBehavior() {
 function main() {
   assertStaticBoundary();
   assertAdapterBehavior();
-  console.log("PASS: Vue field combat UI remains display-only without snapshot, timer, or random runtime");
+  console.log("PASS: Vue field combat UI connects client-only deterministic basic-attack runtime without snapshot, save, Gold, item reward, random, or respawn mutation");
 }
 
 main();

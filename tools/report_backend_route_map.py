@@ -22,9 +22,9 @@ from pathlib import Path
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
-CHECKPOINT_VERSION = "v392.vue-game-legacy-frame-modal-readability"
-CHECKPOINT_RESULT = "vue-game-legacy-frame-modal-readability"
-NEXT_SAFE_STAGE = "migrate-vue-game-combat-runtime-foundation"
+CHECKPOINT_VERSION = "v393.vue-game-combat-runtime-foundation"
+CHECKPOINT_RESULT = "vue-game-combat-runtime-foundation"
+NEXT_SAFE_STAGE = "migrate-vue-game-server-snapshot-load-foundation"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 
@@ -437,7 +437,7 @@ signed backend image와 legacy static의 공개 배포를 승인된 단일 시�
 
 권장 범위:
 
-1. v392에서 legacy형 좌우 게임 창·utility modal·최소 12px 가독성을 복원했으므로 다음은 server save·보상·난수 드랍과 분리해 client 전투 runtime controller 기반을 준비합니다.
+1. v393에서 빈 게임 화면 회귀를 고치고 server state·save·보상·난수와 분리된 client 전투 runtime을 준비했으므로 다음은 선택 캐릭터의 server snapshot read/load와 typed normalize/apply 경계를 연결합니다.
 2. production 관리자 복구, 재인증 request, dev key header와 실제 Apply는 별도 exact DB-write 승인을 받기 전까지 연결하지 않습니다.
 3. 완료된 migration·publish·Render deploy와 기호가 확인한 Docker·로그인은 단순 확인을 위해 재실행하지 않습니다.
 """

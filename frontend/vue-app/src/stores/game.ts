@@ -35,6 +35,17 @@ import {
   type ShopSettingsViewModel,
 } from '@/game/adapters/shopSettings';
 import {
+  calculateBasicAttackDamage,
+  getBaseAttackByAttackSpeed,
+  getBasicAttackIntervalMs,
+} from '@/game/domain';
+import {
+  createCombatRuntimeController,
+  createIdleCombatRuntimeSnapshot,
+  type CombatRuntimePauseReason,
+  type CombatRuntimeTarget,
+} from '@/game/runtime/combatRuntime';
+import {
   createTownHudViewModel,
   TOWN_FEATURES,
   type TownFeatureKey,
@@ -75,6 +86,10 @@ export const useGameStore = defineStore('game', () => {
   const utilityOrigin = ref<'town' | 'field' | 'boss'>('town');
   const contextSignature = ref('');
   const activeFeatureKey = ref<TownFeatureKey | null>(null);
+  const combatRuntime = shallowRef(createIdleCombatRuntimeSnapshot());
+  const combatController = createCombatRuntimeController((snapshot) => {
+    combatRuntime.value = snapshot;
+  });
 
   const activeFeature = computed(() => (
     activeFeatureKey.value ? TOWN_FEATURES[activeFeatureKey.value] : null
@@ -107,6 +122,7 @@ export const useGameStore = defineStore('game', () => {
     ].join(':');
     screen.value = 'town';
     utilityOrigin.value = 'town';
+    combatController.stop();
     if (signature === contextSignature.value && model.value) return;
     model.value = createTownHudViewModel({
       accountCharacterId: slot.accountCharacterId,
@@ -145,6 +161,7 @@ export const useGameStore = defineStore('game', () => {
     });
     screen.value = 'field';
     utilityOrigin.value = 'field';
+    engageFieldRuntime();
     activeFeatureKey.value = null;
     return true;
   }
@@ -157,6 +174,7 @@ export const useGameStore = defineStore('game', () => {
       preferredIndex: index,
       createdAt: 0,
     });
+    engageFieldRuntime();
   }
 
   function enterBossPreview(bosses: BossOption[]) {
@@ -170,6 +188,7 @@ export const useGameStore = defineStore('game', () => {
     });
     screen.value = 'boss';
     utilityOrigin.value = 'boss';
+    engageBossRuntime();
     activeFeatureKey.value = null;
     return true;
   }
@@ -182,6 +201,7 @@ export const useGameStore = defineStore('game', () => {
       preferredIndex: index,
       createdAt: 0,
     });
+    engageBossRuntime();
   }
 
   function enterInventoryPreview(itemTemplates: ItemTemplateOption[]) {
@@ -388,6 +408,7 @@ export const useGameStore = defineStore('game', () => {
   function returnTown() {
     screen.value = 'town';
     utilityOrigin.value = 'town';
+    combatController.stop();
     fieldModel.value = null;
     bossModel.value = null;
     inventoryModel.value = null;
@@ -400,12 +421,63 @@ export const useGameStore = defineStore('game', () => {
     if (utilityOrigin.value === 'field' && fieldModel.value) screen.value = 'field';
     else if (utilityOrigin.value === 'boss' && bossModel.value) screen.value = 'boss';
     else screen.value = 'town';
+    if (screen.value === 'field' || screen.value === 'boss') combatController.resume('utility');
   }
 
   function captureUtilityOrigin() {
     if (screen.value === 'town' || screen.value === 'field' || screen.value === 'boss') {
       utilityOrigin.value = screen.value;
+      if (screen.value === 'field' || screen.value === 'boss') combatController.pause('utility');
     }
+  }
+
+  function buildCombatRuntimeTarget(type: 'field' | 'boss', key: string, name: string, maxHp: number): CombatRuntimeTarget | null {
+    if (!model.value) return null;
+    const player = model.value.serverState.player;
+    const attack = getBaseAttackByAttackSpeed(player.addAttackSpeed) + (Number(player.farmAtkBonus) || 0);
+    return {
+      type,
+      key,
+      name,
+      maxHp,
+      attackDamage: calculateBasicAttackDamage({
+        attack,
+        basicAtkDmgInc: player.basicAtkDmgInc,
+        allDmgInc: player.allDmgInc,
+        basicCritDmg: player.basicCritDmg,
+      }, false),
+      intervalMs: getBasicAttackIntervalMs(player.addAttackSpeed),
+    };
+  }
+
+  function engageFieldRuntime() {
+    const zone = fieldModel.value?.selectedZone;
+    if (!zone) return false;
+    const target = buildCombatRuntimeTarget('field', zone.code, `${zone.name} 몬스터`, zone.enemyHp);
+    return target ? combatController.engage(target) : false;
+  }
+
+  function engageBossRuntime() {
+    const boss = bossModel.value?.selectedBoss;
+    if (!boss) return false;
+    const target = buildCombatRuntimeTarget('boss', boss.code, boss.name, boss.hp);
+    return target ? combatController.engage(target) : false;
+  }
+
+  function pauseCombatRuntime(reason: Exclude<CombatRuntimePauseReason, null> = 'manual') {
+    return combatController.pause(reason);
+  }
+
+  function resumeCombatRuntime(reason?: Exclude<CombatRuntimePauseReason, null>) {
+    return combatController.resume(reason);
+  }
+
+  function restartCombatRuntime() {
+    return combatController.restart();
+  }
+
+  function stopCombatRuntime() {
+    combatController.stop();
   }
 
   function openFeature(key: TownFeatureKey) {
@@ -417,6 +489,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function resetShell() {
+    combatController.stop();
     model.value = null;
     fieldModel.value = null;
     fieldZoneSources.value = [];
@@ -472,6 +545,7 @@ export const useGameStore = defineStore('game', () => {
     storageTrashModel,
     skillEnhancementModel,
     shopSettingsModel,
+    combatRuntime,
     activeFeature,
     isTown,
     isField,
@@ -503,6 +577,10 @@ export const useGameStore = defineStore('game', () => {
     selectShopItem,
     toggleSettingPreview,
     resetSettingPreview,
+    pauseCombatRuntime,
+    resumeCombatRuntime,
+    restartCombatRuntime,
+    stopCombatRuntime,
     closeUtilityPreview,
     returnTown,
     openFeature,

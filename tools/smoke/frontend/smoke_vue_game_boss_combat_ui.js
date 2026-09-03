@@ -77,8 +77,11 @@ function assertStaticBoundary() {
     'aria-label="보스 목록"',
     "game.selectBossPreview",
     "game.returnTown",
-    "실제 소환·전투·보상 지급은 실행되지 않습니다",
-    "HP 감소·난수 드랍·보상·쿨타임 변경은 아직 연결하지 않습니다",
+    'aria-label="클라이언트 전투 실행 상태"',
+    "game.pauseCombatRuntime('manual')",
+    "game.resumeCombatRuntime('manual')",
+    "기본 공격 timer는 동작하지만 서버 캐릭터와 보상에는 반영되지 않습니다",
+    "snapshot load/save·자동 저장·난수 드랍·보상·쿨타임 변경·자동 재소환은 아직 연결하지 않습니다",
   ]) requireMarker(component, marker, "boss combat component");
   assert.ok(!component.includes("town-session-bar"), "connected character bar must remain town-only");
 
@@ -95,6 +98,7 @@ function assertStaticBoundary() {
     ".boss-browser__rail",
     ".boss-dashboard",
     ".boss-data-boundary",
+    ".combat-runtime-panel",
     "@media (max-width: 480px)",
   ]) requireMarker(styles, selector, "boss combat responsive CSS");
 }
@@ -148,7 +152,7 @@ function assertAdapterBehavior() {
 function main() {
   assertStaticBoundary();
   assertAdapterBehavior();
-  console.log("PASS: Vue boss combat UI remains display-only without snapshot, timer, random, reward, or cooldown mutation");
+  console.log("PASS: Vue boss combat UI connects client-only deterministic basic-attack runtime without snapshot, save, random, reward, cooldown, or respawn mutation");
 }
 
 main();

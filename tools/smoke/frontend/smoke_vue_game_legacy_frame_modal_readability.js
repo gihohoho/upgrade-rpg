@@ -37,6 +37,7 @@ function main() {
     'v-else-if="game.isInventory"',
     "event.key !== 'Escape'",
   ]) requireMarker(playShell, marker, "shared legacy game frame");
+  assert.ok(!playShell.includes('v-if="game.model"'), "game frame must mount the town initializer before game.model exists");
 
   for (const marker of [
     "createInventoryEquipmentViewModel",

@@ -77,8 +77,8 @@ def main() -> None:
 
     package = read("package.json")
     app = read("src/App.vue")
-    require(package, '"version": "0.0.0-v392"', "Vue package version")
-    require(app, "Upgrade RPG · v392", "Vue shell version")
+    require(package, '"version": "0.0.0-v393"', "Vue package version")
+    require(app, "Upgrade RPG · v393", "Vue shell version")
 
     print("OK: Vue admin Apply confirmation gates remain preview-only and write-locked")
 

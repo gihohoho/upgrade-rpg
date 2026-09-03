@@ -55,11 +55,11 @@
           <span aria-hidden="true">☰</span>
         </button>
         <div>
-          <p class="vue-shell__eyebrow">Upgrade RPG · v392</p>
+          <p class="vue-shell__eyebrow">Upgrade RPG · v393</p>
           <h1>Vue 전환 작업공간</h1>
           <p>기존 서비스는 유지하면서, 새 화면을 안전하게 하나씩 옮깁니다.</p>
         </div>
-        <span class="vue-shell__phase"><i aria-hidden="true" /> 게임 가독성·창 구조 복원</span>
+        <span class="vue-shell__phase"><i aria-hidden="true" /> client 전투 runtime 기반</span>
       </header>
 
       <RouterView />

@@ -6,7 +6,7 @@
         <span>필드 전투 UI</span>
         <strong>{{ field.selectedZone.name }}</strong>
       </div>
-      <span class="field-command-bar__status"><i aria-hidden="true" /> runtime 연결 대기</span>
+      <span class="field-command-bar__status" :data-state="runtime.status"><i aria-hidden="true" /> {{ runtimeStatusLabel }}</span>
     </header>
 
     <section class="field-arena" aria-labelledby="field-arena-title">
@@ -30,13 +30,30 @@
           class="field-enemy__hp"
           role="progressbar"
           aria-label="몬스터 체력"
-          :aria-valuenow="field.enemyHp"
+          :aria-valuenow="enemyHp"
           aria-valuemin="0"
-          :aria-valuemax="field.selectedZone.enemyHp"
+          :aria-valuemax="enemyMaxHp"
         >
-          <i :style="{ width: `${field.enemyHpPercent}%` }" />
-          <span>{{ field.enemyHpLabel }}</span>
+          <i :style="{ width: `${enemyHpPercent}%` }" />
+          <span>{{ enemyHpLabel }}</span>
         </div>
+      </div>
+    </section>
+
+    <section class="combat-runtime-panel" data-tone="field" aria-label="클라이언트 전투 실행 상태">
+      <div class="combat-runtime-panel__heading">
+        <div><span>Client combat runtime</span><strong>기본 공격 timer</strong></div>
+        <span class="combat-runtime-panel__status" :data-state="runtime.status"><i aria-hidden="true" />{{ runtimeStatusLabel }}</span>
+      </div>
+      <dl>
+        <div><dt>대상</dt><dd>{{ runtime.targetName || field.selectedZone.name }}</dd></div>
+        <div><dt>공격 간격</dt><dd>{{ Math.round(runtime.intervalMs) }}ms</dd></div>
+        <div><dt>공격 횟수</dt><dd>{{ runtime.attackCount }}회</dd></div>
+        <div><dt>최근 피해</dt><dd>{{ formatCompactNumber(runtime.lastDamage) }}</dd></div>
+      </dl>
+      <div class="combat-runtime-panel__actions">
+        <button type="button" @click="toggleCombatRuntime">{{ runtimeActionLabel }}</button>
+        <span>이 화면의 HP만 변하며 저장·Gold·보상·난수는 연결되지 않습니다.</span>
       </div>
     </section>
 
@@ -93,12 +110,12 @@
       </div>
 
       <div class="field-action-preview" aria-live="polite">
-        <div><strong>Action adapter</strong><span>HP·Gold 변화 없음</span></div>
+        <div><strong>Action adapter</strong><span>client HP 미리보기만 실행</span></div>
         <p v-for="log in field.action.logs" :key="log.message">{{ log.message }}</p>
         <dl>
           <div><dt>master-data</dt><dd>연결됨</dd></div>
           <div><dt>server snapshot</dt><dd>미연결</dd></div>
-          <div><dt>combat timer</dt><dd>정지</dd></div>
+          <div><dt>combat timer</dt><dd>{{ runtimeStatusLabel }}</dd></div>
         </dl>
       </div>
     </section>
@@ -106,8 +123,8 @@
     <aside class="field-data-boundary" aria-label="필드 미리보기 데이터 경계">
       <span aria-hidden="true">!</span>
       <div>
-        <strong>구역을 눌러도 실제 전투나 저장은 시작되지 않습니다.</strong>
-        <p>필드 이름·HP·보상은 PostgreSQL master-data, 캐릭터 계산은 기본 typed domain을 사용합니다. snapshot load/save·자동 저장·전투 timer·난수 판정은 아직 연결하지 않습니다.</p>
+        <strong>기본 공격 timer는 동작하지만 서버 캐릭터와 보상에는 반영되지 않습니다.</strong>
+        <p>필드 이름·HP·보상은 PostgreSQL master-data, 공격력 계산은 기본 typed domain을 사용합니다. 현재 HP는 이 화면 안에서만 감소하며 snapshot load/save·자동 저장·Gold·아이템 보상·난수 판정·자동 재등장은 아직 연결하지 않습니다.</p>
       </div>
     </aside>
   </div>
@@ -115,11 +132,36 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { formatCompactNumber } from '@/game/domain';
 import { useGameStore } from '@/stores';
 
 const game = useGameStore();
 const field = computed(() => game.fieldModel);
 const town = computed(() => game.model);
+const runtime = computed(() => game.combatRuntime);
+const runtimeMatchesTarget = computed(() => (
+  runtime.value.targetType === 'field'
+  && runtime.value.targetKey === field.value?.selectedZone.code
+));
+const enemyHp = computed(() => runtimeMatchesTarget.value ? runtime.value.currentHp : (field.value?.enemyHp ?? 0));
+const enemyMaxHp = computed(() => runtimeMatchesTarget.value ? runtime.value.maxHp : (field.value?.selectedZone.enemyHp ?? 0));
+const enemyHpPercent = computed(() => runtimeMatchesTarget.value ? runtime.value.hpPercent : (field.value?.enemyHpPercent ?? 0));
+const enemyHpLabel = computed(() => `${formatCompactNumber(enemyHp.value)} / ${formatCompactNumber(enemyMaxHp.value)}`);
+const runtimeStatusLabel = computed(() => {
+  if (runtime.value.status === 'running') return '자동 전투 중';
+  if (runtime.value.status === 'defeated') return '대상 처치 · 보상 없음';
+  if (runtime.value.status === 'paused') {
+    if (runtime.value.pauseReason === 'visibility') return '탭 비활성 · 일시정지';
+    if (runtime.value.pauseReason === 'utility') return '게임 창 열림 · 일시정지';
+    return '수동 일시정지';
+  }
+  return '전투 정지';
+});
+const runtimeActionLabel = computed(() => {
+  if (runtime.value.status === 'running') return '전투 일시정지';
+  if (runtime.value.status === 'paused') return '전투 재개';
+  return '같은 대상 다시 시작';
+});
 const visibleZones = computed(() => {
   if (!field.value) return [];
   const start = Math.floor(field.value.selectedIndex / 4) * 4;
@@ -129,5 +171,11 @@ const visibleZones = computed(() => {
 function selectRelative(offset: number) {
   if (!field.value) return;
   game.selectFieldPreview(field.value.selectedIndex + offset);
+}
+
+function toggleCombatRuntime() {
+  if (runtime.value.status === 'running') game.pauseCombatRuntime('manual');
+  else if (runtime.value.status === 'paused') game.resumeCombatRuntime('manual');
+  else game.restartCombatRuntime();
 }
 </script>

@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v392
+# Upgrade RPG Codex handoff — v393
 
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v392.vue-game-legacy-frame-modal-readability
-strict result: vue-game-legacy-frame-modal-readability
-next safe stage: migrate-vue-game-combat-runtime-foundation
+latest: v393.vue-game-combat-runtime-foundation
+strict result: vue-game-combat-runtime-foundation
+next safe stage: migrate-vue-game-server-snapshot-load-foundation
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -26,20 +26,22 @@ v389 production approval/execution: no/no
 v390 production approval/execution: no/no
 v391 production approval/execution: no/no
 v392 production approval/execution: no/no
+v393 production approval/execution: no/no
 ```
 
 ## 이번 체크포인트
 
-- v392는 Vue 이식 중 지나치게 단순화됐던 legacy 게임 창 구조를 복원했습니다. `1500px` 이상 넓은 화면에서 왼쪽 `내 정보·장비·능력치·스킬`, 오른쪽 `가방·Gold·보관함·상점` 창을 중앙 마을/전투 화면과 함께 계속 표시합니다.
-- 인벤토리·보관함/휴지통·스킬/강화·상점/설정은 더 이상 전체 게임 화면을 교체하지 않고, 현재 마을/필드/보스 화면을 잠근 채 그 위에 `role="dialog"`·`aria-modal="true"`인 공통 게임 창으로 열립니다. X·바깥 영역·Escape로 닫으면 원래 구역으로 돌아가고 초점도 창으로 이동합니다.
-- 좁은 화면에서는 좌우 창을 숨기고 하단 `내 정보`·`가방` 버튼으로 같은 정보를 모바일 modal에서 엽니다. 기존 7~10px 보조 문구·버튼·슬롯 표시는 공통 가독성 계층에서 최소 12px로 올렸습니다.
-- 실제 desktop `1920×1080`, mobile `390×844`에서 좌우 패널·가방 modal·보관함 modal·모바일 정보 modal과 가로 배치를 확인했고 임시 browser fixture는 제거했습니다. snapshot load/save·아이템/Gold 변경·전투 runtime은 연결하지 않았습니다.
-- backend·DB·env·secret·legacy·Render는 변경하지 않았고 v392 production 승인/실행은 없습니다.
+- v393은 선택 캐릭터가 있어도 `game.model` 생성 전 전체 프레임을 렌더링하지 않아 `GameTownShell` initializer가 영원히 실행되지 않던 순환 조건을 제거했습니다. `game.enterTown()`을 미리 호출하지 않은 browser fixture에서 마을·좌우 정보창이 바로 나타나는 것을 확인해 빈 게임 화면을 복구했습니다.
+- Vue·Pinia·Router·API에 의존하지 않는 `combatRuntime` controller가 typed 기본 공격 피해와 legacy-equivalent 간격으로 필드·보스의 client-only HP만 감소시킵니다. 대상 전환·처치·마을 복귀·component 해제 때 기존 timer를 해제해 한 번에 하나만 유지합니다.
+- 필드·보스 화면은 runtime 상태·대상·공격 간격·횟수·최근 피해와 수동 정지/재개/재시작을 표시합니다. utility/mobile modal과 탭 비활성에서는 같은 pause owner만 재개할 수 있도록 정지하므로 수동 정지를 잘못 풀지 않습니다.
+- 실제 브라우저에서 마을 초기화, 필드/보스 HP 감소, 수동 정지 중 HP 고정, 가방 modal 자동 정지·닫기 후 재개, 마을 복귀를 확인했고 임시 fixture는 제거했습니다. focused smoke와 Vue build도 PASS했습니다.
+- server snapshot load/save·자동 저장·Gold/아이템 보상·난수·cooldown·자동 재등장/재소환은 연결하지 않았습니다. backend·DB·env·secret·legacy·Render는 변경하지 않았고 v393 production 승인/실행은 없습니다.
+- v392에서 복원한 넓은 화면의 legacy형 `내 정보·장비·능력치·스킬`/`가방·Gold·보관함·상점` 좌우 창, utility/mobile modal과 최소 12px 가독성은 유지합니다.
 - v391 상점 카탈로그와 임시 설정 preview는 거래·Gold/아이템·runtime·설정 저장·snapshot/save를 계속 잠급니다.
 - v384~v390의 typed domain·마을/HUD·필드·보스·인벤토리/장비·보관함/휴지통·스킬/강화 UI와 `baseUrl` 제거 상태를 유지합니다. 관리자 Apply route/header/write도 계속 없습니다.
 - v381~v383 관리자 Vue는 `isAdmin=true` route guard, Bearer GET, `dryRun: true` Preview 5종과 SHA-256·exact 문구 재검증 modal까지 이식했습니다. 비밀번호·dev key는 저장·전송하지 않고 Apply route/header/write와 최종 버튼은 잠겨 있습니다.
 - 기호가 Docker·로컬 로그인 정상 동작을 확인했습니다. Vue dev server는 `127.0.0.1:5173`에서 실행 중이며 반복 로그인 검사는 하지 않습니다.
-- 기존 공개 legacy·backend·DB·env·secret·Render는 변경하지 않았고 Vue v382~v392 production 승인/실행은 없습니다.
+- 기존 공개 legacy·backend·DB·env·secret·Render는 변경하지 않았고 Vue v382~v393 production 승인/실행은 없습니다.
 - 특Q(SQ)·특W(SW)는 첫 전용 강화권 사용 뒤 저장·표시·전투 유효 레벨이 모두 1이며, 탈리스만 A/B의 일반 스킬 보너스를 더 이상 상속하지 않습니다. 기존 R·T와 F·D 보너스는 유지하고 source/generated skill metadata와 탈리스만 설명도 같은 계약으로 맞췄습니다.
 - 상단 `접속 캐릭터` 바는 계정·캐릭터가 있고 현재 구역이 `town`일 때만 표시합니다. 초기 상태와 동기화 실패도 hidden/inert로 닫힙니다.
 - 로컬에서는 기존 테스트 편의를 유지하지만 배포 origin에서는 로그인 사용자의 `isAdmin=true`일 때만 테스트 패널·테스트 지급 모달·MASTER DATA/SAVE DATA 개발 배지를 표시합니다. 이는 화면 노출 계약이며 client-authoritative save의 근본 치트 방지는 향후 server save 검증/CAS 범위입니다.
@@ -65,7 +67,7 @@ v392 production approval/execution: no/no
 
 ## 바로 할 일
 
-1. 다음 Vue 전환 단계는 `migrate-vue-game-combat-runtime-foundation`입니다. typed 전투 계산을 사용하는 client runtime controller와 timer lifecycle부터 분리하되 server snapshot load/save·자동 저장·Gold/아이템 보상·난수 드랍은 함께 연결하지 않습니다.
+1. 다음 Vue 전환 단계는 `migrate-vue-game-server-snapshot-load-foundation`입니다. 선택 캐릭터의 server snapshot read/load와 typed normalize/apply 경계부터 연결하되 save API·자동/수동 저장·Gold/아이템 보상·난수 드랍·revision write는 함께 연결하지 않습니다.
 2. 실제 관리자 Apply API, 비밀번호 재인증 request, dev key header와 DB write는 연결하지 않습니다. 진행하려면 작업 종류와 exact DB-write 범위를 별도로 승인받습니다.
 3. production 관리자 복구는 Vue 화면 이식과 분리하며 기존 `admin` 승격 또는 새 owner 생성의 exact DB-write 승인을 받기 전에는 실행하지 않습니다.
 

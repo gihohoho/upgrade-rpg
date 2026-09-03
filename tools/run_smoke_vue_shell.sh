@@ -18,6 +18,7 @@ node tools/smoke/frontend/smoke_vue_game_domain_foundation.js
 node tools/smoke/frontend/smoke_vue_game_town_hud.js
 node tools/smoke/frontend/smoke_vue_game_field_combat_ui.js
 node tools/smoke/frontend/smoke_vue_game_boss_combat_ui.js
+node tools/smoke/frontend/smoke_vue_game_combat_runtime.js
 node tools/smoke/frontend/smoke_vue_game_inventory_equipment_ui.js
 node tools/smoke/frontend/smoke_vue_game_storage_trash_ui.js
 node tools/smoke/frontend/smoke_vue_game_skill_enhancement_ui.js

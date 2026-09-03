@@ -165,6 +165,7 @@ function assertCalculationParity(domain, legacy) {
     legacy.player.addAttackSpeed = value;
     assert.strictEqual(domain.clampFieldAttackSpeed(value), vm.runInContext("getClampedFieldAttackSpeed()", legacy));
     assert.strictEqual(domain.getBaseAttackByAttackSpeed(value), vm.runInContext("getBaseAttackByAttackSpeed()", legacy));
+    assert.strictEqual(domain.getBasicAttackIntervalMs(value), vm.runInContext("getTotals().aspdMs", legacy));
   }
   for (const value of [0, 1, 9999, 10000, 123456789, -987654]) {
     assert.strictEqual(domain.formatCompactNumber(value), vm.runInContext(`formatCompactNumber(${value})`, legacy));

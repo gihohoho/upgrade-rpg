@@ -1,6 +1,5 @@
 <template>
   <div
-    v-if="game.model"
     class="game-legacy-frame"
     :aria-hidden="(game.isUtilityScreen || mobilePanel !== null) || undefined"
     :inert="game.isUtilityScreen || mobilePanel !== null"
@@ -77,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import GameLegacySidebar from './GameLegacySidebar.vue';
 import GameInventoryEquipmentShell from './GameInventoryEquipmentShell.vue';
 import GameShopSettingsShell from './GameShopSettingsShell.vue';
@@ -117,13 +116,20 @@ function closeUtility() {
 
 function openMobilePanel(panel: 'profile' | 'inventory', event: Event) {
   mobileTrigger.value = event.currentTarget as HTMLElement;
+  game.pauseCombatRuntime('utility');
   mobilePanel.value = panel;
   void nextTick(() => (mobileClose.value ?? mobileModal.value)?.focus());
 }
 
 function closeMobilePanel() {
   mobilePanel.value = null;
+  game.resumeCombatRuntime('utility');
   void nextTick(() => mobileTrigger.value?.focus());
+}
+
+function handleVisibilityChange() {
+  if (document.hidden) game.pauseCombatRuntime('visibility');
+  else game.resumeCombatRuntime('visibility');
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -132,6 +138,14 @@ function handleKeydown(event: KeyboardEvent) {
   else if (game.isUtilityScreen) closeUtility();
 }
 
-window.addEventListener('keydown', handleKeydown);
-onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown));
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown);
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown);
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
+  game.stopCombatRuntime();
+});
 </script>
