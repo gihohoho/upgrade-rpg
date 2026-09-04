@@ -1,13 +1,13 @@
-# Current Status — v393
+# Current Status — v394
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v393.vue-game-combat-runtime-foundation
-strict result: vue-game-combat-runtime-foundation
-next safe stage: migrate-vue-game-server-snapshot-load-foundation
+latest: v394.vue-game-server-snapshot-load-foundation
+strict result: vue-game-server-snapshot-load-foundation
+next safe stage: migrate-vue-game-serialized-save-queue-foundation
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -30,15 +30,24 @@ v390 production approval/execution: no/no
 v391 production approval/execution: no/no
 v392 production approval/execution: no/no
 v393 production approval/execution: no/no
+v394 production approval/execution: no/no
 ```
+
+## v394 선택 캐릭터 server snapshot read/load 기반
+
+- 캐릭터 선택 뒤 `GamePlayShell`이 Bearer token, `character-N`, 32자리 `accountCharacterId`로 `GET /api/v1/game/load`를 호출합니다. 응답 envelope와 payload의 슬롯·캐릭터 ID·캐릭터 종류를 현재 선택과 다시 대조하고 일치할 때만 typed server state로 normalize/apply합니다.
+- 신규 캐릭터의 빈 `{}` snapshot은 서버 연결 실패가 아니라 정상 기본 상태로 처리합니다. 기존 snapshot은 Gold·레벨·상세 능력치·스킬·최근 구역에 반영되고 필드·보스의 기본 공격 계산에도 같은 읽기 상태를 전달합니다.
+- load 전에는 전체 게임 대신 명시적 로딩 화면을 표시합니다. network/timeout/429/404/5xx와 계약 불일치는 token과 선택 캐릭터를 유지한 오류 화면에서 다시 불러오기/캐릭터 재선택을 제공하며, 401/403만 session을 폐기하고 로그인으로 돌아갑니다. 새 요청과 component 해제는 이전 GET과 client timer를 정리합니다.
+- desktop/mobile 임시 fixture에서 첫 503 뒤 재시도와 `Lv.23`, `9.877B Gold`, `Q Lv.3`, `W Lv.2`, 최근 필드 5 반영, 넓은 화면 좌우 창, 모바일 dock, 필드 snapshot 기반 공격력과 console error 0을 확인한 뒤 fixture를 제거했습니다.
+- API와 adapter/store focused smoke, 전체 Vue shell smoke와 production build를 통과했습니다. save POST·자동/수동/전환 저장·local fallback·pending-unsynced 충돌 해결·Gold/아이템 보상·난수·revision write는 연결하지 않았고 backend·DB·env·secret·legacy·Render·production 배포도 변경하지 않았습니다.
 
 ## v393 빈 게임 화면 복구·client 전투 runtime 기반
 
-- `GamePlayShell`이 `game.model`이 만들어지기 전 전체 게임 프레임을 숨기던 조건을 제거했습니다. 이제 `GameTownShell`이 먼저 mount되어 선택 캐릭터를 마을 model로 초기화하므로 로그인·캐릭터 선택 뒤 빈 화면이 되지 않습니다. 이 순서를 focused smoke에 회귀 조건으로 고정했습니다.
+- `GamePlayShell`이 `game.model`이 만들어지기 전 전체 게임 프레임을 숨기던 순환 조건을 제거했습니다. v394부터는 `GameTownShell`이 기본 model을 먼저 만드는 대신 snapshot load gate가 성공한 뒤 마을 model을 생성합니다.
 - Vue·Pinia·Router·API와 독립된 `combatRuntime` controller가 typed 기본 공격 피해와 legacy-equivalent 공격 간격으로 필드·보스의 client-only HP를 감소시킵니다. 한 번에 timer 하나만 유지하고 대상 전환·처치·마을 복귀·component 해제 때 기존 timer를 해제합니다.
 - 필드·보스에는 현재 대상·공격 간격·공격 횟수·최근 피해·진행 상태와 수동 일시정지/재개/재시작 UI를 추가했습니다. utility/mobile modal과 브라우저 탭 비활성에서는 자동 일시정지하고 같은 원인이 해제될 때만 재개해 수동 정지를 침범하지 않습니다.
 - 임시 fixture가 `game.enterTown()`을 미리 호출하지 않는 실제 초기화 순서에서 마을·좌우 창이 나타나는지 확인했습니다. 실제 브라우저에서 필드/보스 HP 감소, 수동 정지 중 HP 고정, 가방 modal 자동 정지·닫기 후 재개와 마을 복귀를 검증한 뒤 fixture를 제거했습니다.
-- 이 runtime은 server state, snapshot load/save, 자동 저장, Gold·아이템·보상, 난수, cooldown, 자동 재등장/재소환을 읽거나 바꾸지 않습니다. backend·DB·env·secret·legacy·Render·production 배포도 변경하지 않았습니다.
+- 이 runtime은 v394의 읽기 snapshot으로 공격력을 계산하지만 server state, 저장, Gold·아이템·보상, 난수, cooldown, 자동 재등장/재소환을 바꾸지 않습니다.
 
 ## v384~v392 이전 Vue 게임 기반
 
@@ -50,27 +59,17 @@ v393 production approval/execution: no/no
 
 ## v378 게임 UI·환경 라우팅 소스 준비
 
-- SQ·SW의 첫 전용 강화권은 저장·화면·전투 계산에서 모두 `Lv.1`입니다. 탈리스만 A/B는 더 이상 SQ·SW에 합산되지 않으며 R·T / F·D 보너스만 유지합니다. 브라우저 source와 generated skill seed, 탈리스만 설명도 동기화했습니다.
-- `접속 캐릭터` 바는 `town`에서만 표시하고 필드·보스·초기 상태에서는 hidden/inert로 닫습니다.
-- 배포 origin의 테스트 패널·지급 모달·MASTER DATA/SAVE DATA 개발 배지는 현재 로그인 사용자가 관리자일 때만 표시합니다. 로컬 개발 origin은 기존 테스트 편의를 유지합니다. 이 UI gate는 server-authoritative anti-cheat 경계가 아니며 그 범위는 save revision/CAS와 함께 남아 있습니다.
-- 로컬 API는 `127.0.0.1:8000/api/v1`, 배포 API는 Render 주소로 고정합니다. stale production URL과 stale local port를 무시하며 배포 관리자 페이지의 API `기본값` 버튼도 배포 주소를 유지합니다.
-- 실제 브라우저에서 로컬 stale `8001` 실패를 확인하고 수정 뒤 `Failed to fetch` 대신 로컬 backend의 정상 인증 오류 응답이 표시되는 데까지 검증했습니다.
-- local/Neon의 `local-dev` legacy 관리자 row는 password가 없어 로그인할 수 없습니다. production의 로그인 가능한 `admin` 계정은 관리자 권한이 없습니다. 두 환경의 dev key는 private ignored dotenv에만 있으며 값은 보고하지 않습니다.
-- 승인 SHA `c56525394a4099160e7a32e93dc2d3a0d54568b3`의 v378 legacy static은 Render deploy `dep-da5vn3m417fc738rs2bg`로 정확히 1회 배포되어 live입니다. 298개 파일 build와 secret 미포함, public index/admin·핵심 v378 자산 HTTP 200, 미로그인 테스트 패널 denied/hidden을 확인했습니다. backend·DB·secret은 변경하지 않았습니다.
+- SQ·SW 첫 전용 강화권은 저장·표시·전투 모두 `Lv.1`이고 탈리스만 A/B 보너스를 상속하지 않습니다. `접속 캐릭터` 바는 `town`에서만 표시합니다.
+- 배포 origin의 테스트 UI는 로그인한 관리자에게만 보이며 로컬 개발 편의는 유지합니다. 이 화면 gate와 별개인 server save 검증/CAS는 남아 있습니다.
+- 로컬 API는 `127.0.0.1:8000/api/v1`, 배포는 Render API로 고정해 stale `8001`의 `Failed to fetch`를 복구했습니다. dev key는 ignored dotenv에만 있고 로그인 가능한 production `admin`은 현재 관리자가 아닙니다.
+- 승인 SHA `c56525394a4099160e7a32e93dc2d3a0d54568b3`의 v378 legacy static은 Render deploy `dep-da5vn3m417fc738rs2bg`로 1회 배포되어 live이며 backend·DB·secret은 바꾸지 않았습니다.
 
 ## v377 구현과 환경
 
-- `auth_rate_limit_buckets`는 원문 IP·email·username·identifier·Bearer/action token 대신 domain-separated HMAC digest만 보존합니다. PostgreSQL upsert와 row lock으로 동시 요청을 직렬화하고 fixed window, 반복 실패 cooldown, 유한 지연을 적용합니다.
-- auth 9개 POST의 IP 검사는 JSON 파싱·schema·Bearer dependency 전에 실행됩니다. Render production은 edge가 덮어쓰는 `CF-Connecting-IP`만 신뢰하고 `X-Forwarded-For`를 사용하지 않습니다.
-- raw body cap은 auth 16,384 bytes, 전체 2,100,000 bytes입니다. auth 응답은 202·422·429·413·5xx를 포함해 `Cache-Control: no-store`를 유지합니다.
-- durable outbox/queue인 `auth_email_outbox`는 user FK, purpose, HMAC target digest, 상태·시각·단일 시도 메타데이터만 저장합니다. 수신자, 원문 action token, 메일 본문은 저장하지 않습니다.
-- worker는 `FOR UPDATE SKIP LOCKED`로 claim하고 provider 호출 직전에 token digest만 commit합니다. provider를 시작한 건은 자동 재시도하지 않으며 새 발송이 성공해야만 이전 유효 링크를 폐기합니다.
-- 인증 재전송·아이디 찾기·비밀번호 재설정은 실제·decoy 모두 고정+jitter 지연 뒤 generic 202로 답해 계정 존재 여부를 숨깁니다.
-- 7일이 지난 미인증 계정은 관리자·감사·게임 소유 데이터가 없을 때만 동일 identity 재가입에서 회수합니다.
-- frontend는 stable auth code를 분류해 유효 session과 action link를 보존합니다. 202 접수, 429 `Retry-After`, 413, backend와 동일한 action token 형식을 처리합니다.
-- private environment 준비는 기존 security artifact 535개의 Windows ACL을 비공개로 고정하고 local/production에 서로 다른 email/abuse secret 4개를 값 출력 없이 생성했습니다.
-- `email-validator==2.3.0`과 `dnspython==2.8.0`은 backend `.venv`와 Linux runtime/musllinux/dev lock에 고정되어 있습니다.
-- local Brevo E2E에서 실제 Naver 메일 수신, action-link 인증 HTTP 200, 로그인, 캐릭터 슬롯 8개 진입을 확인했습니다. anonymous tracking, 1개월 log retention, preview 미저장도 확인했습니다.
+- `auth_rate_limit_buckets`는 원문 identity 대신 HMAC digest를 저장하며 row lock, fixed window와 cooldown을 적용합니다. auth 9개 POST는 JSON 파싱 전 신뢰 IP 확인과 16,384-byte body cap을 거치고 `Cache-Control: no-store`를 유지합니다.
+- durable outbox/queue `auth_email_outbox`는 수신자·원문 token·본문 없이 HMAC 대상과 단일 시도 상태만 보존합니다. worker는 `FOR UPDATE SKIP LOCKED`로 claim하며 provider 시작 건을 자동 재시도하지 않습니다.
+- 인증 재전송·아이디 찾기·재설정은 실제·decoy 모두 generic 202로 account enumeration을 막고, 조건을 만족한 7일 초과 미인증 계정만 재가입에서 회수합니다. frontend는 202·429·413와 stable auth code를 처리합니다.
+- private ACL과 local/production 분리 secret을 준비했고 `email-validator==2.3.0`·`dnspython==2.8.0`을 Linux runtime/musllinux/dev lock에 고정했습니다. local Brevo의 Naver 수신→링크 인증→로그인→8개 슬롯 E2E를 확인했습니다.
 
 ## DB·migration 상태
 
@@ -126,7 +125,7 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. `migrate-vue-game-server-snapshot-load-foundation`: 선택 캐릭터의 server snapshot을 read/load하고 typed domain으로 normalize/apply하는 경계를 연결합니다. save API·자동/수동 저장·Gold/아이템 보상·난수 드랍·revision write는 이 단계에 함께 연결하지 않습니다.
+1. `migrate-vue-game-serialized-save-queue-foundation`: 현재 typed server state를 자동·수동·캐릭터 전환 저장이 공유하는 단일 직렬 queue로 직렬화하고 기존 identity/revision 계약을 유지합니다. Gold/아이템 보상·난수 드랍·local conflict 자동 선택은 함께 연결하지 않습니다.
 2. 실제 관리자 Apply API·재인증·dev key header·DB write 연결은 이번 단계에 포함되지 않았습니다. 필요하면 작업 종류와 정확한 DB-write 범위를 별도 승인받습니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 

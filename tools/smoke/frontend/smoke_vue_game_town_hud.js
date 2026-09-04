@@ -78,7 +78,7 @@ function assertStaticBoundary() {
     'role="dialog"',
     'aria-modal="true"',
     "event.key === 'Escape'",
-    "snapshot load/save와 전투 timer는 아직 시작하지 않습니다",
+    "서버 저장을 읽어 typed 게임 상태에 적용했습니다",
     "account.changeCharacter()",
     "account.logout()",
   ]) {
@@ -141,7 +141,8 @@ function assertAdapterBehavior() {
   assert.strictEqual(model.skills.find((item) => item.slotKey === "Q").level, 1);
   assert.strictEqual(model.skills.find((item) => item.slotKey === "W").level, 0);
   assert.strictEqual(model.snapshotConnected, false);
-  assert.ok(adapter.TOWN_FEATURES.save.nextStep.includes("snapshot load"));
+  assert.strictEqual(model.snapshotStatusLabel, "계정 요약 모드");
+  assert.ok(adapter.TOWN_FEATURES.save.nextStep.includes("단일 직렬 저장 queue"));
   assert.strictEqual(JSON.stringify(source), before, "town adapter mutated account summary input");
 }
 

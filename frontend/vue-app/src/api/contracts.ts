@@ -70,6 +70,48 @@ export interface AccountCharacterSlot {
   progress: AccountCharacterProgress | null;
 }
 
+export interface GameSaveIntegrity {
+  algorithm?: string;
+  snapshotSha256?: string;
+  snapshotBytes?: number;
+  saveVersion?: number | null;
+  snapshotSaveVersion?: unknown;
+  clientSaveKey?: string | null;
+  slotKey?: string;
+  summaryKeys?: string[];
+  counts?: Record<string, number>;
+  warnings: string[];
+  ok: boolean;
+}
+
+export interface GameLoadPayload {
+  userId: number;
+  slotKey: `character-${number}`;
+  slotIndex: number;
+  accountCharacterId: string;
+  accountCharacter: AccountCharacterMetadata;
+  status: 'loaded';
+  exists: boolean;
+  clientSaveKey: string | null;
+  saveVersion: number | null;
+  snapshot: Record<string, unknown> | null;
+  summary: Record<string, unknown> | null;
+  source: string | null;
+  note: string | null;
+  integrity: GameSaveIntegrity | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface GameLoadData {
+  status: 'loaded';
+  userId: number;
+  slotKey: `character-${number}`;
+  accountCharacterId: string;
+  exists: boolean;
+  integrity: GameSaveIntegrity | null;
+}
+
 export interface AccountCharactersPayload {
   status: 'loaded';
   slotCount: 8;

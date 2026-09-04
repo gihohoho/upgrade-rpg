@@ -101,7 +101,7 @@
       </div>
 
       <div class="field-skill-preview" aria-label="필드 스킬 미리보기">
-        <div><strong>전투 스킬</strong><span>기본 domain 상태</span></div>
+        <div><strong>전투 스킬</strong><span>서버 snapshot 상태</span></div>
         <div class="field-skill-preview__grid">
           <span v-for="skill in field.skills" :key="skill.key" :data-tone="skill.tone" :title="skill.name">
             <b>{{ skill.slotKey }}</b><small>Lv.{{ skill.level }}</small>
@@ -114,7 +114,7 @@
         <p v-for="log in field.action.logs" :key="log.message">{{ log.message }}</p>
         <dl>
           <div><dt>master-data</dt><dd>연결됨</dd></div>
-          <div><dt>server snapshot</dt><dd>미연결</dd></div>
+          <div><dt>server snapshot</dt><dd>{{ field.snapshotConnected ? '읽기 연결' : '미연결' }}</dd></div>
           <div><dt>combat timer</dt><dd>{{ runtimeStatusLabel }}</dd></div>
         </dl>
       </div>
@@ -124,7 +124,7 @@
       <span aria-hidden="true">!</span>
       <div>
         <strong>기본 공격 timer는 동작하지만 서버 캐릭터와 보상에는 반영되지 않습니다.</strong>
-        <p>필드 이름·HP·보상은 PostgreSQL master-data, 공격력 계산은 기본 typed domain을 사용합니다. 현재 HP는 이 화면 안에서만 감소하며 snapshot load/save·자동 저장·Gold·아이템 보상·난수 판정·자동 재등장은 아직 연결하지 않습니다.</p>
+        <p>필드 이름·HP·보상은 PostgreSQL master-data, 공격력 계산은 읽어온 서버 snapshot을 사용합니다. 현재 HP는 이 화면 안에서만 감소하며 snapshot 저장·자동 저장·Gold·아이템 보상·난수 판정·자동 재등장은 아직 연결하지 않습니다.</p>
       </div>
     </aside>
   </div>

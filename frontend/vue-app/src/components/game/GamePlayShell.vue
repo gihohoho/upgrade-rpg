@@ -1,5 +1,32 @@
 <template>
+  <section
+    v-if="!gameReady"
+    class="game-snapshot-gate"
+    aria-live="polite"
+    :aria-busy="game.snapshotLoad.status !== 'error'"
+  >
+    <div class="game-snapshot-gate__crest" aria-hidden="true">◇</div>
+    <p>Selected character · server snapshot</p>
+    <h1>{{ loadTitle }}</h1>
+    <p class="game-snapshot-gate__message">{{ loadMessage }}</p>
+    <div v-if="selectedCharacterName" class="game-snapshot-gate__identity">
+      <strong>{{ selectedCharacterName }}</strong>
+      <span>{{ account.selectedCharacter?.slotKey }}</span>
+    </div>
+    <div v-if="game.snapshotLoad.status === 'error'" class="game-snapshot-gate__actions">
+      <button class="account-button account-button--primary" type="button" @click="initializeSelectedGame">
+        서버 저장 다시 불러오기
+      </button>
+      <button class="account-button account-button--ghost" type="button" @click="changeCharacter">
+        캐릭터 다시 선택
+      </button>
+    </div>
+    <span v-else class="game-snapshot-gate__spinner" aria-hidden="true" />
+    <small>이 단계에서는 저장 요청이나 보상 변경을 실행하지 않습니다.</small>
+  </section>
+
   <div
+    v-else
     class="game-legacy-frame"
     :aria-hidden="(game.isUtilityScreen || mobilePanel !== null) || undefined"
     :inert="game.isUtilityScreen || mobilePanel !== null"
@@ -85,8 +112,9 @@ import GameStorageTrashShell from './GameStorageTrashShell.vue';
 import GameBossCombatShell from './GameBossCombatShell.vue';
 import GameFieldCombatShell from './GameFieldCombatShell.vue';
 import GameTownShell from './GameTownShell.vue';
-import { useGameStore } from '@/stores';
+import { useAccountStore, useGameStore } from '@/stores';
 
+const account = useAccountStore();
 const game = useGameStore();
 const world = ref<HTMLElement | null>(null);
 const utilityModal = ref<HTMLElement | null>(null);
@@ -95,6 +123,17 @@ const mobileModal = ref<HTMLElement | null>(null);
 const mobileClose = ref<HTMLButtonElement | null>(null);
 const mobileTrigger = ref<HTMLElement | null>(null);
 const mobilePanel = ref<'profile' | 'inventory' | null>(null);
+const gameReady = computed(() => game.snapshotLoad.status === 'ready' && Boolean(game.model));
+const selectedCharacterName = computed(() => account.selectedCharacter?.accountCharacter?.name ?? '');
+const selectedCharacterLabel = computed(() => {
+  const code = account.selectedCharacter?.accountCharacter?.characterCode;
+  return account.characterOptions.find((option) => option.code === code)?.name ?? code ?? '캐릭터';
+});
+const loadTitle = computed(() => game.snapshotLoad.status === 'error'
+  ? '게임 저장을 불러오지 못했습니다'
+  : '게임 저장을 불러오는 중입니다');
+const loadMessage = computed(() => game.snapshotLoad.message
+  || '선택한 캐릭터와 서버 저장을 확인하고 있습니다.');
 const utilityTitle = computed(() => {
   if (game.isInventory) return '가방과 장비';
   if (game.isStorageTrash) return '보관함과 휴지통';
@@ -102,6 +141,14 @@ const utilityTitle = computed(() => {
   if (game.isShopSettings) return '상점과 설정';
   return '게임 기능';
 });
+
+watch([
+  () => account.accessToken,
+  () => account.selectedCharacter?.slotKey,
+  () => account.selectedCharacter?.accountCharacterId,
+], () => {
+  void initializeSelectedGame();
+}, { immediate: true });
 
 watch(() => game.isUtilityScreen, (open) => {
   if (!open) return;
@@ -112,6 +159,27 @@ watch(() => game.isUtilityScreen, (open) => {
 function closeUtility() {
   game.closeUtilityPreview();
   void nextTick(() => world.value?.focus());
+}
+
+async function initializeSelectedGame() {
+  const slot = account.selectedCharacter;
+  if (!account.accessToken || !slot?.occupied || !slot.accountCharacterId || !slot.accountCharacter) {
+    game.resetShell();
+    return;
+  }
+  const outcome = await game.loadSelectedCharacterSnapshot({
+    token: account.accessToken,
+    slot,
+    characterLabel: selectedCharacterLabel.value,
+  });
+  if (outcome === 'session-invalid') {
+    account.invalidateSession('로그인 정보가 만료되었거나 이 캐릭터에 접근할 수 없습니다. 다시 로그인해 주세요.');
+  }
+}
+
+function changeCharacter() {
+  game.resetShell();
+  account.changeCharacter();
 }
 
 function openMobilePanel(panel: 'profile' | 'inventory', event: Event) {
@@ -146,6 +214,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown);
   document.removeEventListener('visibilitychange', handleVisibilityChange);
-  game.stopCombatRuntime();
+  game.resetShell();
 });
 </script>

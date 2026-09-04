@@ -103,7 +103,7 @@ function assertStaticBoundary() {
     "game.selectShopItem",
     "game.toggleSettingPreview",
     "legacy 화면의 “판매”는 Gold를 지급하지 않고 휴지통으로 이동합니다.",
-    "구매·판매·Gold/아이템 변경·설정 저장·snapshot load/save·자동 저장·전투 runtime",
+    "구매·판매·Gold/아이템 변경·설정 저장·snapshot 저장·자동 저장",
   ]) requireMarker(component, marker, "shop/settings component");
   assert.ok(!component.includes("town-session-bar"), "connected character bar must remain town-only");
   assert.ok(!component.includes("v-html"), "master-data descriptions must render as text, not raw HTML");
@@ -186,7 +186,7 @@ function assertAdapterBehavior() {
 function main() {
   assertStaticBoundary();
   assertAdapterBehavior();
-  console.log("PASS: Vue shop/settings UI exposes only master-data pricing references and local setting previews without commerce, runtime, persistence, snapshot, or save mutation");
+  console.log("PASS: Vue shop/settings UI reads snapshot Gold and exposes master-data pricing plus local setting previews without commerce, persistence, or save mutation");
 }
 
 main();

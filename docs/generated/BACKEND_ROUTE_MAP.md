@@ -5,8 +5,8 @@
 중요: v377 local migration과 인증 요청 보호 복구는 완료됐습니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
 
 ```txt
-latest: v393.vue-game-combat-runtime-foundation
-strict result: vue-game-combat-runtime-foundation
+latest: v394.vue-game-server-snapshot-load-foundation
+strict result: vue-game-server-snapshot-load-foundation
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 actual target v377 apply: local 1 / Neon 1
@@ -18,7 +18,7 @@ local Brevo E2E: Naver delivery / link verification / login verified
 provider finalize: local multi-worker ownership diagnosed / direct provider healthy
 recovery2 roundtrip/Neon backup/apply: verified / one attempt each
 public backend/static: v377/v378 live
-next safe stage: migrate-vue-game-server-snapshot-load-foundation
+next safe stage: migrate-vue-game-serialized-save-queue-foundation
 ```
 
 ## 생성 방식
@@ -207,7 +207,7 @@ next safe stage: migrate-vue-game-server-snapshot-load-foundation
 
 ## 다음 추천 단계
 
-`next safe stage: migrate-vue-game-server-snapshot-load-foundation`
+`next safe stage: migrate-vue-game-serialized-save-queue-foundation`
 
 private environment, local migration, recovery2 synthetic 왕복·Neon backup·exact v377 apply,
 signed backend image와 legacy static의 공개 배포를 승인된 단일 시도로 완료했습니다.
@@ -215,6 +215,6 @@ signed backend image와 legacy static의 공개 배포를 승인된 단일 시�
 
 권장 범위:
 
-1. v393에서 빈 게임 화면 회귀를 고치고 server state·save·보상·난수와 분리된 client 전투 runtime을 준비했으므로 다음은 선택 캐릭터의 server snapshot read/load와 typed normalize/apply 경계를 연결합니다.
+1. v394에서 선택 캐릭터 server snapshot의 read/load·identity 검증·typed normalize/apply와 retry/session 분기를 연결했으므로 다음은 자동·수동·전환 저장의 단일 직렬 queue 기반을 준비합니다.
 2. production 관리자 복구, 재인증 request, dev key header와 실제 Apply는 별도 exact DB-write 승인을 받기 전까지 연결하지 않습니다.
 3. 완료된 migration·publish·Render deploy와 기호가 확인한 Docker·로그인은 단순 확인을 위해 재실행하지 않습니다.

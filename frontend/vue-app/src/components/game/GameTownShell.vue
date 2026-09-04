@@ -35,7 +35,7 @@
         <div class="town-scene__summary" aria-label="캐릭터 요약">
           <span><b>직업</b>{{ game.model.characterLabel }}</span>
           <span><b>보유 골드</b>{{ game.model.goldLabel }}</span>
-          <span><b>데이터</b>계정 요약 모드</span>
+          <span><b>데이터</b>{{ game.model.snapshotStatusLabel }}</span>
         </div>
       </div>
       <div class="town-scene__crest" aria-hidden="true">
@@ -138,7 +138,7 @@
       <div class="town-hud__skills" aria-label="기본 스킬 슬롯 미리보기">
         <div class="town-hud__skills-heading">
           <strong>스킬 슬롯</strong>
-          <span>기본 domain 상태</span>
+          <span>{{ game.model.snapshotEmpty ? '신규 기본 상태' : '서버 snapshot 상태' }}</span>
         </div>
         <div class="town-hud__skill-grid">
           <div v-for="skill in game.model.skills" :key="skill.key" :data-tone="skill.tone" :title="skill.name">
@@ -152,8 +152,9 @@
     <aside class="town-data-boundary" aria-label="현재 데이터 연결 범위">
       <span aria-hidden="true">i</span>
       <div>
-        <strong>저장 데이터를 변경하지 않는 마을 미리보기입니다.</strong>
-        <p>캐릭터 이름·레벨·골드·최근 구역은 계정 슬롯 요약을 사용하고, 상세 능력치와 스킬은 기본 typed domain 값입니다. snapshot load/save와 전투 timer는 아직 시작하지 않습니다.</p>
+        <strong>서버 저장을 읽어 typed 게임 상태에 적용했습니다.</strong>
+        <p v-if="game.model.snapshotEmpty">신규 캐릭터의 빈 snapshot은 정상 상태로 처리해 기본 능력치로 시작합니다. 저장 요청·자동 저장·보상 변경은 아직 실행하지 않습니다.</p>
+        <p v-else>골드·상세 능력치·스킬·최근 구역은 선택 캐릭터의 서버 snapshot을 사용합니다. 이번 단계는 읽기 전용이며 저장 요청과 보상 변경은 실행하지 않습니다.</p>
       </div>
     </aside>
   </div>
@@ -184,7 +185,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, watchEffect } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
 import { useAccountStore, useGameStore } from '@/stores';
 import { TOWN_FEATURES, type TownFeatureKey } from '@/game/adapters/townHud';
 
@@ -195,23 +196,12 @@ const modalPanel = ref<HTMLElement | null>(null);
 const modalClose = ref<HTMLButtonElement | null>(null);
 const featureTrigger = ref<HTMLElement | null>(null);
 const townFeatures = ['record', 'codex', 'ranking', 'mailbox'].map((key) => TOWN_FEATURES[key as TownFeatureKey]);
-const selectedCharacterLabel = computed(() => {
-  const code = account.selectedCharacter?.accountCharacter?.characterCode;
-  return account.characterOptions.find((option) => option.code === code)?.name ?? code ?? '캐릭터';
-});
 const canEnterSkillEnhancement = computed(() => (
   account.skills.length > 0
   && account.enhancementGroups.length > 0
   && account.enhancementLevels.length > 0
   && account.itemTemplates.some((item) => Boolean(item.enhanceGroupCode))
 ));
-
-watchEffect(() => {
-  const slot = account.selectedCharacter;
-  if (background && game.model) return;
-  if (slot?.occupied && slot.accountCharacter) game.enterTown(slot, selectedCharacterLabel.value);
-  else game.resetShell();
-});
 
 function openFeature(key: TownFeatureKey, event: Event) {
   featureTrigger.value = event.currentTarget as HTMLElement;
@@ -252,12 +242,10 @@ function enterShopSettingsPreview() {
 }
 
 function changeCharacter() {
-  game.resetShell();
   account.changeCharacter();
 }
 
 function logout() {
-  game.resetShell();
   void account.logout();
 }
 

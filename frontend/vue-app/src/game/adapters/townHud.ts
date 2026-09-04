@@ -1,4 +1,5 @@
 import {
+  cloneDomainValue,
   createDefaultServerState,
   formatCompactNumber,
   getBaseAttackByAttackSpeed,
@@ -8,6 +9,7 @@ import {
 export type TownFeatureKey = 'record' | 'codex' | 'ranking' | 'mailbox' | 'inventory' | 'field' | 'boss' | 'save';
 
 export interface TownProgressSummary {
+  saveVersion?: number | null;
   gold: number | string | null;
   level: number | null;
   currentZoneIndex: number | null;
@@ -22,6 +24,14 @@ export interface TownHudSource {
   characterCode: string;
   characterLabel: string;
   progress: TownProgressSummary | null;
+  serverState?: GameServerState;
+  snapshot?: {
+    connected: true;
+    isEmpty: boolean;
+    saveVersion: number | null;
+    updatedAt: string | null;
+    integrityOk: boolean | null;
+  };
 }
 
 export interface TownHudStat {
@@ -65,7 +75,10 @@ export interface TownHudViewModel {
   updatedAt: string | null;
   stats: TownHudStat[];
   skills: TownHudSkill[];
-  snapshotConnected: false;
+  snapshotConnected: boolean;
+  snapshotEmpty: boolean;
+  snapshotStatusLabel: string;
+  saveVersion: number | null;
 }
 
 export const TOWN_FEATURES: Record<TownFeatureKey, TownFeatureDefinition> = {
@@ -74,7 +87,7 @@ export const TOWN_FEATURES: Record<TownFeatureKey, TownFeatureDefinition> = {
     icon: '記',
     label: '기록관',
     description: '누적 처치와 획득 기록을 확인하는 공간입니다.',
-    nextStep: '서버 snapshot과 기록 데이터 연결 단계에서 열립니다.',
+    nextStep: '불러온 snapshot의 기록 데이터를 화면에 매핑하는 단계에서 열립니다.',
   },
   codex: {
     key: 'codex',
@@ -123,7 +136,7 @@ export const TOWN_FEATURES: Record<TownFeatureKey, TownFeatureDefinition> = {
     icon: '存',
     label: '수동 저장',
     description: '현재 캐릭터의 진행 상태를 서버에 저장합니다.',
-    nextStep: 'snapshot load와 단일 저장 queue 단계에서 활성화됩니다.',
+    nextStep: '단일 직렬 저장 queue 단계에서 활성화됩니다.',
   },
 };
 
@@ -139,10 +152,29 @@ const SKILL_PRESENTATION = [
 ] as const;
 
 export function createTownHudViewModel(source: TownHudSource): TownHudViewModel {
-  const serverState = createDefaultServerState({ defaultCharacterId: source.characterCode });
-  serverState.progress.currentZoneType = 'town';
+  const snapshotConnected = Boolean(source.serverState && source.snapshot?.connected);
+  const snapshotEmpty = snapshotConnected && Boolean(source.snapshot?.isEmpty);
+  const serverState = source.serverState
+    ? cloneDomainValue(source.serverState)
+    : createDefaultServerState({ defaultCharacterId: source.characterCode });
   const summaryGold = toNonNegativeFiniteNumber(source.progress?.gold);
-  if (summaryGold !== null) serverState.player.gold = summaryGold;
+  if (!snapshotConnected) {
+    serverState.progress.currentZoneType = 'town';
+    if (summaryGold !== null) serverState.player.gold = summaryGold;
+  }
+  const snapshotLevel = toNonNegativeFiniteNumber(serverState.player.level);
+  const displayLevel = snapshotLevel ?? source.progress?.level;
+  const recentProgress = snapshotConnected && !snapshotEmpty
+    ? {
+        gold: serverState.player.gold,
+        level: snapshotLevel,
+        currentZoneIndex: serverState.progress.currentZoneIndex,
+        currentZoneType: serverState.progress.currentZoneType,
+        updatedAt: source.snapshot?.updatedAt ?? null,
+      }
+    : snapshotEmpty
+      ? null
+      : source.progress;
 
   const attack = getBaseAttackByAttackSpeed(serverState.player.addAttackSpeed);
   const stats: TownHudStat[] = [
@@ -168,17 +200,26 @@ export function createTownHudViewModel(source: TownHudSource): TownHudViewModel 
     avatarText: source.characterName.trim().slice(0, 1) || '검',
     zoneType: 'town',
     zoneLabel: '마을',
-    levelLabel: source.progress?.level === null || source.progress?.level === undefined
+    levelLabel: displayLevel === null || displayLevel === undefined
       ? '저장 없음'
-      : `Lv.${Math.max(0, Math.trunc(source.progress.level))}`,
-    goldLabel: formatCompactNumber(summaryGold ?? 0),
-    recentSaveZoneLabel: formatRecentSaveZone(source.progress),
-    recentSaveZoneIndex: source.progress?.currentZoneIndex ?? null,
-    recentSaveZoneType: source.progress?.currentZoneType ?? null,
-    updatedAt: source.progress?.updatedAt ?? null,
+      : `Lv.${Math.max(0, Math.trunc(displayLevel))}`,
+    goldLabel: formatCompactNumber(snapshotConnected ? serverState.player.gold : summaryGold ?? 0),
+    recentSaveZoneLabel: formatRecentSaveZone(recentProgress),
+    recentSaveZoneIndex: recentProgress?.currentZoneIndex ?? null,
+    recentSaveZoneType: recentProgress?.currentZoneType ?? null,
+    updatedAt: source.snapshot?.updatedAt ?? source.progress?.updatedAt ?? null,
     stats,
     skills,
-    snapshotConnected: false,
+    snapshotConnected,
+    snapshotEmpty,
+    snapshotStatusLabel: snapshotEmpty
+      ? '서버 연결 · 신규 기본 상태'
+      : source.snapshot?.integrityOk === false
+        ? '서버 snapshot 적용 · 호환 정규화'
+        : snapshotConnected
+          ? '서버 snapshot 적용 완료'
+          : '계정 요약 모드',
+    saveVersion: source.snapshot?.saveVersion ?? source.progress?.saveVersion ?? null,
   };
 }
 

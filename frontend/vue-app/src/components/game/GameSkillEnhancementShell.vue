@@ -46,7 +46,7 @@
             <small>Lv.{{ skill.effectiveLevel }} / {{ skill.maxLevel }}</small>
           </button>
         </div>
-        <p class="skill-browser__note">현재 레벨은 snapshot이 아니라 기본 typed domain 상태입니다. 회색 표시는 아직 획득하지 않은 샘플입니다.</p>
+        <p class="skill-browser__note">현재 스킬 레벨은 서버 snapshot의 typed 상태입니다. 회색 표시는 아직 획득하지 않은 샘플입니다.</p>
       </div>
 
       <article class="skill-detail" :data-tone="model.selectedSkill.tone" aria-labelledby="skill-detail-title">
@@ -57,7 +57,7 @@
           <span>{{ model.selectedSkill.description }}</span>
         </div>
         <dl class="skill-detail__levels">
-          <div><dt>기본 레벨</dt><dd>Lv.{{ model.selectedSkill.currentLevel }}</dd></div>
+          <div><dt>현재 레벨</dt><dd>Lv.{{ model.selectedSkill.currentLevel }}</dd></div>
           <div><dt>장비 보너스</dt><dd>+{{ model.selectedSkill.bonusLevel }}</dd></div>
           <div><dt>표시 레벨</dt><dd>Lv.{{ model.selectedSkill.effectiveLevel }}</dd></div>
         </dl>
@@ -159,7 +159,7 @@
       <p v-for="log in model.action.logs" :key="log.message">{{ log.message }}</p>
       <dl>
         <div><dt>master-data</dt><dd>연결됨</dd></div>
-        <div><dt>snapshot / inventory</dt><dd>미연결</dd></div>
+        <div><dt>snapshot / inventory</dt><dd>스킬 읽기 연결 / 아이템 샘플</dd></div>
         <div><dt>random / save</dt><dd>잠김</dd></div>
       </dl>
     </section>
@@ -168,7 +168,7 @@
       <span aria-hidden="true">!</span>
       <div>
         <strong>현재 화면은 실제 보유 스킬·장비·재료가 아닌 규칙 미리보기입니다.</strong>
-        <p>master-data와 기본 typed domain만 읽습니다. 스킬강화권 사용·장비 강화·Gold/재료 소비·난수 결과·snapshot load/save·자동 저장·전투 runtime은 실행하지 않습니다.</p>
+        <p>master-data와 서버 snapshot의 스킬 상태를 읽습니다. 스킬강화권 사용·장비 강화·Gold/재료 소비·난수 결과·snapshot 저장·자동 저장은 실행하지 않습니다.</p>
       </div>
     </aside>
   </div>

@@ -73,7 +73,7 @@ function main() {
     "@media (max-width: 760px)",
   ]) requireMarker(styles, marker, "legacy frame and readability CSS");
 
-  console.log("PASS: Vue game restores readable legacy-style desktop info/bag side windows and accessible utility/mobile dialogs without snapshot, save, item, Gold, or runtime mutation");
+  console.log("PASS: Vue game keeps readable legacy-style desktop info/bag windows and accessible utility/mobile dialogs without save, item, Gold, or runtime mutation");
 }
 
 main();

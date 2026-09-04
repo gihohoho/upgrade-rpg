@@ -292,7 +292,7 @@ function formatStatSummary(
   if (itemType === 'skill_book') return '스킬 성장 재료';
   if (equipSlotIndex !== null) return `${EQUIPMENT_SLOT_LABELS[equipSlotIndex]} 슬롯 대상`;
   const group = stringValue(options.equipGroup ?? raw.equipGroup);
-  return group ? `장비 그룹 · ${group}` : '상세 능력치는 snapshot 연결 뒤 계산';
+  return group ? `장비 그룹 · ${group}` : '상세 능력치는 보유 장비 snapshot 매핑 뒤 계산';
 }
 
 function nullableTier(value: unknown): number | null {

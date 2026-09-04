@@ -33,7 +33,7 @@ export interface SkillEnhancementSkillView {
   bonusGroup: string | null;
   awakened: boolean;
   masterDataConnected: true;
-  snapshotConnected: false;
+  snapshotConnected: boolean;
 }
 
 export interface EnhancementStepView {
@@ -92,7 +92,7 @@ export interface SkillEnhancementViewModel {
   selectedEnhancementStep: EnhancementStepView;
   action: GameActionResult;
   masterDataConnected: true;
-  snapshotConnected: false;
+  snapshotConnected: boolean;
   skillMutationConnected: false;
   itemMutationConnected: false;
   randomResultConnected: false;
@@ -184,7 +184,7 @@ export function createSkillEnhancementViewModel(source: SkillEnhancementSource):
     selectedEnhancementStep,
     action,
     masterDataConnected: true,
-    snapshotConnected: false,
+    snapshotConnected: source.town.snapshotConnected,
     skillMutationConnected: false,
     itemMutationConnected: false,
     randomResultConnected: false,
@@ -224,6 +224,7 @@ function createSkillViews(source: SkillEnhancementSource): SkillEnhancementSkill
       cooldownSeconds: skill.cooldownSeconds,
       bonusGroup,
       awakened: false,
+      snapshotConnected: source.town.snapshotConnected,
     }));
 
     const awakening = asRecord(options.awakening ?? raw.awakening);
@@ -244,6 +245,7 @@ function createSkillViews(source: SkillEnhancementSource): SkillEnhancementSkill
         cooldownSeconds: null,
         bonusGroup: nullableString(awakening.bonusGroup),
         awakened: true,
+        snapshotConnected: source.town.snapshotConnected,
       }));
     }
   }
@@ -266,6 +268,7 @@ function createSkillView(input: {
   cooldownSeconds: number | null | undefined;
   bonusGroup: string | null;
   awakened: boolean;
+  snapshotConnected: boolean;
 }): SkillEnhancementSkillView {
   const isDedicatedAwakening = input.slotKey === 'SQ' || input.slotKey === 'SW';
   const bonusLevel = 0;
@@ -295,7 +298,7 @@ function createSkillView(input: {
     bonusGroup: input.bonusGroup,
     awakened: input.awakened,
     masterDataConnected: true,
-    snapshotConnected: false,
+    snapshotConnected: input.snapshotConnected,
   };
 }
 

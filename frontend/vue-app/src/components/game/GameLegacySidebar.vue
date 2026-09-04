@@ -47,7 +47,7 @@
       <section class="game-side-section" aria-labelledby="game-side-stats-title">
         <div class="game-side-section__heading">
           <strong id="game-side-stats-title">능력치</strong>
-          <span>기본 상태</span>
+          <span>{{ town.snapshotEmpty ? '신규 기본 상태' : '서버 snapshot' }}</span>
         </div>
         <dl class="game-side-stats">
           <div v-for="stat in town.stats" :key="stat.key" :data-tone="stat.tone">
@@ -60,7 +60,7 @@
       <section class="game-side-section" aria-labelledby="game-side-skills-title">
         <div class="game-side-section__heading">
           <strong id="game-side-skills-title">스킬</strong>
-          <span>기본 레벨</span>
+          <span>{{ town.snapshotEmpty ? '신규 기본 레벨' : '서버 레벨' }}</span>
         </div>
         <div class="game-side-skill-grid">
           <span v-for="skill in town.skills" :key="skill.key" :data-tone="skill.tone" :title="skill.name">

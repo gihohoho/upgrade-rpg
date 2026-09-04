@@ -118,7 +118,7 @@ function assertStaticBoundary() {
     "game.selectSkillEnhancementSkill",
     "game.selectEnhancementItem",
     "game.selectEnhancementLevel",
-    "스킬강화권 사용·장비 강화·Gold/재료 소비·난수 결과·snapshot load/save·자동 저장·전투 runtime",
+    "스킬강화권 사용·장비 강화·Gold/재료 소비·난수 결과·snapshot 저장·자동 저장",
   ]) requireMarker(component, marker, "skill/enhancement component");
   assert.ok(!component.includes("town-session-bar"), "connected character bar must remain town-only");
   assert.ok(!component.includes("v-html"), "master-data descriptions must render as text, not raw HTML");
@@ -248,7 +248,7 @@ function assertAdapterBehavior() {
 function main() {
   assertStaticBoundary();
   assertAdapterBehavior();
-  console.log("PASS: Vue skill/enhancement UI preserves SQ/SW level-1 awakening and enhancement preview rules without skill, item, random, snapshot, or save mutation");
+  console.log("PASS: Vue skill/enhancement UI reads snapshot skill levels and preserves SQ/SW level-1 rules without skill, item, random, or save mutation");
 }
 
 main();

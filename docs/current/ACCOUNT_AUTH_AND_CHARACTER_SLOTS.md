@@ -1,9 +1,9 @@
 # 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v393.vue-game-combat-runtime-foundation
-strict result: vue-game-combat-runtime-foundation
-next safe stage: migrate-vue-game-server-snapshot-load-foundation
+latest: v394.vue-game-server-snapshot-load-foundation
+strict result: vue-game-server-snapshot-load-foundation
+next safe stage: migrate-vue-game-serialized-save-queue-foundation
 public Render: backend v377 / static v378 Live
 local/Neon DB: v377 / v377
 ```
@@ -171,6 +171,13 @@ DB session 생성 전에 요구합니다. 별도 exact-SHA 승인은 계속 필�
 password를 제거합니다.
 
 ## 서버 기준 저장·브라우저 복구와 캐릭터 전환
+
+v394 Vue는 선택 캐릭터의 서버 snapshot read/load까지만 실제 연결했습니다. Bearer 계정,
+`character-N`, 32자리 `accountCharacterId`가 응답까지 모두 일치할 때만 typed 상태에
+적용하고 빈 snapshot은 신규 기본 상태로 처리합니다. 401/403은 로그인으로 돌아가며,
+network/timeout/5xx와 응답 계약 오류는 token·선택 캐릭터를 보존한 재시도 화면으로
+닫습니다. 아래 local 복구·`pending-unsynced` 선택과 직렬 저장 queue는 계속 유효한
+최종 계약이지만 v394에는 아직 연결하지 않았습니다.
 
 - 기존 단일 키 `idleRpgSaveV22`는 삭제하거나 자동 덮어쓰지 않고 명시적 가져오기
   원본으로만 보존합니다.

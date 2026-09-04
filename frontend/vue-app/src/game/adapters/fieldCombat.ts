@@ -52,7 +52,7 @@ export interface FieldCombatViewModel {
   skills: TownHudSkill[];
   action: GameActionResult;
   masterDataConnected: true;
-  snapshotConnected: false;
+  snapshotConnected: boolean;
   runtimeConnected: false;
 }
 
@@ -102,7 +102,7 @@ export function createFieldCombatViewModel(source: FieldCombatSource): FieldComb
     skills: source.town.skills.map((skill) => ({ ...skill })),
     action: createFieldPreviewAction(selectedZone, source.createdAt),
     masterDataConnected: true,
-    snapshotConnected: false,
+    snapshotConnected: source.town.snapshotConnected,
     runtimeConnected: false,
   };
 }
@@ -122,7 +122,7 @@ function normalizeZone(zone: FieldZoneOption, index: number): FieldCombatZone {
     enemyHpLabel: formatCompactNumber(enemyHp),
     goldReward,
     goldRewardLabel: formatCompactNumber(goldReward),
-    entryCondition: stringValue(entryRules.text) || '상세 입장 판정은 snapshot 연결 뒤 적용됩니다.',
+    entryCondition: stringValue(entryRules.text) || '상세 입장 판정은 후속 전투 규칙 단계에서 적용됩니다.',
     farmReward: formatFarmReward(farmRules),
   };
 }

@@ -17,14 +17,14 @@ from pathlib import Path
 
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/POSTGRES_ALEMBIC_READINESS.md")
-CHECKPOINT_VERSION = "v393.vue-game-combat-runtime-foundation"
-CHECKPOINT_RESULT = "vue-game-combat-runtime-foundation"
+CHECKPOINT_VERSION = "v394.vue-game-server-snapshot-load-foundation"
+CHECKPOINT_RESULT = "vue-game-server-snapshot-load-foundation"
 SOURCE_GRAPH_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_DB_REVISION = SOURCE_GRAPH_HEAD
 NEON_APPLIED_DB_REVISION = SOURCE_GRAPH_HEAD
 LOCAL_APPLIED_DB_APPLICATION_TABLES = 25
 NEON_APPLIED_DB_APPLICATION_TABLES = 25
-NEXT_SAFE_STAGE = "migrate-vue-game-server-snapshot-load-foundation"
+NEXT_SAFE_STAGE = "migrate-vue-game-serialized-save-queue-foundation"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 
@@ -454,7 +454,7 @@ revision만 거짓으로 올릴 수 있으므로 특히 금지합니다.
 7. local/Neon actual DB는 모두 v377이고 기존 22개 table 데이터 변화 0·25개 model table parity를
    확인했습니다. recovery2 Neon backup과 apply는 각각 한 번만 실행했습니다.
 8. local 실제 메일·링크 인증·로그인, 공개 backend/static 배포와 Vue 인증·관리자 Preview·write-locked 확인 modal을 완료했습니다.
-   다음 안전 단계는 save write·Gold/아이템 보상·난수 드랍과 분리해 선택 캐릭터의 server snapshot read/load 경계를 준비하는 `{NEXT_SAFE_STAGE}`입니다.
+   다음 안전 단계는 Gold/아이템 보상·난수 드랍과 분리해 자동·수동·전환 저장의 단일 직렬 queue 경계를 준비하는 `{NEXT_SAFE_STAGE}`입니다.
 
 현재는 **public email rollout deployed** 상태입니다. local/Neon DB schema와 legacy
 데이터는 보존됐고 signed backend image와 legacy static이 공개 live입니다.

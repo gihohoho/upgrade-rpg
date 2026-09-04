@@ -9,10 +9,10 @@ export const gameReadOnlyApi = Object.freeze({
     });
   },
 
-  fetchLoad({ slotKey = 'default' } = {}, options = {}) {
+  fetchLoad({ slotKey = 'character-1', accountCharacterId = '' } = {}, options = {}) {
     return requestReadOnly(GAME_READONLY_ROUTES.load, {
       ...options,
-      query: { slotKey },
+      query: { slotKey, accountCharacterId },
     });
   },
 

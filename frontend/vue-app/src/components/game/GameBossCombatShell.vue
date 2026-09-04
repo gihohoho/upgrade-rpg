@@ -121,7 +121,7 @@
         <p v-for="log in boss.action.logs" :key="log.message">{{ log.message }}</p>
         <dl>
           <div><dt>master-data</dt><dd>연결됨</dd></div>
-          <div><dt>server snapshot</dt><dd>미연결</dd></div>
+          <div><dt>server snapshot</dt><dd>{{ boss.snapshotConnected ? '읽기 연결' : '미연결' }}</dd></div>
           <div><dt>combat timer</dt><dd>{{ runtimeStatusLabel }}</dd></div>
           <div><dt>random / rewards</dt><dd>미연결</dd></div>
         </dl>
@@ -132,7 +132,7 @@
       <span aria-hidden="true">!</span>
       <div>
         <strong>기본 공격 timer는 동작하지만 서버 캐릭터와 보상에는 반영되지 않습니다.</strong>
-        <p>보스 이름·타입·티어·HP·소환 규칙·쿨타임은 PostgreSQL master-data를 사용합니다. 현재 HP는 이 화면 안에서만 감소하며 snapshot load/save·자동 저장·난수 드랍·보상·쿨타임 변경·자동 재소환은 아직 연결하지 않습니다.</p>
+        <p>보스 정보는 PostgreSQL master-data, 공격력 계산은 읽어온 서버 snapshot을 사용합니다. 현재 HP는 이 화면 안에서만 감소하며 snapshot 저장·자동 저장·난수 드랍·보상·쿨타임 변경·자동 재소환은 아직 연결하지 않습니다.</p>
       </div>
     </aside>
   </div>

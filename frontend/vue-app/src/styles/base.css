@@ -3971,6 +3971,101 @@ code {
   width: min(1680px, calc(100% - 32px));
 }
 
+/* v394 selected-character server snapshot loading, retry, and read-only apply gate */
+.vue-shell:has(.game-snapshot-gate) {
+  width: min(880px, calc(100% - 32px));
+}
+
+.game-snapshot-gate {
+  display: grid;
+  width: 100%;
+  min-height: min(560px, calc(100vh - 150px));
+  place-items: center;
+  align-content: center;
+  gap: 13px;
+  padding: clamp(28px, 7vw, 72px);
+  border: 1px solid rgba(180, 190, 225, 0.22);
+  border-radius: 24px;
+  color: #edf3ff;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(118, 97, 244, 0.2), transparent 38%),
+    linear-gradient(145deg, rgba(31, 43, 69, 0.96), rgba(9, 15, 27, 0.98));
+  box-shadow: 0 28px 100px rgba(0, 0, 0, 0.38);
+}
+
+.game-snapshot-gate__crest {
+  display: grid;
+  width: 66px;
+  height: 66px;
+  place-items: center;
+  border: 1px solid rgba(190, 180, 255, 0.42);
+  border-radius: 21px;
+  color: #fff;
+  background: linear-gradient(145deg, #7864ff, #4630ab);
+  box-shadow: 0 14px 40px rgba(87, 67, 211, 0.34);
+  font-size: 28px;
+}
+
+.game-snapshot-gate > p:first-of-type {
+  margin: 7px 0 -5px;
+  color: #b5aaff;
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.game-snapshot-gate h1 {
+  margin: 0;
+  font-size: clamp(25px, 4vw, 38px);
+  letter-spacing: -0.035em;
+}
+
+.game-snapshot-gate__message {
+  max-width: 600px;
+  margin: 0;
+  color: #bdc8da;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.game-snapshot-gate__identity {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 13px;
+  border: 1px solid rgba(190, 180, 255, 0.2);
+  border-radius: 11px;
+  background: rgba(139, 124, 255, 0.08);
+}
+
+.game-snapshot-gate__identity span,
+.game-snapshot-gate > small {
+  color: #95a3b8;
+  font-size: 12px;
+}
+
+.game-snapshot-gate__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px;
+}
+
+.game-snapshot-gate__spinner {
+  width: 27px;
+  height: 27px;
+  border: 3px solid rgba(184, 174, 255, 0.2);
+  border-top-color: #aa9eff;
+  border-radius: 50%;
+  animation: game-snapshot-spin 780ms linear infinite;
+}
+
+@keyframes game-snapshot-spin {
+  to { transform: rotate(360deg); }
+}
+
 .game-legacy-frame {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

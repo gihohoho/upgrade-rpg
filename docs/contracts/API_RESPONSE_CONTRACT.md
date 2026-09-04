@@ -170,36 +170,72 @@ admin.change
 역할:
 
 ```txt
-유저의 서버 저장 데이터를 불러옵니다.
+Bearer 계정이 소유한 선택 캐릭터의 서버 저장 데이터를 불러옵니다.
 ```
+
+필수 query는 `slotKey=character-1..8`과 32자리 `accountCharacterId`입니다. 서버는
+Bearer 계정·슬롯 키·캐릭터 ID가 모두 일치하는지 확인합니다.
 
 응답:
 
 ```js
 {
   ok: true,
+  responseVersion: "game-api-response.v1",
   type: "game.load",
-  data: {
-    saveVersion: 5,
-    serverState: {
-      player: {},
-      progress: {},
-      field: {}
+  requestId: "...",
+  payload: {
+    status: "loaded",
+    exists: true,
+    userId: 7,
+    slotKey: "character-2",
+    slotIndex: 2,
+    accountCharacterId: "32자리 캐릭터 ID",
+    accountCharacter: {
+      id: "32자리 캐릭터 ID",
+      slotIndex: 2,
+      name: "캐릭터 이름",
+      characterCode: "weapon_master",
+      createdAt: "2026-09-01T00:00:00Z"
     },
-    masterDataVersion: "2026-07-06.1"
+    clientSaveKey: "character-2",
+    saveVersion: 5,
+    snapshot: {
+      saveVersion: 5,
+      player: {},
+      currentZoneIndex: 0,
+      currentZoneType: "field",
+      fieldEnemyHp: {},
+      fieldRespawnEndAt: {}
+    },
+    summary: {},
+    source: "localStorage",
+    note: null,
+    integrity: { ok: true, warnings: [] },
+    createdAt: "2026-09-01T00:00:00Z",
+    updatedAt: "2026-09-04T00:00:00Z"
   },
-  statePatch: {
-    gameState: {
-      server: {}
-    }
-  }
+  data: {
+    status: "loaded",
+    userId: 7,
+    slotKey: "character-2",
+    accountCharacterId: "32자리 캐릭터 ID",
+    exists: true,
+    integrity: { ok: true, warnings: [] }
+  },
+  meta: { source: "postgresql" },
+  error: null
 }
 ```
 
 프론트 처리:
 
 ```txt
-statePatch.gameState.server를 현재 gameState.server에 반영
+v394 Vue는 data와 payload의 slotKey/accountCharacterId, payload의 characterCode를
+현재 선택과 다시 대조한 뒤 payload.snapshot만 typed server state로 normalize/apply합니다.
+빈 snapshot {}은 신규 기본 상태로 허용합니다. 401/403은 로그인으로 돌아가고,
+network/timeout/5xx와 계약 오류는 token·캐릭터 선택을 유지한 재시도 화면으로 처리합니다.
+이 GET 처리에서 save POST, Gold/아이템 보상, 난수와 revision write를 실행하지 않습니다.
 ```
 
 ---

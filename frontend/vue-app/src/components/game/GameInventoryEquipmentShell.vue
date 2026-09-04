@@ -16,7 +16,7 @@
         <span>Inventory · equipment UI</span>
         <strong>{{ inventory.characterName }}의 장비 보관 화면</strong>
       </div>
-      <span class="inventory-command-bar__status"><i aria-hidden="true" /> snapshot 연결 대기</span>
+      <span class="inventory-command-bar__status"><i aria-hidden="true" /> 보유 아이템 매핑 대기</span>
     </header>
 
     <section class="inventory-overview" aria-labelledby="inventory-overview-title">
@@ -140,7 +140,7 @@
       <p v-for="log in inventory.action.logs" :key="log.message">{{ log.message }}</p>
       <dl>
         <div><dt>master-data</dt><dd>연결됨</dd></div>
-        <div><dt>server snapshot</dt><dd>미연결</dd></div>
+        <div><dt>server snapshot</dt><dd>플레이어 읽기 연결 · 아이템 미매핑</dd></div>
         <div><dt>item mutation / save</dt><dd>잠김</dd></div>
       </dl>
     </section>
@@ -149,7 +149,7 @@
       <span aria-hidden="true">!</span>
       <div>
         <strong>현재 아이템은 실제 보유 목록이 아니라 master-data 샘플입니다.</strong>
-        <p>선택과 `위로 정렬`은 표시 모델만 다시 만들며 원본 master-data와 server state를 바꾸지 않습니다. snapshot load/save·장착·사용·판매·강화·보관함 이동·휴지통 이동은 아직 연결하지 않습니다.</p>
+        <p>선택과 `위로 정렬`은 표시 모델만 다시 만들며 원본 master-data와 server state를 바꾸지 않습니다. 보유 아이템 snapshot 매핑·저장·장착·사용·판매·강화·보관함 이동·휴지통 이동은 아직 연결하지 않습니다.</p>
       </div>
     </aside>
   </div>

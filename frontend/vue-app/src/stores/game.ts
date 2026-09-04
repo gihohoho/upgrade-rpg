@@ -1,5 +1,7 @@
 import { computed, ref, shallowRef } from 'vue';
 import { defineStore } from 'pinia';
+import { gameApi } from '@/api/gameApi';
+import { ApiRequestError } from '@/api/http';
 import type {
   AccountCharacterSlot,
   BossOption,
@@ -51,8 +53,27 @@ import {
   type TownFeatureKey,
   type TownHudViewModel,
 } from '@/game/adapters/townHud';
+import {
+  applyLoadedGameSnapshot,
+  GameSnapshotContractError,
+  type LoadedGameSnapshot,
+} from '@/game/adapters/serverSnapshot';
+
+export type GameSnapshotLoadStatus = 'idle' | 'loading' | 'ready' | 'error';
+export type GameSnapshotLoadErrorKind = 'retryable' | 'contract' | null;
+
+export interface GameSnapshotLoadState {
+  status: GameSnapshotLoadStatus;
+  errorKind: GameSnapshotLoadErrorKind;
+  message: string;
+  slotKey: string | null;
+  accountCharacterId: string | null;
+}
+
+export type GameSnapshotLoadOutcome = 'ready' | 'session-invalid' | 'error' | 'cancelled';
 
 export const useGameStore = defineStore('game', () => {
+  const snapshotLoad = shallowRef<GameSnapshotLoadState>(createIdleSnapshotLoadState());
   const model = shallowRef<TownHudViewModel | null>(null);
   const fieldModel = shallowRef<FieldCombatViewModel | null>(null);
   const fieldZoneSources = shallowRef<FieldZoneOption[]>([]);
@@ -90,6 +111,8 @@ export const useGameStore = defineStore('game', () => {
   const combatController = createCombatRuntimeController((snapshot) => {
     combatRuntime.value = snapshot;
   });
+  let snapshotAbortController: AbortController | null = null;
+  let snapshotRequestId = 0;
 
   const activeFeature = computed(() => (
     activeFeatureKey.value ? TOWN_FEATURES[activeFeatureKey.value] : null
@@ -109,7 +132,7 @@ export const useGameStore = defineStore('game', () => {
   ));
   const utilityBackground = computed(() => isUtilityScreen.value ? utilityOrigin.value : null);
 
-  function enterTown(slot: AccountCharacterSlot, characterLabel: string) {
+  function enterTown(slot: AccountCharacterSlot, characterLabel: string, snapshot?: LoadedGameSnapshot) {
     if (!slot.occupied || !slot.accountCharacterId || !slot.accountCharacter) {
       resetShell();
       return;
@@ -119,6 +142,8 @@ export const useGameStore = defineStore('game', () => {
       slot.slotKey,
       slot.progress?.updatedAt ?? '',
       characterLabel,
+      snapshot?.saveVersion ?? '',
+      snapshot?.updatedAt ?? '',
     ].join(':');
     screen.value = 'town';
     utilityOrigin.value = 'town';
@@ -131,6 +156,16 @@ export const useGameStore = defineStore('game', () => {
       characterCode: slot.accountCharacter.characterCode,
       characterLabel,
       progress: slot.progress,
+      ...(snapshot ? {
+        serverState: snapshot.serverState,
+        snapshot: {
+          connected: true as const,
+          isEmpty: snapshot.isEmpty,
+          saveVersion: snapshot.saveVersion,
+          updatedAt: snapshot.updatedAt,
+          integrityOk: snapshot.integrity?.ok ?? null,
+        },
+      } : {}),
     });
     contextSignature.value = signature;
     fieldModel.value = null;
@@ -145,6 +180,81 @@ export const useGameStore = defineStore('game', () => {
     resetSkillEnhancementPreview();
     resetShopSettingsPreview();
     activeFeatureKey.value = null;
+  }
+
+  async function loadSelectedCharacterSnapshot(options: {
+    token: string;
+    slot: AccountCharacterSlot;
+    characterLabel: string;
+  }): Promise<GameSnapshotLoadOutcome> {
+    const { token, slot, characterLabel } = options;
+    if (!token || !slot.occupied || !slot.accountCharacterId || !slot.accountCharacter) {
+      resetShell();
+      return 'cancelled';
+    }
+
+    const requestId = supersedeSnapshotRequest();
+    const controller = new AbortController();
+    snapshotAbortController = controller;
+    clearShellState();
+    snapshotLoad.value = {
+      status: 'loading',
+      errorKind: null,
+      message: '선택한 캐릭터의 서버 저장을 불러오고 있습니다.',
+      slotKey: slot.slotKey,
+      accountCharacterId: slot.accountCharacterId,
+    };
+
+    try {
+      const response = await gameApi.loadSelectedCharacter(token, {
+        slotKey: slot.slotKey,
+        accountCharacterId: slot.accountCharacterId,
+      }, controller.signal);
+      if (requestId !== snapshotRequestId) return 'cancelled';
+      const responseData: unknown = response.data;
+      if (
+        response.type !== 'game.load'
+        || !isRecord(responseData)
+        || responseData.slotKey !== slot.slotKey
+        || responseData.accountCharacterId !== slot.accountCharacterId
+      ) {
+        throw new GameSnapshotContractError('서버 저장 응답의 식별 정보가 현재 선택과 일치하지 않습니다.');
+      }
+      const snapshot = applyLoadedGameSnapshot(response.payload, {
+        slotKey: slot.slotKey,
+        accountCharacterId: slot.accountCharacterId,
+        characterCode: slot.accountCharacter.characterCode,
+      });
+      if (requestId !== snapshotRequestId) return 'cancelled';
+      enterTown(slot, characterLabel, snapshot);
+      snapshotLoad.value = {
+        status: 'ready',
+        errorKind: null,
+        message: snapshot.isEmpty
+          ? '서버 연결을 확인했습니다. 신규 캐릭터 기본 상태로 시작합니다.'
+          : '서버 저장을 안전하게 불러왔습니다.',
+        slotKey: slot.slotKey,
+        accountCharacterId: slot.accountCharacterId,
+      };
+      return 'ready';
+    } catch (error) {
+      if (requestId !== snapshotRequestId || controller.signal.aborted) return 'cancelled';
+      if (error instanceof ApiRequestError && (error.status === 401 || error.status === 403)) {
+        snapshotLoad.value = createIdleSnapshotLoadState();
+        return 'session-invalid';
+      }
+      const contractError = error instanceof GameSnapshotContractError;
+      snapshotLoad.value = {
+        status: 'error',
+        errorKind: contractError ? 'contract' : 'retryable',
+        message: formatSnapshotLoadError(error),
+        slotKey: slot.slotKey,
+        accountCharacterId: slot.accountCharacterId,
+      };
+      return 'error';
+    } finally {
+      if (requestId === snapshotRequestId) snapshotAbortController = null;
+    }
   }
 
   function enterFieldPreview(zones: FieldZoneOption[]) {
@@ -489,6 +599,12 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function resetShell() {
+    supersedeSnapshotRequest();
+    clearShellState();
+    snapshotLoad.value = createIdleSnapshotLoadState();
+  }
+
+  function clearShellState() {
     combatController.stop();
     model.value = null;
     fieldModel.value = null;
@@ -506,6 +622,13 @@ export const useGameStore = defineStore('game', () => {
     utilityOrigin.value = 'town';
     contextSignature.value = '';
     activeFeatureKey.value = null;
+  }
+
+  function supersedeSnapshotRequest() {
+    snapshotRequestId += 1;
+    snapshotAbortController?.abort();
+    snapshotAbortController = null;
+    return snapshotRequestId;
   }
 
   function resetStorageTrashPreview() {
@@ -538,6 +661,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   return {
+    snapshotLoad,
     model,
     fieldModel,
     bossModel,
@@ -556,6 +680,7 @@ export const useGameStore = defineStore('game', () => {
     isShopSettings,
     isUtilityScreen,
     utilityBackground,
+    loadSelectedCharacterSnapshot,
     enterTown,
     enterFieldPreview,
     selectFieldPreview,
@@ -588,3 +713,36 @@ export const useGameStore = defineStore('game', () => {
     resetShell,
   };
 });
+
+function createIdleSnapshotLoadState(): GameSnapshotLoadState {
+  return {
+    status: 'idle',
+    errorKind: null,
+    message: '',
+    slotKey: null,
+    accountCharacterId: null,
+  };
+}
+
+function formatSnapshotLoadError(error: unknown): string {
+  if (error instanceof GameSnapshotContractError) return error.message;
+  if (!(error instanceof ApiRequestError)) {
+    return '게임 저장을 불러오지 못했습니다. 로그인 정보와 캐릭터 선택은 유지됩니다.';
+  }
+  if (error.status === 429) {
+    return error.retryAfterSeconds
+      ? `요청이 많습니다. ${error.retryAfterSeconds}초 뒤 다시 시도해 주세요.`
+      : '요청이 많습니다. 잠시 뒤 다시 시도해 주세요.';
+  }
+  if (error.status === 404) {
+    return '선택한 캐릭터 저장을 찾지 못했습니다. 다시 시도하거나 캐릭터를 다시 선택해 주세요.';
+  }
+  if (error.status >= 500) {
+    return '게임 서버가 저장을 불러오지 못했습니다. 로그인 정보와 캐릭터 선택은 유지됩니다.';
+  }
+  return error.message || '게임 저장을 불러오지 못했습니다. 로그인 정보와 캐릭터 선택은 유지됩니다.';
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}

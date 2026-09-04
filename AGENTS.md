@@ -90,9 +90,9 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v393.vue-game-combat-runtime-foundation
-strict result: vue-game-combat-runtime-foundation
-next safe stage: migrate-vue-game-server-snapshot-load-foundation
+latest: v394.vue-game-server-snapshot-load-foundation
+strict result: vue-game-server-snapshot-load-foundation
+next safe stage: migrate-vue-game-serialized-save-queue-foundation
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -116,9 +116,10 @@ v390 production approval/execution: no/no
 v391 production approval/execution: no/no
 v392 production approval/execution: no/no
 v393 production approval/execution: no/no
+v394 production approval/execution: no/no
 ```
 
-- v393은 `game.model` 생성 전에 마을 initializer까지 막아 게임이 비던 순환 렌더 조건을 제거했습니다. 필드·보스에는 typed 기본 공격 계산과 legacy-equivalent 간격을 쓰는 client-only runtime을 연결하고 대상 전환·수동 정지/재개·utility/mobile modal·탭 비활성·마을 복귀·component 해제 때 단일 timer를 정리합니다. 브라우저·smoke·Vue build가 PASS했으며 server snapshot/save·Gold/아이템 보상·난수·재등장·backend·DB·배포는 바꾸지 않았습니다.
+- v394는 선택 캐릭터의 `GET /game/load` identity를 재검증해 server snapshot을 typed 상태에 적용합니다. 빈 snapshot은 신규 기본 상태이며 401/403만 로그인으로, 다른 오류는 token·선택을 유지한 retry 화면으로 보냅니다. v393 client 전투 timer는 이 읽기 상태를 사용하지만 save·보상·난수·backend·DB·배포는 바꾸지 않았습니다.
 - v392는 넓은 Vue 게임 화면에 legacy형 `내 정보·장비`/`가방·Gold` 좌우 창을 복원하고, 주요 기능을 배경을 잠그는 공통 modal로 바꿨습니다. 좁은 화면은 하단 버튼과 모바일 modal을 사용하며 7~10px 보조 글자를 최소 12px로 올렸습니다. desktop/mobile browser와 focused smoke가 PASS했고 snapshot/save·아이템/Gold·runtime·backend·DB·배포는 바꾸지 않았습니다.
 - v391은 구매 계약 없는 legacy 경계를 지켜 비용 정보 카탈로그와 보스 자동·장비 드랍 설정 미리보기를 이식했습니다. 거래·Gold/아이템·runtime·설정 저장·snapshot/save는 잠겼고 desktop/mobile·focused smoke가 PASS했습니다.
 - v390은 스킬 10단계·강화 규칙 UI와 SQ·SW 첫 Lv.1, 보너스 비상속, 탈리스만/휘장 `2^현재 강화` 재료 규칙을 고정했습니다. 사용·강화·소비·난수·snapshot/save는 잠겼습니다.

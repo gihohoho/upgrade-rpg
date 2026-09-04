@@ -128,7 +128,7 @@
       <div><strong>Action adapter</strong><span>container 배열·선택·save 변화 없음</span></div>
       <p v-for="log in model.action.logs" :key="log.message">{{ log.message }}</p>
       <dl>
-        <div><dt>server snapshot</dt><dd>미연결</dd></div>
+        <div><dt>server snapshot</dt><dd>플레이어 읽기 연결 · 아이템 미매핑</dd></div>
         <div><dt>item move / restore</dt><dd>잠김</dd></div>
         <div><dt>permanent delete / save</dt><dd>잠김</dd></div>
       </dl>
@@ -138,7 +138,7 @@
       <span aria-hidden="true">!</span>
       <div>
         <strong>현재 보관함과 휴지통은 실제 보유 목록이 아니라 master-data 샘플입니다.</strong>
-        <p>선택과 `위로 정렬`은 표시 모델만 다시 만듭니다. snapshot load/save·가방/보관함 이동·휴지통 이동·복구·영구 삭제는 아직 연결하지 않았으며 원본 master-data와 server state는 바뀌지 않습니다.</p>
+        <p>선택과 `위로 정렬`은 표시 모델만 다시 만듭니다. 보유 아이템 snapshot 매핑·저장·가방/보관함 이동·휴지통 이동·복구·영구 삭제는 아직 연결하지 않았으며 원본 master-data와 server state는 바뀌지 않습니다.</p>
       </div>
     </aside>
   </div>

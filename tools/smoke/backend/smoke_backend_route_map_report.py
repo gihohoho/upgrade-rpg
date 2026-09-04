@@ -14,8 +14,8 @@ RUN_SMOKE = ROOT / "tools/run_smoke_core.sh"
 
 REQUIRED_TEXT = [
     "Backend Route Map — v377",
-    "latest: v393.vue-game-combat-runtime-foundation",
-    "strict result: vue-game-combat-runtime-foundation",
+    "latest: v394.vue-game-server-snapshot-load-foundation",
+    "strict result: vue-game-server-snapshot-load-foundation",
     "actual target v377 apply: local 1 / Neon 1",
     "private email environment: prepared",
     "source 8db9bcb / preserved",
@@ -47,7 +47,7 @@ REQUIRED_TEXT = [
     "POST /api/v1/admin/master-data/create-apply",
     "POST /api/v1/game/save",
     "query 이름은 `id`",
-    "migrate-vue-game-server-snapshot-load-foundation",
+    "migrate-vue-game-serialized-save-queue-foundation",
 ]
 
 FORBIDDEN_TEXT = [

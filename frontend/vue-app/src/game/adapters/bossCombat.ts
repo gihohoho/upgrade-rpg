@@ -56,7 +56,7 @@ export interface BossCombatViewModel {
   bossHpPercent: 100;
   action: GameActionResult;
   masterDataConnected: true;
-  snapshotConnected: false;
+  snapshotConnected: boolean;
   runtimeConnected: false;
   randomConnected: false;
 }
@@ -90,7 +90,7 @@ export function createBossCombatViewModel(source: BossCombatSource): BossCombatV
     bossHpPercent: 100,
     action: createBossPreviewAction(selectedBoss, source.createdAt),
     masterDataConnected: true,
-    snapshotConnected: false,
+    snapshotConnected: source.town.snapshotConnected,
     runtimeConnected: false,
     randomConnected: false,
   };
@@ -130,7 +130,7 @@ function normalizeBoss(boss: BossOption, index: number): BossCombatBoss {
     hp,
     hpLabel: formatCompactNumber(hp),
     description: stripMarkup(stringValue(summonRules.desc1) || boss.description) || '보스존에 출현하는 강력한 적입니다.',
-    entryCondition: stripMarkup(stringValue(summonRules.reqLvl)) || '상세 입장 판정은 snapshot 연결 뒤 적용됩니다.',
+    entryCondition: stripMarkup(stringValue(summonRules.reqLvl)) || '상세 입장 판정은 후속 전투 규칙 단계에서 적용됩니다.',
     cooldownLabel: formatCooldown(boss.cooldownSeconds, isSpecial),
     dropRuleLabel: raw.dropRateDoubled === true ? '표시된 드랍률 2배 규칙 포함' : 'master-data 드랍 규칙 사용',
     skillDropRateLabel: skillDropRate > 0 ? `${formatPercent(skillDropRate)} 기본 스킬북` : '기본 스킬북 드랍 없음',

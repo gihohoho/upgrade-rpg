@@ -79,7 +79,7 @@ function assertStaticBoundary() {
     "handleVisibilityChange",
     "game.pauseCombatRuntime('visibility')",
     "game.resumeCombatRuntime('visibility')",
-    "game.stopCombatRuntime()",
+    "game.resetShell()",
   ]) requireMarker(playShell, marker, "combat timer lifecycle");
 
   for (const relativePath of [
@@ -93,7 +93,7 @@ function assertStaticBoundary() {
       "game.pauseCombatRuntime('manual')",
       "game.resumeCombatRuntime('manual')",
       "game.restartCombatRuntime()",
-      "snapshot load/save",
+      "snapshot 저장",
     ]) requireMarker(component, marker, relativePath);
   }
 

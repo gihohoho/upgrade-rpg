@@ -94,7 +94,7 @@ function assertStaticBoundary() {
     "game.toggleInventoryCompactPreview",
     "game.returnTown",
     "실제 보유 목록이 아니라 master-data 샘플",
-    "snapshot load/save·장착·사용·판매·강화·보관함 이동·휴지통 이동",
+    "보유 아이템 snapshot 매핑·저장·장착·사용·판매·강화·보관함 이동·휴지통 이동",
   ]) requireMarker(component, marker, "inventory/equipment component");
   assert.ok(!component.includes("town-session-bar"), "connected character bar must remain town-only");
 
@@ -198,7 +198,7 @@ function assertAdapterBehavior() {
 function main() {
   assertStaticBoundary();
   assertAdapterBehavior();
-  console.log("PASS: Vue inventory/equipment UI preserves sparse-slot and compact-preview rules without snapshot or item mutation");
+  console.log("PASS: Vue inventory/equipment UI preserves sparse-slot and compact-preview rules without owned-item snapshot mapping or mutation");
 }
 
 main();

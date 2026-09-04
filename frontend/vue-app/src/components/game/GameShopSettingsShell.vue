@@ -128,7 +128,7 @@
       <span aria-hidden="true">!</span>
       <div>
         <strong>새 거래 규칙이나 영구 설정을 만들지 않은 표시 전용 화면입니다.</strong>
-        <p>아이템 master-data와 마을 요약만 읽습니다. 구매·판매·Gold/아이템 변경·설정 저장·snapshot load/save·자동 저장·전투 runtime은 실행하지 않습니다.</p>
+        <p>아이템 master-data와 서버 snapshot의 Gold 요약을 읽습니다. 구매·판매·Gold/아이템 변경·설정 저장·snapshot 저장·자동 저장은 실행하지 않습니다.</p>
       </div>
     </aside>
   </div>
