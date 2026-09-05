@@ -109,7 +109,7 @@
       </div>
 
       <div class="settings-data-controls">
-        <div><span aria-hidden="true">存</span><p><strong>수동 저장</strong><small>직렬 저장 queue와 revision 연결 뒤 제공</small></p><button type="button" disabled>잠김</button></div>
+        <div><span aria-hidden="true">存</span><p><strong>수동 저장</strong><small>마을 HUD에서 단일 직렬 queue로 실행할 수 있습니다</small></p><button type="button" disabled>마을에서 실행</button></div>
         <div><span aria-hidden="true">初</span><p><strong>캐릭터 데이터 초기화</strong><small>캐릭터 이름 재입력 확인 흐름과 함께 이식</small></p><button type="button" disabled>잠김</button></div>
       </div>
     </section>
@@ -120,7 +120,7 @@
       <dl>
         <div><dt>master-data</dt><dd>읽기 연결</dd></div>
         <div><dt>commerce / Gold</dt><dd>미연결</dd></div>
-        <div><dt>runtime / save</dt><dd>잠김</dd></div>
+        <div><dt>runtime / save</dt><dd>직렬 queue 연결</dd></div>
       </dl>
     </section>
 
@@ -128,7 +128,7 @@
       <span aria-hidden="true">!</span>
       <div>
         <strong>새 거래 규칙이나 영구 설정을 만들지 않은 표시 전용 화면입니다.</strong>
-        <p>아이템 master-data와 서버 snapshot의 Gold 요약을 읽습니다. 구매·판매·Gold/아이템 변경·설정 저장·snapshot 저장·자동 저장은 실행하지 않습니다.</p>
+        <p>아이템 master-data와 서버 snapshot의 Gold 요약을 읽습니다. 게임 snapshot 저장은 공통 직렬 queue가 담당하며 구매·판매·Gold/아이템 변경과 설정 저장은 실행하지 않습니다.</p>
       </div>
     </aside>
   </div>

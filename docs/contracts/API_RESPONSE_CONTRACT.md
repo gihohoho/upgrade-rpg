@@ -245,7 +245,42 @@ network/timeout/5xx와 계약 오류는 token·캐릭터 선택을 유지한 재
 역할:
 
 ```txt
-현재 `gameState.server` 기준 저장 데이터를 서버에 저장합니다.
+현재 선택 캐릭터의 typed server state를 호출 시점에 복제해 서버에 저장합니다.
+Bearer 계정, slotKey, accountCharacterId와 snapshot의 currentCharacterId가 모두 일치해야 합니다.
+```
+
+요청:
+
+```js
+{
+  accountCharacterId: "32자리 캐릭터 ID",
+  slotKey: "character-2",
+  saveVersion: 7,
+  clientSaveKey: "upgradeRpgVue:7:32자리 캐릭터 ID",
+  snapshot: {
+    saveVersion: 7,
+    player: {},
+    currentZoneIndex: 4,
+    currentZoneType: "field",
+    fieldEnemyHp: {},
+    fieldRespawnEndAt: {}
+  },
+  summary: {
+    saveVersion: 7,
+    gold: 98765,
+    level: 23,
+    currentCharacterId: "weapon_master",
+    currentZoneIndex: 4,
+    currentZoneType: "field",
+    inventoryItems: 2,
+    storageItems: 0,
+    trashItems: 0,
+    mailboxItems: 0,
+    createdAt: "2026-09-05T00:00:00.000Z"
+  },
+  source: "vue-manual-save",
+  note: "사용자가 실행한 Vue 수동 저장"
+}
 ```
 
 응답:
@@ -254,14 +289,43 @@ network/timeout/5xx와 계약 오류는 token·캐릭터 선택을 유지한 재
 {
   ok: true,
   type: "game.save",
-  data: {
-    savedAt: "2026-07-06T00:00:00.000Z",
-    saveVersion: 5
+  payload: {
+    userId: 7,
+    slotKey: "character-2",
+    accountCharacterId: "32자리 캐릭터 ID",
+    accountCharacter: { id: "32자리 캐릭터 ID", characterCode: "weapon_master" },
+    status: "saved",
+    exists: true,
+    saveVersion: 7,
+    snapshot: { saveVersion: 7, player: { currentCharacterId: "weapon_master" } },
+    integrity: { ok: true, warnings: [] },
+    updatedAt: "2026-09-05T00:00:01Z"
   },
-  logs: [
-    { message: "저장되었습니다.", important: false }
-  ]
+  data: {
+    status: "saved",
+    userId: 7,
+    slotKey: "character-2",
+    accountCharacterId: "32자리 캐릭터 ID",
+    saveVersion: 7,
+    integrity: { ok: true, warnings: [] }
+  },
+  meta: { source: "postgresql" },
+  error: null
 }
+```
+
+v395 Vue 처리:
+
+```txt
+60초 자동 저장, 마을 수동 저장, 캐릭터 변경·로그아웃 전 최종 저장은 한 Promise queue를
+공유합니다. 각 요청은 enqueue 시점의 token·identity·snapshot을 복제하며 앞 요청 실패가
+뒤 요청을 영구적으로 막지 않습니다. 전환은 runtime pause 뒤 마지막 저장을 기다리고 성공
+뒤에만 선택 또는 token을 정리합니다. 401/403은 session invalid, 409는 자동 덮어쓰기와
+후속 자동 저장을 멈추는 conflict, network/timeout/429/5xx는 retryable, 413/422와 응답
+identity 불일치는 contract 오류입니다.
+
+현재 backend의 saveVersion은 snapshot 형식 버전이며 다중 기기 CAS revision이 아닙니다.
+따라서 v395는 expectedRevision을 임의로 보내지 않으며 CAS·낙관적 잠금은 별도 공개 gate입니다.
 ```
 
 ---

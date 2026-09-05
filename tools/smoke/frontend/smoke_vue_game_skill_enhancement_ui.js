@@ -118,7 +118,7 @@ function assertStaticBoundary() {
     "game.selectSkillEnhancementSkill",
     "game.selectEnhancementItem",
     "game.selectEnhancementLevel",
-    "스킬강화권 사용·장비 강화·Gold/재료 소비·난수 결과·snapshot 저장·자동 저장",
+    "공통 직렬 queue가 snapshot을 저장합니다",
   ]) requireMarker(component, marker, "skill/enhancement component");
   assert.ok(!component.includes("town-session-bar"), "connected character bar must remain town-only");
   assert.ok(!component.includes("v-html"), "master-data descriptions must render as text, not raw HTML");

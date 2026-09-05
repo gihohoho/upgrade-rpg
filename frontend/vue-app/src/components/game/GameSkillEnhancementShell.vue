@@ -168,7 +168,7 @@
       <span aria-hidden="true">!</span>
       <div>
         <strong>현재 화면은 실제 보유 스킬·장비·재료가 아닌 규칙 미리보기입니다.</strong>
-        <p>master-data와 서버 snapshot의 스킬 상태를 읽습니다. 스킬강화권 사용·장비 강화·Gold/재료 소비·난수 결과·snapshot 저장·자동 저장은 실행하지 않습니다.</p>
+        <p>master-data와 서버 snapshot의 스킬 상태를 읽고 공통 직렬 queue가 snapshot을 저장합니다. 스킬강화권 사용·장비 강화·Gold/재료 소비·난수 결과는 실행하지 않습니다.</p>
       </div>
     </aside>
   </div>

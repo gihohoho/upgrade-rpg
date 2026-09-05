@@ -142,14 +142,14 @@ function assertAdapterBehavior() {
   assert.strictEqual(model.skills.find((item) => item.slotKey === "W").level, 0);
   assert.strictEqual(model.snapshotConnected, false);
   assert.strictEqual(model.snapshotStatusLabel, "계정 요약 모드");
-  assert.ok(adapter.TOWN_FEATURES.save.nextStep.includes("단일 직렬 저장 queue"));
+  assert.ok(adapter.TOWN_FEATURES.save.nextStep.includes("단일 직렬 queue"));
   assert.strictEqual(JSON.stringify(source), before, "town adapter mutated account summary input");
 }
 
 function main() {
   assertStaticBoundary();
   assertAdapterBehavior();
-  console.log("PASS: Vue town/HUD uses the typed domain without starting save or combat runtime");
+  console.log("PASS: Vue town/HUD adapter uses typed state while save and combat orchestration remain in dedicated controllers");
 }
 
 main();

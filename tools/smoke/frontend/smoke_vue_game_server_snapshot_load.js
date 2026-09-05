@@ -47,8 +47,9 @@ function assertStaticBoundary() {
     "accountCharacterId: request.accountCharacterId",
     "requestApi<GameLoadPayload, GameLoadData>",
   ]) requireMarker(api, marker, "typed game load API");
+  const loadApi = api.slice(api.indexOf("loadSelectedCharacter"), api.indexOf("saveSelectedCharacter"));
   for (const forbidden of ["method: 'POST'", "/game/save", "snapshot:"]) {
-    assert.ok(!api.includes(forbidden), `game load API must remain read-only: ${forbidden}`);
+    assert.ok(!loadApi.includes(forbidden), `game load API must remain read-only: ${forbidden}`);
   }
 
   const adapter = read("src/game/adapters/serverSnapshot.ts");
@@ -77,7 +78,7 @@ function assertStaticBoundary() {
     "status: 'ready'",
     "status: 'error'",
   ]) requireMarker(store, marker, "snapshot load store lifecycle");
-  for (const forbidden of ["/game/save", "method: 'POST'", "Math.random", "localStorage", "sessionStorage"]) {
+  for (const forbidden of ["method: 'POST'", "Math.random", "localStorage", "sessionStorage"]) {
     assert.ok(!store.includes(forbidden), `snapshot load store crossed mutation boundary: ${forbidden}`);
   }
 
@@ -230,7 +231,7 @@ function assertAdapterBehavior() {
 function main() {
   assertStaticBoundary();
   assertAdapterBehavior();
-  console.log("PASS: Vue loads and validates one selected-character server snapshot without save, reward, random, storage, or DB mutation");
+  console.log("PASS: Vue load path validates one selected-character server snapshot without write, reward, random, or storage mutation");
 }
 
 main();

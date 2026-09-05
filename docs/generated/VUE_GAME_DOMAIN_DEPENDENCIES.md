@@ -63,6 +63,6 @@ node tools/smoke/frontend/smoke_vue_game_domain_foundation.js
 
 ## 다음 안전 단계
 
-`next safe stage: migrate-vue-game-serialized-save-queue-foundation`
+`next safe stage: migrate-vue-game-pending-unsynced-recovery-foundation`
 
-v394에서 선택 캐릭터 server snapshot의 GET, identity 검증, typed normalize/apply와 loading·retry·session-invalid 경계를 연결했습니다. 다음은 Gold/아이템 보상·난수 드랍과 분리해 자동·수동·전환 저장의 단일 직렬 queue를 준비하며, legacy 공개 화면, 관리자 Apply, DB write와 production 배포는 변경하지 않습니다.
+v395에서 typed server state를 호출 시점에 복제해 자동·수동·전환 저장이 공유하는 단일 직렬 queue와 실제 save POST에 연결했습니다. 다음은 Gold/아이템 보상·난수 드랍과 분리해 local fallback과 `pending-unsynced` 사용자 선택 복구를 준비하며, backend/CAS schema, legacy 공개 화면, 관리자 Apply와 production 배포는 변경하지 않습니다.

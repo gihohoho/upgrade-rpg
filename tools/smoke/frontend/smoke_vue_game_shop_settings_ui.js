@@ -103,7 +103,7 @@ function assertStaticBoundary() {
     "game.selectShopItem",
     "game.toggleSettingPreview",
     "legacy 화면의 “판매”는 Gold를 지급하지 않고 휴지통으로 이동합니다.",
-    "구매·판매·Gold/아이템 변경·설정 저장·snapshot 저장·자동 저장",
+    "게임 snapshot 저장은 공통 직렬 queue가 담당",
   ]) requireMarker(component, marker, "shop/settings component");
   assert.ok(!component.includes("town-session-bar"), "connected character bar must remain town-only");
   assert.ok(!component.includes("v-html"), "master-data descriptions must render as text, not raw HTML");

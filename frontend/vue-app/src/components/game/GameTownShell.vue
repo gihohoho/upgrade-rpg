@@ -16,10 +16,13 @@
       <div class="town-session-bar__state">
         <span><i aria-hidden="true" /> {{ game.model.zoneLabel }}</span>
         <small>{{ game.model.recentSaveZoneLabel }}</small>
+        <small class="town-session-bar__save" :data-status="game.saveQueue.status">
+          {{ saveStatusLabel }}
+        </small>
       </div>
       <div class="town-session-bar__actions">
-        <button type="button" @click="changeCharacter">캐릭터 변경</button>
-        <button type="button" @click="logout">로그아웃</button>
+        <button type="button" :disabled="transitionBusy" @click="changeCharacter">캐릭터 변경</button>
+        <button type="button" :disabled="transitionBusy" @click="logout">로그아웃</button>
       </div>
     </header>
 
@@ -153,8 +156,8 @@
       <span aria-hidden="true">i</span>
       <div>
         <strong>서버 저장을 읽어 typed 게임 상태에 적용했습니다.</strong>
-        <p v-if="game.model.snapshotEmpty">신규 캐릭터의 빈 snapshot은 정상 상태로 처리해 기본 능력치로 시작합니다. 저장 요청·자동 저장·보상 변경은 아직 실행하지 않습니다.</p>
-        <p v-else>골드·상세 능력치·스킬·최근 구역은 선택 캐릭터의 서버 snapshot을 사용합니다. 이번 단계는 읽기 전용이며 저장 요청과 보상 변경은 실행하지 않습니다.</p>
+        <p v-if="game.model.snapshotEmpty">신규 캐릭터의 빈 snapshot은 정상 상태로 처리해 기본 능력치로 시작합니다. 이후 자동·수동·전환 저장은 하나의 서버 저장 queue를 사용합니다.</p>
+        <p v-else>골드·상세 능력치·스킬·최근 구역은 선택 캐릭터의 서버 snapshot을 사용하며 자동·수동·전환 저장은 한 건씩 순서대로 처리됩니다.</p>
       </div>
     </aside>
   </div>
@@ -171,14 +174,31 @@
       >
         <button ref="modalClose" class="town-feature-modal__close" type="button" aria-label="안내 닫기" @click="closeFeature">×</button>
         <span class="town-feature-modal__icon" aria-hidden="true">{{ game.activeFeature.icon }}</span>
-        <p>기능 연결 안내</p>
+        <p>{{ game.activeFeature.key === 'save' ? 'Serialized server save' : '기능 연결 안내' }}</p>
         <h2 id="town-feature-modal-title">{{ game.activeFeature.label }}</h2>
         <p>{{ game.activeFeature.description }}</p>
-        <div class="town-feature-modal__boundary">
+        <div v-if="game.activeFeature.key === 'save'" class="town-save-panel" aria-live="polite">
+          <strong :data-status="game.saveQueue.status">{{ game.saveQueue.message }}</strong>
+          <span>자동·수동·전환 저장은 같은 큐에서 한 건씩 처리됩니다.</span>
+          <dl>
+            <div><dt>대기 저장</dt><dd>{{ game.saveQueue.queuedWrites }}건</dd></div>
+            <div><dt>서버 연결</dt><dd>{{ game.saveQueue.active ? '저장 중' : '대기' }}</dd></div>
+            <div><dt>충돌 보호</dt><dd>{{ game.saveQueue.errorKind === 'conflict' ? '덮어쓰기 차단' : '409 감시' }}</dd></div>
+          </dl>
+          <small>현재 backend에는 다중 기기 CAS revision이 없어, 충돌 응답을 받으면 자동 재시도하지 않습니다.</small>
+        </div>
+        <div v-else class="town-feature-modal__boundary">
           <strong>현재는 실행하지 않습니다</strong>
           <span>{{ game.activeFeature.nextStep }}</span>
         </div>
-        <button class="account-button account-button--primary" type="button" @click="closeFeature">마을로 돌아가기</button>
+        <button
+          v-if="game.activeFeature.key === 'save'"
+          class="account-button account-button--primary"
+          type="button"
+          :disabled="game.saveQueue.active || transitionBusy"
+          @click="manualSave"
+        >{{ game.saveQueue.active ? '저장 중…' : '지금 서버에 저장' }}</button>
+        <button v-else class="account-button account-button--primary" type="button" @click="closeFeature">마을로 돌아가기</button>
       </section>
     </div>
   </Teleport>
@@ -195,6 +215,7 @@ const { background = false } = defineProps<{ background?: boolean }>();
 const modalPanel = ref<HTMLElement | null>(null);
 const modalClose = ref<HTMLButtonElement | null>(null);
 const featureTrigger = ref<HTMLElement | null>(null);
+const transitionBusy = ref(false);
 const townFeatures = ['record', 'codex', 'ranking', 'mailbox'].map((key) => TOWN_FEATURES[key as TownFeatureKey]);
 const canEnterSkillEnhancement = computed(() => (
   account.skills.length > 0
@@ -202,6 +223,12 @@ const canEnterSkillEnhancement = computed(() => (
   && account.enhancementLevels.length > 0
   && account.itemTemplates.some((item) => Boolean(item.enhanceGroupCode))
 ));
+const saveStatusLabel = computed(() => {
+  if (game.saveQueue.status === 'saving') return `서버 저장 중 · ${game.saveQueue.queuedWrites}건`;
+  if (game.saveQueue.status === 'saved') return '서버 저장 완료';
+  if (game.saveQueue.status === 'error') return '저장 확인 필요';
+  return '60초 자동 저장 대기';
+});
 
 function openFeature(key: TownFeatureKey, event: Event) {
   featureTrigger.value = event.currentTarget as HTMLElement;
@@ -241,12 +268,52 @@ function enterShopSettingsPreview() {
   game.enterShopSettingsPreview(account.itemTemplates);
 }
 
+async function manualSave() {
+  const slot = account.selectedCharacter;
+  const userId = account.user?.id;
+  if (!account.accessToken || userId === undefined || !slot) return;
+  const outcome = await game.enqueueSelectedCharacterSave({
+    token: account.accessToken,
+    userId,
+    slot,
+    reason: 'manual',
+  });
+  if (outcome === 'session-invalid') {
+    account.invalidateSession('수동 저장 중 로그인 정보가 만료되었습니다. 다시 로그인해 주세요.');
+  }
+}
+
 function changeCharacter() {
-  account.changeCharacter();
+  void transitionFromGame('character-switch');
 }
 
 function logout() {
-  void account.logout();
+  void transitionFromGame('logout');
+}
+
+async function transitionFromGame(reason: 'character-switch' | 'logout') {
+  const slot = account.selectedCharacter;
+  const userId = account.user?.id;
+  if (transitionBusy.value || !account.accessToken || userId === undefined || !slot) return;
+  transitionBusy.value = true;
+  const outcome = await game.flushSelectedCharacterSave({
+    token: account.accessToken,
+    userId,
+    slot,
+    reason,
+  });
+  if (outcome === 'saved') {
+    game.resetShell();
+    if (reason === 'character-switch') account.changeCharacter();
+    else await account.logout();
+    return;
+  }
+  transitionBusy.value = false;
+  if (outcome === 'session-invalid') {
+    account.invalidateSession('최종 저장 중 로그인 정보가 만료되었습니다. 다시 로그인해 주세요.');
+    return;
+  }
+  game.openFeature('save');
 }
 
 function handleKeydown(event: KeyboardEvent) {

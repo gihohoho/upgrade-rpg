@@ -1,13 +1,13 @@
-# Current Status — v394
+# Current Status — v395
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v394.vue-game-server-snapshot-load-foundation
-strict result: vue-game-server-snapshot-load-foundation
-next safe stage: migrate-vue-game-serialized-save-queue-foundation
+latest: v395.vue-game-serialized-save-queue-foundation
+strict result: vue-game-serialized-save-queue-foundation
+next safe stage: migrate-vue-game-pending-unsynced-recovery-foundation
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -31,23 +31,28 @@ v391 production approval/execution: no/no
 v392 production approval/execution: no/no
 v393 production approval/execution: no/no
 v394 production approval/execution: no/no
+v395 production approval/execution: no/no
 ```
+
+## v395 선택 캐릭터 단일 직렬 저장 queue 기반
+
+- typed `POST /api/v1/game/save` client가 현재 Bearer token, `character-N`, 32자리 `accountCharacterId`와 호출 시점의 detached server state를 한 요청으로 고정합니다. snapshot은 기존 `createServerSavePayload`로 만들고 Gold·레벨·최근 구역과 item container count만 summary allow-list에 담습니다.
+- 자동 60초 저장, 마을의 수동 저장, 캐릭터 전환·로그아웃 전 최종 저장은 모두 실패한 앞 요청이 뒤 요청을 막지 않는 하나의 Promise 직렬 queue를 사용합니다. 전환은 runtime을 먼저 pause하고 앞선 queue와 마지막 저장을 기다린 뒤 성공할 때만 캐릭터 선택이나 token을 정리합니다.
+- 응답의 type·data·payload에서 슬롯·캐릭터 ID·캐릭터 종류·saveVersion을 다시 대조합니다. 401/403은 로그인 만료, 409는 자동 덮어쓰기와 후속 자동 저장을 멈추는 conflict, network/timeout/429/5xx는 token·선택을 유지하는 retryable 오류, 413/422와 응답 불일치는 contract 오류로 분리합니다.
+- backend의 현재 `saveVersion`은 snapshot 형식 버전이며 다중 기기 CAS revision이 아닙니다. Vue가 `expectedRevision`을 임의로 만들거나 409를 자동 재시도하지 않으며 실제 CAS schema/API는 공개 확대 전 별도 backend 단계로 남깁니다.
+- 저장 adapter·queue·Pinia 실행·자동/수동/전환 gate focused smoke, 전체 Vue shell smoke, TypeScript 검사와 production build가 PASS했습니다. 실제 DB save POST는 실행하지 않았고 backend·DB·env·secret·legacy·Render·production 배포도 변경하지 않았습니다. Chrome·확장·native host 설치 상태는 정상이었지만 이번 실행의 제어 연결이 끊겨 mock fixture 브라우저 조작은 완료하지 못했고 fixture는 제거했습니다.
 
 ## v394 선택 캐릭터 server snapshot read/load 기반
 
 - 캐릭터 선택 뒤 `GamePlayShell`이 Bearer token, `character-N`, 32자리 `accountCharacterId`로 `GET /api/v1/game/load`를 호출합니다. 응답 envelope와 payload의 슬롯·캐릭터 ID·캐릭터 종류를 현재 선택과 다시 대조하고 일치할 때만 typed server state로 normalize/apply합니다.
 - 신규 캐릭터의 빈 `{}` snapshot은 서버 연결 실패가 아니라 정상 기본 상태로 처리합니다. 기존 snapshot은 Gold·레벨·상세 능력치·스킬·최근 구역에 반영되고 필드·보스의 기본 공격 계산에도 같은 읽기 상태를 전달합니다.
 - load 전에는 전체 게임 대신 명시적 로딩 화면을 표시합니다. network/timeout/429/404/5xx와 계약 불일치는 token과 선택 캐릭터를 유지한 오류 화면에서 다시 불러오기/캐릭터 재선택을 제공하며, 401/403만 session을 폐기하고 로그인으로 돌아갑니다. 새 요청과 component 해제는 이전 GET과 client timer를 정리합니다.
-- desktop/mobile 임시 fixture에서 첫 503 뒤 재시도와 `Lv.23`, `9.877B Gold`, `Q Lv.3`, `W Lv.2`, 최근 필드 5 반영, 넓은 화면 좌우 창, 모바일 dock, 필드 snapshot 기반 공격력과 console error 0을 확인한 뒤 fixture를 제거했습니다.
-- API와 adapter/store focused smoke, 전체 Vue shell smoke와 production build를 통과했습니다. save POST·자동/수동/전환 저장·local fallback·pending-unsynced 충돌 해결·Gold/아이템 보상·난수·revision write는 연결하지 않았고 backend·DB·env·secret·legacy·Render·production 배포도 변경하지 않았습니다.
+- API와 adapter/store focused smoke, 전체 Vue shell smoke와 production build를 통과했습니다. v394 당시에는 save POST·자동/수동/전환 저장을 연결하지 않았으며 local fallback·pending-unsynced 충돌 해결·Gold/아이템 보상·난수·CAS revision은 지금도 연결하지 않았습니다.
 
 ## v393 빈 게임 화면 복구·client 전투 runtime 기반
 
-- `GamePlayShell`이 `game.model`이 만들어지기 전 전체 게임 프레임을 숨기던 순환 조건을 제거했습니다. v394부터는 `GameTownShell`이 기본 model을 먼저 만드는 대신 snapshot load gate가 성공한 뒤 마을 model을 생성합니다.
-- Vue·Pinia·Router·API와 독립된 `combatRuntime` controller가 typed 기본 공격 피해와 legacy-equivalent 공격 간격으로 필드·보스의 client-only HP를 감소시킵니다. 한 번에 timer 하나만 유지하고 대상 전환·처치·마을 복귀·component 해제 때 기존 timer를 해제합니다.
-- 필드·보스에는 현재 대상·공격 간격·공격 횟수·최근 피해·진행 상태와 수동 일시정지/재개/재시작 UI를 추가했습니다. utility/mobile modal과 브라우저 탭 비활성에서는 자동 일시정지하고 같은 원인이 해제될 때만 재개해 수동 정지를 침범하지 않습니다.
-- 임시 fixture가 `game.enterTown()`을 미리 호출하지 않는 실제 초기화 순서에서 마을·좌우 창이 나타나는지 확인했습니다. 실제 브라우저에서 필드/보스 HP 감소, 수동 정지 중 HP 고정, 가방 modal 자동 정지·닫기 후 재개와 마을 복귀를 검증한 뒤 fixture를 제거했습니다.
-- 이 runtime은 v394의 읽기 snapshot으로 공격력을 계산하지만 server state, 저장, Gold·아이템·보상, 난수, cooldown, 자동 재등장/재소환을 바꾸지 않습니다.
+- snapshot load 성공 뒤에만 독립 `combatRuntime`이 단일 timer로 client-only 전투를 수행합니다. 대상 전환·마을 복귀·component 해제에서 timer를 정리하고 pause 원인을 분리합니다.
+- 이 runtime은 v394 snapshot을 읽고 v395 queue가 typed server state를 저장하지만 client 전투 HP, Gold·아이템·보상·난수·cooldown·자동 재등장/재소환을 server state에 쓰지 않습니다. 당시 desktop/mobile fixture와 focused smoke가 PASS했습니다.
 
 ## v384~v392 이전 Vue 게임 기반
 
@@ -55,7 +60,7 @@ v394 production approval/execution: no/no
 - v385~v387은 마을 전용 접속 캐릭터 바·HUD와 master-data 필드·보스 표시 UI를, v388~v389는 15개 장비·24개 가방 및 보관함·휴지통의 빈 칸·독립 정렬 규칙을 이식했습니다.
 - v390은 스킬 10단계와 강화 규칙, SQ·SW 첫 Lv.1·보너스 비상속, 탈리스만/휘장 `2^현재 강화` 재료를 표시합니다.
 - v391은 구매 계약을 만들지 않는 master-data 가격 카탈로그와 저장 없는 설정 preview, v392는 legacy형 좌우 창·utility/mobile modal·최소 12px 가독성을 완성했습니다.
-- 각 desktop/mobile·focused smoke가 PASS했습니다. 실제 HP·Gold·보상·쿨타임·아이템/스킬 변경·snapshot/save·timer·난수와 backend·DB·legacy·Render는 바꾸지 않았습니다.
+- 각 단계의 desktop/mobile·focused smoke가 PASS했습니다. 이후 v393 client HP timer와 v394 load, v395 snapshot save queue만 추가했으며 Gold·보상·쿨타임·아이템/스킬 변경·난수와 backend·DB·legacy·Render는 바꾸지 않았습니다.
 
 ## v378 게임 UI·환경 라우팅 소스 준비
 
@@ -125,7 +130,7 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. `migrate-vue-game-serialized-save-queue-foundation`: 현재 typed server state를 자동·수동·캐릭터 전환 저장이 공유하는 단일 직렬 queue로 직렬화하고 기존 identity/revision 계약을 유지합니다. Gold/아이템 보상·난수 드랍·local conflict 자동 선택은 함께 연결하지 않습니다.
+1. `migrate-vue-game-pending-unsynced-recovery-foundation`: 서버 저장 실패 때 계정·캐릭터별 local fallback과 `pending-unsynced` marker를 보존하고, 재진입 시 local/server/취소를 사용자가 명시적으로 선택하는 복구 gate를 Vue에 이식합니다. Gold/아이템 보상·난수 드랍과 자동 충돌 선택은 함께 연결하지 않습니다.
 2. 실제 관리자 Apply API·재인증·dev key header·DB write 연결은 이번 단계에 포함되지 않았습니다. 필요하면 작업 종류와 정확한 DB-write 범위를 별도 승인받습니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 

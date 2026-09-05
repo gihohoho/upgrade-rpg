@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v394
+# Upgrade RPG Codex handoff — v395
 
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v394.vue-game-server-snapshot-load-foundation
-strict result: vue-game-server-snapshot-load-foundation
-next safe stage: migrate-vue-game-serialized-save-queue-foundation
+latest: v395.vue-game-serialized-save-queue-foundation
+strict result: vue-game-serialized-save-queue-foundation
+next safe stage: migrate-vue-game-pending-unsynced-recovery-foundation
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -28,21 +28,20 @@ v391 production approval/execution: no/no
 v392 production approval/execution: no/no
 v393 production approval/execution: no/no
 v394 production approval/execution: no/no
+v395 production approval/execution: no/no
 ```
 
 ## 이번 체크포인트
 
-- v394는 선택 캐릭터가 `ready`가 되면 `GET /api/v1/game/load`를 Bearer token, `character-N`, 32자리 `accountCharacterId`와 함께 정확히 한 번 요청합니다. 응답 type·data·payload의 슬롯/캐릭터 ID/캐릭터 종류를 다시 대조한 뒤에만 snapshot을 typed server state에 적용합니다.
-- 신규 캐릭터의 빈 snapshot은 오류로 막지 않고 서버 연결이 확인된 기본 상태로 시작합니다. 기존 snapshot은 Gold·레벨·능력치·스킬·최근 구역의 원본이 되며 필드·보스의 공격력 계산에도 전달됩니다.
-- 로딩 중에는 게임 프레임 대신 명시적 진행 화면을 표시합니다. network/timeout/429/404/5xx와 응답 계약 오류는 token·선택 캐릭터를 보존하고 재시도/캐릭터 재선택을 제공하며, 401/403만 session을 폐기하고 로그인으로 돌립니다. 교체 요청과 component 해제는 이전 GET을 abort하고 combat timer를 정리합니다.
-- 실제 desktop/mobile 브라우저 fixture에서 첫 503 후 재시도, `Lv.23 / 9.877B Gold / Q Lv.3 / W Lv.2 / 최근 필드 5`, 넓은 화면 좌우 창, 모바일 dock, 필드의 snapshot 기반 공격력과 console error 0을 확인했습니다. fixture는 제거했고 focused smoke와 Vue build가 PASS했습니다.
-- 이 단계는 read/load 전용입니다. save POST·자동/수동/전환 저장·local fallback·pending-unsynced 충돌 선택·Gold/아이템 보상·난수·revision write는 연결하지 않았습니다. backend·DB·env·secret·legacy·Render는 변경하지 않았고 v394 production 승인/실행은 없습니다.
-- v392에서 복원한 넓은 화면의 legacy형 `내 정보·장비·능력치·스킬`/`가방·Gold·보관함·상점` 좌우 창, utility/mobile modal과 최소 12px 가독성은 유지합니다.
-- v391 상점 카탈로그와 임시 설정 preview는 거래·Gold/아이템·runtime·설정 저장·snapshot/save를 계속 잠급니다.
+- v395는 선택 캐릭터의 typed server state를 호출 시점에 복제해 Bearer token, `character-N`, 32자리 `accountCharacterId`와 함께 `POST /api/v1/game/save`로 보냅니다. 요청 후 live state를 바꿔도 이미 대기 중인 payload가 바뀌지 않으며 응답 type·data·payload identity와 saveVersion을 다시 검증합니다.
+- 60초 자동 저장, 마을 수동 저장, 캐릭터 변경·로그아웃 전 최종 저장은 실패 뒤에도 다음 요청을 처리할 수 있는 하나의 Promise 직렬 queue를 공유합니다. 전환은 runtime pause → 앞선 queue와 최종 저장 대기 → 성공 뒤 selection/token 정리 순서이며 실패하면 전환을 막고 현재 context를 유지합니다.
+- 401/403은 session invalid, 409는 자동 덮어쓰기와 후속 자동 저장을 멈추는 conflict, network/timeout/429/5xx는 token·선택을 보존하는 retryable 오류, 413/422와 응답 불일치는 contract 오류입니다. `saveVersion`은 기존 snapshot 형식 버전일 뿐 CAS revision이 아니므로 `expectedRevision`을 만들지 않았고 backend CAS는 여전히 공개 전 blocker입니다.
+- focused queue/adapter/Pinia store/UI smoke, 전체 Vue shell smoke, TypeScript 검사와 production build가 PASS했습니다. 실제 DB save POST는 실행하지 않았고 backend·DB·env·secret·legacy·Render는 변경하지 않았으며 v395 production 승인/실행은 없습니다. Chrome·확장·native host는 설치 정상이지만 이번 제어 연결이 끊겨 mock fixture 브라우저 조작은 완료하지 못했고 fixture는 제거했습니다.
+- v394의 server snapshot load, 신규 빈 상태, retry/session 분기와 v392의 desktop 좌우 창·mobile modal·최소 12px 가독성은 그대로 유지합니다.
 - v384~v390의 typed domain·마을/HUD·필드·보스·인벤토리/장비·보관함/휴지통·스킬/강화 UI와 `baseUrl` 제거 상태를 유지합니다. 관리자 Apply route/header/write도 계속 없습니다.
 - v381~v383 관리자 Vue는 `isAdmin=true` route guard, Bearer GET, `dryRun: true` Preview 5종과 SHA-256·exact 문구 재검증 modal까지 이식했습니다. 비밀번호·dev key는 저장·전송하지 않고 Apply route/header/write와 최종 버튼은 잠겨 있습니다.
 - 기호가 Docker·로컬 로그인 정상 동작을 확인했습니다. Vue dev server는 `127.0.0.1:5173`에서 실행 중이며 반복 로그인 검사는 하지 않습니다.
-- 기존 공개 legacy·backend·DB·env·secret·Render는 변경하지 않았고 Vue v382~v394 production 승인/실행은 없습니다.
+- 기존 공개 legacy·backend·DB·env·secret·Render는 변경하지 않았고 Vue v382~v395 production 승인/실행은 없습니다.
 - 특Q(SQ)·특W(SW)는 첫 전용 강화권 사용 뒤 저장·표시·전투 유효 레벨이 모두 1이며, 탈리스만 A/B의 일반 스킬 보너스를 더 이상 상속하지 않습니다. 기존 R·T와 F·D 보너스는 유지하고 source/generated skill metadata와 탈리스만 설명도 같은 계약으로 맞췄습니다.
 - 상단 `접속 캐릭터` 바는 계정·캐릭터가 있고 현재 구역이 `town`일 때만 표시합니다. 초기 상태와 동기화 실패도 hidden/inert로 닫힙니다.
 - 로컬에서는 기존 테스트 편의를 유지하지만 배포 origin에서는 로그인 사용자의 `isAdmin=true`일 때만 테스트 패널·테스트 지급 모달·MASTER DATA/SAVE DATA 개발 배지를 표시합니다. 이는 화면 노출 계약이며 client-authoritative save의 근본 치트 방지는 향후 server save 검증/CAS 범위입니다.
@@ -68,7 +67,7 @@ v394 production approval/execution: no/no
 
 ## 바로 할 일
 
-1. 다음 Vue 전환 단계는 `migrate-vue-game-serialized-save-queue-foundation`입니다. 현재 typed server state를 자동·수동·캐릭터 전환 저장이 공유하는 단일 직렬 queue로 직렬화하되 Gold/아이템 보상·난수 드랍·local conflict 자동 선택은 함께 연결하지 않습니다. 실제 save POST 범위와 충돌/CAS 계약은 기존 저장 계약을 그대로 지켜야 합니다.
+1. 다음 Vue 전환 단계는 `migrate-vue-game-pending-unsynced-recovery-foundation`입니다. 저장 실패 때 계정·캐릭터별 local fallback과 `pending-unsynced` marker를 보존하고 재진입 시 local/server/취소를 사용자가 명시적으로 고르는 복구 gate를 이식하되 Gold/아이템 보상·난수 드랍과 자동 충돌 선택은 함께 연결하지 않습니다. 실제 다중 기기 CAS는 별도 backend 계약과 승인이 필요합니다.
 2. 실제 관리자 Apply API, 비밀번호 재인증 request, dev key header와 DB write는 연결하지 않습니다. 진행하려면 작업 종류와 exact DB-write 범위를 별도로 승인받습니다.
 3. production 관리자 복구는 Vue 화면 이식과 분리하며 기존 `admin` 승격 또는 새 owner 생성의 exact DB-write 승인을 받기 전에는 실행하지 않습니다.
 

@@ -22,9 +22,9 @@ from pathlib import Path
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
-CHECKPOINT_VERSION = "v394.vue-game-server-snapshot-load-foundation"
-CHECKPOINT_RESULT = "vue-game-server-snapshot-load-foundation"
-NEXT_SAFE_STAGE = "migrate-vue-game-serialized-save-queue-foundation"
+CHECKPOINT_VERSION = "v395.vue-game-serialized-save-queue-foundation"
+CHECKPOINT_RESULT = "vue-game-serialized-save-queue-foundation"
+NEXT_SAFE_STAGE = "migrate-vue-game-pending-unsynced-recovery-foundation"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 
@@ -437,7 +437,7 @@ signed backend image와 legacy static의 공개 배포를 승인된 단일 시�
 
 권장 범위:
 
-1. v394에서 선택 캐릭터 server snapshot의 read/load·identity 검증·typed normalize/apply와 retry/session 분기를 연결했으므로 다음은 자동·수동·전환 저장의 단일 직렬 queue 기반을 준비합니다.
+1. v395에서 선택 캐릭터의 자동·수동·전환 저장을 단일 직렬 queue와 실제 save POST에 연결했습니다. 다음은 local fallback과 `pending-unsynced` 사용자 선택 복구를 준비합니다.
 2. production 관리자 복구, 재인증 request, dev key header와 실제 Apply는 별도 exact DB-write 승인을 받기 전까지 연결하지 않습니다.
 3. 완료된 migration·publish·Render deploy와 기호가 확인한 Docker·로그인은 단순 확인을 위해 재실행하지 않습니다.
 """

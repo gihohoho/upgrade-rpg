@@ -136,7 +136,7 @@ export const TOWN_FEATURES: Record<TownFeatureKey, TownFeatureDefinition> = {
     icon: '存',
     label: '수동 저장',
     description: '현재 캐릭터의 진행 상태를 서버에 저장합니다.',
-    nextStep: '단일 직렬 저장 queue 단계에서 활성화됩니다.',
+    nextStep: '자동·수동·전환 저장이 공유하는 단일 직렬 queue에 연결되었습니다.',
   },
 };
 

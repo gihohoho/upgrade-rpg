@@ -112,6 +112,30 @@ export interface GameLoadData {
   integrity: GameSaveIntegrity | null;
 }
 
+export interface GameSaveRequestBody extends Record<string, unknown> {
+  accountCharacterId: string;
+  slotKey: `character-${number}`;
+  saveVersion: number;
+  clientSaveKey: string;
+  snapshot: Record<string, unknown>;
+  summary: Record<string, unknown>;
+  source: string;
+  note: string | null;
+}
+
+export interface GameSavePayload extends Omit<GameLoadPayload, 'status'> {
+  status: 'saved';
+}
+
+export interface GameSaveData {
+  status: 'saved';
+  userId: number;
+  slotKey: `character-${number}`;
+  accountCharacterId: string;
+  saveVersion: number;
+  integrity: GameSaveIntegrity | null;
+}
+
 export interface AccountCharactersPayload {
   status: 'loaded';
   slotCount: 8;

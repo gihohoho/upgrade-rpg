@@ -3352,6 +3352,65 @@ code {
 
 .town-feature-modal__boundary strong { color: #f2cd8d; }
 
+/* v395 selected-character serialized save queue and transition gate */
+.town-session-bar__save {
+  margin-top: 3px;
+  color: #8fc9ae !important;
+  font-size: 12px !important;
+  font-weight: 750;
+}
+
+.town-session-bar__save[data-status="saving"] { color: #f2cd8d !important; }
+.town-session-bar__save[data-status="error"] { color: #ff9f9f !important; }
+
+.town-session-bar__actions button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.town-save-panel {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 15px;
+  border: 1px solid rgba(111, 221, 168, 0.22);
+  border-radius: 14px;
+  background: rgba(44, 135, 89, 0.09);
+}
+
+.town-save-panel > strong {
+  color: #b8ecd0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.town-save-panel > strong[data-status="error"] { color: #ffaaaa; }
+.town-save-panel > span,
+.town-save-panel > small { color: #aab7ca; font-size: 12px; line-height: 1.6; }
+
+.town-save-panel dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin: 0;
+}
+
+.town-save-panel dl > div {
+  display: grid;
+  gap: 3px;
+  padding: 9px;
+  border: 1px solid rgba(211, 224, 241, 0.1);
+  border-radius: 10px;
+  background: rgba(3, 8, 17, 0.25);
+}
+
+.town-save-panel dt { color: #8797ad; font-size: 12px; }
+.town-save-panel dd { margin: 0; color: #eef5ff; font-size: 13px; font-weight: 800; }
+
+@media (max-width: 520px) {
+  .town-save-panel dl { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 1050px) {
   .town-hud {
     grid-template-columns: minmax(210px, 0.8fr) minmax(390px, 1.5fr);

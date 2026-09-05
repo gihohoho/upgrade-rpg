@@ -1,9 +1,9 @@
 # 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v394.vue-game-server-snapshot-load-foundation
-strict result: vue-game-server-snapshot-load-foundation
-next safe stage: migrate-vue-game-serialized-save-queue-foundation
+latest: v395.vue-game-serialized-save-queue-foundation
+strict result: vue-game-serialized-save-queue-foundation
+next safe stage: migrate-vue-game-pending-unsynced-recovery-foundation
 public Render: backend v377 / static v378 Live
 local/Neon DB: v377 / v377
 ```
@@ -172,12 +172,13 @@ password를 제거합니다.
 
 ## 서버 기준 저장·브라우저 복구와 캐릭터 전환
 
-v394 Vue는 선택 캐릭터의 서버 snapshot read/load까지만 실제 연결했습니다. Bearer 계정,
+v394 Vue는 선택 캐릭터의 서버 snapshot read/load를 연결했습니다. Bearer 계정,
 `character-N`, 32자리 `accountCharacterId`가 응답까지 모두 일치할 때만 typed 상태에
 적용하고 빈 snapshot은 신규 기본 상태로 처리합니다. 401/403은 로그인으로 돌아가며,
 network/timeout/5xx와 응답 계약 오류는 token·선택 캐릭터를 보존한 재시도 화면으로
-닫습니다. 아래 local 복구·`pending-unsynced` 선택과 직렬 저장 queue는 계속 유효한
-최종 계약이지만 v394에는 아직 연결하지 않았습니다.
+닫습니다. v395는 호출 시점 typed state를 복제해 자동·수동·전환 저장이 공유하는 단일
+직렬 queue와 실제 save POST를 연결했습니다. 아래 local 복구·`pending-unsynced` 선택은
+계속 유효한 최종 계약이지만 아직 Vue에 연결하지 않았습니다.
 
 - 기존 단일 키 `idleRpgSaveV22`는 삭제하거나 자동 덮어쓰지 않고 명시적 가져오기
   원본으로만 보존합니다.
@@ -197,6 +198,11 @@ network/timeout/5xx와 응답 계약 오류는 token·선택 캐릭터를 보존
 - 자동 저장, 수동 저장, 캐릭터 전환·로그아웃 최종 저장은 모두 하나의 Promise 직렬 저장
   큐를 사용합니다. 각 요청은 호출 시점 snapshot과 계정·슬롯·캐릭터 ID를 고정해 앞선
   저장이 끝난 뒤 순서대로 실행합니다.
+- v395 Vue는 위 직렬 queue와 60초 자동 저장, 마을 수동 저장, 전환 전 최종 저장을
+  구현했습니다. 401/403은 session invalid, 409는 자동 덮어쓰기와 후속 자동 저장을
+  멈추는 conflict, network/timeout/429/5xx는 token·선택을 유지하는 retryable 오류로
+  분리합니다. 현재 `saveVersion`은 snapshot 형식 버전이며 CAS revision이 아니므로
+  `expectedRevision`을 보내지 않고 다중 기기 CAS는 별도 backend 단계로 남깁니다.
 - 캐릭터 선택 뒤에만 게임 load, UI 초기화, 자동 저장 timer가 정확히 한 번 시작됩니다.
 - 전환과 로그아웃은 runtime·전투·timer를 먼저 pause하고 기존 저장 큐와 마지막 저장을
   drain합니다. 성공한 뒤에만 선택 상태 또는 token을 정리하고 reload합니다. network/5xx

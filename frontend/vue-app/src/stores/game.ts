@@ -10,6 +10,7 @@ import type {
   EnhancementLevelOption,
   FieldZoneOption,
   ItemTemplateOption,
+  GameSaveRequestBody,
   SkillLevelOption,
   SkillOption,
 } from '@/api/contracts';
@@ -58,6 +59,14 @@ import {
   GameSnapshotContractError,
   type LoadedGameSnapshot,
 } from '@/game/adapters/serverSnapshot';
+import {
+  acceptSelectedCharacterSave,
+  cloneSelectedCharacterSaveRequest,
+  createSelectedCharacterSaveRequest,
+  GameSaveContractError,
+  type GameSaveReason,
+} from '@/game/adapters/serverSave';
+import { createSerializedSaveQueue } from '@/game/save/serializedSaveQueue';
 
 export type GameSnapshotLoadStatus = 'idle' | 'loading' | 'ready' | 'error';
 export type GameSnapshotLoadErrorKind = 'retryable' | 'contract' | null;
@@ -72,8 +81,33 @@ export interface GameSnapshotLoadState {
 
 export type GameSnapshotLoadOutcome = 'ready' | 'session-invalid' | 'error' | 'cancelled';
 
+export type GameSaveQueueStatus = 'idle' | 'saving' | 'saved' | 'error';
+export type GameSaveErrorKind = 'session' | 'conflict' | 'retryable' | 'contract' | null;
+export type GameSaveOutcome = 'saved' | 'session-invalid' | 'conflict' | 'error' | 'cancelled';
+
+export interface GameSaveQueueState {
+  status: GameSaveQueueStatus;
+  errorKind: GameSaveErrorKind;
+  message: string;
+  queuedWrites: number;
+  active: boolean;
+  reason: GameSaveReason | null;
+  slotKey: string | null;
+  accountCharacterId: string | null;
+  savedAt: string | null;
+}
+
+interface QueuedGameSave {
+  token: string;
+  request: GameSaveRequestBody;
+  reason: GameSaveReason;
+  characterCode: string;
+}
+
 export const useGameStore = defineStore('game', () => {
   const snapshotLoad = shallowRef<GameSnapshotLoadState>(createIdleSnapshotLoadState());
+  const saveQueue = shallowRef<GameSaveQueueState>(createIdleSaveQueueState());
+  const saveTransitioning = ref(false);
   const model = shallowRef<TownHudViewModel | null>(null);
   const fieldModel = shallowRef<FieldCombatViewModel | null>(null);
   const fieldZoneSources = shallowRef<FieldZoneOption[]>([]);
@@ -113,6 +147,15 @@ export const useGameStore = defineStore('game', () => {
   });
   let snapshotAbortController: AbortController | null = null;
   let snapshotRequestId = 0;
+  const serializedSaveQueue = createSerializedSaveQueue<QueuedGameSave>({
+    clone: (job) => ({
+      ...job,
+      request: cloneSelectedCharacterSaveRequest(job.request),
+    }),
+    onChange: ({ queuedWrites, active }) => {
+      saveQueue.value = { ...saveQueue.value, queuedWrites, active };
+    },
+  });
 
   const activeFeature = computed(() => (
     activeFeatureKey.value ? TOWN_FEATURES[activeFeatureKey.value] : null
@@ -255,6 +298,175 @@ export const useGameStore = defineStore('game', () => {
     } finally {
       if (requestId === snapshotRequestId) snapshotAbortController = null;
     }
+  }
+
+  async function enqueueSelectedCharacterSave(options: {
+    token: string;
+    userId: number;
+    slot: AccountCharacterSlot;
+    reason: GameSaveReason;
+  }): Promise<GameSaveOutcome> {
+    const { token, userId, slot, reason } = options;
+    const town = model.value;
+    if (!token || !Number.isSafeInteger(userId) || !town || snapshotLoad.value.status !== 'ready') {
+      return 'cancelled';
+    }
+    if (!slot.occupied || !slot.accountCharacterId || !slot.accountCharacter
+      || town.slotKey !== slot.slotKey
+      || town.accountCharacterId !== slot.accountCharacterId
+      || town.characterCode !== slot.accountCharacter.characterCode) {
+      return recordSaveError(
+        new GameSaveContractError('저장할 캐릭터 식별 정보가 현재 선택과 일치하지 않습니다.'),
+        reason,
+        slot.slotKey,
+        slot.accountCharacterId,
+      );
+    }
+
+    let request: GameSaveRequestBody;
+    try {
+      request = createSelectedCharacterSaveRequest({
+        userId,
+        slotKey: slot.slotKey,
+        accountCharacterId: slot.accountCharacterId,
+        characterCode: slot.accountCharacter.characterCode,
+        saveVersion: town.saveVersion,
+        serverState: town.serverState,
+      }, reason);
+    } catch (error) {
+      return recordSaveError(error, reason, slot.slotKey, slot.accountCharacterId);
+    }
+
+    try {
+      await serializedSaveQueue.enqueue({
+        request: {
+          token,
+          request,
+          reason,
+          characterCode: slot.accountCharacter.characterCode,
+        },
+        execute: executeQueuedSave,
+      });
+      return 'saved';
+    } catch (error) {
+      return recordSaveError(error, reason, slot.slotKey, slot.accountCharacterId);
+    }
+  }
+
+  async function executeQueuedSave(job: QueuedGameSave) {
+    const expected = {
+      slotKey: job.request.slotKey,
+      accountCharacterId: job.request.accountCharacterId,
+      characterCode: job.characterCode,
+    };
+    saveQueue.value = {
+      ...saveQueue.value,
+      status: 'saving',
+      errorKind: null,
+      message: formatSaveProgress(job.reason, saveQueue.value.queuedWrites),
+      reason: job.reason,
+      slotKey: expected.slotKey,
+      accountCharacterId: expected.accountCharacterId,
+    };
+    const response = await gameApi.saveSelectedCharacter(job.token, job.request);
+    const responseData: unknown = response.data;
+    if (response.type !== 'game.save'
+      || !isRecord(responseData)
+      || responseData.status !== 'saved'
+      || responseData.slotKey !== expected.slotKey
+      || responseData.accountCharacterId !== expected.accountCharacterId) {
+      throw new GameSaveContractError('서버 저장 응답의 식별 정보가 현재 선택과 일치하지 않습니다.');
+    }
+    const saved = acceptSelectedCharacterSave(response.payload, expected);
+    if (responseData.saveVersion !== saved.saveVersion) {
+      throw new GameSaveContractError('서버 저장 응답의 버전 정보가 서로 일치하지 않습니다.');
+    }
+    const current = model.value;
+    if (current?.slotKey === saved.slotKey && current.accountCharacterId === saved.accountCharacterId) {
+      model.value = {
+        ...current,
+        saveVersion: saved.saveVersion,
+        updatedAt: saved.updatedAt ?? current.updatedAt,
+        snapshotEmpty: false,
+        snapshotStatusLabel: saved.integrityOk === false
+          ? '서버 저장 완료 · 호환 경고 확인 필요'
+          : '서버 저장 완료',
+      };
+    }
+    saveQueue.value = {
+      ...saveQueue.value,
+      status: 'saved',
+      errorKind: null,
+      message: formatSaveSuccess(job.reason),
+      reason: job.reason,
+      slotKey: saved.slotKey,
+      accountCharacterId: saved.accountCharacterId,
+      savedAt: saved.updatedAt ?? new Date().toISOString(),
+    };
+  }
+
+  async function flushSelectedCharacterSave(options: {
+    token: string;
+    userId: number;
+    slot: AccountCharacterSlot;
+    reason: Extract<GameSaveReason, 'character-switch' | 'logout'>;
+  }): Promise<GameSaveOutcome> {
+    if (saveTransitioning.value) return 'cancelled';
+    saveTransitioning.value = true;
+    combatController.pause('transition');
+    activeFeatureKey.value = null;
+    const outcome = await enqueueSelectedCharacterSave(options);
+    if (outcome !== 'saved') {
+      saveTransitioning.value = false;
+      if (outcome !== 'session-invalid') combatController.resume('transition');
+    }
+    return outcome;
+  }
+
+  function recordSaveError(
+    error: unknown,
+    reason: GameSaveReason,
+    slotKey: string | null,
+    accountCharacterId: string | null,
+  ): GameSaveOutcome {
+    let errorKind: GameSaveErrorKind = 'retryable';
+    let outcome: GameSaveOutcome = 'error';
+    let message = '서버에 저장하지 못했습니다. 캐릭터와 로그인 정보는 유지됩니다.';
+    if (error instanceof GameSaveContractError) {
+      errorKind = 'contract';
+      message = error.message;
+    } else if (error instanceof ApiRequestError) {
+      if (error.status === 401 || error.status === 403) {
+        errorKind = 'session';
+        outcome = 'session-invalid';
+        message = '로그인 정보가 만료되어 저장을 완료하지 못했습니다.';
+      } else if (error.status === 409) {
+        errorKind = 'conflict';
+        outcome = 'conflict';
+        message = '서버 저장 충돌을 감지했습니다. 자동으로 덮어쓰지 않았습니다.';
+      } else if (error.status === 413 || error.status === 422) {
+        errorKind = 'contract';
+        message = error.message;
+      } else if (error.status === 429) {
+        message = error.retryAfterSeconds
+          ? `저장 요청이 많습니다. ${error.retryAfterSeconds}초 뒤 다시 시도해 주세요.`
+          : '저장 요청이 많습니다. 잠시 뒤 다시 시도해 주세요.';
+      } else if (error.status >= 500 || error.status === 0) {
+        message = '게임 서버가 저장을 완료하지 못했습니다. 로그인 정보와 캐릭터 선택은 유지됩니다.';
+      } else {
+        message = error.message || message;
+      }
+    }
+    saveQueue.value = {
+      ...saveQueue.value,
+      status: 'error',
+      errorKind,
+      message,
+      reason,
+      slotKey,
+      accountCharacterId,
+    };
+    return outcome;
   }
 
   function enterFieldPreview(zones: FieldZoneOption[]) {
@@ -602,6 +814,10 @@ export const useGameStore = defineStore('game', () => {
     supersedeSnapshotRequest();
     clearShellState();
     snapshotLoad.value = createIdleSnapshotLoadState();
+    saveTransitioning.value = false;
+    if (serializedSaveQueue.getSnapshot().queuedWrites === 0) {
+      saveQueue.value = createIdleSaveQueueState();
+    }
   }
 
   function clearShellState() {
@@ -662,6 +878,8 @@ export const useGameStore = defineStore('game', () => {
 
   return {
     snapshotLoad,
+    saveQueue,
+    saveTransitioning,
     model,
     fieldModel,
     bossModel,
@@ -681,6 +899,8 @@ export const useGameStore = defineStore('game', () => {
     isUtilityScreen,
     utilityBackground,
     loadSelectedCharacterSnapshot,
+    enqueueSelectedCharacterSave,
+    flushSelectedCharacterSave,
     enterTown,
     enterFieldPreview,
     selectFieldPreview,
@@ -723,6 +943,37 @@ function createIdleSnapshotLoadState(): GameSnapshotLoadState {
     accountCharacterId: null,
   };
 }
+
+function createIdleSaveQueueState(): GameSaveQueueState {
+  return {
+    status: 'idle',
+    errorKind: null,
+    message: '서버 저장 대기 중입니다.',
+    queuedWrites: 0,
+    active: false,
+    reason: null,
+    slotKey: null,
+    accountCharacterId: null,
+    savedAt: null,
+  };
+}
+
+function formatSaveProgress(reason: GameSaveReason, queuedWrites: number): string {
+  const labels: Record<GameSaveReason, string> = {
+    auto: '자동 저장',
+    manual: '수동 저장',
+    'character-switch': '캐릭터 전환 전 최종 저장',
+    logout: '로그아웃 전 최종 저장',
+  };
+  return `${labels[reason]}을 처리하고 있습니다.${queuedWrites > 1 ? ` 대기 ${queuedWrites - 1}건` : ''}`;
+}
+
+function formatSaveSuccess(reason: GameSaveReason): string {
+  if (reason === 'manual') return '현재 캐릭터를 서버에 저장했습니다.';
+  if (reason === 'auto') return '자동 저장을 완료했습니다.';
+  return '전환 전 최종 저장을 완료했습니다.';
+}
+
 
 function formatSnapshotLoadError(error: unknown): string {
   if (error instanceof GameSnapshotContractError) return error.message;

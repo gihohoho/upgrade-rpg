@@ -88,7 +88,7 @@ function assertStaticBoundary() {
     "game.pauseCombatRuntime('manual')",
     "game.resumeCombatRuntime('manual')",
     "기본 공격 timer는 동작하지만 서버 캐릭터와 보상에는 반영되지 않습니다",
-    "snapshot 저장·자동 저장·Gold·아이템 보상·난수 판정·자동 재등장은 아직 연결하지 않습니다",
+    "직렬 snapshot 저장은 연결됐지만 현재 HP는 client runtime 전용",
   ]) {
     requireMarker(component, marker, "field combat component");
   }
@@ -181,7 +181,7 @@ function assertAdapterBehavior() {
 function main() {
   assertStaticBoundary();
   assertAdapterBehavior();
-  console.log("PASS: Vue field combat UI can read snapshot-backed stats while keeping save, Gold, item reward, random, and respawn mutation disconnected");
+  console.log("PASS: Vue field combat UI reads snapshot stats without adding client HP, Gold, reward, random, or respawn mutation to server saves");
 }
 
 main();

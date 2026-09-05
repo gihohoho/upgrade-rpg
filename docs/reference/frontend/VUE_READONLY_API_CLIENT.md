@@ -1,5 +1,9 @@
 # Vue Read-only API Client — v275
 
+> v395 현재 상태: 게임 화면은 typed Bearer client로 master-data, 선택 캐릭터 load와
+> 단일 직렬 `POST /game/save`를 연결했습니다. 아래 내용은 v275 당시 read-only client를
+> 처음 도입한 범위이며, 현재 저장 계약은 [API Response Contract](../../contracts/API_RESPONSE_CONTRACT.md)를 따릅니다.
+
 ## 한 줄 요약
 
 v271에서는 Vue 앱 내부에 `GET` 전용 API client 구조를 만들었고, v272에서는 그 client를 이용해 Vue shell 화면에서 안전한 GET API를 실제로 작게 호출하도록 연결했습니다. v273에서는 Vue 개발 서버에서 FastAPI를 호출할 때 발생한 local CORS 오류를 수정했습니다. v275에서는 backend route map 자동 보고서를 기준으로 read-only 후보와 보류 route를 다시 정리했고, 상세/관계 조회 query 이름을 backend 기준에 맞췄습니다.
@@ -81,7 +85,7 @@ http://127.0.0.1:8000/api/v1
 
 `.env` 파일은 만들거나 수정하지 않았습니다. v273에서는 오래된 로컬 `.env`에 `5173` origin이 빠져 있어도 local/debug 환경에서 기본 개발 origin을 자동 포함합니다. 나중에 실제 개발/배포 주소 분리가 필요해지면 `VITE_API_BASE_URL` 도입을 별도 단계에서 검토합니다.
 
-## 현재 준비된 관리자 GET 경로
+## v275 당시 준비된 관리자 GET 경로
 
 | 이름 | 경로 | v275 자동 화면 확인 여부 |
 |---|---|---|
@@ -96,7 +100,7 @@ http://127.0.0.1:8000/api/v1
 | changeLogs | `/admin/change-logs` | v382 rollback Preview 이력 선택 |
 | changeLogDetail | `/admin/change-logs/{changeLogId}` | v382 Preview availability 확인 |
 
-## 현재 준비된 게임 GET 경로
+## v275 당시 준비된 게임 GET 경로
 
 | 이름 | 경로 | v275 자동 화면 확인 여부 |
 |---|---|---|
@@ -104,9 +108,9 @@ http://127.0.0.1:8000/api/v1
 | load | `/game/load` | 아직 미사용 |
 | saveSlots | `/game/save-slots` | 아직 미사용 |
 
-## 일부러 제외한 것
+## v275 당시 일부러 제외한 것
 
-실제 DB write와 Apply 계열은 아직 Vue 화면에 연결하지 않습니다. v382에서 관리자 Preview만 예외적으로 연결했습니다.
+v275 당시 실제 DB write와 Apply 계열은 Vue 화면에 연결하지 않았습니다. v382에서 관리자 Preview를 연결했고 v395에서 선택 캐릭터 save POST만 연결했지만, 관리자 Apply/write는 계속 제외합니다.
 
 - `POST /game/save`
 - 관리자 Apply 계열 POST

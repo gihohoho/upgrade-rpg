@@ -90,9 +90,9 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v394.vue-game-server-snapshot-load-foundation
-strict result: vue-game-server-snapshot-load-foundation
-next safe stage: migrate-vue-game-serialized-save-queue-foundation
+latest: v395.vue-game-serialized-save-queue-foundation
+strict result: vue-game-serialized-save-queue-foundation
+next safe stage: migrate-vue-game-pending-unsynced-recovery-foundation
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -117,12 +117,12 @@ v391 production approval/execution: no/no
 v392 production approval/execution: no/no
 v393 production approval/execution: no/no
 v394 production approval/execution: no/no
+v395 production approval/execution: no/no
 ```
 
+- v395에서 선택 캐릭터의 typed server state를 호출 시점에 복제해 자동·수동·전환 저장이 공유하는 단일 직렬 queue와 실제 `POST /game/save`에 연결했습니다. 캐릭터 전환·로그아웃은 runtime을 먼저 멈추고 마지막 저장까지 기다리며, 401/403·409·network/5xx를 분리합니다. focused/전체 Vue smoke와 production build가 PASS했고 backend CAS revision·local fallback·보상·난수·배포는 변경하지 않았습니다.
 - v394는 선택 캐릭터의 `GET /game/load` identity를 재검증해 server snapshot을 typed 상태에 적용합니다. 빈 snapshot은 신규 기본 상태이며 401/403만 로그인으로, 다른 오류는 token·선택을 유지한 retry 화면으로 보냅니다. v393 client 전투 timer는 이 읽기 상태를 사용하지만 save·보상·난수·backend·DB·배포는 바꾸지 않았습니다.
-- v392는 넓은 Vue 게임 화면에 legacy형 `내 정보·장비`/`가방·Gold` 좌우 창을 복원하고, 주요 기능을 배경을 잠그는 공통 modal로 바꿨습니다. 좁은 화면은 하단 버튼과 모바일 modal을 사용하며 7~10px 보조 글자를 최소 12px로 올렸습니다. desktop/mobile browser와 focused smoke가 PASS했고 snapshot/save·아이템/Gold·runtime·backend·DB·배포는 바꾸지 않았습니다.
-- v391은 구매 계약 없는 legacy 경계를 지켜 비용 정보 카탈로그와 보스 자동·장비 드랍 설정 미리보기를 이식했습니다. 거래·Gold/아이템·runtime·설정 저장·snapshot/save는 잠겼고 desktop/mobile·focused smoke가 PASS했습니다.
-- v390은 스킬 10단계·강화 규칙 UI와 SQ·SW 첫 Lv.1, 보너스 비상속, 탈리스만/휘장 `2^현재 강화` 재료 규칙을 고정했습니다. 사용·강화·소비·난수·snapshot/save는 잠겼습니다.
+- v390~v392는 스킬·강화와 상점·설정 표시, legacy형 desktop 좌우 창·mobile modal·최소 12px 가독성을 완성했습니다. 실제 사용·거래·소비·난수·설정 영구 저장은 잠그고 snapshot만 v395 공통 queue가 저장합니다.
 - v388~v389는 장비·가방·보관함·휴지통 표시 모델과 빈 칸·첫 빈 칸·상대 순서 보존 독립 정렬을 연결했습니다. 실제 아이템 변경·save는 잠겼습니다.
 - v386~v387은 `baseUrl`을 제거하고 master-data 필드·보스의 표시 UI를 이식했습니다. HP·Gold·보상·쿨타임·save·timer·난수는 바꾸지 않았습니다.
 - v384~v385는 Vue 독립 typed game domain과 마을 전용 접속 캐릭터 바·HUD를 이식했고 legacy 동등성·반응형 검사가 PASS했습니다.

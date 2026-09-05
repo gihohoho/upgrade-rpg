@@ -1,6 +1,6 @@
 export type CombatRuntimeTargetType = 'field' | 'boss';
 export type CombatRuntimeStatus = 'idle' | 'running' | 'paused' | 'defeated';
-export type CombatRuntimePauseReason = 'manual' | 'utility' | 'visibility' | null;
+export type CombatRuntimePauseReason = 'manual' | 'utility' | 'visibility' | 'transition' | null;
 
 export interface CombatRuntimeTarget {
   type: CombatRuntimeTargetType;

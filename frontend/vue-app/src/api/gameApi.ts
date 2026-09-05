@@ -1,5 +1,11 @@
 import { requestApi } from './http';
-import type { GameLoadData, GameLoadPayload } from './contracts';
+import type {
+  GameLoadData,
+  GameLoadPayload,
+  GameSaveData,
+  GameSavePayload,
+  GameSaveRequestBody,
+} from './contracts';
 
 export interface GameLoadRequest {
   slotKey: `character-${number}`;
@@ -15,6 +21,15 @@ export const gameApi = {
     return requestApi<GameLoadPayload, GameLoadData>(`/game/load?${query.toString()}`, {
       token,
       signal,
+    });
+  },
+
+  saveSelectedCharacter(token: string, request: GameSaveRequestBody) {
+    return requestApi<GameSavePayload, GameSaveData>('/game/save', {
+      method: 'POST',
+      token,
+      body: request,
+      timeoutMs: 8_000,
     });
   },
 };

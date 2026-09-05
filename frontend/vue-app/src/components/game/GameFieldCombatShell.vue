@@ -124,7 +124,7 @@
       <span aria-hidden="true">!</span>
       <div>
         <strong>기본 공격 timer는 동작하지만 서버 캐릭터와 보상에는 반영되지 않습니다.</strong>
-        <p>필드 이름·HP·보상은 PostgreSQL master-data, 공격력 계산은 읽어온 서버 snapshot을 사용합니다. 현재 HP는 이 화면 안에서만 감소하며 snapshot 저장·자동 저장·Gold·아이템 보상·난수 판정·자동 재등장은 아직 연결하지 않습니다.</p>
+        <p>필드 이름·HP·보상은 PostgreSQL master-data, 공격력 계산은 읽어온 서버 snapshot을 사용합니다. 직렬 snapshot 저장은 연결됐지만 현재 HP는 client runtime 전용이며 Gold·아이템 보상·난수 판정·자동 재등장은 아직 연결하지 않습니다.</p>
       </div>
     </aside>
   </div>

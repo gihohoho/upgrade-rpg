@@ -1,9 +1,9 @@
 # 이메일 인증·계정 복구·계정 삭제 준비 — v377
 
 ```txt
-latest: v394.vue-game-server-snapshot-load-foundation
-strict result: vue-game-server-snapshot-load-foundation
-next safe stage: migrate-vue-game-serialized-save-queue-foundation
+latest: v395.vue-game-serialized-save-queue-foundation
+strict result: vue-game-serialized-save-queue-foundation
+next safe stage: migrate-vue-game-pending-unsynced-recovery-foundation
 public Render: backend v377 / static v378 Live
 database migration: local/Neon v377 / apply 1회씩 / stamp·downgrade 0회
 email provider: local Brevo real Naver delivery verified / Render configured

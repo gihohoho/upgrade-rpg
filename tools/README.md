@@ -63,7 +63,7 @@ python tools/report_vue_game_domain_dependencies.py --check
 node tools/smoke/frontend/smoke_vue_game_domain_foundation.js
 ```
 
-`docs/generated/VUE_GAME_DOMAIN_DEPENDENCIES.md`에 legacy state·systems·rules의 browser·난수·시각·timer 의존성과 v384 typed domain 분리 경계를 기록합니다. v385~v394 smoke는 마을/HUD·필드·보스·가방/장비·보관함/휴지통·스킬/강화·상점/설정 adapter, legacy형 좌우 창·utility/mobile modal·가독성, client-only 단일 전투 timer와 선택 캐릭터 server snapshot GET·identity 검증·typed normalize/apply를 확인합니다. runtime은 화면 HP만 결정론적으로 바꾸고 snapshot save·난수·아이템/스킬/Gold/재료·보상·영구 설정과 DB·배포를 변경하지 않습니다.
+`docs/generated/VUE_GAME_DOMAIN_DEPENDENCIES.md`에 legacy state·systems·rules의 browser·난수·시각·timer 의존성과 v384 typed domain 분리 경계를 기록합니다. v385~v395 smoke는 마을/HUD·필드·보스·가방/장비·보관함/휴지통·스킬/강화·상점/설정 adapter, legacy형 좌우 창·utility/mobile modal·가독성, client-only 단일 전투 timer, 선택 캐릭터 server snapshot load와 호출 시점 복제·실패 복구형 단일 저장 queue를 확인합니다. runtime은 화면 HP만 결정론적으로 바꾸고 저장 queue는 typed server state만 저장하며 난수·아이템/스킬/Gold/재료·보상·영구 설정·CAS와 배포를 변경하지 않습니다.
 
 ## PostgreSQL/Alembic readiness 보고서
 

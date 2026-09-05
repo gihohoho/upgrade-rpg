@@ -22,7 +22,7 @@
       </button>
     </div>
     <span v-else class="game-snapshot-gate__spinner" aria-hidden="true" />
-    <small>이 단계에서는 저장 요청이나 보상 변경을 실행하지 않습니다.</small>
+    <small>서버 저장을 불러온 뒤에만 직렬 자동·수동 저장을 시작합니다.</small>
   </section>
 
   <div
@@ -123,6 +123,7 @@ const mobileModal = ref<HTMLElement | null>(null);
 const mobileClose = ref<HTMLButtonElement | null>(null);
 const mobileTrigger = ref<HTMLElement | null>(null);
 const mobilePanel = ref<'profile' | 'inventory' | null>(null);
+let autosaveTimer: number | null = null;
 const gameReady = computed(() => game.snapshotLoad.status === 'ready' && Boolean(game.model));
 const selectedCharacterName = computed(() => account.selectedCharacter?.accountCharacter?.name ?? '');
 const selectedCharacterLabel = computed(() => {
@@ -156,6 +157,11 @@ watch(() => game.isUtilityScreen, (open) => {
   void nextTick(() => (utilityClose.value ?? utilityModal.value)?.focus());
 });
 
+watch(gameReady, (ready) => {
+  stopAutosaveTimer();
+  if (ready) autosaveTimer = window.setInterval(() => void runAutosave(), 60_000);
+}, { immediate: true });
+
 function closeUtility() {
   game.closeUtilityPreview();
   void nextTick(() => world.value?.focus());
@@ -175,6 +181,31 @@ async function initializeSelectedGame() {
   if (outcome === 'session-invalid') {
     account.invalidateSession('로그인 정보가 만료되었거나 이 캐릭터에 접근할 수 없습니다. 다시 로그인해 주세요.');
   }
+}
+
+async function runAutosave() {
+  const slot = account.selectedCharacter;
+  const userId = account.user?.id;
+  if (game.saveTransitioning
+    || game.saveQueue.errorKind === 'conflict'
+    || !account.accessToken
+    || userId === undefined
+    || !slot) return;
+  const outcome = await game.enqueueSelectedCharacterSave({
+    token: account.accessToken,
+    userId,
+    slot,
+    reason: 'auto',
+  });
+  if (outcome === 'session-invalid') {
+    account.invalidateSession('자동 저장 중 로그인 정보가 만료되었습니다. 다시 로그인해 주세요.');
+  }
+}
+
+function stopAutosaveTimer() {
+  if (autosaveTimer === null) return;
+  window.clearInterval(autosaveTimer);
+  autosaveTimer = null;
 }
 
 function changeCharacter() {
@@ -212,6 +243,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  stopAutosaveTimer();
   window.removeEventListener('keydown', handleKeydown);
   document.removeEventListener('visibilitychange', handleVisibilityChange);
   game.resetShell();

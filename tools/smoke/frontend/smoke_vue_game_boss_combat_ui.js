@@ -81,7 +81,7 @@ function assertStaticBoundary() {
     "game.pauseCombatRuntime('manual')",
     "game.resumeCombatRuntime('manual')",
     "기본 공격 timer는 동작하지만 서버 캐릭터와 보상에는 반영되지 않습니다",
-    "snapshot 저장·자동 저장·난수 드랍·보상·쿨타임 변경·자동 재소환은 아직 연결하지 않습니다",
+    "직렬 snapshot 저장은 연결됐지만 현재 HP는 client runtime 전용",
   ]) requireMarker(component, marker, "boss combat component");
   assert.ok(!component.includes("town-session-bar"), "connected character bar must remain town-only");
 
@@ -152,7 +152,7 @@ function assertAdapterBehavior() {
 function main() {
   assertStaticBoundary();
   assertAdapterBehavior();
-  console.log("PASS: Vue boss combat UI can read snapshot-backed stats while keeping save, random, reward, cooldown, and respawn mutation disconnected");
+  console.log("PASS: Vue boss combat UI reads snapshot stats without adding client HP, random, reward, cooldown, or respawn mutation to server saves");
 }
 
 main();
