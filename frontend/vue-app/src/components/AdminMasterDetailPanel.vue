@@ -96,7 +96,7 @@
           <article v-for="field in detail.jsonFields" :key="field.key" class="admin-detail-json-card">
             <div class="admin-detail-json-card__header">
               <strong>{{ field.label || field.key }}</strong>
-              <span>숨긴 asset {{ formatCount(field.hiddenAssetCount) }} · 축약 {{ formatCount(field.truncatedCount) }}</span>
+              <span>숨긴 asset {{ formatCount(field.hiddenAssetCount, '0') }} · 축약 {{ formatCount(field.truncatedCount, '0') }}</span>
             </div>
             <pre>{{ formatJson(field.preview) }}</pre>
           </article>
@@ -119,6 +119,7 @@
 <script setup>
 import { onBeforeUnmount, ref, watch } from 'vue';
 import { useAdminStore } from '@/stores';
+import { formatCount, formatValue, formatJson, formatApiError } from '@/components/admin/display';
 
 const admin = useAdminStore();
 
@@ -147,33 +148,6 @@ const status = ref('idle');
 const detail = ref(null);
 const errorMessage = ref('');
 let activeController = null;
-
-function formatCount(value) {
-  const count = Number(value);
-  return Number.isFinite(count) ? count.toLocaleString('ko-KR') : '0';
-}
-
-function formatValue(value) {
-  if (value === null || value === undefined || value === '') return '-';
-  if (typeof value === 'boolean') return value ? '예' : '아니오';
-  if (typeof value === 'object') return JSON.stringify(value);
-  return String(value);
-}
-
-function formatJson(value) {
-  if (value === null || value === undefined) return '-';
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-}
-
-function formatError(error) {
-  if (error?.name === 'AbortError') return '';
-  if (error?.status) return `HTTP ${error.status}: ${error.message}`;
-  return error?.message || '알 수 없는 오류가 발생했습니다.';
-}
 
 function normalizeDetail(response) {
   const payload = response?.payload && typeof response.payload === 'object' ? response.payload : {};
@@ -219,7 +193,7 @@ async function loadDetail() {
   } catch (error) {
     if (error?.name === 'AbortError') return;
     status.value = 'error';
-    errorMessage.value = formatError(error);
+    errorMessage.value = formatApiError(error);
   }
 }
 

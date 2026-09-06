@@ -39,7 +39,7 @@ function loadModules() {
     define: { "process.env.NODE_ENV": '"test"', "import.meta.env": "{}" },
     write: false,
   });
-  const context = { Buffer, setTimeout, setInterval, clearInterval };
+  const context = { AbortController, Buffer, setTimeout, setInterval, clearInterval };
   vm.createContext(context);
   vm.runInContext(output.outputFiles[0].text, context);
   return context.__saveQueue;
@@ -217,6 +217,7 @@ async function assertQueueBehavior(modules) {
 }
 
 function savedEnvelope(request, source) {
+  const slotIndex = Number(source.slotKey.split("-")[1]);
   return {
     ok: true,
     responseVersion: "1",
@@ -225,11 +226,11 @@ function savedEnvelope(request, source) {
     payload: {
       userId: source.userId,
       slotKey: source.slotKey,
-      slotIndex: 2,
+      slotIndex,
       accountCharacterId: source.accountCharacterId,
       accountCharacter: {
         id: source.accountCharacterId,
-        slotIndex: 2,
+        slotIndex,
         name: "기호검신",
         characterCode: source.characterCode,
         createdAt: "2026-09-01T00:00:00Z",
@@ -259,24 +260,26 @@ function savedEnvelope(request, source) {
   };
 }
 
-async function assertStoreBehavior(modules) {
-  modules.setActivePinia(modules.createPinia());
-  const game = modules.useGameStore();
-  const source = createSource(modules);
-  const slot = {
-    slotIndex: 2,
+function createSlot(source) {
+  const slotIndex = Number(source.slotKey.split("-")[1]);
+  return {
+    slotIndex,
     slotKey: source.slotKey,
     occupied: true,
     accountCharacterId: source.accountCharacterId,
     accountCharacter: {
       id: source.accountCharacterId,
-      slotIndex: 2,
+      slotIndex,
       name: "기호검신",
       characterCode: source.characterCode,
       createdAt: "2026-09-01T00:00:00Z",
     },
     progress: null,
   };
+}
+
+function enterLoadedContext(game, source) {
+  const slot = createSlot(source);
   game.enterTown(slot, "검신", {
     slotKey: source.slotKey,
     accountCharacterId: source.accountCharacterId,
@@ -291,6 +294,33 @@ async function assertStoreBehavior(modules) {
     status: "ready", errorKind: null, message: "ready",
     slotKey: source.slotKey, accountCharacterId: source.accountCharacterId,
   };
+  return slot;
+}
+
+function deferred() {
+  let resolve;
+  let reject;
+  const promise = new Promise((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+}
+
+function saveOptions(slot, reason = "manual") {
+  return { token: "save-token", userId: 7, slot, reason };
+}
+
+function saveStatus(game) {
+  const { queuedWrites: _queuedWrites, active: _active, ...status } = game.saveQueue;
+  return JSON.stringify(status);
+}
+
+async function assertStoreBehavior(modules) {
+  modules.setActivePinia(modules.createPinia());
+  const game = modules.useGameStore();
+  const source = createSource(modules);
+  const slot = enterLoadedContext(game, source);
 
   let active = 0;
   let maxActive = 0;
@@ -314,14 +344,6 @@ async function assertStoreBehavior(modules) {
   assert.strictEqual(game.saveQueue.status, "saved");
   assert.strictEqual(game.saveQueue.queuedWrites, 0);
 
-  modules.gameApi.saveSelectedCharacter = async () => {
-    throw new modules.ApiRequestError("conflict", { status: 409 });
-  };
-  const conflict = await game.enqueueSelectedCharacterSave({ token: "save-token", userId: 7, slot, reason: "manual" });
-  assert.strictEqual(conflict, "conflict");
-  assert.strictEqual(game.saveQueue.errorKind, "conflict");
-  assert.match(game.saveQueue.message, /덮어쓰지 않았습니다/);
-
   modules.gameApi.saveSelectedCharacter = async (_token, request) => savedEnvelope(request, source);
   const transition = await game.flushSelectedCharacterSave({
     token: "save-token", userId: 7, slot, reason: "character-switch",
@@ -332,13 +354,135 @@ async function assertStoreBehavior(modules) {
   assert.strictEqual(game.saveTransitioning, false);
 }
 
+async function assertTerminalSaveBarrier(modules) {
+  for (const [status, outcome, errorKind] of [[409, "conflict", "conflict"], [401, "session-invalid", "session"], [403, "session-invalid", "session"]]) {
+    modules.setActivePinia(modules.createPinia());
+    const game = modules.useGameStore();
+    const source = createSource(modules);
+    const slot = enterLoadedContext(game, source);
+    const started = deferred();
+    const pendingResponse = deferred();
+    let posts = 0;
+    modules.gameApi.saveSelectedCharacter = async () => {
+      posts += 1;
+      started.resolve();
+      return pendingResponse.promise;
+    };
+    const first = game.enqueueSelectedCharacterSave(saveOptions(slot));
+    await started.promise;
+    const waiting = game.enqueueSelectedCharacterSave(saveOptions(slot, "auto"));
+    pendingResponse.reject(new modules.ApiRequestError("terminal save response", { status }));
+    assert.deepStrictEqual(await Promise.all([first, waiting]), [outcome, outcome]);
+    assert.strictEqual(posts, 1, `${status}: queued save reached the API after a terminal response`);
+    assert.strictEqual(game.saveQueue.errorKind, errorKind);
+    if (status === 409) assert.match(game.saveQueue.message, /덮어쓰지 않았습니다/);
+    assert.strictEqual(await game.enqueueSelectedCharacterSave(saveOptions(slot)), outcome);
+    assert.strictEqual(posts, 1, `${status}: a later manual save bypassed the terminal response barrier`);
+    assert.strictEqual(game.saveQueue.queuedWrites, 0);
+
+    if (status === 409) {
+      modules.gameApi.loadSelectedCharacter = async () => {
+        const request = modules.save.createSelectedCharacterSaveRequest(source, "manual");
+        const response = savedEnvelope(request, source);
+        response.type = "game.load";
+        response.payload.status = "loaded";
+        response.data.status = "loaded";
+        return response;
+      };
+      assert.strictEqual(await game.loadSelectedCharacterSnapshot({ token: "save-token", slot, characterLabel: "검신" }), "ready");
+    } else {
+      game.resetShell();
+      enterLoadedContext(game, source);
+    }
+    modules.gameApi.saveSelectedCharacter = async (_token, request) => {
+      posts += 1;
+      return savedEnvelope(request, source);
+    };
+    assert.strictEqual(await game.enqueueSelectedCharacterSave(saveOptions(slot)), "saved", `${status}: explicit context recovery did not permit saving`);
+    assert.strictEqual(posts, 2);
+    assert.strictEqual(game.saveQueue.errorKind, null);
+    game.resetShell();
+  }
+}
+
+async function assertStaleSaveIsolation(modules) {
+  for (const result of ["late-success", "late-401"]) {
+    modules.setActivePinia(modules.createPinia());
+    const game = modules.useGameStore();
+    const oldSource = createSource(modules);
+    const oldSlot = enterLoadedContext(game, oldSource);
+    const started = deferred();
+    const pendingResponse = deferred();
+    const requests = [];
+    modules.gameApi.saveSelectedCharacter = async (_token, request) => {
+      requests.push(request);
+      started.resolve();
+      return pendingResponse.promise;
+    };
+    const first = game.enqueueSelectedCharacterSave(saveOptions(oldSlot));
+    await started.promise;
+    const waiting = game.enqueueSelectedCharacterSave(saveOptions(oldSlot, "auto"));
+    game.resetShell();
+    const newSource = createSource(modules);
+    newSource.slotKey = "character-3";
+    newSource.accountCharacterId = "b".repeat(32);
+    newSource.serverState.player.gold = 456;
+    const newSlot = enterLoadedContext(game, newSource);
+    const freshModel = JSON.stringify(game.model);
+    const freshSaveStatus = saveStatus(game);
+    if (result === "late-success") pendingResponse.resolve(savedEnvelope(requests[0], oldSource));
+    else pendingResponse.reject(new modules.ApiRequestError("expired old session", { status: 401 }));
+    assert.deepStrictEqual(await Promise.all([first, waiting]), ["cancelled", "cancelled"], `${result}: old save survived a context reset`);
+    assert.strictEqual(requests.length, 1, `${result}: reset did not cancel the queued POST`);
+    assert.strictEqual(JSON.stringify(game.model), freshModel, `${result}: old response changed the new character model`);
+    assert.strictEqual(saveStatus(game), freshSaveStatus, `${result}: old response changed the new save status`);
+    assert.strictEqual(game.saveQueue.queuedWrites, 0);
+    assert.strictEqual(game.saveQueue.active, false);
+    modules.gameApi.saveSelectedCharacter = async (_token, request) => {
+      requests.push(request);
+      return savedEnvelope(request, newSource);
+    };
+    assert.strictEqual(await game.enqueueSelectedCharacterSave(saveOptions(newSlot)), "saved", `${result}: old response blocked the new character save`);
+    assert.strictEqual(requests.length, 2);
+    assert.strictEqual(requests[1].accountCharacterId, newSource.accountCharacterId);
+    assert.strictEqual(game.model.accountCharacterId, newSource.accountCharacterId);
+    assert.strictEqual(game.model.serverState.player.gold, 456);
+    assert.strictEqual(game.saveQueue.accountCharacterId, newSource.accountCharacterId);
+    game.resetShell();
+  }
+}
+
+async function assertRetryableSaveRecovery(modules) {
+  modules.setActivePinia(modules.createPinia());
+  const game = modules.useGameStore();
+  const source = createSource(modules);
+  const slot = enterLoadedContext(game, source);
+  let posts = 0;
+  modules.gameApi.saveSelectedCharacter = async (_token, request) => {
+    posts += 1;
+    if (posts === 1) throw new modules.ApiRequestError("temporary server failure", { status: 503 });
+    return savedEnvelope(request, source);
+  };
+  assert.strictEqual(await game.enqueueSelectedCharacterSave(saveOptions(slot)), "error");
+  assert.strictEqual(game.saveQueue.errorKind, "retryable");
+  assert.strictEqual(game.snapshotLoad.status, "ready");
+  assert.strictEqual(game.model.accountCharacterId, source.accountCharacterId);
+  assert.strictEqual(await game.enqueueSelectedCharacterSave(saveOptions(slot)), "saved");
+  assert.strictEqual(posts, 2, "retryable failure incorrectly latched the save barrier");
+  assert.strictEqual(game.saveQueue.errorKind, null);
+  game.resetShell();
+}
+
 async function main() {
   assertStaticBoundary();
   const modules = loadModules();
   assertAdapterBehavior(modules);
   await assertQueueBehavior(modules);
   await assertStoreBehavior(modules);
-  console.log("PASS: Vue selected-character saves use one frozen, failure-tolerant serialized queue with manual, auto, and transition gates");
+  await assertTerminalSaveBarrier(modules);
+  await assertStaleSaveIsolation(modules);
+  await assertRetryableSaveRecovery(modules);
+  console.log("PASS: Vue saves serialize frozen requests, stop queued writes after conflict/session failures, isolate stale responses, and recover after reload or retryable failures");
 }
 
 main().catch((error) => {

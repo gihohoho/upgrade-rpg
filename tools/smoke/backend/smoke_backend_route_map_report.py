@@ -14,8 +14,8 @@ RUN_SMOKE = ROOT / "tools/run_smoke_core.sh"
 
 REQUIRED_TEXT = [
     "Backend Route Map — v377",
-    "latest: v395.vue-game-serialized-save-queue-foundation",
-    "strict result: vue-game-serialized-save-queue-foundation",
+    "latest: v396.vue-frontend-refactor-readability-foundation",
+    "strict result: vue-frontend-refactor-readability-foundation",
     "actual target v377 apply: local 1 / Neon 1",
     "private email environment: prepared",
     "source 8db9bcb / preserved",

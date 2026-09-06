@@ -1,10 +1,10 @@
-# Vue/FastAPI/DB 전체 전환 계획 — v395
+# Vue/FastAPI/DB 전체 전환 계획 — v396
 
 ## 현재 결론
 
 `frontend/vue-app/`은 더 이상 단순 실험용 shell이 아니라 전체 프론트엔드를 옮길 작업공간입니다. 다만 공개 서비스의 `index.html`, `admin.html`, 루트 `src/`는 Vue 기능이 같은 수준으로 검증될 때까지 기준 구현으로 유지합니다.
 
-v379에서 시작해 v395까지 완료한 기반:
+v379~v395 기반과 v396 정리 범위:
 
 - Vue 3 + Vite + Vue Router
 - 새 Vue 코드의 TypeScript 적용
@@ -23,9 +23,11 @@ v379에서 시작해 v395까지 완료한 기반:
 - 보관함·휴지통의 빈 칸·첫 빈 칸·독립 수동 정렬과 파괴적 작업 잠금을 보여주는 표시 전용 UI
 - 스킬 10단계와 강화 확률·비용·재료·결과 능력치, SQ·SW 첫 Lv.1 규칙을 보여주는 표시 전용 UI
 - 구매 계약을 임의로 만들지 않는 item master-data 상점 카탈로그와 기존 전투 옵션의 임시 설정 미리보기 UI
-- legacy형 데스크톱 내 정보/장비·가방/Gold 좌우 창, 접근 가능한 utility/mobile modal과 최소 12px 게임 가독성 계층
+- legacy형 데스크톱 내 정보/장비·가방/Gold 좌우 창, utility/mobile modal과 13px 이상 공통 가독성 token
 - server state·저장·보상·난수와 분리된 결정론적 client 기본 공격 runtime, 단일 timer와 pause/resume/cleanup lifecycle
 - 선택 캐릭터 server snapshot GET, identity 재검증, typed normalize/apply, 빈 snapshot 기본 상태와 loading/retry/session-invalid UI
+- 호출 시점 snapshot을 복제하는 단일 저장 queue, 이전 context 응답 취소와 충돌·세션 오류 뒤 후속 POST 차단
+- 공유 modal 접근성, 관리자 표시·오류 helper 공통화, 미사용 game read-only wrapper 제거
 - legacy, backend, DB, 공개 배포 변경 없음
 
 ## TypeScript를 쓰는 이유
@@ -103,7 +105,7 @@ Vue 자체는 JavaScript만으로도 사용할 수 있습니다. 이 프로젝�
 - client 전투 runtime 기반 — v393 완료
 - server snapshot read/load 기반 — v394 완료
 - 자동·수동·전환 저장의 단일 직렬 queue — v395 완료
-- tooltip 통합과 세부 시각 조정
+- 글자/명암 token·공유 modal·관리자 helper·미사용 API 정리 — v396 완료, Vue smoke/build와 1366px/390px 브라우저 PASS
 
 ### 6. 저장과 runtime — 진행 중
 
@@ -111,6 +113,7 @@ Vue 자체는 JavaScript만으로도 사용할 수 있습니다. 이 프로젝�
 - 자동·수동·전환 저장의 단일 직렬 queue — v395 완료
 - `401/403`, network, `5xx`, `409` conflict 분기 — v395 완료
 - timer 정지와 최종 저장 이후 캐릭터 전환 — v395 완료
+- context generation·409/401/403 terminal barrier — v396 구현, race 회귀 PASS
 - local fallback과 `pending-unsynced` 사용자 선택 복구 — 다음
 - 다중 기기 save revision/CAS와 낙관적 잠금 — 별도 backend/DB 계약과 승인 필요
 

@@ -1,8 +1,8 @@
 # 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v395.vue-game-serialized-save-queue-foundation
-strict result: vue-game-serialized-save-queue-foundation
+latest: v396.vue-frontend-refactor-readability-foundation
+strict result: vue-frontend-refactor-readability-foundation
 next safe stage: migrate-vue-game-pending-unsynced-recovery-foundation
 public Render: backend v377 / static v378 Live
 local/Neon DB: v377 / v377
@@ -199,9 +199,10 @@ network/timeout/5xx와 응답 계약 오류는 token·선택 캐릭터를 보존
   큐를 사용합니다. 각 요청은 호출 시점 snapshot과 계정·슬롯·캐릭터 ID를 고정해 앞선
   저장이 끝난 뒤 순서대로 실행합니다.
 - v395 Vue는 위 직렬 queue와 60초 자동 저장, 마을 수동 저장, 전환 전 최종 저장을
-  구현했습니다. 401/403은 session invalid, 409는 자동 덮어쓰기와 후속 자동 저장을
-  멈추는 conflict, network/timeout/429/5xx는 token·선택을 유지하는 retryable 오류로
-  분리합니다. 현재 `saveVersion`은 snapshot 형식 버전이며 CAS revision이 아니므로
+  구현했습니다. v396은 context generation으로 reset/reload 이전의 늦은 응답을 취소하고
+  401/403·409 뒤 이미 대기한 요청과 후속 POST를 명시적 reload/reset까지 차단합니다.
+  network/timeout/429/5xx는 token·선택을 유지하는 retryable 오류입니다.
+  현재 `saveVersion`은 snapshot 형식 버전이며 CAS revision이 아니므로
   `expectedRevision`을 보내지 않고 다중 기기 CAS는 별도 backend 단계로 남깁니다.
 - 캐릭터 선택 뒤에만 게임 load, UI 초기화, 자동 저장 timer가 정확히 한 번 시작됩니다.
 - 전환과 로그아웃은 runtime·전투·timer를 먼저 pause하고 기존 저장 큐와 마지막 저장을

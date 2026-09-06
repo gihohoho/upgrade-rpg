@@ -7,8 +7,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v395.vue-game-serialized-save-queue-foundation"
-RESULT = "vue-game-serialized-save-queue-foundation"
+VERSION = "v396.vue-frontend-refactor-readability-foundation"
+RESULT = "vue-frontend-refactor-readability-foundation"
 NEXT_STAGE = "migrate-vue-game-pending-unsynced-recovery-foundation"
 SOURCE_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_HEAD = SOURCE_HEAD

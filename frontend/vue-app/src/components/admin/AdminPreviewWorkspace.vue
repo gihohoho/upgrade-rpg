@@ -276,6 +276,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useAdminStore } from '@/stores';
 import AdminApplyConfirmationGate from '@/components/admin/AdminApplyConfirmationGate.vue';
+import { formatValue } from '@/components/admin/display';
 import type { AdminPreviewChange, AdminPreviewEnvelope, AdminPreviewKind, AdminPreviewPayload, JsonRecord } from '@/api/adminPreviewApi';
 
 interface BlueprintOption { value: unknown; label?: string }
@@ -645,13 +646,6 @@ async function fingerprintPayload(payload: AdminPreviewPayload) {
   const bytes = new TextEncoder().encode(stableJson(payload));
   const digest = await window.crypto.subtle.digest('SHA-256', bytes);
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
-function formatValue(value: unknown) {
-  if (value === null || value === undefined || value === '') return '-';
-  if (typeof value === 'boolean') return value ? '예' : '아니오';
-  if (typeof value === 'object') return JSON.stringify(value);
-  return String(value);
 }
 
 function formatDate(value?: string) {

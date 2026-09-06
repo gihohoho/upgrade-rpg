@@ -17,8 +17,8 @@ from pathlib import Path
 
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/POSTGRES_ALEMBIC_READINESS.md")
-CHECKPOINT_VERSION = "v395.vue-game-serialized-save-queue-foundation"
-CHECKPOINT_RESULT = "vue-game-serialized-save-queue-foundation"
+CHECKPOINT_VERSION = "v396.vue-frontend-refactor-readability-foundation"
+CHECKPOINT_RESULT = "vue-frontend-refactor-readability-foundation"
 SOURCE_GRAPH_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_DB_REVISION = SOURCE_GRAPH_HEAD
 NEON_APPLIED_DB_REVISION = SOURCE_GRAPH_HEAD

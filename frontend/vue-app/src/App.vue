@@ -1,7 +1,7 @@
 <template>
   <a class="skip-link" href="#main-content">본문으로 바로가기</a>
 
-  <div class="app-layout" :class="{ 'app-layout--menu-open': app.sidebarOpen }">
+  <div class="app-layout" :class="{ 'app-layout--menu-open': app.sidebarOpen, 'app-layout--playing': isPlaying }">
     <button
       v-if="app.sidebarOpen"
       class="app-layout__scrim"
@@ -55,11 +55,11 @@
           <span aria-hidden="true">☰</span>
         </button>
         <div>
-          <p class="vue-shell__eyebrow">Upgrade RPG · v395</p>
+          <p class="vue-shell__eyebrow">Upgrade RPG · v396</p>
           <h1>Vue 전환 작업공간</h1>
           <p>기존 서비스는 유지하면서, 새 화면을 안전하게 하나씩 옮깁니다.</p>
         </div>
-        <span class="vue-shell__phase"><i aria-hidden="true" /> serialized server save queue</span>
+        <span class="vue-shell__phase"><i aria-hidden="true" /> readable shared Vue UI</span>
       </header>
 
       <RouterView />
@@ -68,7 +68,12 @@
 </template>
 
 <script setup lang="ts">
-import { useAppStore } from '@/stores';
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
+import { useAccountStore, useAppStore } from '@/stores';
 
 const app = useAppStore();
+const account = useAccountStore();
+const route = useRoute();
+const isPlaying = computed(() => route.name === 'game-shell' && account.stage === 'ready');
 </script>

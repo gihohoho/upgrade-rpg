@@ -65,7 +65,7 @@
           class="town-feature-card"
           type="button"
           aria-haspopup="dialog"
-          @click="openFeature(feature.key, $event)"
+          @click="openFeature(feature.key)"
         >
           <span class="town-feature-card__icon" aria-hidden="true">{{ feature.icon }}</span>
           <span><strong>{{ feature.label }}</strong><small>{{ feature.description }}</small></span>
@@ -103,7 +103,7 @@
         <div class="town-hud__group">
           <strong>성장 / 시스템</strong>
           <div>
-            <button type="button" aria-haspopup="dialog" @click="openFeature('save', $event)"><span aria-hidden="true">存</span>수동 저장</button>
+            <button type="button" aria-haspopup="dialog" @click="openFeature('save')"><span aria-hidden="true">存</span>수동 저장</button>
             <button
               type="button"
               :disabled="!canEnterSkillEnhancement"
@@ -185,7 +185,8 @@
             <div><dt>서버 연결</dt><dd>{{ game.saveQueue.active ? '저장 중' : '대기' }}</dd></div>
             <div><dt>충돌 보호</dt><dd>{{ game.saveQueue.errorKind === 'conflict' ? '덮어쓰기 차단' : '409 감시' }}</dd></div>
           </dl>
-          <small>현재 backend에는 다중 기기 CAS revision이 없어, 충돌 응답을 받으면 자동 재시도하지 않습니다.</small>
+          <small v-if="game.saveQueue.errorKind === 'conflict'">충돌로 저장을 멈췄습니다. 다시 불러오면 현재 화면의 상태를 서버 저장으로 교체합니다.</small>
+          <small v-else>현재 backend에는 다중 기기 CAS revision이 없어, 충돌 응답을 받으면 자동 재시도하지 않습니다.</small>
         </div>
         <div v-else class="town-feature-modal__boundary">
           <strong>현재는 실행하지 않습니다</strong>
@@ -196,8 +197,8 @@
           class="account-button account-button--primary"
           type="button"
           :disabled="game.saveQueue.active || transitionBusy"
-          @click="manualSave"
-        >{{ game.saveQueue.active ? '저장 중…' : '지금 서버에 저장' }}</button>
+          @click="game.saveQueue.errorKind === 'conflict' ? reloadServerSave() : manualSave()"
+        >{{ game.saveQueue.active ? '저장 중…' : game.saveQueue.errorKind === 'conflict' ? '서버 저장으로 다시 불러오기' : '지금 서버에 저장' }}</button>
         <button v-else class="account-button account-button--primary" type="button" @click="closeFeature">마을로 돌아가기</button>
       </section>
     </div>
@@ -205,7 +206,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
+import { useModalAccessibility } from '@/composables/useModalAccessibility';
 import { useAccountStore, useGameStore } from '@/stores';
 import { TOWN_FEATURES, type TownFeatureKey } from '@/game/adapters/townHud';
 
@@ -214,7 +216,6 @@ const game = useGameStore();
 const { background = false } = defineProps<{ background?: boolean }>();
 const modalPanel = ref<HTMLElement | null>(null);
 const modalClose = ref<HTMLButtonElement | null>(null);
-const featureTrigger = ref<HTMLElement | null>(null);
 const transitionBusy = ref(false);
 const townFeatures = ['record', 'codex', 'ranking', 'mailbox'].map((key) => TOWN_FEATURES[key as TownFeatureKey]);
 const canEnterSkillEnhancement = computed(() => (
@@ -230,15 +231,14 @@ const saveStatusLabel = computed(() => {
   return '60초 자동 저장 대기';
 });
 
-function openFeature(key: TownFeatureKey, event: Event) {
-  featureTrigger.value = event.currentTarget as HTMLElement;
+useModalAccessibility({ panel: modalPanel, initialFocus: modalClose, isOpen: () => Boolean(game.activeFeature), close: closeFeature });
+
+function openFeature(key: TownFeatureKey) {
   game.openFeature(key);
-  void nextTick(() => (modalClose.value ?? modalPanel.value)?.focus());
 }
 
 function closeFeature() {
   game.closeFeature();
-  void nextTick(() => featureTrigger.value?.focus());
 }
 
 function enterFieldPreview() {
@@ -268,16 +268,29 @@ function enterShopSettingsPreview() {
   game.enterShopSettingsPreview(account.itemTemplates);
 }
 
+async function reloadServerSave() {
+  const slot = account.selectedCharacter;
+  const token = account.accessToken;
+  if (!token || !slot) return;
+  const characterLabel = account.characterOptions.find((option) => option.code === slot.accountCharacter?.characterCode)?.name ?? '캐릭터';
+  game.closeFeature();
+  const outcome = await game.loadSelectedCharacterSnapshot({ token, slot, characterLabel });
+  if (account.accessToken !== token || account.selectedCharacter?.accountCharacterId !== slot.accountCharacterId) return;
+  if (outcome === 'session-invalid') account.invalidateSession('저장 확인 중 로그인 정보가 만료되었습니다. 다시 로그인해 주세요.');
+}
+
 async function manualSave() {
   const slot = account.selectedCharacter;
   const userId = account.user?.id;
+  const token = account.accessToken;
   if (!account.accessToken || userId === undefined || !slot) return;
   const outcome = await game.enqueueSelectedCharacterSave({
-    token: account.accessToken,
+    token,
     userId,
     slot,
     reason: 'manual',
   });
+  if (account.accessToken !== token || account.selectedCharacter?.accountCharacterId !== slot.accountCharacterId) return;
   if (outcome === 'session-invalid') {
     account.invalidateSession('수동 저장 중 로그인 정보가 만료되었습니다. 다시 로그인해 주세요.');
   }
@@ -294,14 +307,16 @@ function logout() {
 async function transitionFromGame(reason: 'character-switch' | 'logout') {
   const slot = account.selectedCharacter;
   const userId = account.user?.id;
+  const token = account.accessToken;
   if (transitionBusy.value || !account.accessToken || userId === undefined || !slot) return;
   transitionBusy.value = true;
   const outcome = await game.flushSelectedCharacterSave({
-    token: account.accessToken,
+    token,
     userId,
     slot,
     reason,
   });
+  if (account.accessToken !== token || account.selectedCharacter?.accountCharacterId !== slot.accountCharacterId) return;
   if (outcome === 'saved') {
     game.resetShell();
     if (reason === 'character-switch') account.changeCharacter();
@@ -316,13 +331,7 @@ async function transitionFromGame(reason: 'character-switch' | 'logout') {
   game.openFeature('save');
 }
 
-function handleKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && game.activeFeature) closeFeature();
-}
-
-window.addEventListener('keydown', handleKeydown);
 onBeforeUnmount(() => {
-  window.removeEventListener('keydown', handleKeydown);
   game.closeFeature();
 });
 </script>

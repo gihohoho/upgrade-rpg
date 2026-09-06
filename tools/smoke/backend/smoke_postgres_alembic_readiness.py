@@ -20,8 +20,8 @@ BASELINE_DOC = ROOT / "docs/reference/database/POSTGRES_ALEMBIC_BASELINE_STRATEG
 
 REQUIRED_REPORT_TEXT = [
     "PostgreSQL / Alembic Readiness — v377",
-    "latest: v395.vue-game-serialized-save-queue-foundation",
-    "strict result: vue-game-serialized-save-queue-foundation",
+    "latest: v396.vue-frontend-refactor-readability-foundation",
+    "strict result: vue-frontend-refactor-readability-foundation",
     "local Alembic source graph head: v377_auth_email_public_security",
     "local/Neon applied DB revision: v377_auth_email_public_security / v377_auth_email_public_security",
     "actual target v377 apply: local 1 / Neon 1",

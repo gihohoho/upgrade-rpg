@@ -41,9 +41,9 @@
       <div class="admin-catalog-summary">
         <span><strong>{{ relations.title || rowTitle || `#${rowId}` }}</strong></span>
         <span>{{ relations.domainLabel || domain }}</span>
-        <span>관계 그룹 {{ formatCount(relations.groupCount) }}개</span>
-        <span>관련 row {{ formatCount(relations.totalRelatedRows) }}개</span>
-        <span>그룹당 최대 {{ formatCount(relations.limitPerGroup) }}개</span>
+        <span>관계 그룹 {{ formatCount(relations.groupCount, '0') }}개</span>
+        <span>관련 row {{ formatCount(relations.totalRelatedRows, '0') }}개</span>
+        <span>그룹당 최대 {{ formatCount(relations.limitPerGroup, '0') }}개</span>
         <span class="admin-domain-summary__readonly">조회 전용</span>
       </div>
 
@@ -58,8 +58,8 @@
               <h4>{{ group.label || group.domainLabel || group.domain }}</h4>
               <p>
                 <code>{{ group.domain }}</code>
-                · 전체 {{ formatCount(group.count) }}개
-                · 표시 {{ formatCount(group.shown) }}개
+                · 전체 {{ formatCount(group.count, '0') }}개
+                · 표시 {{ formatCount(group.shown, '0') }}개
               </p>
             </div>
             <span v-if="group.limited" class="admin-relations-group__limited">일부만 표시</span>
@@ -86,8 +86,8 @@
                       이 row 상세
                     </button>
                   </td>
-                  <td v-for="column in group.columns" :key="column.key" :title="formatValue(row.cells?.[column.key])">
-                    {{ formatValue(row.cells?.[column.key]) }}
+                  <td v-for="column in group.columns" :key="column.key" :title="formatCellValue(row.cells?.[column.key])">
+                    {{ formatCellValue(row.cells?.[column.key]) }}
                   </td>
                 </tr>
               </tbody>
@@ -106,6 +106,7 @@
 <script setup>
 import { onBeforeUnmount, ref, watch } from 'vue';
 import { useAdminStore } from '@/stores';
+import { formatCount, formatCellValue, formatApiError } from '@/components/admin/display';
 
 const admin = useAdminStore();
 
@@ -130,27 +131,6 @@ const status = ref('idle');
 const relations = ref(null);
 const errorMessage = ref('');
 let activeController = null;
-
-function formatCount(value) {
-  const count = Number(value);
-  return Number.isFinite(count) ? count.toLocaleString('ko-KR') : '0';
-}
-
-function formatValue(value) {
-  if (value === null || value === undefined || value === '') return '-';
-  if (typeof value === 'boolean') return value ? '예' : '아니오';
-  if (typeof value === 'object') {
-    const serialized = JSON.stringify(value);
-    return serialized.length > 80 ? `${serialized.slice(0, 77)}...` : serialized;
-  }
-  return String(value);
-}
-
-function formatError(error) {
-  if (error?.name === 'AbortError') return '';
-  if (error?.status) return `HTTP ${error.status}: ${error.message}`;
-  return error?.message || '알 수 없는 오류가 발생했습니다.';
-}
 
 function normalizeRelations(response) {
   const payload = response?.payload && typeof response.payload === 'object' ? response.payload : {};
@@ -207,7 +187,7 @@ async function loadRelations() {
   } catch (error) {
     if (error?.name === 'AbortError') return;
     status.value = 'error';
-    errorMessage.value = formatError(error);
+    errorMessage.value = formatApiError(error);
   }
 }
 

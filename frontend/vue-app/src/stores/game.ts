@@ -98,11 +98,15 @@ export interface GameSaveQueueState {
 }
 
 interface QueuedGameSave {
+  generation: number;
+  userId: number;
   token: string;
   request: GameSaveRequestBody;
   reason: GameSaveReason;
   characterCode: string;
 }
+
+class CancelledGameSave extends Error {}
 
 export const useGameStore = defineStore('game', () => {
   const snapshotLoad = shallowRef<GameSnapshotLoadState>(createIdleSnapshotLoadState());
@@ -147,6 +151,7 @@ export const useGameStore = defineStore('game', () => {
   });
   let snapshotAbortController: AbortController | null = null;
   let snapshotRequestId = 0;
+  let terminalSaveError: ApiRequestError | null = null;
   const serializedSaveQueue = createSerializedSaveQueue<QueuedGameSave>({
     clone: (job) => ({
       ...job,
@@ -240,6 +245,8 @@ export const useGameStore = defineStore('game', () => {
     const controller = new AbortController();
     snapshotAbortController = controller;
     clearShellState();
+    saveQueue.value = { ...createIdleSaveQueueState(), ...serializedSaveQueue.getSnapshot() };
+    saveTransitioning.value = false;
     snapshotLoad.value = {
       status: 'loading',
       errorKind: null,
@@ -307,6 +314,7 @@ export const useGameStore = defineStore('game', () => {
     reason: GameSaveReason;
   }): Promise<GameSaveOutcome> {
     const { token, userId, slot, reason } = options;
+    const generation = snapshotRequestId;
     const town = model.value;
     if (!token || !Number.isSafeInteger(userId) || !town || snapshotLoad.value.status !== 'ready') {
       return 'cancelled';
@@ -340,6 +348,8 @@ export const useGameStore = defineStore('game', () => {
     try {
       await serializedSaveQueue.enqueue({
         request: {
+          generation,
+          userId,
           token,
           request,
           reason,
@@ -349,11 +359,26 @@ export const useGameStore = defineStore('game', () => {
       });
       return 'saved';
     } catch (error) {
+      if (generation !== snapshotRequestId || error instanceof CancelledGameSave) return 'cancelled';
       return recordSaveError(error, reason, slot.slotKey, slot.accountCharacterId);
     }
   }
 
   async function executeQueuedSave(job: QueuedGameSave) {
+    if (job.generation !== snapshotRequestId) throw new CancelledGameSave();
+    if (terminalSaveError) throw terminalSaveError;
+    try {
+      await performQueuedSave(job);
+    } catch (error) {
+      if (job.generation !== snapshotRequestId) throw new CancelledGameSave();
+      if (error instanceof ApiRequestError && [401, 403, 409].includes(error.status)) {
+        terminalSaveError = error;
+      }
+      throw error;
+    }
+  }
+
+  async function performQueuedSave(job: QueuedGameSave) {
     const expected = {
       slotKey: job.request.slotKey,
       accountCharacterId: job.request.accountCharacterId,
@@ -369,10 +394,12 @@ export const useGameStore = defineStore('game', () => {
       accountCharacterId: expected.accountCharacterId,
     };
     const response = await gameApi.saveSelectedCharacter(job.token, job.request);
+    if (job.generation !== snapshotRequestId) throw new CancelledGameSave();
     const responseData: unknown = response.data;
     if (response.type !== 'game.save'
       || !isRecord(responseData)
       || responseData.status !== 'saved'
+      || responseData.userId !== job.userId
       || responseData.slotKey !== expected.slotKey
       || responseData.accountCharacterId !== expected.accountCharacterId) {
       throw new GameSaveContractError('서버 저장 응답의 식별 정보가 현재 선택과 일치하지 않습니다.');
@@ -412,10 +439,12 @@ export const useGameStore = defineStore('game', () => {
     reason: Extract<GameSaveReason, 'character-switch' | 'logout'>;
   }): Promise<GameSaveOutcome> {
     if (saveTransitioning.value) return 'cancelled';
+    const generation = snapshotRequestId;
     saveTransitioning.value = true;
     combatController.pause('transition');
     activeFeatureKey.value = null;
     const outcome = await enqueueSelectedCharacterSave(options);
+    if (generation !== snapshotRequestId) return 'cancelled';
     if (outcome !== 'saved') {
       saveTransitioning.value = false;
       if (outcome !== 'session-invalid') combatController.resume('transition');
@@ -815,9 +844,7 @@ export const useGameStore = defineStore('game', () => {
     clearShellState();
     snapshotLoad.value = createIdleSnapshotLoadState();
     saveTransitioning.value = false;
-    if (serializedSaveQueue.getSnapshot().queuedWrites === 0) {
-      saveQueue.value = createIdleSaveQueueState();
-    }
+    saveQueue.value = { ...createIdleSaveQueueState(), ...serializedSaveQueue.getSnapshot() };
   }
 
   function clearShellState() {
@@ -842,6 +869,7 @@ export const useGameStore = defineStore('game', () => {
 
   function supersedeSnapshotRequest() {
     snapshotRequestId += 1;
+    terminalSaveError = null;
     snapshotAbortController?.abort();
     snapshotAbortController = null;
     return snapshotRequestId;

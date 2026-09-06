@@ -77,7 +77,7 @@ function assertStaticBoundary() {
     'aria-haspopup="dialog"',
     'role="dialog"',
     'aria-modal="true"',
-    "event.key === 'Escape'",
+    "useModalAccessibility",
     "서버 저장을 읽어 typed 게임 상태에 적용했습니다",
     "account.changeCharacter()",
     "account.logout()",

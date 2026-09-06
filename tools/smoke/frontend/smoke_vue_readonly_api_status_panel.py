@@ -62,8 +62,8 @@ def main() -> None:
         raise AssertionError(f"Missing Vue read-only API status panel files: {missing}")
 
     package = json.loads((VUE_APP / "package.json").read_text(encoding="utf-8"))
-    if package.get("version") != "0.0.0-v395":
-        raise AssertionError("Vue package version must be 0.0.0-v395")
+    if package.get("version") != "0.0.0-v396":
+        raise AssertionError("Vue package version must be 0.0.0-v396")
 
     health_api = read("src/api/healthReadOnlyApi.js")
     assert_contains(health_api, "HEALTH_READONLY_ROUTES", "health API route import")
@@ -103,9 +103,9 @@ def main() -> None:
     assert_contains(docs, "v272", "read-only API doc version")
     assert_contains(docs, "/health", "doc health endpoint")
     assert_contains(docs, "/admin/requirements", "doc admin requirements endpoint")
-    assert_contains(docs, "Apply/write와 dev key는 계속 제외", "doc write exclusion")
+    assert_contains(docs, "실제 관리자 Apply/write·재인증 request·DB write는 연결하지 않았습니다", "doc write exclusion")
     assert_contains(docs, "`.venv` 상태", "doc venv guidance")
-    assert_contains(docs, "npm run dev", "doc npm dev guidance")
+    assert_contains(docs, "../../../README.md", "centralized run guidance")
 
     print("OK: Vue read-only API status panel smoke passed")
 

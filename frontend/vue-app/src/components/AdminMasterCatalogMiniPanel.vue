@@ -154,6 +154,7 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useAdminStore } from '@/stores';
+import { formatCount, formatCellValue, formatApiError } from '@/components/admin/display';
 
 const admin = useAdminStore();
 
@@ -200,27 +201,6 @@ const searchPlaceholder = computed(() => {
   if (!props.searchableFields.length) return '검색 가능한 필드가 없습니다';
   return `검색 가능: ${props.searchableFields.join(', ')}`;
 });
-
-function formatCount(value) {
-  const count = Number(value);
-  return Number.isFinite(count) ? count.toLocaleString('ko-KR') : '-';
-}
-
-function formatCellValue(value) {
-  if (value === null || value === undefined || value === '') return '-';
-  if (typeof value === 'boolean') return value ? '예' : '아니오';
-  if (typeof value === 'object') {
-    const serialized = JSON.stringify(value);
-    return serialized.length > 80 ? `${serialized.slice(0, 77)}...` : serialized;
-  }
-  return String(value);
-}
-
-function formatError(error) {
-  if (error?.name === 'AbortError') return '';
-  if (error?.status) return `HTTP ${error.status}: ${error.message}`;
-  return error?.message || '알 수 없는 오류가 발생했습니다.';
-}
 
 function normalizeCatalog(response) {
   const payload = response?.payload && typeof response.payload === 'object' ? response.payload : {};
@@ -309,7 +289,7 @@ async function loadCatalog() {
   } catch (error) {
     if (error?.name === 'AbortError') return;
     status.value = 'error';
-    errorMessage.value = formatError(error);
+    errorMessage.value = formatApiError(error);
   }
 }
 

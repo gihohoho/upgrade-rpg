@@ -63,6 +63,7 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { useAdminStore } from '@/stores';
+import { formatCount, formatApiError } from '@/components/admin/display';
 
 const admin = useAdminStore();
 
@@ -73,18 +74,6 @@ const domains = ref([]);
 const defaultDomain = ref('');
 const selectedKey = ref('');
 const errorMessage = ref('');
-
-function formatCount(value) {
-  const count = Number(value);
-  return Number.isFinite(count) ? count.toLocaleString('ko-KR') : '-';
-}
-
-function formatError(error) {
-  if (error?.status) {
-    return `HTTP ${error.status}: ${error.message}`;
-  }
-  return error?.message || '알 수 없는 오류가 발생했습니다.';
-}
 
 function normalizeDomains(response) {
   const payload = response?.payload && typeof response.payload === 'object' ? response.payload : {};
@@ -132,7 +121,7 @@ async function loadDomains() {
     domains.value = [];
     selectedKey.value = '';
     status.value = 'error';
-    errorMessage.value = formatError(error);
+    errorMessage.value = formatApiError(error);
     emit('domain-selected', null);
   }
 }

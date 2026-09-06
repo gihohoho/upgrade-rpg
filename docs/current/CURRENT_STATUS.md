@@ -1,12 +1,12 @@
-# Current Status — v395
+# Current Status — v396
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v395.vue-game-serialized-save-queue-foundation
-strict result: vue-game-serialized-save-queue-foundation
+latest: v396.vue-frontend-refactor-readability-foundation
+strict result: vue-frontend-refactor-readability-foundation
 next safe stage: migrate-vue-game-pending-unsynced-recovery-foundation
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
@@ -32,22 +32,25 @@ v392 production approval/execution: no/no
 v393 production approval/execution: no/no
 v394 production approval/execution: no/no
 v395 production approval/execution: no/no
+v396 production approval/execution: no/no
 ```
 
-## v395 선택 캐릭터 단일 직렬 저장 queue 기반
+## v396 Vue 가독성·공통 코드·저장 수명주기 정리
+
+- 공통 typography token으로 작은 글씨를 13px 이상으로 맞추고 본문·보조 설명·비활성 상태의 명암을 정리했습니다. desktop의 내 정보·가방 좌우 창과 mobile modal 구조를 유지하며 화면 공간 사용을 조정합니다.
+- 게임·계정 modal은 focus trap·배경 inert·Escape·초점 복귀를 공유하며, 모바일 창 전환 뒤에는 게임으로 초점을 복원합니다. 관리자 표시·오류 helper를 공통화했습니다.
+- 사용처가 없는 `src/api/gameReadOnlyApi.js`를 삭제했습니다. 실제 게임 API는 typed `gameApi.ts`가 맡고 공개 legacy와 사용 중인 관리자 read-only client는 유지합니다.
+- 저장 요청에 context generation을 고정해 reset/reload 이전의 늦은 성공·401 응답은 취소하며 새 캐릭터와 저장 상태를 바꾸지 않습니다. 409·401·403 응답 뒤에는 이미 대기 중인 요청과 후속 수동 요청도 POST하지 않고, 명시적 reload/reset 이후에만 저장을 재개합니다. 5xx 재시도는 허용합니다.
+- 전체 Vue smoke·TypeScript·build PASS. 1366px/390px synthetic 브라우저에서 마을·가방·캐릭터 modal·키보드·409 재로드 PASS. 최종 저장 중 이동을 잠급니다. 실제 DB write·backend·env·secret·legacy·배포는 변경하지 않았습니다.
+- 이번 단계는 v395 기반의 refactor입니다. local fallback과 `pending-unsynced` 사용자 선택 복구는 아직 구현하지 않았으며 바로 다음 단계로 유지합니다.
+
+## v394~v395 선택 캐릭터 서버 load·직렬 저장 기반
 
 - typed `POST /api/v1/game/save` client가 현재 Bearer token, `character-N`, 32자리 `accountCharacterId`와 호출 시점의 detached server state를 한 요청으로 고정합니다. snapshot은 기존 `createServerSavePayload`로 만들고 Gold·레벨·최근 구역과 item container count만 summary allow-list에 담습니다.
-- 자동 60초 저장, 마을의 수동 저장, 캐릭터 전환·로그아웃 전 최종 저장은 모두 실패한 앞 요청이 뒤 요청을 막지 않는 하나의 Promise 직렬 queue를 사용합니다. 전환은 runtime을 먼저 pause하고 앞선 queue와 마지막 저장을 기다린 뒤 성공할 때만 캐릭터 선택이나 token을 정리합니다.
-- 응답의 type·data·payload에서 슬롯·캐릭터 ID·캐릭터 종류·saveVersion을 다시 대조합니다. 401/403은 로그인 만료, 409는 자동 덮어쓰기와 후속 자동 저장을 멈추는 conflict, network/timeout/429/5xx는 token·선택을 유지하는 retryable 오류, 413/422와 응답 불일치는 contract 오류로 분리합니다.
+- 자동 60초·수동·전환 저장은 하나의 Promise 직렬 queue를 사용합니다. 전환은 runtime pause와 최종 저장 성공 뒤에만 선택/token을 정리합니다. 응답 identity·saveVersion을 재검증하고 session·conflict·retryable·contract 오류를 분리합니다. v396의 terminal barrier는 위 현재 계약을 따릅니다.
 - backend의 현재 `saveVersion`은 snapshot 형식 버전이며 다중 기기 CAS revision이 아닙니다. Vue가 `expectedRevision`을 임의로 만들거나 409를 자동 재시도하지 않으며 실제 CAS schema/API는 공개 확대 전 별도 backend 단계로 남깁니다.
-- 저장 adapter·queue·Pinia 실행·자동/수동/전환 gate focused smoke, 전체 Vue shell smoke, TypeScript 검사와 production build가 PASS했습니다. 실제 DB save POST는 실행하지 않았고 backend·DB·env·secret·legacy·Render·production 배포도 변경하지 않았습니다. Chrome·확장·native host 설치 상태는 정상이었지만 이번 실행의 제어 연결이 끊겨 mock fixture 브라우저 조작은 완료하지 못했고 fixture는 제거했습니다.
-
-## v394 선택 캐릭터 server snapshot read/load 기반
-
-- 캐릭터 선택 뒤 `GamePlayShell`이 Bearer token, `character-N`, 32자리 `accountCharacterId`로 `GET /api/v1/game/load`를 호출합니다. 응답 envelope와 payload의 슬롯·캐릭터 ID·캐릭터 종류를 현재 선택과 다시 대조하고 일치할 때만 typed server state로 normalize/apply합니다.
-- 신규 캐릭터의 빈 `{}` snapshot은 서버 연결 실패가 아니라 정상 기본 상태로 처리합니다. 기존 snapshot은 Gold·레벨·상세 능력치·스킬·최근 구역에 반영되고 필드·보스의 기본 공격 계산에도 같은 읽기 상태를 전달합니다.
-- load 전에는 전체 게임 대신 명시적 로딩 화면을 표시합니다. network/timeout/429/404/5xx와 계약 불일치는 token과 선택 캐릭터를 유지한 오류 화면에서 다시 불러오기/캐릭터 재선택을 제공하며, 401/403만 session을 폐기하고 로그인으로 돌아갑니다. 새 요청과 component 해제는 이전 GET과 client timer를 정리합니다.
-- API와 adapter/store focused smoke, 전체 Vue shell smoke와 production build를 통과했습니다. v394 당시에는 save POST·자동/수동/전환 저장을 연결하지 않았으며 local fallback·pending-unsynced 충돌 해결·Gold/아이템 보상·난수·CAS revision은 지금도 연결하지 않았습니다.
+- `GET /api/v1/game/load`도 선택 identity를 재검증해 typed 상태로 적용합니다. 빈 snapshot은 신규 기본 상태이며 오류는 session-invalid와 token·선택을 유지하는 retry 화면으로 나눕니다. 새 요청과 해제는 이전 GET/timer를 정리합니다.
+- v394~v395 focused·전체 Vue smoke·TypeScript·build는 PASS했고, 당시 v395 브라우저 조작은 Chrome 제어 연결 문제로 미완료였습니다. local 복구·보상·난수·CAS 구현은 연결하지 않았습니다.
 
 ## v393 빈 게임 화면 복구·client 전투 runtime 기반
 

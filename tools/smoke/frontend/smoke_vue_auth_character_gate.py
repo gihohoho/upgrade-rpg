@@ -100,7 +100,8 @@ def main() -> None:
         'role="dialog"',
         'aria-modal="true"',
         "deleteConfirm !== deleteTarget?.accountCharacter?.name",
-        "event.key === 'Escape'",
+        "useModalAccessibility",
+        "canClose: () => !account.busy",
     ]:
         assert_contains(character_panel, marker, "character panel")
     if "confirm(" in character_panel or "alert(" in character_panel:

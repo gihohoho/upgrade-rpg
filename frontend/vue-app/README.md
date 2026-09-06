@@ -1,4 +1,4 @@
-# Upgrade RPG Vue App — v393
+# Upgrade RPG Vue App — v396
 
 이 폴더는 Upgrade RPG 전체 프론트엔드를 Vue로 옮기는 작업공간입니다. 현재 공개 게임과 관리자 화면은 아직 루트 `index.html`, `admin.html`, legacy `src/`를 사용합니다.
 
@@ -21,13 +21,19 @@
 - `/admin`: `isAdmin=true` route guard 뒤 read-only 조회, 생성·수정·되돌리기 dry-run Preview, 실제 쓰기 없는 Apply 확인 준비
 - `/admin/access`: 관리자 로그인·권한 거부·network 재시도
 
-`/game`은 typed API client와 Pinia account store로 인증 token과 선택 캐릭터를 처리합니다. 마을에서만 접속 캐릭터 바를 표시하고, 넓은 화면에서는 legacy처럼 내 정보/장비와 가방/Gold 창을 중앙 게임 양옆에 유지합니다. 인벤토리·보관함/휴지통·스킬/강화·상점/설정은 현재 마을/필드/보스 위 접근 가능한 공통 modal로 열고 X로 닫으면 원래 구역을 복원하며, 좁은 화면의 좌우 창은 하단 버튼과 모바일 modal로 대체합니다. 게임 보조 글자·버튼·슬롯 표시는 최소 12px입니다. 필드·보스에서는 typed 공격력과 legacy-equivalent 공격 간격으로 client-only HP를 감소시키며 대상 전환, 수동 정지·재개, modal, 탭 비활성, 마을 복귀와 component 해제 때 timer를 안전하게 교체·정리합니다. 이 HP는 server state와 분리된 표시 상태입니다. 가방·보관함·휴지통 정렬은 빈 칸과 상대 순서 계약을, 스킬·강화는 SQ/SW 첫 Lv.1과 장비 강화 계약을 확인합니다. 상점은 구매 규칙을 만들지 않고 등록된 강화 기준 비용·판매 값만 보여 주며, 설정 토글은 별도 임시 state에만 반영합니다. 실제 snapshot load/save·장착·사용·판매·구매·강화·Gold/재료 소비·난수·이동·복구·영구 삭제·설정 저장·자동 저장·보상·자동 재등장은 시작하지 않습니다. TypeScript 별칭은 폐기 예정인 `baseUrl` 없이 `paths`의 설정 파일 기준 상대 경로를 사용합니다. `/admin`은 관리자 권한 확인 전에는 렌더링하지 않으며 모든 GET/Preview에 Bearer를 사용합니다. Preview는 `dryRun: true`, Apply와 DB write는 잠금 상태입니다.
+`/game`은 선택 캐릭터의 서버 snapshot을 읽은 뒤 시작하며 자동·수동·전환 저장을 하나의 직렬 queue로 보냅니다. 401/403·409 뒤 후속 저장을 차단하고 이전 context의 늦은 응답은 취소합니다. 충돌 시 사용자가 명시적으로 서버 상태를 다시 불러올 수 있으며 local fallback·pending-unsynced·backend CAS는 다음 단계입니다.
+
+1200px 이상에서는 내 정보/장비·가방/Gold를 게임 양옆에 유지하고, 좁은 화면에서는 하단 버튼과 모바일 modal을 사용합니다. 게임·계정 modal의 Tab 순환·Escape·배경 잠금·초점 복귀는 공통 composable이 맡습니다. 보조 글자는 13px 이상 token을 사용합니다. 마을에서만 접속 캐릭터 바가 표시됩니다.
+
+전투 timer와 client HP는 저장할 server state와 분리합니다. 아이템/스킬 변경·Gold/재료 소비·보상·난수·설정 영구 저장은 아직 연결하지 않았습니다. 자세한 기능 경계는 [Vue 전환 계획](../../docs/reference/frontend/VUE_FASTAPI_DB_TRANSITION_PLAN.md)을 따릅니다. TypeScript는 `baseUrl` 없이 상대 `paths`를 사용합니다. 관리자 GET/Preview는 Bearer와 권한 gate를 유지하며 실제 Apply는 잠겨 있습니다.
 
 ## 설치와 실행
 
 실행 위치: `frontend/vue-app`
 
 Python `.venv`: 필요 없음
+
+새 설치: `npm ci`가 lockfile 기준으로 의존성을 설치합니다. Windows PowerShell에서 실행 정책에 막히면 `npm.cmd`를 사용합니다.
 
 ```bash
 npm ci
@@ -42,6 +48,8 @@ http://127.0.0.1:5173/admin
 ```
 
 ## 검사와 빌드
+
+실행 위치: `frontend/vue-app` · Python `.venv`: 필요 없음 · 새 설치: 위 설치 완료 시 없음
 
 ```bash
 npm run typecheck

@@ -1,230 +1,44 @@
-# Vue Read-only API Client — v275
+# Vue API client 경계
 
-> v395 현재 상태: 게임 화면은 typed Bearer client로 master-data, 선택 캐릭터 load와
-> 단일 직렬 `POST /game/save`를 연결했습니다. 아래 내용은 v275 당시 read-only client를
-> 처음 도입한 범위이며, 현재 저장 계약은 [API Response Contract](../../contracts/API_RESPONSE_CONTRACT.md)를 따릅니다.
+게임·계정 API는 TypeScript client가 맡고, 기존 관리자 GET client는 호환 경계를 유지합니다. v396에서 사용처가 없는 `gameReadOnlyApi.js`를 삭제했으며 실제 호출을 맡는 `gameApi.ts`는 그대로 사용합니다. API 경로·응답 계약의 기준은 [API Response Contract](../../contracts/API_RESPONSE_CONTRACT.md), 전체 전환 범위는 [Vue 전환 계획](VUE_FASTAPI_DB_TRANSITION_PLAN.md)입니다.
 
-## 한 줄 요약
+## 현재 책임
 
-v271에서는 Vue 앱 내부에 `GET` 전용 API client 구조를 만들었고, v272에서는 그 client를 이용해 Vue shell 화면에서 안전한 GET API를 실제로 작게 호출하도록 연결했습니다. v273에서는 Vue 개발 서버에서 FastAPI를 호출할 때 발생한 local CORS 오류를 수정했습니다. v275에서는 backend route map 자동 보고서를 기준으로 read-only 후보와 보류 route를 다시 정리했고, 상세/관계 조회 query 이름을 backend 기준에 맞췄습니다.
-
-## v272에서 실제 화면에 연결한 API
-
-| 화면 | 실제 호출 | 이유 |
-|---|---|---|
-| `/game` | `GET /health` | DB 없이 백엔드 서버 응답만 확인하기 위한 가장 안전한 API |
-| `/admin` | `GET /health` | 백엔드 서버 응답 확인 |
-| `/admin` | `GET /admin/requirements` | 관리자 read-only 화면의 기본 요구사항 확인 |
-
-`/game/master-data`, `/game/load`, `/game/save-slots`는 아직 화면 자동 호출에 넣지 않았습니다. 이 경로들은 조회용이지만 DB 상태에 영향을 받을 수 있으므로, v272에서는 공통 `/health`만 먼저 연결했습니다.
-
-## v275 route map 기준
-
-자동 보고서:
-
-```txt
-docs/generated/BACKEND_ROUTE_MAP.md
-```
-
-현재 Vue 자동 smoke 화면에 쓰는 route:
-
-- `GET /api/v1/health`
-- `GET /api/v1/admin/requirements`
-
-다음 연결 후보:
-
-- `GET /api/v1/admin/master-data/domains`
-
-아직 보류:
-
-- 관리자 Preview 계열 POST
-- 관리자 Apply/write 계열 POST
-- `POST /api/v1/game/save`
-- 인증/권한/Write Guard가 필요한 route
-
-## v275 query 이름 수정
-
-백엔드의 관리자 상세/관계 조회 route는 row 식별자 query 이름으로 `id`를 사용합니다.
-
-| Vue wrapper 입력 | 실제 backend query |
+| 모듈 | 책임 |
 |---|---|
-| `fetchMasterDetail({ domain, rowId })` | `?domain=...&id=...` |
-| `fetchMasterRelations({ domain, rowId })` | `?domain=...&id=...` |
+| `http.ts` | typed 요청, Bearer 전달, 응답 envelope와 HTTP 오류 |
+| `gameApi.ts` | 선택 캐릭터 load GET, 직렬 queue가 호출하는 save POST |
+| `authApi.ts`·`accountApi.ts` | 로그인·이메일 흐름, 계정별 캐릭터 슬롯과 master-data GET |
+| `healthReadOnlyApi.js` | `/health` 상태 GET |
+| `adminReadOnlyApi.js` | `/admin/requirements`·overview·master-data·이력 GET |
+| `adminPreviewApi.ts` | `dryRun: true`로 고정된 Preview POST 5종 |
 
-즉 Vue 코드에서는 사람이 이해하기 쉬운 `rowId`를 받되, 실제 요청은 `id`로 변환합니다.
+Vue component는 API 결과를 store의 상태로 표시합니다. 공통 API 요청에 임의의 dev key나 비밀번호 header를 넣지 않습니다.
 
-## 추가/변경 위치
+## 게임 저장과 수명주기
 
-```txt
-frontend/vue-app/src/api/adminReadOnlyApi.js
-tools/report_backend_route_map.py
-tools/smoke/backend/smoke_backend_route_map_report.py
-docs/generated/BACKEND_ROUTE_MAP.md
-```
+선택한 계정·`character-N`·32자리 `accountCharacterId`가 일치할 때만 server snapshot을 적용합니다. 신규 빈 snapshot은 기본 상태로 시작하며 서버가 정상 load의 기준입니다.
 
-## 상태 표시 구조
+`POST /game/save`는 60초 자동 저장·수동 저장·전환 전 최종 저장이 공유하는 단일 queue에서 호출합니다. 각 요청은 호출 시점 snapshot과 identity를 복제합니다. v396은 reset/reload 이전 context의 늦은 응답을 취소하고 409·401·403 뒤 이미 대기한 요청과 후속 POST도 차단합니다. 명시적 context 복구 뒤에는 저장할 수 있고, network/5xx는 같은 context에서 재시도할 수 있습니다.
 
-`ReadOnlyApiStatusPanel.vue`는 아래 상태를 화면에 표시합니다.
+현재 `saveVersion`은 snapshot 형식 버전입니다. backend CAS revision과 Vue local fallback·`pending-unsynced` 사용자 선택 복구는 아직 구현하지 않았습니다.
 
-| 상태 | 의미 |
-|---|---|
-| `idle` | 아직 확인 전 |
-| `loading` | API 확인 중 |
-| `success` | GET 응답 성공 |
-| `error` | 서버 꺼짐, HTTP 오류 등. v273 이후 local CORS 기본값은 보강됨 |
+## 관리자 GET·Preview
 
-실패해도 Vue shell 전체가 깨지지 않고 오류 문구만 표시됩니다.
+관리자 route/store는 로그인 계정의 `isAdmin=true`와 Bearer 인증을 요구합니다. 401/403 응답이면 관리자 화면을 닫고 인증 gate로 돌아갑니다.
 
-## 기본 API 주소
+상세·관계 wrapper의 `rowId`는 backend query의 `id`로 변환합니다. 카탈로그는 검색·필터·정렬·페이지네이션을 지원하고 detail/relations는 서버가 내려준 field·relation schema를 표시합니다.
 
-기본값:
+Preview는 생성·수정·일반 rollback·생성 삭제·복원 요청만 허용합니다. store는 최신 Preview와 SHA-256, 응답의 `confirmTextRequired`를 확인 modal에 사용합니다. 확인 문구·비밀번호·dev key는 Preview 요청에 보내지 않습니다. 실제 관리자 Apply/write·재인증 request·DB write는 연결하지 않았습니다.
 
-```txt
-http://127.0.0.1:8000/api/v1
-```
+## 공통 UI와 오류
 
-`.env` 파일은 만들거나 수정하지 않았습니다. v273에서는 오래된 로컬 `.env`에 `5173` origin이 빠져 있어도 local/debug 환경에서 기본 개발 origin을 자동 포함합니다. 나중에 실제 개발/배포 주소 분리가 필요해지면 `VITE_API_BASE_URL` 도입을 별도 단계에서 검토합니다.
+관리자 값 표시와 오류 문구는 공통 helper를 재사용합니다. 게임·계정 modal은 `useModalAccessibility.ts`에서 focus trap·배경 inert·Escape·초점 복귀를 공유합니다. 관리자 Apply modal의 독립 확인 gate는 유지합니다. API 실패는 해당 panel의 오류로 표시하고 게임 shell 전체를 빈 화면으로 만들지 않습니다.
 
-## v275 당시 준비된 관리자 GET 경로
+## 실행과 검증
 
-| 이름 | 경로 | v275 자동 화면 확인 여부 |
-|---|---|---|
-| requirements | `/admin/requirements` | 사용 |
-| overview | `/admin/overview` | 아직 미사용 |
-| saveSnapshots | `/admin/save-snapshots` | 아직 미사용 |
-| masterDomains | `/admin/master-data/domains` | 다음 후보 |
-| masterCatalog | `/admin/master-data/catalog` | 아직 미사용 |
-| masterCreateBlueprint | `/admin/master-data/create-blueprint` | 아직 미사용 |
-| masterDetail | `/admin/master-data/detail` | 아직 미사용 |
-| masterRelations | `/admin/master-data/relations` | 아직 미사용 |
-| changeLogs | `/admin/change-logs` | v382 rollback Preview 이력 선택 |
-| changeLogDetail | `/admin/change-logs/{changeLogId}` | v382 Preview availability 확인 |
+실행 위치·Python `.venv` 상태·새 설치 여부를 포함한 로컬 준비 절차는 [루트 README](../../../README.md)의 한 곳에서 관리합니다. Vue/npm 위치는 `frontend/vue-app`이며 Python 가상환경은 필요 없습니다.
 
-## v275 당시 준비된 게임 GET 경로
+Vue 회귀 묶음은 `tools/run_smoke_vue_shell.sh`, API 경로 보고서는 [Backend Route Map](../../generated/BACKEND_ROUTE_MAP.md)을 사용합니다. 현재 checkpoint의 실제 실행 결과는 [Current Status](../../current/CURRENT_STATUS.md)를 따릅니다.
 
-| 이름 | 경로 | v275 자동 화면 확인 여부 |
-|---|---|---|
-| masterData | `/game/master-data` | 아직 미사용 |
-| load | `/game/load` | 아직 미사용 |
-| saveSlots | `/game/save-slots` | 아직 미사용 |
-
-## v275 당시 일부러 제외한 것
-
-v275 당시 실제 DB write와 Apply 계열은 Vue 화면에 연결하지 않았습니다. v382에서 관리자 Preview를 연결했고 v395에서 선택 캐릭터 save POST만 연결했지만, 관리자 Apply/write는 계속 제외합니다.
-
-- `POST /game/save`
-- 관리자 Apply 계열 POST
-- Rollback Apply 계열 POST
-- 생성 row 삭제/복원 Apply 계열 POST
-- 일반 공개 GET의 인증 interceptor
-- 관리자 GET 이외 route의 access token 처리
-- Write Guard 처리
-- `.env` 생성/수정
-- DB 구조 변경
-- 기존 API 응답 body 변경
-
-v381부터 관리자 GET은 typed admin store가 account store의 Bearer token을 전달하고 401/403에서 관리자 화면을 내립니다. v382는 같은 경계에서 허용된 Preview POST 5개만 `dryRun: true`로 호출합니다. Apply/write와 dev key는 계속 제외합니다.
-
-## 사용자가 확인해야 할 것
-
-### Vue 의존성 설치
-
-처음 한 번만 필요합니다. 이미 `frontend/vue-app/node_modules`가 있다면 다시 하지 않아도 됩니다.
-
-실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
-
-```bash
-npm install
-```
-
-### FastAPI 서버 실행
-
-Vue 화면에서 API 상태가 `성공`으로 뜨려면 FastAPI 서버가 켜져 있어야 합니다. v273 CORS 수정은 서버를 재시작해야 반영됩니다.
-
-실행 위치: 프로젝트 루트  
-`.venv` 상태: 켜야 함
-
-```bash
-.venv\Scripts\activate
-```
-
-실행 위치: `backend` 폴더  
-`.venv` 상태: 켜진 상태
-
-```bash
-python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-### Vue 개발 서버 실행
-
-실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
-
-```bash
-npm run dev
-```
-
-확인 주소:
-
-```txt
-http://127.0.0.1:5173/game
-http://127.0.0.1:5173/admin
-```
-
-## 검증 명령
-
-Vue shell/API 구조 검증:
-
-실행 위치: 프로젝트 루트  
-`.venv` 상태: 켜진 상태 권장
-
-```bash
-bash tools/run_smoke_vue_shell.sh
-```
-
-Backend route map 검사:
-
-실행 위치: 프로젝트 루트  
-`.venv` 상태: 켜진 상태 권장
-
-```bash
-python tools/report_backend_route_map.py --check
-```
-
-Vue build 검증:
-
-실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
-
-```bash
-npm run build
-```
-
-## v276~v277 실제 연결 확장
-
-Vue `/admin`에서 아래 GET이 추가로 실제 호출됩니다.
-
-- `GET /admin/master-data/domains`
-- `GET /admin/master-data/catalog`
-
-도메인 목록은 `response.payload.domains`, 카탈로그는 `response.payload.columns`와 `response.payload.rows`를 사용합니다.
-카탈로그는 현재 `limit=20`, `page=1`, `sort=id_asc`로 고정했습니다.
-이 문장은 v277 당시 범위 기록입니다. 현재 검색/필터/페이지네이션/detail/relations, v382 Preview와 v383 response-only 확인 경계까지 연결됐고 Apply/write는 제외합니다.
-
-
-## v278~v281 실제 연결 확장
-
-Vue `/admin`은 기존 read-only client를 사용해 카탈로그의 `query`, `enabled`, `sort`, `page`를 GET query로 전송합니다.
-선택 row 상세는 `fetchMasterDetail({ domain, rowId })`를 사용하며 wrapper가 backend query 이름 `id`로 변환합니다.
-
-상세는 `payload.fields`, `payload.jsonFields`, `payload.assetFields`, `payload.relationHints`를 표시합니다.
-관계는 `fetchMasterRelations({ domain, rowId, limit: 20 })`로 조회하고 `payload.groups[].columns/rows`를 표시합니다. 연관 row 이동은 다시 GET detail/relations만 호출합니다.
-
-## v382 Preview client
-
-`adminPreviewApi.ts`는 생성·수정·일반 rollback·생성 삭제·복원 Preview 경로만 소유합니다. method는 POST이지만 body를 `dryRun: true`로 고정하며 확인 문구, Apply path, dev key header는 정의하지 않습니다. Pinia store는 Preview 결과와 오류를 한 곳에서 관리하고 기존 관리자 401/403 처리도 재사용합니다.
-
-## v383 response-only 확인 문구
-
-typed Preview payload는 server가 내려주는 `confirmTextRequired`를 읽을 수 있습니다. 이 값은 확인 modal 표시와 exact 일치 검사에만 사용하며 Preview request body에는 넣지 않습니다. 같은 request의 최신 Preview 재검증도 기존 Preview client만 재사용하고 Apply route, dev key header, 현재 비밀번호는 API layer로 전달하지 않습니다.
+v271~v275의 GET 전용 도입과 v272 health panel은 초기 구현 이력입니다. 현재 게임 save와 관리자 Preview 범위에 과거의 GET 전용 제한을 적용하지 않습니다.

@@ -36,6 +36,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue';
+import { formatApiError } from '@/components/admin/display';
 
 const props = defineProps({
   title: {
@@ -85,16 +86,6 @@ function summarizeResponse(check, response) {
   };
 }
 
-function formatError(error) {
-  if (error?.status) {
-    return `HTTP ${error.status}: ${error.message}`;
-  }
-  if (error?.name === 'AbortError') {
-    return '요청이 취소되었습니다.';
-  }
-  return error?.message || '알 수 없는 오류가 발생했습니다.';
-}
-
 async function runChecks() {
   checkStates.value = createInitialStates().map((check) => ({ ...check, status: 'loading' }));
 
@@ -113,7 +104,7 @@ async function runChecks() {
           ...check,
           status: 'error',
           summary: null,
-          error: formatError(error),
+          error: formatApiError(error, '요청이 취소되었습니다.'),
         };
       }
     }),

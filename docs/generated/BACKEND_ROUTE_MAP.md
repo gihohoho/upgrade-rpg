@@ -5,8 +5,8 @@
 중요: v377 local migration과 인증 요청 보호 복구는 완료됐습니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
 
 ```txt
-latest: v395.vue-game-serialized-save-queue-foundation
-strict result: vue-game-serialized-save-queue-foundation
+latest: v396.vue-frontend-refactor-readability-foundation
+strict result: vue-frontend-refactor-readability-foundation
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 actual target v377 apply: local 1 / Neon 1
@@ -215,6 +215,6 @@ signed backend image와 legacy static의 공개 배포를 승인된 단일 시�
 
 권장 범위:
 
-1. v395에서 선택 캐릭터의 자동·수동·전환 저장을 단일 직렬 queue와 실제 save POST에 연결했습니다. 다음은 local fallback과 `pending-unsynced` 사용자 선택 복구를 준비합니다.
+1. v396은 v395 단일 저장 queue의 이전 context 응답과 충돌·세션 오류 뒤 후속 요청을 차단하고 Vue 공통 UI를 정리했습니다. local fallback과 `pending-unsynced` 사용자 선택 복구는 다음 단계입니다.
 2. production 관리자 복구, 재인증 request, dev key header와 실제 Apply는 별도 exact DB-write 승인을 받기 전까지 연결하지 않습니다.
 3. 완료된 migration·publish·Render deploy와 기호가 확인한 Docker·로그인은 단순 확인을 위해 재실행하지 않습니다.

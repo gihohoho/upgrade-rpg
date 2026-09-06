@@ -12,7 +12,8 @@ REQUIRED_FILES = [
     "src/api/readOnlyRoutes.js",
     "src/api/readOnlyClient.js",
     "src/api/adminReadOnlyApi.js",
-    "src/api/gameReadOnlyApi.js",
+    "src/api/gameApi.ts",
+    "src/api/accountApi.ts",
     "src/api/index.js",
     "src/api/README.md",
     "src/pages/AdminShell.vue",
@@ -91,8 +92,8 @@ def main() -> None:
         raise AssertionError(f"Missing Vue read-only API client files: {missing}")
 
     package = json.loads((VUE_APP / "package.json").read_text(encoding="utf-8"))
-    if package.get("version") != "0.0.0-v395":
-        raise AssertionError("Vue package version must be 0.0.0-v395")
+    if package.get("version") != "0.0.0-v396":
+        raise AssertionError("Vue package version must be 0.0.0-v396")
 
     config = read("src/api/config.js")
     assert_contains(config, "http://127.0.0.1:8000/api/v1", "default API base URL")
@@ -110,7 +111,6 @@ def main() -> None:
     api_files = [
         "src/api/readOnlyClient.js",
         "src/api/adminReadOnlyApi.js",
-        "src/api/gameReadOnlyApi.js",
         "src/api/index.js",
     ]
     for api_file in api_files:
@@ -133,10 +133,14 @@ def main() -> None:
     if "query: { domain, rowId }" in admin_api or "query: { domain, rowId, limit }" in admin_api:
         raise AssertionError("Admin read-only API must not send rowId as a backend query name")
 
-    game_api = read("src/api/gameReadOnlyApi.js")
-    assert_contains(game_api, "fetchMasterData", "game master data wrapper")
-    assert_contains(game_api, "includeAssets = false", "safe asset default")
-    assert_contains(game_api, "fetchSaveSlots", "game save slot wrapper")
+    game_api = read("src/api/gameApi.ts")
+    assert_contains(game_api, "loadSelectedCharacter", "typed selected character load")
+    assert_contains(game_api, "accountCharacterId", "selected character identity")
+    account_api = read("src/api/accountApi.ts")
+    assert_contains(account_api, "fetchCharacterOptions", "typed master data reader")
+    assert_contains(account_api, "listCharacters", "account-owned character slots")
+    if (VUE_APP / "src/api/gameReadOnlyApi.js").exists():
+        raise AssertionError("Unused game read-only wrapper must not duplicate the typed clients")
 
     admin_shell = read("src/pages/AdminShell.vue")
     assert_contains(admin_shell, "@/api", "Admin shell imports API route constants")
@@ -146,14 +150,11 @@ def main() -> None:
     assert_contains(game_shell, "AccountGate", "Game shell uses the typed account gate")
 
     docs = read("docs/reference/frontend/VUE_READONLY_API_CLIENT.md")
-    assert_contains(docs, "v272", "read-only API client doc version")
-    assert_contains(docs, "POST /game/save", "doc excluded write route")
-    assert_contains(docs, "`.venv` 상태", "doc venv guidance")
-    assert_contains(docs, "npm install", "doc npm install guidance")
-    assert_contains(docs, "npm run dev", "doc npm run dev guidance")
-
-    if re.search(r"실제.*write.*추가", docs) and "아직" not in docs:
-        raise AssertionError("Docs must keep write connections explicitly out of v272")
+    assert_contains(docs, "gameApi.ts", "doc current typed game client")
+    assert_contains(docs, "POST /game/save", "doc current serialized save route")
+    assert_contains(docs, "dryRun: true", "doc Preview boundary")
+    assert_contains(docs, "Apply/write", "doc administrator write boundary")
+    assert_contains(docs, "../../../README.md", "doc canonical local-run guidance")
 
     print("OK: Vue read-only API client smoke passed")
 

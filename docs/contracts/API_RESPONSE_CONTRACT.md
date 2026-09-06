@@ -314,18 +314,19 @@ Bearer 계정, slotKey, accountCharacterId와 snapshot의 currentCharacterId가 
 }
 ```
 
-v395 Vue 처리:
+v396 Vue 처리:
 
 ```txt
 60초 자동 저장, 마을 수동 저장, 캐릭터 변경·로그아웃 전 최종 저장은 한 Promise queue를
-공유합니다. 각 요청은 enqueue 시점의 token·identity·snapshot을 복제하며 앞 요청 실패가
-뒤 요청을 영구적으로 막지 않습니다. 전환은 runtime pause 뒤 마지막 저장을 기다리고 성공
-뒤에만 선택 또는 token을 정리합니다. 401/403은 session invalid, 409는 자동 덮어쓰기와
-후속 자동 저장을 멈추는 conflict, network/timeout/429/5xx는 retryable, 413/422와 응답
-identity 불일치는 contract 오류입니다.
+공유합니다. 각 요청은 enqueue 시점의 context generation·token·identity·snapshot을
+고정합니다. reset/reload 이전의 늦은 응답은 cancelled이며 새 캐릭터와 저장 상태를
+변경하지 않습니다. 전환은 runtime pause와 마지막 저장 성공 뒤에만 선택/token을 정리합니다.
+401/403은 session invalid, 409는 conflict이며 이미 대기한 요청과 후속 POST를 명시적
+reload/reset까지 차단합니다. network/timeout/429/5xx는 retryable, 413/422와 응답 identity
+불일치는 contract 오류입니다.
 
 현재 backend의 saveVersion은 snapshot 형식 버전이며 다중 기기 CAS revision이 아닙니다.
-따라서 v395는 expectedRevision을 임의로 보내지 않으며 CAS·낙관적 잠금은 별도 공개 gate입니다.
+따라서 expectedRevision을 임의로 보내지 않으며 CAS·낙관적 잠금은 별도 공개 gate입니다.
 ```
 
 ---

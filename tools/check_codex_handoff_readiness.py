@@ -775,8 +775,8 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require("alembic" not in production_cmd, "container startup must not run Alembic")
 
     current_markers = (
-        "v395.vue-game-serialized-save-queue-foundation",
-        "vue-game-serialized-save-queue-foundation",
+        "v396.vue-frontend-refactor-readability-foundation",
+        "vue-frontend-refactor-readability-foundation",
         "migrate-vue-game-pending-unsynced-recovery-foundation",
     )
     for path, text in (

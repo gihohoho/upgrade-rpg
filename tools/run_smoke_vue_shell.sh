@@ -37,6 +37,5 @@ node --check frontend/vue-app/src/api/config.js
 node --check frontend/vue-app/src/api/readOnlyRoutes.js
 node --check frontend/vue-app/src/api/readOnlyClient.js
 node --check frontend/vue-app/src/api/adminReadOnlyApi.js
-node --check frontend/vue-app/src/api/gameReadOnlyApi.js
 node --check frontend/vue-app/src/api/healthReadOnlyApi.js
 node --check frontend/vue-app/src/api/index.js

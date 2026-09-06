@@ -29,7 +29,8 @@
     v-else
     class="game-legacy-frame"
     :aria-hidden="(game.isUtilityScreen || mobilePanel !== null) || undefined"
-    :inert="game.isUtilityScreen || mobilePanel !== null"
+    :inert="game.isUtilityScreen || mobilePanel !== null || game.saveTransitioning"
+    :aria-busy="game.saveTransitioning"
   >
     <GameLegacySidebar class="game-legacy-frame__sidebar" variant="profile" />
 
@@ -48,10 +49,10 @@
     <GameLegacySidebar class="game-legacy-frame__sidebar" variant="inventory" />
 
     <nav class="game-mobile-dock" aria-label="캐릭터 정보와 가방">
-      <button type="button" aria-haspopup="dialog" @click="openMobilePanel('profile', $event)">
+      <button type="button" aria-haspopup="dialog" @click="openMobilePanel('profile')">
         <span aria-hidden="true">♟</span> 내 정보
       </button>
-      <button type="button" aria-haspopup="dialog" @click="openMobilePanel('inventory', $event)">
+      <button type="button" aria-haspopup="dialog" @click="openMobilePanel('inventory')">
         <span aria-hidden="true">▦</span> 가방
       </button>
     </nav>
@@ -103,7 +104,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useModalAccessibility } from '@/composables/useModalAccessibility';
 import GameLegacySidebar from './GameLegacySidebar.vue';
 import GameInventoryEquipmentShell from './GameInventoryEquipmentShell.vue';
 import GameShopSettingsShell from './GameShopSettingsShell.vue';
@@ -121,7 +123,6 @@ const utilityModal = ref<HTMLElement | null>(null);
 const utilityClose = ref<HTMLButtonElement | null>(null);
 const mobileModal = ref<HTMLElement | null>(null);
 const mobileClose = ref<HTMLButtonElement | null>(null);
-const mobileTrigger = ref<HTMLElement | null>(null);
 const mobilePanel = ref<'profile' | 'inventory' | null>(null);
 let autosaveTimer: number | null = null;
 const gameReady = computed(() => game.snapshotLoad.status === 'ready' && Boolean(game.model));
@@ -154,8 +155,10 @@ watch([
 watch(() => game.isUtilityScreen, (open) => {
   if (!open) return;
   mobilePanel.value = null;
-  void nextTick(() => (utilityClose.value ?? utilityModal.value)?.focus());
 });
+
+useModalAccessibility({ panel: utilityModal, initialFocus: utilityClose, fallbackFocus: world, isOpen: () => game.isUtilityScreen, close: closeUtility });
+useModalAccessibility({ panel: mobileModal, initialFocus: mobileClose, isOpen: () => mobilePanel.value !== null, close: closeMobilePanel });
 
 watch(gameReady, (ready) => {
   stopAutosaveTimer();
@@ -164,7 +167,6 @@ watch(gameReady, (ready) => {
 
 function closeUtility() {
   game.closeUtilityPreview();
-  void nextTick(() => world.value?.focus());
 }
 
 async function initializeSelectedGame() {
@@ -186,17 +188,19 @@ async function initializeSelectedGame() {
 async function runAutosave() {
   const slot = account.selectedCharacter;
   const userId = account.user?.id;
+  const token = account.accessToken;
   if (game.saveTransitioning
     || game.saveQueue.errorKind === 'conflict'
     || !account.accessToken
     || userId === undefined
     || !slot) return;
   const outcome = await game.enqueueSelectedCharacterSave({
-    token: account.accessToken,
+    token,
     userId,
     slot,
     reason: 'auto',
   });
+  if (account.accessToken !== token || account.selectedCharacter?.accountCharacterId !== slot.accountCharacterId) return;
   if (outcome === 'session-invalid') {
     account.invalidateSession('자동 저장 중 로그인 정보가 만료되었습니다. 다시 로그인해 주세요.');
   }
@@ -213,17 +217,14 @@ function changeCharacter() {
   account.changeCharacter();
 }
 
-function openMobilePanel(panel: 'profile' | 'inventory', event: Event) {
-  mobileTrigger.value = event.currentTarget as HTMLElement;
+function openMobilePanel(panel: 'profile' | 'inventory') {
   game.pauseCombatRuntime('utility');
   mobilePanel.value = panel;
-  void nextTick(() => (mobileClose.value ?? mobileModal.value)?.focus());
 }
 
 function closeMobilePanel() {
   mobilePanel.value = null;
   game.resumeCombatRuntime('utility');
-  void nextTick(() => mobileTrigger.value?.focus());
 }
 
 function handleVisibilityChange() {
@@ -231,20 +232,12 @@ function handleVisibilityChange() {
   else game.resumeCombatRuntime('visibility');
 }
 
-function handleKeydown(event: KeyboardEvent) {
-  if (event.key !== 'Escape') return;
-  if (mobilePanel.value) closeMobilePanel();
-  else if (game.isUtilityScreen) closeUtility();
-}
-
 onMounted(() => {
-  window.addEventListener('keydown', handleKeydown);
   document.addEventListener('visibilitychange', handleVisibilityChange);
 });
 
 onBeforeUnmount(() => {
   stopAutosaveTimer();
-  window.removeEventListener('keydown', handleKeydown);
   document.removeEventListener('visibilitychange', handleVisibilityChange);
   game.resetShell();
 });

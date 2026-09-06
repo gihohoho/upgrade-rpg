@@ -1,62 +1,20 @@
-# Vue API Layer — v277 + v383 admin confirmation boundary
+# Vue API 계층
 
-이 폴더는 Vue 앱의 FastAPI 조회와 side-effect 없는 Preview client 공간입니다.
+화면은 store를 통해 아래 client를 호출합니다. 응답 타입은 `contracts.ts`, 실제 API 계약은 [API Response Contract](../../../../docs/contracts/API_RESPONSE_CONTRACT.md)를 따릅니다.
 
-원칙:
+| 영역 | client | 역할 |
+|---|---|---|
+| 로그인·이메일 | `authApi.ts` | 계정 인증과 이메일 요청 |
+| 캐릭터 | `accountApi.ts` | 계정별 슬롯 조회·생성·삭제, master-data 조회 |
+| 게임 저장 | `gameApi.ts` | 선택 캐릭터 load와 단일 직렬 queue의 save |
+| 관리자 조회 | `adminReadOnlyApi.js` | 도메인·카탈로그·상세·관계·변경 이력 GET |
+| 관리자 검토 | `adminPreviewApi.ts` | `dryRun: true`인 Preview POST 5개 |
+| 연결 확인 | `healthReadOnlyApi.js` | health GET |
 
-- 일반 조회는 `GET`만 사용
-- 관리자 Preview 5개만 `POST`와 `dryRun: true` 사용
-- Apply/`PUT`/`PATCH`/write `DELETE` 미연결
-- 공개 GET 인증 interceptor 미구현
-- 관리자 GET은 typed admin store가 Bearer와 `no-store`를 전달
-- `.env` 변경 없음
+`http.ts`는 typed 요청·timeout·인증 오류를 처리하고, `readOnlyClient.js`는 관리자·health 조회의 GET 제한을 유지합니다. 둘 다 `config.js`의 API 주소를 사용합니다. 게임 조회는 typed client로 통일하여 사용하지 않던 `gameReadOnlyApi.js`를 제거했습니다.
 
-## 현재 실제 화면 연결
+관리자 GET은 store에서 Bearer와 `no-store`를 전달합니다. 상세·관계 wrapper는 `rowId`를 backend query `id`로 바꿉니다. 카탈로그 기본값은 `limit=20`, `page=1`, `sort=id_asc`입니다.
 
-- `GET /api/v1/health`
-- `GET /api/v1/admin/requirements`
-- `GET /api/v1/admin/master-data/domains`
-- `GET /api/v1/admin/master-data/catalog`
-- `GET /api/v1/admin/master-data/detail`
-- `GET /api/v1/admin/master-data/relations`
-- `GET /api/v1/admin/master-data/create-blueprint`
-- `GET /api/v1/admin/change-logs`, `/change-logs/{id}`
-- `POST /api/v1/admin/master-data/create-preview`, `/edit-preview`
-- `POST /api/v1/admin/change-logs/{id}/rollback-preview`, `/create-delete-preview`, `/create-delete-restore-preview`
+Preview 응답의 `confirmTextRequired`는 화면에만 표시합니다. 관리자 Apply와 dev key header는 연결하지 않았습니다. 계정·캐릭터·게임 저장의 허용된 write와 관리자 Apply를 혼동하지 않습니다.
 
-`adminPreviewApi.ts`만 Preview POST를 소유합니다. Preview 응답의 `confirmTextRequired`는 화면에 표시할 수 있지만 요청 body에는 넣지 않습니다. 이 모듈에는 Apply route와 dev key header가 없습니다.
-
-도메인 응답:
-
-```txt
-response.payload.domains
-```
-
-카탈로그 응답:
-
-```txt
-response.payload.columns
-response.payload.rows
-```
-
-카탈로그 고정 조회:
-
-```txt
-limit=20
-page=1
-sort=id_asc
-```
-
-상세/관계 wrapper는 `rowId`를 받아 실제 backend query `id`로 변환합니다.
-
-## 설치/실행
-
-새 라이브러리는 없습니다.
-
-실행 위치: `frontend/vue-app` 폴더  
-`.venv` 상태: 꺼져 있어도 됨 / 켤 필요 없음
-
-```bash
-npm install
-npm run dev
-```
+개발 서버 설치·실행은 [저장소 README](../../../../README.md)를 따릅니다.

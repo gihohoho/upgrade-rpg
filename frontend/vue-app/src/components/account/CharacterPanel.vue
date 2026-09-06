@@ -61,7 +61,7 @@
 
   <Teleport to="body">
     <div v-if="modal" class="account-modal-backdrop" @click.self="closeModal">
-      <section class="account-modal" role="dialog" aria-modal="true" :aria-labelledby="`${modal}-modal-title`">
+      <section ref="modalPanel" class="account-modal" role="dialog" aria-modal="true" :aria-labelledby="`${modal}-modal-title`" tabindex="-1">
         <template v-if="modal === 'create'">
           <p class="account-card__eyebrow">Slot {{ createForm.slotIndex }}</p>
           <h2 id="create-modal-title">새 캐릭터 만들기</h2>
@@ -125,13 +125,15 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { reactive, ref } from 'vue';
+import { useModalAccessibility } from '@/composables/useModalAccessibility';
 import { useAccountStore } from '@/stores';
 import type { AccountCharacterSlot } from '@/api/contracts';
 
 const account = useAccountStore();
 const modal = ref<'create' | 'delete' | null>(null);
 const modalInput = ref<HTMLInputElement | null>(null);
+const modalPanel = ref<HTMLElement | null>(null);
 const deleteTarget = ref<AccountCharacterSlot | null>(null);
 const deleteConfirm = ref('');
 const createForm = reactive({ slotIndex: 1, name: '', characterCode: 'weapon_master' });
@@ -146,23 +148,19 @@ function formatDate(value: string | null | undefined) {
   return Number.isNaN(date.getTime()) ? '확인 필요' : new Intl.DateTimeFormat('ko-KR', { dateStyle: 'short' }).format(date);
 }
 
-function focusModal() {
-  void nextTick(() => modalInput.value?.focus());
-}
+useModalAccessibility({ panel: modalPanel, initialFocus: modalInput, isOpen: () => modal.value !== null, close: closeModal, canClose: () => !account.busy });
 
 function openCreate(slotIndex: number) {
   createForm.slotIndex = slotIndex;
   createForm.name = '';
   createForm.characterCode = account.characterOptions[0]?.code ?? 'weapon_master';
   modal.value = 'create';
-  focusModal();
 }
 
 function openDelete(slot: AccountCharacterSlot) {
   deleteTarget.value = slot;
   deleteConfirm.value = '';
   modal.value = 'delete';
-  focusModal();
 }
 
 function closeModal() {
@@ -183,10 +181,4 @@ async function submitDelete() {
   if (deleted) closeModal();
 }
 
-function handleKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && modal.value) closeModal();
-}
-
-onMounted(() => window.addEventListener('keydown', handleKeydown));
-onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown));
 </script>
