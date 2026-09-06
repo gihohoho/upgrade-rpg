@@ -231,7 +231,7 @@ function assertAdapterBehavior() {
 function main() {
   assertStaticBoundary();
   assertAdapterBehavior();
-  console.log("PASS: Vue load path validates one selected-character server snapshot without write, reward, random, or storage mutation");
+  console.log("PASS: Vue snapshot adapter validates selected-character data without mutation; recovery orchestration has separate coverage");
 }
 
 main();

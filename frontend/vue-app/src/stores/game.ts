@@ -67,8 +67,9 @@ import {
   type GameSaveReason,
 } from '@/game/adapters/serverSave';
 import { createSerializedSaveQueue } from '@/game/save/serializedSaveQueue';
+import { createLocalRecovery, LocalRecoveryError, RecoveryChangedError, sameSnapshot, type RecoveryCopy, type RecoveryIdentity, type RecoveryRead } from '@/game/save/localRecovery';
 
-export type GameSnapshotLoadStatus = 'idle' | 'loading' | 'ready' | 'error';
+export type GameSnapshotLoadStatus = 'idle' | 'loading' | 'recovery' | 'ready' | 'error';
 export type GameSnapshotLoadErrorKind = 'retryable' | 'contract' | null;
 
 export interface GameSnapshotLoadState {
@@ -79,7 +80,7 @@ export interface GameSnapshotLoadState {
   accountCharacterId: string | null;
 }
 
-export type GameSnapshotLoadOutcome = 'ready' | 'session-invalid' | 'error' | 'cancelled';
+export type GameSnapshotLoadOutcome = 'ready' | 'recovery' | 'session-invalid' | 'error' | 'cancelled';
 
 export type GameSaveQueueStatus = 'idle' | 'saving' | 'saved' | 'error';
 export type GameSaveErrorKind = 'session' | 'conflict' | 'retryable' | 'contract' | null;
@@ -104,7 +105,10 @@ interface QueuedGameSave {
   request: GameSaveRequestBody;
   reason: GameSaveReason;
   characterCode: string;
+  localCopy: RecoveryRead | null;
 }
+
+interface LoadOptions { token: string; userId: number; slot: AccountCharacterSlot; characterLabel: string }
 
 class CancelledGameSave extends Error {}
 
@@ -112,6 +116,12 @@ export const useGameStore = defineStore('game', () => {
   const snapshotLoad = shallowRef<GameSnapshotLoadState>(createIdleSnapshotLoadState());
   const saveQueue = shallowRef<GameSaveQueueState>(createIdleSaveQueueState());
   const saveTransitioning = ref(false);
+  const recovery = shallowRef<{ local: RecoveryCopy; server: RecoveryCopy } | null>(null);
+  const recoveryWarning = ref('');
+  const localRecovery = createLocalRecovery();
+  let knownLocal: RecoveryRead | null = null;
+  let loadedIdentity: RecoveryIdentity | null = null;
+  let recoveryContext: { options: LoadOptions; snapshot: LoadedGameSnapshot; local: RecoveryRead } | null = null;
   const model = shallowRef<TownHudViewModel | null>(null);
   const fieldModel = shallowRef<FieldCombatViewModel | null>(null);
   const fieldZoneSources = shallowRef<FieldZoneOption[]>([]);
@@ -230,13 +240,9 @@ export const useGameStore = defineStore('game', () => {
     activeFeatureKey.value = null;
   }
 
-  async function loadSelectedCharacterSnapshot(options: {
-    token: string;
-    slot: AccountCharacterSlot;
-    characterLabel: string;
-  }): Promise<GameSnapshotLoadOutcome> {
+  async function loadSelectedCharacterSnapshot(options: LoadOptions): Promise<GameSnapshotLoadOutcome> {
     const { token, slot, characterLabel } = options;
-    if (!token || !slot.occupied || !slot.accountCharacterId || !slot.accountCharacter) {
+    if (!token || !Number.isSafeInteger(options.userId) || options.userId <= 0 || !slot.occupied || !slot.accountCharacterId || !slot.accountCharacter) {
       resetShell();
       return 'cancelled';
     }
@@ -265,6 +271,7 @@ export const useGameStore = defineStore('game', () => {
       if (
         response.type !== 'game.load'
         || !isRecord(responseData)
+        || responseData.userId !== options.userId
         || responseData.slotKey !== slot.slotKey
         || responseData.accountCharacterId !== slot.accountCharacterId
       ) {
@@ -276,16 +283,30 @@ export const useGameStore = defineStore('game', () => {
         characterCode: slot.accountCharacter.characterCode,
       });
       if (requestId !== snapshotRequestId) return 'cancelled';
-      enterTown(slot, characterLabel, snapshot);
-      snapshotLoad.value = {
-        status: 'ready',
-        errorKind: null,
-        message: snapshot.isEmpty
-          ? '서버 연결을 확인했습니다. 신규 캐릭터 기본 상태로 시작합니다.'
-          : '서버 저장을 안전하게 불러왔습니다.',
-        slotKey: slot.slotKey,
-        accountCharacterId: slot.accountCharacterId,
-      };
+      const identity = identityFor(options.userId, slot);
+      const local = localRecovery.read(identity);
+      const server = copyFromSnapshot(options, snapshot);
+      if (local.entry?.current.pending) {
+        recoveryContext = { options: { ...options }, snapshot, local };
+        recovery.value = { local: local.entry.current, server };
+        snapshotLoad.value = { ...snapshotLoad.value, status: 'recovery', message: '서버에 반영되지 않은 이 기기 저장이 있습니다. 사용할 저장을 직접 선택해 주세요.' };
+        return 'recovery';
+      }
+      knownLocal = local;
+      loadedIdentity = identity;
+      if (snapshot.isEmpty && local.entry) {
+        activateSnapshot(options, snapshotFromCopy(options, local.entry.current));
+        const result = await enqueueSelectedCharacterSave({ ...options, reason: 'manual' });
+        return result === 'session-invalid' ? result : requestId === snapshotRequestId ? 'ready' : 'cancelled';
+      }
+      if (!local.entry || !sameSnapshot(local.entry.current, server)) {
+        try { knownLocal = localRecovery.write(identity, local, server, true); }
+        catch (error) {
+          if (local.entry) throw error;
+          recoveryWarning.value = String((error as Error).message);
+        }
+      }
+      activateSnapshot(options, snapshot);
       return 'ready';
     } catch (error) {
       if (requestId !== snapshotRequestId || controller.signal.aborted) return 'cancelled';
@@ -293,17 +314,75 @@ export const useGameStore = defineStore('game', () => {
         snapshotLoad.value = createIdleSnapshotLoadState();
         return 'session-invalid';
       }
-      const contractError = error instanceof GameSnapshotContractError;
+      const contractError = error instanceof GameSnapshotContractError || error instanceof LocalRecoveryError;
       snapshotLoad.value = {
         status: 'error',
         errorKind: contractError ? 'contract' : 'retryable',
-        message: formatSnapshotLoadError(error),
+        message: error instanceof LocalRecoveryError ? error.message : formatSnapshotLoadError(error),
         slotKey: slot.slotKey,
         accountCharacterId: slot.accountCharacterId,
       };
       return 'error';
     } finally {
       if (requestId === snapshotRequestId) snapshotAbortController = null;
+    }
+  }
+
+  function identityFor(userId: number, slot: AccountCharacterSlot): RecoveryIdentity {
+    return { userId, slotKey: slot.slotKey, accountCharacterId: slot.accountCharacterId!, characterCode: slot.accountCharacter!.characterCode };
+  }
+
+  function preserveLocalProgress() {
+    const town = model.value;
+    if (!town || !loadedIdentity || snapshotLoad.value.status !== 'ready') return;
+    try {
+      const request = createSelectedCharacterSaveRequest({ ...loadedIdentity, serverState: town.serverState, saveVersion: town.saveVersion }, 'manual');
+      const previous = knownLocal ?? localRecovery.read(loadedIdentity);
+      if (previous.entry && sameSnapshot(previous.entry.current, { ...previous.entry.current, snapshot: request.snapshot, saveVersion: request.saveVersion })) return;
+      knownLocal = localRecovery.capture(loadedIdentity, request, previous);
+    } catch (error) { recoveryWarning.value = (error as Error).message; }
+  }
+
+  function copyFromSnapshot(options: LoadOptions, snapshot: LoadedGameSnapshot): RecoveryCopy {
+    const request = createSelectedCharacterSaveRequest({ ...identityFor(options.userId, options.slot), serverState: snapshot.serverState, saveVersion: snapshot.saveVersion }, 'manual');
+    const capturedAt = snapshot.updatedAt && Number.isFinite(Date.parse(snapshot.updatedAt)) ? snapshot.updatedAt : new Date().toISOString();
+    return { snapshot: request.snapshot, saveVersion: request.saveVersion, capturedAt, pending: false };
+  }
+
+  function snapshotFromCopy(options: LoadOptions, copy: RecoveryCopy): LoadedGameSnapshot {
+    return applyLoadedGameSnapshot({ status: 'loaded', exists: true, ...options.slot, snapshot: copy.snapshot, saveVersion: copy.saveVersion, updatedAt: copy.capturedAt, source: 'vue-local-recovery' }, identityFor(options.userId, options.slot));
+  }
+
+  function activateSnapshot(options: LoadOptions, snapshot: LoadedGameSnapshot) {
+    recoveryContext = null;
+    recovery.value = null;
+    enterTown(options.slot, options.characterLabel, snapshot);
+    if (snapshot.source === 'vue-local-recovery' && model.value) {
+      model.value = { ...model.value, snapshotStatusLabel: '이 기기 복구본 · 서버 저장 대기' };
+    }
+    snapshotLoad.value = { status: 'ready', errorKind: null, message: '선택한 저장을 불러왔습니다.', slotKey: options.slot.slotKey, accountCharacterId: options.slot.accountCharacterId };
+  }
+
+  async function resolveRecovery(choice: 'local' | 'server', token: string, userId: number): Promise<GameSaveOutcome | 'ready'> {
+    const context = recoveryContext;
+    if (!context || snapshotLoad.value.status !== 'recovery' || context.options.token !== token || context.options.userId !== userId) return 'cancelled';
+    const { options, snapshot, local } = context;
+    const identity = identityFor(userId, options.slot);
+    try {
+      if (localRecovery.read(identity).raw !== local.raw) throw new RecoveryChangedError('복구본이 다른 탭에서 변경되었습니다. 다시 불러온 뒤 선택해 주세요.');
+      if (!local.entry) return 'cancelled';
+      knownLocal = choice === 'server'
+        ? localRecovery.write(identity, local, copyFromSnapshot(options, snapshot), true)
+        : local;
+      loadedIdentity = identity;
+      activateSnapshot(options, choice === 'server' ? snapshot : snapshotFromCopy(options, local.entry.current));
+      if (choice === 'server') return 'ready';
+      return await enqueueSelectedCharacterSave({ ...options, reason: 'manual' });
+    } catch (error) {
+      snapshotLoad.value = { ...snapshotLoad.value, status: 'error', errorKind: 'contract', message: error instanceof Error ? error.message : '복구본을 적용하지 못했습니다.' };
+      recovery.value = null;
+      recoveryContext = null;
+      return 'error';
     }
   }
 
@@ -319,6 +398,7 @@ export const useGameStore = defineStore('game', () => {
     if (!token || !Number.isSafeInteger(userId) || !town || snapshotLoad.value.status !== 'ready') {
       return 'cancelled';
     }
+    if (loadedIdentity && loadedIdentity.userId !== userId) return 'cancelled';
     if (!slot.occupied || !slot.accountCharacterId || !slot.accountCharacter
       || town.slotKey !== slot.slotKey
       || town.accountCharacterId !== slot.accountCharacterId
@@ -345,6 +425,17 @@ export const useGameStore = defineStore('game', () => {
       return recordSaveError(error, reason, slot.slotKey, slot.accountCharacterId);
     }
 
+    let localCopy: RecoveryRead | null = null;
+    try {
+      const identity = identityFor(userId, slot);
+      knownLocal ??= localRecovery.read(identity);
+      localCopy = localRecovery.capture(identity, request, knownLocal);
+      knownLocal = localCopy;
+      recoveryWarning.value = '';
+    } catch (error) {
+      recoveryWarning.value = error instanceof Error ? error.message : '복구본을 기록하지 못했습니다.';
+      if (error instanceof RecoveryChangedError) return recordSaveError(new ApiRequestError(recoveryWarning.value, { status: 409 }), reason, slot.slotKey, slot.accountCharacterId);
+    }
     try {
       await serializedSaveQueue.enqueue({
         request: {
@@ -354,6 +445,7 @@ export const useGameStore = defineStore('game', () => {
           request,
           reason,
           characterCode: slot.accountCharacter.characterCode,
+          localCopy,
         },
         execute: executeQueuedSave,
       });
@@ -407,6 +499,12 @@ export const useGameStore = defineStore('game', () => {
     const saved = acceptSelectedCharacterSave(response.payload, expected);
     if (responseData.saveVersion !== saved.saveVersion) {
       throw new GameSaveContractError('서버 저장 응답의 버전 정보가 서로 일치하지 않습니다.');
+    }
+    if (job.localCopy) {
+      try {
+        const acknowledged = localRecovery.acknowledge({ ...expected, userId: job.userId }, job.localCopy);
+        if (acknowledged) knownLocal = acknowledged;
+      } catch (error) { recoveryWarning.value = (error as Error).message; }
     }
     const current = model.value;
     if (current?.slotKey === saved.slotKey && current.accountCharacterId === saved.accountCharacterId) {
@@ -848,6 +946,11 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function clearShellState() {
+    recovery.value = null;
+    recoveryContext = null;
+    knownLocal = null;
+    loadedIdentity = null;
+    recoveryWarning.value = '';
     combatController.stop();
     model.value = null;
     fieldModel.value = null;
@@ -905,6 +1008,10 @@ export const useGameStore = defineStore('game', () => {
   }
 
   return {
+    recovery,
+    recoveryWarning,
+    resolveRecovery,
+    preserveLocalProgress,
     snapshotLoad,
     saveQueue,
     saveTransitioning,

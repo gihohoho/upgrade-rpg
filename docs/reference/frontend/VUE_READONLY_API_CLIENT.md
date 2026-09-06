@@ -21,7 +21,7 @@ Vue component는 API 결과를 store의 상태로 표시합니다. 공통 API �
 
 `POST /game/save`는 60초 자동 저장·수동 저장·전환 전 최종 저장이 공유하는 단일 queue에서 호출합니다. 각 요청은 호출 시점 snapshot과 identity를 복제합니다. v396은 reset/reload 이전 context의 늦은 응답을 취소하고 409·401·403 뒤 이미 대기한 요청과 후속 POST도 차단합니다. 명시적 context 복구 뒤에는 저장할 수 있고, network/5xx는 같은 context에서 재시도할 수 있습니다.
 
-현재 `saveVersion`은 snapshot 형식 버전입니다. backend CAS revision과 Vue local fallback·`pending-unsynced` 사용자 선택 복구는 아직 구현하지 않았습니다.
+현재 `saveVersion`은 snapshot 형식 버전이며 backend CAS는 미구현입니다. v397의 Vue local fallback은 요청 전 snapshot과 pending을 함께 기록하고, 재진입 시 사용자 선택 뒤 공통 queue로 재전송하거나 서버본을 적용합니다. 자세한 키·백업·실패 경계는 [계정·캐릭터 저장 계약](../../current/ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md)을 따릅니다.
 
 ## 관리자 GET·Preview
 

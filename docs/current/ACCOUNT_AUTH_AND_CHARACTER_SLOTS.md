@@ -1,9 +1,9 @@
 # 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v396.vue-frontend-refactor-readability-foundation
-strict result: vue-frontend-refactor-readability-foundation
-next safe stage: migrate-vue-game-pending-unsynced-recovery-foundation
+latest: v397.vue-game-pending-unsynced-recovery-foundation
+strict result: vue-game-pending-unsynced-recovery-foundation
+next safe stage: migrate-vue-game-owned-item-snapshot-foundation
 public Render: backend v377 / static v378 Live
 local/Neon DB: v377 / v377
 ```
@@ -177,17 +177,16 @@ v394 Vue는 선택 캐릭터의 서버 snapshot read/load를 연결했습니다.
 적용하고 빈 snapshot은 신규 기본 상태로 처리합니다. 401/403은 로그인으로 돌아가며,
 network/timeout/5xx와 응답 계약 오류는 token·선택 캐릭터를 보존한 재시도 화면으로
 닫습니다. v395는 호출 시점 typed state를 복제해 자동·수동·전환 저장이 공유하는 단일
-직렬 queue와 실제 save POST를 연결했습니다. 아래 local 복구·`pending-unsynced` 선택은
-계속 유효한 최종 계약이지만 아직 Vue에 연결하지 않았습니다.
+직렬 queue와 실제 save POST를 연결했습니다. v397은 아래 local 복구·`pending-unsynced`
+선택을 Vue에 연결합니다. 기존 legacy 저장을 자동 가져오거나 삭제하지 않습니다.
 
 - 기존 단일 키 `idleRpgSaveV22`는 삭제하거나 자동 덮어쓰지 않고 명시적 가져오기
   원본으로만 보존합니다.
-- 새 로컬 저장 키에는 계정 ID와 캐릭터 고유 ID를 모두 넣습니다.
+- Vue 키는 `upgradeRpgVueRecovery:v1:<userId>:<slotKey>:<accountCharacterId>`이며 envelope identity도 함께 검증합니다. snapshot·pending boolean·backups를 한 JSON으로 기록해 marker와 원본의 부분 갱신을 피합니다. 토큰·비밀번호·API 요청 전체는 저장하지 않습니다.
 - DB 저장 키는 캐릭터 고유 ID가 아니라 고정 슬롯 번호 `character-N`을 씁니다.
 - 정상 load의 authoritative 원본은 서버 DB snapshot입니다. backend에 snapshot이 있으면
   그 내용을 사용합니다. 서로 다른 local이 남아 있으면 즉시 삭제하지 않고
-  `${saveKey}.pre-backend-recovery`에 복구 백업을 만든 뒤 활성 local을 서버본으로
-  교체합니다.
+  legacy는 `${saveKey}.pre-backend-recovery`, Vue는 같은 envelope의 `backups`에 복구 백업을 남긴 뒤 활성 local을 서버본으로 교체합니다. Vue 백업은 삭제하거나 기존 항목을 덮어쓰지 않습니다.
 - backend snapshot이 비어 있을 때만 계정·캐릭터가 일치하는 local을 복구 원본으로
   사용하고, 게임을 시작한 뒤 같은 직렬 저장 큐에 넣어 서버에 저장합니다. 따라서 평상시
   local이 서버보다 우선한다는 정책이 아닙니다.
@@ -214,6 +213,8 @@ network/timeout/5xx와 응답 계약 오류는 token·선택 캐릭터를 보존
   선택 모달로 복구합니다. network/timeout/`5xx`는 token을 폐기하지 않고 retry 화면이나
   다음 직렬 저장 재시도를 사용합니다.
 - `beforeunload`에서는 네트워크 완료를 믿지 않고 현재 캐릭터 로컬 저장만 수행합니다.
+- v397은 enqueue 전에 복구본을 동기 기록하고 성공한 정확한 요청의 기록만 pending 해제합니다. 늦은 응답·다른 탭 변경은 최신 복구본을 지우지 않습니다. 깨진 JSON/identity는 원본을 보존하고 로드를 차단하며, quota 실패는 복구본 미기록 경고를 표시하되 가능한 서버 저장은 실행합니다. 서버본 선택 중 백업 실패는 적용을 차단합니다.
+- localStorage 비교는 다중 탭 원자적 CAS가 아니며 backend CAS도 아직 없습니다. 실제 동시 기기/탭 저장의 완전한 직렬화는 후속 계약이 필요합니다. 자동 복구본 정리·다운로드·수동 legacy import는 이번 단계에서 제공하지 않습니다.
 
 ## 오류·로그·관리자 응답의 비밀정보 경계
 

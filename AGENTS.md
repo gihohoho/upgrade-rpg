@@ -90,9 +90,9 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v396.vue-frontend-refactor-readability-foundation
-strict result: vue-frontend-refactor-readability-foundation
-next safe stage: migrate-vue-game-pending-unsynced-recovery-foundation
+latest: v397.vue-game-pending-unsynced-recovery-foundation
+strict result: vue-game-pending-unsynced-recovery-foundation
+next safe stage: migrate-vue-game-owned-item-snapshot-foundation
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -119,10 +119,11 @@ v393 production approval/execution: no/no
 v394 production approval/execution: no/no
 v395 production approval/execution: no/no
 v396 production approval/execution: no/no
+v397 production approval/execution: no/no
 ```
 
 - v396은 Vue 글자·명암 token, 게임·계정 modal 접근성, 관리자 표시/오류 helper를 정리했습니다. 미사용 `gameReadOnlyApi.js`만 제거했고 typed API·공개 legacy는 유지합니다. 전체 Vue smoke·TypeScript·build와 1366px/390px 브라우저 검사가 PASS했습니다.
-- v394~v395는 선택 캐릭터의 identity를 검증하는 server snapshot load와 자동·수동·전환 저장의 단일 직렬 queue를 연결했습니다. v396은 context generation으로 늦은 응답을 취소하고 409·401·403 뒤 대기/후속 POST를 차단합니다. local fallback·`pending-unsynced` 복구·backend CAS는 다음 단계이며 이번에 구현하지 않았습니다.
+- v397은 계정·슬롯·캐릭터별 Vue 복구본과 pending marker를 함께 기록하고 재진입 시 local/server/취소 선택을 연결합니다. 선택 전에는 게임·자동 저장을 시작하지 않으며 이전 응답은 최신 pending을 지우지 않습니다. 기존 legacy 저장과 backend CAS·DB·배포는 바꾸지 않습니다. 다음은 실제 보유 아이템 snapshot 표시입니다.
 - v390~v392는 스킬·강화와 상점·설정 표시, legacy형 desktop 좌우 창·mobile modal·최소 12px 가독성을 완성했습니다. 실제 사용·거래·소비·난수·설정 영구 저장은 잠그고 snapshot만 v395 공통 queue가 저장합니다.
 - v388~v389는 장비·가방·보관함·휴지통 표시 모델과 빈 칸·첫 빈 칸·상대 순서 보존 독립 정렬을 연결했습니다. 실제 아이템 변경·save는 잠겼습니다.
 - v386~v387은 `baseUrl`을 제거하고 master-data 필드·보스의 표시 UI를 이식했습니다. HP·Gold·보상·쿨타임·save·timer·난수는 바꾸지 않았습니다.

@@ -63,6 +63,6 @@ node tools/smoke/frontend/smoke_vue_game_domain_foundation.js
 
 ## 다음 안전 단계
 
-`next safe stage: migrate-vue-game-pending-unsynced-recovery-foundation`
+`next safe stage: migrate-vue-game-owned-item-snapshot-foundation`
 
-v396은 v395 단일 저장 queue의 context generation과 409/401/403 terminal barrier를 보강하고 공통 typography·modal·관리자 helper와 미사용 API를 정리했습니다. 다음은 Gold/아이템 보상·난수 드랍과 분리해 local fallback과 `pending-unsynced` 사용자 선택 복구를 준비하며, backend/CAS schema, legacy 공개 화면, 관리자 Apply와 production 배포는 변경하지 않습니다.
+v397은 계정·슬롯·캐릭터별 local fallback과 `pending-unsynced` 사용자 선택을 공통 queue에 연결했습니다. 다음은 실제 보유 아이템 snapshot 표시이며 Gold/아이템 보상·난수·실제 아이템 변경, backend/CAS schema, legacy·관리자 Apply·배포는 변경하지 않습니다.

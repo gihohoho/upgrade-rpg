@@ -155,8 +155,10 @@
     <aside class="town-data-boundary" aria-label="현재 데이터 연결 범위">
       <span aria-hidden="true">i</span>
       <div>
-        <strong>서버 저장을 읽어 typed 게임 상태에 적용했습니다.</strong>
-        <p v-if="game.model.snapshotEmpty">신규 캐릭터의 빈 snapshot은 정상 상태로 처리해 기본 능력치로 시작합니다. 이후 자동·수동·전환 저장은 하나의 서버 저장 queue를 사용합니다.</p>
+        <strong v-if="game.model.snapshotStatusLabel.startsWith('이 기기 복구본')">이 기기 복구본으로 진행 중입니다. 서버 저장 결과를 확인해 주세요.</strong>
+        <strong v-else>서버 저장을 읽어 typed 게임 상태에 적용했습니다.</strong>
+        <p v-if="game.model.snapshotStatusLabel.startsWith('이 기기 복구본')">복구본은 아직 서버 저장 완료로 표시하지 않습니다. 저장에 실패하면 원본을 보존하고 수동 저장으로 다시 시도할 수 있습니다.</p>
+        <p v-else-if="game.model.snapshotEmpty">신규 캐릭터의 빈 snapshot은 정상 상태로 처리해 기본 능력치로 시작합니다. 이후 자동·수동·전환 저장은 하나의 서버 저장 queue를 사용합니다.</p>
         <p v-else>골드·상세 능력치·스킬·최근 구역은 선택 캐릭터의 서버 snapshot을 사용하며 자동·수동·전환 저장은 한 건씩 순서대로 처리됩니다.</p>
       </div>
     </aside>
@@ -179,13 +181,14 @@
         <p>{{ game.activeFeature.description }}</p>
         <div v-if="game.activeFeature.key === 'save'" class="town-save-panel" aria-live="polite">
           <strong :data-status="game.saveQueue.status">{{ game.saveQueue.message }}</strong>
+          <p v-if="game.recoveryWarning" role="alert">{{ game.recoveryWarning }}</p>
           <span>자동·수동·전환 저장은 같은 큐에서 한 건씩 처리됩니다.</span>
           <dl>
             <div><dt>대기 저장</dt><dd>{{ game.saveQueue.queuedWrites }}건</dd></div>
             <div><dt>서버 연결</dt><dd>{{ game.saveQueue.active ? '저장 중' : '대기' }}</dd></div>
             <div><dt>충돌 보호</dt><dd>{{ game.saveQueue.errorKind === 'conflict' ? '덮어쓰기 차단' : '409 감시' }}</dd></div>
           </dl>
-          <small v-if="game.saveQueue.errorKind === 'conflict'">충돌로 저장을 멈췄습니다. 다시 불러오면 현재 화면의 상태를 서버 저장으로 교체합니다.</small>
+          <small v-if="game.saveQueue.errorKind === 'conflict'">충돌로 저장을 멈췄습니다. 서버 상태를 확인한 뒤 복구본과 서버 저장 중 하나를 직접 선택합니다.</small>
           <small v-else>현재 backend에는 다중 기기 CAS revision이 없어, 충돌 응답을 받으면 자동 재시도하지 않습니다.</small>
         </div>
         <div v-else class="town-feature-modal__boundary">
@@ -198,7 +201,7 @@
           type="button"
           :disabled="game.saveQueue.active || transitionBusy"
           @click="game.saveQueue.errorKind === 'conflict' ? reloadServerSave() : manualSave()"
-        >{{ game.saveQueue.active ? '저장 중…' : game.saveQueue.errorKind === 'conflict' ? '서버 저장으로 다시 불러오기' : '지금 서버에 저장' }}</button>
+        >{{ game.saveQueue.active ? '저장 중…' : game.saveQueue.errorKind === 'conflict' ? '서버 확인 후 복구본 선택' : '지금 서버에 저장' }}</button>
         <button v-else class="account-button account-button--primary" type="button" @click="closeFeature">마을로 돌아가기</button>
       </section>
     </div>
@@ -274,7 +277,9 @@ async function reloadServerSave() {
   if (!token || !slot) return;
   const characterLabel = account.characterOptions.find((option) => option.code === slot.accountCharacter?.characterCode)?.name ?? '캐릭터';
   game.closeFeature();
-  const outcome = await game.loadSelectedCharacterSnapshot({ token, slot, characterLabel });
+  const userId = account.user?.id;
+  if (userId === undefined) return;
+  const outcome = await game.loadSelectedCharacterSnapshot({ token, userId, slot, characterLabel });
   if (account.accessToken !== token || account.selectedCharacter?.accountCharacterId !== slot.accountCharacterId) return;
   if (outcome === 'session-invalid') account.invalidateSession('저장 확인 중 로그인 정보가 만료되었습니다. 다시 로그인해 주세요.');
 }

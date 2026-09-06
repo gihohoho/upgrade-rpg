@@ -314,7 +314,7 @@ Bearer 계정, slotKey, accountCharacterId와 snapshot의 currentCharacterId가 
 }
 ```
 
-v396 Vue 처리:
+v397 Vue 처리:
 
 ```txt
 60초 자동 저장, 마을 수동 저장, 캐릭터 변경·로그아웃 전 최종 저장은 한 Promise queue를
@@ -324,6 +324,11 @@ v396 Vue 처리:
 401/403은 session invalid, 409는 conflict이며 이미 대기한 요청과 후속 POST를 명시적
 reload/reset까지 차단합니다. network/timeout/429/5xx는 retryable, 413/422와 응답 identity
 불일치는 contract 오류입니다.
+
+Vue는 enqueue 전 계정·슬롯·캐릭터별 복구본과 pending을 동기 기록합니다. load의 data.userId도
+현재 계정과 비교하며 pending이 있으면 local/server/취소 선택 전 boot·자동 저장을 중지합니다.
+local 선택만 공통 queue로 재전송하고 server 선택은 기존 복구본을 백업한 뒤 적용합니다.
+이전 응답은 더 최신 pending을 해제하지 않으며 401/403에서도 복구본은 보존됩니다.
 
 현재 backend의 saveVersion은 snapshot 형식 버전이며 다중 기기 CAS revision이 아닙니다.
 따라서 expectedRevision을 임의로 보내지 않으며 CAS·낙관적 잠금은 별도 공개 gate입니다.

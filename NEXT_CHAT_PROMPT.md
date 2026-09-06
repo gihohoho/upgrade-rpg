@@ -6,4 +6,4 @@
 2. [NEXT_CHAT_HANDOFF.md](NEXT_CHAT_HANDOFF.md)
 3. [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)
 
-완료된 작업을 다시 전면 감사하거나 재실행하지 말고 `migrate-vue-game-pending-unsynced-recovery-foundation`을 진행해주세요. 현재 refactor는 local fallback이나 사용자 선택 복구를 구현한 단계가 아닙니다. 실행 범위·검증·승인 경계는 handoff를 따릅니다.
+완료된 작업을 반복하지 말고 handoff의 다음 단계를 진행해주세요. 실행 범위·검증·승인 경계와 최신 상태는 handoff 한 곳을 기준으로 합니다.

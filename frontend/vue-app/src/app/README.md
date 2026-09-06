@@ -4,4 +4,4 @@
 
 게임 UI는 `stores/game.ts`의 표시 상태와 `game/adapters/`의 순수 view model을 사용합니다. 전투 runtime과 server snapshot 저장은 화면 preview 상태에 섞지 않고 각각 controller와 단일 직렬 queue 경계로 연결합니다.
 
-v396의 글자·명암 token은 `styles/base.css`, modal의 focus trap·배경 inert·Escape·초점 복귀는 `composables/useModalAccessibility.ts`에서 관리합니다. 관리자 값 표시/오류 helper와 typed API 경계를 재사용하며 사용처 없는 wrapper를 다시 만들지 않습니다. local fallback과 사용자 선택 복구는 다음 단계입니다.
+v396의 글자·명암 token은 `styles/base.css`, modal 접근성은 `composables/useModalAccessibility.ts`에서 관리합니다. v397은 `game/save/localRecovery.ts`의 token 없는 저장소 경계와 game store의 복구 선택 gate를 연결합니다. 관리자 helper와 typed API를 재사용하며 다음은 실제 보유 아이템 snapshot 표시입니다.

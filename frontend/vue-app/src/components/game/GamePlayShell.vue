@@ -1,9 +1,10 @@
 <template>
+  <p v-if="game.recoveryWarning" class="game-recovery-warning" role="alert">{{ game.recoveryWarning }}</p>
   <section
     v-if="!gameReady"
     class="game-snapshot-gate"
     aria-live="polite"
-    :aria-busy="game.snapshotLoad.status !== 'error'"
+    :aria-busy="game.snapshotLoad.status === 'loading'"
   >
     <div class="game-snapshot-gate__crest" aria-hidden="true">◇</div>
     <p>Selected character · server snapshot</p>
@@ -21,7 +22,7 @@
         캐릭터 다시 선택
       </button>
     </div>
-    <span v-else class="game-snapshot-gate__spinner" aria-hidden="true" />
+    <span v-else-if="game.snapshotLoad.status !== 'recovery'" class="game-snapshot-gate__spinner" aria-hidden="true" />
     <small>서버 저장을 불러온 뒤에만 직렬 자동·수동 저장을 시작합니다.</small>
   </section>
 
@@ -57,6 +58,31 @@
       </button>
     </nav>
   </div>
+
+  <Teleport to="body">
+    <div v-if="game.recovery" class="game-recovery-backdrop">
+      <section ref="recoveryModal" class="game-recovery-modal" role="dialog" aria-modal="true" aria-labelledby="game-recovery-title" aria-describedby="game-recovery-description" tabindex="-1">
+        <p class="vue-shell__eyebrow">저장 복구 · {{ selectedCharacterName }}</p>
+        <h2 id="game-recovery-title">어떤 저장으로 이어갈까요?</h2>
+        <p id="game-recovery-description">서버에 반영되지 않은 이 기기 저장이 있습니다. 선택하기 전에는 게임과 자동 저장을 시작하지 않습니다.</p>
+        <div class="game-recovery-copies">
+          <article v-for="(copy, key) in game.recovery" :key="key">
+            <h3>{{ key === 'local' ? '이 기기 저장' : '서버 저장' }}</h3>
+            <dl>
+              <div><dt>기록 시각</dt><dd>{{ recoveryDate(copy.capturedAt) }}</dd></div>
+              <div><dt>레벨</dt><dd>{{ recoveryNumber(copy.snapshot, 'level') }}</dd></div>
+              <div><dt>Gold</dt><dd>{{ recoveryNumber(copy.snapshot, 'gold') }}</dd></div>
+            </dl>
+            <p>{{ key === 'local' ? '이 진행 상태를 불러와 서버에 다시 전송합니다. 서버의 진행 상태가 교체됩니다.' : '이 기기 진행 상태를 별도 복구 백업으로 남긴 뒤 서버 저장을 사용합니다.' }}</p>
+            <button class="account-button account-button--primary" type="button" :disabled="recoveryBusy" @click="chooseRecovery(key)">{{ key === 'local' ? '이 기기 저장 사용' : '서버 저장 사용' }}</button>
+          </article>
+        </div>
+        <p class="game-recovery-note">시각만으로 최신 저장을 판단하지 않습니다. 다중 기기 동시 저장 보호는 아직 제공되지 않습니다. 복구본에는 로그인 토큰을 넣지 않습니다.</p>
+        <button ref="recoveryCancel" class="account-button account-button--ghost" type="button" :disabled="recoveryBusy" @click="cancelRecovery">취소 · 캐릭터 선택으로</button>
+        <p v-if="recoveryBusy" role="status">선택한 저장을 확인하고 있습니다…</p>
+      </section>
+    </div>
+  </Teleport>
 
   <Teleport to="body">
     <div v-if="game.isUtilityScreen" class="game-utility-modal-backdrop" @click.self="closeUtility">
@@ -119,6 +145,9 @@ import { useAccountStore, useGameStore } from '@/stores';
 const account = useAccountStore();
 const game = useGameStore();
 const world = ref<HTMLElement | null>(null);
+const recoveryModal = ref<HTMLElement | null>(null);
+const recoveryCancel = ref<HTMLButtonElement | null>(null);
+const recoveryBusy = ref(false);
 const utilityModal = ref<HTMLElement | null>(null);
 const utilityClose = ref<HTMLButtonElement | null>(null);
 const mobileModal = ref<HTMLElement | null>(null);
@@ -133,7 +162,7 @@ const selectedCharacterLabel = computed(() => {
 });
 const loadTitle = computed(() => game.snapshotLoad.status === 'error'
   ? '게임 저장을 불러오지 못했습니다'
-  : '게임 저장을 불러오는 중입니다');
+  : game.snapshotLoad.status === 'recovery' ? '저장 선택을 기다리고 있습니다' : '게임 저장을 불러오는 중입니다');
 const loadMessage = computed(() => game.snapshotLoad.message
   || '선택한 캐릭터와 서버 저장을 확인하고 있습니다.');
 const utilityTitle = computed(() => {
@@ -159,6 +188,7 @@ watch(() => game.isUtilityScreen, (open) => {
 
 useModalAccessibility({ panel: utilityModal, initialFocus: utilityClose, fallbackFocus: world, isOpen: () => game.isUtilityScreen, close: closeUtility });
 useModalAccessibility({ panel: mobileModal, initialFocus: mobileClose, isOpen: () => mobilePanel.value !== null, close: closeMobilePanel });
+useModalAccessibility({ panel: recoveryModal, initialFocus: recoveryCancel, fallbackFocus: world, isOpen: () => Boolean(game.recovery), close: cancelRecovery, canClose: () => !recoveryBusy.value });
 
 watch(gameReady, (ready) => {
   stopAutosaveTimer();
@@ -171,18 +201,38 @@ function closeUtility() {
 
 async function initializeSelectedGame() {
   const slot = account.selectedCharacter;
-  if (!account.accessToken || !slot?.occupied || !slot.accountCharacterId || !slot.accountCharacter) {
+  const token = account.accessToken;
+  const userId = account.user?.id;
+  if (!token || userId === undefined || !slot?.occupied || !slot.accountCharacterId || !slot.accountCharacter) {
     game.resetShell();
     return;
   }
   const outcome = await game.loadSelectedCharacterSnapshot({
-    token: account.accessToken,
+    token,
+    userId,
     slot,
     characterLabel: selectedCharacterLabel.value,
   });
+  if (account.accessToken !== token || account.user?.id !== userId || account.selectedCharacter?.accountCharacterId !== slot.accountCharacterId) return;
   if (outcome === 'session-invalid') {
     account.invalidateSession('로그인 정보가 만료되었거나 이 캐릭터에 접근할 수 없습니다. 다시 로그인해 주세요.');
   }
+}
+
+function recoveryDate(value: string) { return new Date(value).toLocaleString('ko-KR'); }
+function recoveryNumber(snapshot: Record<string, unknown>, key: string) { const number = Number((snapshot.player as Record<string, unknown>)?.[key]); return Number.isFinite(number) ? number.toLocaleString('ko-KR') : '정보 없음'; }
+function cancelRecovery() { if (!recoveryBusy.value) changeCharacter(); }
+async function chooseRecovery(choice: 'local' | 'server') {
+  const token = account.accessToken;
+  const userId = account.user?.id;
+  const characterId = account.selectedCharacter?.accountCharacterId;
+  if (!token || userId === undefined || recoveryBusy.value) return;
+  recoveryBusy.value = true;
+  try {
+    const outcome = await game.resolveRecovery(choice, token, userId);
+    if (account.accessToken !== token || account.user?.id !== userId || account.selectedCharacter?.accountCharacterId !== characterId) return;
+    if (outcome === 'session-invalid') account.invalidateSession('복구본은 보존했습니다. 다시 로그인해 주세요.');
+  } finally { recoveryBusy.value = false; }
 }
 
 async function runAutosave() {
@@ -234,11 +284,14 @@ function handleVisibilityChange() {
 
 onMounted(() => {
   document.addEventListener('visibilitychange', handleVisibilityChange);
+  window.addEventListener('beforeunload', game.preserveLocalProgress);
 });
 
 onBeforeUnmount(() => {
   stopAutosaveTimer();
   document.removeEventListener('visibilitychange', handleVisibilityChange);
+  window.removeEventListener('beforeunload', game.preserveLocalProgress);
+  game.preserveLocalProgress();
   game.resetShell();
 });
 </script>

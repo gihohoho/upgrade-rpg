@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v396.vue-frontend-refactor-readability-foundation"
-RESULT = "vue-frontend-refactor-readability-foundation"
-NEXT_STAGE = "migrate-vue-game-pending-unsynced-recovery-foundation"
+VERSION = "v397.vue-game-pending-unsynced-recovery-foundation"
+RESULT = "vue-game-pending-unsynced-recovery-foundation"
+NEXT_STAGE = "migrate-vue-game-owned-item-snapshot-foundation"
 SOURCE_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_HEAD = SOURCE_HEAD
 NEON_APPLIED_HEAD = SOURCE_HEAD
@@ -96,8 +96,8 @@ def main() -> int:
     )
     require_markers(
         "NEXT_CHAT_PROMPT.md",
-        "migrate-vue-game-pending-unsynced-recovery-foundation",
-        "다시 전면 감사하거나 재실행하지 말고",
+        "완료된 작업을 반복하지 말고",
+        "handoff 한 곳을 기준으로",
     )
     require_markers(
         "NEXT_CHAT_HANDOFF.md",

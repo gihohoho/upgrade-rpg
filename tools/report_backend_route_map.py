@@ -22,9 +22,9 @@ from pathlib import Path
 PROJECT_VERSION = "v377"
 REPORT_PATH = Path("docs/generated/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
-CHECKPOINT_VERSION = "v396.vue-frontend-refactor-readability-foundation"
-CHECKPOINT_RESULT = "vue-frontend-refactor-readability-foundation"
-NEXT_SAFE_STAGE = "migrate-vue-game-pending-unsynced-recovery-foundation"
+CHECKPOINT_VERSION = "v397.vue-game-pending-unsynced-recovery-foundation"
+CHECKPOINT_RESULT = "vue-game-pending-unsynced-recovery-foundation"
+NEXT_SAFE_STAGE = "migrate-vue-game-owned-item-snapshot-foundation"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 
@@ -437,7 +437,7 @@ signed backend image와 legacy static의 공개 배포를 승인된 단일 시�
 
 권장 범위:
 
-1. v396은 v395 단일 저장 queue의 이전 context 응답과 충돌·세션 오류 뒤 후속 요청을 차단하고 Vue 공통 UI를 정리했습니다. local fallback과 `pending-unsynced` 사용자 선택 복구는 다음 단계입니다.
+1. v397은 Vue local fallback과 `pending-unsynced` 사용자 선택 복구를 공통 저장 queue에 연결했습니다. 다음은 실제 보유 아이템 snapshot 표시이며 backend/CAS와 실제 아이템 변경은 분리합니다.
 2. production 관리자 복구, 재인증 request, dev key header와 실제 Apply는 별도 exact DB-write 승인을 받기 전까지 연결하지 않습니다.
 3. 완료된 migration·publish·Render deploy와 기호가 확인한 Docker·로그인은 단순 확인을 위해 재실행하지 않습니다.
 """

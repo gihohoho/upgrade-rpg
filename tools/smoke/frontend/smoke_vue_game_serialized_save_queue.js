@@ -39,7 +39,8 @@ function loadModules() {
     define: { "process.env.NODE_ENV": '"test"', "import.meta.env": "{}" },
     write: false,
   });
-  const context = { AbortController, Buffer, setTimeout, setInterval, clearInterval };
+  const storage = new Map();
+  const context = { AbortController, Buffer, setTimeout, setInterval, clearInterval, window: { localStorage: { getItem: (key) => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) } } };
   vm.createContext(context);
   vm.runInContext(output.outputFiles[0].text, context);
   return context.__saveQueue;
@@ -389,7 +390,8 @@ async function assertTerminalSaveBarrier(modules) {
         response.data.status = "loaded";
         return response;
       };
-      assert.strictEqual(await game.loadSelectedCharacterSnapshot({ token: "save-token", slot, characterLabel: "검신" }), "ready");
+      assert.strictEqual(await game.loadSelectedCharacterSnapshot({ token: "save-token", userId: source.userId, slot, characterLabel: "검신" }), "recovery");
+      assert.strictEqual(await game.resolveRecovery('server', 'save-token', source.userId), 'ready');
     } else {
       game.resetShell();
       enterLoadedContext(game, source);

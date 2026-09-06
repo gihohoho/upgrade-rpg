@@ -63,7 +63,7 @@ python tools/report_vue_game_domain_dependencies.py --check
 node tools/smoke/frontend/smoke_vue_game_domain_foundation.js
 ```
 
-`docs/generated/VUE_GAME_DOMAIN_DEPENDENCIES.md`에 legacy 의존성과 v384 typed domain 경계를 기록합니다. Vue smoke는 각 게임 adapter·좌우 창·modal·가독성, client-only 전투 timer와 선택 캐릭터 load/save를 검사합니다. v396은 늦은 응답 취소, 409/401/403 뒤 대기/후속 POST 차단, reload/reset 후 저장과 5xx 재시도 회귀를 보강합니다. runtime은 화면 HP, 저장 queue는 typed server state만 담당하며 local 복구·난수·보상·아이템/스킬 변경·CAS와 배포는 다음 경계로 남습니다.
+`docs/generated/VUE_GAME_DOMAIN_DEPENDENCIES.md`에 legacy 의존성과 typed domain 경계를 기록합니다. Vue smoke는 게임 adapter·좌우 창·modal, 전투 timer·load/save와 v397 local 복구를 검사합니다. `smoke_vue_game_pending_recovery.js`는 계정 격리·local/server/취소·quota·손상·이전 응답·닫기 복구를 synthetic 저장소/응답으로 확인하며 실제 DB를 쓰지 않습니다. 난수·보상·아이템/스킬 변경·CAS·배포는 별도 단계입니다.
 
 ## PostgreSQL/Alembic readiness 보고서
 

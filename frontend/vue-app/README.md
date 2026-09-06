@@ -1,4 +1,4 @@
-# Upgrade RPG Vue App — v396
+# Upgrade RPG Vue App — v397
 
 이 폴더는 Upgrade RPG 전체 프론트엔드를 Vue로 옮기는 작업공간입니다. 현재 공개 게임과 관리자 화면은 아직 루트 `index.html`, `admin.html`, legacy `src/`를 사용합니다.
 
@@ -21,7 +21,7 @@
 - `/admin`: `isAdmin=true` route guard 뒤 read-only 조회, 생성·수정·되돌리기 dry-run Preview, 실제 쓰기 없는 Apply 확인 준비
 - `/admin/access`: 관리자 로그인·권한 거부·network 재시도
 
-`/game`은 선택 캐릭터의 서버 snapshot을 읽은 뒤 시작하며 자동·수동·전환 저장을 하나의 직렬 queue로 보냅니다. 401/403·409 뒤 후속 저장을 차단하고 이전 context의 늦은 응답은 취소합니다. 충돌 시 사용자가 명시적으로 서버 상태를 다시 불러올 수 있으며 local fallback·pending-unsynced·backend CAS는 다음 단계입니다.
+`/game`은 선택 캐릭터의 서버 snapshot을 읽은 뒤 시작하며 자동·수동·전환 저장을 하나의 직렬 queue로 보냅니다. v397은 계정·슬롯·캐릭터별 local fallback과 pending을 함께 보존합니다. 미동기화 저장이 있으면 local/server/취소 선택 전에는 boot·자동 저장을 시작하지 않습니다. 서버본 선택 시 이전 로컬본을 백업하고 로컬본 선택 시 공통 queue로 재전송합니다. 401/403·409 뒤 후속 저장과 이전 context의 늦은 응답은 차단합니다. backend CAS는 별도 단계입니다.
 
 1200px 이상에서는 내 정보/장비·가방/Gold를 게임 양옆에 유지하고, 좁은 화면에서는 하단 버튼과 모바일 modal을 사용합니다. 게임·계정 modal의 Tab 순환·Escape·배경 잠금·초점 복귀는 공통 composable이 맡습니다. 보조 글자는 13px 이상 token을 사용합니다. 마을에서만 접속 캐릭터 바가 표시됩니다.
 
