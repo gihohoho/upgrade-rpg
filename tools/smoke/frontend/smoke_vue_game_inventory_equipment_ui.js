@@ -64,7 +64,6 @@ function assertStaticBoundary() {
     "compactItemSlots",
     "countOccupiedItemSlots",
     "findFirstEmptyItemSlot",
-    "placeItemInFirstEmptySlot",
     "mode: 'display-only'",
   ]) requireMarker(adapter, marker, "inventory/equipment adapter");
 
@@ -93,8 +92,8 @@ function assertStaticBoundary() {
     "game.selectInventoryPreview",
     "game.toggleInventoryCompactPreview",
     "game.returnTown",
-    "실제 보유 목록이 아니라 master-data 샘플",
-    "보유 아이템 snapshot 매핑·저장·장착·사용·판매·강화·보관함 이동·휴지통 이동",
+    "선택 캐릭터의 현재 저장 데이터를 표시",
+    "장착·사용·판매·강화·보관함 이동·휴지통 이동",
   ]) requireMarker(component, marker, "inventory/equipment component");
   assert.ok(!component.includes("town-session-bar"), "connected character bar must remain town-only");
 
@@ -157,31 +156,37 @@ function assertAdapterBehavior() {
   ];
   const before = JSON.stringify({ townSource, itemTemplates });
   const town = adapters.town.createTownHudViewModel(townSource);
+  const player = town.serverState.player;
+  player.inventory = [{ id: 'q1', itemTemplateCode: 'skill_q', count: 8 }, null, { id: 'q2', itemTemplateCode: 'skill_q', count: 3 }];
+  player.equipment[6] = { id: 'weapon', itemTemplateCode: 'special_weapon_1', level: 7 };
+  player.storage = [{ id: 's1', templateKey: 'normal_skill_1' }, null, { id: 's2', templateKey: 'normal_skill_1', level: 4 }];
+  player.trash = [{ id: 't1', templateKey: 'skill_w', count: 2 }, null, { id: 't2', name: '알 수 없는 유물', level: 9 }];
+  const playerBefore = JSON.stringify(player);
   const original = adapters.inventory.createInventoryEquipmentViewModel({
     town,
     itemTemplates,
     compactPreview: false,
-    preferredItemCode: "skill_q",
+    preferredItemCode: "inventory:2",
     createdAt: 0,
   });
   const compact = adapters.inventory.createInventoryEquipmentViewModel({
     town,
     itemTemplates,
     compactPreview: true,
-    preferredItemCode: "skill_q",
+    preferredItemCode: "inventory:2",
     createdAt: 0,
   });
 
   assert.strictEqual(original.zoneType, "inventory");
   assert.strictEqual(original.equipmentSlots.length, 15);
-  assert.strictEqual(original.inventorySlots.length, 24);
+  assert.strictEqual(original.inventorySlots.length, 60);
   assert.strictEqual(original.totalCapacity, 60);
   assert.strictEqual(original.nextEmptySlotNumber, 2);
   assert.strictEqual(original.selectedItem.code, "skill_q");
   assert.strictEqual(original.selectedLocation, "inventory");
   assert.strictEqual(original.action.type, "inventory.preview.open");
   assert.strictEqual(original.masterDataConnected, true);
-  assert.strictEqual(original.snapshotConnected, false);
+  assert.strictEqual(original.snapshotConnected, true);
   assert.strictEqual(original.itemMutationConnected, false);
 
   const originalOrder = original.inventorySlots.filter((slot) => slot.item).map((slot) => slot.item.code);
@@ -192,13 +197,39 @@ function assertAdapterBehavior() {
   assert.ok(compact.compactMovedCount > 0);
   assert.strictEqual(compact.action.type, "inventory.preview.compact");
   assert.strictEqual(compact.selectedItem.code, "skill_q");
+  assert.strictEqual(original.selectedItem.instanceId, 'q2');
+  assert.strictEqual(original.selectedItem.quantityLabel, '×3');
+  assert.strictEqual(compact.selectedItem.instanceId, 'q2');
+  assert.strictEqual(compact.selectedSlotNumber, 2);
+  assert.strictEqual(original.equipmentSlots[6].item.levelLabel, '+7');
+  assert.strictEqual(original.equipmentSlots[0].item, null, 'never fabricate equipment from templates');
+  assert.strictEqual(JSON.stringify(player), playerBefore, 'owned snapshot unchanged');
+  const unknown = adapters.inventory.normalizeOwnedItem({ id: 'legacy', name: '미등록', level: 2, count: 4, tier: 36, type: 'normal' }, [], 'inventory', 8);
+  assert.strictEqual(unknown.instanceId, 'legacy');
+  assert.strictEqual(unknown.frameTone, 'liberated');
+  assert.strictEqual(unknown.templateMatched, false);
+  const malformed = adapters.inventory.normalizeOwnedItem('bad-item', [], 'inventory', 0);
+  assert.strictEqual(malformed.name, '알 수 없는 아이템');
+  const legacy = adapters.inventory.normalizeOwnedItem({ name: 'Q 스킬강화권 +0', type: 'skill_book' }, itemTemplates, 'inventory', 0);
+  assert.strictEqual(legacy.code, 'skill_q');
+  const emptyTown = adapters.town.createTownHudViewModel(townSource);
+  const empty = adapters.inventory.createInventoryEquipmentViewModel({ town: emptyTown, itemTemplates, compactPreview: false, createdAt: 0 });
+  assert.strictEqual(empty.selectedItem, null);
+  assert.strictEqual(empty.occupiedCount, 0);
+  emptyTown.serverState.player.maxInventorySize = 1;
+  emptyTown.serverState.player.inventory = [{ name: 'full' }, null, { name: 'overflow', id: 'last' }];
+  const overflow = adapters.inventory.createInventoryEquipmentViewModel({ town: emptyTown, itemTemplates: [], compactPreview: false, preferredItemCode: 'inventory:2', createdAt: 0 });
+  assert.strictEqual(overflow.nextEmptySlotNumber, 0);
+  assert.strictEqual(overflow.inventorySlots.length, 3);
+  assert.strictEqual(overflow.selectedItem.instanceId, 'last');
+  assert.strictEqual(overflow.masterDataConnected, false);
   assert.strictEqual(JSON.stringify({ townSource, itemTemplates }), before, "inventory adapter mutated source input");
 }
 
 function main() {
   assertStaticBoundary();
   assertAdapterBehavior();
-  console.log("PASS: Vue inventory/equipment UI preserves sparse-slot and compact-preview rules without owned-item snapshot mapping or mutation");
+  console.log("PASS: Vue inventory/equipment UI preserves sparse-slot and compact-preview rules with owned-item snapshot mapping and no mutation");
 }
 
 main();

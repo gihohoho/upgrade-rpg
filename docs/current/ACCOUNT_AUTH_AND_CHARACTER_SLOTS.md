@@ -1,9 +1,9 @@
 # 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v397.vue-game-pending-unsynced-recovery-foundation
-strict result: vue-game-pending-unsynced-recovery-foundation
-next safe stage: migrate-vue-game-owned-item-snapshot-foundation
+latest: v398.vue-game-owned-item-snapshot-foundation
+strict result: vue-game-owned-item-snapshot-foundation
+next safe stage: migrate-vue-game-inventory-transfer-foundation
 public Render: backend v377 / static v378 Live
 local/Neon DB: v377 / v377
 ```

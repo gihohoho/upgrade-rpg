@@ -1,4 +1,4 @@
-# Vue/FastAPI/DB 전체 전환 계획 — v397
+# Vue/FastAPI/DB 전체 전환 계획 — v398
 
 ## 현재 결론
 
@@ -115,7 +115,8 @@ Vue 자체는 JavaScript만으로도 사용할 수 있습니다. 이 프로젝�
 - timer 정지와 최종 저장 이후 캐릭터 전환 — v395 완료
 - context generation·409/401/403 terminal barrier — v396 구현, race 회귀 PASS
 - local fallback과 `pending-unsynced` 사용자 선택 복구 — v397 연결, 계정·슬롯·캐릭터 분리와 local/server/취소 gate
-- 실제 보유 아이템 snapshot 표시 — 다음; 장착·이동·사용·소비·보상과 분리
+- 실제 보유 아이템 snapshot 표시 — v398 완료; 빈 목록·전체 칸·중복 항목·강화·수량·안전한 아이콘 처리
+- 가방↔보관함 이동과 수동 정렬 — 다음; 장착·사용·판매·삭제·소비·보상과 분리
 - 다중 기기 save revision/CAS와 낙관적 잠금 — 별도 backend/DB 계약과 승인 필요
 
 ### 7. 병행 검증과 전환

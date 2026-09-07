@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v397.vue-game-pending-unsynced-recovery-foundation"
-RESULT = "vue-game-pending-unsynced-recovery-foundation"
-NEXT_STAGE = "migrate-vue-game-owned-item-snapshot-foundation"
+VERSION = "v398.vue-game-owned-item-snapshot-foundation"
+RESULT = "vue-game-owned-item-snapshot-foundation"
+NEXT_STAGE = "migrate-vue-game-inventory-transfer-foundation"
 SOURCE_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_HEAD = SOURCE_HEAD
 NEON_APPLIED_HEAD = SOURCE_HEAD

@@ -14,7 +14,7 @@
 
     <section class="storage-trash-overview" aria-labelledby="storage-trash-overview-title">
       <div>
-        <p>Master-data sample · display only</p>
+        <p>Owned snapshot · read only</p>
         <h2 id="storage-trash-overview-title">안전 보관과 복구 대기 공간</h2>
         <span>{{ model.characterLabel }} · {{ model.levelLabel }} · {{ model.goldLabel }} Gold</span>
       </div>
@@ -32,7 +32,7 @@
           <span>{{ model.storage.occupiedCount }} / {{ model.storage.capacity }}</span>
         </div>
         <div class="container-preview__controls">
-          <div><span>첫 빈 칸</span><strong>{{ model.storage.nextEmptySlotNumber }}번</strong></div>
+          <div><span>첫 빈 칸</span><strong>{{ model.storage.nextEmptySlotNumber ? `${model.storage.nextEmptySlotNumber}번` : '가득 참' }}</strong></div>
           <button
             type="button"
             :aria-pressed="model.storage.compactPreview"
@@ -45,13 +45,13 @@
             v-for="slot in model.storage.slots"
             :key="slot.index"
             type="button"
-            :class="slotClass(slot.item?.frameTone, slot.item?.code, 'storage')"
+            :class="slotClass(slot.item?.frameTone, slot.item?.selectionKey, 'storage')"
             :disabled="!slot.item"
             :aria-label="slot.item ? `보관함 ${slot.number}번 칸: ${slot.item.name}` : `보관함 ${slot.number}번 칸: 비어 있음`"
-            @click="slot.item && game.selectStorageTrashPreview('storage', slot.item.code)"
+            @click="slot.item && game.selectStorageTrashPreview('storage', slot.item.selectionKey)"
           >
-            <span v-if="slot.item" aria-hidden="true">{{ slot.item.iconText }}</span>
-            <small v-if="slot.item">{{ slot.item.tierLabel }}</small>
+            <GameItemIcon v-if="slot.item" :item="slot.item" />
+            <small v-if="slot.item">{{ slot.item.levelLabel }} {{ slot.item.quantityLabel }}</small>
             <i v-else aria-hidden="true">{{ slot.number }}</i>
           </button>
         </div>
@@ -64,7 +64,7 @@
           <span>{{ model.trash.occupiedCount }} / {{ model.trash.capacity }}</span>
         </div>
         <div class="container-preview__controls">
-          <div><span>첫 빈 칸</span><strong>{{ model.trash.nextEmptySlotNumber }}번</strong></div>
+          <div><span>첫 빈 칸</span><strong>{{ model.trash.nextEmptySlotNumber ? `${model.trash.nextEmptySlotNumber}번` : '가득 참' }}</strong></div>
           <button
             type="button"
             :aria-pressed="model.trash.compactPreview"
@@ -77,13 +77,13 @@
             v-for="slot in model.trash.slots"
             :key="slot.index"
             type="button"
-            :class="slotClass(slot.item?.frameTone, slot.item?.code, 'trash')"
+            :class="slotClass(slot.item?.frameTone, slot.item?.selectionKey, 'trash')"
             :disabled="!slot.item"
             :aria-label="slot.item ? `휴지통 ${slot.number}번 칸: ${slot.item.name}` : `휴지통 ${slot.number}번 칸: 비어 있음`"
-            @click="slot.item && game.selectStorageTrashPreview('trash', slot.item.code)"
+            @click="slot.item && game.selectStorageTrashPreview('trash', slot.item.selectionKey)"
           >
-            <span v-if="slot.item" aria-hidden="true">{{ slot.item.iconText }}</span>
-            <small v-if="slot.item">{{ slot.item.tierLabel }}</small>
+            <GameItemIcon v-if="slot.item" :item="slot.item" />
+            <small v-if="slot.item">{{ slot.item.levelLabel }} {{ slot.item.quantityLabel }}</small>
             <i v-else aria-hidden="true">{{ slot.number }}</i>
           </button>
         </div>
@@ -93,21 +93,24 @@
         </div>
       </article>
 
-      <aside class="storage-trash-detail" :data-container="model.selectedContainer" aria-labelledby="storage-trash-detail-title">
+      <aside v-if="model.selectedItem" class="storage-trash-detail" :data-container="model.selectedContainer" aria-labelledby="storage-trash-detail-title">
         <div class="storage-trash-detail__icon" :data-frame="model.selectedItem.frameTone" aria-hidden="true">
-          {{ model.selectedItem.iconText }}
+          <GameItemIcon :item="model.selectedItem" />
         </div>
         <p>{{ selectedContainerLabel }} · {{ model.selectedItem.frameLabel }}</p>
         <h2 id="storage-trash-detail-title">{{ model.selectedItem.name }}</h2>
         <span>{{ model.selectedItem.description }}</span>
         <dl>
           <div><dt>선택 위치</dt><dd>{{ selectedContainerLabel }} {{ model.selectedSlotNumber }}번</dd></div>
+          <div><dt>강화·수량</dt><dd>{{ model.selectedItem.levelLabel }} {{ model.selectedItem.quantityLabel }}</dd></div>
+          <div><dt>아이템 ID</dt><dd>{{ model.selectedItem.instanceId ?? '저장된 ID 없음' }}</dd></div>
           <div><dt>등급</dt><dd>{{ model.selectedItem.tierLabel }}</dd></div>
           <div><dt>슬롯·효과</dt><dd>{{ model.selectedItem.statSummary }}</dd></div>
           <div><dt>현재 제한</dt><dd>{{ selectedRestriction }}</dd></div>
         </dl>
         <button type="button" disabled :title="selectedActionTitle">{{ selectedActionLabel }}</button>
       </aside>
+      <aside v-else class="storage-trash-detail"><h2>보관된 아이템이 없습니다</h2><p>보관함과 휴지통이 비어 있습니다.</p></aside>
     </section>
 
     <section class="storage-trash-flow" aria-labelledby="storage-trash-flow-title">
@@ -128,7 +131,7 @@
       <div><strong>Action adapter</strong><span>container 배열·선택·save 변화 없음</span></div>
       <p v-for="log in model.action.logs" :key="log.message">{{ log.message }}</p>
       <dl>
-        <div><dt>server snapshot</dt><dd>플레이어 읽기 연결 · 아이템 미매핑</dd></div>
+        <div><dt>server snapshot</dt><dd>보유 아이템 읽기 연결</dd></div>
         <div><dt>item move / restore</dt><dd>잠김</dd></div>
         <div><dt>permanent delete / save</dt><dd>잠김</dd></div>
       </dl>
@@ -137,8 +140,8 @@
     <aside class="storage-trash-data-boundary" aria-label="보관함과 휴지통 미리보기 데이터 경계">
       <span aria-hidden="true">!</span>
       <div>
-        <strong>현재 보관함과 휴지통은 실제 보유 목록이 아니라 master-data 샘플입니다.</strong>
-        <p>선택과 `위로 정렬`은 표시 모델만 다시 만듭니다. 보유 아이템 snapshot 매핑·저장·가방/보관함 이동·휴지통 이동·복구·영구 삭제는 아직 연결하지 않았으며 원본 master-data와 server state는 바뀌지 않습니다.</p>
+        <strong>선택 캐릭터의 현재 보관함과 휴지통을 표시합니다.</strong>
+        <p>선택과 `위로 정렬`은 표시 모델만 다시 만듭니다. 가방/보관함 이동·휴지통 이동·복구·영구 삭제는 아직 연결하지 않았으며 원본 master-data와 server state는 바뀌지 않습니다.</p>
       </div>
     </aside>
   </div>
@@ -146,6 +149,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import GameItemIcon from './GameItemIcon.vue';
 import type { ItemFrameTone } from '@/game/adapters/inventoryEquipment';
 import type { StorageTrashContainerKey } from '@/game/adapters/storageTrash';
 import { useGameStore } from '@/stores';
@@ -170,7 +174,7 @@ function slotClass(
     'has-item': Boolean(itemCode),
     'is-selected': Boolean(
       itemCode
-      && itemCode === model.value?.selectedItem.code
+      && itemCode === model.value?.selectedItem?.selectionKey
       && container === model.value?.selectedContainer,
     ),
     [`item-frame--${frame ?? 'empty'}`]: true,

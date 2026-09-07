@@ -1,4 +1,4 @@
-# Upgrade RPG Vue App — v397
+# Upgrade RPG Vue App — v398
 
 이 폴더는 Upgrade RPG 전체 프론트엔드를 Vue로 옮기는 작업공간입니다. 현재 공개 게임과 관리자 화면은 아직 루트 `index.html`, `admin.html`, legacy `src/`를 사용합니다.
 
@@ -57,3 +57,5 @@ npm run build
 ```
 
 `npm run build`는 먼저 TypeScript 검사를 실행한 뒤 Vite production bundle을 만듭니다.
+
+보유 아이템(v398): 가방·장비·보관함·휴지통은 선택 캐릭터의 snapshot을 표시합니다. 정렬은 미리보기이며 실제 이동·사용·판매는 잠겨 있습니다. 저장소 PNG만 번들링하고 미등록 항목·이미지 누락은 텍스트로 표시합니다.

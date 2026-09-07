@@ -42,7 +42,7 @@ function main() {
 
   for (const marker of [
     "createInventoryEquipmentViewModel",
-    "master-data 미리보기",
+    "보유 아이템 · 처음 20칸",
     "내 정보",
     "장착 장비",
     "능력치",

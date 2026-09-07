@@ -6104,6 +6104,15 @@ code {
 .storage-trash-detail dd { margin: 0; color: #c9cbd9; font-size: var(--font-size-caption); line-height: 1.4; overflow-wrap: anywhere; }
 .storage-trash-detail > button { width: 100%; }
 
+/* Owned containers expose every saved slot without stretching the modal indefinitely. */
+.inventory-slot-grid,
+.container-slot-grid {
+  max-height: min(55vh, 600px);
+  overflow-y: auto;
+  align-content: start;
+  padding: 3px;
+}
+
 .storage-trash-flow {
   display: grid;
   grid-template-columns: minmax(150px, 0.55fr) minmax(470px, 1.7fr) minmax(210px, 0.75fr);

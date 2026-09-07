@@ -101,6 +101,12 @@ def main() -> None:
         if not source_file.is_file():
             continue
         text = source_file.read_text(encoding="utf-8")
+        if source_file == VUE_APP / "src/components/game/GameItemIcon.vue":
+            # v398 shares only bundled PNG assets, never executable legacy code.
+            asset_glob = "../../../../../src/assets/{equipment,special-equipment,skill-books}/**/*.png"
+            assert_contains(text, asset_glob, "owned item PNG allow-list")
+            assert_contains(text, "assets[`../../../../../${path}`] ?? null", "untrusted URL fallback")
+            text = text.replace(asset_glob, "allowed-owned-item-png")
         for pattern in FORBIDDEN_PATTERNS:
             if pattern in text:
                 raise AssertionError(f"Vue shell must not import root legacy src directly yet: {source_file}")

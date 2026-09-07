@@ -654,7 +654,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function enterInventoryPreview(itemTemplates: ItemTemplateOption[]) {
-    if (!model.value || !itemTemplates.length) return false;
+    if (!model.value) return false;
     captureUtilityOrigin();
     itemTemplateSources.value = itemTemplates.slice();
     inventoryCompactedPreview.value = false;
@@ -666,19 +666,19 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function selectInventoryPreview(itemCode: string) {
-    if (!itemTemplateSources.value.length) return;
+    if (!model.value) return;
     selectedInventoryItemCode.value = itemCode;
     rebuildInventoryPreview();
   }
 
   function toggleInventoryCompactPreview() {
-    if (!itemTemplateSources.value.length) return;
+    if (!model.value) return;
     inventoryCompactedPreview.value = !inventoryCompactedPreview.value;
     rebuildInventoryPreview();
   }
 
   function rebuildInventoryPreview() {
-    if (!model.value || !itemTemplateSources.value.length) return;
+    if (!model.value) return;
     inventoryModel.value = createInventoryEquipmentViewModel({
       town: model.value,
       itemTemplates: itemTemplateSources.value,
@@ -686,11 +686,11 @@ export const useGameStore = defineStore('game', () => {
       preferredItemCode: selectedInventoryItemCode.value,
       createdAt: 0,
     });
-    selectedInventoryItemCode.value = inventoryModel.value.selectedItem.code;
+    selectedInventoryItemCode.value = inventoryModel.value.selectedItem?.selectionKey ?? null;
   }
 
   function enterStorageTrashPreview() {
-    if (!inventoryModel.value || !itemTemplateSources.value.length) return false;
+    if (!inventoryModel.value || !model.value) return false;
     storageCompactedPreview.value = false;
     trashCompactedPreview.value = false;
     selectedStorageTrashItemCode.value = null;
@@ -716,9 +716,10 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function rebuildStorageTrashPreview() {
-    if (!inventoryModel.value || !itemTemplateSources.value.length) return;
+    if (!inventoryModel.value || !model.value) return;
     storageTrashModel.value = createStorageTrashViewModel({
       inventory: inventoryModel.value,
+      player: model.value.serverState.player,
       itemTemplates: itemTemplateSources.value,
       storageCompactPreview: storageCompactedPreview.value,
       trashCompactPreview: trashCompactedPreview.value,
@@ -727,13 +728,13 @@ export const useGameStore = defineStore('game', () => {
       lastActionContainer: storageTrashLastAction.value,
       createdAt: 0,
     });
-    selectedStorageTrashItemCode.value = storageTrashModel.value.selectedItem.code;
+    selectedStorageTrashItemCode.value = storageTrashModel.value.selectedItem?.selectionKey ?? null;
     selectedStorageTrashContainer.value = storageTrashModel.value.selectedContainer;
   }
 
   function returnInventoryPreview() {
-    if (!inventoryModel.value && model.value && itemTemplateSources.value.length) rebuildInventoryPreview();
-    if (!inventoryModel.value) returnTown();
+    if (!inventoryModel.value && model.value) rebuildInventoryPreview();
+    if (!inventoryModel.value) { returnTown(); return; }
     screen.value = 'inventory';
     storageTrashModel.value = null;
   }

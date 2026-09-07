@@ -81,8 +81,7 @@
           <div>
             <button
               type="button"
-              :disabled="!account.itemTemplates.length"
-              :title="account.itemTemplates.length ? '인벤토리·장비 표시 화면으로 이동합니다' : '아이템 master-data를 불러오지 못했습니다'"
+              title="선택 캐릭터의 보유 아이템을 확인합니다"
               @click="enterInventoryPreview"
             ><span aria-hidden="true">囊</span>인벤토리</button>
             <button class="is-active" type="button" aria-current="location"><span aria-hidden="true">里</span>마을</button>

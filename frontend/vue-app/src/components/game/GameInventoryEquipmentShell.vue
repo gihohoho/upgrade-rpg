@@ -16,22 +16,22 @@
         <span>Inventory · equipment UI</span>
         <strong>{{ inventory.characterName }}의 장비 보관 화면</strong>
       </div>
-      <span class="inventory-command-bar__status"><i aria-hidden="true" /> 보유 아이템 매핑 대기</span>
+      <span class="inventory-command-bar__status"><i aria-hidden="true" /> 보유 아이템 읽기 연결</span>
     </header>
 
     <section class="inventory-overview" aria-labelledby="inventory-overview-title">
       <div class="inventory-overview__identity">
         <div class="inventory-overview__portrait" aria-hidden="true">{{ inventory.avatarText }}</div>
         <div>
-          <p>Master-data sample · display only</p>
+          <p>Owned snapshot · read only</p>
           <h2 id="inventory-overview-title">{{ inventory.characterName }}</h2>
           <span>{{ inventory.characterLabel }} · {{ inventory.levelLabel }} · {{ inventory.goldLabel }} Gold</span>
         </div>
       </div>
       <dl class="inventory-overview__summary">
         <div><dt>가방 사용</dt><dd>{{ inventory.occupiedCount }} / {{ inventory.totalCapacity }}</dd></div>
-        <div><dt>다음 획득</dt><dd>{{ inventory.nextEmptySlotNumber }}번 칸</dd></div>
-        <div><dt>현재 배치</dt><dd>{{ inventory.compactPreview ? '정렬 결과 미리보기' : '빈 칸 보존 예시' }}</dd></div>
+        <div><dt>다음 획득</dt><dd>{{ inventory.nextEmptySlotNumber ? `${inventory.nextEmptySlotNumber}번 칸` : '가득 참' }}</dd></div>
+        <div><dt>현재 배치</dt><dd>{{ inventory.compactPreview ? '정렬 결과 미리보기' : '저장된 배치' }}</dd></div>
       </dl>
     </section>
 
@@ -50,12 +50,12 @@
                 v-for="slot in normalEquipmentSlots"
                 :key="slot.index"
                 type="button"
-                :class="slotClass(slot.item?.frameTone, slot.item?.code)"
+                :class="slotClass(slot.item?.frameTone, slot.item?.selectionKey)"
                 :disabled="!slot.item"
                 :aria-label="slot.item ? `${slot.label}: ${slot.item.name}` : `${slot.label}: 빈 슬롯`"
-                @click="slot.item && game.selectInventoryPreview(slot.item.code)"
+                @click="slot.item && game.selectInventoryPreview(slot.item.selectionKey)"
               >
-                <span v-if="slot.item" aria-hidden="true">{{ slot.item.iconText }}</span>
+                <GameItemIcon v-if="slot.item" :item="slot.item" />
                 <small>{{ slot.label }}</small>
               </button>
             </div>
@@ -67,12 +67,12 @@
                 v-for="slot in specialEquipmentSlots"
                 :key="slot.index"
                 type="button"
-                :class="slotClass(slot.item?.frameTone, slot.item?.code)"
+                :class="slotClass(slot.item?.frameTone, slot.item?.selectionKey)"
                 :disabled="!slot.item"
                 :aria-label="slot.item ? `${slot.label}: ${slot.item.name}` : `${slot.label}: 빈 슬롯`"
-                @click="slot.item && game.selectInventoryPreview(slot.item.code)"
+                @click="slot.item && game.selectInventoryPreview(slot.item.selectionKey)"
               >
-                <span v-if="slot.item" aria-hidden="true">{{ slot.item.iconText }}</span>
+                <GameItemIcon v-if="slot.item" :item="slot.item" />
                 <small>{{ slot.label }}</small>
               </button>
             </div>
@@ -88,7 +88,7 @@
         <div class="inventory-preview__actions">
           <div>
             <span>첫 빈 칸</span>
-            <strong>{{ inventory.nextEmptySlotNumber }}번</strong>
+            <strong>{{ inventory.nextEmptySlotNumber ? `${inventory.nextEmptySlotNumber}번` : '가득 참' }}</strong>
           </div>
           <button
             type="button"
@@ -102,45 +102,48 @@
             v-for="slot in inventory.inventorySlots"
             :key="slot.index"
             type="button"
-            :class="slotClass(slot.item?.frameTone, slot.item?.code)"
+            :class="slotClass(slot.item?.frameTone, slot.item?.selectionKey)"
             :disabled="!slot.item"
             :aria-label="slot.item ? `${slot.number}번 칸: ${slot.item.name}` : `${slot.number}번 칸: 비어 있음`"
-            @click="slot.item && game.selectInventoryPreview(slot.item.code)"
+            @click="slot.item && game.selectInventoryPreview(slot.item.selectionKey)"
           >
-            <span v-if="slot.item" aria-hidden="true">{{ slot.item.iconText }}</span>
-            <small v-if="slot.item">{{ slot.item.tierLabel }}</small>
+            <GameItemIcon v-if="slot.item" :item="slot.item" />
+            <small v-if="slot.item">{{ slot.item.levelLabel }} {{ slot.item.quantityLabel }}</small>
             <i v-else aria-hidden="true">{{ slot.number }}</i>
           </button>
         </div>
-        <p class="inventory-preview__capacity">화면에는 24칸만 표시하며 실제 계약 용량은 60칸입니다. 빈 칸은 이동·사용 뒤에도 유지됩니다.</p>
+        <p class="inventory-preview__capacity">전체 {{ inventory.visibleSlotCount }}칸을 표시합니다. 저장된 빈 칸과 아이템 순서를 유지하며 정렬 미리보기는 저장되지 않습니다.</p>
       </div>
 
-      <aside class="inventory-detail" aria-labelledby="inventory-detail-title">
+      <aside v-if="inventory.selectedItem" class="inventory-detail" aria-labelledby="inventory-detail-title">
         <div class="inventory-detail__icon" :data-frame="inventory.selectedItem.frameTone" aria-hidden="true">
-          {{ inventory.selectedItem.iconText }}
+          <GameItemIcon :item="inventory.selectedItem" />
         </div>
         <p>{{ inventory.selectedItem.typeLabel }} · {{ inventory.selectedItem.frameLabel }}</p>
         <h2 id="inventory-detail-title">{{ inventory.selectedItem.name }}</h2>
         <span>{{ inventory.selectedItem.description }}</span>
         <dl>
           <div><dt>선택 위치</dt><dd>{{ selectedLocationLabel }}</dd></div>
+          <div><dt>강화</dt><dd>{{ inventory.selectedItem.levelLabel || '정보 없음' }}</dd></div>
+          <div><dt>아이템 ID</dt><dd>{{ inventory.selectedItem.instanceId ?? '저장된 ID 없음' }}</dd></div>
           <div><dt>등급</dt><dd>{{ inventory.selectedItem.tierLabel }}</dd></div>
           <div><dt>슬롯·효과</dt><dd>{{ inventory.selectedItem.statSummary }}</dd></div>
           <div><dt>보관 방식</dt><dd>{{ inventory.selectedItem.stackLabel }}</dd></div>
         </dl>
         <div class="inventory-detail__actions">
-          <button type="button" disabled title="snapshot과 아이템 mutation 연결 뒤 활성화됩니다">장착·사용</button>
-          <button type="button" disabled title="보관함 UI 단계에서 활성화됩니다">보관함 이동</button>
+          <button type="button" disabled title="아이템 변경 기능 연결 뒤 활성화됩니다">장착·사용</button>
+          <button type="button" disabled title="보관함 이동 기능 연결 뒤 활성화됩니다">보관함 이동</button>
         </div>
       </aside>
+      <aside v-else class="inventory-detail"><h2>보유 아이템이 없습니다</h2><p>장비나 가방에 아이템이 있으면 여기에서 상세 정보를 확인할 수 있습니다.</p></aside>
     </section>
 
     <section class="inventory-action-preview" aria-live="polite">
       <div><strong>Action adapter</strong><span>아이템 배열·장착 상태·save 변화 없음</span></div>
       <p v-for="log in inventory.action.logs" :key="log.message">{{ log.message }}</p>
       <dl>
-        <div><dt>master-data</dt><dd>연결됨</dd></div>
-        <div><dt>server snapshot</dt><dd>플레이어 읽기 연결 · 아이템 미매핑</dd></div>
+        <div><dt>master-data</dt><dd>{{ inventory.masterDataConnected ? '기준 정보 연결됨' : '저장된 정보로 표시' }}</dd></div>
+        <div><dt>server snapshot</dt><dd>보유 아이템 읽기 연결</dd></div>
         <div><dt>item mutation / save</dt><dd>잠김</dd></div>
       </dl>
     </section>
@@ -148,8 +151,8 @@
     <aside class="inventory-data-boundary" aria-label="인벤토리 미리보기 데이터 경계">
       <span aria-hidden="true">!</span>
       <div>
-        <strong>현재 아이템은 실제 보유 목록이 아니라 master-data 샘플입니다.</strong>
-        <p>선택과 `위로 정렬`은 표시 모델만 다시 만들며 원본 master-data와 server state를 바꾸지 않습니다. 보유 아이템 snapshot 매핑·저장·장착·사용·판매·강화·보관함 이동·휴지통 이동은 아직 연결하지 않습니다.</p>
+        <strong>선택 캐릭터의 현재 저장 데이터를 표시합니다.</strong>
+        <p>선택과 `위로 정렬`은 표시 모델만 다시 만들며 원본 master-data와 server state를 바꾸지 않습니다. 장착·사용·판매·강화·보관함 이동·휴지통 이동은 아직 연결하지 않습니다.</p>
       </div>
     </aside>
   </div>
@@ -157,6 +160,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import GameItemIcon from './GameItemIcon.vue';
 import type { ItemFrameTone } from '@/game/adapters/inventoryEquipment';
 import { useAccountStore, useGameStore } from '@/stores';
 
@@ -192,7 +196,7 @@ function enterSkillEnhancementPreview() {
 function slotClass(frame: ItemFrameTone | undefined, itemCode: string | undefined) {
   return {
     'has-item': Boolean(itemCode),
-    'is-selected': Boolean(itemCode && itemCode === inventory.value?.selectedItem.code),
+    'is-selected': Boolean(itemCode && itemCode === inventory.value?.selectedItem?.selectionKey),
     [`item-frame--${frame ?? 'empty'}`]: true,
   };
 }

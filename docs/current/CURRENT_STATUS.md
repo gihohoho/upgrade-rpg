@@ -1,13 +1,13 @@
-# Current Status — v397
+# Current Status — v398
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v397.vue-game-pending-unsynced-recovery-foundation
-strict result: vue-game-pending-unsynced-recovery-foundation
-next safe stage: migrate-vue-game-owned-item-snapshot-foundation
+latest: v398.vue-game-owned-item-snapshot-foundation
+strict result: vue-game-owned-item-snapshot-foundation
+next safe stage: migrate-vue-game-inventory-transfer-foundation
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -34,7 +34,16 @@ v394 production approval/execution: no/no
 v395 production approval/execution: no/no
 v396 production approval/execution: no/no
 v397 production approval/execution: no/no
+v398 production approval/execution: no/no
 ```
+
+## v398 실제 보유 아이템 읽기
+
+- 가방·15칸 장비·보관함·휴지통과 좌우 창을 현재 선택 캐릭터의 typed server state에 연결했습니다. master-data는 설명·아이콘 보완에만 쓰며 샘플 배치는 제거했습니다.
+- 저장된 ID·이름·강화·수량·등급과 빈 칸을 보존합니다. 선택 key는 원래 container/index로 구분해 같은 종류/중복 ID도 섞이지 않습니다. 코드 없는 legacy는 유일한 정확한 기본 이름만 매칭하며 미등록·빈 목록도 안전하게 표시합니다.
+- 저장 용량과 배열 전체를 표시하고 용량 밖 기존 항목도 숨기지 않습니다. 정렬은 표시 전용이며 원본 배열/POST는 바뀌지 않습니다. 아이콘은 저장소 PNG를 hash URL로 번들링하고 외부 snapshot URL은 로드하지 않습니다.
+
+- v398 전체 Vue smoke·TypeScript·production build PASS. 1366px/390px synthetic 브라우저에서 중복 선택·정렬 선택 보존·이미지·빈 목록·미등록 항목·modal 닫기·가로 넘침 0·console error 0을 확인했습니다. 실제 계정/DB write·배포는 없으며 Vue 서버만 설치 후 재시작했습니다.
 
 ## v397 Vue 미동기화 저장 복구
 
@@ -50,7 +59,7 @@ v397 production approval/execution: no/no
 - 자동 60초·수동·전환 저장은 하나의 Promise 직렬 queue를 사용합니다. 전환은 runtime pause와 최종 저장 성공 뒤에만 선택/token을 정리합니다. 응답 identity·saveVersion을 재검증하고 session·conflict·retryable·contract 오류를 분리합니다. v396의 terminal barrier는 위 현재 계약을 따릅니다.
 - backend의 현재 `saveVersion`은 snapshot 형식 버전이며 다중 기기 CAS revision이 아닙니다. Vue가 `expectedRevision`을 임의로 만들거나 409를 자동 재시도하지 않으며 실제 CAS schema/API는 공개 확대 전 별도 backend 단계로 남깁니다.
 - `GET /api/v1/game/load`도 선택 identity를 재검증해 typed 상태로 적용합니다. 빈 snapshot은 신규 기본 상태이며 오류는 session-invalid와 token·선택을 유지하는 retry 화면으로 나눕니다. 새 요청과 해제는 이전 GET/timer를 정리합니다.
-- v394~v395 focused·전체 Vue smoke·TypeScript·build는 PASS했고, 당시 v395 브라우저 조작은 Chrome 제어 연결 문제로 미완료였습니다. local 복구·보상·난수·CAS 구현은 연결하지 않았습니다.
+- v394~v395 smoke/build PASS. v395 당시 브라우저 검증은 연결 문제로 미완료였으며 후속 v396에서 확인했습니다.
 
 ## v393 빈 게임 화면 복구·client 전투 runtime 기반
 
@@ -59,11 +68,8 @@ v397 production approval/execution: no/no
 
 ## v384~v392 이전 Vue 게임 기반
 
-- v384는 legacy game JavaScript의 의존성을 [자동 생성 보고서](../generated/VUE_GAME_DOMAIN_DEPENDENCIES.md)로 고정하고 state/save·slot·전투 규칙·action result를 순수 TypeScript로 분리했습니다.
-- v385~v387은 마을 전용 접속 캐릭터 바·HUD와 master-data 필드·보스 표시 UI를, v388~v389는 15개 장비·24개 가방 및 보관함·휴지통의 빈 칸·독립 정렬 규칙을 이식했습니다.
-- v390은 스킬 10단계와 강화 규칙, SQ·SW 첫 Lv.1·보너스 비상속, 탈리스만/휘장 `2^현재 강화` 재료를 표시합니다.
-- v391은 구매 계약을 만들지 않는 master-data 가격 카탈로그와 저장 없는 설정 preview, v392는 legacy형 좌우 창·utility/mobile modal·최소 12px 가독성을 완성했습니다.
-- 각 단계의 desktop/mobile·focused smoke가 PASS했습니다. 이후 v393 client HP timer와 v394 load, v395 snapshot save queue만 추가했으며 Gold·보상·쿨타임·아이템/스킬 변경·난수와 backend·DB·legacy·Render는 바꾸지 않았습니다.
+- v384~v389는 [typed domain과 의존성](../generated/VUE_GAME_DOMAIN_DEPENDENCIES.md), 마을 전용 접속 바·HUD·필드·보스·아이템 표시 기반을 이식했습니다. v398 이전 가방은 24칸 샘플이었습니다.
+- v390~v392는 스킬/강화·가격 카탈로그·임시 설정과 좌우 창/modal을 이식했습니다. SQ·SW 첫 Lv.1·보너스 비상속·탈리스만/휘장 재료 규칙을 유지하며 이후 가독성은 v396의 13px token으로 개선했습니다.
 
 ## v378 게임 UI·환경 라우팅 소스 준비
 
@@ -133,7 +139,7 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. `migrate-vue-game-owned-item-snapshot-foundation`: 가방·장비·보관함·휴지통의 master-data 샘플을 실제 보유 snapshot 표시로 교체합니다. 빈 칸·등급·identity를 보존하며 장착·이동·사용·판매·소비·보상·난수는 별도로 연결합니다.
+1. `migrate-vue-game-inventory-transfer-foundation`: 가방↔보관함 이동과 수동 정렬을 순수 변경 결과·공통 저장 queue에 연결합니다. 빈 칸·첫 빈 칸·실패 시 복구를 유지하며 장착·사용·판매·삭제·소비·보상·난수는 분리합니다.
 2. 실제 관리자 Apply API·재인증·dev key header·DB write 연결은 이번 단계에 포함되지 않았습니다. 필요하면 작업 종류와 정확한 DB-write 범위를 별도 승인받습니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 

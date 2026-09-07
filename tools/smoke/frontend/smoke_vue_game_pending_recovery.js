@@ -55,6 +55,27 @@ function fixture() {
 
 async function main() {
   let f = fixture();
+  f.state.player.inventory = [{ id: 'owned-a', name: '소유 A' }, null, { id: 'owned-b', name: '소유 B' }];
+  f.state.player.storage = [null, { id: 'stored', name: '보관 A' }];
+  f.setServer(f.m.createSelectedCharacterSaveRequest({ ...f.identity, serverState: f.state, saveVersion: 1 }, 'manual').snapshot);
+  await f.load();
+  const ownedBefore = JSON.stringify(f.game.model.serverState);
+  assert.strictEqual(f.game.enterInventoryPreview([]), true, 'owned UI works without master-data');
+  f.game.selectInventoryPreview('inventory:2');
+  assert.strictEqual(f.game.inventoryModel.selectedItem.instanceId, 'owned-b');
+  f.game.toggleInventoryCompactPreview();
+  assert.strictEqual(f.game.inventoryModel.selectedSlotNumber, 2);
+  assert.strictEqual(f.game.enterStorageTrashPreview(), true);
+  assert.strictEqual(f.game.storageTrashModel.storage.slots[1].item.instanceId, 'stored');
+  f.game.toggleStorageTrashCompactPreview('storage');
+  assert.strictEqual(f.game.storageTrashModel.storage.slots[0].item.instanceId, 'stored');
+  assert.strictEqual(JSON.stringify(f.game.model.serverState), ownedBefore);
+  assert.strictEqual(f.posts(), 0, 'owned display and sorting must never POST');
+  f.game.resetShell();
+  assert.strictEqual(f.game.inventoryModel, null);
+  assert.strictEqual(f.game.storageTrashModel, null);
+
+  f = fixture();
   f.seedPending();
   const pending = f.entries.get(f.key);
   assert.strictEqual(await f.load(), 'recovery');

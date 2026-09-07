@@ -5,9 +5,9 @@ import {
   countOccupiedItemSlots,
   createGameActionResult,
   findFirstEmptyItemSlot,
-  placeItemInFirstEmptySlot,
   type GameActionResult,
   type ItemSlot,
+  type GameItem,
 } from '@/game/domain';
 import type { TownHudViewModel } from './townHud';
 
@@ -16,6 +16,12 @@ export type InventoryPreviewLocation = 'inventory' | 'equipment';
 
 export interface InventoryItemView {
   code: string;
+  selectionKey: string;
+  instanceId: string | number | null;
+  iconUrl: string | null;
+  levelLabel: string;
+  quantityLabel: string;
+  templateMatched: boolean;
   name: string;
   iconText: string;
   itemType: string;
@@ -59,18 +65,18 @@ export interface InventoryEquipmentViewModel {
   goldLabel: string;
   equipmentSlots: EquipmentSlotView[];
   inventorySlots: InventorySlotView[];
-  selectedItem: InventoryItemView;
+  selectedItem: InventoryItemView | null;
   selectedLocation: InventoryPreviewLocation;
   selectedSlotNumber: number;
   occupiedCount: number;
-  totalCapacity: 60;
-  visibleSlotCount: 24;
+  totalCapacity: number;
+  visibleSlotCount: number;
   nextEmptySlotNumber: number;
   compactPreview: boolean;
   compactMovedCount: number;
   action: GameActionResult;
-  masterDataConnected: true;
-  snapshotConnected: false;
+  masterDataConnected: boolean;
+  snapshotConnected: true;
   itemMutationConnected: false;
 }
 
@@ -87,7 +93,6 @@ const NORMAL_SLOT_BY_GROUP: Record<string, number> = {
   normal_crit: 4,
   beginner: 5,
 };
-const PREVIEW_INVENTORY_POSITIONS = [0, 2, 5, 6, 10, 14, 18] as const;
 const NORMAL_FAMILY_STAGE_TONES: Record<number, ItemFrameTone> = {
   21: 'basic', 22: 'rare', 23: 'transcendent', 24: 'basic', 25: 'rare', 26: 'transcendent',
   30: 'basic', 31: 'rare', 35: 'transcendent', 36: 'liberated',
@@ -98,30 +103,13 @@ const FRAME_LABELS: Record<ItemFrameTone, string> = {
 };
 
 export function createInventoryEquipmentViewModel(source: InventoryEquipmentSource): InventoryEquipmentViewModel {
-  const items = source.itemTemplates.slice().sort(compareTemplates).map(normalizeInventoryItemTemplate);
-  if (!items.length) throw new Error('아이템 master-data가 없습니다.');
-
-  const equipmentSlots = createEquipmentSlots(items);
-  const equippedCodes = new Set(equipmentSlots.flatMap((slot) => slot.item ? [slot.item.code] : []));
-  const inventoryCandidates = selectInventoryCandidates(items, equippedCodes);
-  const spacedSlots: ItemSlot<InventoryItemView>[] = [];
-  inventoryCandidates.forEach((item, index) => {
-    const target = PREVIEW_INVENTORY_POSITIONS[index] ?? index;
-    spacedSlots[target] = item;
-  });
-
-  const compacted = compactItemSlots(spacedSlots);
-  const displayItems: ItemSlot<InventoryItemView>[] = source.compactPreview ? compacted.slots : spacedSlots.slice();
-  const occupiedCount = countOccupiedItemSlots(displayItems);
-  const nextEmptyIndex = findFirstEmptyItemSlot(displayItems, 60);
-  const incomingPreview = placeItemInFirstEmptySlot(displayItems, items[0], 60);
-  if (incomingPreview.index !== nextEmptyIndex) throw new Error('첫 빈 칸 규칙이 일치하지 않습니다.');
-
-  const inventorySlots = Array.from({ length: 24 }, (_, index): InventorySlotView => ({
-    index,
-    number: index + 1,
-    item: displayItems[index] ?? null,
+  const player = source.town.serverState.player;
+  const equipmentSlots = EQUIPMENT_SLOT_LABELS.map((label, index): EquipmentSlotView => ({
+    index, number: index + 1, label, group: index < 6 ? 'normal' : 'special',
+    item: normalizeOwnedItem(player.equipment[index], source.itemTemplates, 'equipment', index),
   }));
+  const container = createOwnedContainer(player.inventory, player.maxInventorySize, source.itemTemplates, 'inventory', source.compactPreview);
+  const { slots: inventorySlots, occupiedCount, capacity: totalCapacity, nextEmptySlotNumber, compactMovedCount } = container;
   const selected = findSelectedItem(equipmentSlots, inventorySlots, source.preferredItemCode);
 
   return {
@@ -138,23 +126,16 @@ export function createInventoryEquipmentViewModel(source: InventoryEquipmentSour
     selectedLocation: selected.location,
     selectedSlotNumber: selected.slotNumber,
     occupiedCount,
-    totalCapacity: 60,
-    visibleSlotCount: 24,
-    nextEmptySlotNumber: nextEmptyIndex + 1,
+    totalCapacity,
+    visibleSlotCount: inventorySlots.length,
+    nextEmptySlotNumber,
     compactPreview: source.compactPreview,
-    compactMovedCount: compacted.moved,
-    action: createInventoryPreviewAction(source.compactPreview, compacted.moved, occupiedCount, source.createdAt),
-    masterDataConnected: true,
-    snapshotConnected: false,
+    compactMovedCount,
+    action: createInventoryPreviewAction(source.compactPreview, compactMovedCount, occupiedCount, source.createdAt),
+    masterDataConnected: source.itemTemplates.length > 0,
+    snapshotConnected: true,
     itemMutationConnected: false,
   };
-}
-
-function compareTemplates(left: ItemTemplateOption, right: ItemTemplateOption): number {
-  return left.itemType.localeCompare(right.itemType)
-    || resolveTier(left) - resolveTier(right)
-    || left.name.localeCompare(right.name)
-    || left.code.localeCompare(right.code);
 }
 
 export function normalizeInventoryItemTemplate(item: ItemTemplateOption): InventoryItemView {
@@ -165,6 +146,12 @@ export function normalizeInventoryItemTemplate(item: ItemTemplateOption): Invent
   const frameTone = resolveFrameTone(item.name, item.itemType, tier);
   return {
     code: item.code,
+    selectionKey: item.code,
+    instanceId: null,
+    iconUrl: null,
+    levelLabel: '',
+    quantityLabel: '',
+    templateMatched: true,
     name: item.name,
     iconText: item.name.trim().replace(/^[-★\[]+/, '').slice(0, 1) || '物',
     itemType: item.itemType,
@@ -180,49 +167,80 @@ export function normalizeInventoryItemTemplate(item: ItemTemplateOption): Invent
   };
 }
 
-function createEquipmentSlots(items: InventoryItemView[]): EquipmentSlotView[] {
-  const pickedCodes = new Set<string>();
-  return EQUIPMENT_SLOT_LABELS.map((label, index) => {
-    const item = items.find((candidate) => candidate.equipSlotIndex === index && !pickedCodes.has(candidate.code)) ?? null;
-    if (item) pickedCodes.add(item.code);
-    return { index, number: index + 1, label, group: index < 6 ? 'normal' : 'special', item };
+/** Project owned entries without changing identity, sparse positions or the save payload. */
+export function normalizeOwnedItem(value: unknown, templates: ItemTemplateOption[], container: string, index: number): InventoryItemView | null {
+  if (value === null || value === undefined) return null;
+  const owned = asRecord(value);
+  const code = stringValue(owned.itemTemplateCode ?? owned.templateKey ?? owned.code);
+  // Legacy saves can lack a template code. Only a unique exact base-name match is safe.
+  const baseName = stringValue(owned.name).replace(/\s*\+\d+$/, '');
+  const candidates = code ? templates.filter((entry) => entry.code === code) : templates.filter((entry) =>
+    entry.name.replace(/\s*\+\d+$/, '') === baseName
+    && (!owned.type || entry.itemType === owned.type));
+  const template = candidates.length === 1 ? candidates[0] : undefined;
+  const options = asRecord(template?.options);
+  const raw = asRecord(options.raw);
+  const name = stringValue(owned.name) || template?.name || '알 수 없는 아이템';
+  const itemType = stringValue(owned.type) || template?.itemType || 'unknown';
+  const tier = owned.tier ?? owned.grade ?? options.tier ?? raw.tier ?? template?.grade;
+  const view = normalizeInventoryItemTemplate({
+    code: code || template?.code || '', name, itemType,
+    grade: null,
+    description: stringValue(owned.desc ?? owned.description) || template?.description,
+    stackable: template?.stackable ?? false,
+    equipSlot: template?.equipSlot,
+    options: { ...options, ...owned, tier, raw },
   });
+  const level = nullableInteger(owned.level);
+  const count = nullableInteger(owned.count);
+  return {
+    ...view,
+    selectionKey: `${container}:${index}`,
+    instanceId: typeof owned.id === 'string' || typeof owned.id === 'number' ? owned.id : null,
+    iconUrl: stringValue(owned.img ?? owned.iconUrl ?? template?.iconUrl ?? raw.img) || null,
+    levelLabel: level === null ? '' : `+${Math.max(0, level)}`,
+    quantityLabel: count === null ? '' : `×${Math.max(0, count)}`,
+    stackLabel: count === null ? '수량 정보 없음 · 개별 저장 항목' : `보유 수량 ${Math.max(0, count)}개`,
+    templateMatched: Boolean(template),
+    description: view.description + (template ? '' : ' · 기준 정보 미연결: 저장된 항목을 그대로 표시합니다.'),
+  };
 }
 
-function selectInventoryCandidates(items: InventoryItemView[], equippedCodes: Set<string>): InventoryItemView[] {
-  const available = items.filter((item) => !equippedCodes.has(item.code));
-  const selected: InventoryItemView[] = [];
-  const add = (item: InventoryItemView | undefined) => {
-    if (item && !selected.some((current) => current.code === item.code)) selected.push(item);
+export function createOwnedContainer(
+  items: ItemSlot<GameItem>[], capacity: number, templates: ItemTemplateOption[],
+  container: string, compactPreview: boolean,
+) {
+  const normalized = Array.from(items, (item, index) => normalizeOwnedItem(item, templates, container, index));
+  const compacted = compactItemSlots(normalized);
+  const display = compactPreview ? compacted.slots : normalized;
+  const safeCapacity = Number.isSafeInteger(capacity) && capacity >= 0 ? capacity : 60;
+  // Never hide existing entries beyond the nominal capacity.
+  const length = Math.max(safeCapacity, display.length);
+  return {
+    capacity: safeCapacity,
+    occupiedCount: countOccupiedItemSlots(normalized),
+    nextEmptySlotNumber: findFirstEmptyItemSlot(display, safeCapacity) + 1,
+    compactMovedCount: compacted.moved,
+    slots: Array.from({ length }, (_, index): InventorySlotView => ({
+      index, number: index + 1, item: display[index] ?? null,
+    })),
   };
-  add(available.find((item) => item.itemType === 'skill_book'));
-  add(available.find((item) => item.itemType === 'special_equip'));
-  for (const item of available.filter((candidate) => candidate.itemType === 'normal')) {
-    add(item);
-    if (selected.length >= 6) break;
-  }
-  for (const item of available) {
-    add(item);
-    if (selected.length >= PREVIEW_INVENTORY_POSITIONS.length) break;
-  }
-  if (!selected.length) selected.push(items[0]);
-  return selected.slice(0, PREVIEW_INVENTORY_POSITIONS.length);
 }
 
 function findSelectedItem(
   equipment: EquipmentSlotView[],
   inventory: InventorySlotView[],
   preferredItemCode: string | null | undefined,
-): { item: InventoryItemView; location: InventoryPreviewLocation; slotNumber: number } {
-  const inventoryMatch = inventory.find((slot) => slot.item?.code === preferredItemCode);
+): { item: InventoryItemView | null; location: InventoryPreviewLocation; slotNumber: number } {
+  const inventoryMatch = inventory.find((slot) => slot.item?.selectionKey === preferredItemCode);
   if (inventoryMatch?.item) return { item: inventoryMatch.item, location: 'inventory', slotNumber: inventoryMatch.number };
-  const equipmentMatch = equipment.find((slot) => slot.item?.code === preferredItemCode);
+  const equipmentMatch = equipment.find((slot) => slot.item?.selectionKey === preferredItemCode);
   if (equipmentMatch?.item) return { item: equipmentMatch.item, location: 'equipment', slotNumber: equipmentMatch.number };
   const firstInventory = inventory.find((slot) => slot.item);
   if (firstInventory?.item) return { item: firstInventory.item, location: 'inventory', slotNumber: firstInventory.number };
   const firstEquipment = equipment.find((slot) => slot.item);
   if (firstEquipment?.item) return { item: firstEquipment.item, location: 'equipment', slotNumber: firstEquipment.number };
-  throw new Error('표시할 아이템이 없습니다.');
+  return { item: null, location: 'inventory', slotNumber: 0 };
 }
 
 function createInventoryPreviewAction(compact: boolean, moved: number, occupied: number, createdAt: number): GameActionResult {
@@ -234,7 +252,7 @@ function createInventoryPreviewAction(compact: boolean, moved: number, occupied:
   }, createdAt);
   return addResultLog(result, compact
     ? `[정렬 미리보기] ${occupied}개 아이템의 상대 순서를 유지하며 빈 칸 ${moved}곳을 앞당겼습니다.`
-    : '[미리보기] 실제 보유 데이터가 아닌 master-data 샘플 배치를 열었습니다.');
+    : '[보유 목록] 선택 캐릭터의 저장된 아이템 배치를 읽었습니다.');
 }
 
 function resolveEquipmentSlot(item: ItemTemplateOption, options: Record<string, unknown>, raw: Record<string, unknown>): number | null {
@@ -243,12 +261,6 @@ function resolveEquipmentSlot(item: ItemTemplateOption, options: Record<string, 
   if (item.itemType === 'special_equip' && specialIndex !== null && specialIndex >= 6 && specialIndex <= 14) return specialIndex;
   const group = stringValue(options.equipGroup ?? raw.equipGroup ?? item.equipSlot);
   return NORMAL_SLOT_BY_GROUP[group] ?? null;
-}
-
-function resolveTier(item: ItemTemplateOption): number {
-  const options = asRecord(item.options);
-  const raw = asRecord(options.raw);
-  return nullableTier(options.tier ?? raw.tier ?? item.grade) ?? Number.MAX_SAFE_INTEGER;
 }
 
 function resolveFrameTone(name: string, itemType: string, tier: number | null): ItemFrameTone {
@@ -280,6 +292,7 @@ function formatTypeLabel(itemType: string): string {
 function formatDefaultDescription(itemType: string): string {
   if (itemType === 'skill_book') return '스킬 레벨 성장에 사용하는 강화권입니다.';
   if (itemType === 'special_equip') return '전용 슬롯에 장착하는 특수 장비입니다.';
+  if (itemType !== 'normal') return '저장된 아이템입니다. 효과 정보는 확인되지 않았습니다.';
   return '캐릭터 능력치를 높이는 장비입니다.';
 }
 
@@ -292,7 +305,7 @@ function formatStatSummary(
   if (itemType === 'skill_book') return '스킬 성장 재료';
   if (equipSlotIndex !== null) return `${EQUIPMENT_SLOT_LABELS[equipSlotIndex]} 슬롯 대상`;
   const group = stringValue(options.equipGroup ?? raw.equipGroup);
-  return group ? `장비 그룹 · ${group}` : '상세 능력치는 보유 장비 snapshot 매핑 뒤 계산';
+  return group ? `장비 그룹 · ${group}` : '상세 능력치 계산은 후속 단계';
 }
 
 function nullableTier(value: unknown): number | null {

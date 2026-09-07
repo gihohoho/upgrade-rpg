@@ -60,10 +60,7 @@ function assertStaticBoundary() {
     /\b(?:setTimeout|setInterval)\s*\(/,
   ]) assert.ok(!forbidden.test(adapter), `storage/trash adapter contains forbidden dependency: ${forbidden}`);
   for (const marker of [
-    "compactItemSlots",
-    "countOccupiedItemSlots",
-    "findFirstEmptyItemSlot",
-    "placeItemInFirstEmptySlot",
+    "createOwnedContainer",
     "mode: 'display-only'",
     "permanentDeleteConnected: false",
   ]) requireMarker(adapter, marker, "storage/trash adapter");
@@ -100,7 +97,7 @@ function assertStaticBoundary() {
     "game.toggleStorageTrashCompactPreview('trash')",
     "game.returnInventoryPreview",
     "휴지통 비우기",
-    "보유 아이템 snapshot 매핑·저장·가방/보관함 이동·휴지통 이동·복구·영구 삭제",
+    "가방/보관함 이동·휴지통 이동·복구·영구 삭제",
   ]) requireMarker(component, marker, "storage/trash component");
   assert.ok(!component.includes("town-session-bar"), "connected character bar must remain town-only");
   assert.ok(component.includes('type="button" disabled'), "destructive and mutation actions must remain disabled");
@@ -159,6 +156,12 @@ function assertAdapterBehavior() {
   ];
   const before = JSON.stringify({ townSource, itemTemplates });
   const town = adapters.town.createTownHudViewModel(townSource);
+  const player = town.serverState.player;
+  player.inventory = [{ id: 'q1', itemTemplateCode: 'skill_q', count: 8 }, null, { id: 'q2', itemTemplateCode: 'skill_q', count: 3 }];
+  player.equipment[6] = { id: 'weapon', itemTemplateCode: 'special_weapon_1', level: 7 };
+  player.storage = [{ id: 's1', templateKey: 'normal_skill_1' }, null, { id: 's2', templateKey: 'normal_skill_1', level: 4 }];
+  player.trash = [{ id: 't1', templateKey: 'skill_w', count: 2 }, null, { id: 't2', name: '알 수 없는 유물', level: 9 }];
+  const playerBefore = JSON.stringify(player);
   const inventory = adapters.inventory.createInventoryEquipmentViewModel({
     town,
     itemTemplates,
@@ -168,6 +171,7 @@ function assertAdapterBehavior() {
   });
   const original = adapters.storageTrash.createStorageTrashViewModel({
     inventory,
+    player,
     itemTemplates,
     storageCompactPreview: false,
     trashCompactPreview: false,
@@ -176,19 +180,21 @@ function assertAdapterBehavior() {
     lastActionContainer: null,
     createdAt: 0,
   });
-  const selectedTrashCode = original.trash.slots.find((slot) => slot.item).item.code;
+  const selectedTrashCode = original.trash.slots.find((slot) => slot.item).item.selectionKey;
   const compactStorage = adapters.storageTrash.createStorageTrashViewModel({
     inventory,
+    player,
     itemTemplates,
     storageCompactPreview: true,
     trashCompactPreview: false,
-    preferredItemCode: original.selectedItem.code,
+    preferredItemCode: original.selectedItem.selectionKey,
     preferredContainer: "storage",
     lastActionContainer: "storage",
     createdAt: 0,
   });
   const compactTrash = adapters.storageTrash.createStorageTrashViewModel({
     inventory,
+    player,
     itemTemplates,
     storageCompactPreview: false,
     trashCompactPreview: true,
@@ -199,14 +205,14 @@ function assertAdapterBehavior() {
   });
 
   assert.strictEqual(original.zoneType, "storage-trash");
-  assert.strictEqual(original.storage.slots.length, 20);
-  assert.strictEqual(original.trash.slots.length, 20);
+  assert.strictEqual(original.storage.slots.length, 60);
+  assert.strictEqual(original.trash.slots.length, 60);
   assert.strictEqual(original.storage.capacity, 60);
   assert.strictEqual(original.trash.capacity, 60);
   assert.strictEqual(original.storage.nextEmptySlotNumber, 2);
   assert.strictEqual(original.trash.nextEmptySlotNumber, 2);
   assert.strictEqual(original.action.type, "storage-trash.preview.open");
-  assert.strictEqual(original.snapshotConnected, false);
+  assert.strictEqual(original.snapshotConnected, true);
   assert.strictEqual(original.itemMutationConnected, false);
   assert.strictEqual(original.permanentDeleteConnected, false);
 
@@ -217,7 +223,7 @@ function assertAdapterBehavior() {
   assert.strictEqual(compactStorage.trash.nextEmptySlotNumber, 2);
   assert.ok(compactStorage.storage.compactMovedCount > 0);
   assert.strictEqual(compactStorage.action.type, "storage-trash.preview.compact-storage");
-  assert.strictEqual(compactStorage.selectedItem.code, original.selectedItem.code);
+  assert.strictEqual(compactStorage.selectedItem.selectionKey, original.selectedItem.selectionKey);
 
   const originalTrashOrder = original.trash.slots.filter((slot) => slot.item).map((slot) => slot.item.code);
   const compactTrashOrder = compactTrash.trash.slots.filter((slot) => slot.item).map((slot) => slot.item.code);
@@ -226,14 +232,20 @@ function assertAdapterBehavior() {
   assert.ok(compactTrash.trash.compactMovedCount > 0);
   assert.strictEqual(compactTrash.action.type, "storage-trash.preview.compact-trash");
   assert.strictEqual(compactTrash.selectedContainer, "trash");
-  assert.strictEqual(compactTrash.selectedItem.code, selectedTrashCode);
+  assert.strictEqual(compactTrash.selectedItem.selectionKey, selectedTrashCode);
+  assert.strictEqual(JSON.stringify(player), playerBefore, 'owned containers unchanged');
+  const empty = adapters.storageTrash.createStorageTrashViewModel({ inventory, player: { ...player, storage: [], trash: [] }, itemTemplates: [], storageCompactPreview: false, trashCompactPreview: false, createdAt: 0 });
+  assert.strictEqual(empty.selectedItem, null);
+  assert.strictEqual(empty.storage.occupiedCount, 0);
+  assert.strictEqual(original.trash.slots[2].item.name, '알 수 없는 유물');
+  assert.strictEqual(original.trash.slots[2].item.levelLabel, '+9');
   assert.strictEqual(JSON.stringify({ townSource, itemTemplates }), before, "storage/trash adapter mutated source input");
 }
 
 function main() {
   assertStaticBoundary();
   assertAdapterBehavior();
-  console.log("PASS: Vue storage/trash UI preserves sparse slots and independent compaction without owned-item mapping, move, restore, delete, or save mutation");
+  console.log("PASS: Vue storage/trash UI preserves sparse slots and independent compaction with owned-item mapping and no move, restore, delete, or save mutation");
 }
 
 main();

@@ -32,6 +32,7 @@
 - PowerShell에서 `bash`만 호출하면 WSL로 잘못 연결될 수 있습니다. 전체 core smoke는 항상 설치된 Git Bash를 명시하고 같은 명령 안에서 `source backend/.venv/Scripts/activate`, `DEBUG=false`, `bash tools/run_smoke_core.sh` 순서로 실행합니다.
 - 문서만 바꾼 작업은 문서 구조·handoff·strict readiness만 한 번 검사합니다. 포맷만 바꾼 CSS는 AST 의미 동등성과 관련 focused smoke만 검사합니다. 동작 코드의 전체 core는 통합이 끝난 뒤 한 번만 실행하며, 이후 결과 문구만 고친 경우 다시 실행하지 않습니다.
 - 성공한 명령의 exit code와 출력은 그대로 신뢰합니다. 성공한 `git push` 뒤 원격 추적 상태를 다시 확인하거나, 이미 적용·재실행 검증한 Obsidian을 단순 확인 목적으로 다시 열지 않습니다.
+- 변경 기능의 문구·버전·자산 경계에 묶인 smoke와 generated report를 통합 검사 전에 동기화합니다. 검사 중단 시 이미 성공한 앞부분을 반복하지 않고 실패한 검사부터 이어갑니다.
 - 환경 지정 실수나 불필요한 반복이 생기면 작업 종료 전에 원인을 짧게 자체 점검하고 다음 실행 규칙에 반영합니다. 자체 점검을 증명하기 위한 추가 명령이나 보고서는 만들지 않습니다.
 
 ## 변경 품질
@@ -90,9 +91,9 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v397.vue-game-pending-unsynced-recovery-foundation
-strict result: vue-game-pending-unsynced-recovery-foundation
-next safe stage: migrate-vue-game-owned-item-snapshot-foundation
+latest: v398.vue-game-owned-item-snapshot-foundation
+strict result: vue-game-owned-item-snapshot-foundation
+next safe stage: migrate-vue-game-inventory-transfer-foundation
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -120,10 +121,12 @@ v394 production approval/execution: no/no
 v395 production approval/execution: no/no
 v396 production approval/execution: no/no
 v397 production approval/execution: no/no
+v398 production approval/execution: no/no
 ```
 
 - v396은 Vue 글자·명암 token, 게임·계정 modal 접근성, 관리자 표시/오류 helper를 정리했습니다. 미사용 `gameReadOnlyApi.js`만 제거했고 typed API·공개 legacy는 유지합니다. 전체 Vue smoke·TypeScript·build와 1366px/390px 브라우저 검사가 PASS했습니다.
-- v397은 계정·슬롯·캐릭터별 Vue 복구본과 pending marker를 함께 기록하고 재진입 시 local/server/취소 선택을 연결합니다. 선택 전에는 게임·자동 저장을 시작하지 않으며 이전 응답은 최신 pending을 지우지 않습니다. 기존 legacy 저장과 backend CAS·DB·배포는 바꾸지 않습니다. 다음은 실제 보유 아이템 snapshot 표시입니다.
+- v398은 보유 snapshot 기반 가방·장비·보관함·휴지통 읽기를 연결합니다. 샘플 자동 배치를 제거하고 빈 목록·중복 ID/종류·강화·수량·등급·미등록 항목을 표시합니다. 원본/저장은 바꾸지 않으며 다음은 가방↔보관함 이동과 수동 정렬입니다.
+- v397은 계정·슬롯·캐릭터별 Vue 복구본과 pending marker를 함께 기록하고 재진입 시 local/server/취소 선택을 연결합니다. 선택 전에는 게임·자동 저장을 시작하지 않으며 이전 응답은 최신 pending을 지우지 않습니다. 기존 legacy 저장과 backend CAS·DB·배포는 바꾸지 않습니다. v398에서 실제 보유 아이템 읽기 표시를 연결했습니다.
 - v390~v392는 스킬·강화와 상점·설정 표시, legacy형 desktop 좌우 창·mobile modal·최소 12px 가독성을 완성했습니다. 실제 사용·거래·소비·난수·설정 영구 저장은 잠그고 snapshot만 v395 공통 queue가 저장합니다.
 - v388~v389는 장비·가방·보관함·휴지통 표시 모델과 빈 칸·첫 빈 칸·상대 순서 보존 독립 정렬을 연결했습니다. 실제 아이템 변경·save는 잠겼습니다.
 - v386~v387은 `baseUrl`을 제거하고 master-data 필드·보스의 표시 UI를 이식했습니다. HP·Gold·보상·쿨타임·save·timer·난수는 바꾸지 않았습니다.

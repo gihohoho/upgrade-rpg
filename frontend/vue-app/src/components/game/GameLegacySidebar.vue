@@ -35,13 +35,13 @@
             :data-frame="slot.item?.frameTone ?? 'empty'"
             :disabled="!slot.item"
             :title="slot.item ? `${slot.label}: ${slot.item.name}` : `${slot.label}: 빈 슬롯`"
-            @click="slot.item && openInventory(slot.item.code)"
+            @click="slot.item && openInventory(slot.item.selectionKey)"
           >
-            <span aria-hidden="true">{{ slot.item?.iconText ?? '·' }}</span>
+            <GameItemIcon v-if="slot.item" :item="slot.item" /><span v-else aria-hidden="true">·</span>
             <small>{{ slot.label }}</small>
           </button>
         </div>
-        <p v-else class="game-side-window__empty">아이템 master-data를 불러오면 장비 슬롯이 표시됩니다.</p>
+        <p v-else class="game-side-window__empty">선택 캐릭터의 저장 데이터를 불러오는 중입니다.</p>
       </section>
 
       <section class="game-side-section" aria-labelledby="game-side-stats-title">
@@ -74,7 +74,7 @@
       <div class="game-side-bag-summary">
         <div>
           <span>사용 중</span>
-          <strong>{{ preview?.occupiedCount ?? 0 }} / 60</strong>
+          <strong>{{ preview?.occupiedCount ?? 0 }} / {{ preview?.totalCapacity ?? 0 }}</strong>
         </div>
         <button type="button" :disabled="!preview" @click="openInventory()">가방 크게 보기</button>
       </div>
@@ -82,7 +82,7 @@
       <section class="game-side-section game-side-section--bag" aria-labelledby="game-side-bag-title">
         <div class="game-side-section__heading">
           <strong id="game-side-bag-title">아이템 슬롯</strong>
-          <span>master-data 미리보기</span>
+          <span>보유 아이템 · 처음 20칸</span>
         </div>
         <div v-if="preview" class="game-side-bag-grid">
           <button
@@ -92,11 +92,11 @@
             :data-frame="slot.item?.frameTone ?? 'empty'"
             :disabled="!slot.item"
             :aria-label="slot.item ? `${slot.number}번 칸: ${slot.item.name}` : `${slot.number}번 칸: 비어 있음`"
-            @click="slot.item && openInventory(slot.item.code)"
+            @click="slot.item && openInventory(slot.item.selectionKey)"
           >
-            <span v-if="slot.item" aria-hidden="true">{{ slot.item.iconText }}</span>
+            <GameItemIcon v-if="slot.item" :item="slot.item" />
             <i v-else aria-hidden="true">{{ slot.number }}</i>
-            <small v-if="slot.item">{{ slot.item.tierLabel }}</small>
+            <small v-if="slot.item">{{ slot.item.levelLabel }} {{ slot.item.quantityLabel }}</small>
           </button>
         </div>
         <p v-else class="game-side-window__empty">아이템 정보를 불러오는 중입니다.</p>
@@ -115,6 +115,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import GameItemIcon from './GameItemIcon.vue';
 import { useAccountStore, useGameStore } from '@/stores';
 import { createInventoryEquipmentViewModel } from '@/game/adapters/inventoryEquipment';
 
@@ -127,7 +128,7 @@ const account = useAccountStore();
 const game = useGameStore();
 const town = computed(() => game.model);
 const preview = computed(() => {
-  if (!game.model || !account.itemTemplates.length) return null;
+  if (!game.model) return null;
   return createInventoryEquipmentViewModel({
     town: game.model,
     itemTemplates: account.itemTemplates,
@@ -137,12 +138,12 @@ const preview = computed(() => {
 });
 
 function openInventory(itemCode?: string) {
-  if (!account.itemTemplates.length || !game.enterInventoryPreview(account.itemTemplates)) return;
+  if (!game.enterInventoryPreview(account.itemTemplates)) return;
   if (itemCode) game.selectInventoryPreview(itemCode);
 }
 
 function openStorage() {
-  if (!account.itemTemplates.length || !game.enterInventoryPreview(account.itemTemplates)) return;
+  if (!game.enterInventoryPreview(account.itemTemplates)) return;
   game.enterStorageTrashPreview();
 }
 
