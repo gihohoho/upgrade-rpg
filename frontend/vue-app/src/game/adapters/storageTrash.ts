@@ -54,7 +54,7 @@ export interface StorageTrashViewModel {
   action: GameActionResult;
   masterDataConnected: boolean;
   snapshotConnected: true;
-  itemMutationConnected: false;
+  itemMutationConnected: true;
   permanentDeleteConnected: false;
 }
 
@@ -79,7 +79,7 @@ export function createStorageTrashViewModel(source: StorageTrashSource): Storage
     action: createPreviewAction(source.lastActionContainer ?? null, storage, trash, source.createdAt),
     masterDataConnected: source.itemTemplates.length > 0,
     snapshotConnected: true,
-    itemMutationConnected: false,
+    itemMutationConnected: true,
     permanentDeleteConnected: false,
   };
 }

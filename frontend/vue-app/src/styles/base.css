@@ -6105,6 +6105,10 @@ code {
 .storage-trash-detail > button { width: 100%; }
 
 /* Owned containers expose every saved slot without stretching the modal indefinitely. */
+.game-item-save-status { position: sticky; top: 0; z-index: 3; padding: 14px 18px; margin-bottom: 12px; border: 1px solid var(--muted); border-radius: 12px; background: #12192b; overflow-wrap: anywhere; }
+.game-item-save-status p { margin: 4px 0; font-size: var(--font-size-body); line-height: 1.6; }
+.inventory-preview__actions { flex-wrap: wrap; }
+
 .inventory-slot-grid,
 .container-slot-grid {
   max-height: min(55vh, 600px);

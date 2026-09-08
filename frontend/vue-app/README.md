@@ -1,4 +1,4 @@
-# Upgrade RPG Vue App — v398
+# Upgrade RPG Vue App — v399
 
 이 폴더는 Upgrade RPG 전체 프론트엔드를 Vue로 옮기는 작업공간입니다. 현재 공개 게임과 관리자 화면은 아직 루트 `index.html`, `admin.html`, legacy `src/`를 사용합니다.
 
@@ -25,7 +25,7 @@
 
 1200px 이상에서는 내 정보/장비·가방/Gold를 게임 양옆에 유지하고, 좁은 화면에서는 하단 버튼과 모바일 modal을 사용합니다. 게임·계정 modal의 Tab 순환·Escape·배경 잠금·초점 복귀는 공통 composable이 맡습니다. 보조 글자는 13px 이상 token을 사용합니다. 마을에서만 접속 캐릭터 바가 표시됩니다.
 
-전투 timer와 client HP는 저장할 server state와 분리합니다. 아이템/스킬 변경·Gold/재료 소비·보상·난수·설정 영구 저장은 아직 연결하지 않았습니다. 자세한 기능 경계는 [Vue 전환 계획](../../docs/reference/frontend/VUE_FASTAPI_DB_TRANSITION_PLAN.md)을 따릅니다. TypeScript는 `baseUrl` 없이 상대 `paths`를 사용합니다. 관리자 GET/Preview는 Bearer와 권한 gate를 유지하며 실제 Apply는 잠겨 있습니다.
+전투 timer와 client HP는 저장할 server state와 분리합니다. 장착·사용·판매·스킬 변경·Gold/재료 소비·보상·난수·설정 영구 저장은 아직 연결하지 않았습니다. 자세한 기능 경계는 [Vue 전환 계획](../../docs/reference/frontend/VUE_FASTAPI_DB_TRANSITION_PLAN.md)을 따릅니다. TypeScript는 `baseUrl` 없이 상대 `paths`를 사용합니다. 관리자 GET/Preview는 Bearer와 권한 gate를 유지하며 실제 Apply는 잠겨 있습니다.
 
 ## 설치와 실행
 
@@ -58,4 +58,4 @@ npm run build
 
 `npm run build`는 먼저 TypeScript 검사를 실행한 뒤 Vite production bundle을 만듭니다.
 
-보유 아이템(v398): 가방·장비·보관함·휴지통은 선택 캐릭터의 snapshot을 표시합니다. 정렬은 미리보기이며 실제 이동·사용·판매는 잠겨 있습니다. 저장소 PNG만 번들링하고 미등록 항목·이미지 누락은 텍스트로 표시합니다.
+보유 아이템(v398): 가방·장비·보관함·휴지통은 선택 캐릭터의 snapshot을 표시합니다. v399는 가방↔보관함 묶음 이동·정렬 적용을 local 복구본과 공통 queue에 연결합니다. 자동 합치기·장착·사용·판매·휴지통 변경은 잠겨 있습니다. 저장소 PNG만 번들링하고 미등록 항목·이미지 누락은 텍스트로 표시합니다.

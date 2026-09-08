@@ -63,7 +63,7 @@ python tools/report_vue_game_domain_dependencies.py --check
 node tools/smoke/frontend/smoke_vue_game_domain_foundation.js
 ```
 
-`docs/generated/VUE_GAME_DOMAIN_DEPENDENCIES.md`에 legacy 의존성과 typed domain 경계를 기록합니다. v398 inventory/storage smoke는 실제 보유 배열·빈 목록·강화/수량·중복 선택·원본 보존을 검사합니다. Vue smoke는 게임 adapter·좌우 창·modal, 전투 timer·load/save와 v397 local 복구를 검사합니다. `smoke_vue_game_pending_recovery.js`는 계정 격리·local/server/취소·quota·손상·이전 응답·닫기 복구를 synthetic 저장소/응답으로 확인하며 실제 DB를 쓰지 않습니다. 난수·보상·아이템/스킬 변경·CAS·배포는 별도 단계입니다.
+`docs/generated/VUE_GAME_DOMAIN_DEPENDENCIES.md`에 legacy 의존성과 typed domain 경계를 기록합니다. v398 inventory/storage smoke는 실제 보유 배열·빈 목록·강화/수량·중복 선택·원본 보존을 검사합니다. Vue smoke는 게임 adapter·좌우 창·modal, 전투 timer·load/save와 v397 local 복구를 검사합니다. `smoke_vue_game_pending_recovery.js`는 계정 격리·local/server/취소·quota·손상·이전 응답·닫기 복구를 synthetic 저장소/응답으로 확인하며 실제 DB를 쓰지 않습니다. v399의 이동/정렬 검사도 동일 synthetic harness에서 quota·수량/ID·중복 클릭·실패/재시도·늦은 응답을 확인합니다. 자동 합치기·장착·사용·판매·스킬·난수·보상·CAS·배포는 별도 단계입니다.
 
 ## PostgreSQL/Alembic readiness 보고서
 

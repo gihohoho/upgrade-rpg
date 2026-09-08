@@ -41,6 +41,8 @@ import {
   calculateBasicAttackDamage,
   getBaseAttackByAttackSpeed,
   getBasicAttackIntervalMs,
+  compactItemSlots,
+  transferItemSlot,
 } from '@/game/domain';
 import {
   createCombatRuntimeController,
@@ -110,6 +112,9 @@ interface QueuedGameSave {
 
 interface LoadOptions { token: string; userId: number; slot: AccountCharacterSlot; characterLabel: string }
 
+export type OwnedItemAction = { type: 'move'; container: 'inventory' | 'storage'; selectionKey: string }
+  | { type: 'sort'; container: 'inventory' | 'storage' };
+
 class CancelledGameSave extends Error {}
 
 export const useGameStore = defineStore('game', () => {
@@ -118,6 +123,10 @@ export const useGameStore = defineStore('game', () => {
   const saveTransitioning = ref(false);
   const recovery = shallowRef<{ local: RecoveryCopy; server: RecoveryCopy } | null>(null);
   const recoveryWarning = ref('');
+  const itemAction = ref({ busy: false, message: '' });
+  const canMutateItems = computed(() => snapshotLoad.value.status === 'ready' && Boolean(model.value)
+    && !saveTransitioning.value && !itemAction.value.busy && !saveQueue.value.active
+    && saveQueue.value.queuedWrites === 0 && saveQueue.value.errorKind === null);
   const localRecovery = createLocalRecovery();
   let knownLocal: RecoveryRead | null = null;
   let loadedIdentity: RecoveryIdentity | null = null;
@@ -454,6 +463,65 @@ export const useGameStore = defineStore('game', () => {
       if (generation !== snapshotRequestId || error instanceof CancelledGameSave) return 'cancelled';
       return recordSaveError(error, reason, slot.slotKey, slot.accountCharacterId);
     }
+  }
+
+  async function mutateOwnedItems(options: { token: string; userId: number; slot: AccountCharacterSlot; action: OwnedItemAction }): Promise<GameSaveOutcome> {
+    const { token, userId, slot, action } = options;
+    const current = model.value;
+    const generation = snapshotRequestId;
+    if (!canMutateItems.value || terminalSaveError || !current || !loadedIdentity || !token
+      || loadedIdentity.userId !== userId || !slot.occupied || !slot.accountCharacter
+      || current.slotKey !== slot.slotKey || current.accountCharacterId !== slot.accountCharacterId
+      || current.characterCode !== slot.accountCharacter.characterCode) return 'cancelled';
+    if (action.container !== 'inventory' && action.container !== 'storage') return 'cancelled';
+    const player = current.serverState.player;
+    const updated = { ...player };
+    const label = action.container === 'inventory' ? '가방' : '보관함';
+    let message: string;
+    if (action.type === 'move') {
+      const selected = action.container === 'inventory' ? inventoryModel.value?.selectedItem : storageTrashModel.value?.selectedItem;
+      if (!selected || selected.selectionKey !== action.selectionKey || !action.selectionKey.startsWith(`${action.container}:`)) return 'cancelled';
+      const index = Number(action.selectionKey.split(':')[1]);
+      const destination = action.container === 'inventory' ? 'storage' : 'inventory';
+      const capacity = destination === 'inventory' ? player.maxInventorySize : player.maxStorageSize;
+      const result = transferItemSlot(player[action.container], player[destination], index, capacity);
+      if (!result.ok) {
+        itemAction.value.message = result.reason === 'full' ? '도착 공간이 가득 찼습니다. 아이템은 이동하지 않았습니다.' : '선택한 아이템을 다시 확인해 주세요.';
+        return 'cancelled';
+      }
+      updated[action.container] = result.source;
+      updated[destination] = result.destination;
+      message = `${label}의 ${selected.name} 묶음을 ${destination === 'inventory' ? '가방' : '보관함'} ${result.target + 1}번 칸으로 이동했습니다.`;
+    } else if (action.type === 'sort') {
+      const sorted = compactItemSlots(player[action.container]);
+      if (!sorted.moved) { itemAction.value.message = `${label}은 이미 정렬되어 있습니다.`; return 'cancelled'; }
+      updated[action.container] = sorted.slots;
+      message = `${label}을 아이템 순서대로 위로 정렬했습니다.`;
+    } else return 'cancelled';
+    const serverState = { ...current.serverState, player: updated };
+    // New mutations require a durable local copy before changing the visible state.
+    try {
+      const request = createSelectedCharacterSaveRequest({ ...loadedIdentity, serverState, saveVersion: current.saveVersion }, 'manual');
+      knownLocal ??= localRecovery.read(loadedIdentity);
+      knownLocal = localRecovery.capture(loadedIdentity, request, knownLocal);
+      recoveryWarning.value = '';
+    } catch (error) {
+      itemAction.value.message = '복구본을 기록하지 못해 아이템을 변경하지 않았습니다.';
+      recoveryWarning.value = error instanceof Error ? error.message : itemAction.value.message;
+      return recordSaveError(error instanceof RecoveryChangedError ? new ApiRequestError(recoveryWarning.value, { status: 409 }) : error, 'manual', slot.slotKey, slot.accountCharacterId);
+    }
+    itemAction.value = { busy: true, message: `${message} 이 기기에 보존했고 서버 저장 중입니다.` };
+    model.value = { ...current, serverState, snapshotStatusLabel: '이 기기 복구본 · 아이템 변경 저장 대기' };
+    inventoryCompactedPreview.value = false;
+    storageCompactedPreview.value = false;
+    selectedInventoryItemCode.value = null;
+    selectedStorageTrashItemCode.value = null;
+    rebuildInventoryPreview();
+    if (storageTrashModel.value) rebuildStorageTrashPreview();
+    const outcome = await enqueueSelectedCharacterSave({ token, userId, slot, reason: 'manual' });
+    if (generation !== snapshotRequestId) return 'cancelled';
+    itemAction.value = { busy: false, message: outcome === 'saved' ? message : `${message} 이 기기 복구본을 보존했습니다.` };
+    return outcome;
   }
 
   async function executeQueuedSave(job: QueuedGameSave) {
@@ -947,6 +1015,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function clearShellState() {
+    itemAction.value = { busy: false, message: '' };
     recovery.value = null;
     recoveryContext = null;
     knownLocal = null;
@@ -1009,6 +1078,9 @@ export const useGameStore = defineStore('game', () => {
   }
 
   return {
+    itemAction,
+    canMutateItems,
+    mutateOwnedItems,
     recovery,
     recoveryWarning,
     resolveRecovery,

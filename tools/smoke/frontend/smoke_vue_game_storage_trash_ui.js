@@ -97,7 +97,7 @@ function assertStaticBoundary() {
     "game.toggleStorageTrashCompactPreview('trash')",
     "game.returnInventoryPreview",
     "휴지통 비우기",
-    "가방/보관함 이동·휴지통 이동·복구·영구 삭제",
+    "휴지통 이동·복구·영구 삭제",
   ]) requireMarker(component, marker, "storage/trash component");
   assert.ok(!component.includes("town-session-bar"), "connected character bar must remain town-only");
   assert.ok(component.includes('type="button" disabled'), "destructive and mutation actions must remain disabled");
@@ -213,7 +213,7 @@ function assertAdapterBehavior() {
   assert.strictEqual(original.trash.nextEmptySlotNumber, 2);
   assert.strictEqual(original.action.type, "storage-trash.preview.open");
   assert.strictEqual(original.snapshotConnected, true);
-  assert.strictEqual(original.itemMutationConnected, false);
+  assert.strictEqual(original.itemMutationConnected, true);
   assert.strictEqual(original.permanentDeleteConnected, false);
 
   const originalStorageOrder = original.storage.slots.filter((slot) => slot.item).map((slot) => slot.item.code);
@@ -245,7 +245,7 @@ function assertAdapterBehavior() {
 function main() {
   assertStaticBoundary();
   assertAdapterBehavior();
-  console.log("PASS: Vue storage/trash UI preserves sparse slots and independent compaction with owned-item mapping and no move, restore, delete, or save mutation");
+  console.log("PASS: Vue storage/trash adapter preserves sparse slots and preview compaction; move/save orchestration is covered separately by store tests");
 }
 
 main();

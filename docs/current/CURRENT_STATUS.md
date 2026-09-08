@@ -1,13 +1,13 @@
-# Current Status — v398
+# Current Status — v399
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v398.vue-game-owned-item-snapshot-foundation
-strict result: vue-game-owned-item-snapshot-foundation
-next safe stage: migrate-vue-game-inventory-transfer-foundation
+latest: v399.vue-game-inventory-transfer-foundation
+strict result: vue-game-inventory-transfer-foundation
+next safe stage: migrate-vue-game-stack-merge-foundation
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -35,23 +35,22 @@ v395 production approval/execution: no/no
 v396 production approval/execution: no/no
 v397 production approval/execution: no/no
 v398 production approval/execution: no/no
+v399 production approval/execution: no/no
 ```
 
-## v398 실제 보유 아이템 읽기
+## v399 가방↔보관함 이동·정렬 저장
 
-- 가방·15칸 장비·보관함·휴지통과 좌우 창을 현재 선택 캐릭터의 typed server state에 연결했습니다. master-data는 설명·아이콘 보완에만 쓰며 샘플 배치는 제거했습니다.
-- 저장된 ID·이름·강화·수량·등급과 빈 칸을 보존합니다. 선택 key는 원래 container/index로 구분해 같은 종류/중복 ID도 섞이지 않습니다. 코드 없는 legacy는 유일한 정확한 기본 이름만 매칭하며 미등록·빈 목록도 안전하게 표시합니다.
-- 저장 용량과 배열 전체를 표시하고 용량 밖 기존 항목도 숨기지 않습니다. 정렬은 표시 전용이며 원본 배열/POST는 바뀌지 않습니다. 아이콘은 저장소 PNG를 hash URL로 번들링하고 외부 snapshot URL은 로드하지 않습니다.
+- 선택한 묶음을 통째로 첫 빈 칸에 옮깁니다. 원래 칸·ID·수량·강화·추가 필드를 보존하며 자동 합치기는 후속 단계입니다. 가방/보관함의 정렬 적용은 상대 순서를 유지합니다.
+- 변경할 snapshot의 local 복구본을 먼저 기록합니다. quota·다른 탭 변경은 화면/POST 변경 전 차단하며 서버 실패는 pending을 보존합니다. 재시도는 이동을 반복하지 않고 현재 snapshot만 저장합니다.
+- 저장 중·오류·전환 중 추가 변경을 잠그고 세션 오류는 재로그인으로 보냅니다. modal 안에서 진행/실패/재시도를 표시하며 기존 직렬 queue·이전 context 응답 차단을 재사용합니다.
+- 장착·사용·판매·자동 합치기·휴지통 이동/복구/삭제/정렬 저장·Gold·보상·난수·backend·DB·배포는 바꾸지 않았습니다.
+- 전체 Vue smoke·TypeScript·build PASS. 1366px/390px synthetic 브라우저에서 양방향 이동·정렬·503 재시도·pending 해제·가로 넘침 0·console error 0을 확인했습니다. 실제 DB write는 없고 Vue 서버만 npm ci 뒤 재시작했습니다.
 
-- v398 전체 Vue smoke·TypeScript·production build PASS. 1366px/390px synthetic 브라우저에서 중복 선택·정렬 선택 보존·이미지·빈 목록·미등록 항목·modal 닫기·가로 넘침 0·console error 0을 확인했습니다. 실제 계정/DB write·배포는 없으며 Vue 서버만 설치 후 재시작했습니다.
+## v396~v398 보유 표시·복구·가독성
 
-## v397 Vue 미동기화 저장 복구
-
-- 계정·슬롯·캐릭터별 `upgradeRpgVueRecovery:v1` JSON에 snapshot·pending·백업을 함께 기록합니다. 토큰은 기록하지 않으며 legacy 키는 건드리지 않습니다.
-- 재진입 시 local/server/취소 선택 전에는 게임·자동 저장이 시작되지 않습니다. local은 공통 queue로 재전송, server는 기존 local 백업 후 적용, 취소는 원본 보존 후 슬롯으로 돌아갑니다.
-- 이전 응답은 최신 pending을 지우지 않습니다. 401/403·409·network/5xx·닫기에서 복구본을 보존하고 저장소 손상·용량 부족·선택 중 다른 탭의 변경을 처리합니다. 실제 DB write·backend·CAS·배포는 미변경입니다.
-- 전체 Vue smoke·TypeScript·build PASS. synthetic 브라우저에서 1366px/390px 복구 비교, local 1회 전송·server 백업·취소 보존, 키보드·배경 잠금·가로 넘침 0·console error 0을 확인했습니다. 실제 사용자 저장은 건드리지 않았습니다.
-- v396의 13px typography·명암, 좌우 창·모달 접근성, 관리자 helper·미사용 API 정리와 context generation/terminal barrier는 유지합니다.
+- v398은 가방·15칸 장비·보관함·휴지통과 좌우 창에 실제 보유 snapshot을 표시합니다. 빈 칸·ID·강화·수량·등급·미등록 항목을 보존하며 원래 container/index로 선택을 구분합니다. 저장소 PNG만 hash URL로 번들링합니다.
+- v397은 계정/슬롯/캐릭터별 snapshot·pending·백업을 기록합니다. local/server/취소 선택 전에는 boot·자동 저장을 시작하지 않습니다. 늦은 응답은 최신 pending을 지우지 않습니다. 상세 키·실패 계약은 [계정·저장 계약](ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md)을 따릅니다.
+- v396의 13px typography·명암·좌우 창과 공유 modal 접근성, 관리자 helper 정리와 terminal save barrier를 유지합니다. v396~v398 Vue smoke/build·1366px/390px synthetic 브라우저 검사는 PASS했습니다.
 
 ## v394~v395 선택 캐릭터 서버 load·직렬 저장 기반
 
@@ -139,7 +138,7 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. `migrate-vue-game-inventory-transfer-foundation`: 가방↔보관함 이동과 수동 정렬을 순수 변경 결과·공통 저장 queue에 연결합니다. 빈 칸·첫 빈 칸·실패 시 복구를 유지하며 장착·사용·판매·삭제·소비·보상·난수는 분리합니다.
+1. `migrate-vue-game-stack-merge-foundation`: legacy 중첩 가능 여부·template/tier/슬롯 비교 규칙을 이식해 이동 시 자동 합치기를 연결합니다. 수량·강화·옵션 보존을 검증하며 장착·사용·판매·휴지통 변경·Gold·난수·배포는 분리합니다.
 2. 실제 관리자 Apply API·재인증·dev key header·DB write 연결은 이번 단계에 포함되지 않았습니다. 필요하면 작업 종류와 정확한 DB-write 범위를 별도 승인받습니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 

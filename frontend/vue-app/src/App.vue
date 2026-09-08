@@ -55,11 +55,11 @@
           <span aria-hidden="true">☰</span>
         </button>
         <div>
-          <p class="vue-shell__eyebrow">Upgrade RPG · v398</p>
+          <p class="vue-shell__eyebrow">Upgrade RPG · v399</p>
           <h1>Vue 전환 작업공간</h1>
           <p>기존 서비스는 유지하면서, 새 화면을 안전하게 하나씩 옮깁니다.</p>
         </div>
-        <span class="vue-shell__phase"><i aria-hidden="true" /> owned item snapshots</span>
+        <span class="vue-shell__phase"><i aria-hidden="true" /> safe item transfers</span>
       </header>
 
       <RouterView />

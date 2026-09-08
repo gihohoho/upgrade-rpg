@@ -63,6 +63,6 @@ node tools/smoke/frontend/smoke_vue_game_domain_foundation.js
 
 ## 다음 안전 단계
 
-`next safe stage: migrate-vue-game-inventory-transfer-foundation`
+`next safe stage: migrate-vue-game-stack-merge-foundation`
 
-v397은 계정·슬롯·캐릭터별 local fallback과 `pending-unsynced` 사용자 선택을 공통 queue에 연결했습니다. v398은 실제 보유 아이템 snapshot 표시를 연결했습니다. 다음은 가방↔보관함 이동과 수동 정렬이며 Gold/아이템 보상·난수·backend/CAS schema, legacy·관리자 Apply·배포는 변경하지 않습니다.
+v397은 계정·슬롯·캐릭터별 local fallback과 `pending-unsynced` 사용자 선택을 공통 queue에 연결했습니다. v398은 실제 보유 아이템 snapshot 표시를 연결했습니다. v399는 복구본 선기록 뒤 가방↔보관함 묶음 이동·정렬 저장을 연결했습니다. 다음은 legacy 자동 합치기이며 Gold/아이템 보상·난수·backend/CAS schema, legacy·관리자 Apply·배포는 변경하지 않습니다.

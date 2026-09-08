@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v398
+# Upgrade RPG Codex handoff — v399
 
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v398.vue-game-owned-item-snapshot-foundation
-strict result: vue-game-owned-item-snapshot-foundation
-next safe stage: migrate-vue-game-inventory-transfer-foundation
+latest: v399.vue-game-inventory-transfer-foundation
+strict result: vue-game-inventory-transfer-foundation
+next safe stage: migrate-vue-game-stack-merge-foundation
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -32,33 +32,24 @@ v395 production approval/execution: no/no
 v396 production approval/execution: no/no
 v397 production approval/execution: no/no
 v398 production approval/execution: no/no
+v399 production approval/execution: no/no
 ```
 
 ## 이번 체크포인트
 
-- v398은 가방·장비·보관함·휴지통·좌우 창을 선택 캐릭터의 보유 snapshot으로 표시합니다. 빈 칸·ID·강화·수량·등급을 유지하며 같은 template도 원래 container/index로 구분합니다. 빈 목록·미등록 항목·용량 밖 기존 항목도 보존합니다. 아이템 변경·POST는 추가하지 않았습니다.
-- v398 전체 Vue smoke·TypeScript·production build PASS. 1366px/390px synthetic 브라우저의 중복 선택·정렬 선택 보존·아이콘·미등록·빈 목록·modal 닫기 검사가 PASS했습니다. 실제 DB write는 없고 Vue 서버만 npm ci 뒤 재시작했습니다. 임시 fixture는 제거했습니다.
-
-- v397은 `upgradeRpgVueRecovery:v1:<userId>:<slotKey>:<accountCharacterId>`에 snapshot·pending·백업을 하나의 JSON으로 기록합니다. 실패·세션 만료·닫기에도 원본을 보존하며 재진입 시 local/server/취소를 직접 선택합니다. local은 공통 queue로 재전송, server는 기존 local을 `backups`에 보존, 취소는 기록 변화 없이 슬롯으로 돌아갑니다. 깨진 저장소는 fail-closed, 용량 부족은 명시적으로 알립니다.
-- v397 전체 Vue smoke·TypeScript·build와 1366px/390px synthetic 브라우저 복구 선택·취소·키보드·배경 잠금 PASS. 테스트는 메모리 저장소/가짜 API를 사용했으며 실제 계정·DB write는 없습니다. 임시 fixture는 제거했습니다. npm ci 전에는 해당 Vue의 Vite/esbuild 파일 잠금을 확인해 설치 실패를 피합니다.
-- 문서 구조·handoff·strict·report smoke·Python compileall PASS. 로컬본 재전송 실패는 ‘이 기기 복구본’으로 표시하고 서버 저장 완료로 오인시키지 않습니다. 이 마지막 표시 보강 뒤 recovery/town focused·build도 PASS했습니다.
-- v396은 13px 이상 글자·명암 token과 desktop 공간을 정리하고 게임·계정 modal의 focus trap·배경 inert·Escape·초점 복귀를 공유합니다. 1200px 이상에서 좌우 정보/가방 창을 표시합니다. 관리자 helper 중복과 미사용 `gameReadOnlyApi.js`를 정리했으며 typed API와 공개 legacy는 유지합니다.
-- v395의 60초 자동·수동·전환 저장 queue에 context generation을 추가했습니다. reset/reload 이전의 늦은 응답은 취소하고 409·401·403 뒤 대기/후속 POST를 차단합니다. 명시적 reload/reset 뒤 저장을 다시 허용하며 network/5xx는 재시도할 수 있습니다.
-- 전체 Vue smoke·TypeScript·production build PASS. 1366px/390px synthetic 브라우저에서 마을·가방·캐릭터 modal, 키보드 순환/복귀·배경 잠금·409 후 재로드 PASS. 최종 저장 중 화면 이동도 잠급니다. 실제 DB write·backend·env·secret·legacy·배포는 변경하지 않았습니다. 중지된 Vue 서버만 시작했습니다.
-- 현재 `saveVersion`은 snapshot 형식 버전이며 backend 다중 기기 CAS는 미구현입니다. 복구본 시각만으로 자동 선택하지 않으며 다른 탭의 변경이 감지되면 다시 확인합니다. legacy 키 자동 가져오기·삭제, DB·backend·배포 변경은 없습니다. Windows 설치 파일 잠금 때문에 중복 실행 중이던 Vue 서버 2개를 정리하고 1개로 다시 시작했습니다.
-- 문서 구조·handoff·strict와 관련 report smoke PASS. AST import graph에서 남은 Vue 코드 66개 모두 entry에서 도달하며 미해결 import 0개입니다. 임시 브라우저 fixture는 제거했습니다. 공통 처리 이동 시 component의 옛 문자열에 묶인 smoke도 함께 옮겨 중간 검사 중단을 줄입니다.
-- v379~v395의 TypeScript·Pinia·계정/8칸 캐릭터·typed game domain·마을/필드/보스/가방/장비/보관함/스킬/상점 UI·client 전투 timer·server load/save를 유지합니다. Gold/아이템 보상·난수·실제 아이템/스킬 변경·설정 영구 저장은 연결하지 않았습니다.
-- 관리자 Vue는 `isAdmin=true` route guard와 Bearer GET, `dryRun: true` Preview 5종, SHA-256·exact 문구 재검증 modal까지 연결했습니다. 실제 Apply·재인증 request·dev key header는 잠겨 있습니다.
-- 기호가 Docker와 로컬 로그인을 확인했습니다. 정상 실행 중인 서버를 재사용하며 반복 로그인 검사는 하지 않습니다.
-- 공개 legacy v378은 SQ·SW 첫 Lv.1, 마을 전용 접속 캐릭터 바, 배포 관리자 전용 테스트 UI와 local/production API 주소 분리를 포함합니다. 승인 SHA `c56525394a4099160e7a32e93dc2d3a0d54568b3`에서 static deploy `dep-da5vn3m417fc738rs2bg`로 1회 배포됐습니다. Vue v379~v398은 배포하지 않았습니다.
-- v377 이메일 인증·복구·삭제와 rate limit·body cap·semantic outbox·미인증 identity 회수는 공개 배포됐습니다. `email-validator==2.3.0`·`dnspython==2.8.0` Linux runtime/musllinux/dev lock과 local Brevo Naver 수신→링크 인증→로그인→8개 슬롯 E2E 증거를 보존합니다.
-- local/Neon migration은 각각 1회 v377로 완료했습니다. stale 증거와 `recovery1` marker는 보존하며 최종 `recovery2` synthetic fixture 왕복·Neon fresh backup·apply 결과는 [현재 상태](docs/current/CURRENT_STATUS.md)에 통합합니다. reset·seed·restore·stamp·actual downgrade는 실행하지 않았습니다.
-- Brevo Render outbound IP 허용과 outbox 성공 finalize 수정 뒤 공개 메일 전송을 확인했습니다. 현재 backend deploy는 `dep-da4tp7nqj5pc73b6l910`, production image는 `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:80e8f57618b2bd8bbac37fd63381e454434e06b67eff0cd8f4327796bdc1c677`입니다. 공개 health 200, Naver 테스트 주소 요청의 generic 202/no-store와 outbox 1회 sent 증거는 재실행하지 않습니다.
-- production 로그인 계정 `admin`은 관리자 승격 전 상태이고 owner bootstrap은 실행하지 않았습니다. 실제 dev key·비밀번호·secret은 ignored 환경 파일에만 보존합니다. 상세 승인·배포·메일 이력은 [현재 상태](docs/current/CURRENT_STATUS.md)를 기준으로 합니다.
+- v399는 가방↔보관함 묶음 이동과 정렬 적용을 연결합니다. 순수 `transferItemSlot`이 source의 빈 칸·ID·강화·수량·추가 필드를 유지하고 destination 첫 빈 칸을 사용합니다. 자동 합치기는 아직 하지 않습니다.
+- 전체 Vue smoke·TypeScript·production build PASS. 1366px/390px synthetic 브라우저에서 양방향 이동·정렬 저장·503 실패/재시도·pending 해제·가로 넘침 0·console error 0을 확인했고 임시 fixture는 제거했습니다.
+- store는 prospective snapshot의 복구본 기록이 성공해야 화면을 바꾸고 공통 queue에 저장합니다. quota/다른 탭 변경은 변경 전 차단합니다. 저장 실패는 pending을 보존하며 재시도는 이동을 반복하지 않습니다. 저장 중/오류/전환 중 후속 변경을 잠그고 401/403은 로그인으로 돌아갑니다.
+- 가방·보관함 정렬은 미리보기 후 `정렬 적용·저장`으로 확정합니다. 휴지통 정렬은 미리보기만 유지합니다. 장착·사용·판매·자동 합치기·휴지통 이동/복구/삭제·Gold·보상·난수는 연결하지 않았습니다.
+- v398의 실제 보유 snapshot 표시·전체 칸·중복 선택·아이콘, v397의 계정/슬롯/캐릭터별 pending 복구 선택과 v396의 13px typography·좌우 창·공유 modal 접근성을 유지합니다.
+- 실제 계정·DB·backend·env·secret·legacy·배포 변경은 없습니다. 브라우저 검증은 메모리 저장소와 가짜 API만 사용하며 Vue 서버만 npm ci 설치 후 재시작했습니다.
+- 공개 backend v377/static v378만 Live이며 Vue v379~v399는 미배포입니다. legacy static 승인 SHA는 `c56525394a4099160e7a32e93dc2d3a0d54568b3`입니다. DB migration/메일/배포 상세 증거는 [현재 상태](docs/current/CURRENT_STATUS.md)를 따르고 재실행하지 않습니다.
+- 관리자 Preview는 Bearer/isAdmin과 `dryRun: true`이며 Apply/재인증/dev key header는 잠겼습니다. production `admin` 승격/owner bootstrap도 별도 exact DB-write 승인 전까지 실행하지 않습니다.
+- `saveVersion`은 형식 버전이며 backend CAS는 미구현입니다. 다중 탭 localStorage 비교도 원자적 CAS가 아닙니다. legacy 키 자동 가져오기/삭제·복구본 자동 정리/다운로드는 제공하지 않습니다.
 
 ## 바로 할 일
 
-1. 다음은 `migrate-vue-game-inventory-transfer-foundation`입니다. 가방↔보관함 이동과 수동 정렬을 순수 변경 결과 및 공통 저장 queue에 연결합니다. 빈 칸·첫 빈 칸·중복 identity·실패 시 복구본 보존을 검증하며 장착/사용/판매/휴지통 삭제·Gold 소비·보상·난수는 동시에 연결하지 않습니다. CAS는 별도 backend 계약과 승인 범위입니다.
+1. 다음은 `migrate-vue-game-stack-merge-foundation`입니다. legacy의 +0/스킬강화권 중첩 가능 여부와 template·tier·슬롯 비교 규칙을 순수 함수로 옮겨 가방↔보관함 이동 시 자동 합치기를 연결합니다. 수량 보존·가득 찬 목적지의 호환 묶음·강화 장비 비중첩·추가 옵션 보존을 검증합니다. 장착·사용·판매·휴지통 변경·Gold·난수·backend/CAS·DB write·배포는 분리합니다.
 2. 실제 관리자 Apply API, 비밀번호 재인증 request, dev key header와 DB write는 연결하지 않습니다. 진행하려면 작업 종류와 exact DB-write 범위를 별도로 승인받습니다.
 3. production 관리자 복구는 Vue 화면 이식과 분리하며 기존 `admin` 승격 또는 새 owner 생성의 exact DB-write 승인을 받기 전에는 실행하지 않습니다.
 

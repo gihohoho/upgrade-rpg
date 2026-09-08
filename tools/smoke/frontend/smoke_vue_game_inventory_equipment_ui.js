@@ -93,7 +93,7 @@ function assertStaticBoundary() {
     "game.toggleInventoryCompactPreview",
     "game.returnTown",
     "선택 캐릭터의 현재 저장 데이터를 표시",
-    "장착·사용·판매·강화·보관함 이동·휴지통 이동",
+    "장착·사용·판매·강화·휴지통 이동",
   ]) requireMarker(component, marker, "inventory/equipment component");
   assert.ok(!component.includes("town-session-bar"), "connected character bar must remain town-only");
 
@@ -187,7 +187,7 @@ function assertAdapterBehavior() {
   assert.strictEqual(original.action.type, "inventory.preview.open");
   assert.strictEqual(original.masterDataConnected, true);
   assert.strictEqual(original.snapshotConnected, true);
-  assert.strictEqual(original.itemMutationConnected, false);
+  assert.strictEqual(original.itemMutationConnected, true);
 
   const originalOrder = original.inventorySlots.filter((slot) => slot.item).map((slot) => slot.item.code);
   const compactOrder = compact.inventorySlots.filter((slot) => slot.item).map((slot) => slot.item.code);
@@ -229,7 +229,7 @@ function assertAdapterBehavior() {
 function main() {
   assertStaticBoundary();
   assertAdapterBehavior();
-  console.log("PASS: Vue inventory/equipment UI preserves sparse-slot and compact-preview rules with owned-item snapshot mapping and no mutation");
+  console.log("PASS: Vue inventory/equipment adapter preserves sparse-slot and preview rules; mutations are covered separately by store tests");
 }
 
 main();

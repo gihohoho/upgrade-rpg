@@ -1,9 +1,9 @@
 # 계정 인증·캐릭터 슬롯·회원 관리 — v377
 
 ```txt
-latest: v398.vue-game-owned-item-snapshot-foundation
-strict result: vue-game-owned-item-snapshot-foundation
-next safe stage: migrate-vue-game-inventory-transfer-foundation
+latest: v399.vue-game-inventory-transfer-foundation
+strict result: vue-game-inventory-transfer-foundation
+next safe stage: migrate-vue-game-stack-merge-foundation
 public Render: backend v377 / static v378 Live
 local/Neon DB: v377 / v377
 ```
@@ -215,6 +215,8 @@ network/timeout/5xx와 응답 계약 오류는 token·선택 캐릭터를 보존
 - `beforeunload`에서는 네트워크 완료를 믿지 않고 현재 캐릭터 로컬 저장만 수행합니다.
 - v397은 enqueue 전에 복구본을 동기 기록하고 성공한 정확한 요청의 기록만 pending 해제합니다. 늦은 응답·다른 탭 변경은 최신 복구본을 지우지 않습니다. 깨진 JSON/identity는 원본을 보존하고 로드를 차단하며, quota 실패는 복구본 미기록 경고를 표시하되 가능한 서버 저장은 실행합니다. 서버본 선택 중 백업 실패는 적용을 차단합니다.
 - localStorage 비교는 다중 탭 원자적 CAS가 아니며 backend CAS도 아직 없습니다. 실제 동시 기기/탭 저장의 완전한 직렬화는 후속 계약이 필요합니다. 자동 복구본 정리·다운로드·수동 legacy import는 이번 단계에서 제공하지 않습니다.
+
+v399 아이템 이동/정렬은 변경할 snapshot의 local pending 기록을 먼저 성공시켜야 화면을 변경합니다. 이 사전 기록 실패는 원본과 POST를 유지합니다. 성공 후 기존 queue를 사용하며 서버 실패 시 변경을 되돌리지 않고 복구본을 보존합니다. 재시도는 같은 snapshot 저장이지 이동 재실행이 아닙니다. 자동 합치기·휴지통 변경은 후속 단계입니다.
 
 ## 오류·로그·관리자 응답의 비밀정보 경계
 

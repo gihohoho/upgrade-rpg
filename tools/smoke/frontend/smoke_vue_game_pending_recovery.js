@@ -53,7 +53,107 @@ function fixture() {
   };
 }
 
+async function assertOwnedTransfers() {
+  function ownedFixture() {
+    const f = fixture();
+    f.state.player.inventory = [{ id: 'same', name: '첫 묶음', count: 5, level: 0, extra: { rune: 3 } }, null, { id: 'same', name: '두 번째', count: 2, level: 7 }];
+    f.state.player.storage = [null, { id: 'kept', name: '보관중', count: 4 }];
+    f.setServer(f.m.createSelectedCharacterSaveRequest({ ...f.identity, serverState: f.state, saveVersion: 1 }, 'manual').snapshot);
+    f.move = (container = 'inventory', selectionKey = 'inventory:2') => f.game.mutateOwnedItems({ ...f.options, action: { type: 'move', container, selectionKey } });
+    f.sort = (container) => f.game.mutateOwnedItems({ ...f.options, action: { type: 'sort', container } });
+    f.ready = async () => { await f.load(); f.game.enterInventoryPreview([]); f.game.selectInventoryPreview('inventory:2'); };
+    return f;
+  }
+  let f = ownedFixture(); await f.ready();
+  const original = JSON.stringify(f.game.model.serverState.player);
+  f.game.toggleInventoryCompactPreview();
+  assert.strictEqual(await f.move(), 'saved', 'preview selection uses original slot, not display index');
+  let player = f.game.model.serverState.player;
+  assert.strictEqual(player.inventory[2], null);
+  assert.strictEqual(player.inventory.length, 3);
+  assert.strictEqual(player.inventory[0].count, 5);
+  assert.strictEqual(player.storage[0].name, '두 번째');
+  assert.strictEqual(player.storage[0].count, 2);
+  assert.strictEqual(player.storage[1].id, 'kept');
+  assert.strictEqual(f.posts(), 1);
+  assert.strictEqual(f.local.read(f.identity).entry.current.pending, false);
+  f.game.enterStorageTrashPreview(); f.game.selectStorageTrashPreview('storage', 'storage:0');
+  assert.strictEqual(await f.move('storage', 'storage:0'), 'saved');
+  assert.strictEqual(f.game.model.serverState.player.inventory[1].name, '두 번째');
+  assert.strictEqual(f.game.model.serverState.player.storage[0], null);
+  assert.strictEqual(JSON.stringify(f.state.player), original, 'source fixture immutable');
+  assert.strictEqual(await f.sort('inventory'), 'cancelled', 'already sorted does not POST');
+  assert.strictEqual(await f.sort('storage'), 'saved');
+  assert.strictEqual(f.game.model.serverState.player.storage[0].id, 'kept');
+  const sortedPosts = f.posts();
+  assert.strictEqual(await f.sort('storage'), 'cancelled');
+  assert.strictEqual(f.posts(), sortedPosts);
+  assert.strictEqual(await f.sort('trash'), 'cancelled', 'trash mutations out of scope');
+
+  for (const status of [0, 401, 403, 409, 503]) {
+    f = ownedFixture(); await f.ready();
+    f.m.gameApi.saveSelectedCharacter = async () => { throw new f.m.ApiRequestError('synthetic failure', { status }); };
+    await f.move();
+    assert.strictEqual(f.game.model.serverState.player.inventory[2], null);
+    const local = f.local.read(f.identity);
+    assert.strictEqual(local.entry.current.pending, true);
+    assert.strictEqual(local.entry.current.snapshot.player.storage[0].count, 2);
+    assert.strictEqual(f.game.canMutateItems, false);
+    assert.strictEqual(await f.move(), 'cancelled');
+    f.game.resetShell(); await f.load();
+    assert.strictEqual(f.game.snapshotLoad.status, 'recovery');
+  }
+  f = ownedFixture(); await f.ready();
+  const beforeQuota = JSON.stringify(f.game.model.serverState);
+  assert.strictEqual(await f.game.mutateOwnedItems({ ...f.options, userId: 99, action: { type: 'move', container: 'inventory', selectionKey: 'inventory:2' } }), 'cancelled');
+  f.storage.setItem = () => { throw new Error('quota'); };
+  assert.strictEqual(await f.move(), 'error');
+  assert.strictEqual(JSON.stringify(f.game.model.serverState), beforeQuota);
+  assert.strictEqual(f.posts(), 0, 'quota blocks mutation and POST');
+
+  f = ownedFixture(); await f.ready();
+  f.m.gameApi.saveSelectedCharacter = async () => { throw new f.m.ApiRequestError('offline', { status: 503 }); };
+  await f.move();
+  assert.ok(f.game.model.snapshotStatusLabel.startsWith('이 기기 복구본'));
+  const moved = JSON.stringify(f.game.model.serverState);
+  f.m.gameApi.saveSelectedCharacter = async (_token, request) => f.envelope('saved', request.snapshot, request);
+  assert.strictEqual(await f.save(), 'saved');
+  assert.strictEqual(JSON.stringify(f.game.model.serverState), moved, 'retry saves without repeating the move');
+  assert.strictEqual(f.local.read(f.identity).entry.current.pending, false);
+  assert.strictEqual(f.game.canMutateItems, true);
+
+  f = ownedFixture(); await f.ready();
+  const beforeStale = JSON.stringify(f.game.model.serverState);
+  f.entries.set(f.key, 'changed-by-another-tab');
+  assert.strictEqual(await f.move(), 'conflict');
+  assert.strictEqual(JSON.stringify(f.game.model.serverState), beforeStale);
+  assert.strictEqual(f.entries.get(f.key), 'changed-by-another-tab');
+
+  f = ownedFixture();
+  f.state.player.storage = Array.from({ length: 60 }, (_, id) => ({ id, name: '가득 참' }));
+  f.setServer(f.m.createSelectedCharacterSaveRequest({ ...f.identity, serverState: f.state, saveVersion: 1 }, 'manual').snapshot);
+  await f.ready(); const full = JSON.stringify(f.game.model.serverState);
+  assert.strictEqual(await f.move(), 'cancelled');
+  assert.strictEqual(JSON.stringify(f.game.model.serverState), full);
+  assert.strictEqual(f.posts(), 0);
+
+  f = ownedFixture(); await f.ready();
+  let resolveSave;
+  f.m.gameApi.saveSelectedCharacter = (_token, request) => new Promise((resolve) => { resolveSave = () => resolve(f.envelope('saved', request.snapshot, request)); });
+  const pendingMove = f.move();
+  await Promise.resolve(); await Promise.resolve();
+  assert.strictEqual(f.game.itemAction.busy, true);
+  assert.strictEqual(await f.move(), 'cancelled', 'double click blocked');
+  assert.strictEqual(f.local.read(f.identity).entry.current.pending, true);
+  f.game.resetShell(); resolveSave();
+  assert.strictEqual(await pendingMove, 'cancelled');
+  assert.strictEqual(f.game.model, null);
+  assert.strictEqual(f.game.itemAction.message, '');
+  assert.strictEqual(f.local.read(f.identity).entry.current.pending, true, 'stale response cannot acknowledge');
+}
+
 async function main() {
+  await assertOwnedTransfers();
   let f = fixture();
   f.state.player.inventory = [{ id: 'owned-a', name: '소유 A' }, null, { id: 'owned-b', name: '소유 B' }];
   f.state.player.storage = [null, { id: 'stored', name: '보관 A' }];
@@ -184,6 +284,6 @@ async function main() {
   const play = fs.readFileSync(path.join(vue, 'src/components/game/GamePlayShell.vue'), 'utf8');
   for (const marker of ['이 기기 저장 사용', '서버 저장 사용', '취소 · 캐릭터 선택으로', 'beforeunload', 'game.preserveLocalProgress', 'game.resolveRecovery', 'initialFocus: recoveryCancel']) assert.ok(play.includes(marker), marker);
   assert.ok(!fs.readFileSync(path.join(vue, 'src/game/save/localRecovery.ts'), 'utf8').includes('removeItem('));
-  console.log('PASS: Vue recovery preserves identity-scoped pending snapshots, offers explicit local/server/cancel choices, archives replaced copies, guards stale acknowledgements and handles malformed/quota/unload cases');
+  console.log('PASS: Vue recovery and owned transfers preserve pending snapshots, quantities and identity; handle explicit recovery, full destinations, quota, stale responses, double clicks and save retries');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

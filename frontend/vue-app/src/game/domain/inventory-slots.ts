@@ -64,3 +64,18 @@ function normalizeCapacity(value: unknown) {
   const parsed = Number.parseInt(String(value ?? ''), 10);
   return Math.max(0, Number.isFinite(parsed) ? parsed : 0);
 }
+
+/** Move one whole owned entry. No stacking, quantity conversion, ID generation or mutation. */
+export function transferItemSlot<T>(source: ItemSlot<T>[], destination: ItemSlot<T>[], index: number, capacity: number) {
+  if (source === destination || !Number.isSafeInteger(index) || index < 0 || !source[index]) {
+    return { ok: false as const, reason: 'invalid' as const };
+  }
+  if (!Number.isSafeInteger(capacity) || capacity < 0) return { ok: false as const, reason: 'invalid' as const };
+  const target = findFirstEmptyItemSlot(destination, capacity);
+  if (target < 0) return { ok: false as const, reason: 'full' as const };
+  const from = [...source];
+  const to = [...destination];
+  to[target] = from[index];
+  from[index] = null; // Preserve even the last vacated slot.
+  return { ok: true as const, source: from, destination: to, target };
+}

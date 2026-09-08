@@ -77,7 +77,7 @@ export interface InventoryEquipmentViewModel {
   action: GameActionResult;
   masterDataConnected: boolean;
   snapshotConnected: true;
-  itemMutationConnected: false;
+  itemMutationConnected: true;
 }
 
 const EQUIPMENT_SLOT_LABELS = [
@@ -134,7 +134,7 @@ export function createInventoryEquipmentViewModel(source: InventoryEquipmentSour
     action: createInventoryPreviewAction(source.compactPreview, compactMovedCount, occupiedCount, source.createdAt),
     masterDataConnected: source.itemTemplates.length > 0,
     snapshotConnected: true,
-    itemMutationConnected: false,
+    itemMutationConnected: true,
   };
 }
 

@@ -103,6 +103,13 @@
           <button ref="utilityClose" type="button" aria-label="창 닫기" @click="closeUtility">×</button>
         </header>
         <div class="game-utility-modal__body">
+          <section v-if="game.itemAction.message" class="game-item-save-status" aria-live="polite" :aria-busy="game.itemAction.busy || game.saveQueue.active">
+            <p>{{ game.itemAction.message }}</p>
+            <p v-if="game.saveQueue.message">{{ game.saveQueue.message }}</p>
+            <p v-if="game.recoveryWarning" role="alert">{{ game.recoveryWarning }}</p>
+            <button v-if="game.saveQueue.errorKind === 'retryable'" class="account-button account-button--primary" type="button" :disabled="game.saveQueue.active || game.itemAction.busy" @click="itemActions.retry">서버 저장 재시도</button>
+            <p v-else-if="game.saveQueue.errorKind === 'conflict'">마을의 수동 저장 창에서 서버를 확인하고 복구본을 선택해 주세요.</p>
+          </section>
           <GameShopSettingsShell v-if="game.isShopSettings" />
           <GameSkillEnhancementShell v-else-if="game.isSkillEnhancement" />
           <GameStorageTrashShell v-else-if="game.isStorageTrash" />
@@ -132,6 +139,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useModalAccessibility } from '@/composables/useModalAccessibility';
+import { useOwnedItemActions } from '@/composables/useOwnedItemActions';
 import GameLegacySidebar from './GameLegacySidebar.vue';
 import GameInventoryEquipmentShell from './GameInventoryEquipmentShell.vue';
 import GameShopSettingsShell from './GameShopSettingsShell.vue';
@@ -144,6 +152,7 @@ import { useAccountStore, useGameStore } from '@/stores';
 
 const account = useAccountStore();
 const game = useGameStore();
+const itemActions = useOwnedItemActions();
 const world = ref<HTMLElement | null>(null);
 const recoveryModal = ref<HTMLElement | null>(null);
 const recoveryCancel = ref<HTMLButtonElement | null>(null);

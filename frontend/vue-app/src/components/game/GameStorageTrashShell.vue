@@ -9,12 +9,12 @@
         <span>Storage · recycle safety UI</span>
         <strong>{{ model.characterName }}의 보관 공간</strong>
       </div>
-      <span class="storage-trash-command-bar__status"><i aria-hidden="true" /> 이동·삭제 잠금</span>
+      <span class="storage-trash-command-bar__status"><i aria-hidden="true" /> 가방↔보관함 이동 · 삭제 잠금</span>
     </header>
 
     <section class="storage-trash-overview" aria-labelledby="storage-trash-overview-title">
       <div>
-        <p>Owned snapshot · read only</p>
+        <p>Owned items · safe transfer</p>
         <h2 id="storage-trash-overview-title">안전 보관과 복구 대기 공간</h2>
         <span>{{ model.characterLabel }} · {{ model.levelLabel }} · {{ model.goldLabel }} Gold</span>
       </div>
@@ -39,6 +39,7 @@
             title="아이템 상대 순서를 유지한 정렬 결과만 미리 봅니다"
             @click="game.toggleStorageTrashCompactPreview('storage')"
           >{{ model.storage.compactPreview ? '원래 배치 보기' : '↑ 위로 정렬 미리보기' }}</button>
+          <button type="button" :disabled="!canMutate || !model.storage.compactPreview || !model.storage.compactMovedCount" title="미리 본 순서로 보관함을 정렬하고 저장합니다" @click="sort('storage')">정렬 적용·저장</button>
         </div>
         <div class="container-slot-grid" aria-label="보관함 아이템 슬롯">
           <button
@@ -55,7 +56,7 @@
             <i v-else aria-hidden="true">{{ slot.number }}</i>
           </button>
         </div>
-        <p>가방이 가득 찼을 때 일부 보상은 보관함의 첫 빈 칸을 사용합니다. 실제 이동은 아직 실행하지 않습니다.</p>
+        <p>가방이 가득 찼을 때 일부 보상은 보관함의 첫 빈 칸을 사용합니다. 현재 가방↔보관함 이동은 첫 빈 칸에 묶음을 그대로 옮깁니다.</p>
       </article>
 
       <article class="container-preview container-preview--trash">
@@ -108,7 +109,7 @@
           <div><dt>슬롯·효과</dt><dd>{{ model.selectedItem.statSummary }}</dd></div>
           <div><dt>현재 제한</dt><dd>{{ selectedRestriction }}</dd></div>
         </dl>
-        <button type="button" disabled :title="selectedActionTitle">{{ selectedActionLabel }}</button>
+        <button type="button" :disabled="!canMutate || model.selectedContainer !== 'storage'" :title="selectedActionTitle" @click="move('storage', model.selectedItem.selectionKey)">{{ selectedActionLabel }}</button>
       </aside>
       <aside v-else class="storage-trash-detail"><h2>보관된 아이템이 없습니다</h2><p>보관함과 휴지통이 비어 있습니다.</p></aside>
     </section>
@@ -124,15 +125,15 @@
         <li><span>가방</span><i aria-hidden="true">→</i><strong>휴지통</strong><small>삭제 대기</small></li>
         <li><span>휴지통</span><i aria-hidden="true">→</i><strong>가방</strong><small>복구</small></li>
       </ol>
-      <p>모든 이동은 source의 빈 자리를 유지하고 destination의 첫 빈 칸을 사용합니다. 이번 화면에서는 흐름만 설명합니다.</p>
+      <p>가방↔보관함 이동은 원래 빈 자리를 유지하고 도착 공간의 첫 빈 칸을 사용합니다. 휴지통 이동·복구는 후속 단계입니다.</p>
     </section>
 
     <section class="storage-trash-action-preview" aria-live="polite">
-      <div><strong>Action adapter</strong><span>container 배열·선택·save 변화 없음</span></div>
+      <div><strong>Action adapter</strong><span>미리보기는 원본 유지 · 적용/이동은 직렬 저장</span></div>
       <p v-for="log in model.action.logs" :key="log.message">{{ log.message }}</p>
       <dl>
         <div><dt>server snapshot</dt><dd>보유 아이템 읽기 연결</dd></div>
-        <div><dt>item move / restore</dt><dd>잠김</dd></div>
+        <div><dt>가방 이동 / 휴지통 복구</dt><dd>연결 / 잠김</dd></div>
         <div><dt>permanent delete / save</dt><dd>잠김</dd></div>
       </dl>
     </section>
@@ -141,7 +142,7 @@
       <span aria-hidden="true">!</span>
       <div>
         <strong>선택 캐릭터의 현재 보관함과 휴지통을 표시합니다.</strong>
-        <p>선택과 `위로 정렬`은 표시 모델만 다시 만듭니다. 가방/보관함 이동·휴지통 이동·복구·영구 삭제는 아직 연결하지 않았으며 원본 master-data와 server state는 바뀌지 않습니다.</p>
+        <p>정렬 미리보기는 원본을 유지합니다. 보관함 정렬 적용과 가방↔보관함 이동은 복구본을 기록하고 저장합니다. 자동 합치기·휴지통 정렬 저장·휴지통 이동·복구·영구 삭제는 잠겨 있습니다.</p>
       </div>
     </aside>
   </div>
@@ -150,17 +151,19 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import GameItemIcon from './GameItemIcon.vue';
+import { useOwnedItemActions } from '@/composables/useOwnedItemActions';
 import type { ItemFrameTone } from '@/game/adapters/inventoryEquipment';
 import type { StorageTrashContainerKey } from '@/game/adapters/storageTrash';
 import { useGameStore } from '@/stores';
 
 const game = useGameStore();
+const { canMutate, move, sort } = useOwnedItemActions();
 const model = computed(() => game.storageTrashModel);
 const selectedContainerLabel = computed(() => model.value?.selectedContainer === 'trash' ? '휴지통' : '보관함');
-const selectedActionLabel = computed(() => model.value?.selectedContainer === 'trash' ? '가방으로 복구' : '가방으로 꺼내기');
+const selectedActionLabel = computed(() => model.value?.selectedContainer === 'trash' ? '가방으로 복구 · 잠김' : '가방으로 이동·저장');
 const selectedActionTitle = computed(() => model.value?.selectedContainer === 'trash'
   ? 'snapshot과 복구 mutation 연결 뒤 활성화됩니다'
-  : 'snapshot과 보관함 이동 mutation 연결 뒤 활성화됩니다');
+  : '묶음을 수량 그대로 가방 첫 빈 칸으로 옮기고 저장합니다. 자동 합치기는 하지 않습니다');
 const selectedRestriction = computed(() => model.value?.selectedContainer === 'trash'
   ? '복구 전 사용·판매·강화 불가'
   : '가방으로 꺼낸 뒤 사용 가능');

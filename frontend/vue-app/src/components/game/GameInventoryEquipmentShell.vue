@@ -23,7 +23,7 @@
       <div class="inventory-overview__identity">
         <div class="inventory-overview__portrait" aria-hidden="true">{{ inventory.avatarText }}</div>
         <div>
-          <p>Owned snapshot · read only</p>
+          <p>Owned items · safe transfer</p>
           <h2 id="inventory-overview-title">{{ inventory.characterName }}</h2>
           <span>{{ inventory.characterLabel }} · {{ inventory.levelLabel }} · {{ inventory.goldLabel }} Gold</span>
         </div>
@@ -96,6 +96,7 @@
             title="아이템 상대 순서를 유지한 정렬 결과만 미리 봅니다"
             @click="game.toggleInventoryCompactPreview"
           >{{ inventory.compactPreview ? '원래 배치 보기' : '↑ 위로 정렬 미리보기' }}</button>
+          <button type="button" :disabled="!canMutate || !inventory.compactPreview || !inventory.compactMovedCount" title="미리 본 순서로 가방을 정렬하고 저장합니다" @click="sort('inventory')">정렬 적용·저장</button>
         </div>
         <div class="inventory-slot-grid" aria-label="가방 아이템 슬롯">
           <button
@@ -132,19 +133,19 @@
         </dl>
         <div class="inventory-detail__actions">
           <button type="button" disabled title="아이템 변경 기능 연결 뒤 활성화됩니다">장착·사용</button>
-          <button type="button" disabled title="보관함 이동 기능 연결 뒤 활성화됩니다">보관함 이동</button>
+          <button type="button" :disabled="!canMutate || inventory.selectedLocation !== 'inventory'" title="선택한 묶음을 수량 그대로 보관함 첫 빈 칸에 옮기고 저장합니다. 자동 합치기는 하지 않습니다" @click="move('inventory', inventory.selectedItem.selectionKey)">보관함으로 이동·저장</button>
         </div>
       </aside>
       <aside v-else class="inventory-detail"><h2>보유 아이템이 없습니다</h2><p>장비나 가방에 아이템이 있으면 여기에서 상세 정보를 확인할 수 있습니다.</p></aside>
     </section>
 
     <section class="inventory-action-preview" aria-live="polite">
-      <div><strong>Action adapter</strong><span>아이템 배열·장착 상태·save 변화 없음</span></div>
+      <div><strong>Action adapter</strong><span>미리보기는 원본 유지 · 적용/이동은 직렬 저장</span></div>
       <p v-for="log in inventory.action.logs" :key="log.message">{{ log.message }}</p>
       <dl>
         <div><dt>master-data</dt><dd>{{ inventory.masterDataConnected ? '기준 정보 연결됨' : '저장된 정보로 표시' }}</dd></div>
         <div><dt>server snapshot</dt><dd>보유 아이템 읽기 연결</dd></div>
-        <div><dt>item mutation / save</dt><dd>잠김</dd></div>
+        <div><dt>이동·정렬 저장</dt><dd>가방↔보관함 연결</dd></div>
       </dl>
     </section>
 
@@ -152,7 +153,7 @@
       <span aria-hidden="true">!</span>
       <div>
         <strong>선택 캐릭터의 현재 저장 데이터를 표시합니다.</strong>
-        <p>선택과 `위로 정렬`은 표시 모델만 다시 만들며 원본 master-data와 server state를 바꾸지 않습니다. 장착·사용·판매·강화·보관함 이동·휴지통 이동은 아직 연결하지 않습니다.</p>
+        <p>선택·정렬 미리보기는 원본을 유지합니다. 정렬 적용과 가방↔보관함 이동은 복구본을 먼저 기록한 뒤 저장합니다. 묶음은 통째로 이동하며 자동 합치기는 하지 않습니다. 장착·사용·판매·강화·휴지통 이동은 잠겨 있습니다.</p>
       </div>
     </aside>
   </div>
@@ -161,11 +162,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import GameItemIcon from './GameItemIcon.vue';
+import { useOwnedItemActions } from '@/composables/useOwnedItemActions';
 import type { ItemFrameTone } from '@/game/adapters/inventoryEquipment';
 import { useAccountStore, useGameStore } from '@/stores';
 
 const account = useAccountStore();
 const game = useGameStore();
+const { canMutate, move, sort } = useOwnedItemActions();
 const inventory = computed(() => game.inventoryModel);
 const town = computed(() => game.model);
 const normalEquipmentSlots = computed(() => inventory.value?.equipmentSlots.filter((slot) => slot.group === 'normal') ?? []);

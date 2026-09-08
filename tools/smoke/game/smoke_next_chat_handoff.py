@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v398.vue-game-owned-item-snapshot-foundation"
-RESULT = "vue-game-owned-item-snapshot-foundation"
-NEXT_STAGE = "migrate-vue-game-inventory-transfer-foundation"
+VERSION = "v399.vue-game-inventory-transfer-foundation"
+RESULT = "vue-game-inventory-transfer-foundation"
+NEXT_STAGE = "migrate-vue-game-stack-merge-foundation"
 SOURCE_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_HEAD = SOURCE_HEAD
 NEON_APPLIED_HEAD = SOURCE_HEAD
@@ -39,8 +39,6 @@ def main() -> int:
             SOURCE_HEAD,
             LOCAL_APPLIED_HEAD,
             NEON_APPLIED_HEAD,
-            "email-validator",
-            "Brevo",
             "public backend/static: v377/v378 Live",
         )
 
@@ -54,8 +52,7 @@ def main() -> int:
     require_markers(
         "NEXT_CHAT_HANDOFF.md",
         "바로 할 일",
-        "Linux runtime/musllinux/dev lock",
-        "synthetic fixture",
+        "synthetic 브라우저",
         "migration",
         "local/Neon DB current",
         "owner bootstrap",
@@ -65,6 +62,10 @@ def main() -> int:
     )
     require_markers(
         "docs/current/CURRENT_STATUS.md",
+        "email-validator",
+        "Brevo",
+        "Linux runtime/musllinux/dev lock",
+        "Naver 테스트",
         "8db9bcb",
         "stale",
         "cross-driver fingerprint",
@@ -103,7 +104,6 @@ def main() -> int:
         "NEXT_CHAT_HANDOFF.md",
         "이메일 인증 rollout",
         "남은 공개 계정 gate",
-        "Naver 테스트",
     )
 
     for obsolete in (
