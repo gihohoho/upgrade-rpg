@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v400.legacy-boss-drop-hotfix-ready"
-RESULT = "legacy-boss-drop-hotfix-ready"
-NEXT_STAGE = "deploy-legacy-boss-drop-hotfix"
+VERSION = "v400.legacy-boss-drop-hotfix-live"
+RESULT = "legacy-boss-drop-hotfix-live"
+NEXT_STAGE = "await-user-vue-resume"
 SOURCE_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_HEAD = SOURCE_HEAD
 NEON_APPLIED_HEAD = SOURCE_HEAD
@@ -39,7 +39,7 @@ def main() -> int:
             SOURCE_HEAD,
             LOCAL_APPLIED_HEAD,
             NEON_APPLIED_HEAD,
-            "public backend/static: v377/v378 Live",
+            "public backend/static: v377/v400 Live",
         )
 
     prompt = read("NEXT_CHAT_PROMPT.md")

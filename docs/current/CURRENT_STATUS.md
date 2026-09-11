@@ -5,14 +5,14 @@
 ## 상태 표식
 
 ```txt
-latest: v400.legacy-boss-drop-hotfix-ready
-strict result: legacy-boss-drop-hotfix-ready
-next safe stage: deploy-legacy-boss-drop-hotfix
+latest: v400.legacy-boss-drop-hotfix-live
+strict result: legacy-boss-drop-hotfix-live
+next safe stage: await-user-vue-resume
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
 email rollout approval/execution: yes/public-live
-public backend/static: v377/v378 Live
+public backend/static: v377/v400 Live
 production approval/execution: yes/yes
 v378 production approval/execution: yes/yes
 v379 production approval/execution: no/no
@@ -36,7 +36,7 @@ v396 production approval/execution: no/no
 v397 production approval/execution: no/no
 v398 production approval/execution: no/no
 v399 production approval/execution: no/no
-v400 legacy hotfix approval/execution: yes/no
+v400 legacy hotfix approval/execution: yes/yes
 ```
 
 ## v400 실서버 보스 드랍 긴급 수정
@@ -44,10 +44,10 @@ v400 legacy hotfix approval/execution: yes/no
 - 사용자 요청: Vue 작업 중단, 공개 보스 드랍 수정·배포 승인. 검증은 메모리 가방만 사용하며 실제 계정 저장은 변경하지 않습니다.
 - 원인: 공개 master-data에는 `summonRules.raw`에 보정된 확률이 있었지만 legacy adapter가 `equipDropRate`, `skillDropRate`, `talismanDropRate`, `emblemDropRate`, `dropTitle`을 누락했습니다. 화면에는 `undefined`, 일반 장비/강화권 확률 계산에는 `NaN`이 생겼습니다. 개별 확률 장비는 별도 경로였으며 이번 검사에서 함께 확인했습니다.
 - 수정: raw 확률을 직접 복원하고 누락 시 drop table raw 값을 사용합니다. 명시적인 0을 보존하며 두 배 보정을 반복하지 않습니다. 제목은 table 설명/원본/기본 제목으로 복구합니다. `index.html`은 adapter 캐시 키 `v=400`을 사용합니다. 확률·source/generated seed·backend·DB는 변경하지 않습니다.
-- 공개 응답+기존 adapter에서 실패 재현, 수정 adapter에서는 일반 39·특수 6종/245개 아이템의 처치→지급 회귀 PASS. asset 유무·실패 확률·가방 용량·장비 OFF·cooldown·0 확률·재변환을 검사했습니다.
-- 전체 core·JS syntax·변경 Python compileall·문서 구조/handoff·strict readiness PASS. static build는 298파일/39,370,314바이트입니다. 실제 브라우저 검증은 미완료입니다.
+- 전체 core·JS syntax·변경 Python compileall·문서 구조/handoff·strict readiness PASS. Render build는 298파일/39,367,005바이트입니다.
 - Render static `srv-d9iu337aqgkc73am4lh0`만 배포합니다. v378 공개 경로에는 이번 수정 외 차이가 없고 Vue는 빌드에서 제외됩니다.
-- 배포·브라우저 검증은 연결 부재로 미완료이며 사용자에게 연결 복구를 요청했습니다. 공개 GET은 200/수정 전 코드입니다. 서버 재시작 불필요.
+- 2026-09-12 00:33 KST, SHA `6652e41ceb50edc077414d0b8d3a531c27b6df7f`를 1회 배포한 `dep-dai1u8mq1p3s73anmmi0`이 Live입니다. 공개 index/adapter GET 200·Git bytes 일치, 공개 응답+배포 adapter로 45종/245개 지급 회귀 PASS입니다.
+- Chrome에서 배포 JS를 읽는 임시 메모리 fixture로 45종 모두 실제 `updateFullUI` 드랍표와 처치 지급을 검증했습니다. 일반/특수 화면의 제목·확률 정상, console error 0입니다. 공개 로그인 화면도 정상입니다. 테스트용 5500 서버와 fixture는 제거했으며 기존 backend·DB는 변경하지 않았습니다.
 
 ## v399 가방↔보관함 이동·정렬 저장
 
@@ -74,7 +74,7 @@ v400 legacy hotfix approval/execution: yes/no
 - SQ·SW 첫 전용 강화권은 저장·표시·전투 모두 `Lv.1`이고 탈리스만 A/B 보너스를 상속하지 않습니다. `접속 캐릭터` 바는 `town`에서만 표시합니다.
 - 배포 origin의 테스트 UI는 로그인한 관리자에게만 보이며 로컬 개발 편의는 유지합니다. 이 화면 gate와 별개인 server save 검증/CAS는 남아 있습니다.
 - 로컬 API는 `127.0.0.1:8000/api/v1`, 배포는 Render API로 고정해 stale `8001`의 `Failed to fetch`를 복구했습니다. dev key는 ignored dotenv에만 있고 로그인 가능한 production `admin`은 현재 관리자가 아닙니다.
-- 승인 SHA `c56525394a4099160e7a32e93dc2d3a0d54568b3`의 v378 legacy static은 Render deploy `dep-da5vn3m417fc738rs2bg`로 1회 배포되어 live이며 backend·DB·secret은 바꾸지 않았습니다.
+- v378 SHA `c56525394a4099160e7a32e93dc2d3a0d54568b3` / deploy `dep-da5vn3m417fc738rs2bg`는 v400 이전 배포이며 rollback 기준입니다.
 
 ## v377 구현과 환경
 
@@ -137,7 +137,7 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. `deploy-legacy-boss-drop-hotfix`: 승인된 실서버 드랍 수정의 static 배포와 공개 브라우저 검증을 완료합니다. Vue 후속 `migrate-vue-game-stack-merge-foundation`은 사용자 재개 요청까지 보류합니다.
+1. `await-user-vue-resume`: 보스 드랍 수정·배포 완료. Vue 후속 `migrate-vue-game-stack-merge-foundation`은 사용자 재개 요청까지 보류합니다.
 2. 실제 관리자 Apply API·재인증·dev key header·DB write 연결은 이번 단계에 포함되지 않았습니다. 필요하면 작업 종류와 정확한 DB-write 범위를 별도 승인받습니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 

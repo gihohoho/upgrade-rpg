@@ -92,14 +92,14 @@
 ## 현재 체크포인트
 
 ```txt
-latest: v400.legacy-boss-drop-hotfix-ready
-strict result: legacy-boss-drop-hotfix-ready
-next safe stage: deploy-legacy-boss-drop-hotfix
+latest: v400.legacy-boss-drop-hotfix-live
+strict result: legacy-boss-drop-hotfix-live
+next safe stage: await-user-vue-resume
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
 email rollout approval/execution: yes/public-live
-public backend/static: v377/v378 Live
+public backend/static: v377/v400 Live
 Render public preview: deployed
 production approval/execution: yes/yes
 v378 production approval/execution: yes/yes
@@ -124,11 +124,11 @@ v396 production approval/execution: no/no
 v397 production approval/execution: no/no
 v398 production approval/execution: no/no
 v399 production approval/execution: no/no
-v400 legacy hotfix approval/execution: yes/no
+v400 legacy hotfix approval/execution: yes/yes
 ```
 
 - v396은 Vue 글자·명암 token, 게임·계정 modal 접근성, 관리자 표시/오류 helper를 정리했습니다. 미사용 `gameReadOnlyApi.js`만 제거했고 typed API·공개 legacy는 유지합니다. 전체 Vue smoke·TypeScript·build와 1366px/390px 브라우저 검사가 PASS했습니다.
-- v400은 실서버 보스 드랍 긴급 수정입니다. API adapter의 보정된 확률 4종·드랍 제목 누락을 복구하고 캐시 버전을 갱신합니다. 일반 39·특수 6종/245개 아이템 지급 회귀를 확인했습니다. 사용자가 수정·배포를 승인했으며 현재 브라우저 연결 복구 후 legacy static 배포를 진행해야 합니다. DB·backend 변경은 없습니다.
+- v400 보스 드랍 수정은 SHA `6652e41`로 Render static에 1회 배포되어 Live입니다. 일반 39·특수 6종/245개 아이템 지급 회귀와 배포 코드의 브라우저 드랍표 검증이 PASS했습니다. DB·backend 변경은 없습니다. 상세 배포 증거는 현재 상태에 기록합니다.
 - v399 가방↔보관함 묶음 이동·정렬까지의 Vue 작업은 사용자 요청으로 일시 중단합니다. 재개 요청 전 자동 합치기 단계로 넘어가지 않습니다. 다음 Vue 단계 `migrate-vue-game-stack-merge-foundation`은 보존합니다.
 - v398은 보유 snapshot 기반 가방·장비·보관함·휴지통 읽기를 연결합니다. 샘플 자동 배치를 제거하고 빈 목록·중복 ID/종류·강화·수량·등급·미등록 항목을 표시합니다. 원본/저장은 바꾸지 않으며 이동과 정렬 저장은 v399에서 연결했습니다.
 - v397은 계정·슬롯·캐릭터별 Vue 복구본과 pending marker를 함께 기록하고 재진입 시 local/server/취소 선택을 연결합니다. 선택 전에는 게임·자동 저장을 시작하지 않으며 이전 응답은 최신 pending을 지우지 않습니다. 기존 legacy 저장과 backend CAS·DB·배포는 바꾸지 않습니다. v398에서 실제 보유 아이템 읽기 표시를 연결했습니다.
@@ -138,14 +138,14 @@ v400 legacy hotfix approval/execution: yes/no
 - v384~v385는 Vue 독립 typed game domain과 마을 전용 접속 캐릭터 바·HUD를 이식했고 legacy 동등성·반응형 검사가 PASS했습니다.
 - v379~v383은 TypeScript·Pinia·Router, 계정·8칸 캐릭터·관리자 인증, `dryRun: true` Preview와 write-locked modal을 이식했습니다. Apply write는 없습니다.
 - Docker PostgreSQL·로컬 로그인은 기호가 확인했습니다. production 관리자 복구·Apply write는 별도 exact 승인까지 보류합니다.
-- v378 legacy static은 승인 SHA `c56525394a4099160e7a32e93dc2d3a0d54568b3`에서 Render deploy `dep-da5vn3m417fc738rs2bg`로 정확히 1회 배포되어 live입니다. backend·DB·secret은 변경하지 않았습니다.
+- v378 legacy static `c56525394a4099160e7a32e93dc2d3a0d54568b3` / `dep-da5vn3m417fc738rs2bg`는 v400의 이전 배포이며 rollback 기준입니다.
 - v371~v373은 이메일 lifecycle·owner/migration source, 문서 체계와 `email-validator==2.3.0`·`dnspython==2.8.0` 재현 lock을 준비했습니다. dependency가 빠지면 이메일 동작은 503으로 fail-closed합니다.
 - Obsidian 1.13.7에서 저장소 루트를 `Upgrade RPG` local vault로 등록하고 ignored `.obsidian/` 설정과 핵심 문서·색인의 표준 Markdown 링크를 연결했습니다. Obsidian은 로컬 탐색기이며 Git source of truth를 대체하지 않습니다.
 - v376에서 실행 환경 사전 고정, 범위별 단일 검증, 성공 후 중복 확인 금지와 작업별 자체 피드백을 영구 규칙으로 추가했습니다. 기호는 실질적인 이메일 인증 rollout에 필요한 보안 구현·migration·provider 설정·테스트 메일·배포를 승인했습니다.
 - v377 source는 PostgreSQL HMAC rate limit, auth IP 사전 보호, JSON 파싱 전 body cap, semantic mail outbox, 안전한 미인증 identity 회수와 202/429/413 frontend 계약을 추가했습니다.
 - local/Neon DB는 각각 1회 v377로 upgrade했고 기존 22개 table 데이터 변화 0과 25개 model table parity를 확인했습니다. stale evidence와 `recovery1`·`recovery2` marker는 보존하며 상세 migration·배포 증거는 [현재 상태](docs/current/CURRENT_STATUS.md)에 통합합니다.
 - v295에서 생성된 이메일 없는 기존 계정은 아이디·비밀번호 로그인을 계속 허용하되 `emailVerified=false`로 정직하게 표시합니다. 이메일이 있는 신규 계정은 링크 인증 전 계속 차단합니다.
-- Brevo의 실제 Naver 수신→링크 인증→로그인→8개 슬롯 E2E와 Render email/security 환경변수 35개 준비를 완료했습니다. 메일 finalize 수정의 현재 backend deploy는 `dep-da4tp7nqj5pc73b6l910`이며 legacy static은 v378입니다. owner bootstrap·실제 DB reset·seed·restore·stamp·downgrade는 실행하지 않았습니다.
+- Brevo의 실제 Naver 수신→링크 인증→로그인→8개 슬롯 E2E와 Render email/security 환경변수 35개 준비를 완료했습니다. 메일 finalize 수정의 현재 backend deploy는 `dep-da4tp7nqj5pc73b6l910`이며 legacy static은 v400입니다. owner bootstrap·실제 DB reset·seed·restore·stamp·downgrade는 실행하지 않았습니다.
 - 공개 회원가입·새 이미지 배포 blocker는 server session/revoke, save CAS, CSP/XSS·브라우저 token, 개인정보 정책입니다. 이메일 rollout 내에서도 이 gate를 우회하지 않습니다.
 - 검증된 공개 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`, backend는 `https://upgrade-rpg-api.onrender.com`입니다.
 - 이전 배포·콘텐츠·이미지의 상세 이력은 `docs/archive/history/`와 Git history에서 필요할 때만 확인합니다.
