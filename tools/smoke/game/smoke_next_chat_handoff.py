@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v399.vue-game-inventory-transfer-foundation"
-RESULT = "vue-game-inventory-transfer-foundation"
-NEXT_STAGE = "migrate-vue-game-stack-merge-foundation"
+VERSION = "v400.legacy-boss-drop-hotfix-ready"
+RESULT = "legacy-boss-drop-hotfix-ready"
+NEXT_STAGE = "deploy-legacy-boss-drop-hotfix"
 SOURCE_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_HEAD = SOURCE_HEAD
 NEON_APPLIED_HEAD = SOURCE_HEAD

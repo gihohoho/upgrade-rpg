@@ -1,13 +1,13 @@
-# Current Status — v399
+# Current Status — v400
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v399.vue-game-inventory-transfer-foundation
-strict result: vue-game-inventory-transfer-foundation
-next safe stage: migrate-vue-game-stack-merge-foundation
+latest: v400.legacy-boss-drop-hotfix-ready
+strict result: legacy-boss-drop-hotfix-ready
+next safe stage: deploy-legacy-boss-drop-hotfix
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -36,7 +36,18 @@ v396 production approval/execution: no/no
 v397 production approval/execution: no/no
 v398 production approval/execution: no/no
 v399 production approval/execution: no/no
+v400 legacy hotfix approval/execution: yes/no
 ```
+
+## v400 실서버 보스 드랍 긴급 수정
+
+- 사용자 요청: Vue 작업 중단, 공개 보스 드랍 수정·배포 승인. 검증은 메모리 가방만 사용하며 실제 계정 저장은 변경하지 않습니다.
+- 원인: 공개 master-data에는 `summonRules.raw`에 보정된 확률이 있었지만 legacy adapter가 `equipDropRate`, `skillDropRate`, `talismanDropRate`, `emblemDropRate`, `dropTitle`을 누락했습니다. 화면에는 `undefined`, 일반 장비/강화권 확률 계산에는 `NaN`이 생겼습니다. 개별 확률 장비는 별도 경로였으며 이번 검사에서 함께 확인했습니다.
+- 수정: raw 확률을 직접 복원하고 누락 시 drop table raw 값을 사용합니다. 명시적인 0을 보존하며 두 배 보정을 반복하지 않습니다. 제목은 table 설명/원본/기본 제목으로 복구합니다. `index.html`은 adapter 캐시 키 `v=400`을 사용합니다. 확률·source/generated seed·backend·DB는 변경하지 않습니다.
+- 공개 응답+기존 adapter에서 실패 재현, 수정 adapter에서는 일반 39·특수 6종/245개 아이템의 처치→지급 회귀 PASS. asset 유무·실패 확률·가방 용량·장비 OFF·cooldown·0 확률·재변환을 검사했습니다.
+- 전체 core·JS syntax·변경 Python compileall·문서 구조/handoff·strict readiness PASS. static build는 298파일/39,370,314바이트입니다. 실제 브라우저 검증은 미완료입니다.
+- Render static `srv-d9iu337aqgkc73am4lh0`만 배포합니다. v378 공개 경로에는 이번 수정 외 차이가 없고 Vue는 빌드에서 제외됩니다.
+- 배포·브라우저 검증은 연결 부재로 미완료이며 사용자에게 연결 복구를 요청했습니다. 공개 GET은 200/수정 전 코드입니다. 서버 재시작 불필요.
 
 ## v399 가방↔보관함 이동·정렬 저장
 
@@ -52,23 +63,11 @@ v399 production approval/execution: no/no
 - v397은 계정/슬롯/캐릭터별 snapshot·pending·백업을 기록합니다. local/server/취소 선택 전에는 boot·자동 저장을 시작하지 않습니다. 늦은 응답은 최신 pending을 지우지 않습니다. 상세 키·실패 계약은 [계정·저장 계약](ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md)을 따릅니다.
 - v396의 13px typography·명암·좌우 창과 공유 modal 접근성, 관리자 helper 정리와 terminal save barrier를 유지합니다. v396~v398 Vue smoke/build·1366px/390px synthetic 브라우저 검사는 PASS했습니다.
 
-## v394~v395 선택 캐릭터 서버 load·직렬 저장 기반
+## v384~v395 이전 Vue 기반
 
-- typed `POST /api/v1/game/save` client가 현재 Bearer token, `character-N`, 32자리 `accountCharacterId`와 호출 시점의 detached server state를 한 요청으로 고정합니다. snapshot은 기존 `createServerSavePayload`로 만들고 Gold·레벨·최근 구역과 item container count만 summary allow-list에 담습니다.
-- 자동 60초·수동·전환 저장은 하나의 Promise 직렬 queue를 사용합니다. 전환은 runtime pause와 최종 저장 성공 뒤에만 선택/token을 정리합니다. 응답 identity·saveVersion을 재검증하고 session·conflict·retryable·contract 오류를 분리합니다. v396의 terminal barrier는 위 현재 계약을 따릅니다.
-- backend의 현재 `saveVersion`은 snapshot 형식 버전이며 다중 기기 CAS revision이 아닙니다. Vue가 `expectedRevision`을 임의로 만들거나 409를 자동 재시도하지 않으며 실제 CAS schema/API는 공개 확대 전 별도 backend 단계로 남깁니다.
-- `GET /api/v1/game/load`도 선택 identity를 재검증해 typed 상태로 적용합니다. 빈 snapshot은 신규 기본 상태이며 오류는 session-invalid와 token·선택을 유지하는 retry 화면으로 나눕니다. 새 요청과 해제는 이전 GET/timer를 정리합니다.
-- v394~v395 smoke/build PASS. v395 당시 브라우저 검증은 연결 문제로 미완료였으며 후속 v396에서 확인했습니다.
-
-## v393 빈 게임 화면 복구·client 전투 runtime 기반
-
-- snapshot load 성공 뒤에만 독립 `combatRuntime`이 단일 timer로 client-only 전투를 수행합니다. 대상 전환·마을 복귀·component 해제에서 timer를 정리하고 pause 원인을 분리합니다.
-- 이 runtime은 v394 snapshot을 읽고 v395 queue가 typed server state를 저장하지만 client 전투 HP, Gold·아이템·보상·난수·cooldown·자동 재등장/재소환을 server state에 쓰지 않습니다. 당시 desktop/mobile fixture와 focused smoke가 PASS했습니다.
-
-## v384~v392 이전 Vue 게임 기반
-
-- v384~v389는 [typed domain과 의존성](../generated/VUE_GAME_DOMAIN_DEPENDENCIES.md), 마을 전용 접속 바·HUD·필드·보스·아이템 표시 기반을 이식했습니다. v398 이전 가방은 24칸 샘플이었습니다.
-- v390~v392는 스킬/강화·가격 카탈로그·임시 설정과 좌우 창/modal을 이식했습니다. SQ·SW 첫 Lv.1·보너스 비상속·탈리스만/휘장 재료 규칙을 유지하며 이후 가독성은 v396의 13px token으로 개선했습니다.
+- [typed domain 의존성](../generated/VUE_GAME_DOMAIN_DEPENDENCIES.md)과 마을/HUD·필드·보스·스킬·상점·설정 표시를 이식했습니다. snapshot load 성공 뒤 단일 전투 timer가 시작되지만 HP·Gold·아이템 보상·난수·cooldown은 저장하지 않습니다.
+- GET/POST는 Bearer·슬롯·캐릭터 identity를 검사합니다. 자동 60초·수동·전환 저장은 한 queue를 사용하며 최종 저장 성공 뒤 선택/token을 정리합니다. `saveVersion`은 형식 버전이고 backend CAS는 미구현입니다. 상세는 [계정·저장 계약](ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md)을 따릅니다.
+- smoke/build와 후속 v396 브라우저 검사가 PASS했습니다. 이전 구현 상세는 [Vue 전환 계획](../reference/frontend/VUE_FASTAPI_DB_TRANSITION_PLAN.md)과 Git 이력을 따릅니다.
 
 ## v378 게임 UI·환경 라우팅 소스 준비
 
@@ -101,7 +100,7 @@ v399 production approval/execution: no/no
 - 최초 v377 publish preparation `d58d093fc5ac2a4ffefa812e7067cb3083ce8a7d`와 GitHub Actions run `32576889295`는 기본 email/security image를 게시했습니다. 메일 finalize fix는 별도 preparation `cd357de032425138d44323dd3060bbbf5b6a45d8`과 GitHub Actions run `32587614153`, `run_attempt=1`로 게시했고 rerun하지 않았습니다.
 - 현재 production image는 `ghcr.io/gihohoho/upgrade-rpg-backend@sha256:80e8f57618b2bd8bbac37fd63381e454434e06b67eff0cd8f4327796bdc1c677`입니다.
 - Render backend service에는 email/security 환경변수 35개를 key-name-only로 확인하고 secret 값 노출 없이 저장했습니다. deploy `dep-da4tp7nqj5pc73b6l910`은 현재 digest로 live입니다.
-- legacy static deploy `dep-da4qr867bikc73aekck0`은 commit `ceea14c20ac8604d453930d8f6c5127f00236352`를 build해 live입니다.
+- v377 당시 legacy static deploy `dep-da4qr867bikc73aekck0`은 후속 v378 `dep-da5vn3m417fc738rs2bg`로 교체됐습니다. 현재 v400 배포 여부는 위 긴급 수정 절을 따릅니다.
 - 공개 backend health는 HTTP 200입니다. 공개 인증 POST는 schema-invalid 요청에 422, 허용된 Naver 테스트 주소의 인증메일 재요청에 generic 202 accepted를 반환했고 두 응답 모두 `Cache-Control: no-store`였습니다.
 - 이전 `auth_protection_unavailable`과 “이메일 보안 설정이 아직 준비되지 않았습니다” 503은 공개 경로에서 재현되지 않습니다.
 - production 메일 장애의 첫 원인은 Brevo Authorized IP가 Render shared outbound IP를 허용하지 않은 것이었습니다. Render 공식 CIDR `74.220.52.0/24`, `74.220.60.0/24`를 등록한 뒤 실제 인증 메일이 provider에서 Delivered로 확인됐습니다.
@@ -138,7 +137,7 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. `migrate-vue-game-stack-merge-foundation`: legacy 중첩 가능 여부·template/tier/슬롯 비교 규칙을 이식해 이동 시 자동 합치기를 연결합니다. 수량·강화·옵션 보존을 검증하며 장착·사용·판매·휴지통 변경·Gold·난수·배포는 분리합니다.
+1. `deploy-legacy-boss-drop-hotfix`: 승인된 실서버 드랍 수정의 static 배포와 공개 브라우저 검증을 완료합니다. Vue 후속 `migrate-vue-game-stack-merge-foundation`은 사용자 재개 요청까지 보류합니다.
 2. 실제 관리자 Apply API·재인증·dev key header·DB write 연결은 이번 단계에 포함되지 않았습니다. 필요하면 작업 종류와 정확한 DB-write 범위를 별도 승인받습니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 

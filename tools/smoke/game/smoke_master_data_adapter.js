@@ -224,7 +224,7 @@ assert(fs.existsSync(adapterPath), "src/api/master-data-adapter.js 파일이 없
 const indexHtml = fs.readFileSync(indexPath, "utf8");
 const clientTagIndex = indexHtml.indexOf('src="src/api/game-api-client.js?v=378"');
 const bridgeTagIndex = indexHtml.indexOf('src="src/api/master-data-bridge.js"');
-const adapterTagIndex = indexHtml.indexOf('src="src/api/master-data-adapter.js"');
+const adapterTagIndex = indexHtml.indexOf('src="src/api/master-data-adapter.js?v=400"');
 const dataTagIndex = indexHtml.indexOf('src="src/data/skills.js?v=378"');
 assert(clientTagIndex >= 0, "index.html에 game-api-client.js script 태그가 없습니다.");
 assert(bridgeTagIndex >= 0, "index.html에 master-data-bridge.js script 태그가 없습니다.");
@@ -278,6 +278,81 @@ assert(legacyData.specialBossList.length === 6, "특수 보스 수가 6개가 �
 assert(legacyData.fieldZones.length === 40, "필드 수가 40개가 아닙니다.");
 assert(legacyData.itemTemplateList.length === 245, "아이템 템플릿 수가 245개가 아닙니다.");
 assert(validation.hasInlineAsset === false, "기본 adapter 결과에 inline data URL이 남아 있습니다.");
+
+// 실제 API → adapter → runtime 교체 → killEnemy → inventory 경로를 실행합니다.
+// 선택적으로 공개 API 응답/배포 JS를 넣어 동일한 회귀를 배포 전후에 확인합니다.
+function checkBossDropRuntime(payload, adapterSource = fs.readFileSync(adapterPath, "utf8")) {
+	const context = {
+		console, Date, Math: Object.create(Math),
+		document: { getElementById: () => null },
+		getTotals: () => ({ dropInc: 0 }),
+		addLog() {}, showItemDropText() {}, updateCombatUI() {}, renderUI() {}, clearInterval() {},
+	};
+	context.window = context;
+	vm.createContext(context);
+	for (const file of ["src/state/game-state.js", "src/systems/item-system.js", "src/rules/boss-drop-rules.js", "src/systems/combat-system.js"]) {
+		vm.runInContext(fs.readFileSync(path.join(projectRoot, file), "utf8"), context, { filename: file });
+	}
+	vm.runInContext(adapterSource, context);
+	vm.runInContext("const bossList = []; const specialBossList = []; const characterMasterData = {}; const skillMasterData = {}; const zones = [];", context);
+	vm.runInContext(fs.readFileSync(path.join(projectRoot, "src/api/master-data-runtime-switch.js"), "utf8"), context);
+	const adapted = context.RpgMasterDataAdapter.createLegacyMasterDataFromPayload({ ok: true, payload });
+	context.RpgBackendMasterDataRuntime.applyLegacyMasterData(adapted, { hydrateStaticAssets: false });
+	const bosses = vm.runInContext("[...bossList, ...specialBossList]", context);
+	assert(bosses.length === 45, "드랍 회귀는 일반 39 + 특수 6 보스를 모두 검사해야 합니다.");
+	let awardedItems = 0;
+	const kill = (boss, roll = 1e-12, equipEnabled = true, capacity = 60) => {
+		context.player = context.createDefaultPlayerState();
+		context.player.maxInventorySize = capacity;
+		context.player.maxStorageSize = capacity;
+		context.player.firstEquipSkillDropGiven = { [boss.id]: true };
+		context.currentBoss = JSON.parse(JSON.stringify(boss));
+		context.currentZoneType = "boss_fight";
+		context.equipDropEnabled = equipEnabled;
+		context.autoBossSummon = false;
+		context.Math.random = () => roll;
+		context.killEnemy(boss);
+		if (boss.isSpecial) assert(context.player.specialBossCD[boss.id] > Date.now(), `${boss.code}: 처치 cooldown 누락`);
+		return context.player.inventory.filter(Boolean);
+	};
+	for (const boss of bosses) {
+		const source = payload.bosses.find((row) => row.code === boss.code).summonRules.raw;
+		assert(boss.dropTitle === "[획득 가능 아이템]", `${boss.code}: undefined 드랍 제목`);
+		assert(boss.dropsList.length > 0 && !boss.dropsList.join().includes("undefined"), `${boss.code}: 드랍 목록 누락`);
+		for (const key of ["equipDropRate", "skillDropRate", "talismanDropRate", "emblemDropRate"]) {
+			assert(Number.isFinite(boss[key]) && boss[key] === (source[key] ?? 0), `${boss.code}: ${key} 누락/중복 보정`);
+		}
+		assert(kill(boss).length > 0, `${boss.code}: 처치 후 보상 없음`);
+		assert(kill(boss, 0.999999).length === 0, `${boss.code}: 실패 확률에서 보상 발생`);
+		assert(kill(boss, 1e-12, true, 0).length === 0, `${boss.code}: 가방 용량 초과`);
+		for (const drop of boss.drops) {
+			const singleDropBoss = { ...boss, drops: [drop] };
+			const items = kill(singleDropBoss);
+			assert(items.length === 1 && items[0].templateKey === drop.templateKey, `${boss.code}: ${drop.name} 실제 지급 실패`);
+			assert(items[0].count === (drop.count || 1), `${boss.code}: ${drop.name} 수량 변경`);
+			awardedItems += 1;
+			if ((drop.type === "normal" || drop.type === "special_equip") && !drop.isTalisman && !drop.individualDropRate) {
+				assert(kill(singleDropBoss, 1e-12, false).length === (boss.isSpecial ? 1 : 0), `${boss.code}: 장비 드랍 OFF 계약 변경`);
+			}
+		}
+	}
+	assert(awardedItems === 245, "245개 드랍 아이템의 실제 지급을 모두 확인해야 합니다.");
+	assert(JSON.stringify(context.RpgMasterDataAdapter.createLegacyMasterDataFromPayload({ ok: true, payload }).bossList) === JSON.stringify(adapted.bossList), "재변환 시 확률/원본 변경");
+	console.log(`boss drop runtime passed: ${bosses.length} bosses, ${awardedItems} items, loss/full-inventory/equipment-toggle guards`);
+}
+
+checkBossDropRuntime(fakePayload);
+checkBossDropRuntime(buildApiPayloadFromSeed({ includeAssets: true }));
+const fallbackPayload = JSON.parse(JSON.stringify(fakePayload));
+delete fallbackPayload.bosses[0].summonRules.raw.equipDropRate;
+const fallbackBoss = sandbox.RpgMasterDataAdapter.createLegacyMasterDataFromPayload({ ok: true, payload: fallbackPayload }).bossList[0];
+assert(fallbackBoss.equipDropRate === 0.08, "drop table의 보정된 확률 fallback 실패");
+fallbackPayload.bosses[0].summonRules.raw.equipDropRate = 0;
+assert(sandbox.RpgMasterDataAdapter.createLegacyMasterDataFromPayload({ ok: true, payload: fallbackPayload }).bossList[0].equipDropRate === 0, "명시적 0 확률 보존 실패");
+if (process.argv[2]) {
+	const live = JSON.parse(fs.readFileSync(path.resolve(process.argv[2]), "utf8").replace(/^\uFEFF/, ""));
+	checkBossDropRuntime(live.payload, process.argv[3] ? fs.readFileSync(path.resolve(process.argv[3]), "utf8") : undefined);
+}
 
 (async () => {
 	const result = await sandbox.checkBackendMasterDataAdapter();

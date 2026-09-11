@@ -261,6 +261,7 @@
 			const raw = summonRules.raw || {};
 			const id = parseBossId(boss.code, boss.tier);
 			const table = dropTableByOwnerCode[boss.code] || null;
+			const tableRaw = (table && table.rules && table.rules.raw) || {};
 			const dropRows = table ? asArray(dropItemsByTable[table.code]) : [];
 			const drops = dropRows.map((row) => {
 				const template = itemTemplates[row.itemTemplateCode] || {};
@@ -286,6 +287,13 @@
 				hasImage: !!boss.hasImage,
 				maxHp: boss.hp,
 				cooldownMs: raw.cooldownMs !== undefined && raw.cooldownMs !== null ? raw.cooldownMs : asMilliseconds(boss.cooldownSeconds),
+				// API seed의 확률은 이미 보정된 값입니다. bootstrap의 배율을 다시 적용하지 않습니다.
+				equipDropRate: raw.equipDropRate ?? tableRaw.rawEquipDropRate ?? 0,
+				skillDropRate: raw.skillDropRate ?? tableRaw.rawSkillDropRate ?? 0,
+				talismanDropRate: raw.talismanDropRate ?? tableRaw.rawTalismanDropRate ?? 0,
+				emblemDropRate: raw.emblemDropRate ?? tableRaw.rawEmblemDropRate ?? 0,
+				dropRateDoubled: summonRules.dropRateDoubled ?? raw.dropRateDoubled ?? false,
+				dropTitle: (table && table.description) || tableRaw.title || raw.dropTitle || "[획득 가능 아이템]",
 				dropsList: cloneJson(summonRules.dropsList || raw.dropsList || []),
 				drops,
 				dropTableCode: table ? table.code : null,

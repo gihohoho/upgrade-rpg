@@ -1,11 +1,11 @@
-# Upgrade RPG Codex handoff — v399
+# Upgrade RPG Codex handoff — v400
 
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v399.vue-game-inventory-transfer-foundation
-strict result: vue-game-inventory-transfer-foundation
-next safe stage: migrate-vue-game-stack-merge-foundation
+latest: v400.legacy-boss-drop-hotfix-ready
+strict result: legacy-boss-drop-hotfix-ready
+next safe stage: deploy-legacy-boss-drop-hotfix
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -33,10 +33,13 @@ v396 production approval/execution: no/no
 v397 production approval/execution: no/no
 v398 production approval/execution: no/no
 v399 production approval/execution: no/no
+v400 legacy hotfix approval/execution: yes/no
 ```
 
 ## 이번 체크포인트
 
+- 사용자가 Vue 작업을 일시 중단하고 실서버 일반·특수보스 드랍 수정과 배포를 승인했습니다. v400은 `src/api/master-data-adapter.js`에서 보정된 확률 4종·드랍 제목·보정 marker를 복구하고 `index.html` 캐시 키를 `v=400`으로 변경합니다. 배포 상태와 검증 증거는 [현재 상태](docs/current/CURRENT_STATUS.md)의 v400 절을 따릅니다.
+- Browser 연결 탐색 결과가 빈 목록이며 Render API 인증/CLI도 준비되지 않았습니다. 사용자에게 Browser/Chrome 연결 복구를 요청했습니다. 연결되면 기존 static service `srv-d9iu337aqgkc73am4lh0`에 검증한 exact commit을 배포하고 공개 파일과 보스 화면을 확인합니다. 이번 배포 승인은 이미 있으므로 같은 승인을 다시 묻지 않습니다.
 - v399는 가방↔보관함 묶음 이동과 정렬 적용을 연결합니다. 순수 `transferItemSlot`이 source의 빈 칸·ID·강화·수량·추가 필드를 유지하고 destination 첫 빈 칸을 사용합니다. 자동 합치기는 아직 하지 않습니다.
 - 전체 Vue smoke·TypeScript·production build PASS. 1366px/390px synthetic 브라우저에서 양방향 이동·정렬 저장·503 실패/재시도·pending 해제·가로 넘침 0·console error 0을 확인했고 임시 fixture는 제거했습니다.
 - store는 prospective snapshot의 복구본 기록이 성공해야 화면을 바꾸고 공통 queue에 저장합니다. quota/다른 탭 변경은 변경 전 차단합니다. 저장 실패는 pending을 보존하며 재시도는 이동을 반복하지 않습니다. 저장 중/오류/전환 중 후속 변경을 잠그고 401/403은 로그인으로 돌아갑니다.
@@ -49,9 +52,10 @@ v399 production approval/execution: no/no
 
 ## 바로 할 일
 
-1. 다음은 `migrate-vue-game-stack-merge-foundation`입니다. legacy의 +0/스킬강화권 중첩 가능 여부와 template·tier·슬롯 비교 규칙을 순수 함수로 옮겨 가방↔보관함 이동 시 자동 합치기를 연결합니다. 수량 보존·가득 찬 목적지의 호환 묶음·강화 장비 비중첩·추가 옵션 보존을 검증합니다. 장착·사용·판매·휴지통 변경·Gold·난수·backend/CAS·DB write·배포는 분리합니다.
-2. 실제 관리자 Apply API, 비밀번호 재인증 request, dev key header와 DB write는 연결하지 않습니다. 진행하려면 작업 종류와 exact DB-write 범위를 별도로 승인받습니다.
-3. production 관리자 복구는 Vue 화면 이식과 분리하며 기존 `admin` 승격 또는 새 owner 생성의 exact DB-write 승인을 받기 전에는 실행하지 않습니다.
+1. `deploy-legacy-boss-drop-hotfix`: Browser/Chrome 연결을 복구한 뒤 현재 수정의 exact SHA로 legacy static만 배포합니다. backend/Neon 수정은 필요 없습니다. 기존 v378 대비 배포 대상 `index.html`, `admin.html`, `src/`, static build script에는 이번 드랍 수정 외 차이가 없음을 확인했습니다. Vue는 배포 allowlist 밖입니다.
+2. Vue 작업은 일시 중단 상태입니다. 사용자 재개 요청 후에만 `migrate-vue-game-stack-merge-foundation`을 진행합니다. 수량·강화·옵션 보존과 가득 찬 목적지 합치기를 확인할 계획을 유지합니다.
+3. 실제 관리자 Apply API, 비밀번호 재인증 request, dev key header와 DB write는 연결하지 않습니다. 진행하려면 작업 종류와 exact DB-write 범위를 별도로 승인받습니다.
+4. production 관리자 복구는 Vue 화면 이식과 분리하며 기존 `admin` 승격 또는 새 owner 생성의 exact DB-write 승인을 받기 전에는 실행하지 않습니다.
 
 ## 안전 경계
 
