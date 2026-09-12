@@ -91,17 +91,17 @@
 
 ## 현재 체크포인트
 
-v401: 사용자가 요청한 실서버 5개 개선(백그라운드 전투·묶음 드랍·소환 기본 ON·도감 능력치·스킬 강조)을 구현하고 static 배포합니다. Vue v399는 계속 중단합니다. 사용한도 중단 시 handoff의 완료/남은 단계부터 재개합니다.
+v401: 실서버 5개 개선(백그라운드 전투·묶음 드랍·소환 기본 ON·도감 능력치·스킬 강조)을 SHA `a86fd0c`로 static에 1회 배포했고 Live 검증을 완료했습니다. Vue v399는 계속 중단합니다. 사용한도 중단 시 handoff의 완료/남은 단계부터 재개합니다.
 
 ```txt
 latest: v401.legacy-live-game-improvements
 strict result: legacy-live-game-improvements
-next safe stage: deploy-legacy-live-game-improvements
+next safe stage: await-user-vue-resume
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
 email rollout approval/execution: yes/public-live
-public backend/static: v377/v400 Live
+public backend/static: v377/v401 Live
 Render public preview: deployed
 production approval/execution: yes/yes
 v378 production approval/execution: yes/yes
@@ -127,7 +127,7 @@ v397 production approval/execution: no/no
 v398 production approval/execution: no/no
 v399 production approval/execution: no/no
 v400 legacy hotfix approval/execution: yes/yes
-v401 legacy improvements approval/execution: yes/no
+v401 legacy improvements approval/execution: yes/yes
 ```
 
 - v396은 Vue 글자·명암 token, 게임·계정 modal 접근성, 관리자 표시/오류 helper를 정리했습니다. 미사용 `gameReadOnlyApi.js`만 제거했고 typed API·공개 legacy는 유지합니다. 전체 Vue smoke·TypeScript·build와 1366px/390px 브라우저 검사가 PASS했습니다.
@@ -148,7 +148,7 @@ v401 legacy improvements approval/execution: yes/no
 - v377 source는 PostgreSQL HMAC rate limit, auth IP 사전 보호, JSON 파싱 전 body cap, semantic mail outbox, 안전한 미인증 identity 회수와 202/429/413 frontend 계약을 추가했습니다.
 - local/Neon DB는 각각 1회 v377로 upgrade했고 기존 22개 table 데이터 변화 0과 25개 model table parity를 확인했습니다. stale evidence와 `recovery1`·`recovery2` marker는 보존하며 상세 migration·배포 증거는 [현재 상태](docs/current/CURRENT_STATUS.md)에 통합합니다.
 - v295에서 생성된 이메일 없는 기존 계정은 아이디·비밀번호 로그인을 계속 허용하되 `emailVerified=false`로 정직하게 표시합니다. 이메일이 있는 신규 계정은 링크 인증 전 계속 차단합니다.
-- Brevo의 실제 Naver 수신→링크 인증→로그인→8개 슬롯 E2E와 Render email/security 환경변수 35개 준비를 완료했습니다. 메일 finalize 수정의 현재 backend deploy는 `dep-da4tp7nqj5pc73b6l910`이며 legacy static은 v400입니다. owner bootstrap·실제 DB reset·seed·restore·stamp·downgrade는 실행하지 않았습니다.
+- Brevo의 실제 Naver 수신→링크 인증→로그인→8개 슬롯 E2E와 Render email/security 환경변수 35개 준비를 완료했습니다. 메일 finalize 수정의 현재 backend deploy는 `dep-da4tp7nqj5pc73b6l910`이며 legacy static은 v401입니다. owner bootstrap·실제 DB reset·seed·restore·stamp·downgrade는 실행하지 않았습니다.
 - 공개 회원가입·새 이미지 배포 blocker는 server session/revoke, save CAS, CSP/XSS·브라우저 token, 개인정보 정책입니다. 이메일 rollout 내에서도 이 gate를 우회하지 않습니다.
 - 검증된 공개 주소는 `https://gihohoho-upgrade-rpg.onrender.com/index.html`, `/admin.html`, backend는 `https://upgrade-rpg-api.onrender.com`입니다.
 - 이전 배포·콘텐츠·이미지의 상세 이력은 `docs/archive/history/`와 Git history에서 필요할 때만 확인합니다.

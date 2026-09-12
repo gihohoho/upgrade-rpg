@@ -777,7 +777,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     current_markers = (
         "v401.legacy-live-game-improvements",
         "legacy-live-game-improvements",
-        "deploy-legacy-live-game-improvements",
+        "await-user-vue-resume",
     )
     for path, text in (
         ("AGENTS.md", agents),

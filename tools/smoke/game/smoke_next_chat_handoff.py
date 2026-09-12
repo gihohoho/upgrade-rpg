@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 VERSION = "v401.legacy-live-game-improvements"
 RESULT = "legacy-live-game-improvements"
-NEXT_STAGE = "deploy-legacy-live-game-improvements"
+NEXT_STAGE = "await-user-vue-resume"
 SOURCE_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_HEAD = SOURCE_HEAD
 NEON_APPLIED_HEAD = SOURCE_HEAD
@@ -39,7 +39,7 @@ def main() -> int:
             SOURCE_HEAD,
             LOCAL_APPLIED_HEAD,
             NEON_APPLIED_HEAD,
-            "public backend/static: v377/v400 Live",
+            "public backend/static: v377/v401 Live",
         )
 
     prompt = read("NEXT_CHAT_PROMPT.md")

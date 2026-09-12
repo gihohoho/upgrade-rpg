@@ -7,12 +7,12 @@
 ```txt
 latest: v401.legacy-live-game-improvements
 strict result: legacy-live-game-improvements
-next safe stage: deploy-legacy-live-game-improvements
+next safe stage: await-user-vue-resume
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
 email rollout approval/execution: yes/public-live
-public backend/static: v377/v400 Live
+public backend/static: v377/v401 Live
 production approval/execution: yes/yes
 v378 production approval/execution: yes/yes
 v379 production approval/execution: no/no
@@ -37,7 +37,7 @@ v397 production approval/execution: no/no
 v398 production approval/execution: no/no
 v399 production approval/execution: no/no
 v400 legacy hotfix approval/execution: yes/yes
-v401 legacy improvements approval/execution: yes/no
+v401 legacy improvements approval/execution: yes/yes
 ```
 
 ## v401 실서버 게임 편의 개선
@@ -46,7 +46,8 @@ v401 legacy improvements approval/execution: yes/no
 - 경과시간 순서로 공격·버프·필드 재등장·특수보스 쿨타임을 처리합니다. 지연은 500개 이벤트씩 나누고 완료 전 입력을 잠급니다. 계정 전환/로그아웃 시 시계를 중단하며 중단 시간은 재생하지 않습니다. 화면 효과는 생략하고 최근 로그 200개를 복귀 시 표시합니다. 브라우저 종료·탭 폐기 뒤 오프라인 사냥은 지원하지 않습니다.
 - 장비는 `5종 중 1개 · 8.00%`처럼 묶음 확률, 휘장은 개별 판정으로 표시합니다. 실제 확률/seed는 유지합니다. 새 소환은 자동소환·장비드랍 ON, 다른 보스 선택은 보스제거 안내로 차단합니다.
 - 도감은 실제 template/+단계 능력치를 hover·클릭·키보드로 표시합니다. 모바일은 한 열입니다. 스킬 공식/최종 피해를 굵기·색으로 구분하며 현재 레벨·탈리스만·피해 증가를 반영하고 치명타는 제외합니다.
-- 전체 core·JS syntax·변경 Python compileall·static build PASS. 마지막 지급 ID 충돌 보강 뒤 관련 5개 회귀도 PASS입니다. 공개 데이터로 전경/지연·특수복귀·pause/resume·45종 드랍표를 검증했습니다. 1366/390px 도감·스킬 확인, console error 0입니다. 실제 계정 저장 없이 검사했으며 배포만 남았습니다.
+- 전체 core·JS syntax·변경 Python compileall·static build PASS. 마지막 지급 ID 충돌 보강 뒤 관련 5개 회귀도 PASS. 공개 데이터로 전경/지연·특수복귀·pause/resume·45종을 검증했습니다. 1366/390px 도감·스킬 확인, console error 0입니다.
+- 2026-09-12 17:48 KST, SHA `a86fd0c2c9c31516a73cf6de352dc6f34a67851d` → deploy `dep-daih3krm8hqs73crb140` 1회 Live(16.1초). 변경 파일 7개 GET 200·Git bytes 일치, 최신 공개 API 회귀 PASS. 기존 서버 재시작 불필요.
 
 ## v400 실서버 보스 드랍 긴급 수정
 
@@ -138,7 +139,7 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. `deploy-legacy-live-game-improvements`: 보스 드랍 수정·배포 완료. Vue 후속 `migrate-vue-game-stack-merge-foundation`은 사용자 재개 요청까지 보류합니다.
+1. `await-user-vue-resume`: 보스 드랍 수정·배포 완료. Vue 후속 `migrate-vue-game-stack-merge-foundation`은 사용자 재개 요청까지 보류합니다.
 2. 실제 관리자 Apply API·재인증·dev key header·DB write 연결은 이번 단계에 포함되지 않았습니다. 필요하면 작업 종류와 정확한 DB-write 범위를 별도 승인받습니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 
