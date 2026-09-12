@@ -80,7 +80,7 @@ function testStaticContracts() {
 	assert.match(html, /id="test-panel"[^>]+data-admin-dev-ui="test-panel"[^>]+aria-hidden="true"[^>]+hidden[^>]+inert/);
 	assert.match(html, /id="test-item-modal"[^>]+data-admin-dev-ui="test-item-modal"[^>]+aria-hidden="true"[^>]+hidden[^>]+inert/);
 	assert.match(html, /game-dev-ui-access\.js\?v=378/);
-	assert(html.indexOf("game-dev-ui-access.js?v=378") < html.indexOf("main.js?v=370"), "개발 UI access gate는 main.js보다 먼저 로드되어야 합니다.");
+	assert(html.indexOf("game-dev-ui-access.js?v=378") < html.indexOf("main.js?v=401"), "개발 UI access gate는 main.js보다 먼저 로드되어야 합니다.");
 	assert.match(css, /\.game-account-bar\[data-zone-visible="hidden"\][\s\S]+display:\s*none\s*!important/);
 	assert.match(css, /\[data-admin-dev-ui\]\[hidden\][\s\S]+display:\s*none\s*!important/);
 	assert.match(renderSource, /function syncRenderedAccountBarTownVisibility\(\)[\s\S]+syncAccountBarTownVisibility\(currentZoneType\)[\s\S]+dataset\.zoneVisible = "hidden"/);

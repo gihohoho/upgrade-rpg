@@ -158,6 +158,10 @@ function addStackableItemToInventory(rawItem) {
 	}
 	if (!hasEmptyItemSlot(player.inventory, player.maxInventorySize)) return { ok: false, item, stacked: false };
 	item.id = item.id || Date.now() + Math.random();
+	// 지연된 전투 보상이 같은 밀리초에 지급되어도 기존 보유 아이템 ID를 재사용하지 않습니다.
+	const occupiedIds = new Set([player.inventory, player.storage, player.equipment, player.trash]
+		.flatMap((items) => Array.isArray(items) ? items : []).filter(Boolean).map((owned) => String(owned.id)));
+	while (occupiedIds.has(String(item.id))) item.id = Math.floor(Number(item.id) || Date.now()) + 1;
 	placeItemInFirstEmptySlot(player.inventory, item, player.maxInventorySize);
 	if (typeof recordItemAcquired === "function") recordItemAcquired(item);
 	return { ok: true, item, stacked: false };

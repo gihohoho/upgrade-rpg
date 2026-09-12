@@ -358,12 +358,24 @@ function getUniqueTooltipHTML() {
 	return `<div class="unique-tooltip-box"><div class="unique-tooltip-title">고유능력</div>${rows.map(r => `<div class="unique-tooltip-row ${r.active ? "active" : "inactive"}"><span>${r.label}</span><span class="unique-tooltip-value">${r.value}</span></div>`).join("")}<div class="unique-tooltip-note">비활성화 된 스탯은 적용되지 않습니다.</div></div>`;
 }
 
+const deferredCombatLogs = [];
+function flushDeferredCombatLogs() {
+	const logs = deferredCombatLogs.splice(0);
+	for (const entry of logs) addLog(entry.text, entry.isSuccess);
+}
+
 function addLog(text, isSuccess = false) {
+	if (typeof isCombatUiDeferred === "function" && isCombatUiDeferred()) {
+		deferredCombatLogs.push({ text, isSuccess });
+		if (deferredCombatLogs.length > 200) deferredCombatLogs.shift();
+		return;
+	}
 	if (!ui.log) return;
 	let p = document.createElement("p");
 	p.innerHTML = text;
 	if (isSuccess) p.style.color = "#88ff88";
 	ui.log.appendChild(p);
+	while (ui.log.childElementCount > 300) ui.log.firstElementChild.remove();
 	ui.log.scrollTop = ui.log.scrollHeight;
 }
 
@@ -409,7 +421,7 @@ function buildSkillBookActionHtml(item) {
 	</div>`;
 }
 
-function showItemTooltip(item) {
+function showItemTooltip(item, options = {}) {
 	if (!ui.tooltip) return;
 	if (item.type === "skill_book") {
 		ui.tooltip.innerHTML = buildSkillBookTooltipHtml(item);
@@ -431,7 +443,7 @@ function showItemTooltip(item) {
 		ui.tooltip.innerHTML = `
       <div style="font-size: 13px; font-weight: bold; line-height: 1.4;">
         <div style="color: #ffcc00; font-size: 15px; margin-bottom: 5px;">${baseName} +${lvl} ${isEquipTxt}</div>
-        <div style="color: #aaa; margin-bottom: 10px;">클릭하여 관리창을 열고 ${isEquipped ? "해제" : "장착"}할 수 있습니다.</div>
+        ${options.codex ? "" : `<div style="color: #aaa; margin-bottom: 10px;">클릭하여 관리창을 열고 ${isEquipped ? "해제" : "장착"}할 수 있습니다.</div>`}
         <div style="color: #28a745; margin-bottom: 10px; font-size: 14px;">${info.typeName}</div>
         ${info.statsHtml}
         <div style="color: #ffcc00; margin-top: 15px;">${upgradeCostHtml}</div>
@@ -445,7 +457,7 @@ function showItemTooltip(item) {
 		let statsHtml = buildSpecialEquipStatsHtml(item);
 		let ampNote = item.name && (item.name.includes("반지") || item.name.includes("목걸이")) ? `<div style="color:#ffcc00; margin-top:8px;">※ 해당 추가증가는 스탯창의 증폭수치로 적용됩니다.</div>` : "";
 		let category = getSpecialEquipCategoryPresentation(item);
-		ui.tooltip.innerHTML = `<div style="font-size: 13px; font-weight: bold; line-height: 1.4;"><div style="color: #ffcc00; font-size: 15px; margin-bottom: 5px;">${getDisplayNameWithLevel(item)}</div><div style="color: ${category.color}; margin-bottom: 8px;">${category.label}</div>${statsHtml}${ampNote}<div style="color: #fff; margin-top:10px;">클릭하여 관리창을 열고<br>전용 슬롯에 장착 및 해제할 수 있습니다.</div></div>`;
+		ui.tooltip.innerHTML = `<div style="font-size: 13px; font-weight: bold; line-height: 1.4;"><div style="color: #ffcc00; font-size: 15px; margin-bottom: 5px;">${getDisplayNameWithLevel(item)}</div><div style="color: ${category.color}; margin-bottom: 8px;">${category.label}</div>${statsHtml}${ampNote}${options.codex ? "" : `<div style="color: #fff; margin-top:10px;">클릭하여 관리창을 열고<br>전용 슬롯에 장착 및 해제할 수 있습니다.</div>`}</div>`;
 		ui.tooltip.style.display = "block";
 		return;
 	}
@@ -471,7 +483,7 @@ function showItemTooltip(item) {
 	let html = `
     <div style="font-size: 13px; font-weight: bold; line-height: 1.4;">
         <div style="color: #ffcc00; font-size: 15px; margin-bottom: 2px;">${item.name} ${lvText}</div>
-        <div style="color: #888888; font-size: 12px; margin-bottom: 10px;">클릭하여 관리창에서 장착/강화/이동할 수 있습니다.</div>
+        ${options.codex ? "" : `<div style="color: #888888; font-size: 12px; margin-bottom: 10px;">클릭하여 관리창에서 장착/강화/이동할 수 있습니다.</div>`}
         <div style="color: #ff3333; margin-bottom: 10px;">[일반]</div>
         ${statsHtml}
         <div style="color: #ffcc00; margin-bottom: 10px; margin-top: 10px;">강화비용: ${costText}</div>
@@ -876,6 +888,7 @@ function renderMailbox() {
 
 
 function renderUI() {
+	if (typeof isCombatUiDeferred === "function" && isCombatUiDeferred()) return;
 	if (ui.equipNormal) ui.equipNormal.innerHTML = "";
 	if (ui.equipSpecial) ui.equipSpecial.innerHTML = "";
 
@@ -1012,6 +1025,7 @@ function renderUI() {
 }
 
 function updateCombatUI() {
+	if (typeof isCombatUiDeferred === "function" && isCombatUiDeferred()) return;
 	let maxHpVal = 100;
 	let curHpVal = 0;
 	if (currentZoneType === "boss_fight" && currentBoss) {
@@ -1036,6 +1050,7 @@ function updateCombatUI() {
 }
 
 function updateGoldUI() {
+	if (typeof isCombatUiDeferred === "function" && isCombatUiDeferred()) return;
 	if (ui.playerGold) ui.playerGold.innerText = formatNumber(player.gold);
 }
 
@@ -1117,16 +1132,16 @@ function getCodexItems() {
 		"특수장비류": 4,
 		"스킬강화권": 5,
 	};
-	const addItem = (key, category, source, order, sourceVisible = true) => {
+	const addItem = (key, category, source, order, sourceVisible = true, template = null) => {
 		if (!key) return;
-		if (!map.has(key)) map.set(key, { key, category, sources: new Set(), order: order ?? 999999 });
+		if (!map.has(key)) map.set(key, { key, category, sources: new Set(), order: order ?? 999999, template });
 		const target = map.get(key);
 		target.order = Math.min(target.order, order ?? 999999);
 		if (source && sourceVisible) target.sources.add(source);
 	};
 
 	// 초보자 장비는 항상 도감 첫 번째입니다.
-	addItem("리버레이션 스태프", "보스 장비", "초보자 지원", 0, true);
+	addItem("리버레이션 스태프", "보스 장비", "초보자 지원", 0, true, typeof createBeginnerItemTemplate === "function" ? createBeginnerItemTemplate() : null);
 
 	[...(bossList || []), ...(specialBossList || [])].forEach((boss) => {
 		const bossOrder = boss && boss.isSpecial ? 50000 + (boss.id || 0) * 100 : (boss && boss.id ? boss.id * 100 : 99900);
@@ -1138,9 +1153,9 @@ function getCodexItems() {
 			const sourceVisible = category !== "탈리스만/휘장";
 			const order = bossOrder + dropIdx;
 			if (isStackSpecial) {
-				for (let lvl = 0; lvl <= 6; lvl++) addItem(`${base} +${lvl}`, category, boss.name, order + lvl / 100, sourceVisible);
+				for (let lvl = 0; lvl <= 6; lvl++) addItem(`${base} +${lvl}`, category, boss.name, order + lvl / 100, sourceVisible, { ...drop, name: base, level: lvl });
 			} else {
-				addItem(base, category, boss.name, order, sourceVisible);
+				addItem(base, category, boss.name, order, sourceVisible, { ...drop, level: 0 });
 			}
 		});
 	});
@@ -1230,7 +1245,8 @@ function renderTownCodexModal() {
 						const reveal = !!window.isCodexRevealMode;
 						const sourceRaw = it.sources && it.sources.length ? it.sources.slice(0, 2).join(", ") : "";
 						const source = sourceRaw ? ((has || reveal) ? sourceRaw : "????") : "";
-						return `<div class="codex-item ${has ? "owned" : reveal ? "revealed" : "locked"}">
+						const detailIndex = codex.indexOf(it);
+						return `<div class="codex-item ${has ? "owned" : reveal ? "revealed" : "locked"}" ${(has || reveal) && it.template ? `tabindex="0" role="button" data-codex-detail="${detailIndex}" aria-label="${it.key.replace(/"/g, "&quot;")} 능력치 보기"` : ""}>
 							<span class="codex-state">${has ? "획득" : reveal ? "공개" : "미획득"}</span>
 							<span class="codex-name">${(has || reveal) ? it.key : "????"}</span>
 							<span class="codex-source">${source}</span>
@@ -1263,6 +1279,26 @@ function renderTownCodexModal() {
 		</div>
 		${groupHtml || `<div class="codex-empty-view">조건에 맞는 도감 항목이 없습니다.</div>`}
 	`;
+	content.querySelectorAll("[data-codex-detail]").forEach((element) => {
+		const show = () => {
+			const item = codex[Number(element.dataset.codexDetail)];
+			showItemTooltip({ ...item.template }, { codex: true });
+			ui.tooltip.setAttribute("role", "tooltip");
+			ui.tooltip.innerHTML += `<div class="codex-tooltip-note">도감 기준 능력치 · +${item.template.level || 0}</div>`;
+			const rect = element.getBoundingClientRect();
+			ui.tooltip.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - ui.tooltip.offsetWidth - 8)) + "px";
+			ui.tooltip.style.top = Math.max(8, Math.min(rect.bottom + 8, window.innerHeight - ui.tooltip.offsetHeight - 8)) + "px";
+		};
+		element.onmouseenter = show;
+		element.onfocus = show;
+		element.onclick = show;
+		element.onmouseleave = hideTooltip;
+		element.onblur = hideTooltip;
+		element.onkeydown = (event) => {
+			if (event.key === "Escape") hideTooltip();
+			if (event.key === "Enter" || event.key === " ") { event.preventDefault(); show(); }
+		};
+	});
 }
 
 function setCodexViewFilter(filter) {
@@ -1355,6 +1391,7 @@ function openTownRankingModal() {
 }
 
 function closeTownModal(id) {
+	hideTooltip();
 	const modal = document.getElementById(id);
 	if (modal) modal.style.display = "none";
 }
@@ -1387,6 +1424,8 @@ function syncRenderedAccountBarTownVisibility() {
 }
 
 function updateFullUI() {
+	if (typeof isCombatUiDeferred === "function" && isCombatUiDeferred()) return;
+	flushDeferredCombatLogs();
 	if (typeof updateAutoSpecialBossButton === "function") updateAutoSpecialBossButton();
 	if (typeof refreshOnOffButtonVisuals === "function") refreshOnOffButtonVisuals();
 	let zoneData = zones[currentZoneIndex];
@@ -1413,7 +1452,7 @@ function updateFullUI() {
 			imgBox.style.display = "block";
 			imgBox.style.background = `url('${currentBoss.img}') center/cover`;
 		}
-		if (bossInfo) bossInfo.innerHTML = `<div style="color: #ffcc00; font-size: 16px; font-weight: bold; margin-bottom: 5px;">${currentBoss.title}</div><div style="color: #a3e354; margin-bottom: 2px;">${currentBoss.desc1}</div><div style="color: #ffcc00; margin-left: 10px; margin-bottom: 2px;">${currentBoss.desc2}</div><div style="color: #ffcc00; margin-left: 10px; margin-bottom: 15px;">${currentBoss.desc3}</div><div style="color: #d86cf5; margin-bottom: 5px;">${currentBoss.dropTitle}</div><div style="color: #ffcc00; margin-bottom: 15px; line-height: 1.3;">${currentBoss.dropsList.join("<br>")}</div>`;
+		if (bossInfo) bossInfo.innerHTML = `<div style="color: #ffcc00; font-size: 16px; font-weight: bold; margin-bottom: 5px;">${currentBoss.title}</div><div style="color: #a3e354; margin-bottom: 2px;">${currentBoss.desc1}</div><div style="color: #ffcc00; margin-left: 10px; margin-bottom: 2px;">${currentBoss.desc2}</div><div style="color: #ffcc00; margin-left: 10px; margin-bottom: 15px;">${getBossSummonHint()}</div><div style="color: #d86cf5; margin-bottom: 5px;">${currentBoss.dropTitle}</div><div style="color: #ffcc00; margin-bottom: 15px; line-height: 1.3;">${buildBossDropDetailsHtml(currentBoss)}</div>`;
 	} else if (currentZoneType === "boss_empty") {
 		if (nav) nav.style.display = "none";
 		if (fieldInfo) fieldInfo.style.display = "none";
@@ -1514,7 +1553,7 @@ function restoreSpecialBossReturnState(reason = "복귀") {
 		currentBoss = null;
 		currentBossHp = 0;
 		currentZoneType = "boss_empty";
-		clearInterval(attackInterval);
+		stopAutoAttack();
 		updateFullUI();
 		return;
 	}
@@ -1542,8 +1581,7 @@ function restoreSpecialBossReturnState(reason = "복귀") {
 		currentEnemy.hp = getFieldEnemyHp(currentZoneIndex);
 		addLog(`↩️ [특수보스 ${reason}] 직전 필드존으로 복귀합니다.`, true);
 		updateFullUI();
-		if (currentEnemy.hp > 0) startAutoAttack();
-		else clearInterval(attackInterval);
+		startAutoAttack();
 		return;
 	}
 
@@ -1551,7 +1589,7 @@ function restoreSpecialBossReturnState(reason = "복귀") {
 		currentBoss = null;
 		currentBossHp = 0;
 		currentZoneType = "town";
-		clearInterval(attackInterval);
+		stopAutoAttack();
 		addLog(`↩️ [특수보스 ${reason}] 마을로 복귀합니다.`, true);
 		updateFullUI();
 		return;
@@ -1561,7 +1599,7 @@ function restoreSpecialBossReturnState(reason = "복귀") {
 		currentBoss = null;
 		currentBossHp = 0;
 		currentZoneType = "boss_empty";
-		clearInterval(attackInterval);
+		stopAutoAttack();
 		addLog(`↩️ [특수보스 ${reason}] 보스존으로 복귀합니다.`, true);
 		updateFullUI();
 		return;
@@ -1570,7 +1608,7 @@ function restoreSpecialBossReturnState(reason = "복귀") {
 	currentBoss = null;
 	currentBossHp = 0;
 	currentZoneType = "boss_empty";
-	clearInterval(attackInterval);
+	stopAutoAttack();
 	updateFullUI();
 }
 
@@ -1650,7 +1688,7 @@ function tryStartAutoSpecialBoss(forceLog = false) {
 	}
 
 	const cdEnd = player.specialBossCD[boss.id] || 0;
-	if (Date.now() < cdEnd) {
+	if (getCombatNow() < cdEnd) {
 		if (forceLog) addLog(`[특수보스 자동사냥] ${boss.name} 쿨타임이 끝나면 자동으로 이동합니다.`);
 		return false;
 	}
@@ -1662,6 +1700,7 @@ function tryStartAutoSpecialBoss(forceLog = false) {
 	currentBossHp = boss.maxHp;
 	lastSummonedBoss = boss;
 	currentZoneType = "boss_fight";
+	enableNewBossDefaults();
 
 	if (isBossPanelOpen) toggleBossPanel();
 	if (isSpecialBossPanelOpen) toggleSpecialBossPanel();
@@ -1686,6 +1725,16 @@ function toggleAutoBoss() {
 	if (typeof applyToggleButtonVisual === "function") applyToggleButtonVisual(btn, autoBossSummon);
 }
 
+function enableNewBossDefaults() {
+	autoBossSummon = true;
+	equipDropEnabled = true;
+	const autoButton = document.getElementById("btn-auto-boss");
+	const dropButton = document.getElementById("btn-equip-drop");
+	if (autoButton) autoButton.innerHTML = `자동소환<br /><span style="color:#88ff88">ON</span>`;
+	if (dropButton) dropButton.innerHTML = `장비드랍<br /><span style="color:#88ff88">ON</span>`;
+	if (typeof refreshOnOffButtonVisuals === "function") refreshOnOffButtonVisuals();
+}
+
 function removeBoss() {
 	if (currentBoss && currentZoneType === "boss_fight") {
 		const removedBoss = currentBoss;
@@ -1701,7 +1750,7 @@ function removeBoss() {
 		currentBoss = null;
 		currentBossHp = 0;
 		currentZoneType = "boss_empty";
-		clearInterval(attackInterval);
+		stopAutoAttack();
 		updateFullUI();
 	} else {
 		addLog(`[시스템] 제거할 보스가 없습니다.`);
@@ -1729,6 +1778,7 @@ function getCanonicalBossForSummon(boss) {
 
 function summonBoss(boss) {
 	boss = getCanonicalBossForSummon(boss);
+	const isNewBoss = !currentBoss || (boss && (currentBoss.id !== boss.id || !!currentBoss.isSpecial !== !!boss.isSpecial));
 	let summonResult = typeof createBossSummonResult === "function"
 		? createBossSummonResult({
 			bossId: boss && boss.id,
@@ -1749,6 +1799,7 @@ function summonBoss(boss) {
 	}
 
 	function applySummonSuccess(message, important = false) {
+		if (isNewBoss) enableNewBossDefaults();
 		if (summonResult) {
 			addResultLog(summonResult, message, important);
 			summonResult.data.bossId = currentBoss && currentBoss.id;
@@ -1772,6 +1823,9 @@ function summonBoss(boss) {
 
 	if (!boss) {
 		return failSummon(`[시스템] 소환할 보스를 찾을 수 없습니다.`, "missing_boss");
+	}
+	if (autoBossSummon && currentBoss && (currentBoss.id !== boss.id || !!currentBoss.isSpecial !== !!boss.isSpecial)) {
+		return failSummon(`[시스템] 자동소환 ON 상태입니다. [보스제거]로 현재 보스를 제거한 뒤 다시 소환해 주세요.`, "auto_boss_remove_required");
 	}
 
 	if (boss && boss.isSpecial) {
@@ -1904,7 +1958,7 @@ function renderBossZone() {
 			slot.onclick = () => summonBoss(boss);
 			slot.onmouseenter = (e) => {
 				const tip = document.getElementById("boss-tooltip");
-				tip.innerHTML = `<div style="color: #ffcc00; font-size: 16px; font-weight: bold; margin-bottom: 5px;">${boss.title}</div><div style="color: #a3e354; margin-bottom: 2px;">${boss.desc1}</div><div style="color: #ffcc00; margin-left: 10px; margin-bottom: 2px;">${boss.desc2}</div><div style="color: #ffcc00; margin-left: 10px; margin-bottom: 15px;">${boss.desc3}</div><div style="color: #fff; margin-bottom: 5px;">보스 체력: ${formatNumber(boss.maxHp)}</div><div style="color: #d86cf5; margin-bottom: 5px;">${boss.dropTitle}</div><div style="color: #ffcc00; margin-bottom: 15px; line-height: 1.3;">${boss.dropsList.join("<br>")}</div>`;
+				tip.innerHTML = `<div style="color: #ffcc00; font-size: 16px; font-weight: bold; margin-bottom: 5px;">${boss.title}</div><div style="color: #a3e354; margin-bottom: 2px;">${boss.desc1}</div><div style="color: #ffcc00; margin-left: 10px; margin-bottom: 2px;">${boss.desc2}</div><div style="color: #ffcc00; margin-left: 10px; margin-bottom: 15px;">${getBossSummonHint()}</div><div style="color: #fff; margin-bottom: 5px;">보스 체력: ${formatNumber(boss.maxHp)}</div><div style="color: #d86cf5; margin-bottom: 5px;">${boss.dropTitle}</div><div style="color: #ffcc00; margin-bottom: 15px; line-height: 1.3;">${buildBossDropDetailsHtml(boss)}</div>`;
 				tip.style.display = "block";
 			};
 			slot.onmouseleave = () => {
@@ -1951,7 +2005,7 @@ function renderSpecialBossZone() {
 			cdText.id = `cd-text-${boss.id}`;
 			slot.onmouseenter = (e) => {
 				const tip = document.getElementById("boss-tooltip");
-				tip.innerHTML = `<div style="color: #ffcc00; font-size: 16px; font-weight: bold; margin-bottom: 5px;">${boss.title}</div><div style="color: #a3e354; margin-bottom: 2px;">${boss.desc1}</div><div style="color: #ffcc00; margin-left: 10px; margin-bottom: 2px;">${boss.desc2}</div><div style="color: #ffcc00; margin-left: 10px; margin-bottom: 15px;">${boss.desc3}</div><div style="color: #fff; margin-bottom: 5px;">보스 체력: ${formatNumber(boss.maxHp)}</div><div style="color: #d86cf5; margin-bottom: 5px;">${boss.dropTitle}</div><div style="color: #ffcc00; margin-bottom: 15px; line-height: 1.3;">${boss.dropsList.join("<br>")}</div>`;
+				tip.innerHTML = `<div style="color: #ffcc00; font-size: 16px; font-weight: bold; margin-bottom: 5px;">${boss.title}</div><div style="color: #a3e354; margin-bottom: 2px;">${boss.desc1}</div><div style="color: #ffcc00; margin-left: 10px; margin-bottom: 2px;">${boss.desc2}</div><div style="color: #ffcc00; margin-left: 10px; margin-bottom: 15px;">${getBossSummonHint()}</div><div style="color: #fff; margin-bottom: 5px;">보스 체력: ${formatNumber(boss.maxHp)}</div><div style="color: #d86cf5; margin-bottom: 5px;">${boss.dropTitle}</div><div style="color: #ffcc00; margin-bottom: 15px; line-height: 1.3;">${buildBossDropDetailsHtml(boss)}</div>`;
 				tip.style.display = "block";
 			};
 			slot.onmouseleave = () => {
@@ -2052,8 +2106,7 @@ function renderFieldZone() {
 				currentEnemy.hp = getFieldEnemyHp(currentZoneIndex);
 				toggleFieldZone();
 				updateFullUI();
-				if (currentEnemy.hp > 0) startAutoAttack();
-				else clearInterval(attackInterval);
+				startAutoAttack();
 				addLog(`[이동] ${field.name} 진입`);
 			};
 			row.appendChild(btn);
@@ -2086,6 +2139,13 @@ function buildSkillProcChanceHtml(baseRate, totalInc) {
 	return `<span class="skill-proc-final">${formatSkillProcRateText(finalRate)}</span> <span class="skill-proc-detail">(<span class="skill-proc-base">${formatSkillProcRateText(base)}</span>+<span class="skill-proc-added">${formatSkillProcRateText(added)}</span>)</span>`;
 }
 
+function buildSkillDamageFormulaHtml(effectHtml, skill, level, totals) {
+	const damage = Math.max(0, Number(level) || 0) * (Number(totals.attack) || 0) * (Number(skill.damageMultiplier) || 0)
+		* (1 + (Number(totals.skillDmgInc) || 0) / 100) * (1 + (Number(totals.allDmgInc) || 0) / 100);
+	return String(effectHtml).replace(/(스킬레벨\s*x\s*공격력\s*x\s*[0-9.]+)(의 스킬데미지)?/g, (_, formula, suffix = "") =>
+		`<strong class="skill-damage-formula">${formula}</strong>${suffix}<br><strong class="skill-damage-result">(최종결과 데미지: ${formatNumber(damage)})</strong><span class="skill-damage-note"> [치명타 제외]</span>`);
+}
+
 function renderSkills() {
 	const grid = document.querySelector(".skill-slots-grid");
 	if (!grid) return;
@@ -2105,6 +2165,9 @@ function renderSkills() {
 		let div = document.createElement("div");
 		div.className = "skill-slot-wrapper";
 		let sk = { ...skillData[i] };
+		div.tabIndex = 0;
+		div.setAttribute("role", "button");
+		div.setAttribute("aria-label", `${sk.key} ${sk.name} 스킬 설명`);
 		let pSk = currentSkills && currentSkills[sk.id] ? currentSkills[sk.id] : { level: 0 };
 
 		// 🌟 레벨 합산 로직
@@ -2139,14 +2202,26 @@ function renderSkills() {
 		div.onmouseenter = () => {
 			const tip = document.getElementById("tooltip");
 			let effHtml = sk.effectHtml || sk.eff || "";
+			const totals = getTotals();
+			effHtml = buildSkillDamageFormulaHtml(effHtml, sk, totalLevel, totals);
 			if (sk.baseProcRate !== undefined && sk.baseProcRate !== null) {
-				const procHtml = buildSkillProcChanceHtml(sk.baseProcRate, getTotals().skillProcChanceInc || 0);
+				const procHtml = buildSkillProcChanceHtml(sk.baseProcRate, totals.skillProcChanceInc || 0);
 				effHtml = effHtml.replace(/기본 공격 시 [0-9.]+% 확률로 발동/, `기본 공격 시 ${procHtml} 확률로 발동`);
 			}
 			tip.innerHTML = `<div style="color:#3399ff; font-weight:bold; font-size:15px; margin-bottom:5px;">[${sk.key}] ${sk.name} 레벨 ${tooltipLevelText}</div><div style="color:#a3e354; margin-bottom:10px;">${sk.description || sk.desc || ""}</div><div style="color:#cc33ff; margin-bottom:5px;">[패시브]</div><div style="color:#00ffff;">${effHtml}</div>${pSk.level === 0 ? `<div style="color:#ff4444; margin-top:5px; font-weight:bold;">[미습득 상태] 스킬이 발동하지 않습니다.</div>` : ""}`;
 			tip.style.display = "block";
+			const rect = div.getBoundingClientRect();
+			tip.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - tip.offsetWidth - 8)) + "px";
+			tip.style.top = Math.max(8, Math.min(rect.top - tip.offsetHeight - 8, window.innerHeight - tip.offsetHeight - 8)) + "px";
 		};
 		div.onmouseleave = hideTooltip;
+		div.onfocus = div.onmouseenter;
+		div.onclick = div.onmouseenter;
+		div.onblur = hideTooltip;
+		div.onkeydown = (event) => {
+			if (event.key === "Escape") hideTooltip();
+			if (event.key === "Enter" || event.key === " ") { event.preventDefault(); div.onmouseenter(); }
+		};
 
 		grid.appendChild(div);
 	}

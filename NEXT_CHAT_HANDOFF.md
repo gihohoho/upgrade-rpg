@@ -3,9 +3,9 @@
 새 채팅은 루트 [AGENTS.md](AGENTS.md)를 먼저 읽고 이 문서를 이어서 사용합니다. 더 자세한 현재 상태는 [CURRENT_STATUS.md](docs/current/CURRENT_STATUS.md)가 기준입니다.
 
 ```txt
-latest: v400.legacy-boss-drop-hotfix-live
-strict result: legacy-boss-drop-hotfix-live
-next safe stage: await-user-vue-resume
+latest: v401.legacy-live-game-improvements
+strict result: legacy-live-game-improvements
+next safe stage: deploy-legacy-live-game-improvements
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -34,9 +34,12 @@ v397 production approval/execution: no/no
 v398 production approval/execution: no/no
 v399 production approval/execution: no/no
 v400 legacy hotfix approval/execution: yes/yes
+v401 legacy improvements approval/execution: yes/no
 ```
 
 ## 이번 체크포인트
+
+- v401은 사용자 요청 5개 실서버 개선입니다. Vue는 계속 중단합니다. 백그라운드 전투·드랍 묶음·소환 ON/다른 보스 차단·도감 능력치·스킬 피해 강조를 구현했습니다. 통합 검증 후 static exact SHA 배포까지 진행합니다. 사용한도 중단 시 이 단계부터 이어가며 완료한 검사를 반복하지 않습니다.
 
 - 사용자가 Vue 작업을 일시 중단하고 실서버 일반·특수보스 드랍 수정과 배포를 승인했습니다. v400은 `src/api/master-data-adapter.js`에서 보정된 확률 4종·드랍 제목·보정 marker를 복구하고 `index.html` 캐시 키를 `v=400`으로 변경합니다. 배포 상태와 검증 증거는 [현재 상태](docs/current/CURRENT_STATUS.md)의 v400 절을 따릅니다.
 - Render 로그인·브라우저 연결 복구 후 SHA `6652e41ceb50edc077414d0b8d3a531c27b6df7f`를 static service `srv-d9iu337aqgkc73am4lh0`에 정확히 1회 배포했습니다. deploy `dep-dai1u8mq1p3s73anmmi0`은 Live이며 공개 파일 bytes 대조·배포 코드 지급 회귀·브라우저 드랍표 검증 PASS입니다. 반복 배포하지 않습니다.
@@ -52,7 +55,7 @@ v400 legacy hotfix approval/execution: yes/yes
 
 ## 바로 할 일
 
-1. `await-user-vue-resume`: 실서버 보스 드랍 수정·배포는 완료됐습니다. 접속 중인 게임은 새로고침해야 v400 코드를 읽습니다. Vue는 사용자 재개 요청까지 계속 중단합니다.
+1. `deploy-legacy-live-game-improvements`: v401 전체 core·build·공개 데이터 회귀·1366/390px UI 검사 PASS. commit/push → Render static exact commit 배포 → 공개 파일 확인 → 배포 증거 문서 마감만 진행합니다. 배포 승인은 유지되며 성공한 검사를 반복하지 않습니다. v400 배포는 완료입니다.
 2. Vue 작업은 일시 중단 상태입니다. 사용자 재개 요청 후에만 `migrate-vue-game-stack-merge-foundation`을 진행합니다. 수량·강화·옵션 보존과 가득 찬 목적지 합치기를 확인할 계획을 유지합니다.
 3. 실제 관리자 Apply API, 비밀번호 재인증 request, dev key header와 DB write는 연결하지 않습니다. 진행하려면 작업 종류와 exact DB-write 범위를 별도로 승인받습니다.
 4. production 관리자 복구는 Vue 화면 이식과 분리하며 기존 `admin` 승격 또는 새 owner 생성의 exact DB-write 승인을 받기 전에는 실행하지 않습니다.

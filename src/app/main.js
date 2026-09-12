@@ -173,7 +173,6 @@ function tickPlayTimeRecord() {
 	const now = Date.now();
 	const elapsed = Math.max(0, now - recordPlayLastTick);
 	recordPlayLastTick = now;
-	if (document.hidden) return;
 	ensurePlayerRecords().playTimeMs += elapsed;
 }
 
@@ -181,7 +180,7 @@ function startPlayTimeRecordTimer() {
 	recordPlayLastTick = Date.now();
 	if (!playTimeVisibilityBound) {
 		document.addEventListener("visibilitychange", () => {
-			recordPlayLastTick = Date.now();
+			if (playTimeRecordInterval) tickPlayTimeRecord();
 		});
 		playTimeVisibilityBound = true;
 	}
@@ -685,6 +684,7 @@ async function flushAccountGameSave(options = {}) {
 
 function startGameRuntimeTimers() {
 	if (!isAccountGameBooted || isAccountGameRuntimePaused) return;
+	if (!gameClock.running) initializeGameClock();
 	startPlayTimeRecordTimer();
 	if (!accountAutosaveInterval) {
 		accountAutosaveInterval = setInterval(() => {
@@ -696,21 +696,21 @@ function startGameRuntimeTimers() {
 	}
 	if (!accountMaintenanceInterval) {
 		accountMaintenanceInterval = setInterval(() => {
-			if (typeof tryStartAutoSpecialBoss === "function") tryStartAutoSpecialBoss(false);
 			if (typeof refreshOnOffButtonVisuals === "function") refreshOnOffButtonVisuals();
 		}, 1000);
 	}
 	if (!cooldownUiInterval) cooldownUiInterval = setInterval(tickCooldownUi, 1000);
-	if (!activeBuffInterval) activeBuffInterval = setInterval(tickActiveBuffs, 100);
+	if (!activeBuffInterval) activeBuffInterval = setInterval(tickGameClock, 100);
 }
 
 function pauseAccountGameRuntime() {
 	if (!isAccountGameBooted || isAccountGameRuntimePaused) return false;
 	tickPlayTimeRecord();
 	isAccountGameRuntimePaused = true;
+	stopGameClock();
 	accountCombatWasActiveBeforePause = typeof attackInterval !== "undefined" && attackInterval !== null;
 	if (typeof attackInterval !== "undefined") {
-		clearInterval(attackInterval);
+		stopAutoAttack();
 		attackInterval = null;
 	}
 	clearInterval(accountAutosaveInterval);
@@ -750,7 +750,7 @@ async function bootPreparedAccountCharacter(character, preparation) {
 		// 접속 시에는 항상 마을에서 시작합니다.
 		if (currentZoneType === "field") syncCurrentFieldHp();
 		currentZoneType = "town";
-		clearInterval(attackInterval);
+		stopAutoAttack();
 
 		// 에러 발생을 대비하여 안전장치 추가
 		if (isNaN(currentEnemy.hp)) currentEnemy.hp = getFieldEnemyHp(currentZoneIndex || 0);
@@ -978,6 +978,7 @@ document.querySelectorAll(".stat-row[data-stat]").forEach((el) => {
 });
 
 function tickCooldownUi() {
+	if (typeof isCombatUiDeferred === "function" && isCombatUiDeferred()) return;
 	if (isSpecialBossPanelOpen) {
 		specialBossList.forEach((boss) => {
 			const cdEl = document.getElementById(`cd-text-${boss.id}`);
@@ -1007,9 +1008,9 @@ function tickCooldownUi() {
 	}
 }
 
-function tickActiveBuffs() {
+function tickActiveBuffs(elapsedMs = 100) {
 	if (activeBuffs && activeBuffs.ironStrike && activeBuffs.ironStrike.active) {
-		activeBuffs.ironStrike.timer -= 100;
+		activeBuffs.ironStrike.timer -= elapsedMs;
 		if (activeBuffs.ironStrike.timer <= 0) {
 			activeBuffs.ironStrike.active = false;
 			activeBuffs.ironStrike.timer = 0;
@@ -1017,7 +1018,7 @@ function tickActiveBuffs() {
 		}
 	}
 	if (activeBuffs && activeBuffs.overdrive && activeBuffs.overdrive.active) {
-		activeBuffs.overdrive.timer -= 100;
+		activeBuffs.overdrive.timer -= elapsedMs;
 		if (activeBuffs.overdrive.timer <= 0) {
 			activeBuffs.overdrive.active = false;
 			activeBuffs.overdrive.timer = 0;
@@ -1031,14 +1032,8 @@ document.addEventListener("keydown", (e) => {
 	// 사용자 요청에 의해 모든 단축키(소환, 제거, 자동 등) 기능이 삭제되었습니다.
 });
 
-function giveBeginnerItem() {
-	if (!hasEmptyItemSlot(player.inventory, player.maxInventorySize)) {
-		addLog("[시스템] 가방이 꽉 찼습니다.");
-		return;
-	}
-
-	const beginnerItem = {
-		id: Date.now(),
+function createBeginnerItemTemplate() {
+	return {
 		name: "리버레이션 스태프",
 		type: "normal",
 		level: 0,
@@ -1049,6 +1044,14 @@ function giveBeginnerItem() {
 		equipTextInfo: `<span style="color:#ff66cc;">초보자 아이템</span>은 <span style="color:#ffcc00;">6개</span>까지 장착<br>가능합니다.`,
 		enhanceStats: [100, 107, 121, 142, 170, 205, 247, 296, 352, 415, 485, 618, 814, 1073, 1395, 1780, 2228, 2739, 3313, 3950, 4650],
 	};
+}
+
+function giveBeginnerItem() {
+	if (!hasEmptyItemSlot(player.inventory, player.maxInventorySize)) {
+		addLog("[시스템] 가방이 꽉 찼습니다.");
+		return;
+	}
+	const beginnerItem = { ...createBeginnerItemTemplate(), id: Date.now() };
 
 	if (typeof normalizeItemIcon === "function") normalizeItemIcon(beginnerItem);
 	placeItemInFirstEmptySlot(player.inventory, beginnerItem, player.maxInventorySize);
@@ -1104,8 +1107,7 @@ function moveToRecentField() {
 		addLog(`[이동] 최근 사냥터(${zones[currentZoneIndex].name})로 이동했습니다.`);
 		closeActionPanel();
 		updateFullUI();
-		if (currentEnemy.hp > 0) startAutoAttack();
-		else clearInterval(attackInterval);
+		startAutoAttack();
 	}
 }
 

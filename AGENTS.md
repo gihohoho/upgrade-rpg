@@ -91,10 +91,12 @@
 
 ## 현재 체크포인트
 
+v401: 사용자가 요청한 실서버 5개 개선(백그라운드 전투·묶음 드랍·소환 기본 ON·도감 능력치·스킬 강조)을 구현하고 static 배포합니다. Vue v399는 계속 중단합니다. 사용한도 중단 시 handoff의 완료/남은 단계부터 재개합니다.
+
 ```txt
-latest: v400.legacy-boss-drop-hotfix-live
-strict result: legacy-boss-drop-hotfix-live
-next safe stage: await-user-vue-resume
+latest: v401.legacy-live-game-improvements
+strict result: legacy-live-game-improvements
+next safe stage: deploy-legacy-live-game-improvements
 local source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -125,6 +127,7 @@ v397 production approval/execution: no/no
 v398 production approval/execution: no/no
 v399 production approval/execution: no/no
 v400 legacy hotfix approval/execution: yes/yes
+v401 legacy improvements approval/execution: yes/no
 ```
 
 - v396은 Vue 글자·명암 token, 게임·계정 modal 접근성, 관리자 표시/오류 helper를 정리했습니다. 미사용 `gameReadOnlyApi.js`만 제거했고 typed API·공개 legacy는 유지합니다. 전체 Vue smoke·TypeScript·build와 1366px/390px 브라우저 검사가 PASS했습니다.

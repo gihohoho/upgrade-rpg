@@ -1,3 +1,102 @@
+// 브라우저가 타이머를 늦춰도 지난 시간을 순서대로 처리합니다. 계정 전환 때는 시계를 폐기합니다.
+const gameClock = { running: false, cursor: 0, nextBuffAt: 0, nextMaintenanceAt: 0, nextAttackAt: Infinity, simulatedAt: null, working: false, silent: false, continuation: null };
+
+function getCombatNow() { return gameClock.simulatedAt ?? Date.now(); }
+
+function initializeGameClock() {
+	gameClock.running = true;
+	gameClock.cursor = Date.now();
+	gameClock.nextBuffAt = gameClock.cursor + 100;
+	gameClock.nextMaintenanceAt = gameClock.cursor + 1000;
+}
+
+function stopAutoAttack() {
+	clearInterval(attackInterval);
+	attackInterval = null;
+	gameClock.nextAttackAt = Infinity;
+}
+
+function stopGameClock() {
+	gameClock.running = false;
+	gameClock.simulatedAt = null;
+	gameClock.silent = false;
+	if (gameClock.continuation !== null) clearTimeout(gameClock.continuation);
+	gameClock.continuation = null;
+	if (typeof deferredCombatLogs !== "undefined") deferredCombatLogs.length = 0;
+	const status = document.getElementById("background-progress-status");
+	if (status) status.hidden = true;
+}
+
+function isCombatUiDeferred() { return gameClock.silent || !!document.hidden; }
+
+function tickGameClock() {
+	if (!gameClock.running || gameClock.working || (window.isAccountGameRuntimePaused && window.isAccountGameRuntimePaused())) return;
+	const target = Date.now();
+	if (target < gameClock.cursor) {
+		initializeGameClock();
+		if (attackInterval !== null) gameClock.nextAttackAt = target + Math.max(1, getTotals().aspdMs || 560);
+		return;
+	}
+	gameClock.working = true;
+	const wasDeferred = gameClock.silent;
+	gameClock.silent = !!document.hidden || target - gameClock.cursor > 250;
+	let events = 0;
+	try {
+		while (gameClock.running && gameClock.cursor < target && events++ < 500) {
+			const next = Math.min(gameClock.nextBuffAt, gameClock.nextMaintenanceAt, gameClock.nextAttackAt, target);
+			gameClock.cursor = next;
+			gameClock.simulatedAt = next;
+			if (next >= gameClock.nextBuffAt) {
+				gameClock.nextBuffAt += 100;
+				if (typeof tickActiveBuffs === "function") tickActiveBuffs(100);
+			}
+			if (next >= gameClock.nextMaintenanceAt) {
+				gameClock.nextMaintenanceAt += 1000;
+				if (typeof tryStartAutoSpecialBoss === "function") tryStartAutoSpecialBoss(false);
+			}
+			if (next >= gameClock.nextAttackAt && attackInterval !== null) {
+				const delay = Math.max(1, Number(getTotals().aspdMs) || 560);
+				gameClock.nextAttackAt = next + delay;
+				if (currentZoneType === "field" && currentEnemy.hp <= 0) {
+					currentEnemy.hp = getFieldEnemyHp(currentZoneIndex);
+					if (currentEnemy.hp <= 0) {
+						gameClock.nextAttackAt = Math.max(next, fieldRespawnEndAt[String(currentZoneIndex)] || next) + delay;
+						continue;
+					}
+				}
+				if ((currentZoneType === "boss_fight" && currentBoss) || currentZoneType === "field") playerAttack();
+				else stopAutoAttack();
+			}
+		}
+	} finally {
+		gameClock.simulatedAt = null;
+		gameClock.working = false;
+	}
+	const pending = gameClock.running && gameClock.cursor < target;
+	const status = document.getElementById("background-progress-status");
+	if (status) status.hidden = !pending || !!document.hidden;
+	if (pending) {
+		gameClock.silent = true;
+		if (gameClock.continuation === null) gameClock.continuation = setTimeout(() => {
+			gameClock.continuation = null;
+			tickGameClock();
+		}, 0);
+	} else {
+		gameClock.silent = false;
+		if ((wasDeferred || events > 4) && !document.hidden && typeof updateFullUI === "function") updateFullUI();
+	}
+}
+
+if (typeof document !== "undefined" && typeof document.addEventListener === "function") {
+	document.addEventListener("visibilitychange", tickGameClock);
+	const reconcileBeforeInput = (event) => {
+		if (!gameClock.running) return;
+		tickGameClock();
+		if (gameClock.cursor < Date.now() - 250) { event.preventDefault(); event.stopImmediatePropagation(); }
+	};
+	document.addEventListener("click", reconcileBeforeInput, true);
+	document.addEventListener("keydown", reconcileBeforeInput, true);
+}
 
 function normalizeFieldState() {
 	if (!fieldEnemyHp || typeof fieldEnemyHp !== "object") fieldEnemyHp = {};
@@ -10,7 +109,7 @@ function getFieldEnemyHp(index) {
 	const zone = zones[index];
 	if (!zone) return 0;
 
-	if (fieldRespawnEndAt[key] && Date.now() >= fieldRespawnEndAt[key]) {
+	if (fieldRespawnEndAt[key] && getCombatNow() >= fieldRespawnEndAt[key]) {
 		fieldEnemyHp[key] = zone.maxHp;
 		delete fieldRespawnEndAt[key];
 	}
@@ -31,8 +130,9 @@ function setFieldEnemyHp(index, hp) {
 function scheduleFieldRespawn(index, delayMs = 2000) {
 	normalizeFieldState();
 	const key = String(index);
-	fieldRespawnEndAt[key] = Date.now() + delayMs;
+	fieldRespawnEndAt[key] = getCombatNow() + delayMs;
 	setFieldEnemyHp(index, 0);
+	if (gameClock.running) return;
 
 	const completeFieldRespawn = () => {
 		if (window.isAccountGameRuntimePaused && window.isAccountGameRuntimePaused()) {
@@ -67,7 +167,7 @@ function syncCurrentFieldHp() {
 function enterTown() {
 	if (currentZoneType === "field") syncCurrentFieldHp();
 	if (typeof closeAllGameplayModals === "function") closeAllGameplayModals();
-	clearInterval(attackInterval);
+	stopAutoAttack();
 	currentZoneType = "town";
 	updateFullUI();
 	addLog(`[이동] 마을로 귀환했습니다. 기록관과 도감, 랭킹을 확인할 수 있습니다.`);
@@ -76,7 +176,7 @@ function enterTown() {
 function enterBossZone() {
 	if (currentZoneType === "field") syncCurrentFieldHp();
 	if (typeof closeAllGameplayModals === "function") closeAllGameplayModals();
-	clearInterval(attackInterval);
+	stopAutoAttack();
 	if (currentBoss) {
 		currentZoneType = "boss_fight";
 		addLog(`[이동] 진행 중이던 보스 전투로 복귀합니다.`);
@@ -90,11 +190,12 @@ function enterBossZone() {
 }
 
 function startAutoAttack() {
-	clearInterval(attackInterval);
-	attackInterval = null;
+	stopAutoAttack();
 	if (window.isAccountGameRuntimePaused && window.isAccountGameRuntimePaused()) return;
 	if (currentZoneType === "field" || currentZoneType === "boss_fight") {
-		attackInterval = setInterval(playerAttack, getTotals().aspdMs);
+		if (!gameClock.running) initializeGameClock();
+		gameClock.nextAttackAt = getCombatNow() + Math.max(1, Number(getTotals().aspdMs) || 560);
+		attackInterval = setInterval(tickGameClock, 100);
 	}
 }
 
@@ -104,6 +205,7 @@ function rollSkillProc(baseRate, totals) {
 }
 
 function playerAttack() {
+	if (window.isAccountGameRuntimePaused && window.isAccountGameRuntimePaused()) return;
 	let t = getTotals();
 	let currentSkills = typeof getCurrentCharacterSkills === "function" ? getCurrentCharacterSkills(player) : (player.skills || {});
 	let attackResult = typeof createCombatAttackResult === "function"
@@ -270,7 +372,7 @@ function playerAttack() {
 	// 🌟 진각성 (천제극섬)
 	let hsObj = currentSkills && currentSkills.heavenlyStrike ? currentSkills.heavenlyStrike : { level: 0, lastUsed: 0 };
 	if (hsObj.level > 0) {
-		let now = Date.now();
+		let now = getCombatNow();
 		if (now - (hsObj.lastUsed || 0) >= 300000) {
 			if (rollSkillProc(0.05, t)) {
 				let hsDamage = hsObj.level * t.attack * 11000000;
@@ -357,7 +459,7 @@ function killEnemy(zoneData) {
 
 		// 🔥 1. 특수보스 쿨타임: 보스를 "처치"했을 때만 적용
 		if (currentBoss.isSpecial) {
-			player.specialBossCD[currentBoss.id] = Date.now() + currentBoss.cooldownMs;
+			player.specialBossCD[currentBoss.id] = getCombatNow() + currentBoss.cooldownMs;
 			if (killResult) killResult.data.cooldownApplied = { bossId: currentBoss.id, until: player.specialBossCD[currentBoss.id] };
 		}
 
@@ -470,7 +572,7 @@ function killEnemy(zoneData) {
 			currentZoneType = "boss_empty";
 			currentBoss = null;
 			currentBossHp = 0;
-			clearInterval(attackInterval);
+			stopAutoAttack();
 			if (killResult) killResult.data.transition = { type: "boss_empty" };
 		}
 
@@ -528,7 +630,7 @@ function killEnemy(zoneData) {
 		}
 		currentEnemy.hp = 0;
 		scheduleFieldRespawn(currentZoneIndex, 2000);
-		clearInterval(attackInterval);
+		if (!gameClock.running) stopAutoAttack();
 
 		if (killResult) {
 			killResult.data.attackSpeedGrew = didGrowAttackSpeed;
@@ -558,8 +660,7 @@ function changeZone(offset) {
 		addLog(`[이동] ${zones[currentZoneIndex].name} 진입`);
 		closeActionPanel();
 		updateFullUI();
-		if (currentEnemy.hp > 0) startAutoAttack();
-		else clearInterval(attackInterval);
+		startAutoAttack();
 	}
 }
 
@@ -595,6 +696,7 @@ function getBattleZoneSize(bZone, zRect) {
 }
 
 function showItemDropText(itemName) {
+	if (isCombatUiDeferred()) return;
 	const bZone = document.getElementById("battle-zone");
 	if (!bZone) return;
 
@@ -623,6 +725,7 @@ function showItemDropText(itemName) {
 }
 
 function showDamageText(damageText, extraClass = "") {
+	if (isCombatUiDeferred()) return;
 	const bZone = document.getElementById("battle-zone");
 	if (!bZone) return;
 

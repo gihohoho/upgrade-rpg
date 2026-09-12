@@ -274,7 +274,7 @@ for (const [script, expectedCacheVersion] of [
 		`${script}: index cache key must be v${expectedCacheVersion}`,
 	);
 }
-assert(indexSource.includes('src="src/app/main.js?v=370"'), "src/app/main.js: index cache key must be v370");
+assert(indexSource.includes('src="src/app/main.js?v=401"'), "src/app/main.js: index cache key must be v401");
 
 const builderSource = read("tools/build_legacy_static_site.mjs");
 assert(builderSource.includes('new Set([".js", ".css", ".png"])'), "legacy builder must publish PNG files");

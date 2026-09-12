@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v400.legacy-boss-drop-hotfix-live"
-RESULT = "legacy-boss-drop-hotfix-live"
-NEXT_STAGE = "await-user-vue-resume"
+VERSION = "v401.legacy-live-game-improvements"
+RESULT = "legacy-live-game-improvements"
+NEXT_STAGE = "deploy-legacy-live-game-improvements"
 SOURCE_HEAD = "v377_auth_email_public_security"
 LOCAL_APPLIED_HEAD = SOURCE_HEAD
 NEON_APPLIED_HEAD = SOURCE_HEAD

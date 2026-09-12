@@ -5,9 +5,9 @@
 ## 상태 표식
 
 ```txt
-latest: v400.legacy-boss-drop-hotfix-live
-strict result: legacy-boss-drop-hotfix-live
-next safe stage: await-user-vue-resume
+latest: v401.legacy-live-game-improvements
+strict result: legacy-live-game-improvements
+next safe stage: deploy-legacy-live-game-improvements
 local Alembic source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
@@ -37,25 +37,26 @@ v397 production approval/execution: no/no
 v398 production approval/execution: no/no
 v399 production approval/execution: no/no
 v400 legacy hotfix approval/execution: yes/yes
+v401 legacy improvements approval/execution: yes/no
 ```
+
+## v401 실서버 게임 편의 개선
+
+- Vue는 중단 상태입니다. 사용자 요청 5개: 백그라운드 진행, 묶음 드랍 확률, 소환 기본 ON/다른 보스 차단, 해금 도감 능력치, 스킬 피해 공식 강조를 legacy에 적용합니다. static 배포까지 승인됐습니다.
+- 경과시간 순서로 공격·버프·필드 재등장·특수보스 쿨타임을 처리합니다. 지연은 500개 이벤트씩 나누고 완료 전 입력을 잠급니다. 계정 전환/로그아웃 시 시계를 중단하며 중단 시간은 재생하지 않습니다. 화면 효과는 생략하고 최근 로그 200개를 복귀 시 표시합니다. 브라우저 종료·탭 폐기 뒤 오프라인 사냥은 지원하지 않습니다.
+- 장비는 `5종 중 1개 · 8.00%`처럼 묶음 확률, 휘장은 개별 판정으로 표시합니다. 실제 확률/seed는 유지합니다. 새 소환은 자동소환·장비드랍 ON, 다른 보스 선택은 보스제거 안내로 차단합니다.
+- 도감은 실제 template/+단계 능력치를 hover·클릭·키보드로 표시합니다. 모바일은 한 열입니다. 스킬 공식/최종 피해를 굵기·색으로 구분하며 현재 레벨·탈리스만·피해 증가를 반영하고 치명타는 제외합니다.
+- 전체 core·JS syntax·변경 Python compileall·static build PASS. 마지막 지급 ID 충돌 보강 뒤 관련 5개 회귀도 PASS입니다. 공개 데이터로 전경/지연·특수복귀·pause/resume·45종 드랍표를 검증했습니다. 1366/390px 도감·스킬 확인, console error 0입니다. 실제 계정 저장 없이 검사했으며 배포만 남았습니다.
 
 ## v400 실서버 보스 드랍 긴급 수정
 
-- 사용자 요청: Vue 작업 중단, 공개 보스 드랍 수정·배포 승인. 검증은 메모리 가방만 사용하며 실제 계정 저장은 변경하지 않습니다.
-- 원인: 공개 master-data에는 `summonRules.raw`에 보정된 확률이 있었지만 legacy adapter가 `equipDropRate`, `skillDropRate`, `talismanDropRate`, `emblemDropRate`, `dropTitle`을 누락했습니다. 화면에는 `undefined`, 일반 장비/강화권 확률 계산에는 `NaN`이 생겼습니다. 개별 확률 장비는 별도 경로였으며 이번 검사에서 함께 확인했습니다.
-- 수정: raw 확률을 직접 복원하고 누락 시 drop table raw 값을 사용합니다. 명시적인 0을 보존하며 두 배 보정을 반복하지 않습니다. 제목은 table 설명/원본/기본 제목으로 복구합니다. `index.html`은 adapter 캐시 키 `v=400`을 사용합니다. 확률·source/generated seed·backend·DB는 변경하지 않습니다.
-- 전체 core·JS syntax·변경 Python compileall·문서 구조/handoff·strict readiness PASS. Render build는 298파일/39,367,005바이트입니다.
-- Render static `srv-d9iu337aqgkc73am4lh0`만 배포합니다. v378 공개 경로에는 이번 수정 외 차이가 없고 Vue는 빌드에서 제외됩니다.
-- 2026-09-12 00:33 KST, SHA `6652e41ceb50edc077414d0b8d3a531c27b6df7f`를 1회 배포한 `dep-dai1u8mq1p3s73anmmi0`이 Live입니다. 공개 index/adapter GET 200·Git bytes 일치, 공개 응답+배포 adapter로 45종/245개 지급 회귀 PASS입니다.
-- Chrome에서 배포 JS를 읽는 임시 메모리 fixture로 45종 모두 실제 `updateFullUI` 드랍표와 처치 지급을 검증했습니다. 일반/특수 화면의 제목·확률 정상, console error 0입니다. 공개 로그인 화면도 정상입니다. 테스트용 5500 서버와 fixture는 제거했으며 기존 backend·DB는 변경하지 않았습니다.
+- adapter가 누락한 확률 4종·제목을 raw/table에서 복원했습니다. 명시적 0·보정 marker를 보존하고 adapter 캐시는 v400입니다. 확률·seed·backend·DB는 유지합니다.
+- 2026-09-12 00:33 KST, SHA `6652e41ceb50edc077414d0b8d3a531c27b6df7f` → static `srv-d9iu337aqgkc73am4lh0`, deploy `dep-dai1u8mq1p3s73anmmi0` 1회 Live. rollback 기준입니다. 전체 core·build PASS, 공개 bytes 일치 및 45종/245개 지급·화면 검증 PASS입니다.
 
 ## v399 가방↔보관함 이동·정렬 저장
 
-- 선택한 묶음을 통째로 첫 빈 칸에 옮깁니다. 원래 칸·ID·수량·강화·추가 필드를 보존하며 자동 합치기는 후속 단계입니다. 가방/보관함의 정렬 적용은 상대 순서를 유지합니다.
-- 변경할 snapshot의 local 복구본을 먼저 기록합니다. quota·다른 탭 변경은 화면/POST 변경 전 차단하며 서버 실패는 pending을 보존합니다. 재시도는 이동을 반복하지 않고 현재 snapshot만 저장합니다.
-- 저장 중·오류·전환 중 추가 변경을 잠그고 세션 오류는 재로그인으로 보냅니다. modal 안에서 진행/실패/재시도를 표시하며 기존 직렬 queue·이전 context 응답 차단을 재사용합니다.
-- 장착·사용·판매·자동 합치기·휴지통 이동/복구/삭제/정렬 저장·Gold·보상·난수·backend·DB·배포는 바꾸지 않았습니다.
-- 전체 Vue smoke·TypeScript·build PASS. 1366px/390px synthetic 브라우저에서 양방향 이동·정렬·503 재시도·pending 해제·가로 넘침 0·console error 0을 확인했습니다. 실제 DB write는 없고 Vue 서버만 npm ci 뒤 재시작했습니다.
+- 묶음 이동은 첫 빈 칸, 정렬은 상대 순서를 유지하며 ID·강화·수량·추가 필드를 보존합니다. prospective 복구본 기록 후 공통 queue에 저장하고, quota/다른 탭은 변경 전 차단합니다. 실패 pending의 재시도는 이동을 반복하지 않습니다.
+- 전체 Vue smoke·TypeScript·build 및 1366/390px 이동·정렬·503 재시도·pending·overflow/console 0 PASS. 장착·사용·판매·자동 합치기·휴지통 write·Gold·보상·backend·DB·배포는 미변경입니다. 다음 Vue 단계는 자동 합치기이며 사용자 재개까지 보류합니다.
 
 ## v396~v398 보유 표시·복구·가독성
 
@@ -137,7 +138,7 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. `await-user-vue-resume`: 보스 드랍 수정·배포 완료. Vue 후속 `migrate-vue-game-stack-merge-foundation`은 사용자 재개 요청까지 보류합니다.
+1. `deploy-legacy-live-game-improvements`: 보스 드랍 수정·배포 완료. Vue 후속 `migrate-vue-game-stack-merge-foundation`은 사용자 재개 요청까지 보류합니다.
 2. 실제 관리자 Apply API·재인증·dev key header·DB write 연결은 이번 단계에 포함되지 않았습니다. 필요하면 작업 종류와 정확한 DB-write 범위를 별도 승인받습니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 

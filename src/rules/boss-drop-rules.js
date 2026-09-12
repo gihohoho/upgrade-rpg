@@ -11,6 +11,28 @@
 
 const BOSS_DROP_RATE_MULTIPLIER = 2;
 
+function getBossSummonHint() {
+	return "#자동소환 ON일 때 다른 보스는 보스제거 후 소환하세요.";
+}
+
+function buildBossDropDetailsHtml(boss) {
+	const drops = boss && Array.isArray(boss.drops) ? boss.drops : [];
+	const escape = (text) => String(text || "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+	const group = (label, items, rate) => {
+		if (!items.length || !(rate > 0)) return "";
+		return `<div class="boss-drop-group"><strong>${label} ${items.length}종 중 1개 · ${(rate * 100).toFixed(2)}%</strong><div>${items.map((item) => escape(item.name)).join("<br>")}</div></div>`;
+	};
+	const equipment = drops.filter((d) => (d.type === "normal" || d.type === "special_equip") && !d.isTalisman && !d.individualDropRate);
+	const skills = drops.filter((d) => d.type === "skill_book");
+	const talismans = drops.filter((d) => d.isTalisman);
+	const individual = drops.filter((d) => d.individualDropRate && !d.isTalisman);
+	return `<div class="boss-drop-note">기본 확률 · 드랍률 증가 능력치는 별도 적용됩니다.<br>각 묶음은 별도 판정하며, 묶음 안에서는 1개만 획득합니다.</div>`
+		+ group("장비", equipment, boss.equipDropRate)
+		+ group("스킬강화권", skills, getNormalBossSkillDropRate(boss))
+		+ group("탈리스만", talismans, boss.talismanDropRate)
+		+ individual.map((item) => `<div class="boss-drop-group"><strong>개별 판정 · ${(item.individualDropRate * 100).toFixed(2)}%</strong><div>${escape(item.name)}</div></div>`).join("");
+}
+
 function getNormalBossSkillDropRate(boss) {
 	if (!boss || boss.skillDropRate <= 0) return 0;
 	if (boss.isSpecial) return boss.skillDropRate;

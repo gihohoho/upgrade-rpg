@@ -5,7 +5,7 @@
     <meta name="referrer" content="no-referrer" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>강화RPG v0.22 (특수보스 & 장비슬롯 개편)</title>
-    <link rel="stylesheet" href="src/styles/style.css?v=362" />
+    <link rel="stylesheet" href="src/styles/style.css?v=401" />
     <link rel="stylesheet" href="src/styles/account.css?v=378" />
   </head>
   <body class="account-gate-active">
@@ -898,6 +898,7 @@
         </div>
       </div>
 
+    <div id="background-progress-status" role="status" aria-live="polite" hidden>백그라운드 전투 결과를 반영하고 있습니다. 잠시만 기다려 주세요.</div>
     <!--
       백엔드 분리 준비용 구조.
       아직 import/export를 쓰지 않는 전역 스크립트 방식이라 아래 로딩 순서는 중요합니다.
@@ -923,17 +924,17 @@
     <script src="src/data/bosses.js"></script>
     <script src="src/rules/abyss-fragment-rules.js"></script>
     <script src="src/rules/boss-display-rules.js?v=369"></script>
-    <script src="src/rules/boss-drop-rules.js?v=362"></script>
+    <script src="src/rules/boss-drop-rules.js?v=401"></script>
     <script src="src/data/boss-bootstrap.js"></script>
     <script src="src/data/zones.js?v=360"></script>
     <script src="src/systems/stat-system.js?v=360"></script>
-    <script src="src/ui/render-ui.js?v=378"></script>
+    <script src="src/ui/render-ui.js?v=401"></script>
     <script src="src/systems/action-result-system.js?v=360"></script>
-    <script src="src/systems/item-system.js?v=363"></script>
-    <script src="src/systems/combat-system.js?v=378"></script>
+    <script src="src/systems/item-system.js?v=401"></script>
+    <script src="src/systems/combat-system.js?v=401"></script>
     <script src="src/ui/account-gate.js?v=378"></script>
     <script src="src/ui/game-dev-ui-access.js?v=378"></script>
-    <script src="src/app/main.js?v=370"></script>
+    <script src="src/app/main.js?v=401"></script>
     <script src="src/api/master-data-runtime-switch.js?v=369"></script>
     <script src="src/api/master-data-runtime-validator.js"></script>
     <script src="src/api/master-data-browser-checklist.js"></script>
