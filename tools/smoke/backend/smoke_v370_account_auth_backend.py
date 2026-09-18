@@ -233,6 +233,9 @@ def test_password_and_token() -> None:
     require(not verify_password("account124", password_hash), "wrong password was accepted")
 
     now = datetime(2026, 8, 10, tzinfo=UTC)
+    # Retain coverage of the optional bounded policy; v402 defaults to no expiry.
+    original_ttl = settings.access_token_expire_minutes
+    settings.access_token_expire_minutes = 1440
     token, ttl_seconds = create_access_token(
         17,
         auth_version=3,
@@ -279,6 +282,7 @@ def test_password_and_token() -> None:
         pass
     else:
         raise AssertionError("token exceeding the configured lifetime was accepted")
+    settings.access_token_expire_minutes = original_ttl
 
 
 def test_auth_validation_secrets_are_not_reflected() -> None:

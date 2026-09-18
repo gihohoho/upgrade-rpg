@@ -145,7 +145,9 @@
 	}
 
 	function returnToLoginAfterSessionExpiry(message) {
-		const notice = message || "로그인 정보가 만료되었습니다. 현재 캐릭터의 최신 진행은 이 기기의 로컬 저장에 보존했습니다. 다시 로그인해 주세요.";
+		const notice = message || (window.RpgServerGame?.active
+			? "로그인 정보를 다시 확인해야 합니다. 확정된 진행은 서버에 저장되어 있습니다. 다시 로그인하면 저장된 진행과 아직 확인하지 못한 요청의 결과를 불러옵니다."
+			: "로그인 정보가 만료되었습니다. 현재 캐릭터의 최신 진행은 이 기기의 로컬 저장에 보존했습니다. 다시 로그인해 주세요.");
 		if (typeof window.pauseAccountGameRuntime === "function") window.pauseAccountGameRuntime();
 		window.RpgAuthSession.clearSession();
 		window.RpgAuthSession.storeAuthNotice(notice);

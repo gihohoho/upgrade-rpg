@@ -1,12 +1,12 @@
-# Backend Route Map — v377
+# Backend Route Map — v402
 
 이 문서는 FastAPI route 파일을 정적으로 분석해서 현재 API 목록을 정리한 자동 보고서입니다.
 
 중요: v377 local migration과 인증 요청 보호 복구는 완료됐습니다. 이 보고서 생성은 DB, 인증 상태와 저장 데이터를 변경하지 않습니다.
 
 ```txt
-latest: v399.vue-game-inventory-transfer-foundation
-strict result: vue-game-inventory-transfer-foundation
+latest: v402.server-gameplay-prepared
+strict result: server-gameplay-prepared
 source head: v377_auth_email_public_security
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 actual target v377 apply: local 1 / Neon 1
@@ -17,8 +17,8 @@ local auth POST: protection store available / legacy no-email login compatible
 local Brevo E2E: Naver delivery / link verification / login verified
 provider finalize: local multi-worker ownership diagnosed / direct provider healthy
 recovery2 roundtrip/Neon backup/apply: verified / one attempt each
-public backend/static: v377/v378 live
-next safe stage: migrate-vue-game-stack-merge-foundation
+public backend/static: v377/v401 live
+next safe stage: approve-v402-release-preparation
 ```
 
 ## 생성 방식
@@ -45,7 +45,7 @@ next safe stage: migrate-vue-game-stack-merge-foundation
 
 | 기준 | 값 |
 |---|---:|
-| 전체 route 수 | 48 |
+| 전체 route 수 | 53 |
 | 중복 method/path | 0 |
 
 ### Method별 수
@@ -53,8 +53,9 @@ next safe stage: migrate-vue-game-stack-merge-foundation
 | method | count |
 | --- | --- |
 | `DELETE` | 1 |
-| `GET` | 21 |
-| `POST` | 26 |
+| `GET` | 22 |
+| `POST` | 29 |
+| `WEBSOCKET` | 1 |
 
 ### Group별 수
 
@@ -65,6 +66,7 @@ next safe stage: migrate-vue-game-stack-merge-foundation
 | `admin` | 21 |
 | `auth` | 12 |
 | `game` | 4 |
+| `game-session` | 5 |
 | `health` | 2 |
 
 중복 method/path:
@@ -150,6 +152,11 @@ next safe stage: migrate-vue-game-stack-merge-foundation
 | `GET /api/v1/admin/overview` | admin | admin.overview | GET route, 추가 검토 필요 |
 | `GET /api/v1/admin/requirements` | admin | admin.requirements | GET route, 추가 검토 필요 |
 | `GET /api/v1/admin/save-snapshots` | admin | admin.save_snapshots | GET route, 추가 검토 필요 |
+| `GET /api/v1/game/session/capabilities` | game-session | game.capabilities | GET route, 추가 검토 필요 |
+| `POST /api/v1/game/session/command` | game-session | game.command | 비-GET route, Vue read-only 범위 밖 |
+| `WEBSOCKET /api/v1/game/session/live` | game-session | - | 비-GET route, Vue read-only 범위 밖 |
+| `POST /api/v1/game/session/open` | game-session | game.session | 비-GET route, Vue read-only 범위 밖 |
+| `POST /api/v1/game/session/resume` | game-session | game.session | 비-GET route, Vue read-only 범위 밖 |
 | `GET /api/v1/health/db` | health | system.health.db | DB 연결 확인용 GET, 자동 화면 연결 보류 |
 
 ## 전체 route map
@@ -198,16 +205,21 @@ next safe stage: migrate-vue-game-stack-merge-foundation
 | `POST` | `/api/v1/auth/resend-verification` | `resend_verification` | `backend/app/api/routes/auth.py:198` | auth.resend_verification | legacy 계정/관리자 화면 사용 중 |
 | `POST` | `/api/v1/auth/reset-password` | `reset_password` | `backend/app/api/routes/auth.py:261` | auth.reset_password | legacy 계정/관리자 화면 사용 중 |
 | `POST` | `/api/v1/auth/verify-email` | `verify_email` | `backend/app/api/routes/auth.py:169` | auth.verify_email | legacy 계정/관리자 화면 사용 중 |
-| `GET` | `/api/v1/game/load` | `load_game` | `backend/app/api/routes/game.py:44` | game.load | legacy 계정/관리자 화면 사용 중 |
-| `GET` | `/api/v1/game/master-data` | `get_master_data` | `backend/app/api/routes/game.py:14` | game.master_data | Vue read-only 후보 |
-| `POST` | `/api/v1/game/save` | `save_game` | `backend/app/api/routes/game.py:103` | game.save | legacy 계정/관리자 화면 사용 중 |
-| `GET` | `/api/v1/game/save-slots` | `list_save_slots` | `backend/app/api/routes/game.py:79` | game.save_slots | legacy 계정/관리자 화면 사용 중 |
+| `GET` | `/api/v1/game/load` | `load_game` | `backend/app/api/routes/game.py:46` | game.load | legacy 계정/관리자 화면 사용 중 |
+| `GET` | `/api/v1/game/master-data` | `get_master_data` | `backend/app/api/routes/game.py:16` | game.master_data | Vue read-only 후보 |
+| `POST` | `/api/v1/game/save` | `save_game` | `backend/app/api/routes/game.py:105` | game.save | legacy 계정/관리자 화면 사용 중 |
+| `GET` | `/api/v1/game/save-slots` | `list_save_slots` | `backend/app/api/routes/game.py:81` | game.save_slots | legacy 계정/관리자 화면 사용 중 |
+| `GET` | `/api/v1/game/session/capabilities` | `capabilities` | `backend/app/api/routes/game_session.py:21` | game.capabilities | GET route, 추가 검토 필요 |
+| `POST` | `/api/v1/game/session/command` | `command` | `backend/app/api/routes/game_session.py:42` | game.command | 비-GET route, Vue read-only 범위 밖 |
+| `WEBSOCKET` | `/api/v1/game/session/live` | `live` | `backend/app/api/routes/game_session.py:62` | - | 비-GET route, Vue read-only 범위 밖 |
+| `POST` | `/api/v1/game/session/open` | `open_game` | `backend/app/api/routes/game_session.py:33` | game.session | 비-GET route, Vue read-only 범위 밖 |
+| `POST` | `/api/v1/game/session/resume` | `resume_game` | `backend/app/api/routes/game_session.py:53` | game.session | 비-GET route, Vue read-only 범위 밖 |
 | `GET` | `/api/v1/health` | `health_check` | `backend/app/api/routes/health.py:11` | system.health | Vue 자동 smoke 화면 사용 중 |
 | `GET` | `/api/v1/health/db` | `database_health_check` | `backend/app/api/routes/health.py:17` | system.health.db | DB 연결 확인용 GET, 자동 화면 연결 보류 |
 
 ## 다음 추천 단계
 
-`next safe stage: migrate-vue-game-stack-merge-foundation`
+`next safe stage: approve-v402-release-preparation`
 
 private environment, local migration, recovery2 synthetic 왕복·Neon backup·exact v377 apply,
 signed backend image와 legacy static의 공개 배포를 승인된 단일 시도로 완료했습니다.

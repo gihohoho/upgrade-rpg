@@ -5,6 +5,7 @@ from app.models.boss import Boss, DropTable, DropTableItem
 from app.models.character import Character
 from app.models.enhancement import EnhancementGroup, EnhancementLevel
 from app.models.field import FieldZone
+from app.models.game_session import GameActionReceipt, GameSession
 from app.models.item import ItemInstance, ItemTemplate, UserEquipmentSlot, UserInventorySlot
 from app.models.mailbox import UserMailboxMessage
 from app.models.skill import CharacterSkill, Skill, SkillLevel, UserCharacterSkill
@@ -24,6 +25,8 @@ __all__ = [
     "EnhancementGroup",
     "EnhancementLevel",
     "FieldZone",
+    "GameSession",
+    "GameActionReceipt",
     "ItemInstance",
     "ItemTemplate",
     "Skill",

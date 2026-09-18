@@ -21,6 +21,10 @@ next safe stage: select-production-targets-and-complete-executable-deploy-plan
 
 정적 문서 잠금 표식: `workflow_dispatch`, `pull_request_target` 금지, `contents: read`, `actions: read`, `packages: write`, `id-token: write`, Docker BuildKit, `HIGH,CRITICAL`, Sigstore Cosign keyless, `approved_preparation_commit`, `DOCKER_BUILD_RECORD_UPLOAD`, required reviewer 제약.
 
+## v402 현재 준비 상태
+
+2026-09-17 서버 사냥·강화 확정·시간 만료 없는 로그인 구현을 검증하고 새 `preparation-closed`를 준비했습니다. 이전 완료 시도 11회는 lifecycle history에 보존하며 현재 owner approval/gate는 false입니다. 새 preparation 전체 SHA 확인 후 단일 authorization 직계 자식 commit과 workflow 1회 게시를 진행합니다. workflow 및 exact-SHA 증거 규칙은 유지합니다. 실행 순서는 [handoff](../../NEXT_CHAT_HANDOFF.md)를 따릅니다.
+
 ## 첫 실행 결과와 focused fix 후보
 
 run `29716038891`은 validate job의 `Install backend validation dependencies`에서 실패했습니다. bootstrap pip wheel 다운로드가 `--python-version 3`을 사용해 Python `>=3.10`을 요구하는 `pip==26.1.2`를 제외한 것이 직접 원인입니다. 기호의 focused fix 승인 뒤 해당 값을 `--python-version 3.11`로 수정하고 workflow source/semantic hash, checker와 정책 문서를 함께 갱신했습니다. 첫 실패는 `priorAttemptEvidence.recordCommitSha=1f12ea59eb54385337557e9754f86731ec53d253`로 보존하며 새 preparation gate는 `false`입니다.

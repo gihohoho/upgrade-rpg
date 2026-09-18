@@ -52,6 +52,20 @@ def expect_error(callback: Callable[[], Any], message: str) -> None:
     raise AssertionError(message)
 
 
+def historical_revision_contract():
+    # v402 extends the graph. The old execution guard must keep rejecting it;
+    # exercise its original three-revision contract in an isolated source fixture.
+    expect_error(lambda: roundtrip.validate_revision_contract(ROOT), "old guard accepted the v402 graph")
+    with tempfile.TemporaryDirectory(prefix="upgrade-rpg-v377-history-") as directory:
+        root = Path(directory)
+        versions = root / "backend/alembic/versions"
+        versions.mkdir(parents=True)
+        for filename in roundtrip.REVISION_FILES.values():
+            (versions / filename).write_bytes((ROOT / "backend/alembic/versions" / filename).read_bytes())
+        (root / "backend/alembic.ini").write_bytes((ROOT / "backend/alembic.ini").read_bytes())
+        return roundtrip.validate_revision_contract(root)
+
+
 class OperationRecorder:
     def __init__(self) -> None:
         self.calls: list[tuple[str, tuple[Any, ...], dict[str, Any]]] = []
@@ -250,6 +264,8 @@ def test_revision_model_parity() -> None:
         "user_email_action_tokens",
         "auth_email_outbox",
         "auth_rate_limit_buckets",
+        "game_sessions",  # Added later by v402, outside this v377 historical contract.
+        "game_action_receipts",
     }
     require(
         len(legacy_names) == roundtrip.EXPECTED_BASE_APPLICATION_TABLES,
@@ -1312,8 +1328,10 @@ def test_private_artifact_boundaries() -> None:
 
 def main() -> None:
     test_revision_model_parity()
-    test_isolated_roundtrip_guard()
-    test_target_apply_guard()
+    contract = historical_revision_contract()
+    with patch.object(roundtrip, "validate_revision_contract", return_value=contract), patch.object(target_guard, "validate_revision_contract", return_value=contract):
+        test_isolated_roundtrip_guard()
+        test_target_apply_guard()
     test_private_artifact_boundaries()
     print("OK: v377 auth security migration parity/guard smoke passed")
 

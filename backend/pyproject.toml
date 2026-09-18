@@ -14,6 +14,7 @@ dependencies = [
   "pydantic-settings>=2.3.0",
   "bcrypt>=5.0.0",
   "email-validator==2.3.0",
+  "quickjs-ng==0.16.2.1",
 ]
 
 [project.optional-dependencies]
@@ -40,3 +41,6 @@ build-backend = "setuptools.build_meta"
 where = ["."]
 include = ["app*"]
 exclude = ["alembic*", "seeds*", "sql*", "tests*"]
+
+[tool.setuptools.package-data]
+"app.services" = ["game_engine_runtime.js"]

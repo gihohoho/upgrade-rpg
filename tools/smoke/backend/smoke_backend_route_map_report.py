@@ -13,9 +13,9 @@ ADMIN_API = ROOT / "frontend/vue-app/src/api/adminReadOnlyApi.js"
 RUN_SMOKE = ROOT / "tools/run_smoke_core.sh"
 
 REQUIRED_TEXT = [
-    "Backend Route Map — v377",
-    "latest: v399.vue-game-inventory-transfer-foundation",
-    "strict result: vue-game-inventory-transfer-foundation",
+    "Backend Route Map — v402",
+    "latest: v402.server-gameplay-prepared",
+    "strict result: server-gameplay-prepared",
     "actual target v377 apply: local 1 / Neon 1",
     "private email environment: prepared",
     "source 8db9bcb / preserved",
@@ -24,12 +24,17 @@ REQUIRED_TEXT = [
     "Naver delivery / link verification / login verified",
     "local multi-worker ownership diagnosed / direct provider healthy",
     "recovery2 roundtrip/Neon backup/apply: verified / one attempt each",
-    "public backend/static: v377/v378 live",
+    "public backend/static: v377/v401 live",
     "v377 이메일 계정 gate, 캐릭터 슬롯, 저장 브리지",
-    "전체 route 수 | 48",
+    "전체 route 수 | 53",
     "`DELETE` | 1",
-    "`GET` | 21",
-    "`POST` | 26",
+    "`GET` | 22",
+    "`POST` | 29",
+    "`WEBSOCKET` | 1",
+    "POST /api/v1/game/session/open",
+    "POST /api/v1/game/session/command",
+    "POST /api/v1/game/session/resume",
+    "WEBSOCKET /api/v1/game/session/live",
     "중복 method/path | 0",
     "GET /api/v1/health",
     "POST /api/v1/auth/register",
@@ -47,7 +52,7 @@ REQUIRED_TEXT = [
     "POST /api/v1/admin/master-data/create-apply",
     "POST /api/v1/game/save",
     "query 이름은 `id`",
-    "migrate-vue-game-stack-merge-foundation",
+    "approve-v402-release-preparation",
 ]
 
 FORBIDDEN_TEXT = [

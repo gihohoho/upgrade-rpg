@@ -24,6 +24,7 @@
 	}
 
 	function canUseGameDevUi() {
+		if(window.RpgServerGame && window.RpgServerGame.active)return false;
 		if (isLocalDevelopment()) return true;
 		const user = getCurrentUser();
 		return !!(user && user.isAdmin === true);

@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[3]
 BACKEND = ROOT / "backend"
 SCRIPT = BACKEND / "scripts" / "bootstrap_owner_admin.py"
 ENV_EXAMPLE = BACKEND / ".env.example"
-EXPECTED_ALEMBIC_HEAD = "v377_auth_email_public_security"
+EXPECTED_ALEMBIC_HEAD = "v402_server_gameplay"
 os.environ["DEBUG"] = "false"
 sys.path.insert(0, str(BACKEND / "scripts"))
 sys.path.insert(0, str(BACKEND))

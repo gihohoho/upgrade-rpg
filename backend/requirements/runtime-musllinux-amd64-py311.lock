@@ -51,6 +51,8 @@ python-dotenv==1.2.2 \
     --hash=sha256:1d8214789a24de455a8b8bd8ae6fe3c6b69a5e3d64aa8a8e5d68e694bbcb285a
 pyyaml==6.0.3 \
     --hash=sha256:37503bfbfc9d2c40b344d06b2199cf0e96e97957ab1c1b546fd4f87e53e5d3e4
+quickjs-ng==0.16.2.1 \
+    --hash=sha256:c131d2fb5c9741ad2da9475807453dc98a31fde1df5f096e4037b1a7ae576025
 sqlalchemy==2.0.51 \
     --hash=sha256:a6d26094615306d116dd5e4a51b0304c99dd2356fc569eed6922a80a6bd3b265
 starlette==1.6.0 \

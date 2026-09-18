@@ -12,7 +12,7 @@
   "workflowSourceSha256": "3331484f280a12a239275785bef625f18656c62ccbe33e8707a296ac2e204843",
   "workflowSemanticSha256": "526c4d21f9bc223e25829f60bf804f9167f6905b9129ffe1e70d85f354d57126",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
-  "publishLifecycleSchemaVersion": "v377.owner-only-publish-lifecycle-with-10-attempt-history",
+  "publishLifecycleSchemaVersion": "v377.owner-only-publish-lifecycle-with-11-attempt-history",
   "workflowFilePresent": true,
   "workflowCreationApproved": true,
   "workflowExecutionApproved": true,
@@ -283,16 +283,16 @@
       "hashCheckingRequired": true,
       "lockSha256": {
         "backend/requirements/pip-bootstrap.lock": "9399f6b52f827b1c92f996f77319107055ad01fa2296193e9bede8f42f6c3307",
-        "backend/requirements/runtime-linux-amd64-py311.lock": "126718271e5cf1007487f7813adc648030691b3a251787f6bf570919d02cc05e",
-        "backend/requirements/runtime-musllinux-amd64-py311.lock": "a318ee15cf227eb057f1fef1c1df7ff3dc10b65d892e889da3ee9ad747b5ea10",
-        "backend/requirements/dev-linux-amd64-py311.lock": "eb97dea783b80fe5187a161eac3cd3298f602d64dabed613a3be5223c81198b7"
+        "backend/requirements/runtime-linux-amd64-py311.lock": "3503e40f1988673c89af1283e96eb536b2a2201f4147dac068642cdeed502d23",
+        "backend/requirements/runtime-musllinux-amd64-py311.lock": "c7a50cedac4e19e9295e6ad253398a1d9ce34dc048bbe6992bcc838874291ed3",
+        "backend/requirements/dev-linux-amd64-py311.lock": "e40d2b7a0588c77626f4f2eb8b59d187593b0c78a95315eb53b9661880aa0c13"
       },
       "inputSha256": {
         "backend/requirements/pip-bootstrap.in": "9df44a3db13ef551bf575949d553b8d14044635b91c09e85dc6d3ea97f50d225",
-        "backend/requirements/runtime.in": "de3324e5b96538e6d4d768ed980acae3bd6005711eda48702364cf0e2018bfcb",
+        "backend/requirements/runtime.in": "b1dc38a38e4328f4d818850da3c62c70a0e8dfff4d2d2d0184c7cabba7ca9753",
         "backend/requirements/dev.in": "6404277a75ce651735fcea3f89b5eee548cfd58ee197faed27b03333d587e2fe",
-        "backend/pyproject.toml": "066fbc7367508130b329ea31f9715dd95131cf02b64f22011bb025ca4f76ad9e",
-      "backend/Dockerfile.production": "ca4bb49de42650355b6f28519c231f5249f1ea9f52fb6fe574bc778cd7c5f16c"
+        "backend/pyproject.toml": "33dd28d28c73a5b8be947850b52f362385c7995e1d8a42135d158bb0e337af28",
+        "backend/Dockerfile.production": "9d5504290d5e4662471660c888c1cc28ff741223c1e8a53f4d9f8d71aa36f9f2"
       },
       "requiredBeforeFirstPublish": true
     },

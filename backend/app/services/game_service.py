@@ -246,6 +246,9 @@ class GameService:
         payload: Any,
     ) -> dict[str, Any]:
         """Update only the selected account character owned by the current user."""
+        from app.core.config import settings
+        if settings.game_server_authority_enabled:
+            raise HTTPException(409, "서버에서 게임 결과를 저장합니다. 게임 탭을 새로고침해 주세요.")
         snapshot_data = payload.snapshot or {}
         summary_data = payload.summary or {}
         request_bytes = len(

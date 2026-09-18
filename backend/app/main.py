@@ -17,6 +17,7 @@ from app.db.session import AsyncSessionLocal, engine
 from app.middleware.auth_ip_rate_limit import AuthIPRateLimitMiddleware
 from app.middleware.request_body_limit import RequestBodyLimitMiddleware
 from app.services.auth_email_outbox import run_auth_email_outbox_worker
+from app.services.game_session_service import run_game_session_worker
 
 
 SENSITIVE_VALIDATION_FIELDS = frozenset(
@@ -104,6 +105,9 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     """Run the durable mail worker and release pooled connections on shutdown."""
     stop_event: asyncio.Event | None = None
     worker_task: asyncio.Task[None] | None = None
+    game_stop = asyncio.Event()
+    game_worker = asyncio.create_task(run_game_session_worker(game_stop, AsyncSessionLocal),
+        name="game-session-worker") if settings.game_server_authority_enabled else None
     if (
         settings.email_outbox_worker_enabled
         and settings.brevo_ready
@@ -120,6 +124,14 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     try:
         yield
     finally:
+        if game_worker:
+            game_stop.set()
+            try:
+                await asyncio.wait_for(game_worker, timeout=12)
+            except TimeoutError:
+                game_worker.cancel()
+                with suppress(asyncio.CancelledError):
+                    await game_worker
         if stop_event is not None and worker_task is not None:
             stop_event.set()
             try:

@@ -69,6 +69,7 @@ COPY --from=builder --chown=65532:65532 /opt/python /opt/python
 COPY --chown=65532:65532 backend/app /app/app
 COPY --chown=65532:65532 backend/alembic.ini /app/alembic.ini
 COPY --chown=65532:65532 backend/alembic /app/alembic
+COPY --chown=65532:65532 src /app/game-src
 
 USER 65532:65532
 EXPOSE 8000

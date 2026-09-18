@@ -31,6 +31,7 @@ ASYNC_WITHOUT_AWAIT_ALLOWLIST = {
     "backend/app/main.py:request_validation_error_handler",
     "backend/app/api/routes/auth.py:get_me",
     "backend/app/api/routes/auth.py:logout",
+    "backend/app/api/routes/game_session.py:capabilities",
     "backend/app/api/routes/admin_overview_snapshot_routes.py:get_admin_requirements",
     "backend/app/api/routes/health.py:health_check",
     "backend/app/core/security.py:require_admin_user",

@@ -97,7 +97,7 @@ def main() -> int:
     assert result["publishEnvironmentExists"] is True
     assert result["publishEnvironmentConfigured"] is False
     assert result["publishGateReady"] is False
-    assert result["publishLifecycleState"] == "attempt-recorded"
+    assert result["publishLifecycleState"] == "preparation-closed"
     assert result["publishLifecycleSupportedStates"] == [
         "preparation-closed",
         "authorization-open",
@@ -105,15 +105,15 @@ def main() -> int:
         "attempt-recorded",
     ]
     assert result["workflowExecutionHistoryCount"] == 11
-    assert result["priorApprovedPreparationSha"] == "d58d093fc5ac2a4ffefa812e7067cb3083ce8a7d"
-    assert result["approvedPreparationSha"] == "cd357de032425138d44323dd3060bbbf5b6a45d8"
-    assert result["authorizationSha"] == "46c9e7e33d866b160b6f4a8f36d5b68dabe3ece4"
-    assert result["closureSha"] == "e07474d5b5411dd805736687d1003f451298dae4"
+    assert result["priorApprovedPreparationSha"] == "cd357de032425138d44323dd3060bbbf5b6a45d8"
+    assert result["approvedPreparationSha"] is None
+    assert result["authorizationSha"] is None
+    assert result["closureSha"] is None
     assert result["recordCommitSha"] == "3e3516299a72e47c6d85597f8c0b60db5cb11a46"
     assert result["currentRunId"] == 32587614153
     assert result["currentArtifactIds"] == [9479502641, 9479487044]
     assert result["currentImageDigest"] == "sha256:80e8f57618b2bd8bbac37fd63381e454434e06b67eff0cd8f4327796bdc1c677"
-    assert result["ownerApprovalRecorded"] is True
+    assert result["ownerApprovalRecorded"] is False
     assert result["workflowRunAttemptMustEqual"] == 1
     assert result["singleDispatchApiCheckRequired"] is True
     assert result["rerunForbidden"] is True
@@ -132,9 +132,6 @@ def main() -> int:
     assert result["productionDeploymentApprovalReady"] is False
     assert result["productionDeploymentApproved"] is False
     assert result["productionDeploymentExecuted"] is False
-
-    root_actions_result = module._inspect_actions_workflow(ROOT)
-    module._inspect_actions_workflow = lambda _root: root_actions_result
 
     mutations = (
         ("namespace", "invented-account"),
@@ -202,7 +199,7 @@ def main() -> int:
         lambda p: p.update({"publishReviewerGateReady": True}),
         lambda p: p.update({"priorApprovedPreparationSha": "0" * 40}),
         lambda p: p.update({"approvedPreparationSha": "f4788acf5455b07169320bd29f43ddf92ff1d5ad"}),
-        lambda p: p["ownerApproval"].update({"recorded": False}),
+        lambda p: p["ownerApproval"].update({"recorded": True}),
         lambda p: p["ownerApproval"].update({"recordedAtUtc": "not-utc"}),
         lambda p: p["ownerApproval"].update({"evidence": "codex-self-approval"}),
         lambda p: p["authorizationPolicy"].update({"workflowRunAttemptMustEqual": 2}),

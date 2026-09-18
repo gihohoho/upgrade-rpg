@@ -103,23 +103,25 @@ def create_access_token(
     now: datetime | None = None,
     nonce: str | None = None,
 ) -> tuple[str, int]:
-    """Create a fixed-algorithm signed access token and return token/TTL seconds."""
+    """Return a signed access token and TTL seconds (0 means no time expiry)."""
     issued_at = now or datetime.now(UTC)
     if issued_at.tzinfo is None:
         issued_at = issued_at.replace(tzinfo=UTC)
     issued_at = issued_at.astimezone(UTC)
-    ttl_seconds = max(60, int(settings.access_token_expire_minutes) * 60)
-    expires_at = issued_at + timedelta(seconds=ttl_seconds)
+    ttl_seconds = int(settings.access_token_expire_minutes) * 60
 
     header = {"alg": ACCESS_TOKEN_ALGORITHM, "typ": ACCESS_TOKEN_TYPE}
     payload = {
         "sub": str(int(user_id)),
         "iat": int(issued_at.timestamp()),
-        "exp": int(expires_at.timestamp()),
         "nonce": nonce or secrets.token_hex(16),
         "tokenType": ACCESS_TOKEN_KIND,
         "authVersion": int(auth_version),
     }
+    if ttl_seconds:
+        payload["exp"] = int((issued_at + timedelta(seconds=ttl_seconds)).timestamp())
+    else:
+        payload["sessionLifetime"] = "until-revoked"
     encoded_header = _base64url_encode(
         json.dumps(header, ensure_ascii=True, sort_keys=True, separators=(",", ":")).encode("utf-8")
     )
@@ -164,7 +166,7 @@ def decode_access_token(token: str, *, now: datetime | None = None) -> dict[str,
     try:
         user_id = int(payload["sub"])
         issued_at = int(payload["iat"])
-        expires_at = int(payload["exp"])
+        expires_at = int(payload["exp"]) if "exp" in payload else None
         auth_version = int(payload["authVersion"])
     except (KeyError, TypeError, ValueError) as exc:
         raise InvalidAccessToken("invalid_token_claims") from exc
@@ -184,13 +186,18 @@ def decode_access_token(token: str, *, now: datetime | None = None) -> dict[str,
     current_timestamp = int(current.astimezone(UTC).timestamp())
     if issued_at > current_timestamp + ACCESS_TOKEN_CLOCK_SKEW_SECONDS:
         raise InvalidAccessToken("token_issued_in_future")
-    if expires_at <= current_timestamp:
-        raise InvalidAccessToken("token_expired")
-    if expires_at <= issued_at:
-        raise InvalidAccessToken("invalid_token_lifetime")
-    configured_ttl_seconds = max(60, int(settings.access_token_expire_minutes) * 60)
-    if expires_at - issued_at > configured_ttl_seconds:
-        raise InvalidAccessToken("token_lifetime_exceeds_limit")
+    if expires_at is None:
+        if settings.access_token_expire_minutes != 0 or payload.get("sessionLifetime") != "until-revoked":
+            raise InvalidAccessToken("invalid_token_lifetime")
+    else:
+        # Previously issued 24h tokens still expire; never revive an expired login.
+        if expires_at <= current_timestamp:
+            raise InvalidAccessToken("token_expired")
+        if expires_at <= issued_at:
+            raise InvalidAccessToken("invalid_token_lifetime")
+        configured_ttl_seconds = (int(settings.access_token_expire_minutes) or 1440) * 60
+        if expires_at - issued_at > configured_ttl_seconds:
+            raise InvalidAccessToken("token_lifetime_exceeds_limit")
 
     return {**payload, "userId": user_id, "authVersion": auth_version}
 

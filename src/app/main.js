@@ -402,9 +402,10 @@ function claimMail(index) {
 
 	if (mail.type === "bundle" && Array.isArray(mail.items)) {
 		let received = [];
-		for (let item of mail.items) {
+		while (mail.items.length) {
+			const item = mail.items[0];
 			let result = typeof addStackableItemToInventory === "function" ? addStackableItemToInventory(item) : null;
-			if (result && result.ok) received.push(getDisplayNameWithLevel(result.item));
+			if (result && result.ok) { received.push(getDisplayNameWithLevel(result.item)); mail.items.shift(); }
 			else {
 				addLog("[시스템] 가방과 보관함이 꽉 차서 일부 우편 아이템을 받을 수 없습니다.");
 				updateFullUI();
@@ -451,12 +452,14 @@ function claimAllMail() {
 
 		if (mail.type === "bundle" && Array.isArray(mail.items)) {
 			let allOk = true;
-			for (let item of mail.items) {
+			while (mail.items.length) {
+				const item = mail.items[0];
 				let result = typeof addStackableItemToInventory === "function" ? addStackableItemToInventory(item) : null;
 				if (!(result && result.ok)) {
 					allOk = false;
 					break;
 				}
+				mail.items.shift();
 			}
 
 			if (allOk) {
@@ -683,6 +686,7 @@ async function flushAccountGameSave(options = {}) {
 }
 
 function startGameRuntimeTimers() {
+	if (window.RpgServerGame && window.RpgServerGame.active) { window.RpgServerGame.startVisuals(); return; }
 	if (!isAccountGameBooted || isAccountGameRuntimePaused) return;
 	if (!gameClock.running) initializeGameClock();
 	startPlayTimeRecordTimer();
@@ -800,6 +804,7 @@ async function bootPreparedAccountCharacter(character, preparation) {
 }
 
 async function startAccountCharacterGame(character) {
+	if (window.RpgServerGame && await window.RpgServerGame.available()) return window.RpgServerGame.start(character);
 	if (isAccountGameBooted) return { ok: true, alreadyBooted: true };
 	if (accountGameBootPromise) return accountGameBootPromise;
 	if (!window.RpgAuthSession || !window.RpgAuthSession.hasReadyGameContext()) {
@@ -1040,8 +1045,8 @@ function createBeginnerItemTemplate() {
 		img: "",
 		baseCost: 350,
 		equipGroup: "beginner",
-		equipLimit: 6,
-		equipTextInfo: `<span style="color:#ff66cc;">초보자 아이템</span>은 <span style="color:#ffcc00;">6개</span>까지 장착<br>가능합니다.`,
+		equipLimit: 5,
+		equipTextInfo: `<span style="color:#ff66cc;">초보자 스태프</span>는 1~5번 칸에 <span style="color:#ffcc00;">5개</span>까지 장착 가능합니다. 6번 칸은 창 전용입니다.`,
 		enhanceStats: [100, 107, 121, 142, 170, 205, 247, 296, 352, 415, 485, 618, 814, 1073, 1395, 1780, 2228, 2739, 3313, 3950, 4650],
 	};
 }
@@ -1349,6 +1354,7 @@ function renderTestItemList(boss) {
 }
 
 window.addEventListener("beforeunload", () => {
+	if (window.RpgServerGame && window.RpgServerGame.active) return;
 	if (!isAccountGameBooted || isResettingGame || !hasReadyAccountGameContext()) return;
 	if (window.RpgAuthSession && window.RpgAuthSession.isTransitionInProgress()) return;
 	tickPlayTimeRecord();

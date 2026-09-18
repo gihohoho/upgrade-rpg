@@ -1,15 +1,15 @@
-# PostgreSQL / Alembic Readiness — v377
+# PostgreSQL / Alembic Readiness — v402
 
 이 문서는 현재 프로젝트 파일을 기준으로 PostgreSQL과 Alembic 도입 준비 상태를 자동 분석한 결과입니다.
 
 중요: 이 보고서는 **읽기 전용 정적 분석**입니다. DB 연결, `.env` 변경, schema 생성/삭제, seed import, migration 생성/적용을 수행하지 않습니다.
 
-## v377 현재 overlay
+## v402 현재 overlay
 
 ```txt
-latest: v399.vue-game-inventory-transfer-foundation
-strict result: vue-game-inventory-transfer-foundation
-local Alembic source graph head: v377_auth_email_public_security
+latest: v402.server-gameplay-prepared
+strict result: server-gameplay-prepared
+local Alembic source graph head: v402_server_gameplay
 local/Neon applied DB revision: v377_auth_email_public_security / v377_auth_email_public_security
 actual target v377 apply: local 1 / Neon 1
 private email environment: prepared
@@ -19,18 +19,17 @@ local auth POST: protection store available / legacy no-email login compatible
 local Brevo E2E: Naver delivery / link verification / login verified
 provider finalize: local multi-worker ownership diagnosed / direct provider healthy
 recovery2 roundtrip/Neon backup/apply: verified / one attempt each
-public backend/static: v377/v378 live
-model application tables: 25
+public backend/static: v377/v401 live
+model application tables: 27
 local/Neon application tables: 25 / 25
-next safe stage: migrate-vue-game-stack-merge-foundation
+next safe stage: approve-v402-release-preparation
 ```
 
-v295는 최초 22-table baseline을 실제 DB에 적용한 역사이자 현재 Neon DB revision으로
-계속 유효합니다. local source graph에는 v295 뒤에 `v371_email_identity_lifecycle`과
-`v377_auth_email_public_security`이 차례로 준비됐으므로, `head`와 DB `current`를 같은
-말로 쓰지 않습니다.
+v295는 최초 22-table baseline의 역사입니다. 실제 local/Neon은 v377이며,
+source에는 v402 서버 사냥 세션/행동 영수증 2개 table revision을 추가했습니다.
+v402 실제 적용은 아직 하지 않았습니다. `head`와 DB `current`를 구분합니다.
 
-- source graph `head`: `v377_auth_email_public_security`
+- source graph `head`: `v402_server_gameplay`
 - local/Neon DB `current`: `v377_auth_email_public_security` / `v377_auth_email_public_security`
 - 차이: v371의 nullable email identity·`authVersion`과
   `user_email_action_tokens` 1개 table, v377의 durable auth rate-limit·semantic mail outbox
@@ -41,7 +40,7 @@ private environment/ACL·email/abuse secret 준비와 local migration은 완료�
 `8db9bcb`의 stale evidence와 실패 marker는 보존했고, source
 `345872a`의 별도 recovery1 왕복·fresh backup·local v377 apply를 각각 1회
 검증했습니다. recovery2 synthetic 왕복·Neon fresh backup·exact v377 apply도 각각 1회
-완료했으며 다음은 `migrate-vue-game-stack-merge-foundation` 단계입니다.
+완료했으며 다음은 `approve-v402-release-preparation` 단계입니다.
 현재 `tools/run_smoke_core.sh`에서는 v295~v310 단일-head·no-next-revision 역사 계약에
 고정된 최초 revision 생성·수동 검토, isolated upgrade·downgrade·roundtrip,
 source·restore stamp guard, baseline completion, next-revision preflight와 deployment
@@ -57,7 +56,7 @@ v306 결과도 **v306 당시 model/schema**에 대한 역사이며 v377 현재 �
 - 현재 backend는 이미 PostgreSQL 전용 타입과 두 드라이버를 전제로 설계되어 있습니다.
 - FastAPI 런타임은 `asyncpg`, 로컬 schema/seed 도구는 `psycopg` 사용을 전제로 분리되어 있습니다.
 - v310 당시 SQLAlchemy 모델과 수동 검토가 끝난 최초 Alembic revision 1개가
-  존재했습니다. 현재 source에는 v371·v377 수동 revision을 더해 3개가 있습니다.
+  존재했습니다. 현재 source에는 v371·v377·v402 수동 revision을 더해 4개가 있습니다.
 - v284에서 사용자 실제 `MissingGreenlet` 결과를 근거로 Alembic online 경로를 async engine 방식으로 수정했습니다.
 - 기호 컴퓨터에서 `alembic history`, `heads`, `current`가 모두 정상 완료되고 PostgreSQL 연결이 확인되었습니다.
 - 기호 컴퓨터의 실제 runtime 점검에서 모델/DB 테이블 22개, 전체 row 748개, `alembic_version` 없음, DB health 정상 결과가 확인되었습니다.
@@ -96,12 +95,12 @@ v306 결과도 **v306 당시 model/schema**에 대한 역사이며 v377 현재 �
 
 | 항목 | 현재 상태 |
 |---|---|
-| SQLAlchemy model table 수 | 25개 |
+| SQLAlchemy model table 수 | 27개 |
 | local/Neon DB application table 수 | 25개 / 25개 |
-| PostgreSQL `JSONB` mapped column | 26개 |
+| PostgreSQL `JSONB` mapped column | 28개 |
 | 큰 수/확률용 `Numeric` mapped column | 10개 |
-| `ForeignKey` 선언 | 24개 |
-| 명시적 `UniqueConstraint` 선언 | 5개 |
+| `ForeignKey` 선언 | 26개 |
+| 명시적 `UniqueConstraint` 선언 | 6개 |
 | async session | 있음 |
 | Docker PostgreSQL 16 | 있음 |
 | 로컬 host port 55432 | 있음 |
@@ -111,8 +110,8 @@ v306 결과도 **v306 당시 model/schema**에 대한 역사이며 v377 현재 �
 | Alembic env | 있음 |
 | Alembic asyncpg-compatible online env | 있음 |
 | Alembic versions 폴더 | 있음 |
-| Alembic revision 수 | 3개 |
-| local source graph head | `v377_auth_email_public_security` |
+| Alembic revision 수 | 4개 |
+| local source graph head | `v402_server_gameplay` |
 | local/Neon DB current | `v377_auth_email_public_security` / `v377_auth_email_public_security` |
 | Alembic script template | 있음 |
 
@@ -145,6 +144,8 @@ python -m pip install -e ".[dev]"
 | `enhancement_groups` | `EnhancementGroup` | `backend/app/models/enhancement.py` |
 | `enhancement_levels` | `EnhancementLevel` | `backend/app/models/enhancement.py` |
 | `field_zones` | `FieldZone` | `backend/app/models/field.py` |
+| `game_sessions` | `GameSession` | `backend/app/models/game_session.py` |
+| `game_action_receipts` | `GameActionReceipt` | `backend/app/models/game_session.py` |
 | `item_templates` | `ItemTemplate` | `backend/app/models/item.py` |
 | `item_instances` | `ItemInstance` | `backend/app/models/item.py` |
 | `user_inventory_slots` | `UserInventorySlot` | `backend/app/models/item.py` |
@@ -184,7 +185,7 @@ python -m pip install -e ".[dev]"
 - env: `backend/alembic/env.py`
 - metadata: `Base.metadata`
 - online 방식: `async_engine_from_config()` + `connection.run_sync()`
-- source revision: 3개 / graph head `v377_auth_email_public_security`
+- source revision: 4개 / graph head `v402_server_gameplay`
 - 적용 DB current: local `v377_auth_email_public_security` / Neon `v377_auth_email_public_security`
 - `history`, `heads`, `current` 읽기 전용 수집 도구: `tools/check_alembic_readonly_state.py`
 - Docker/schema/table count/health 읽기 전용 수집 도구: `tools/check_postgres_runtime_readonly_state.py`
@@ -293,7 +294,7 @@ v295 baseline 확정 상태:
 
 이전 `stamp head`는 완료됐으며 재실행하지 않습니다.
 
-현재 local source graph head는 그 뒤의 `v377_auth_email_public_security`입니다. 따라서
+현재 local source graph head는 그 뒤의 `v402_server_gameplay`입니다. 따라서
 v295 DB에 대해 `stamp head`를 다시 실행하면 실제 v371·v377 schema 변경 없이
 revision만 거짓으로 올릴 수 있으므로 특히 금지합니다.
 
@@ -338,7 +339,7 @@ revision만 거짓으로 올릴 수 있으므로 특히 금지합니다.
 7. local/Neon actual DB는 모두 v377이고 기존 22개 table 데이터 변화 0·25개 model table parity를
    확인했습니다. recovery2 Neon backup과 apply는 각각 한 번만 실행했습니다.
 8. local 실제 메일·링크 인증·로그인, 공개 backend/static 배포와 Vue 인증·관리자 Preview·write-locked 확인 modal을 완료했습니다.
-   다음 안전 단계는 Gold/아이템 보상·난수 드랍과 분리해 자동·수동·전환 저장의 단일 직렬 queue 경계를 준비하는 `migrate-vue-game-stack-merge-foundation`입니다.
+   다음 안전 단계는 검증된 서버 사냥 preparation의 exact SHA를 확인한 뒤 additive migration과 배포를 진행하는 `approve-v402-release-preparation`입니다.
 
 현재는 **public email rollout deployed** 상태입니다. local/Neon DB schema와 legacy
 데이터는 보존됐고 signed backend image와 legacy static이 공개 live입니다.

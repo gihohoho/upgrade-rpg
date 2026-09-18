@@ -479,6 +479,10 @@ function showItemTooltip(item, options = {}) {
 		? `<div style="color: #ffffff; margin-bottom: 10px;">${item.equipTextInfo}</div>`
 		: `<div style="color: #ff66cc;">${item.equipText || "장비"}은(는)</div>
        <div style="color: #ffffff; margin-bottom: 10px;"><span style="color:#ffcc00;">${item.equipLimit || 1}개</span>까지 장착 가능합니다.</div>`;
+	if (typeof getNormalEquipAllowedSlots === "function") {
+		const slots = getNormalEquipAllowedSlots(item).map(index => index + 1).sort((a,b) => a-b);
+		if (slots.length) customEquipHtml = `<div style="color:#ffcc88;margin-bottom:10px;">장착 가능: ${slots.join("·")}번 장비칸</div>`;
+	}
 
 	let html = `
     <div style="font-size: 13px; font-weight: bold; line-height: 1.4;">
@@ -897,6 +901,12 @@ function renderUI() {
 		let isSpecial = i >= 6;
 		slot.className = "item-slot " + (isSpecial ? "empty-special" : "empty-normal");
 		if (isSpecial) slot.innerHTML = specialSlotNames[i - 6];
+		if (!isSpecial) {
+			const label = ["스킬·모든피해", "공격력", "평타피해", "스태프", "스태프·창", "창"][i];
+			slot.title = `${i + 1}번 장비칸: ${label}${i < 5 ? " (초보자 스태프 가능)" : " 전용"}`;
+			slot.setAttribute("aria-label", slot.title);
+			if (i >= 3) slot.textContent = label;
+		}
 
 		let item = player.equipment[i];
 		if (item) {
@@ -1789,6 +1799,7 @@ function summonBoss(boss) {
 		: null;
 
 	function failSummon(message, reason) {
+		if (typeof showGameNotice === "function") showGameNotice("보스 소환 안내", message.replace(/^\[시스템\]\s*/, ""));
 		if (summonResult) {
 			summonResult.ok = false;
 			summonResult.data.reason = reason || "blocked";
@@ -1996,7 +2007,7 @@ function renderSpecialBossZone() {
 			slot.innerHTML = `<img src="${boss.img}" alt="boss">`;
 			if (autoSpecialBossEnabled && autoSpecialBossId && autoSpecialBossId !== boss.id) {
 				slot.classList.add("disabled-special-slot");
-				slot.onclick = () => addLog(`[시스템] 특수보스 자동사냥 ON 상태에서는 다른 특수보스를 소환할 수 없습니다.`);
+				slot.onclick = () => showGameNotice("보스 소환 안내", "특수보스 자동사냥 ON 상태입니다. 특보 자동사냥을 끄고 현재 보스를 제거한 뒤 다시 소환해 주세요.");
 			} else {
 				slot.onclick = () => summonBoss(boss);
 			}
@@ -2093,6 +2104,7 @@ function renderFieldZone() {
 			};
 
 			btn.onclick = () => {
+				if (window.RpgServerGame && window.RpgServerGame.active) { changeZone(zoneIdx-currentZoneIndex); return; }
 				if (field.req) {
 					let pureAtk = player.farmAtkBonus || 0;
 					if (pureAtk < field.req.minAtk || pureAtk > field.req.maxAtk) {

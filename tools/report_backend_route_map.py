@@ -19,16 +19,22 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-PROJECT_VERSION = "v377"
+PROJECT_VERSION = "v402"
 REPORT_PATH = Path("docs/generated/BACKEND_ROUTE_MAP.md")
 CONFIG_PATH = Path("backend/app/core/config.py")
-CHECKPOINT_VERSION = "v399.vue-game-inventory-transfer-foundation"
-CHECKPOINT_RESULT = "vue-game-inventory-transfer-foundation"
-NEXT_SAFE_STAGE = "migrate-vue-game-stack-merge-foundation"
+CHECKPOINT_VERSION = "v402.server-gameplay-prepared"
+CHECKPOINT_RESULT = "server-gameplay-prepared"
+NEXT_SAFE_STAGE = "approve-v402-release-preparation"
 STALE_SOURCE_SHA = "8db9bcb"
 RECOVERY_SOURCE_SHA = "345872a"
 
 ROUTE_MODULES = [
+    {
+        "group": "game-session",
+        "file": Path("backend/app/api/routes/game_session.py"),
+        "prefix": "/game/session",
+        "include": "game.py include_router(session_router, prefix='/session')",
+    },
     {
         "group": "health",
         "file": Path("backend/app/api/routes/health.py"),
@@ -144,7 +150,7 @@ PROTECTED_ITEMS = [
     "existing smoke/contract meaning",
 ]
 
-ROUTE_DECORATOR_NAMES = {"get", "post", "put", "patch", "delete"}
+ROUTE_DECORATOR_NAMES = {"get", "post", "put", "patch", "delete", "websocket"}
 
 
 @dataclass(frozen=True)
@@ -360,7 +366,7 @@ local auth POST: protection store available / legacy no-email login compatible
 local Brevo E2E: Naver delivery / link verification / login verified
 provider finalize: local multi-worker ownership diagnosed / direct provider healthy
 recovery2 roundtrip/Neon backup/apply: verified / one attempt each
-public backend/static: v377/v378 live
+public backend/static: v377/v401 live
 next safe stage: {NEXT_SAFE_STAGE}
 ```
 

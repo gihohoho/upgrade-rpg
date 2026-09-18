@@ -87,9 +87,13 @@ ID가 모두 일치해야만 요청을 허용합니다. 따라서 캐릭터를 �
 - CPU 비용이 큰 bcrypt hash/verify는 FastAPI event loop가 아니라 worker
   thread에서 실행합니다.
 - 이메일 인증 전에는 access token을 발급하지 않습니다. 인증 뒤 아이디 또는 이메일과
-  비밀번호로 로그인하면 기존 `JWT_SECRET_KEY`로 HS256 서명한 24시간 access token을
-  발급합니다. 서버는 알고리즘을 고정하고 서명, 종류, 발급 시각, 만료 시각과 DB의 현재
-  `authVersion`을 검사합니다.
+  비밀번호로 로그인하면 `JWT_SECRET_KEY`로 HS256 서명한 access token을 발급합니다.
+  v402 작업은 사용자 요청에 따라 `ACCESS_TOKEN_EXPIRE_MINUTES=0`으로 시간에 의한
+  자동 로그아웃을 없앱니다. `expiresIn: 0`, 서명된 `sessionLifetime: until-revoked`가
+  무기한 로그인을 나타냅니다. 서명·종류·발급 시각·DB `authVersion`·계정 상태는 계속
+  검사합니다. 기존 24시간 토큰을 되살리지는 않으며, 아직 유효한 토큰은 게임 연결 시
+  새 토큰으로 바꿉니다. 이미 만료된 경우 배포 후 한 번 다시 로그인해야 합니다.
+  실제 배포 완료 여부는 CURRENT_STATUS와 root handoff를 따릅니다.
 - v295 이전에 만들어져 email 열이 `NULL`인 기존 계정은 기존 아이디·비밀번호 접근을
   유지합니다. 이 경우 응답은 `emailVerified=false`로 사실대로 표시하며, 이메일이 있는
   신규 계정은 링크 인증 전 계속 차단합니다.
@@ -108,6 +112,26 @@ ID가 모두 일치해야만 요청을 허용합니다. 따라서 캐릭터를 �
 배포해야 합니다.
 
 ## API 계약
+
+v402 서버 사냥(배포 진행 상태는 root handoff 기준):
+
+- `/game/session/capabilities`가 서버 모드를 알립니다. `open`은 계정/슬롯/캐릭터를
+  검사하고 마을에서 세션을 시작합니다. `/live` WebSocket은 허용 origin과 본문 토큰으로
+  인증하며 URL에 토큰을 싣지 않습니다. 한 캐릭터의 최신 게임 탭만 진행합니다.
+- 서버 연결 확인은 20초, 보상 정산은 약 60초입니다. 연결 유효시간은 45초이며 정상
+  종료는 즉시 정산합니다. 비정상 단절 감지의 최대 유예를 제외한 오프라인 보상은 없습니다.
+  재연결 `resume`은 전투 상태를 이어가되 끊긴 시간을 사냥으로 계산하지 않습니다.
+- `command`는 requestId와 아이템 ID/위치 등 의도만 받습니다. 서버 snapshot 행 잠금 안에서
+  직전 사냥 정산, 비용 차감, 난수 결과, 영수증을 함께 commit한 뒤 표시합니다. 응답 유실은
+  같은 requestId로 조회하며 재추첨하지 않습니다. 같은 ID의 다른 명령은 거부합니다.
+- 클라이언트 snapshot 업로드 `/game/save`는 서버 모드에서 거부합니다. 표시용 전투 연출은
+  보상을 만들지 않습니다. 숨긴 탭은 최신 서버 snapshot 한 개만 보관하므로 복귀 시
+  24시간 전투 이벤트를 브라우저에서 몰아서 계산하지 않습니다.
+- `game_sessions`, `game_action_receipts`는 v402 추가 table입니다. 서버 비밀 난수 seed와
+  cursor는 응답에 포함하지 않습니다. 서버 모드 local 저장은 확정 snapshot 백업이며
+  기존 local 복구본을 자동 업로드해 서버 결과를 덮어쓰지 않습니다.
+- 로그인 시간 제한 없음과 사냥 연결 유효시간은 별개입니다. 탭 종료/오프라인은 사냥을
+  중단합니다. 로그인 유지 체크 여부에 따른 sessionStorage/localStorage 선택은 유지합니다.
 
 공개 경로:
 

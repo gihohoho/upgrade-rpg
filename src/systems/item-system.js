@@ -217,14 +217,16 @@ function isBeginnerLiberationStaff(item) {
 
 function getNormalEquipAllowedSlots(item) {
 	if (!item || item.type === "skill_book" || item.type === "special_equip") return [];
-	if (isBeginnerLiberationStaff(item)) return [0, 1, 2, 3, 4, 5];
+	if (isBeginnerLiberationStaff(item)) return [0, 1, 2, 3, 4];
+	const group = getEquipGroup(item);
 
-	if (item.equipGroup === "skill_all") return [0]; // N-1: 스킬/모든피해증가
-	if (item.equipGroup === "atk_inc") return [1]; // N-2: 공격력%
-	if (item.equipGroup === "normal_dmg") return [2]; // N-3: 평타피해증가%
+	if (group === "skill_all") return [0]; // N-1: 스킬/모든피해증가
+	if (group === "atk_inc") return [1]; // N-2: 공격력%
+	if (group === "normal_dmg") return [2]; // N-3: 평타피해증가%
 
-	// N-4/N-5 계열은 남은 일반 장비칸에서 기존 equipLimit 규칙을 유지합니다.
-	return [3, 4, 5];
+	if (group === "skill_chance") return [3, 4]; // 스태프: 전용 4번, 공용 5번
+	if (group === "normal_crit") return [5, 4]; // 창: 전용 6번, 공용 5번
+	return [];
 }
 
 function getNormalEquipTargetIndex(item) {
@@ -238,24 +240,14 @@ function getNormalEquipTargetIndex(item) {
 		return -1;
 	}
 
-	let groupCount = 0;
-	let firstSameGroupIdx = -1;
-	if (item.equipGroup) {
-		for (let idx of allowedSlots) {
-			if (player.equipment[idx] && player.equipment[idx].equipGroup === item.equipGroup) {
-				groupCount++;
-				if (firstSameGroupIdx === -1) firstSameGroupIdx = idx;
-			}
-		}
-
-		if (groupCount >= (item.equipLimit || 1)) return firstSameGroupIdx;
-	}
-
 	for (let idx of allowedSlots) {
-		if (player.equipment[idx] === null) return idx;
+		if (!player.equipment[idx]) return idx;
 	}
-
-	return -1;
+	// 기존 초보자 장비도 교체 대상입니다. 같은 아이템 레벨이면 공용 5번을 마지막에 교체합니다.
+	return [...allowedSlots].sort((left, right) => {
+		const level = (index) => Number(calcItemStats(player.equipment[index]).ilv) || 0;
+		return level(left) - level(right) || Number(left === 4) - Number(right === 4) || left - right;
+	})[0];
 }
 
 function actionEquipDirect(invIndex) {
@@ -424,7 +416,7 @@ function actionEquipDirect(invIndex) {
 		let splitFromStack = false;
 		if (item.count && item.count > 1) {
 			item.count--; // 인벤토리의 개수는 1개 줄임
-			newEquip = { ...item, count: 1 }; // 장착창에는 1개만 복사해서 투입
+			newEquip = { ...item, id: Date.now() + Math.random(), count: 1 }; // 분리된 장비는 독립 ID
 			splitFromStack = true;
 		} else {
 			newEquip = clearItemSlot(player.inventory, invIndex);

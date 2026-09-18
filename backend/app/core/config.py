@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     environment: str = "local"
     debug: bool = True
     api_prefix: str = "/api/v1"
+    game_server_authority_enabled: bool = False
     database_url: str = "postgresql+asyncpg://rpg_user:rpg_password@127.0.0.1:55432/rpg_game"
 
     # SQLAlchemy runtime pool defaults are deliberately conservative. Local
@@ -40,7 +41,8 @@ class Settings(BaseSettings):
     db_pool_recycle_seconds: int = Field(default=1800, ge=30, le=86400)
 
     jwt_secret_key: str = LOCAL_JWT_SECRET
-    access_token_expire_minutes: int = 1440
+    # Zero keeps login valid until logout/account revocation, without a time limit.
+    access_token_expire_minutes: int = Field(default=0, ge=0)
     email_verification_expire_minutes: int = Field(default=1440, ge=5, le=10080)
     password_reset_expire_minutes: int = Field(default=30, ge=5, le=1440)
     account_deletion_expire_minutes: int = Field(default=30, ge=5, le=1440)

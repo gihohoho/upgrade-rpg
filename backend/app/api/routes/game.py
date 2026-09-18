@@ -6,8 +6,10 @@ from app.core.security import CurrentUser, get_current_user
 from app.db.session import get_db_session
 from app.schemas.account import ACCOUNT_CHARACTER_ID_PATTERN, AccountCharacterGameSaveRequest
 from app.services.game_service import GameService
+from app.api.routes.game_session import router as session_router
 
 router = APIRouter()
+router.include_router(session_router, prefix="/session", tags=["game-session"])
 service = GameService()
 
 

@@ -493,71 +493,88 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         policy.get("publishLifecycleSupportedStates") == list(LIFECYCLE_SUPPORTED_STATES),
         "policy lifecycle supported-state list changed",
     )
-    _require(
-        policy.get("priorApprovedPreparationSha")
-        == lifecycle.get("priorApprovedPreparationSha"),
-        "policy/lifecycle prior exact-SHA approval differs",
-    )
-    lifecycle_prior_attempt = lifecycle.get("priorAttemptEvidence")
-    _require(isinstance(lifecycle_prior_attempt, dict), "lifecycle prior attempt evidence is missing")
-    summary_keys = (
-        "recordCommitSha",
-        "runId",
-        "conclusion",
-        "registryLoginExecuted",
-        "imageBuildExecuted",
-        "imagePushExecuted",
-    )
-    _require(
-        policy.get("priorAttemptEvidence")
-        == {key: lifecycle_prior_attempt[key] for key in summary_keys},
-        "policy/lifecycle prior attempt evidence differs",
-    )
-    policy_history = policy.get("attemptHistory")
-    lifecycle_history = lifecycle.get("attemptHistory")
-    _require(isinstance(lifecycle_history, list), "lifecycle attempt history is missing")
-    _require(
-        policy_history
-        == [{key: item[key] for key in summary_keys} for item in lifecycle_history],
-        "policy/lifecycle attempt history differs",
-    )
-    _require(
-        policy.get("approvedPreparationSha") == lifecycle.get("approvedPreparationSha"),
-        "policy/lifecycle approved preparation differs",
-    )
-    _full_sha_or_none(policy.get("approvedPreparationSha"), "policy approvedPreparationSha")
-    current_policy_attempt = policy.get("currentAttemptEvidence")
-    _require(isinstance(current_policy_attempt, dict), "policy current attempt evidence is missing")
-    _full_sha_or_none(current_policy_attempt.get("authorizationSha"), "policy authorizationSha")
-    _full_sha_or_none(current_policy_attempt.get("closureSha"), "policy closureSha")
-    _full_sha_or_none(current_policy_attempt.get("recordCommitSha"), "policy recordCommitSha")
-    _require(current_policy_attempt.get("conclusion") in {"success", "failure"}, "policy current attempt conclusion differs")
-    closure = lifecycle.get("closure")
-    observed = lifecycle.get("observedAttempt")
-    _require(isinstance(closure, dict), "lifecycle closure evidence is missing")
-    _require(isinstance(observed, dict), "lifecycle observed attempt is missing")
-    _require(
-        current_policy_attempt.get("authorizationSha")
-        == closure.get("authorizationSourceSha"),
-        "policy/lifecycle authorization evidence differs",
-    )
-    _require(
-        current_policy_attempt.get("closureSha") == closure.get("closureCommitSha"),
-        "policy/lifecycle closure evidence differs",
-    )
-    for policy_key, lifecycle_key in (
-        ("runId", "runId"),
-        ("runUrl", "runUrl"),
-        ("conclusion", "conclusion"),
-        ("imageDigest", "imageDigest"),
-        ("signatureVerified", "signatureVerified"),
-    ):
+    summary_keys = ("recordCommitSha", "runId", "conclusion", "registryLoginExecuted", "imageBuildExecuted", "imagePushExecuted")
+    if lifecycle.get("state") == "preparation-closed":
+        history = lifecycle.get("attemptHistory")
+        _require(isinstance(history, list) and len(history) >= 2, "closed preparation requires published history")
+        prior, latest = history[-2:]
+        _require(policy.get("priorApprovedPreparationSha") == prior["preparationSha"], "published prior approval differs")
+        _require(policy.get("priorAttemptEvidence") == {key: prior[key] for key in summary_keys}, "published prior evidence differs")
+        _require(policy.get("attemptHistory") == [{key: item[key] for key in summary_keys} for item in history[:-1]], "published history differs")
+        _require(policy.get("approvedPreparationSha") == latest["preparationSha"], "published preparation differs")
+        current_policy_attempt = policy.get("currentAttemptEvidence")
+        _require(isinstance(current_policy_attempt, dict), "published attempt is missing")
+        for key, value in latest.items():
+            if key != "preparationSha":
+                _require(current_policy_attempt.get(key) == value, f"published {key} evidence differs")
+        _require(_bool(policy, "priorExactPreparationShaApproved") is True, "prior approval is missing")
+        closure = lifecycle["closure"]
+    else:
         _require(
-            current_policy_attempt.get(policy_key) == observed.get(lifecycle_key),
-            f"policy/lifecycle {policy_key} evidence differs",
+            policy.get("priorApprovedPreparationSha")
+            == lifecycle.get("priorApprovedPreparationSha"),
+            "policy/lifecycle prior exact-SHA approval differs",
         )
-    _require(_bool(policy, "priorExactPreparationShaApproved") is True, "prior exact-SHA approval record is missing")
-    _require(lifecycle.get("state") == policy.get("publishLifecycleState"), "policy/lifecycle state differs")
+        lifecycle_prior_attempt = lifecycle.get("priorAttemptEvidence")
+        _require(isinstance(lifecycle_prior_attempt, dict), "lifecycle prior attempt evidence is missing")
+        summary_keys = (
+            "recordCommitSha",
+            "runId",
+            "conclusion",
+            "registryLoginExecuted",
+            "imageBuildExecuted",
+            "imagePushExecuted",
+        )
+        _require(
+            policy.get("priorAttemptEvidence")
+            == {key: lifecycle_prior_attempt[key] for key in summary_keys},
+            "policy/lifecycle prior attempt evidence differs",
+        )
+        policy_history = policy.get("attemptHistory")
+        lifecycle_history = lifecycle.get("attemptHistory")
+        _require(isinstance(lifecycle_history, list), "lifecycle attempt history is missing")
+        _require(
+            policy_history
+            == [{key: item[key] for key in summary_keys} for item in lifecycle_history],
+            "policy/lifecycle attempt history differs",
+        )
+        _require(
+            policy.get("approvedPreparationSha") == lifecycle.get("approvedPreparationSha"),
+            "policy/lifecycle approved preparation differs",
+        )
+        _full_sha_or_none(policy.get("approvedPreparationSha"), "policy approvedPreparationSha")
+        current_policy_attempt = policy.get("currentAttemptEvidence")
+        _require(isinstance(current_policy_attempt, dict), "policy current attempt evidence is missing")
+        _full_sha_or_none(current_policy_attempt.get("authorizationSha"), "policy authorizationSha")
+        _full_sha_or_none(current_policy_attempt.get("closureSha"), "policy closureSha")
+        _full_sha_or_none(current_policy_attempt.get("recordCommitSha"), "policy recordCommitSha")
+        _require(current_policy_attempt.get("conclusion") in {"success", "failure"}, "policy current attempt conclusion differs")
+        closure = lifecycle.get("closure")
+        observed = lifecycle.get("observedAttempt")
+        _require(isinstance(closure, dict), "lifecycle closure evidence is missing")
+        _require(isinstance(observed, dict), "lifecycle observed attempt is missing")
+        _require(
+            current_policy_attempt.get("authorizationSha")
+            == closure.get("authorizationSourceSha"),
+            "policy/lifecycle authorization evidence differs",
+        )
+        _require(
+            current_policy_attempt.get("closureSha") == closure.get("closureCommitSha"),
+            "policy/lifecycle closure evidence differs",
+        )
+        for policy_key, lifecycle_key in (
+            ("runId", "runId"),
+            ("runUrl", "runUrl"),
+            ("conclusion", "conclusion"),
+            ("imageDigest", "imageDigest"),
+            ("signatureVerified", "signatureVerified"),
+        ):
+            _require(
+                current_policy_attempt.get(policy_key) == observed.get(lifecycle_key),
+                f"policy/lifecycle {policy_key} evidence differs",
+            )
+        _require(_bool(policy, "priorExactPreparationShaApproved") is True, "prior exact-SHA approval record is missing")
+        _require(lifecycle.get("state") == policy.get("publishLifecycleState"), "policy/lifecycle state differs")
     _require(policy.get("githubRemote") == EXPECTED_REMOTE, "GitHub remote changed")
     _require(policy.get("registryProvider") == "github-container-registry", "registry provider must be GHCR")
     _require(policy.get("registryHost") == "ghcr.io", "registry host must be ghcr.io")
@@ -749,11 +766,11 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "unexpected image-policy next safe stage",
     )
     _require(
-        actions_result.get("publishLifecycleState") == "attempt-recorded",
-        "root handoff must use the recorded attempt state",
+        actions_result.get("publishLifecycleState") in {"preparation-closed", "attempt-recorded"},
+        "root handoff requires a closed preparation or recorded attempt",
     )
     _require(
-        actions_result.get("result") == ATTEMPT_RECORDED_RESULT,
+        actions_result.get("result") == (PREPARATION_READY_RESULT if lifecycle["state"] == "preparation-closed" else ATTEMPT_RECORDED_RESULT),
         "root workflow lifecycle must preserve the verified recorded attempt",
     )
 
@@ -775,9 +792,9 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
     _require("alembic" not in production_cmd, "container startup must not run Alembic")
 
     current_markers = (
-        "v401.legacy-live-game-improvements",
-        "legacy-live-game-improvements",
-        "await-user-vue-resume",
+        "v402.server-gameplay-prepared",
+        "server-gameplay-prepared",
+        "approve-v402-release-preparation",
     )
     for path, text in (
         ("AGENTS.md", agents),
@@ -862,7 +879,7 @@ def inspect_codex_handoff(root: Path) -> dict[str, Any]:
         "publishGateReady": actions_result["publishGateReady"],
         "publishLifecycleState": actions_result["publishLifecycleState"],
         "publishLifecycleSupportedStates": list(LIFECYCLE_SUPPORTED_STATES),
-        "workflowExecutionHistoryCount": len(lifecycle["attemptHistory"]) + 1,
+        "workflowExecutionHistoryCount": len(lifecycle["attemptHistory"]) + int(lifecycle["state"] == "attempt-recorded"),
         "priorApprovedPreparationSha": lifecycle["priorApprovedPreparationSha"],
         "approvedPreparationSha": lifecycle["approvedPreparationSha"],
         "authorizationSha": closure["authorizationSourceSha"],

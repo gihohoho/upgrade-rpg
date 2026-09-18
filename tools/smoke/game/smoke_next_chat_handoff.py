@@ -7,12 +7,12 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-VERSION = "v401.legacy-live-game-improvements"
-RESULT = "legacy-live-game-improvements"
-NEXT_STAGE = "await-user-vue-resume"
-SOURCE_HEAD = "v377_auth_email_public_security"
-LOCAL_APPLIED_HEAD = SOURCE_HEAD
-NEON_APPLIED_HEAD = SOURCE_HEAD
+VERSION = "v402.server-gameplay-prepared"
+RESULT = "server-gameplay-prepared"
+NEXT_STAGE = "approve-v402-release-preparation"
+SOURCE_HEAD = "v402_server_gameplay"
+LOCAL_APPLIED_HEAD = "v377_auth_email_public_security"
+NEON_APPLIED_HEAD = "v377_auth_email_public_security"
 
 
 def read(relative: str) -> str:
@@ -52,7 +52,7 @@ def main() -> int:
     require_markers(
         "NEXT_CHAT_HANDOFF.md",
         "바로 할 일",
-        "synthetic 브라우저",
+        "실제 브라우저 PASS",
         "migration",
         "local/Neon DB current",
         "owner bootstrap",

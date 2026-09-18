@@ -128,7 +128,7 @@ Migration guard는 libpq가 URL의 host보다 실제 접속 주소에 사용할 
 
 - 비밀번호는 직접 dependency인 `bcrypt 5.0.0`으로 해시하고 CPU 작업은 worker
   thread에서 수행합니다.
-- 기존 `JWT_SECRET_KEY`로 알고리즘이 고정된 HS256 24시간 access token을 서명합니다.
+- `JWT_SECRET_KEY`로 알고리즘이 고정된 HS256 access token을 서명합니다. v402는 사용자 요청으로 TTL 0(시간 만료 없음)을 지원하며, 계정 상태와 `authVersion` 검사는 유지합니다. 배포 상태는 현재 문서를 따릅니다.
 - 이메일 인증 전에는 access token을 발급하지 않고, 매 인증 요청에서 token claim의
   `authVersion`과 DB 현재값을 비교합니다.
 - 각 인증 요청에서 `users`를 다시 읽고 비활성 계정은 이미 발급된 token도 거절합니다.

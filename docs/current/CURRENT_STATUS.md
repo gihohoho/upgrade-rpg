@@ -1,14 +1,14 @@
-# Current Status — v400
+# Current Status — v402 배포 준비 완료
 
 이 문서는 현재 구현과 승인 경계를 설명합니다. 장기 작업 규칙은 루트 [AGENTS.md](../../AGENTS.md), 새 채팅의 바로 다음 행동은 [NEXT_CHAT_HANDOFF.md](../../NEXT_CHAT_HANDOFF.md)가 기준입니다.
 
 ## 상태 표식
 
 ```txt
-latest: v401.legacy-live-game-improvements
-strict result: legacy-live-game-improvements
-next safe stage: await-user-vue-resume
-local Alembic source head: v377_auth_email_public_security
+latest: v402.server-gameplay-prepared
+strict result: server-gameplay-prepared
+next safe stage: approve-v402-release-preparation
+local Alembic source head: v402_server_gameplay
 local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
 email rollout approval/execution: yes/public-live
@@ -40,6 +40,12 @@ v400 legacy hotfix approval/execution: yes/yes
 v401 legacy improvements approval/execution: yes/yes
 ```
 
+## v402 서버 사냥 배포 준비 완료 — 미배포
+
+- 사용자 승인: 연결된 게임 탭에서만 서버 사냥, 60초 정산, 중요한 행동의 차감/난수/영수증을 단일 DB transaction으로 확정 후 표시. 장비 교체 규칙·보스 안내 모달·24시간 자동 로그아웃 제거를 함께 적용합니다.
+- 전체 core, 엔진/45종 보스, 격리 PostgreSQL 중복 요청·rollback·응답 유실·오프라인 제외, 로그인 무기한/계정 폐기 검사 PASS. 브라우저 장비 교체·강화 모달·같은 결과 재조회·보스 안내·백그라운드 사냥·1366/390px 새 모달 PASS. Linux 이미지/QuickJS 실행과 migration의 기존 25개 테이블 보존도 검증했습니다.
+- source v402, 실제 local/Neon v377, 공개 v377/v401 유지. lifecycle은 이전 11회 게시를 보존한 `preparation-closed`이며 새 exact SHA 확인 후 게시·DB 추가·Render 배포합니다. 순서와 중요 재개 기록은 [handoff](../../NEXT_CHAT_HANDOFF.md)에 통합합니다.
+
 ## v401 실서버 게임 편의 개선
 
 - Vue는 중단 상태입니다. 사용자 요청 5개: 백그라운드 진행, 묶음 드랍 확률, 소환 기본 ON/다른 보스 차단, 해금 도감 능력치, 스킬 피해 공식 강조를 legacy에 적용합니다. static 배포까지 승인됐습니다.
@@ -59,17 +65,9 @@ v401 legacy improvements approval/execution: yes/yes
 - 묶음 이동은 첫 빈 칸, 정렬은 상대 순서를 유지하며 ID·강화·수량·추가 필드를 보존합니다. prospective 복구본 기록 후 공통 queue에 저장하고, quota/다른 탭은 변경 전 차단합니다. 실패 pending의 재시도는 이동을 반복하지 않습니다.
 - 전체 Vue smoke·TypeScript·build 및 1366/390px 이동·정렬·503 재시도·pending·overflow/console 0 PASS. 장착·사용·판매·자동 합치기·휴지통 write·Gold·보상·backend·DB·배포는 미변경입니다. 다음 Vue 단계는 자동 합치기이며 사용자 재개까지 보류합니다.
 
-## v396~v398 보유 표시·복구·가독성
+## v384~v398 이전 Vue 기반
 
-- v398은 가방·15칸 장비·보관함·휴지통과 좌우 창에 실제 보유 snapshot을 표시합니다. 빈 칸·ID·강화·수량·등급·미등록 항목을 보존하며 원래 container/index로 선택을 구분합니다. 저장소 PNG만 hash URL로 번들링합니다.
-- v397은 계정/슬롯/캐릭터별 snapshot·pending·백업을 기록합니다. local/server/취소 선택 전에는 boot·자동 저장을 시작하지 않습니다. 늦은 응답은 최신 pending을 지우지 않습니다. 상세 키·실패 계약은 [계정·저장 계약](ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md)을 따릅니다.
-- v396의 13px typography·명암·좌우 창과 공유 modal 접근성, 관리자 helper 정리와 terminal save barrier를 유지합니다. v396~v398 Vue smoke/build·1366px/390px synthetic 브라우저 검사는 PASS했습니다.
-
-## v384~v395 이전 Vue 기반
-
-- [typed domain 의존성](../generated/VUE_GAME_DOMAIN_DEPENDENCIES.md)과 마을/HUD·필드·보스·스킬·상점·설정 표시를 이식했습니다. snapshot load 성공 뒤 단일 전투 timer가 시작되지만 HP·Gold·아이템 보상·난수·cooldown은 저장하지 않습니다.
-- GET/POST는 Bearer·슬롯·캐릭터 identity를 검사합니다. 자동 60초·수동·전환 저장은 한 queue를 사용하며 최종 저장 성공 뒤 선택/token을 정리합니다. `saveVersion`은 형식 버전이고 backend CAS는 미구현입니다. 상세는 [계정·저장 계약](ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md)을 따릅니다.
-- smoke/build와 후속 v396 브라우저 검사가 PASS했습니다. 이전 구현 상세는 [Vue 전환 계획](../reference/frontend/VUE_FASTAPI_DB_TRANSITION_PLAN.md)과 Git 이력을 따릅니다.
+- typed domain·게임/계정 UI·13px 가독성·반응형·계정별 복구 선택·보유 아이템 표시를 완료했습니다. smoke/build와 1366/390px synthetic 브라우저 검사는 PASS했습니다. Vue는 계속 중단·미배포입니다. 상세는 [계정·저장 계약](ACCOUNT_AUTH_AND_CHARACTER_SLOTS.md), [Vue 전환 계획](../reference/frontend/VUE_FASTAPI_DB_TRANSITION_PLAN.md)과 Git 이력에 보존합니다.
 
 ## v378 게임 UI·환경 라우팅 소스 준비
 
@@ -139,7 +137,7 @@ v377 rate limit, durable outbox/queue, raw body cap, 미인증 계정 회수와 
 
 ## 바로 다음 단계
 
-1. `await-user-vue-resume`: 보스 드랍 수정·배포 완료. Vue 후속 `migrate-vue-game-stack-merge-foundation`은 사용자 재개 요청까지 보류합니다.
+1. `approve-v402-release-preparation`: 검증된 preparation SHA 확인 뒤 서버 사냥·로그인 만료 제거를 배포합니다. Vue 후속은 사용자 재개까지 보류합니다.
 2. 실제 관리자 Apply API·재인증·dev key header·DB write 연결은 이번 단계에 포함되지 않았습니다. 필요하면 작업 종류와 정확한 DB-write 범위를 별도 승인받습니다.
 3. production 관리자 복구는 별도 guarded recovery와 exact DB-write 승인을 받기 전까지 실행하지 않습니다.
 
