@@ -12,7 +12,7 @@
   "workflowSourceSha256": "3331484f280a12a239275785bef625f18656c62ccbe33e8707a296ac2e204843",
   "workflowSemanticSha256": "526c4d21f9bc223e25829f60bf804f9167f6905b9129ffe1e70d85f354d57126",
   "publishLifecyclePath": "deploy/github-actions-ghcr-publish-lifecycle.json",
-  "publishLifecycleSchemaVersion": "v377.owner-only-publish-lifecycle-with-11-attempt-history",
+  "publishLifecycleSchemaVersion": "v377.owner-only-publish-lifecycle-with-12-attempt-history",
   "workflowFilePresent": true,
   "workflowCreationApproved": true,
   "workflowExecutionApproved": true,
@@ -292,7 +292,7 @@
         "backend/requirements/runtime.in": "b1dc38a38e4328f4d818850da3c62c70a0e8dfff4d2d2d0184c7cabba7ca9753",
         "backend/requirements/dev.in": "6404277a75ce651735fcea3f89b5eee548cfd58ee197faed27b03333d587e2fe",
         "backend/pyproject.toml": "33dd28d28c73a5b8be947850b52f362385c7995e1d8a42135d158bb0e337af28",
-        "backend/Dockerfile.production": "9d5504290d5e4662471660c888c1cc28ff741223c1e8a53f4d9f8d71aa36f9f2"
+        "backend/Dockerfile.production": "00f8ba345903e4698627279c2a71e5d8bedd31b9f441435e09fceb62e3fa2af4"
       },
       "requiredBeforeFirstPublish": true
     },

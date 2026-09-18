@@ -30,21 +30,21 @@ REPOSITORY = "gihohoho/upgrade-rpg"
 IMAGE_REPOSITORY = "ghcr.io/gihohoho/upgrade-rpg-backend"
 WORKFLOW_PATH = ".github/workflows/publish-backend-ghcr.yml"
 LIFECYCLE_PATH = "deploy/github-actions-ghcr-publish-lifecycle.json"
-LIFECYCLE_SCHEMA_VERSION = 'v377.owner-only-publish-lifecycle-with-11-attempt-history'
-PRIOR_APPROVED_PREPARATION_SHA = 'cd357de032425138d44323dd3060bbbf5b6a45d8'
-PRIOR_ATTEMPT_EVIDENCE = {'preparationSha': 'cd357de032425138d44323dd3060bbbf5b6a45d8',
- 'authorizationSha': '46c9e7e33d866b160b6f4a8f36d5b68dabe3ece4',
- 'closureSha': 'e07474d5b5411dd805736687d1003f451298dae4',
- 'recordCommitSha': '3e3516299a72e47c6d85597f8c0b60db5cb11a46',
- 'runId': 32587614153,
- 'runUrl': 'https://github.com/gihohoho/upgrade-rpg/actions/runs/32587614153',
- 'conclusion': 'success',
- 'registryLoginExecuted': True,
+LIFECYCLE_SCHEMA_VERSION = 'v377.owner-only-publish-lifecycle-with-12-attempt-history'
+PRIOR_APPROVED_PREPARATION_SHA = '74435a27ea1dc61cd487f77726def49198194173'
+PRIOR_ATTEMPT_EVIDENCE = {'preparationSha': '74435a27ea1dc61cd487f77726def49198194173',
+ 'authorizationSha': '8fdf8a03033e07cc6b73f9bc3f00474b20e78a49',
+ 'closureSha': '37167199e0aa7346140d6685542e6240f6c05fb4',
+ 'recordCommitSha': '9aad11606014d178fcc9b6a8f747731eaa31fdc3',
+ 'runId': 35367950275,
+ 'runUrl': 'https://github.com/gihohoho/upgrade-rpg/actions/runs/35367950275',
+ 'conclusion': 'failure',
+ 'registryLoginExecuted': False,
  'imageBuildExecuted': True,
- 'imagePushExecuted': True,
- 'artifactCount': 2,
- 'imageDigest': 'sha256:80e8f57618b2bd8bbac37fd63381e454434e06b67eff0cd8f4327796bdc1c677',
- 'signatureVerified': True}
+ 'imagePushExecuted': False,
+ 'artifactCount': 1,
+ 'imageDigest': None,
+ 'signatureVerified': False}
 ATTEMPT_HISTORY = [{'preparationSha': '350bbd085f1cf636810d75ddcbb5321e0791256c',
   'authorizationSha': '32e5102877851ace06e1c0ed3bcb48310b8d65b6',
   'closureSha': '362f5f1901d234b5b86f2a7cefdabd28ac61f896',
@@ -187,7 +187,20 @@ ATTEMPT_HISTORY = [{'preparationSha': '350bbd085f1cf636810d75ddcbb5321e0791256c'
   'imagePushExecuted': True,
   'artifactCount': 2,
   'imageDigest': 'sha256:80e8f57618b2bd8bbac37fd63381e454434e06b67eff0cd8f4327796bdc1c677',
-  'signatureVerified': True}]
+  'signatureVerified': True},
+ {'preparationSha': '74435a27ea1dc61cd487f77726def49198194173',
+  'authorizationSha': '8fdf8a03033e07cc6b73f9bc3f00474b20e78a49',
+  'closureSha': '37167199e0aa7346140d6685542e6240f6c05fb4',
+  'recordCommitSha': '9aad11606014d178fcc9b6a8f747731eaa31fdc3',
+  'runId': 35367950275,
+  'runUrl': 'https://github.com/gihohoho/upgrade-rpg/actions/runs/35367950275',
+  'conclusion': 'failure',
+  'registryLoginExecuted': False,
+  'imageBuildExecuted': True,
+  'imagePushExecuted': False,
+  'artifactCount': 1,
+  'imageDigest': None,
+  'signatureVerified': False}]
 EXPECTED_WORKFLOW_SHA256 = "3331484f280a12a239275785bef625f18656c62ccbe33e8707a296ac2e204843"
 EXPECTED_WORKFLOW_SEMANTIC_SHA256 = "526c4d21f9bc223e25829f60bf804f9167f6905b9129ffe1e70d85f354d57126"
 SMOKE_CORE_PATH = "tools/run_smoke_core.sh"
@@ -224,7 +237,7 @@ REPRODUCIBILITY_INPUT_SHA256 = {
     "backend/requirements/runtime.in": "b1dc38a38e4328f4d818850da3c62c70a0e8dfff4d2d2d0184c7cabba7ca9753",
     "backend/requirements/dev.in": "6404277a75ce651735fcea3f89b5eee548cfd58ee197faed27b03333d587e2fe",
     "backend/pyproject.toml": "33dd28d28c73a5b8be947850b52f362385c7995e1d8a42135d158bb0e337af28",
-    "backend/Dockerfile.production": "9d5504290d5e4662471660c888c1cc28ff741223c1e8a53f4d9f8d71aa36f9f2",
+    "backend/Dockerfile.production": "00f8ba345903e4698627279c2a71e5d8bedd31b9f441435e09fceb62e3fa2af4",
 }
 CERTIFICATE_IDENTITY = (
     "https://github.com/gihohoho/upgrade-rpg/"

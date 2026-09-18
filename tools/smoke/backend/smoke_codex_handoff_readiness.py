@@ -104,15 +104,15 @@ def main() -> int:
         "authorization-closed-awaiting-evidence",
         "attempt-recorded",
     ]
-    assert result["workflowExecutionHistoryCount"] == 11
-    assert result["priorApprovedPreparationSha"] == "cd357de032425138d44323dd3060bbbf5b6a45d8"
+    assert result["workflowExecutionHistoryCount"] == 12
+    assert result["priorApprovedPreparationSha"] == "74435a27ea1dc61cd487f77726def49198194173"
     assert result["approvedPreparationSha"] is None
     assert result["authorizationSha"] is None
     assert result["closureSha"] is None
-    assert result["recordCommitSha"] == "3e3516299a72e47c6d85597f8c0b60db5cb11a46"
-    assert result["currentRunId"] == 32587614153
-    assert result["currentArtifactIds"] == [9479502641, 9479487044]
-    assert result["currentImageDigest"] == "sha256:80e8f57618b2bd8bbac37fd63381e454434e06b67eff0cd8f4327796bdc1c677"
+    assert result["recordCommitSha"] == "9aad11606014d178fcc9b6a8f747731eaa31fdc3"
+    assert result["currentRunId"] == 35367950275
+    assert result["currentArtifactIds"] == [10556663877]
+    assert result["currentImageDigest"] is None
     assert result["ownerApprovalRecorded"] is False
     assert result["workflowRunAttemptMustEqual"] == 1
     assert result["singleDispatchApiCheckRequired"] is True

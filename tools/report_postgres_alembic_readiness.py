@@ -20,9 +20,9 @@ REPORT_PATH = Path("docs/generated/POSTGRES_ALEMBIC_READINESS.md")
 CHECKPOINT_VERSION = "v402.server-gameplay-prepared"
 CHECKPOINT_RESULT = "server-gameplay-prepared"
 SOURCE_GRAPH_HEAD = "v402_server_gameplay"
-LOCAL_APPLIED_DB_REVISION = "v377_auth_email_public_security"
+LOCAL_APPLIED_DB_REVISION = "v402_server_gameplay"
 NEON_APPLIED_DB_REVISION = "v377_auth_email_public_security"
-LOCAL_APPLIED_DB_APPLICATION_TABLES = 25
+LOCAL_APPLIED_DB_APPLICATION_TABLES = 27
 NEON_APPLIED_DB_APPLICATION_TABLES = 25
 NEXT_SAFE_STAGE = "approve-v402-release-preparation"
 STALE_SOURCE_SHA = "8db9bcb"
@@ -171,12 +171,12 @@ local/Neon application tables: {LOCAL_APPLIED_DB_APPLICATION_TABLES} / {NEON_APP
 next safe stage: {NEXT_SAFE_STAGE}
 ```
 
-v295는 최초 22-table baseline의 역사입니다. 실제 local/Neon은 v377이며,
+v295는 최초 22-table baseline의 역사입니다. 실제 local은 v402, Neon은 v377이며,
 source에는 v402 서버 사냥 세션/행동 영수증 2개 table revision을 추가했습니다.
-v402 실제 적용은 아직 하지 않았습니다. `head`와 DB `current`를 구분합니다.
+v402 local apply 1회·기존 25개 테이블 783행 보존·27개 model parity를 검증했고 Neon은 미적용입니다. `head`와 DB `current`를 구분합니다.
 
 - source graph `head`: `{SOURCE_GRAPH_HEAD}`
-- local/Neon DB `current`: `v377_auth_email_public_security` / `v377_auth_email_public_security`
+- local/Neon DB `current`: `{LOCAL_APPLIED_DB_REVISION}` / `{NEON_APPLIED_DB_REVISION}`
 - 차이: v371의 nullable email identity·`authVersion`과
   `user_email_action_tokens` 1개 table, v377의 durable auth rate-limit·semantic mail outbox
   2개 table
@@ -450,7 +450,7 @@ revision만 거짓으로 올릴 수 있으므로 특히 금지합니다.
    `{RECOVERY_SOURCE_SHA}`의 recovery1 왕복·local backup을 새 apply의 선행 evidence로 검증했습니다.
 6. 첫 local apply는 pre-Alembic false fingerprint safe-stop으로 종료했고 apply report는
    생성되지 않았습니다. 그 private exclusive attempt marker는 남겨 두고 재실행하지 않았습니다.
-7. local/Neon actual DB는 모두 v377이고 기존 22개 table 데이터 변화 0·25개 model table parity를
+7. v377 적용 당시 local/Neon DB는 모두 v377이고 기존 22개 table 데이터 변화 0·25개 model table parity를
    확인했습니다. recovery2 Neon backup과 apply는 각각 한 번만 실행했습니다.
 8. local 실제 메일·링크 인증·로그인, 공개 backend/static 배포와 Vue 인증·관리자 Preview·write-locked 확인 modal을 완료했습니다.
    다음 안전 단계는 검증된 서버 사냥 preparation의 exact SHA를 확인한 뒤 additive migration과 배포를 진행하는 `{NEXT_SAFE_STAGE}`입니다.

@@ -93,14 +93,14 @@
 
 v401: 실서버 5개 개선(백그라운드 전투·묶음 드랍·소환 기본 ON·도감 능력치·스킬 강조)을 SHA `a86fd0c`로 static에 1회 배포했고 Live 검증을 완료했습니다. Vue v399는 계속 중단합니다. 사용한도 중단 시 handoff의 완료/남은 단계부터 재개합니다.
 
-- v402 서버 사냥·행동 원자 저장·장비 규칙·24시간 자동 로그아웃 제거는 구현·검증을 마쳤습니다. 새 preparation exact SHA 확인 후 게시·배포하며 아직 실서버에는 적용하지 않았습니다. 실제 DB는 v377이고 source만 v402입니다. 재개 순서는 root handoff의 중요 절을 따릅니다. Vue v399는 중단합니다.
+- v402 서버 사냥·행동 원자 저장·장비 규칙·24시간 자동 로그아웃 제거는 구현·검증을 마쳤습니다. 첫 게시가 OS 취약점 10건으로 차단돼 보안 수정 preparation을 준비합니다. local은 v402 추가 적용 1회·기존 데이터 보존, Neon/실서버는 v377 유지입니다. 재개 순서는 root handoff의 중요 절을 따릅니다. Vue v399는 중단합니다.
 
 ```txt
 latest: v402.server-gameplay-prepared
 strict result: server-gameplay-prepared
 next safe stage: approve-v402-release-preparation
 local source head: v402_server_gameplay
-local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
+local/Neon DB current: v402_server_gameplay / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
 email rollout approval/execution: yes/public-live
 public backend/static: v377/v401 Live

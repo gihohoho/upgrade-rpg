@@ -11,10 +11,10 @@
     "authorization-closed-awaiting-evidence",
     "attempt-recorded"
   ],
-  "priorApprovedPreparationSha": "d58d093fc5ac2a4ffefa812e7067cb3083ce8a7d",
+  "priorApprovedPreparationSha": "cd357de032425138d44323dd3060bbbf5b6a45d8",
   "priorAttemptEvidence": {
-    "recordCommitSha": "ceea14c20ac8604d453930d8f6c5127f00236352",
-    "runId": 32576889295,
+    "recordCommitSha": "3e3516299a72e47c6d85597f8c0b60db5cb11a46",
+    "runId": 32587614153,
     "conclusion": "success",
     "registryLoginExecuted": true,
     "imageBuildExecuted": true,
@@ -100,23 +100,33 @@
       "registryLoginExecuted": true,
       "imageBuildExecuted": true,
       "imagePushExecuted": true
+    },
+    {
+      "recordCommitSha": "3e3516299a72e47c6d85597f8c0b60db5cb11a46",
+      "runId": 32587614153,
+      "conclusion": "success",
+      "registryLoginExecuted": true,
+      "imageBuildExecuted": true,
+      "imagePushExecuted": true
     }
   ],
-  "approvedPreparationSha": "cd357de032425138d44323dd3060bbbf5b6a45d8",
+  "approvedPreparationSha": "74435a27ea1dc61cd487f77726def49198194173",
   "currentAttemptEvidence": {
-    "authorizationSha": "46c9e7e33d866b160b6f4a8f36d5b68dabe3ece4",
-    "closureSha": "e07474d5b5411dd805736687d1003f451298dae4",
-    "recordCommitSha": "3e3516299a72e47c6d85597f8c0b60db5cb11a46",
-    "runId": 32587614153,
-    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/32587614153",
-    "conclusion": "success",
-    "registryLoginExecuted": true,
+    "authorizationSha": "8fdf8a03033e07cc6b73f9bc3f00474b20e78a49",
+    "closureSha": "37167199e0aa7346140d6685542e6240f6c05fb4",
+    "recordCommitSha": "9aad11606014d178fcc9b6a8f747731eaa31fdc3",
+    "runId": 35367950275,
+    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/35367950275",
+    "conclusion": "failure",
+    "registryLoginExecuted": false,
     "imageBuildExecuted": true,
-    "imagePushExecuted": true,
-    "artifactCount": 2,
-    "artifactIds": [9479502641, 9479487044],
-    "imageDigest": "sha256:80e8f57618b2bd8bbac37fd63381e454434e06b67eff0cd8f4327796bdc1c677",
-    "signatureVerified": true
+    "imagePushExecuted": false,
+    "artifactCount": 1,
+    "artifactIds": [
+      10556663877
+    ],
+    "imageDigest": null,
+    "signatureVerified": false
   },
   "priorExactPreparationShaApproved": true,
   "exactPreparationShaApproved": true,

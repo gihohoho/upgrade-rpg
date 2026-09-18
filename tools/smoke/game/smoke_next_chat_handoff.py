@@ -11,7 +11,7 @@ VERSION = "v402.server-gameplay-prepared"
 RESULT = "server-gameplay-prepared"
 NEXT_STAGE = "approve-v402-release-preparation"
 SOURCE_HEAD = "v402_server_gameplay"
-LOCAL_APPLIED_HEAD = "v377_auth_email_public_security"
+LOCAL_APPLIED_HEAD = "v402_server_gameplay"
 NEON_APPLIED_HEAD = "v377_auth_email_public_security"
 
 

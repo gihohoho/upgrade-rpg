@@ -1,22 +1,22 @@
 {
-  "schemaVersion": "v377.owner-only-publish-lifecycle-with-11-attempt-history",
-  "state": "attempt-recorded",
+  "schemaVersion": "v377.owner-only-publish-lifecycle-with-12-attempt-history",
+  "state": "preparation-closed",
   "publishReviewerGateReady": false,
-  "priorApprovedPreparationSha": "cd357de032425138d44323dd3060bbbf5b6a45d8",
+  "priorApprovedPreparationSha": "74435a27ea1dc61cd487f77726def49198194173",
   "priorAttemptEvidence": {
-    "preparationSha": "cd357de032425138d44323dd3060bbbf5b6a45d8",
-    "authorizationSha": "46c9e7e33d866b160b6f4a8f36d5b68dabe3ece4",
-    "closureSha": "e07474d5b5411dd805736687d1003f451298dae4",
-    "recordCommitSha": "3e3516299a72e47c6d85597f8c0b60db5cb11a46",
-    "runId": 32587614153,
-    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/32587614153",
-    "conclusion": "success",
-    "registryLoginExecuted": true,
+    "preparationSha": "74435a27ea1dc61cd487f77726def49198194173",
+    "authorizationSha": "8fdf8a03033e07cc6b73f9bc3f00474b20e78a49",
+    "closureSha": "37167199e0aa7346140d6685542e6240f6c05fb4",
+    "recordCommitSha": "9aad11606014d178fcc9b6a8f747731eaa31fdc3",
+    "runId": 35367950275,
+    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/35367950275",
+    "conclusion": "failure",
+    "registryLoginExecuted": false,
     "imageBuildExecuted": true,
-    "imagePushExecuted": true,
-    "artifactCount": 2,
-    "imageDigest": "sha256:80e8f57618b2bd8bbac37fd63381e454434e06b67eff0cd8f4327796bdc1c677",
-    "signatureVerified": true
+    "imagePushExecuted": false,
+    "artifactCount": 1,
+    "imageDigest": null,
+    "signatureVerified": false
   },
   "attemptHistory": [
     {
@@ -183,12 +183,27 @@
       "artifactCount": 2,
       "imageDigest": "sha256:80e8f57618b2bd8bbac37fd63381e454434e06b67eff0cd8f4327796bdc1c677",
       "signatureVerified": true
+    },
+    {
+      "preparationSha": "74435a27ea1dc61cd487f77726def49198194173",
+      "authorizationSha": "8fdf8a03033e07cc6b73f9bc3f00474b20e78a49",
+      "closureSha": "37167199e0aa7346140d6685542e6240f6c05fb4",
+      "recordCommitSha": "9aad11606014d178fcc9b6a8f747731eaa31fdc3",
+      "runId": 35367950275,
+      "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/35367950275",
+      "conclusion": "failure",
+      "registryLoginExecuted": false,
+      "imageBuildExecuted": true,
+      "imagePushExecuted": false,
+      "artifactCount": 1,
+      "imageDigest": null,
+      "signatureVerified": false
     }
   ],
-  "approvedPreparationSha": "74435a27ea1dc61cd487f77726def49198194173",
+  "approvedPreparationSha": null,
   "ownerApproval": {
-    "recorded": true,
-    "recordedAtUtc": "2026-09-18T16:20:25Z",
+    "recorded": false,
+    "recordedAtUtc": null,
     "evidence": "exact-40-character-sha-user-message"
   },
   "githubLiveSettings": {
@@ -219,16 +234,16 @@
     "immediateClosureAfterRunAccepted": true
   },
   "closure": {
-    "authorizationSourceSha": "8fdf8a03033e07cc6b73f9bc3f00474b20e78a49",
-    "closureCommitSha": "37167199e0aa7346140d6685542e6240f6c05fb4",
-    "preparedAtUtc": "2026-09-18T16:21:18Z"
+    "authorizationSourceSha": null,
+    "closureCommitSha": null,
+    "preparedAtUtc": null
   },
   "observedAttempt": {
-    "runId": 35367950275,
-    "runUrl": "https://github.com/gihohoho/upgrade-rpg/actions/runs/35367950275",
-    "runAttempt": 1,
-    "status": "completed",
-    "conclusion": "failure",
+    "runId": null,
+    "runUrl": null,
+    "runAttempt": null,
+    "status": "not-dispatched",
+    "conclusion": null,
     "imageDigest": null,
     "signatureVerified": false
   }

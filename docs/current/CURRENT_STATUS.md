@@ -9,7 +9,7 @@ latest: v402.server-gameplay-prepared
 strict result: server-gameplay-prepared
 next safe stage: approve-v402-release-preparation
 local Alembic source head: v402_server_gameplay
-local/Neon DB current: v377_auth_email_public_security / v377_auth_email_public_security
+local/Neon DB current: v402_server_gameplay / v377_auth_email_public_security
 v377 apply/stamp/downgrade: local 1/0/0; Neon 1/0/0
 email rollout approval/execution: yes/public-live
 public backend/static: v377/v401 Live
@@ -44,7 +44,7 @@ v401 legacy improvements approval/execution: yes/yes
 
 - 사용자 승인: 연결된 게임 탭에서만 서버 사냥, 60초 정산, 중요한 행동의 차감/난수/영수증을 단일 DB transaction으로 확정 후 표시. 장비 교체 규칙·보스 안내 모달·24시간 자동 로그아웃 제거를 함께 적용합니다.
 - 전체 core, 엔진/45종 보스, 격리 PostgreSQL 중복 요청·rollback·응답 유실·오프라인 제외, 로그인 무기한/계정 폐기 검사 PASS. 브라우저 장비 교체·강화 모달·같은 결과 재조회·보스 안내·백그라운드 사냥·1366/390px 새 모달 PASS. Linux 이미지/QuickJS 실행과 migration의 기존 25개 테이블 보존도 검증했습니다.
-- source v402, 실제 local/Neon v377, 공개 v377/v401 유지. lifecycle은 이전 11회 게시를 보존한 `preparation-closed`이며 새 exact SHA 확인 후 게시·DB 추가·Render 배포합니다. 순서와 중요 재개 기록은 [handoff](../../NEXT_CHAT_HANDOFF.md)에 통합합니다.
+- 승인 SHA `74435a2`의 run `35367950275`는 core/build PASS 뒤 OS HIGH 10건으로 차단됐습니다. GHCR push·Neon·Render 변경은 없습니다. OS 4개 패키지 수정 후 image/엔진/Trivy HIGH·CRITICAL 0건 PASS, 새 preparation은 12회 이력을 보존합니다. local v402 apply 1회, 기존 25개 table/783행 보존·27개 model parity PASS. Neon v377, 공개 v377/v401 유지. 정확한 SHA와 재개 순서는 [handoff](../../NEXT_CHAT_HANDOFF.md)에 통합합니다.
 
 ## v401 실서버 게임 편의 개선
 
